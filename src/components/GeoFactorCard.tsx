@@ -4,6 +4,7 @@ import { GeoFactor } from '@/types/geo';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GeoFactorCardProps {
   factor: GeoFactor;
@@ -12,6 +13,7 @@ interface GeoFactorCardProps {
 export function GeoFactorCard({ factor }: GeoFactorCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
 
   const getStatusIcon = () => {
     switch (factor.status) {
@@ -95,7 +97,7 @@ export function GeoFactorCard({ factor }: GeoFactorCardProps) {
               onClick={() => setIsExpanded(!isExpanded)}
               className="flex w-full items-center justify-between text-sm font-medium text-primary hover:text-primary/80"
             >
-              <span>How to improve</span>
+              <span>{t.results.howToImprove}</span>
               {isExpanded ? (
                 <ChevronUp className="h-4 w-4" />
               ) : (

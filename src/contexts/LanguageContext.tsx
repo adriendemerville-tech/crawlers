@@ -58,13 +58,80 @@ interface Translations {
     pageSpeedScore: string;
     allowed: string;
     blocked: string;
+    unknown: string;
     howToFix: string;
     howToImprove: string;
+    reason: string;
+    line: string;
+    addToRobots: string;
+  };
+  crawlers: {
+    scanning: string;
+    checkingRobots: string;
   };
   geo: {
     title: string;
     whatIsGeo: string;
     checksPassed: string;
+  };
+  llm: {
+    title: string;
+    overallVisibility: string;
+    citationRate: string;
+    citationRateDesc: string;
+    coverage: string;
+    invisibleList: string;
+    visibleAllLlms: string;
+    iterationDepth: string;
+    avgPrompts: string;
+    iterationExcellent: string;
+    iterationModerate: string;
+    iterationDeep: string;
+    sentimentAnalysis: string;
+    sentimentPositive: string;
+    sentimentNeutral: string;
+    sentimentNegative: string;
+    sentimentPositiveDesc: string;
+    sentimentNeutralDesc: string;
+    sentimentNegativeDesc: string;
+    recommendationStatus: string;
+    llmsRecommend: string;
+    notRecommended: string;
+    llmsRecommendDesc: string;
+    notRecommendedDesc: string;
+    coreValueUnderstanding: string;
+    hallucinationsDetected: string;
+    detailedAnalysis: string;
+    iterations: string;
+    sentiment: string;
+    recommends: string;
+    notMentioned: string;
+    llmsCite: string;
+    positive: string;
+    neutral: string;
+    negative: string;
+  };
+  pagespeed: {
+    title: string;
+    mobile: string;
+    desktop: string;
+    coreWebVitals: string;
+    performance: string;
+    accessibility: string;
+    bestPractices: string;
+    seo: string;
+    fcp: string;
+    fcpDesc: string;
+    lcp: string;
+    lcpDesc: string;
+    cls: string;
+    clsDesc: string;
+    tbt: string;
+    tbtDesc: string;
+    speedIndex: string;
+    speedIndexDesc: string;
+    tti: string;
+    ttiDesc: string;
   };
   faq: {
     badge: string;
@@ -148,13 +215,80 @@ const translations: Record<Language, Translations> = {
       pageSpeedScore: 'Score PageSpeed',
       allowed: 'Autorisés',
       blocked: 'Bloqués',
+      unknown: 'Inconnu',
       howToFix: 'Comment autoriser ce bot',
       howToImprove: 'Comment améliorer',
+      reason: 'Raison',
+      line: 'ligne',
+      addToRobots: 'Ajoutez ceci à votre',
+    },
+    crawlers: {
+      scanning: 'Scan du site en cours...',
+      checkingRobots: 'Vérification du robots.txt, des balises meta et des en-têtes HTTP',
     },
     geo: {
       title: 'Analyse GEO',
       whatIsGeo: "Qu'est-ce que le GEO ? L'Optimisation pour Moteurs Génératifs mesure la qualité de structuration de votre contenu pour les systèmes IA comme ChatGPT, Claude et Gemini. Un score élevé signifie que les outils IA peuvent mieux comprendre et référencer votre contenu.",
       checksPassed: 'vérifications réussies',
+    },
+    llm: {
+      title: 'Analyse de Visibilité LLM',
+      overallVisibility: 'Visibilité Globale',
+      citationRate: 'Taux de Citation',
+      citationRateDesc: 'LLMs ayant mentionné ce domaine dans leurs réponses',
+      coverage: 'couverture',
+      invisibleList: 'Liste des "Invisibles"',
+      visibleAllLlms: 'Visible sur tous les LLMs !',
+      iterationDepth: 'Profondeur d\'Itération',
+      avgPrompts: 'prompts en moy.',
+      iterationExcellent: 'Excellent ! Les LLMs vous mentionnent immédiatement.',
+      iterationModerate: 'Profondeur modérée. Améliorez vos signaux d\'autorité.',
+      iterationDeep: 'Itération profonde nécessaire. Améliorez les données structurées.',
+      sentimentAnalysis: 'Analyse de Sentiment',
+      sentimentPositive: 'Positif',
+      sentimentNeutral: 'Neutre',
+      sentimentNegative: 'Négatif',
+      sentimentPositiveDesc: 'Les LLMs parlent favorablement de votre marque et contenu.',
+      sentimentNeutralDesc: 'Perception neutre. Opportunité de renforcer votre réputation.',
+      sentimentNegativeDesc: 'Perceptions négatives détectées. Revoyez la qualité du contenu.',
+      recommendationStatus: 'Statut de Recommandation',
+      llmsRecommend: 'Les LLMs recommandent ce site',
+      notRecommended: 'Non explicitement recommandé',
+      llmsRecommendDesc: 'Votre site est activement recommandé par les LLMs.',
+      notRecommendedDesc: 'Travaillez les signaux E-E-A-T pour obtenir des recommandations.',
+      coreValueUnderstanding: 'Compréhension de la Valeur Clé',
+      hallucinationsDetected: 'Hallucinations Potentielles Détectées',
+      detailedAnalysis: 'Analyse LLM Détaillée',
+      iterations: 'Itérations',
+      sentiment: 'Sentiment',
+      recommends: 'Recommande',
+      notMentioned: 'Non mentionné par ce LLM',
+      llmsCite: 'LLMs citent ce domaine',
+      positive: 'Positif',
+      neutral: 'Neutre',
+      negative: 'Négatif',
+    },
+    pagespeed: {
+      title: 'PageSpeed Insights',
+      mobile: 'Mobile',
+      desktop: 'Ordinateur',
+      coreWebVitals: 'Core Web Vitals',
+      performance: 'Performance',
+      accessibility: 'Accessibilité',
+      bestPractices: 'Bonnes Pratiques',
+      seo: 'SEO',
+      fcp: 'First Contentful Paint',
+      fcpDesc: 'Temps jusqu\'au premier texte/image',
+      lcp: 'Largest Contentful Paint',
+      lcpDesc: 'Temps jusqu\'au plus grand élément',
+      cls: 'Cumulative Layout Shift',
+      clsDesc: 'Score de stabilité visuelle',
+      tbt: 'Total Blocking Time',
+      tbtDesc: 'Blocage du thread principal',
+      speedIndex: 'Speed Index',
+      speedIndexDesc: 'Vitesse de chargement du contenu',
+      tti: 'Time to Interactive',
+      ttiDesc: 'Temps avant interactivité complète',
     },
     faq: {
       badge: 'Questions Fréquentes',
@@ -254,13 +388,80 @@ const translations: Record<Language, Translations> = {
       pageSpeedScore: 'PageSpeed score',
       allowed: 'Allowed',
       blocked: 'Blocked',
+      unknown: 'Unknown',
       howToFix: 'How to allow this bot',
       howToImprove: 'How to improve',
+      reason: 'Reason',
+      line: 'line',
+      addToRobots: 'Add this to your',
+    },
+    crawlers: {
+      scanning: 'Scanning website...',
+      checkingRobots: 'Checking robots.txt, meta tags, and HTTP headers',
     },
     geo: {
       title: 'GEO Analysis',
       whatIsGeo: 'What is GEO? Generative Engine Optimization measures how well your content is structured for AI systems like ChatGPT, Claude, and Gemini. A higher score means AI tools can better understand and reference your content.',
       checksPassed: 'checks passed',
+    },
+    llm: {
+      title: 'LLM Visibility Analysis',
+      overallVisibility: 'Overall Visibility',
+      citationRate: 'Citation Rate',
+      citationRateDesc: 'LLMs that mentioned this domain in their responses',
+      coverage: 'coverage',
+      invisibleList: 'The "Invisible" List',
+      visibleAllLlms: 'Visible across all LLMs!',
+      iterationDepth: 'Iteration Depth',
+      avgPrompts: 'avg. prompts',
+      iterationExcellent: 'Excellent! LLMs mention you immediately.',
+      iterationModerate: 'Moderate depth. Consider improving authority signals.',
+      iterationDeep: 'Deep iteration needed. Improve structured data.',
+      sentimentAnalysis: 'Sentiment Analysis',
+      sentimentPositive: 'Positive',
+      sentimentNeutral: 'Neutral',
+      sentimentNegative: 'Negative',
+      sentimentPositiveDesc: 'LLMs speak favorably about your brand and content.',
+      sentimentNeutralDesc: 'Neutral perception. Opportunity to build stronger reputation.',
+      sentimentNegativeDesc: 'Some negative perceptions detected. Review content quality.',
+      recommendationStatus: 'Recommendation Status',
+      llmsRecommend: 'LLMs recommend this site',
+      notRecommended: 'Not explicitly recommended',
+      llmsRecommendDesc: 'Your site is actively recommended by LLMs.',
+      notRecommendedDesc: 'Work on E-E-A-T signals to gain recommendations.',
+      coreValueUnderstanding: 'Core Value Understanding',
+      hallucinationsDetected: 'Potential Hallucinations Detected',
+      detailedAnalysis: 'Detailed LLM Analysis',
+      iterations: 'Iterations',
+      sentiment: 'Sentiment',
+      recommends: 'Recommends',
+      notMentioned: 'Not mentioned by this LLM',
+      llmsCite: 'LLMs cite this domain',
+      positive: 'Positive',
+      neutral: 'Neutral',
+      negative: 'Negative',
+    },
+    pagespeed: {
+      title: 'PageSpeed Insights',
+      mobile: 'Mobile',
+      desktop: 'Desktop',
+      coreWebVitals: 'Core Web Vitals',
+      performance: 'Performance',
+      accessibility: 'Accessibility',
+      bestPractices: 'Best Practices',
+      seo: 'SEO',
+      fcp: 'First Contentful Paint',
+      fcpDesc: 'Time to first text/image',
+      lcp: 'Largest Contentful Paint',
+      lcpDesc: 'Time to largest element',
+      cls: 'Cumulative Layout Shift',
+      clsDesc: 'Visual stability score',
+      tbt: 'Total Blocking Time',
+      tbtDesc: 'Main thread blocking',
+      speedIndex: 'Speed Index',
+      speedIndexDesc: 'How quickly content loads',
+      tti: 'Time to Interactive',
+      ttiDesc: 'Time until fully interactive',
     },
     faq: {
       badge: 'Frequently Asked Questions',

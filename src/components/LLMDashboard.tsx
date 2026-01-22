@@ -19,6 +19,7 @@ import {
   Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LLMDashboardProps {
   result: LLMAnalysisResult | null;
@@ -73,11 +74,11 @@ function ScoreGauge({ score }: { score: number }) {
   );
 }
 
-function SentimentBadge({ sentiment }: { sentiment: 'positive' | 'neutral' | 'negative' }) {
+function SentimentBadge({ sentiment, t }: { sentiment: 'positive' | 'neutral' | 'negative'; t: ReturnType<typeof useLanguage>['t'] }) {
   const config = {
-    positive: { icon: ThumbsUp, label: 'Positive', className: 'bg-success/10 text-success border-success/20' },
-    neutral: { icon: Minus, label: 'Neutral', className: 'bg-warning/10 text-warning border-warning/20' },
-    negative: { icon: ThumbsDown, label: 'Negative', className: 'bg-destructive/10 text-destructive border-destructive/20' },
+    positive: { icon: ThumbsUp, label: t.llm.positive, className: 'bg-success/10 text-success border-success/20' },
+    neutral: { icon: Minus, label: t.llm.neutral, className: 'bg-warning/10 text-warning border-warning/20' },
+    negative: { icon: ThumbsDown, label: t.llm.negative, className: 'bg-destructive/10 text-destructive border-destructive/20' },
   };
   
   const { icon: Icon, label, className } = config[sentiment];
@@ -91,6 +92,8 @@ function SentimentBadge({ sentiment }: { sentiment: 'positive' | 'neutral' | 'ne
 }
 
 export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
+  const { t } = useLanguage();
+
   if (isLoading) {
     return (
       <section className="px-4 pb-12">
@@ -130,7 +133,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
             <div className="flex flex-col items-center lg:items-start">
               <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1">
                 <Brain className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium text-primary">LLM Visibility Analysis</span>
+                <span className="text-sm font-medium text-primary">{t.llm.title}</span>
               </div>
               <h2 className="flex items-center gap-2 text-xl font-semibold text-foreground">
                 {result.domain}
@@ -148,13 +151,13 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                   <Clock className="h-3.5 w-3.5" />
                   {new Date(result.scannedAt).toLocaleTimeString()}
                 </span>
-                <span>{result.citationRate.cited}/{result.citationRate.total} LLMs cite this domain</span>
+                <span>{result.citationRate.cited}/{result.citationRate.total} {t.llm.llmsCite}</span>
               </div>
             </div>
 
             <div className="text-center">
               <ScoreGauge score={result.overallScore} />
-              <p className="mt-2 text-sm font-medium text-muted-foreground">Overall Visibility</p>
+              <p className="mt-2 text-sm font-medium text-muted-foreground">{t.llm.overallVisibility}</p>
             </div>
           </div>
         </div>
@@ -166,7 +169,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Eye className="h-5 w-5 text-primary" />
-                Citation Rate
+                {t.llm.citationRate}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -183,7 +186,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                     ? "bg-warning/10 text-warning"
                     : "bg-destructive/10 text-destructive"
                 )}>
-                  {Math.round((result.citationRate.cited / result.citationRate.total) * 100)}% coverage
+                  {Math.round((result.citationRate.cited / result.citationRate.total) * 100)}% {t.llm.coverage}
                 </span>
               </div>
               <Progress 
@@ -191,7 +194,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                 className="h-2"
               />
               <p className="mt-3 text-sm text-muted-foreground">
-                LLMs that mentioned this domain in their responses
+                {t.llm.citationRateDesc}
               </p>
             </CardContent>
           </Card>
@@ -201,14 +204,14 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
             <CardHeader className="pb-3 bg-warning/5">
               <CardTitle className="flex items-center gap-2 text-base text-warning">
                 <EyeOff className="h-5 w-5" />
-                The "Invisible" List
+                {t.llm.invisibleList}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
               {result.invisibleList.length === 0 ? (
                 <div className="flex items-center gap-2 text-success">
                   <CheckCircle2 className="h-5 w-5" />
-                  <span className="font-medium">Visible across all LLMs!</span>
+                  <span className="font-medium">{t.llm.visibleAllLlms}</span>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -234,7 +237,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Target className="h-5 w-5 text-primary" />
-                Iteration Depth
+                {t.llm.iterationDepth}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -242,7 +245,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                 <span className="text-3xl font-bold text-foreground">
                   {result.averageIterationDepth.toFixed(1)}
                 </span>
-                <span className="text-sm text-muted-foreground ml-1">avg. prompts</span>
+                <span className="text-sm text-muted-foreground ml-1">{t.llm.avgPrompts}</span>
               </div>
               <Progress 
                 value={(5 - result.averageIterationDepth) / 4 * 100} 
@@ -257,10 +260,10 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
               />
               <p className="mt-3 text-sm text-muted-foreground">
                 {result.averageIterationDepth <= 2 
-                  ? "Excellent! LLMs mention you immediately."
+                  ? t.llm.iterationExcellent
                   : result.averageIterationDepth <= 3.5
-                  ? "Moderate depth. Consider improving authority signals."
-                  : "Deep iteration needed. Improve structured data."}
+                  ? t.llm.iterationModerate
+                  : t.llm.iterationDeep}
               </p>
             </CardContent>
           </Card>
@@ -270,18 +273,18 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Sparkles className="h-5 w-5 text-primary" />
-                Sentiment Analysis
+                {t.llm.sentimentAnalysis}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-3">
-                <SentimentBadge sentiment={result.overallSentiment} />
+                <SentimentBadge sentiment={result.overallSentiment} t={t} />
                 <p className="text-sm text-muted-foreground">
                   {result.overallSentiment === 'positive'
-                    ? "LLMs speak favorably about your brand and content."
+                    ? t.llm.sentimentPositiveDesc
                     : result.overallSentiment === 'negative'
-                    ? "Some negative perceptions detected. Review content quality."
-                    : "Neutral perception. Opportunity to build stronger reputation."}
+                    ? t.llm.sentimentNegativeDesc
+                    : t.llm.sentimentNeutralDesc}
                 </p>
               </div>
             </CardContent>
@@ -296,7 +299,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                 ) : (
                   <XCircle className="h-5 w-5 text-destructive" />
                 )}
-                Recommendation Status
+                {t.llm.recommendationStatus}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -309,19 +312,19 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                 {result.overallRecommendation ? (
                   <>
                     <CheckCircle2 className="h-4 w-4" />
-                    LLMs recommend this site
+                    {t.llm.llmsRecommend}
                   </>
                 ) : (
                   <>
                     <XCircle className="h-4 w-4" />
-                    Not explicitly recommended
+                    {t.llm.notRecommended}
                   </>
                 )}
               </div>
               <p className="mt-3 text-sm text-muted-foreground">
                 {result.overallRecommendation
-                  ? "Your site is actively recommended by LLMs."
-                  : "Work on E-E-A-T signals to gain recommendations."}
+                  ? t.llm.llmsRecommendDesc
+                  : t.llm.notRecommendedDesc}
               </p>
             </CardContent>
           </Card>
@@ -332,7 +335,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <AlertTriangle className="h-5 w-5 text-primary" />
-              Core Value Understanding
+              {t.llm.coreValueUnderstanding}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -345,7 +348,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
               <div className="mt-4 rounded-lg border border-warning/30 bg-warning/5 p-4">
                 <p className="flex items-center gap-2 text-sm font-medium text-warning mb-2">
                   <AlertTriangle className="h-4 w-4" />
-                  Potential Hallucinations Detected
+                  {t.llm.hallucinationsDetected}
                 </p>
                 <ul className="text-sm text-muted-foreground space-y-1">
                   {result.citations
@@ -363,7 +366,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
 
         {/* Individual LLM Cards */}
         <div>
-          <h3 className="text-lg font-semibold text-foreground mb-4">Detailed LLM Analysis</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">{t.llm.detailedAnalysis}</h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {result.citations.map((citation) => (
               <Card 
@@ -391,7 +394,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                   {citation.cited && (
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Iterations:</span>
+                        <span className="text-muted-foreground">{t.llm.iterations} :</span>
                         <span className={cn(
                           "font-medium",
                           citation.iterationDepth <= 2 ? "text-success" : 
@@ -401,11 +404,11 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Sentiment:</span>
-                        <SentimentBadge sentiment={citation.sentiment} />
+                        <span className="text-muted-foreground">{t.llm.sentiment} :</span>
+                        <SentimentBadge sentiment={citation.sentiment} t={t} />
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Recommends:</span>
+                        <span className="text-muted-foreground">{t.llm.recommends} :</span>
                         {citation.recommends ? (
                           <CheckCircle2 className="h-4 w-4 text-success" />
                         ) : (
@@ -417,7 +420,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                   
                   {!citation.cited && (
                     <p className="text-sm text-muted-foreground">
-                      Not mentioned by this LLM
+                      {t.llm.notMentioned}
                     </p>
                   )}
                 </CardContent>
