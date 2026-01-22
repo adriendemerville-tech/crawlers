@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BotResult } from '@/types/crawler';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BotCardProps {
   bot: BotResult;
@@ -12,6 +13,7 @@ interface BotCardProps {
 export function BotCard({ bot }: BotCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
 
   const getStatusIcon = () => {
     switch (bot.status) {
@@ -38,11 +40,11 @@ export function BotCard({ bot }: BotCardProps) {
   const getStatusLabel = () => {
     switch (bot.status) {
       case 'allowed':
-        return 'Allowed';
+        return t.results.allowed;
       case 'blocked':
-        return 'Blocked';
+        return t.results.blocked;
       default:
-        return 'Unknown';
+        return t.results.unknown;
     }
   };
 
@@ -80,9 +82,9 @@ export function BotCard({ bot }: BotCardProps) {
         {/* Reason */}
         {bot.reason && (
           <div className="mb-4 rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">Reason:</span> {bot.reason}
+            <span className="font-medium text-foreground">{t.results.reason} :</span> {bot.reason}
             {bot.lineNumber && (
-              <span className="ml-1 text-xs opacity-75">(line {bot.lineNumber})</span>
+              <span className="ml-1 text-xs opacity-75">({t.results.line} {bot.lineNumber})</span>
             )}
           </div>
         )}
@@ -94,7 +96,7 @@ export function BotCard({ bot }: BotCardProps) {
               onClick={() => setIsExpanded(!isExpanded)}
               className="flex w-full items-center justify-between text-sm font-medium text-primary hover:text-primary/80"
             >
-              <span>How to allow this bot</span>
+              <span>{t.results.howToFix}</span>
               {isExpanded ? (
                 <ChevronUp className="h-4 w-4" />
               ) : (
@@ -105,7 +107,7 @@ export function BotCard({ bot }: BotCardProps) {
             {isExpanded && (
               <div className="mt-3 animate-fade-in">
                 <p className="mb-2 text-sm text-muted-foreground">
-                  Add this to your <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">robots.txt</code>:
+                  {t.results.addToRobots} <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">robots.txt</code> :
                 </p>
                 <div className="relative rounded-lg bg-foreground/5 p-3">
                   <pre className="text-sm font-mono text-foreground overflow-x-auto">
