@@ -26,6 +26,7 @@ export const mockArticles: NewsArticle[] = [
     id: 'art-1',
     title: 'L\'intelligence artificielle bouleverse les métiers du référencement web',
     summary: 'Les professionnels du SEO doivent désormais composer avec ChatGPT et les moteurs génératifs. Une révolution qui redéfinit les stratégies de visibilité en ligne.',
+    url: 'https://lemonde.fr/economie/article/intelligence-artificielle-seo',
     imageUrl: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=450&fit=crop',
     category: 'GEO',
     source: initialSources[0], // Le Monde
@@ -38,6 +39,7 @@ export const mockArticles: NewsArticle[] = [
     id: 'art-2',
     title: 'Google\'s AI Overviews reshape how websites get discovered online',
     summary: 'The search giant\'s generative AI features are changing SEO forever. Publishers and marketers must adapt to a new era of AI-first search results.',
+    url: 'https://theverge.com/2025/google-ai-overviews-seo-impact',
     imageUrl: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=800&h=450&fit=crop',
     category: 'GEO',
     source: initialSources[1], // The Verge
@@ -50,6 +52,7 @@ export const mockArticles: NewsArticle[] = [
     id: 'art-3',
     title: 'Comment les entreprises françaises optimisent leur visibilité pour les LLM',
     summary: 'Face à l\'essor de ChatGPT et Perplexity, les marques tricolores repensent leur stratégie digitale. Le GEO devient un enjeu stratégique majeur.',
+    url: 'https://usine-digitale.fr/article/visibilite-llm-entreprises-francaises',
     imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop',
     category: 'LLM',
     source: initialSources[2], // L'Usine Digitale
@@ -62,6 +65,7 @@ export const mockArticles: NewsArticle[] = [
     id: 'art-4',
     title: 'Core Web Vitals 2025 : les nouvelles métriques à surveiller pour votre SEO',
     summary: 'Google renforce ses exigences de performance. INP, LCP et CLS deviennent incontournables pour maintenir son positionnement dans les résultats de recherche.',
+    url: 'https://journaldunet.com/solutions/seo/core-web-vitals-2025',
     imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=450&fit=crop',
     category: 'SEO',
     source: initialSources[3], // Journal du Net
@@ -74,6 +78,7 @@ export const mockArticles: NewsArticle[] = [
     id: 'art-5',
     title: 'RAG et Search : comment les architectures IA transforment la découverte de contenu',
     summary: 'Les systèmes de récupération augmentée redéfinissent l\'accès à l\'information. Implications pour les créateurs de contenu et les stratégies SEO.',
+    url: 'https://siecledigital.fr/rag-search-ia-contenu',
     imageUrl: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=450&fit=crop',
     category: 'LLM',
     source: initialSources[4], // Siècle Digital
@@ -86,6 +91,7 @@ export const mockArticles: NewsArticle[] = [
     id: 'art-6',
     title: 'Startups SEO : la nouvelle génération d\'outils pour l\'ère de l\'IA générative',
     summary: 'L\'écosystème startup français innove avec des solutions d\'analyse GEO. Tour d\'horizon des pépites qui réinventent le référencement.',
+    url: 'https://maddyness.com/startups-seo-ia-generative',
     imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=450&fit=crop',
     category: 'GEO',
     source: initialSources[5], // Maddyness
@@ -98,6 +104,7 @@ export const mockArticles: NewsArticle[] = [
     id: 'art-7',
     title: 'Marketing digital : pourquoi le GEO devient prioritaire pour les marques',
     summary: 'Les directeurs marketing intègrent désormais la visibilité IA dans leurs KPIs. Une transformation profonde des stratégies de communication digitale.',
+    url: 'https://ladn.eu/marketing-geo-priorite-marques',
     imageUrl: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=450&fit=crop',
     category: 'GEO',
     source: initialSources[6], // L'ADN
@@ -110,7 +117,8 @@ export const mockArticles: NewsArticle[] = [
     id: 'art-8',
     title: 'Perplexity, ChatGPT, Claude : optimiser son contenu pour chaque LLM',
     summary: 'Chaque moteur IA a ses propres critères de sélection. Guide comparatif des méthodes d\'indexation et recommandations d\'optimisation par plateforme.',
-    imageUrl: 'https://images.unsplash.com/photo-620712943543-bcc4688e7485?w=800&h=450&fit=crop',
+    url: 'https://searchenginejournal.com/optimize-content-llm-platforms',
+    imageUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=450&fit=crop',
     category: 'LLM',
     source: initialSources[7], // Search Engine Journal
     publishedAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
@@ -122,6 +130,7 @@ export const mockArticles: NewsArticle[] = [
     id: 'art-9',
     title: 'E-E-A-T et moteurs génératifs : construire une autorité reconnue par l\'IA',
     summary: 'L\'expertise et l\'autorité restent des signaux clés pour les IA. Méthodologie pour développer une présence web naturellement recommandée par les LLM.',
+    url: 'https://abondance.com/eeat-moteurs-generatifs-autorite-ia',
     imageUrl: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&h=450&fit=crop',
     category: 'GEO',
     source: initialSources[8], // Abondance
@@ -134,6 +143,7 @@ export const mockArticles: NewsArticle[] = [
     id: 'art-10',
     title: 'Les robots IA qui indexent le web : comment s\'y préparer techniquement',
     summary: 'GPTBot, ClaudeBot, PerplexityBot... Les crawlers IA se multiplient. Configuration robots.txt et bonnes pratiques pour accueillir ces nouveaux visiteurs.',
+    url: 'https://actuia.com/robots-ia-indexent-web-preparation',
     imageUrl: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&h=450&fit=crop',
     category: 'LLM',
     source: initialSources[9], // ActuIA

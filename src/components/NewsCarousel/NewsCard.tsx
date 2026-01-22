@@ -101,12 +101,15 @@ Saludos`,
   };
 
   return (
-    <motion.div
+    <motion.a
+      href={article.url}
+      target="_blank"
+      rel="noopener noreferrer"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
-      className="flex-shrink-0 w-[300px] md:w-[340px]"
+      className="flex-shrink-0 w-[300px] md:w-[340px] block cursor-pointer"
     >
       <Card className="h-full overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
         <div className="relative group">
@@ -134,7 +137,7 @@ Saludos`,
         </div>
         
         <CardContent className="p-4 flex flex-col gap-3">
-          <h3 className="font-bold text-base leading-tight line-clamp-2 text-foreground">
+          <h3 className="font-bold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors">
             {article.title}
           </h3>
           
@@ -156,6 +159,6 @@ Saludos`,
           </div>
         </CardContent>
       </Card>
-    </motion.div>
+    </motion.a>
   );
 }
