@@ -296,15 +296,13 @@ export function DownloadReportButton({
   if (!hasResult) return null;
 
   return (
-    <div className="flex justify-center mt-6 mb-8">
-      <Button
-        onClick={handleDownload}
-        size="lg"
-        className="gap-3 bg-blue-600 text-white font-bold text-lg px-8 py-6 hover:bg-blue-700"
-      >
-        {getButtonLabel()}
-        <Download className="h-6 w-6" />
-      </Button>
-    </div>
+    <Button
+      onClick={handleDownload}
+      size="lg"
+      className="gap-3 bg-blue-600 text-white font-bold text-lg px-8 py-6 hover:bg-blue-700"
+    >
+      {getButtonLabel()}
+      <Download className="h-6 w-6" />
+    </Button>
   );
 }
