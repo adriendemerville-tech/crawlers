@@ -10,6 +10,7 @@ export interface NewsArticle {
   id: string;
   title: string;
   summary: string;
+  url: string;
   imageUrl: string;
   category: 'SEO' | 'LLM' | 'GEO';
   source: NewsSource;

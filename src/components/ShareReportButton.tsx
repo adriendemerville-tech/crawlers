@@ -337,11 +337,18 @@ Saludos`,
                   {language === 'fr' ? 'Lien de partage' : language === 'es' ? 'Enlace de compartir' : 'Share link'}
                 </label>
                 <div className="flex gap-2">
-                  <Input value={shareUrl} readOnly className="flex-1 text-sm" />
+                  <Input 
+                    value={`crawlers.fr/r/${shareUrl.split('/').pop()?.split('?')[0] || ''}`} 
+                    readOnly 
+                    className="flex-1 text-sm font-mono" 
+                  />
                   <Button variant="outline" size="icon" onClick={handleCopyLink}>
-                    {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                    {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {language === 'fr' ? 'Lien raccourci valide 7 jours' : language === 'es' ? 'Enlace corto válido 7 días' : 'Short link valid for 7 days'}
+                </p>
               </div>
 
               <div className="space-y-2">
