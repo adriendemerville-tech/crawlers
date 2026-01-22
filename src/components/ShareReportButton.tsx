@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Share2, Copy, Mail, Check, Loader2 } from 'lucide-react';
+import { Share2, Copy, Mail, Check, Loader2, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -201,6 +201,32 @@ Saludos`,
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`);
   };
 
+  const getLinkedInText = () => {
+    const score = getScore();
+    const reportType = {
+      crawlers: 'Bots IA',
+      geo: 'GEO',
+      llm: 'LLM',
+      pagespeed: 'PageSpeed',
+    }[type];
+    
+    const hostname = url ? new URL(url).hostname : '';
+    
+    const templates = {
+      fr: `📊 Audit ${reportType} réalisé pour ${hostname} : ${score}.\n\nDécouvrez votre visibilité IA gratuitement sur crawlers.fr\n\n#SEO #GEO #LLM #IA`,
+      en: `📊 ${reportType} audit completed for ${hostname}: ${score}.\n\nDiscover your AI visibility for free at crawlers.fr\n\n#SEO #GEO #LLM #AI`,
+      es: `📊 Auditoría ${reportType} realizada para ${hostname}: ${score}.\n\nDescubre tu visibilidad IA gratis en crawlers.fr\n\n#SEO #GEO #LLM #IA`,
+    };
+    
+    return templates[language as keyof typeof templates] || templates.en;
+  };
+
+  const handleShareLinkedIn = () => {
+    const text = getLinkedInText();
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(text)}`;
+    window.open(linkedInUrl, '_blank', 'width=600,height=600');
+  };
+
   if (!hasData) return null;
 
   const buttonLabel = {
@@ -226,6 +252,12 @@ Saludos`,
     en: 'Send by email',
     es: 'Enviar por email',
   }[language] || 'Send by email';
+
+  const linkedInLabel = {
+    fr: 'Partager sur LinkedIn',
+    en: 'Share on LinkedIn',
+    es: 'Compartir en LinkedIn',
+  }[language] || 'Share on LinkedIn';
 
   const emailPreviewLabel = {
     fr: 'Aperçu du message',
@@ -279,7 +311,7 @@ Saludos`,
                 <div className="flex gap-2">
                   <Input value={shareUrl} readOnly className="flex-1 text-sm" />
                   <Button variant="outline" size="icon" onClick={handleCopyLink}>
-                    {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                    {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
@@ -293,10 +325,19 @@ Saludos`,
                 />
               </div>
 
-              <Button onClick={handleSendEmail} className="w-full gap-2">
-                <Mail className="h-4 w-4" />
-                {emailLabel}
-              </Button>
+              <div className="flex gap-3">
+                <Button onClick={handleSendEmail} className="flex-1 gap-2">
+                  <Mail className="h-4 w-4" />
+                  {emailLabel}
+                </Button>
+                <Button 
+                  onClick={handleShareLinkedIn} 
+                  className="flex-1 gap-2 bg-[#0A66C2] hover:bg-[#004182] text-white"
+                >
+                  <Linkedin className="h-4 w-4" />
+                  {linkedInLabel}
+                </Button>
+              </div>
             </>
           )}
         </div>
