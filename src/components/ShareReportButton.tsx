@@ -201,21 +201,46 @@ Saludos`,
     window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`);
   };
 
+  const getConcreteInsight = () => {
+    switch (type) {
+      case 'crawlers':
+        if (!crawlResult) return '';
+        const blocked = crawlResult.bots.filter(b => b.status === 'blocked');
+        if (blocked.length > 0) {
+          return language === 'fr' 
+            ? `${blocked[0].name} est bloqué sur ce site`
+            : language === 'es'
+            ? `${blocked[0].name} está bloqueado en este sitio`
+            : `${blocked[0].name} is blocked on this site`;
+        }
+        return language === 'fr' ? 'Tous les bots IA sont autorisés' : language === 'es' ? 'Todos los bots IA están autorizados' : 'All AI bots are allowed';
+      case 'geo':
+        return geoResult 
+          ? (language === 'fr' ? `Score GEO de ${geoResult.totalScore}/100` : language === 'es' ? `Puntuación GEO de ${geoResult.totalScore}/100` : `GEO score of ${geoResult.totalScore}/100`)
+          : '';
+      case 'llm':
+        return llmResult 
+          ? (language === 'fr' ? `Visibilité LLM de ${llmResult.overallScore}%` : language === 'es' ? `Visibilidad LLM de ${llmResult.overallScore}%` : `LLM visibility of ${llmResult.overallScore}%`)
+          : '';
+      case 'pagespeed':
+        if (!pageSpeedResult) return '';
+        const perf = pageSpeedResult.scores.performance;
+        return language === 'fr' 
+          ? `Performance Lighthouse : ${perf}/100, LCP : ${pageSpeedResult.scores.lcp}`
+          : language === 'es'
+          ? `Rendimiento Lighthouse: ${perf}/100, LCP: ${pageSpeedResult.scores.lcp}`
+          : `Lighthouse performance: ${perf}/100, LCP: ${pageSpeedResult.scores.lcp}`;
+    }
+  };
+
   const getLinkedInText = () => {
-    const score = getScore();
-    const reportType = {
-      crawlers: 'Bots IA',
-      geo: 'GEO',
-      llm: 'LLM',
-      pagespeed: 'PageSpeed',
-    }[type];
-    
+    const insight = getConcreteInsight();
     const hostname = url ? new URL(url).hostname : '';
     
     const templates = {
-      fr: `📊 Audit ${reportType} réalisé pour ${hostname} : ${score}.\n\nDécouvrez votre visibilité IA gratuitement sur crawlers.fr\n\n#SEO #GEO #LLM #IA`,
-      en: `📊 ${reportType} audit completed for ${hostname}: ${score}.\n\nDiscover your AI visibility for free at crawlers.fr\n\n#SEO #GEO #LLM #AI`,
-      es: `📊 Auditoría ${reportType} realizada para ${hostname}: ${score}.\n\nDescubre tu visibilidad IA gratis en crawlers.fr\n\n#SEO #GEO #LLM #IA`,
+      fr: `📊 Audit réalisé pour ${hostname} : ${insight}.\n\nTestez gratuitement votre visibilité IA ➡️ crawlers.fr\n\n#SEO #GEO #IA`,
+      en: `📊 Audit completed for ${hostname}: ${insight}.\n\nTest your AI visibility for free ➡️ crawlers.fr\n\n#SEO #GEO #AI`,
+      es: `📊 Auditoría para ${hostname}: ${insight}.\n\nPrueba gratis tu visibilidad IA ➡️ crawlers.fr\n\n#SEO #GEO #IA`,
     };
     
     return templates[language as keyof typeof templates] || templates.en;
@@ -223,8 +248,11 @@ Saludos`,
 
   const handleShareLinkedIn = () => {
     const text = getLinkedInText();
-    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(text)}`;
+    // LinkedIn share uses the report URL as the main link
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
     window.open(linkedInUrl, '_blank', 'width=600,height=600');
+    // Copy text to clipboard so user can paste it
+    navigator.clipboard.writeText(text);
   };
 
   if (!hasData) return null;
