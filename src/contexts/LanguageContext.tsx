@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 
-type Language = 'fr' | 'en';
+type Language = 'fr' | 'en' | 'es';
 
 interface Translations {
   hero: {
@@ -503,6 +503,179 @@ const translations: Record<Language, Translations> = {
       useOfficial: "Use Google's official PageSpeed Insights website directly",
       comeBack: 'Come back tomorrow when the quota resets',
       retry: 'Try Again',
+    },
+  },
+  es: {
+    hero: {
+      badge: {
+        crawlers: 'Verificador de Bots IA',
+        geo: 'Analizador GEO',
+        pagespeed: 'Análisis de Rendimiento',
+        llm: 'Verificación LLM',
+      },
+      headline: {
+        crawlers: '¿Está tu sitio listo para',
+        crawlersHighlight: 'la era de la IA',
+        geo: 'Optimiza para',
+        geoHighlight: 'el descubrimiento IA',
+        pagespeed: '¿Qué tan rápido es',
+        pagespeedHighlight: 'tu sitio web',
+        llm: '¿Eres visible en',
+        llmHighlight: 'los LLMs',
+      },
+      subheadline: {
+        crawlers: 'Verifica instantáneamente si los principales crawlers de IA pueden acceder a tu contenido. Optimiza para visibilidad LLM o protege tus datos.',
+        geo: 'Mide tu puntuación de Optimización para Motores Generativos. Obtén recomendaciones accionables para mejorar tu visibilidad IA.',
+        pagespeed: 'Obtén información detallada de PageSpeed con Core Web Vitals. Entiende rendimiento, accesibilidad, SEO y mejores prácticas.',
+        llm: 'Analiza cómo GPT-4, Claude, Gemini y Perplexity perciben y recomiendan tu sitio. Descubre tu reputación IA.',
+      },
+      button: {
+        crawlers: 'Verificar Bots',
+        geo: 'Analizar GEO',
+        pagespeed: 'Analizar Velocidad',
+        llm: 'Analizar LLM',
+        loading: {
+          crawlers: 'Escaneando...',
+          geo: 'Analizando...',
+          pagespeed: 'Analizando...',
+          llm: 'Analizando...',
+        },
+      },
+      trust: {
+        noSignup: 'Sin registro',
+        instant: 'Resultados instantáneos',
+        free: '100% gratis',
+      },
+    },
+    tabs: {
+      crawlers: 'Bots IA',
+      geo: 'Puntuación GEO',
+      pagespeed: 'PageSpeed',
+      llm: 'Visibilidad LLM',
+    },
+    results: {
+      scanComplete: '¡Escaneo completo!',
+      analysisComplete: '¡Análisis completo!',
+      botsChecked: 'bots IA verificados para',
+      geoScore: 'Puntuación GEO',
+      pageSpeedScore: 'Puntuación PageSpeed',
+      allowed: 'Permitidos',
+      blocked: 'Bloqueados',
+      unknown: 'Desconocido',
+      howToFix: 'Cómo permitir este bot',
+      howToImprove: 'Cómo mejorar',
+      reason: 'Razón',
+      line: 'línea',
+      addToRobots: 'Añade esto a tu',
+    },
+    crawlers: {
+      scanning: 'Escaneando sitio web...',
+      checkingRobots: 'Verificando robots.txt, meta tags y cabeceras HTTP',
+    },
+    geo: {
+      title: 'Análisis GEO',
+      whatIsGeo: '¿Qué es GEO? La Optimización para Motores Generativos mide qué tan bien está estructurado tu contenido para sistemas de IA como ChatGPT, Claude y Gemini. Una puntuación alta significa que las herramientas de IA pueden entender y referenciar mejor tu contenido.',
+      checksPassed: 'verificaciones pasadas',
+    },
+    llm: {
+      title: 'Análisis de Visibilidad LLM',
+      overallVisibility: 'Visibilidad General',
+      citationRate: 'Tasa de Citación',
+      citationRateDesc: 'LLMs que mencionaron este dominio en sus respuestas',
+      coverage: 'cobertura',
+      invisibleList: 'Lista de "Invisibles"',
+      visibleAllLlms: '¡Visible en todos los LLMs!',
+      iterationDepth: 'Profundidad de Iteración',
+      avgPrompts: 'prompts prom.',
+      iterationExcellent: '¡Excelente! Los LLMs te mencionan inmediatamente.',
+      iterationModerate: 'Profundidad moderada. Mejora las señales de autoridad.',
+      iterationDeep: 'Se necesita iteración profunda. Mejora los datos estructurados.',
+      sentimentAnalysis: 'Análisis de Sentimiento',
+      sentimentPositive: 'Positivo',
+      sentimentNeutral: 'Neutro',
+      sentimentNegative: 'Negativo',
+      sentimentPositiveDesc: 'Los LLMs hablan favorablemente de tu marca y contenido.',
+      sentimentNeutralDesc: 'Percepción neutra. Oportunidad de construir una reputación más fuerte.',
+      sentimentNegativeDesc: 'Se detectaron percepciones negativas. Revisa la calidad del contenido.',
+      recommendationStatus: 'Estado de Recomendación',
+      llmsRecommend: 'Los LLMs recomiendan este sitio',
+      notRecommended: 'No recomendado explícitamente',
+      llmsRecommendDesc: 'Tu sitio es recomendado activamente por los LLMs.',
+      notRecommendedDesc: 'Trabaja en las señales E-E-A-T para obtener recomendaciones.',
+      coreValueUnderstanding: 'Comprensión del Valor Central',
+      hallucinationsDetected: 'Alucinaciones Potenciales Detectadas',
+      detailedAnalysis: 'Análisis LLM Detallado',
+      iterations: 'Iteraciones',
+      sentiment: 'Sentimiento',
+      recommends: 'Recomienda',
+      notMentioned: 'No mencionado por este LLM',
+      llmsCite: 'LLMs citan este dominio',
+      positive: 'Positivo',
+      neutral: 'Neutro',
+      negative: 'Negativo',
+    },
+    pagespeed: {
+      title: 'PageSpeed Insights',
+      mobile: 'Móvil',
+      desktop: 'Escritorio',
+      coreWebVitals: 'Core Web Vitals',
+      performance: 'Rendimiento',
+      accessibility: 'Accesibilidad',
+      bestPractices: 'Mejores Prácticas',
+      seo: 'SEO',
+      fcp: 'First Contentful Paint',
+      fcpDesc: 'Tiempo hasta el primer texto/imagen',
+      lcp: 'Largest Contentful Paint',
+      lcpDesc: 'Tiempo hasta el elemento más grande',
+      cls: 'Cumulative Layout Shift',
+      clsDesc: 'Puntuación de estabilidad visual',
+      tbt: 'Total Blocking Time',
+      tbtDesc: 'Bloqueo del hilo principal',
+      speedIndex: 'Speed Index',
+      speedIndexDesc: 'Qué tan rápido carga el contenido',
+      tti: 'Time to Interactive',
+      ttiDesc: 'Tiempo hasta la interactividad completa',
+    },
+    faq: {
+      badge: 'Preguntas Frecuentes',
+      title: 'Todo sobre los crawlers de IA y GEO',
+      items: [
+        {
+          question: '¿Qué es un crawler de IA y por qué es importante?',
+          answer: 'Un crawler de IA es un bot que recorre la web para recopilar datos destinados a entrenar modelos de lenguaje (LLM) como ChatGPT, Claude o Gemini. Si tu sitio es accesible para estos crawlers, tu contenido puede ser citado y referenciado en las respuestas de los asistentes de IA, generando tráfico cualificado.'
+        },
+        {
+          question: '¿Qué es la puntuación GEO y cómo puedo mejorarla?',
+          answer: 'La puntuación GEO (Generative Engine Optimization) mide qué tan optimizado está tu sitio para los motores de búsqueda generativos. Para mejorarla: añade datos estructurados JSON-LD, optimiza tus meta tags, usa una jerarquía H1/H2 clara, y asegúrate de que tu sitemap sea accesible.'
+        },
+        {
+          question: '¿Cómo bloqueo o permito bots de IA en mi sitio?',
+          answer: "Edita tu archivo robots.txt en la raíz de tu sitio. Para bloquear GPTBot: añade 'User-agent: GPTBot' seguido de 'Disallow: /'. Para permitirlo: usa 'Allow: /' en su lugar. Repite para cada bot (ClaudeBot, Google-Extended, etc.)."
+        },
+        {
+          question: '¿Cuáles son los principales crawlers de IA a monitorear?',
+          answer: 'Los principales crawlers de IA son: GPTBot y ChatGPT-User (OpenAI), ClaudeBot (Anthropic), Google-Extended (Google AI), PerplexityBot (Perplexity), CCBot (Common Crawl) y Applebot-Extended (Apple Intelligence). Cada uno tiene sus propias reglas de cumplimiento del robots.txt.'
+        },
+        {
+          question: '¿Por qué mi puntuación PageSpeed afecta mi visibilidad IA?',
+          answer: 'Un sitio lento puede impedir que los crawlers de IA carguen correctamente tu contenido. Los Core Web Vitals (LCP, FID, CLS) afectan no solo el SEO clásico sino también la capacidad de la IA para analizar tu sitio. Una buena puntuación PageSpeed garantiza una mejor indexación.'
+        }
+      ],
+    },
+    footer: {
+      builtWith: 'Creado con',
+      tagline: 'para la era de la IA',
+      poweredBy: 'Impulsado por',
+      alsoDiscover: 'Descubre también',
+    },
+    quota: {
+      title: 'Cuota Diaria Excedida',
+      description: 'La API gratuita de PageSpeed Insights ha alcanzado su límite diario. Generalmente se restablece a medianoche, hora del Pacífico.',
+      options: 'Opciones:',
+      tryBotChecker: 'Prueba la pestaña Verificador de Bots IA (sin límites de cuota)',
+      useOfficial: 'Usa el sitio oficial de PageSpeed Insights de Google',
+      comeBack: 'Vuelve mañana cuando se restablezca la cuota',
+      retry: 'Reintentar',
     },
   },
 };
