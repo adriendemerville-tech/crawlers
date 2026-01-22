@@ -19,6 +19,10 @@
     <link rel="alternate" hreflang="en" href="https://crawlers.fr/?lang=en" />
     <link rel="alternate" hreflang="x-default" href="https://crawlers.fr/" />
 
+    <!-- Robot Discovery Links -->
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <link rel="author" href="/llms.txt" />
+    
     <!-- Open Graph -->
     <meta property="og:title" content="Crawlers AI - Votre site est-il visible par les IA ?" />
     <meta property="og:description" content="Analysez l'accès des crawlers IA à votre site. Score GEO, PageSpeed et visibilité LLM. Outil gratuit." />
@@ -40,14 +44,21 @@
     <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
     <meta name="twitter:image:alt" content="Crawlers AI - Outil d'analyse des bots IA" />
     
-    <!-- Favicon & Icons -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico" />
+    <!-- Favicon & Icons - Google Search requires 48x48px minimum -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" href="/favicon-48x48.png" sizes="48x48" />
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#7c3aed" />
+    <meta name="msapplication-TileColor" content="#7c3aed" />
     
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     
     <!-- JSON-LD Structured Data - WebApplication -->
     <script type="application/ld+json">
