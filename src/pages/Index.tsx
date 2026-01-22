@@ -10,6 +10,7 @@ import { CrawlResult } from '@/types/crawler';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
+import { StrategicAuditResult } from '@/types/audit';
 import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load heavy dashboard components
@@ -17,6 +18,7 @@ const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then
 const PageSpeedDashboard = lazy(() => import('@/components/PageSpeedDashboard').then(m => ({ default: m.PageSpeedDashboard })));
 const GeoDashboard = lazy(() => import('@/components/GeoDashboard').then(m => ({ default: m.GeoDashboard })));
 const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({ default: m.LLMDashboard })));
+const StrategicAuditDashboard = lazy(() => import('@/components/StrategicAuditDashboard').then(m => ({ default: m.StrategicAuditDashboard })));
 const QuotaExceeded = lazy(() => import('@/components/QuotaExceeded').then(m => ({ default: m.QuotaExceeded })));
 const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
@@ -38,10 +40,13 @@ const DashboardSkeleton = () => (
 const Index = () => {
   const [activeTab, setActiveTab] = useState<ToolTab>('crawlers');
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuditLoading, setIsAuditLoading] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
   const [pageSpeedResult, setPageSpeedResult] = useState<PageSpeedResult | null>(null);
   const [geoResult, setGeoResult] = useState<GeoResult | null>(null);
   const [llmResult, setLlmResult] = useState<LLMAnalysisResult | null>(null);
+  const [auditResult, setAuditResult] = useState<StrategicAuditResult | null>(null);
+  const [showAuditDashboard, setShowAuditDashboard] = useState(false);
   const [pageSpeedStrategy, setPageSpeedStrategy] = useState<'mobile' | 'desktop'>('mobile');
   const [currentUrl, setCurrentUrl] = useState<string>('');
   const [quotaExceeded, setQuotaExceeded] = useState(false);
@@ -53,6 +58,8 @@ const Index = () => {
     setPageSpeedResult(null);
     setGeoResult(null);
     setLlmResult(null);
+    setAuditResult(null);
+    setShowAuditDashboard(false);
     setQuotaExceeded(false);
     setCurrentUrl(url);
 
@@ -189,6 +196,8 @@ const Index = () => {
     setPageSpeedResult(null);
     setGeoResult(null);
     setLlmResult(null);
+    setAuditResult(null);
+    setShowAuditDashboard(false);
     setQuotaExceeded(false);
   };
 
@@ -199,7 +208,76 @@ const Index = () => {
     }
   };
 
+  // Run all 4 tools in parallel and generate strategic audit
+  const handleFullAudit = async () => {
+    if (!currentUrl) {
+      toast({
+        title: 'URL requise',
+        description: 'Veuillez d\'abord analyser une URL avec l\'un des outils.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsAuditLoading(true);
+    setShowAuditDashboard(true);
+    setAuditResult(null);
+
+    try {
+      // Run all 4 checks in parallel
+      const [crawlersRes, geoRes, llmRes, pagespeedRes] = await Promise.all([
+        supabase.functions.invoke('check-crawlers', { body: { url: currentUrl } }),
+        supabase.functions.invoke('check-geo', { body: { url: currentUrl } }),
+        supabase.functions.invoke('check-llm', { body: { url: currentUrl } }),
+        supabase.functions.invoke('check-pagespeed', { body: { url: currentUrl, strategy: 'mobile' } }),
+      ]);
+
+      const toolsData = {
+        crawlers: crawlersRes.data?.data || null,
+        geo: geoRes.data?.data || null,
+        llm: llmRes.data?.data || null,
+        pagespeed: pagespeedRes.data?.data || null,
+      };
+
+      // Update individual results for other tabs
+      if (crawlersRes.data?.success) setCrawlResult(crawlersRes.data.data);
+      if (geoRes.data?.success) setGeoResult(geoRes.data.data);
+      if (llmRes.data?.success) setLlmResult(llmRes.data.data);
+      if (pagespeedRes.data?.success) setPageSpeedResult(pagespeedRes.data.data);
+
+      // Generate strategic audit with AI
+      const { data: auditData, error: auditError } = await supabase.functions.invoke('audit-strategic', {
+        body: { url: currentUrl, toolsData }
+      });
+
+      if (auditError) throw new Error(auditError.message);
+      if (!auditData.success) throw new Error(auditData.error || 'Failed to generate audit');
+
+      setAuditResult(auditData.data);
+      toast({
+        title: 'Audit stratégique terminé !',
+        description: `Score de citabilité 2026 : ${auditData.data.overallScore}/100`,
+      });
+
+    } catch (error) {
+      console.error('Audit error:', error);
+      toast({
+        title: 'Erreur',
+        description: error instanceof Error ? error.message : 'Échec de l\'audit stratégique',
+        variant: 'destructive',
+      });
+      setShowAuditDashboard(false);
+    } finally {
+      setIsAuditLoading(false);
+    }
+  };
+
   const renderDashboard = () => {
+    // Show strategic audit dashboard if active
+    if (showAuditDashboard) {
+      return <StrategicAuditDashboard result={auditResult} isLoading={isAuditLoading} />;
+    }
+
     switch (activeTab) {
       case 'crawlers':
         return (
@@ -252,6 +330,9 @@ const Index = () => {
     }
   };
 
+  // Check if any tool has results
+  const hasAnyResult = !!(crawlResult || geoResult || llmResult || pageSpeedResult);
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
@@ -262,7 +343,14 @@ const Index = () => {
           activeTab={activeTab}
         />
         <section aria-label="Outils d'analyse">
-          <ToolTabs activeTab={activeTab} onTabChange={handleTabChange} />
+          <ToolTabs 
+            activeTab={activeTab} 
+            onTabChange={handleTabChange}
+            onFullAudit={handleFullAudit}
+            isAuditLoading={isAuditLoading}
+            showAuditButton={!!currentUrl || hasAnyResult}
+            isAuditActive={showAuditDashboard}
+          />
           <Suspense fallback={<DashboardSkeleton />}>
             {renderDashboard()}
           </Suspense>
