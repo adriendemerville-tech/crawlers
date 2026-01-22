@@ -1,127 +1,145 @@
 import { NewsArticle, NewsSource, WhitelistState } from '@/types/news';
 
+// Sources diversifiées : presse nationale, internationale, spécialisée tech/marketing
 export const initialSources: NewsSource[] = [
-  { id: 'src-1', name: 'Search Engine Journal', url: 'https://searchenginejournal.com', trustScore: 95, lastCrawled: new Date().toISOString() },
-  { id: 'src-2', name: 'Moz Blog', url: 'https://moz.com/blog', trustScore: 92, lastCrawled: new Date().toISOString() },
-  { id: 'src-3', name: 'Abondance', url: 'https://abondance.com', trustScore: 90, lastCrawled: new Date().toISOString() },
-  { id: 'src-4', name: 'OpenAI Blog', url: 'https://openai.com/blog', trustScore: 98, lastCrawled: new Date().toISOString() },
-  { id: 'src-5', name: 'Google AI Blog', url: 'https://ai.googleblog.com', trustScore: 97, lastCrawled: new Date().toISOString() },
-  { id: 'src-6', name: 'Semrush Blog', url: 'https://semrush.com/blog', trustScore: 88, lastCrawled: new Date().toISOString() },
-  { id: 'src-7', name: 'Ahrefs Blog', url: 'https://ahrefs.com/blog', trustScore: 89, lastCrawled: new Date().toISOString() },
+  // Presse nationale
+  { id: 'src-1', name: 'Le Monde', url: 'https://lemonde.fr', trustScore: 96, lastCrawled: new Date().toISOString() },
+  // Presse internationale
+  { id: 'src-2', name: 'The Verge', url: 'https://theverge.com', trustScore: 94, lastCrawled: new Date().toISOString() },
+  // Presse spécialisée tech/digital/marketing
+  { id: 'src-3', name: 'L\'Usine Digitale', url: 'https://usine-digitale.fr', trustScore: 92, lastCrawled: new Date().toISOString() },
+  { id: 'src-4', name: 'Journal du Net', url: 'https://journaldunet.com', trustScore: 90, lastCrawled: new Date().toISOString() },
+  { id: 'src-5', name: 'Siècle Digital', url: 'https://siecledigital.fr', trustScore: 89, lastCrawled: new Date().toISOString() },
+  { id: 'src-6', name: 'Maddyness', url: 'https://maddyness.com', trustScore: 88, lastCrawled: new Date().toISOString() },
+  { id: 'src-7', name: 'L\'ADN', url: 'https://ladn.eu', trustScore: 87, lastCrawled: new Date().toISOString() },
+  // Sources SEO/LLM spécialisées
+  { id: 'src-8', name: 'Search Engine Journal', url: 'https://searchenginejournal.com', trustScore: 95, lastCrawled: new Date().toISOString() },
+  { id: 'src-9', name: 'Abondance', url: 'https://abondance.com', trustScore: 91, lastCrawled: new Date().toISOString() },
+  { id: 'src-10', name: 'ActuIA', url: 'https://actuia.com', trustScore: 88, lastCrawled: new Date().toISOString() },
 ];
 
 const MAX_ARTICLE_AGE_DAYS = 40;
 
 export const mockArticles: NewsArticle[] = [
+  // Article presse nationale (Le Monde)
   {
     id: 'art-1',
-    title: 'Comment optimiser votre site pour les moteurs de recherche génératifs (GEO)',
-    summary: 'Les moteurs de recherche basés sur l\'IA changent la donne. Découvrez les meilleures pratiques pour adapter votre stratégie SEO aux nouvelles exigences des LLM et maximiser votre visibilité.',
+    title: 'L\'intelligence artificielle bouleverse les métiers du référencement web',
+    summary: 'Les professionnels du SEO doivent désormais composer avec ChatGPT et les moteurs génératifs. Une révolution qui redéfinit les stratégies de visibilité en ligne.',
     imageUrl: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=450&fit=crop',
     category: 'GEO',
-    source: initialSources[0],
+    source: initialSources[0], // Le Monde
     publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    relevanceScore: 95,
+    relevanceScore: 94,
     keywords: ['GEO', 'LLM', 'SEO', 'Search', 'IA générative']
   },
+  // Article presse internationale (The Verge)
   {
     id: 'art-2',
-    title: 'Core Web Vitals 2025 : Les nouveaux critères SEO technique à maîtriser',
-    summary: 'Google met à jour ses métriques de performance. INP remplace FID et de nouveaux signaux apparaissent. Voici comment préparer votre site pour ces changements majeurs.',
-    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop',
-    category: 'SEO',
-    source: initialSources[1],
+    title: 'Google\'s AI Overviews reshape how websites get discovered online',
+    summary: 'The search giant\'s generative AI features are changing SEO forever. Publishers and marketers must adapt to a new era of AI-first search results.',
+    imageUrl: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=800&h=450&fit=crop',
+    category: 'GEO',
+    source: initialSources[1], // The Verge
     publishedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 93,
+    keywords: ['GEO', 'Google', 'SGE', 'Search', 'SEO']
+  },
+  // Article L'Usine Digitale
+  {
+    id: 'art-3',
+    title: 'Comment les entreprises françaises optimisent leur visibilité pour les LLM',
+    summary: 'Face à l\'essor de ChatGPT et Perplexity, les marques tricolores repensent leur stratégie digitale. Le GEO devient un enjeu stratégique majeur.',
+    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop',
+    category: 'LLM',
+    source: initialSources[2], // L'Usine Digitale
+    publishedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 91,
+    keywords: ['LLM', 'GEO', 'SEO', 'Entreprises', 'Search']
+  },
+  // Article Journal du Net
+  {
+    id: 'art-4',
+    title: 'Core Web Vitals 2025 : les nouvelles métriques à surveiller pour votre SEO',
+    summary: 'Google renforce ses exigences de performance. INP, LCP et CLS deviennent incontournables pour maintenir son positionnement dans les résultats de recherche.',
+    imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=450&fit=crop',
+    category: 'SEO',
+    source: initialSources[3], // Journal du Net
+    publishedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
     relevanceScore: 88,
     keywords: ['SEO', 'Core Web Vitals', 'Performance', 'Google']
   },
-  {
-    id: 'art-3',
-    title: 'RAG et SEO : Comment les systèmes de récupération augmentée impactent le référencement',
-    summary: 'Les architectures RAG transforment la façon dont les IA accèdent à l\'information. Comprenez leur fonctionnement pour optimiser votre contenu et apparaître dans les réponses générées.',
-    imageUrl: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=450&fit=crop',
-    category: 'LLM',
-    source: initialSources[3],
-    publishedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    relevanceScore: 92,
-    keywords: ['RAG', 'LLM', 'SEO', 'IA', 'Search']
-  },
-  {
-    id: 'art-4',
-    title: 'Google SGE : Analyse des premiers résultats et stratégies d\'adaptation',
-    summary: 'La Search Generative Experience de Google redéfinit les SERPs. Notre analyse des tendances observées et les tactiques gagnantes pour maintenir votre trafic organique.',
-    imageUrl: 'https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=800&h=450&fit=crop',
-    category: 'GEO',
-    source: initialSources[2],
-    publishedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    relevanceScore: 90,
-    keywords: ['GEO', 'Google', 'SGE', 'Search', 'SEO']
-  },
+  // Article Siècle Digital
   {
     id: 'art-5',
-    title: 'Les meilleurs outils d\'analyse LLM pour auditer votre visibilité IA',
-    summary: 'De nouveaux outils émergent pour mesurer comment les modèles de langage perçoivent votre marque. Comparatif des solutions les plus efficaces pour le monitoring GEO.',
-    imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=450&fit=crop',
+    title: 'RAG et Search : comment les architectures IA transforment la découverte de contenu',
+    summary: 'Les systèmes de récupération augmentée redéfinissent l\'accès à l\'information. Implications pour les créateurs de contenu et les stratégies SEO.',
+    imageUrl: 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=450&fit=crop',
     category: 'LLM',
-    source: initialSources[4],
-    publishedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-    relevanceScore: 85,
-    keywords: ['LLM', 'GEO', 'Outils', 'Analyse', 'Search']
+    source: initialSources[4], // Siècle Digital
+    publishedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 90,
+    keywords: ['RAG', 'LLM', 'SEO', 'IA', 'Search']
   },
+  // Article Maddyness
   {
     id: 'art-6',
-    title: 'Stratégie de contenu pour l\'ère de l\'IA : ce que les LLMs recherchent',
-    summary: 'Les modèles de langage privilégient certains types de contenu. Apprenez à structurer vos pages pour maximiser les citations dans les réponses génératives.',
-    imageUrl: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=450&fit=crop',
-    category: 'LLM',
-    source: initialSources[5],
-    publishedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-    relevanceScore: 87,
-    keywords: ['LLM', 'Contenu', 'SEO', 'Search', 'Stratégie']
-  },
-  {
-    id: 'art-7',
-    title: 'Données structurées et GEO : le guide complet du Schema.org pour l\'IA',
-    summary: 'Les données structurées sont essentielles pour que les IA comprennent votre contenu. Guide pratique pour implémenter les schémas les plus efficaces.',
-    imageUrl: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&h=450&fit=crop',
-    category: 'GEO',
-    source: initialSources[6],
-    publishedAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
-    relevanceScore: 91,
-    keywords: ['GEO', 'Schema', 'SEO', 'Données structurées', 'Search']
-  },
-  {
-    id: 'art-8',
-    title: 'Perplexity, ChatGPT, Claude : comment chaque LLM indexe différemment le web',
-    summary: 'Chaque moteur IA a ses propres critères de sélection. Analyse comparative des méthodes d\'indexation et recommandations pour optimiser votre visibilité sur chaque plateforme.',
-    imageUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=450&fit=crop',
-    category: 'LLM',
-    source: initialSources[0],
-    publishedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
-    relevanceScore: 93,
-    keywords: ['LLM', 'Perplexity', 'ChatGPT', 'Claude', 'Search']
-  },
-  {
-    id: 'art-9',
-    title: 'SEO technique 2025 : les fondamentaux qui comptent encore',
-    summary: 'Malgré l\'essor de l\'IA, certains fondamentaux SEO restent incontournables. Tour d\'horizon des optimisations techniques toujours essentielles.',
-    imageUrl: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&h=450&fit=crop',
-    category: 'SEO',
-    source: initialSources[1],
-    publishedAt: new Date(Date.now() - 32 * 24 * 60 * 60 * 1000).toISOString(),
-    relevanceScore: 82,
-    keywords: ['SEO', 'Technique', 'Fondamentaux', 'Optimisation']
-  },
-  {
-    id: 'art-10',
-    title: 'E-E-A-T et IA générative : renforcer votre autorité pour les moteurs du futur',
-    summary: 'L\'expertise, l\'expérience et l\'autorité sont plus importantes que jamais. Comment construire une présence web que les IA recommanderont naturellement.',
+    title: 'Startups SEO : la nouvelle génération d\'outils pour l\'ère de l\'IA générative',
+    summary: 'L\'écosystème startup français innove avec des solutions d\'analyse GEO. Tour d\'horizon des pépites qui réinventent le référencement.',
     imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=450&fit=crop',
     category: 'GEO',
-    source: initialSources[4],
-    publishedAt: new Date(Date.now() - 38 * 24 * 60 * 60 * 1000).toISOString(),
+    source: initialSources[5], // Maddyness
+    publishedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 86,
+    keywords: ['GEO', 'Startups', 'SEO', 'Outils', 'Innovation']
+  },
+  // Article L'ADN
+  {
+    id: 'art-7',
+    title: 'Marketing digital : pourquoi le GEO devient prioritaire pour les marques',
+    summary: 'Les directeurs marketing intègrent désormais la visibilité IA dans leurs KPIs. Une transformation profonde des stratégies de communication digitale.',
+    imageUrl: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=450&fit=crop',
+    category: 'GEO',
+    source: initialSources[6], // L'ADN
+    publishedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 85,
+    keywords: ['GEO', 'Marketing', 'Marques', 'SEO', 'Search']
+  },
+  // Article Search Engine Journal
+  {
+    id: 'art-8',
+    title: 'Perplexity, ChatGPT, Claude : optimiser son contenu pour chaque LLM',
+    summary: 'Chaque moteur IA a ses propres critères de sélection. Guide comparatif des méthodes d\'indexation et recommandations d\'optimisation par plateforme.',
+    imageUrl: 'https://images.unsplash.com/photo-620712943543-bcc4688e7485?w=800&h=450&fit=crop',
+    category: 'LLM',
+    source: initialSources[7], // Search Engine Journal
+    publishedAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 92,
+    keywords: ['LLM', 'Perplexity', 'ChatGPT', 'Claude', 'Search']
+  },
+  // Article Abondance
+  {
+    id: 'art-9',
+    title: 'E-E-A-T et moteurs génératifs : construire une autorité reconnue par l\'IA',
+    summary: 'L\'expertise et l\'autorité restent des signaux clés pour les IA. Méthodologie pour développer une présence web naturellement recommandée par les LLM.',
+    imageUrl: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&h=450&fit=crop',
+    category: 'GEO',
+    source: initialSources[8], // Abondance
+    publishedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
     relevanceScore: 89,
     keywords: ['GEO', 'E-E-A-T', 'Autorité', 'SEO', 'Search']
+  },
+  // Article ActuIA
+  {
+    id: 'art-10',
+    title: 'Les robots IA qui indexent le web : comment s\'y préparer techniquement',
+    summary: 'GPTBot, ClaudeBot, PerplexityBot... Les crawlers IA se multiplient. Configuration robots.txt et bonnes pratiques pour accueillir ces nouveaux visiteurs.',
+    imageUrl: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&h=450&fit=crop',
+    category: 'LLM',
+    source: initialSources[9], // ActuIA
+    publishedAt: new Date(Date.now() - 32 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 87,
+    keywords: ['LLM', 'Crawlers', 'Robots', 'SEO', 'Technique']
   },
 ];
 
