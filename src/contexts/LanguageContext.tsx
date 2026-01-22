@@ -156,6 +156,15 @@ interface Translations {
     comeBack: string;
     retry: string;
   };
+  news: {
+    title: string;
+    searchPlaceholder: string;
+    refresh: string;
+    newSource: string;
+    noResults: string;
+    sourcesCount: string;
+    lastUpdate: string;
+  };
 }
 
 const translations: Record<Language, Translations> = {
@@ -331,6 +340,15 @@ const translations: Record<Language, Translations> = {
       comeBack: 'Revenez demain quand le quota sera réinitialisé',
       retry: 'Réessayer',
     },
+    news: {
+      title: 'Veille SEO / LLM / GEO',
+      searchPlaceholder: 'Rechercher un article...',
+      refresh: 'Actualiser',
+      newSource: 'Nouvelle source découverte :',
+      noResults: 'Aucun article trouvé',
+      sourcesCount: '{count} sources surveillées',
+      lastUpdate: 'Dernière mise à jour',
+    },
   },
   en: {
     hero: {
@@ -504,6 +522,15 @@ const translations: Record<Language, Translations> = {
       comeBack: 'Come back tomorrow when the quota resets',
       retry: 'Try Again',
     },
+    news: {
+      title: 'SEO / LLM / GEO News',
+      searchPlaceholder: 'Search articles...',
+      refresh: 'Refresh',
+      newSource: 'New source discovered:',
+      noResults: 'No articles found',
+      sourcesCount: '{count} sources monitored',
+      lastUpdate: 'Last update',
+    },
   },
   es: {
     hero: {
@@ -676,6 +703,15 @@ const translations: Record<Language, Translations> = {
       useOfficial: 'Usa el sitio oficial de PageSpeed Insights de Google',
       comeBack: 'Vuelve mañana cuando se restablezca la cuota',
       retry: 'Reintentar',
+    },
+    news: {
+      title: 'Noticias SEO / LLM / GEO',
+      searchPlaceholder: 'Buscar artículos...',
+      refresh: 'Actualizar',
+      newSource: 'Nueva fuente descubierta:',
+      noResults: 'No se encontraron artículos',
+      sourcesCount: '{count} fuentes monitoreadas',
+      lastUpdate: 'Última actualización',
     },
   },
 };

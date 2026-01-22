@@ -18,6 +18,7 @@ const GeoDashboard = lazy(() => import('@/components/GeoDashboard').then(m => ({
 const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({ default: m.LLMDashboard })));
 const QuotaExceeded = lazy(() => import('@/components/QuotaExceeded').then(m => ({ default: m.QuotaExceeded })));
 const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
+const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
 
 // Skeleton loader for dashboards
 const DashboardSkeleton = () => (
@@ -253,6 +254,9 @@ const Index = () => {
             {renderDashboard()}
           </Suspense>
         </section>
+        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+          <NewsCarousel />
+        </Suspense>
         <Suspense fallback={<div className="h-96" />}>
           <FAQSection />
         </Suspense>
