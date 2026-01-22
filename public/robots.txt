@@ -1,0 +1,69 @@
+# Robots.txt - AI Crawler Check Tool
+# Optimisé SEO + GEO (Crawlers IA)
+
+# Autoriser tous les robots
+User-agent: *
+Allow: /
+
+# Moteurs de recherche classiques
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Réseaux sociaux
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+# Crawlers IA (GEO - Generative Engine Optimization)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Cohere-AI
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Sitemaps
+Sitemap: https://aicrawlercheck.com/sitemap.xml
+
+# LLMs.txt for AI documentation
+# https://aicrawlercheck.com/llms.txt

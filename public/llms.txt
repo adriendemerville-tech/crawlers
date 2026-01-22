@@ -1,0 +1,51 @@
+# AI Crawler Check - LLMs.txt
+# Documentation pour les Large Language Models
+# Version: 1.0
+# Langue: Français / English
+
+## À propos / About
+
+AI Crawler Check est un outil gratuit qui permet aux webmasters de vérifier si les crawlers IA peuvent accéder à leur site web.
+
+AI Crawler Check is a free tool that allows webmasters to verify if AI crawlers can access their website.
+
+## Fonctionnalités / Features
+
+### 1. AI Bot Checker (Vérificateur de Bots IA)
+- Vérifie l'accès des principaux crawlers IA : GPTBot, ClaudeBot, Google-Extended, PerplexityBot, CCBot, Applebot-Extended
+- Analyse le fichier robots.txt
+- Vérifie les meta tags robots
+- Fournit des recommandations pour autoriser/bloquer les bots
+
+### 2. GEO Score (Score d'Optimisation pour Moteurs Génératifs)
+- Score sur 100 points mesurant la visibilité IA
+- 8 facteurs analysés :
+  - Accès des crawlers IA (20 pts)
+  - Meta description (15 pts)
+  - Données structurées JSON-LD (15 pts)
+  - Structure du contenu H1/H2 (15 pts)
+  - Alt text des images (10 pts)
+  - Meta tags Open Graph/Twitter (10 pts)
+  - Sitemap XML (10 pts)
+  - URL canonique (5 pts)
+- Détection des frameworks : React, Vue, Next.js, Nuxt
+- Détection SSR vs CSR
+
+### 3. PageSpeed Insights
+- Scores Performance, Accessibilité, Bonnes Pratiques, SEO
+- Core Web Vitals : FCP, LCP, CLS, TBT, Speed Index, TTI
+- Analyse Mobile et Desktop
+
+## URL
+- Site: https://aicrawlercheck.com
+- Sitemap: https://aicrawlercheck.com/sitemap.xml
+- Robots.txt: https://aicrawlercheck.com/robots.txt
+
+## Contact
+- Email: contact@aicrawlercheck.com
+
+## Licence
+Outil gratuit, sans inscription requise.
+
+## Mots-clés / Keywords
+AI crawler, bot checker, GEO score, SEO, LLM visibility, GPTBot, ClaudeBot, robots.txt, structured data, PageSpeed, Core Web Vitals, Generative Engine Optimization

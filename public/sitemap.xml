@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://aicrawlercheck.com/</loc>
+    <lastmod>2026-01-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://aicrawlercheck.com/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://aicrawlercheck.com/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://aicrawlercheck.com/"/>
+    <image:image>
+      <image:loc>https://aicrawlercheck.com/og-image.png</image:loc>
+      <image:title>AI Crawler Check - Outil de vérification des bots IA</image:title>
+    </image:image>
+  </url>
+</urlset>
