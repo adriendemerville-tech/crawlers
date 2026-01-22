@@ -4,6 +4,7 @@ import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { ToolTabs, ToolTab } from '@/components/ToolTabs';
 import { Footer } from '@/components/Footer';
+import { DownloadReportButton } from '@/components/DownloadReportButton';
 import { CrawlResult } from '@/types/crawler';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { GeoResult } from '@/types/geo';
@@ -199,22 +200,40 @@ const Index = () => {
   const renderDashboard = () => {
     switch (activeTab) {
       case 'crawlers':
-        return <ResultsDashboard result={crawlResult} isLoading={isLoading} />;
+        return (
+          <>
+            <ResultsDashboard result={crawlResult} isLoading={isLoading} />
+            <DownloadReportButton type="crawlers" crawlResult={crawlResult} />
+          </>
+        );
       case 'geo':
-        return <GeoDashboard result={geoResult} isLoading={isLoading} />;
+        return (
+          <>
+            <GeoDashboard result={geoResult} isLoading={isLoading} />
+            <DownloadReportButton type="geo" geoResult={geoResult} />
+          </>
+        );
       case 'llm':
-        return <LLMDashboard result={llmResult} isLoading={isLoading} />;
+        return (
+          <>
+            <LLMDashboard result={llmResult} isLoading={isLoading} />
+            <DownloadReportButton type="llm" llmResult={llmResult} />
+          </>
+        );
       case 'pagespeed':
         if (quotaExceeded) {
           return <QuotaExceeded onRetry={handleRetry} />;
         }
         return (
-          <PageSpeedDashboard 
-            result={pageSpeedResult} 
-            isLoading={isLoading}
-            strategy={pageSpeedStrategy}
-            onStrategyChange={handleStrategyChange}
-          />
+          <>
+            <PageSpeedDashboard 
+              result={pageSpeedResult} 
+              isLoading={isLoading}
+              strategy={pageSpeedStrategy}
+              onStrategyChange={handleStrategyChange}
+            />
+            <DownloadReportButton type="pagespeed" pageSpeedResult={pageSpeedResult} />
+          </>
         );
     }
   };

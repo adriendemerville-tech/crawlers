@@ -2,6 +2,19 @@ import { Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+// Flag emoji components for better accessibility and consistency
+const FlagFR = () => (
+  <span className="text-base" role="img" aria-label="Français">🇫🇷</span>
+);
+
+const FlagEN = () => (
+  <span className="text-base" role="img" aria-label="English">🇬🇧</span>
+);
+
+const FlagES = () => (
+  <span className="text-base" role="img" aria-label="Español">🇪🇸</span>
+);
+
 export function Header() {
   const { language, setLanguage } = useLanguage();
 
@@ -20,21 +33,31 @@ export function Header() {
             variant={language === 'fr' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setLanguage('fr')}
-            className="h-7 px-3 text-xs font-medium"
+            className="h-8 w-10 p-0"
             aria-pressed={language === 'fr'}
             aria-label="Français"
           >
-            FR
+            <FlagFR />
           </Button>
           <Button
             variant={language === 'en' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setLanguage('en')}
-            className="h-7 px-3 text-xs font-medium"
+            className="h-8 w-10 p-0"
             aria-pressed={language === 'en'}
             aria-label="English"
           >
-            EN
+            <FlagEN />
+          </Button>
+          <Button
+            variant={language === 'es' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setLanguage('es')}
+            className="h-8 w-10 p-0"
+            aria-pressed={language === 'es'}
+            aria-label="Español"
+          >
+            <FlagES />
           </Button>
         </div>
       </nav>
