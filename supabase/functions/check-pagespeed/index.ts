@@ -54,17 +54,18 @@ Deno.serve(async (req) => {
     const normalizedUrl = normalizeUrl(url);
     console.log('Checking PageSpeed for:', normalizedUrl, 'Strategy:', strategy);
 
-    // PageSpeed Insights API (free, no API key required for basic usage)
-    const apiUrl = new URL('https://www.googleapis.com/pagespeedonline/v5/runPagespeed');
-    apiUrl.searchParams.set('url', normalizedUrl);
-    apiUrl.searchParams.set('strategy', strategy);
-    apiUrl.searchParams.set('category', 'PERFORMANCE');
-    apiUrl.searchParams.set('category', 'ACCESSIBILITY');
-    apiUrl.searchParams.set('category', 'BEST_PRACTICES');
-    apiUrl.searchParams.set('category', 'SEO');
+    // Get API key from environment
+    const apiKey = Deno.env.get('GOOGLE_PAGESPEED_API_KEY');
+    if (!apiKey) {
+      console.error('GOOGLE_PAGESPEED_API_KEY not configured');
+      return new Response(
+        JSON.stringify({ success: false, error: 'API key not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    // Build the URL manually to include multiple categories
-    const fullApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO`;
+    // Build the URL with API key and multiple categories
+    const fullApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&key=${apiKey}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO`;
 
     const response = await fetch(fullApiUrl);
 
