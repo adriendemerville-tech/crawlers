@@ -1,17 +1,22 @@
-# AI Crawler Check - LLMs.txt
+# Crawlers AI - LLMs.txt
 # Documentation pour les Large Language Models
-# Version: 1.0
+# Version: 2.0
 # Langue: Français / English
 
 ## À propos / About
 
-AI Crawler Check est un outil gratuit qui permet aux webmasters de vérifier si les crawlers IA peuvent accéder à leur site web.
+Crawlers AI est un outil gratuit d'analyse des crawlers IA pour les webmasters et professionnels du SEO.
 
-AI Crawler Check is a free tool that allows webmasters to verify if AI crawlers can access their website.
+Crawlers AI is a free AI crawler analysis tool for webmasters and SEO professionals.
+
+## URL
+- Site: https://crawlers.fr
+- Sitemap: https://crawlers.fr/sitemap.xml
+- Robots.txt: https://crawlers.fr/robots.txt
 
 ## Fonctionnalités / Features
 
-### 1. AI Bot Checker (Vérificateur de Bots IA)
+### 1. AI Bot Checker (Analyseur de Bots IA)
 - Vérifie l'accès des principaux crawlers IA : GPTBot, ClaudeBot, Google-Extended, PerplexityBot, CCBot, Applebot-Extended
 - Analyse le fichier robots.txt
 - Vérifie les meta tags robots
@@ -36,16 +41,23 @@ AI Crawler Check is a free tool that allows webmasters to verify if AI crawlers 
 - Core Web Vitals : FCP, LCP, CLS, TBT, Speed Index, TTI
 - Analyse Mobile et Desktop
 
-## URL
-- Site: https://aicrawlercheck.com
-- Sitemap: https://aicrawlercheck.com/sitemap.xml
-- Robots.txt: https://aicrawlercheck.com/robots.txt
+### 4. LLM Visibility Check (Analyse de Visibilité LLM)
+- Analyse comment GPT-4, Claude, Gemini et Perplexity perçoivent votre site
+- Évaluation de la réputation IA
+- Recommandations d'optimisation
+
+## Cas d'usage / Use Cases
+- Webmasters souhaitant optimiser leur visibilité IA
+- Professionnels SEO travaillant sur le GEO
+- Entreprises voulant contrôler l'accès des bots IA à leur contenu
+- Éditeurs cherchant à maximiser leur présence dans les réponses LLM
 
 ## Contact
-- Email: contact@aicrawlercheck.com
+- Site: https://crawlers.fr
+- Email: contact@crawlers.fr
 
 ## Licence
 Outil gratuit, sans inscription requise.
 
 ## Mots-clés / Keywords
-AI crawler, bot checker, GEO score, SEO, LLM visibility, GPTBot, ClaudeBot, robots.txt, structured data, PageSpeed, Core Web Vitals, Generative Engine Optimization
+Crawlers AI, AI crawler, bot checker, GEO score, SEO, LLM visibility, GPTBot, ClaudeBot, robots.txt, structured data, PageSpeed, Core Web Vitals, Generative Engine Optimization, crawlers.fr

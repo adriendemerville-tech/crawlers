@@ -1,5 +1,6 @@
-# Robots.txt - AI Crawler Check Tool
+# Robots.txt - Crawlers AI
 # Optimisé SEO + GEO (Crawlers IA)
+# https://crawlers.fr
 
 # Autoriser tous les robots
 User-agent: *
@@ -62,8 +63,17 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
+User-agent: Bytespider
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
 # Sitemaps
-Sitemap: https://aicrawlercheck.com/sitemap.xml
+Sitemap: https://crawlers.fr/sitemap.xml
 
 # LLMs.txt for AI documentation
-# https://aicrawlercheck.com/llms.txt
+# https://crawlers.fr/llms.txt
