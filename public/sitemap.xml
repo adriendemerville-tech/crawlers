@@ -3,16 +3,16 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://aicrawlercheck.com/</loc>
-    <lastmod>2026-01-14</lastmod>
+    <loc>https://crawlers.fr/</loc>
+    <lastmod>2026-01-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://aicrawlercheck.com/?lang=fr"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://aicrawlercheck.com/?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://aicrawlercheck.com/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/"/>
     <image:image>
-      <image:loc>https://aicrawlercheck.com/og-image.png</image:loc>
-      <image:title>AI Crawler Check - Outil de vérification des bots IA</image:title>
+      <image:loc>https://crawlers.fr/og-image.png</image:loc>
+      <image:title>Crawlers AI - Analyseur de bots IA et optimisation GEO</image:title>
     </image:image>
   </url>
 </urlset>

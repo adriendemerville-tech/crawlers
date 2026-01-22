@@ -11,16 +11,7 @@ export function Footer() {
           {t.footer.builtWith} <Heart className="h-4 w-4 text-destructive" aria-label="amour" /> {t.footer.tagline}
         </p>
         <p className="text-sm text-muted-foreground">
-          {t.footer.poweredBy}{' '}
-          <a 
-            href="https://iktracker.com" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-primary hover:underline font-medium"
-            title="IKTracker - Outils SEO et Analytics"
-          >
-            IKTracker
-          </a>
+          © {new Date().getFullYear()} Crawlers AI - crawlers.fr
         </p>
         <p className="text-sm text-muted-foreground">
           {t.footer.alsoDiscover}{' '}
