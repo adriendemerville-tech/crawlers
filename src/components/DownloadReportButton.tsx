@@ -299,11 +299,11 @@ export function DownloadReportButton({
     <div className="flex justify-center mt-6 mb-8">
       <Button
         onClick={handleDownload}
-        variant="outline"
-        className="gap-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+        size="lg"
+        className="gap-3 bg-blue-600 text-white font-bold text-lg px-8 py-6 hover:bg-blue-700"
       >
         {getButtonLabel()}
-        <Download className="h-4 w-4" />
+        <Download className="h-6 w-6" />
       </Button>
     </div>
   );
