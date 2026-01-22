@@ -44,14 +44,26 @@
     <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
     <meta name="twitter:image:alt" content="Crawlers AI - Outil d'analyse des bots IA" />
     
-    <!-- Favicon & Icons - Google Search requires 48x48px minimum -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="48x48" />
-    <link rel="icon" type="image/png" href="/favicon-48x48.png" sizes="48x48" />
-    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+    <!-- Favicon - SVG principal (navigateurs modernes) -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    
+    <!-- Favicon - ICO fallback multi-résolution -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    
+    <!-- Favicon - PNG pour compatibilité étendue (Google SERP minimum 48x48) -->
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    
+    <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    
+    <!-- PWA Manifest -->
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#7c3aed" />
+    
+    <!-- Theme colors adaptatifs -->
+    <meta name="theme-color" content="#7c3aed" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#7c3aed" media="(prefers-color-scheme: dark)" />
     <meta name="msapplication-TileColor" content="#7c3aed" />
     
     <!-- Preconnect for performance -->
