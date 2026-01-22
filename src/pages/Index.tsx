@@ -5,6 +5,7 @@ import { HeroSection } from '@/components/HeroSection';
 import { ToolTabs, ToolTab } from '@/components/ToolTabs';
 import { Footer } from '@/components/Footer';
 import { DownloadReportButton } from '@/components/DownloadReportButton';
+import { ShareReportButton } from '@/components/ShareReportButton';
 import { CrawlResult } from '@/types/crawler';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { GeoResult } from '@/types/geo';
@@ -204,21 +205,30 @@ const Index = () => {
         return (
           <>
             <ResultsDashboard result={crawlResult} isLoading={isLoading} />
-            <DownloadReportButton type="crawlers" crawlResult={crawlResult} />
+            <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+              <DownloadReportButton type="crawlers" crawlResult={crawlResult} />
+              <ShareReportButton type="crawlers" url={currentUrl} crawlResult={crawlResult} />
+            </div>
           </>
         );
       case 'geo':
         return (
           <>
             <GeoDashboard result={geoResult} isLoading={isLoading} />
-            <DownloadReportButton type="geo" geoResult={geoResult} />
+            <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+              <DownloadReportButton type="geo" geoResult={geoResult} />
+              <ShareReportButton type="geo" url={currentUrl} geoResult={geoResult} />
+            </div>
           </>
         );
       case 'llm':
         return (
           <>
             <LLMDashboard result={llmResult} isLoading={isLoading} />
-            <DownloadReportButton type="llm" llmResult={llmResult} />
+            <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+              <DownloadReportButton type="llm" llmResult={llmResult} />
+              <ShareReportButton type="llm" url={currentUrl} llmResult={llmResult} />
+            </div>
           </>
         );
       case 'pagespeed':
@@ -233,7 +243,10 @@ const Index = () => {
               strategy={pageSpeedStrategy}
               onStrategyChange={handleStrategyChange}
             />
-            <DownloadReportButton type="pagespeed" pageSpeedResult={pageSpeedResult} />
+            <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+              <DownloadReportButton type="pagespeed" pageSpeedResult={pageSpeedResult} />
+              <ShareReportButton type="pagespeed" url={currentUrl} pageSpeedResult={pageSpeedResult} />
+            </div>
           </>
         );
     }
