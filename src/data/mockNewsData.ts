@@ -6,7 +6,11 @@ export const initialSources: NewsSource[] = [
   { id: 'src-3', name: 'Abondance', url: 'https://abondance.com', trustScore: 90, lastCrawled: new Date().toISOString() },
   { id: 'src-4', name: 'OpenAI Blog', url: 'https://openai.com/blog', trustScore: 98, lastCrawled: new Date().toISOString() },
   { id: 'src-5', name: 'Google AI Blog', url: 'https://ai.googleblog.com', trustScore: 97, lastCrawled: new Date().toISOString() },
+  { id: 'src-6', name: 'Semrush Blog', url: 'https://semrush.com/blog', trustScore: 88, lastCrawled: new Date().toISOString() },
+  { id: 'src-7', name: 'Ahrefs Blog', url: 'https://ahrefs.com/blog', trustScore: 89, lastCrawled: new Date().toISOString() },
 ];
+
+const MAX_ARTICLE_AGE_DAYS = 40;
 
 export const mockArticles: NewsArticle[] = [
   {
@@ -64,6 +68,61 @@ export const mockArticles: NewsArticle[] = [
     relevanceScore: 85,
     keywords: ['LLM', 'GEO', 'Outils', 'Analyse', 'Search']
   },
+  {
+    id: 'art-6',
+    title: 'Stratégie de contenu pour l\'ère de l\'IA : ce que les LLMs recherchent',
+    summary: 'Les modèles de langage privilégient certains types de contenu. Apprenez à structurer vos pages pour maximiser les citations dans les réponses génératives.',
+    imageUrl: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=450&fit=crop',
+    category: 'LLM',
+    source: initialSources[5],
+    publishedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 87,
+    keywords: ['LLM', 'Contenu', 'SEO', 'Search', 'Stratégie']
+  },
+  {
+    id: 'art-7',
+    title: 'Données structurées et GEO : le guide complet du Schema.org pour l\'IA',
+    summary: 'Les données structurées sont essentielles pour que les IA comprennent votre contenu. Guide pratique pour implémenter les schémas les plus efficaces.',
+    imageUrl: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&h=450&fit=crop',
+    category: 'GEO',
+    source: initialSources[6],
+    publishedAt: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 91,
+    keywords: ['GEO', 'Schema', 'SEO', 'Données structurées', 'Search']
+  },
+  {
+    id: 'art-8',
+    title: 'Perplexity, ChatGPT, Claude : comment chaque LLM indexe différemment le web',
+    summary: 'Chaque moteur IA a ses propres critères de sélection. Analyse comparative des méthodes d\'indexation et recommandations pour optimiser votre visibilité sur chaque plateforme.',
+    imageUrl: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=450&fit=crop',
+    category: 'LLM',
+    source: initialSources[0],
+    publishedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 93,
+    keywords: ['LLM', 'Perplexity', 'ChatGPT', 'Claude', 'Search']
+  },
+  {
+    id: 'art-9',
+    title: 'SEO technique 2025 : les fondamentaux qui comptent encore',
+    summary: 'Malgré l\'essor de l\'IA, certains fondamentaux SEO restent incontournables. Tour d\'horizon des optimisations techniques toujours essentielles.',
+    imageUrl: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&h=450&fit=crop',
+    category: 'SEO',
+    source: initialSources[1],
+    publishedAt: new Date(Date.now() - 32 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 82,
+    keywords: ['SEO', 'Technique', 'Fondamentaux', 'Optimisation']
+  },
+  {
+    id: 'art-10',
+    title: 'E-E-A-T et IA générative : renforcer votre autorité pour les moteurs du futur',
+    summary: 'L\'expertise, l\'expérience et l\'autorité sont plus importantes que jamais. Comment construire une présence web que les IA recommanderont naturellement.',
+    imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=450&fit=crop',
+    category: 'GEO',
+    source: initialSources[4],
+    publishedAt: new Date(Date.now() - 38 * 24 * 60 * 60 * 1000).toISOString(),
+    relevanceScore: 89,
+    keywords: ['GEO', 'E-E-A-T', 'Autorité', 'SEO', 'Search']
+  },
 ];
 
 export const RELEVANCE_KEYWORDS = ['LLM', 'GEO', 'SEO', 'RAG', 'Search'];
@@ -109,9 +168,9 @@ export function saveWhitelistToStorage(whitelist: WhitelistState): void {
 
 export function discoverNewSource(): NewsSource | null {
   const newSources: NewsSource[] = [
-    { id: `src-new-${Date.now()}`, name: 'Semrush Blog', url: 'https://semrush.com/blog', trustScore: 75, lastCrawled: new Date().toISOString() },
-    { id: `src-new-${Date.now()}`, name: 'Ahrefs Blog', url: 'https://ahrefs.com/blog', trustScore: 78, lastCrawled: new Date().toISOString() },
-    { id: `src-new-${Date.now()}`, name: 'Anthropic Research', url: 'https://anthropic.com/research', trustScore: 80, lastCrawled: new Date().toISOString() },
+    { id: `src-new-${Date.now()}`, name: 'Backlinko', url: 'https://backlinko.com/blog', trustScore: 85, lastCrawled: new Date().toISOString() },
+    { id: `src-new-${Date.now()}`, name: 'Anthropic Research', url: 'https://anthropic.com/research', trustScore: 94, lastCrawled: new Date().toISOString() },
+    { id: `src-new-${Date.now()}`, name: 'The Keyword (Google)', url: 'https://blog.google', trustScore: 96, lastCrawled: new Date().toISOString() },
   ];
   
   // 30% chance to discover a new source
@@ -122,18 +181,61 @@ export function discoverNewSource(): NewsSource | null {
   return null;
 }
 
+/**
+ * Calculate article priority score
+ * For lower relevance articles, trust score matters more than freshness
+ */
+function calculatePriorityScore(article: NewsArticle, sourceTrustScore: number): number {
+  const now = Date.now();
+  const articleAge = now - new Date(article.publishedAt).getTime();
+  const ageDays = articleAge / (24 * 60 * 60 * 1000);
+  
+  // Freshness score: 100 for today, decreasing to 0 at MAX_ARTICLE_AGE_DAYS
+  const freshnessScore = Math.max(0, 100 - (ageDays / MAX_ARTICLE_AGE_DAYS) * 100);
+  
+  // For high relevance articles (>= 85), balance freshness and trust
+  // For lower relevance articles, prioritize trust score over freshness
+  const relevanceThreshold = 85;
+  
+  if (article.relevanceScore >= relevanceThreshold) {
+    // High relevance: 50% freshness, 30% trust, 20% relevance
+    return freshnessScore * 0.5 + sourceTrustScore * 0.3 + article.relevanceScore * 0.2;
+  } else {
+    // Lower relevance: 20% freshness, 50% trust, 30% relevance
+    return freshnessScore * 0.2 + sourceTrustScore * 0.5 + article.relevanceScore * 0.3;
+  }
+}
+
 export async function fetchArticles(whitelist: WhitelistState): Promise<NewsArticle[]> {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 1500));
   
-  // Filter articles based on relevance score and source trust
+  const now = Date.now();
+  const maxAgeMs = MAX_ARTICLE_AGE_DAYS * 24 * 60 * 60 * 1000;
+  
+  // Filter articles based on relevance score, source trust, and max age
   const filteredArticles = mockArticles.filter(article => {
     const source = whitelist.sources.find(s => s.id === article.source.id);
     const sourceTrustScore = source?.trustScore ?? article.source.trustScore;
+    const articleAge = now - new Date(article.publishedAt).getTime();
     
-    return article.relevanceScore >= MIN_RELEVANCE_SCORE && sourceTrustScore >= 70;
+    return (
+      article.relevanceScore >= MIN_RELEVANCE_SCORE && 
+      sourceTrustScore >= 70 &&
+      articleAge <= maxAgeMs
+    );
   });
   
-  // Randomly shuffle to simulate "fresh" content
-  return filteredArticles.sort(() => Math.random() - 0.5);
+  // Sort by priority score (trust more important for lower relevance articles)
+  return filteredArticles.sort((a, b) => {
+    const sourceA = whitelist.sources.find(s => s.id === a.source.id);
+    const sourceB = whitelist.sources.find(s => s.id === b.source.id);
+    const trustA = sourceA?.trustScore ?? a.source.trustScore;
+    const trustB = sourceB?.trustScore ?? b.source.trustScore;
+    
+    const priorityA = calculatePriorityScore(a, trustA);
+    const priorityB = calculatePriorityScore(b, trustB);
+    
+    return priorityB - priorityA;
+  });
 }
