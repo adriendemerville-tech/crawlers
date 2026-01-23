@@ -1,3 +1,5 @@
+import { getLLMTranslations, parseLanguage, type Language } from '../_shared/translations.ts';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -42,8 +44,11 @@ interface LLMResponse {
 async function queryLLM(
   apiKey: string,
   model: string,
-  domain: string
+  domain: string,
+  lang: Language
 ): Promise<LLMResponse> {
+  const t = getLLMTranslations(lang);
+  
   const prompt = `You are analyzing the website/brand "${domain}". Answer these questions in JSON format:
 
 1. Are you aware of this website/brand? (cited: true/false)
@@ -69,8 +74,8 @@ Respond ONLY with valid JSON in this exact format:
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://phelps-ai.lovable.app',
-        'X-Title': 'AI Crawler Check - LLM Visibility Analyzer',
+        'HTTP-Referer': 'https://crawlers.lovable.app',
+        'X-Title': 'Crawlers.fr - LLM Visibility Analyzer',
       },
       body: JSON.stringify({
         model,
@@ -122,7 +127,7 @@ Respond ONLY with valid JSON in this exact format:
       cited: false,
       sentiment: 'neutral',
       recommends: false,
-      summary: `Unable to retrieve information about ${domain} from this model.`,
+      summary: t.unableToRetrieve(domain),
       coreValueMatch: false,
       hallucinations: [],
     };
@@ -136,7 +141,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const { url, lang: requestLang } = await req.json();
+    const lang = parseLanguage(requestLang);
+    const t = getLLMTranslations(lang);
 
     if (!url) {
       return new Response(
@@ -160,7 +167,7 @@ Deno.serve(async (req) => {
     const citationPromises = LLM_PROVIDERS.map(async (provider) => {
       console.log(`Querying ${provider.name} (${provider.model})...`);
       const startTime = Date.now();
-      const result = await queryLLM(apiKey, provider.model, domain);
+      const result = await queryLLM(apiKey, provider.model, domain, lang);
       const iterationDepth = result.cited ? Math.ceil((Date.now() - startTime) / 1000) : 0;
 
       return {
@@ -209,17 +216,21 @@ Deno.serve(async (req) => {
 
     const overallScore = Math.round(citationScore + sentimentScore + recommendationScore + coreValueScore);
 
-    // Generate core value summary
+    // Generate core value summary with translations
     const citedSummaries = citations.filter(c => c.cited).map(c => c.summary);
-    const coreValueSummary = citedCount > 0
-      ? `Based on ${citedCount} LLM citations: ${citedSummaries[0]} ${
-          overallSentiment === 'positive'
-            ? 'The overall perception across AI models is favorable.'
-            : overallSentiment === 'negative'
-            ? 'Some AI models express concerns about this domain.'
-            : 'The perception across AI models is mixed or neutral.'
-        }`
-      : `${domain} has low visibility across major LLMs. Consider improving your online presence, structured data, and content authority to be recognized by AI models.`;
+    let coreValueSummary: string;
+    
+    if (citedCount > 0) {
+      const perceptionText = overallSentiment === 'positive'
+        ? t.coreValueSummary.positivePerception
+        : overallSentiment === 'negative'
+        ? t.coreValueSummary.negativePerception
+        : t.coreValueSummary.neutralPerception;
+      
+      coreValueSummary = `${t.coreValueSummary.basedOn(citedCount)} ${citedSummaries[0]} ${perceptionText}`;
+    } else {
+      coreValueSummary = t.coreValueSummary.lowVisibility(domain);
+    }
 
     const result = {
       url: `https://${domain}`,

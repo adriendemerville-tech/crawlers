@@ -1,3 +1,5 @@
+import { getGeoTranslations, parseLanguage, type Language } from '../_shared/translations.ts';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -40,7 +42,6 @@ function checkAIBotsAllowed(robotsTxt: string | null): { allowed: number; total:
         currentAgent = trimmed.substring(11).trim();
       } else if (trimmed.startsWith('disallow:') && trimmed.includes('/')) {
         if (currentAgent === bot.toLowerCase() || currentAgent === '*') {
-          // Check if there's a specific allow for this bot later
           const botSection = robotsTxt.toLowerCase().includes(`user-agent: ${bot.toLowerCase()}`);
           if (currentAgent === '*' && !botSection) {
             isBlocked = true;
@@ -60,7 +61,6 @@ function checkAIBotsAllowed(robotsTxt: string | null): { allowed: number; total:
 }
 
 function extractHeadContent(html: string): string {
-  // Extract the <head> section specifically for more accurate parsing
   const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
   return headMatch ? headMatch[1] : html;
 }
@@ -68,23 +68,17 @@ function extractHeadContent(html: string): string {
 function analyzeCanonical(html: string): { hasCanonical: boolean; canonicalUrl?: string } {
   const headContent = extractHeadContent(html);
   
-  // Multiple regex patterns to catch canonical in various formats
   const patterns = [
-    // Standard: <link rel="canonical" href="...">
     /<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["'][^>]*\/?>/i,
-    // Reversed: <link href="..." rel="canonical">
     /<link[^>]*href=["']([^"']+)["'][^>]*rel=["']canonical["'][^>]*\/?>/i,
-    // With other attributes in between
     /<link[^>]*rel=["']canonical["'][^>]*>/i,
   ];
   
   for (const pattern of patterns) {
     const match = headContent.match(pattern);
     if (match) {
-      // If we captured the URL, extract it; otherwise just confirm presence
       let canonicalUrl: string | undefined = match[1];
       
-      // If no URL captured but tag found, try to extract href separately
       if (!canonicalUrl && match[0]) {
         const hrefMatch = match[0].match(/href=["']([^"']+)["']/i);
         if (hrefMatch && hrefMatch[1]) {
@@ -92,14 +86,10 @@ function analyzeCanonical(html: string): { hasCanonical: boolean; canonicalUrl?:
         }
       }
       
-      return { 
-        hasCanonical: true, 
-        canonicalUrl: canonicalUrl 
-      };
+      return { hasCanonical: true, canonicalUrl };
     }
   }
   
-  // Also check for HTTP header equivalent in meta
   const metaCanonical = headContent.match(/<meta[^>]*http-equiv=["']Link["'][^>]*content=["'][^"']*rel=["']?canonical["']?[^"']*["'][^>]*>/i);
   if (metaCanonical) {
     return { hasCanonical: true };
@@ -118,13 +108,11 @@ function analyzeMetaTags(html: string): {
 } {
   const headContent = extractHeadContent(html);
   
-  // More flexible regex patterns that handle attributes in any order
   const descMatch = headContent.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/i) ||
                     headContent.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["'][^>]*>/i);
   const keywordsMatch = headContent.match(/<meta[^>]*name=["']keywords["'][^>]*>/i);
   const robotsMatch = headContent.match(/<meta[^>]*name=["']robots["'][^>]*>/i);
   
-  // Use the dedicated canonical analyzer
   const canonicalResult = analyzeCanonical(html);
   
   return {
@@ -144,7 +132,6 @@ function analyzeStructuredData(html: string): { hasJsonLd: boolean; types: strin
   
   const types: string[] = [];
   for (const match of jsonLdMatches) {
-    // Extract all @type values
     const typeMatches = match.matchAll(/"@type"\s*:\s*"([^"]+)"/gi);
     for (const typeMatch of typeMatches) {
       if (typeMatch[1] && !types.includes(typeMatch[1])) {
@@ -157,18 +144,15 @@ function analyzeStructuredData(html: string): { hasJsonLd: boolean; types: strin
 }
 
 function detectSPA(html: string): { isSPA: boolean; hasSSR: boolean; framework?: string } {
-  // Check for common SPA patterns
   const hasReactRoot = /<div[^>]*id=["']root["'][^>]*>\s*<\/div>/i.test(html) ||
                        /<div[^>]*id=["']app["'][^>]*>\s*<\/div>/i.test(html) ||
                        /<div[^>]*id=["']__next["'][^>]*>\s*<\/div>/i.test(html);
   
-  // Check for framework indicators
   const hasReact = html.includes('__REACT') || html.includes('react') || html.includes('_react');
   const hasVue = html.includes('__VUE') || html.includes('vue');
   const hasNext = html.includes('__NEXT_DATA__') || html.includes('_next');
   const hasNuxt = html.includes('__NUXT__');
   
-  // Check for SSR indicators (content inside root div, Next.js data, etc.)
   const rootContentMatch = html.match(/<div[^>]*id=["'](?:root|app|__next)["'][^>]*>([\s\S]*?)<\/div>/i);
   const hasSSRContent = rootContentMatch && rootContentMatch[1].trim().length > 100;
   const hasNextData = html.includes('__NEXT_DATA__');
@@ -182,11 +166,7 @@ function detectSPA(html: string): { isSPA: boolean; hasSSR: boolean; framework?:
   else if (hasReact) framework = 'React';
   else if (hasVue) framework = 'Vue';
   
-  return {
-    isSPA: hasReactRoot && !hasSSR,
-    hasSSR,
-    framework
-  };
+  return { isSPA: hasReactRoot && !hasSSR, hasSSR, framework };
 }
 
 function analyzeContent(html: string): {
@@ -201,15 +181,12 @@ function analyzeContent(html: string): {
 } {
   const spaInfo = detectSPA(html);
   
-  // Match H1 tags (handle both <h1> and <h1 class="...">, etc.)
   const h1Match = html.match(/<h1[\s>]/gi);
   const headingsMatch = html.match(/<h[1-6][\s>]/gi);
   
-  // Match images with more flexible pattern
   const imagesMatch = html.match(/<img[^>]+>/gi) || [];
   const imagesWithAltMatch = imagesMatch.filter(img => /alt=["'][^"']+["']/i.test(img));
   
-  // Get text content from body, excluding scripts and styles
   let bodyContent = '';
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
   if (bodyMatch) {
@@ -234,14 +211,10 @@ function analyzeContent(html: string): {
 }
 
 function analyzeOpenGraph(html: string): { hasOg: boolean; hasTwitter: boolean } {
-  // More flexible matching for OG and Twitter tags
   const ogMatch = html.match(/<meta[^>]*property=["']og:[^"']+["'][^>]*>/i);
   const twitterMatch = html.match(/<meta[^>]*name=["']twitter:[^"']+["'][^>]*>/i);
   
-  return {
-    hasOg: !!ogMatch,
-    hasTwitter: !!twitterMatch
-  };
+  return { hasOg: !!ogMatch, hasTwitter: !!twitterMatch };
 }
 
 function checkSitemap(robotsTxt: string | null): boolean {
@@ -255,7 +228,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const { url, lang: requestLang } = await req.json();
+    const lang = parseLanguage(requestLang);
+    const t = getGeoTranslations(lang);
 
     if (!url) {
       return new Response(
@@ -311,71 +286,70 @@ Deno.serve(async (req) => {
     const aiBotScore = Math.round((aiBotsResult.allowed / aiBotsResult.total) * 20);
     factors.push({
       id: 'ai-bots',
-      name: 'AI Crawlers Access',
-      description: 'Major AI bots can access your content',
+      name: t.factors.aiBots.name,
+      description: t.factors.aiBots.description,
       score: aiBotScore,
       maxScore: 20,
       status: aiBotScore >= 18 ? 'good' : aiBotScore >= 10 ? 'warning' : 'error',
       recommendation: aiBotScore < 20 
-        ? `Allow blocked bots in robots.txt: ${aiBotsResult.blocked.join(', ')}`
+        ? t.factors.aiBots.recommendation(aiBotsResult.blocked.join(', '))
         : undefined,
-      details: `${aiBotsResult.allowed}/${aiBotsResult.total} AI bots allowed`
+      details: t.details.botsAllowed(aiBotsResult.allowed, aiBotsResult.total)
     });
 
     // Factor 2: Meta Description (15 points)
     const metaDescScore = metaResult.hasDescription ? 15 : 0;
     factors.push({
       id: 'meta-description',
-      name: 'Meta Description',
-      description: 'Quality meta description for AI summaries',
+      name: t.factors.metaDescription.name,
+      description: t.factors.metaDescription.description,
       score: metaDescScore,
       maxScore: 15,
       status: metaDescScore === 15 ? 'good' : 'error',
       recommendation: !metaResult.hasDescription 
-        ? 'Add a descriptive meta description (50-160 characters) that summarizes your page content'
+        ? t.factors.metaDescription.recommendation
         : undefined,
       details: metaResult.description 
         ? `"${metaResult.description.substring(0, 60)}..."` 
-        : 'No meta description found'
+        : t.details.noMetaDescription
     });
 
     // Factor 3: Structured Data (15 points)
     const structuredScore = structuredData.hasJsonLd ? 15 : 0;
     factors.push({
       id: 'structured-data',
-      name: 'Structured Data (JSON-LD)',
-      description: 'Schema.org markup for AI understanding',
+      name: t.factors.structuredData.name,
+      description: t.factors.structuredData.description,
       score: structuredScore,
       maxScore: 15,
       status: structuredScore === 15 ? 'good' : 'error',
       recommendation: !structuredData.hasJsonLd 
-        ? 'Add JSON-LD structured data (Organization, Article, Product, FAQ, etc.) to help AI understand your content'
+        ? t.factors.structuredData.recommendation
         : undefined,
       details: structuredData.hasJsonLd 
-        ? `Found types: ${structuredData.types.join(', ')}` 
-        : 'No structured data found'
+        ? t.details.foundTypes(structuredData.types.join(', '))
+        : t.details.noStructuredData
     });
 
     // Factor 4: Content Structure (15 points)
     let contentScore = 0;
     const contentIssues: string[] = [];
     
-    // If it's a client-side SPA without SSR, warn about it
     if (contentResult.isSPA && !contentResult.hasSSR) {
-      contentIssues.push(`Detected ${contentResult.framework || 'SPA'} without SSR - AI crawlers may not see dynamic content. Consider using SSR/SSG`);
+      contentIssues.push(t.factors.contentStructure.spaWarning(contentResult.framework || 'SPA'));
     }
     
     if (contentResult.hasH1) contentScore += 5;
     if (contentResult.headingsCount >= 3) contentScore += 5;
     if (contentResult.wordCount >= 300) contentScore += 5;
     
-    if (!contentResult.hasH1) contentIssues.push('Add a single H1 heading');
-    if (contentResult.headingsCount < 3) contentIssues.push('Use more heading hierarchy (H2, H3)');
+    if (!contentResult.hasH1) contentIssues.push(t.factors.contentStructure.addH1);
+    if (contentResult.headingsCount < 3) contentIssues.push(t.factors.contentStructure.moreHeadings);
     if (contentResult.wordCount < 300) {
       if (contentResult.isSPA && !contentResult.hasSSR) {
-        contentIssues.push('Low word count detected - this may be due to client-side rendering');
+        contentIssues.push(t.factors.contentStructure.lowWordCountSPA);
       } else {
-        contentIssues.push('Add more content (aim for 300+ words)');
+        contentIssues.push(t.factors.contentStructure.moreContent);
       }
     }
     
@@ -386,8 +360,8 @@ Deno.serve(async (req) => {
     
     factors.push({
       id: 'content-structure',
-      name: 'Content Structure',
-      description: 'Clear headings and sufficient content',
+      name: t.factors.contentStructure.name,
+      description: t.factors.contentStructure.description,
       score: contentScore,
       maxScore: 15,
       status: contentScore >= 12 ? 'good' : contentScore >= 8 ? 'warning' : 'error',
@@ -401,17 +375,17 @@ Deno.serve(async (req) => {
       : Math.round((contentResult.imagesWithAlt / contentResult.imagesTotal) * 10);
     factors.push({
       id: 'image-alt',
-      name: 'Image Alt Text',
-      description: 'Descriptive alt text for images',
+      name: t.factors.imageAlt.name,
+      description: t.factors.imageAlt.description,
       score: altScore,
       maxScore: 10,
       status: altScore >= 8 ? 'good' : altScore >= 5 ? 'warning' : 'error',
       recommendation: altScore < 10 && contentResult.imagesTotal > 0
-        ? `Add descriptive alt text to ${contentResult.imagesTotal - contentResult.imagesWithAlt} images`
+        ? t.factors.imageAlt.recommendation(contentResult.imagesTotal - contentResult.imagesWithAlt)
         : undefined,
       details: contentResult.imagesTotal === 0 
-        ? 'No images found' 
-        : `${contentResult.imagesWithAlt}/${contentResult.imagesTotal} images have alt text`
+        ? t.details.noImages 
+        : t.details.imagesWithAlt(contentResult.imagesWithAlt, contentResult.imagesTotal)
     });
 
     // Factor 6: Open Graph (10 points)
@@ -419,16 +393,23 @@ Deno.serve(async (req) => {
     if (ogResult.hasOg) ogScore += 5;
     if (ogResult.hasTwitter) ogScore += 5;
     
+    let ogRecommendation: string | undefined;
+    if (!ogResult.hasOg && !ogResult.hasTwitter) {
+      ogRecommendation = t.factors.socialMeta.addBoth;
+    } else if (!ogResult.hasOg) {
+      ogRecommendation = t.factors.socialMeta.addOg;
+    } else if (!ogResult.hasTwitter) {
+      ogRecommendation = t.factors.socialMeta.addTwitter;
+    }
+    
     factors.push({
       id: 'social-meta',
-      name: 'Social Meta Tags',
-      description: 'Open Graph and Twitter Cards',
+      name: t.factors.socialMeta.name,
+      description: t.factors.socialMeta.description,
       score: ogScore,
       maxScore: 10,
       status: ogScore >= 8 ? 'good' : ogScore >= 5 ? 'warning' : 'error',
-      recommendation: ogScore < 10 
-        ? `Add ${!ogResult.hasOg ? 'Open Graph tags' : ''}${!ogResult.hasOg && !ogResult.hasTwitter ? ' and ' : ''}${!ogResult.hasTwitter ? 'Twitter Card tags' : ''}`
-        : undefined,
+      recommendation: ogRecommendation,
       details: `OG: ${ogResult.hasOg ? '✓' : '✗'} | Twitter: ${ogResult.hasTwitter ? '✓' : '✗'}`
     });
 
@@ -436,35 +417,35 @@ Deno.serve(async (req) => {
     const sitemapScore = hasSitemap ? 10 : 0;
     factors.push({
       id: 'sitemap',
-      name: 'XML Sitemap',
-      description: 'Sitemap declared in robots.txt',
+      name: t.factors.sitemap.name,
+      description: t.factors.sitemap.description,
       score: sitemapScore,
       maxScore: 10,
       status: sitemapScore === 10 ? 'good' : 'error',
       recommendation: !hasSitemap 
-        ? 'Add a Sitemap directive to your robots.txt file pointing to your XML sitemap'
+        ? t.factors.sitemap.recommendation
         : undefined,
-      details: hasSitemap ? 'Sitemap found in robots.txt' : 'No sitemap reference in robots.txt'
+      details: hasSitemap ? t.details.sitemapFound : t.details.noSitemap
     });
 
     // Factor 8: Canonical URL (5 points)
     const canonicalScore = metaResult.hasCanonical ? 5 : 0;
-    let canonicalDetails = 'No canonical tag found in <head>';
+    let canonicalDetails = t.factors.canonical.noCanonical;
     if (metaResult.hasCanonical) {
       canonicalDetails = metaResult.canonicalUrl 
         ? `Canonical: ${metaResult.canonicalUrl.length > 50 ? metaResult.canonicalUrl.substring(0, 50) + '...' : metaResult.canonicalUrl}`
-        : 'Canonical tag found';
+        : t.factors.canonical.found;
     }
     
     factors.push({
       id: 'canonical',
-      name: 'Canonical URL',
-      description: 'Canonical tag to avoid duplicate content',
+      name: t.factors.canonical.name,
+      description: t.factors.canonical.description,
       score: canonicalScore,
       maxScore: 5,
       status: canonicalScore === 5 ? 'good' : 'warning',
       recommendation: !metaResult.hasCanonical 
-        ? 'Add a <link rel="canonical" href="..."> tag in your <head> section to indicate the preferred version of this page'
+        ? t.factors.canonical.recommendation
         : undefined,
       details: canonicalDetails
     });
