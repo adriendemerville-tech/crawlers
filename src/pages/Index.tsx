@@ -12,6 +12,7 @@ import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
 import { StrategicAuditResult } from '@/types/audit';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Lazy load heavy dashboard components
 const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then(m => ({ default: m.ResultsDashboard })));
@@ -51,6 +52,7 @@ const Index = () => {
   const [currentUrl, setCurrentUrl] = useState<string>('');
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   const handleCheck = async (url: string) => {
     setIsLoading(true);
@@ -79,7 +81,7 @@ const Index = () => {
         });
       } else if (activeTab === 'geo') {
         const { data, error } = await supabase.functions.invoke('check-geo', {
-          body: { url }
+          body: { url, lang: language }
         });
 
         if (error) throw new Error(error.message);
@@ -92,7 +94,7 @@ const Index = () => {
         });
       } else if (activeTab === 'llm') {
         const { data, error } = await supabase.functions.invoke('check-llm', {
-          body: { url }
+          body: { url, lang: language }
         });
 
         if (error) throw new Error(error.message);
@@ -227,8 +229,8 @@ const Index = () => {
       // Run all 4 checks in parallel
       const [crawlersRes, geoRes, llmRes, pagespeedRes] = await Promise.all([
         supabase.functions.invoke('check-crawlers', { body: { url: currentUrl } }),
-        supabase.functions.invoke('check-geo', { body: { url: currentUrl } }),
-        supabase.functions.invoke('check-llm', { body: { url: currentUrl } }),
+        supabase.functions.invoke('check-geo', { body: { url: currentUrl, lang: language } }),
+        supabase.functions.invoke('check-llm', { body: { url: currentUrl, lang: language } }),
         supabase.functions.invoke('check-pagespeed', { body: { url: currentUrl, strategy: 'mobile' } }),
       ]);
 
@@ -273,61 +275,70 @@ const Index = () => {
   };
 
   const renderDashboard = () => {
-    // Show strategic audit dashboard if active
-    if (showAuditDashboard) {
-      return <StrategicAuditDashboard result={auditResult} isLoading={isAuditLoading} />;
-    }
+    // Show strategic audit dashboard above the current tab results when active
+    const auditSection = showAuditDashboard && (
+      <StrategicAuditDashboard result={auditResult} isLoading={isAuditLoading} />
+    );
 
-    switch (activeTab) {
-      case 'crawlers':
-        return (
-          <>
-            <ResultsDashboard result={crawlResult} isLoading={isLoading} />
-            <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-              <DownloadReportButton type="crawlers" crawlResult={crawlResult} />
-              <ShareReportButton type="crawlers" url={currentUrl} crawlResult={crawlResult} />
-            </div>
-          </>
-        );
-      case 'geo':
-        return (
-          <>
-            <GeoDashboard result={geoResult} isLoading={isLoading} />
-            <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-              <DownloadReportButton type="geo" geoResult={geoResult} />
-              <ShareReportButton type="geo" url={currentUrl} geoResult={geoResult} />
-            </div>
-          </>
-        );
-      case 'llm':
-        return (
-          <>
-            <LLMDashboard result={llmResult} isLoading={isLoading} />
-            <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-              <DownloadReportButton type="llm" llmResult={llmResult} />
-              <ShareReportButton type="llm" url={currentUrl} llmResult={llmResult} />
-            </div>
-          </>
-        );
-      case 'pagespeed':
-        if (quotaExceeded) {
-          return <QuotaExceeded onRetry={handleRetry} />;
-        }
-        return (
-          <>
-            <PageSpeedDashboard 
-              result={pageSpeedResult} 
-              isLoading={isLoading}
-              strategy={pageSpeedStrategy}
-              onStrategyChange={handleStrategyChange}
-            />
-            <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-              <DownloadReportButton type="pagespeed" pageSpeedResult={pageSpeedResult} />
-              <ShareReportButton type="pagespeed" url={currentUrl} pageSpeedResult={pageSpeedResult} />
-            </div>
-          </>
-        );
-    }
+    const tabContent = (() => {
+      switch (activeTab) {
+        case 'crawlers':
+          return (
+            <>
+              <ResultsDashboard result={crawlResult} isLoading={isLoading && !showAuditDashboard} />
+              <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+                <DownloadReportButton type="crawlers" crawlResult={crawlResult} />
+                <ShareReportButton type="crawlers" url={currentUrl} crawlResult={crawlResult} />
+              </div>
+            </>
+          );
+        case 'geo':
+          return (
+            <>
+              <GeoDashboard result={geoResult} isLoading={isLoading && !showAuditDashboard} />
+              <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+                <DownloadReportButton type="geo" geoResult={geoResult} />
+                <ShareReportButton type="geo" url={currentUrl} geoResult={geoResult} />
+              </div>
+            </>
+          );
+        case 'llm':
+          return (
+            <>
+              <LLMDashboard result={llmResult} isLoading={isLoading && !showAuditDashboard} />
+              <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+                <DownloadReportButton type="llm" llmResult={llmResult} />
+                <ShareReportButton type="llm" url={currentUrl} llmResult={llmResult} />
+              </div>
+            </>
+          );
+        case 'pagespeed':
+          if (quotaExceeded) {
+            return <QuotaExceeded onRetry={handleRetry} />;
+          }
+          return (
+            <>
+              <PageSpeedDashboard 
+                result={pageSpeedResult} 
+                isLoading={isLoading && !showAuditDashboard}
+                strategy={pageSpeedStrategy}
+                onStrategyChange={handleStrategyChange}
+              />
+              <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+                <DownloadReportButton type="pagespeed" pageSpeedResult={pageSpeedResult} />
+                <ShareReportButton type="pagespeed" url={currentUrl} pageSpeedResult={pageSpeedResult} />
+              </div>
+            </>
+          );
+      }
+    })();
+
+    return (
+      <>
+        {auditSection}
+        {tabContent}
+      </>
+    );
   };
 
   // Check if any tool has results
