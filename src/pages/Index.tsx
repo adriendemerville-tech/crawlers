@@ -4,8 +4,7 @@ import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { ToolTabs, ToolTab } from '@/components/ToolTabs';
 import { Footer } from '@/components/Footer';
-import { DownloadReportButton } from '@/components/DownloadReportButton';
-import { ShareReportButton } from '@/components/ShareReportButton';
+import { FloatingReportButton } from '@/components/FloatingReportButton';
 import { CrawlResult } from '@/types/crawler';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { GeoResult } from '@/types/geo';
@@ -277,20 +276,6 @@ const Index = () => {
       );
     }
 
-    // Onglet actuel (en cours de chargement) en premier parmi les outils
-    const currentTabResult = (() => {
-      switch (activeTab) {
-        case 'crawlers':
-          return { type: 'crawlers' as const, result: crawlResult, isActive: true };
-        case 'geo':
-          return { type: 'geo' as const, result: geoResult, isActive: true };
-        case 'llm':
-          return { type: 'llm' as const, result: llmResult, isActive: true };
-        case 'pagespeed':
-          return { type: 'pagespeed' as const, result: pageSpeedResult, isActive: true };
-      }
-    })();
-
     // Afficher le dashboard de l'onglet actif en premier
     if (activeTab === 'pagespeed' && quotaExceeded) {
       dashboards.push(
@@ -302,30 +287,18 @@ const Index = () => {
       dashboards.push(
         <div key="crawlers-current" className="border-b border-border/50 pb-8">
           <ResultsDashboard result={crawlResult} isLoading={isLoading && !showAuditDashboard} />
-          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-            <DownloadReportButton type="crawlers" crawlResult={crawlResult} />
-            <ShareReportButton type="crawlers" url={currentUrl} crawlResult={crawlResult} />
-          </div>
         </div>
       );
     } else if (activeTab === 'geo') {
       dashboards.push(
         <div key="geo-current" className="border-b border-border/50 pb-8">
           <GeoDashboard result={geoResult} isLoading={isLoading && !showAuditDashboard} />
-          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-            <DownloadReportButton type="geo" geoResult={geoResult} />
-            <ShareReportButton type="geo" url={currentUrl} geoResult={geoResult} />
-          </div>
         </div>
       );
     } else if (activeTab === 'llm') {
       dashboards.push(
         <div key="llm-current" className="border-b border-border/50 pb-8">
           <LLMDashboard result={llmResult} isLoading={isLoading && !showAuditDashboard} />
-          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-            <DownloadReportButton type="llm" llmResult={llmResult} />
-            <ShareReportButton type="llm" url={currentUrl} llmResult={llmResult} />
-          </div>
         </div>
       );
     } else if (activeTab === 'pagespeed') {
@@ -337,10 +310,6 @@ const Index = () => {
             strategy={pageSpeedStrategy}
             onStrategyChange={handleStrategyChange}
           />
-          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-            <DownloadReportButton type="pagespeed" pageSpeedResult={pageSpeedResult} />
-            <ShareReportButton type="pagespeed" url={currentUrl} pageSpeedResult={pageSpeedResult} />
-          </div>
         </div>
       );
     }
@@ -350,10 +319,6 @@ const Index = () => {
       dashboards.push(
         <div key="crawlers-prev" className="border-b border-border/50 pb-8 opacity-80">
           <ResultsDashboard result={crawlResult} isLoading={false} />
-          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-            <DownloadReportButton type="crawlers" crawlResult={crawlResult} />
-            <ShareReportButton type="crawlers" url={currentUrl} crawlResult={crawlResult} />
-          </div>
         </div>
       );
     }
@@ -362,10 +327,6 @@ const Index = () => {
       dashboards.push(
         <div key="geo-prev" className="border-b border-border/50 pb-8 opacity-80">
           <GeoDashboard result={geoResult} isLoading={false} />
-          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-            <DownloadReportButton type="geo" geoResult={geoResult} />
-            <ShareReportButton type="geo" url={currentUrl} geoResult={geoResult} />
-          </div>
         </div>
       );
     }
@@ -374,10 +335,6 @@ const Index = () => {
       dashboards.push(
         <div key="llm-prev" className="border-b border-border/50 pb-8 opacity-80">
           <LLMDashboard result={llmResult} isLoading={false} />
-          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-            <DownloadReportButton type="llm" llmResult={llmResult} />
-            <ShareReportButton type="llm" url={currentUrl} llmResult={llmResult} />
-          </div>
         </div>
       );
     }
@@ -391,15 +348,11 @@ const Index = () => {
             strategy={pageSpeedStrategy}
             onStrategyChange={handleStrategyChange}
           />
-          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-            <DownloadReportButton type="pagespeed" pageSpeedResult={pageSpeedResult} />
-            <ShareReportButton type="pagespeed" url={currentUrl} pageSpeedResult={pageSpeedResult} />
-          </div>
         </div>
       );
     }
 
-    return <div className="space-y-8">{dashboards}</div>;
+    return <div className="space-y-8 pb-24">{dashboards}</div>;
   };
 
   // Check if any tool has results
@@ -435,6 +388,15 @@ const Index = () => {
         </Suspense>
       </main>
       <Footer />
+      
+      {/* Bouton rapport flottant */}
+      <FloatingReportButton
+        crawlResult={crawlResult}
+        geoResult={geoResult}
+        llmResult={llmResult}
+        pageSpeedResult={pageSpeedResult}
+        currentUrl={currentUrl}
+      />
     </div>
   );
 };

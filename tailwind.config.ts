@@ -68,6 +68,9 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        linkedin: {
+          DEFAULT: "hsl(201 100% 40%)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
