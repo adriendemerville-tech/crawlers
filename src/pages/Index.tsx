@@ -56,12 +56,7 @@ const Index = () => {
 
   const handleCheck = async (url: string) => {
     setIsLoading(true);
-    setCrawlResult(null);
-    setPageSpeedResult(null);
-    setGeoResult(null);
-    setLlmResult(null);
-    setAuditResult(null);
-    setShowAuditDashboard(false);
+    // Ne pas effacer les résultats existants - seulement mettre à jour l'outil actuel
     setQuotaExceeded(false);
     setCurrentUrl(url);
 
@@ -194,12 +189,7 @@ const Index = () => {
 
   const handleTabChange = (tab: ToolTab) => {
     setActiveTab(tab);
-    setCrawlResult(null);
-    setPageSpeedResult(null);
-    setGeoResult(null);
-    setLlmResult(null);
-    setAuditResult(null);
-    setShowAuditDashboard(false);
+    // Ne pas effacer les résultats existants - ils restent visibles
     setQuotaExceeded(false);
   };
 
@@ -275,70 +265,141 @@ const Index = () => {
   };
 
   const renderDashboard = () => {
-    // Show strategic audit dashboard above the current tab results when active
-    const auditSection = showAuditDashboard && (
-      <StrategicAuditDashboard result={auditResult} isLoading={isAuditLoading} />
-    );
+    // Afficher tous les résultats empilés : récents en haut, anciens en bas
+    const dashboards = [];
 
-    const tabContent = (() => {
+    // Audit stratégique toujours en premier s'il est actif
+    if (showAuditDashboard) {
+      dashboards.push(
+        <div key="audit" className="border-b border-border/50 pb-8">
+          <StrategicAuditDashboard result={auditResult} isLoading={isAuditLoading} />
+        </div>
+      );
+    }
+
+    // Onglet actuel (en cours de chargement) en premier parmi les outils
+    const currentTabResult = (() => {
       switch (activeTab) {
         case 'crawlers':
-          return (
-            <>
-              <ResultsDashboard result={crawlResult} isLoading={isLoading && !showAuditDashboard} />
-              <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-                <DownloadReportButton type="crawlers" crawlResult={crawlResult} />
-                <ShareReportButton type="crawlers" url={currentUrl} crawlResult={crawlResult} />
-              </div>
-            </>
-          );
+          return { type: 'crawlers' as const, result: crawlResult, isActive: true };
         case 'geo':
-          return (
-            <>
-              <GeoDashboard result={geoResult} isLoading={isLoading && !showAuditDashboard} />
-              <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-                <DownloadReportButton type="geo" geoResult={geoResult} />
-                <ShareReportButton type="geo" url={currentUrl} geoResult={geoResult} />
-              </div>
-            </>
-          );
+          return { type: 'geo' as const, result: geoResult, isActive: true };
         case 'llm':
-          return (
-            <>
-              <LLMDashboard result={llmResult} isLoading={isLoading && !showAuditDashboard} />
-              <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-                <DownloadReportButton type="llm" llmResult={llmResult} />
-                <ShareReportButton type="llm" url={currentUrl} llmResult={llmResult} />
-              </div>
-            </>
-          );
+          return { type: 'llm' as const, result: llmResult, isActive: true };
         case 'pagespeed':
-          if (quotaExceeded) {
-            return <QuotaExceeded onRetry={handleRetry} />;
-          }
-          return (
-            <>
-              <PageSpeedDashboard 
-                result={pageSpeedResult} 
-                isLoading={isLoading && !showAuditDashboard}
-                strategy={pageSpeedStrategy}
-                onStrategyChange={handleStrategyChange}
-              />
-              <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
-                <DownloadReportButton type="pagespeed" pageSpeedResult={pageSpeedResult} />
-                <ShareReportButton type="pagespeed" url={currentUrl} pageSpeedResult={pageSpeedResult} />
-              </div>
-            </>
-          );
+          return { type: 'pagespeed' as const, result: pageSpeedResult, isActive: true };
       }
     })();
 
-    return (
-      <>
-        {auditSection}
-        {tabContent}
-      </>
-    );
+    // Afficher le dashboard de l'onglet actif en premier
+    if (activeTab === 'pagespeed' && quotaExceeded) {
+      dashboards.push(
+        <div key="pagespeed-quota" className="border-b border-border/50 pb-8">
+          <QuotaExceeded onRetry={handleRetry} />
+        </div>
+      );
+    } else if (activeTab === 'crawlers') {
+      dashboards.push(
+        <div key="crawlers-current" className="border-b border-border/50 pb-8">
+          <ResultsDashboard result={crawlResult} isLoading={isLoading && !showAuditDashboard} />
+          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+            <DownloadReportButton type="crawlers" crawlResult={crawlResult} />
+            <ShareReportButton type="crawlers" url={currentUrl} crawlResult={crawlResult} />
+          </div>
+        </div>
+      );
+    } else if (activeTab === 'geo') {
+      dashboards.push(
+        <div key="geo-current" className="border-b border-border/50 pb-8">
+          <GeoDashboard result={geoResult} isLoading={isLoading && !showAuditDashboard} />
+          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+            <DownloadReportButton type="geo" geoResult={geoResult} />
+            <ShareReportButton type="geo" url={currentUrl} geoResult={geoResult} />
+          </div>
+        </div>
+      );
+    } else if (activeTab === 'llm') {
+      dashboards.push(
+        <div key="llm-current" className="border-b border-border/50 pb-8">
+          <LLMDashboard result={llmResult} isLoading={isLoading && !showAuditDashboard} />
+          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+            <DownloadReportButton type="llm" llmResult={llmResult} />
+            <ShareReportButton type="llm" url={currentUrl} llmResult={llmResult} />
+          </div>
+        </div>
+      );
+    } else if (activeTab === 'pagespeed') {
+      dashboards.push(
+        <div key="pagespeed-current" className="border-b border-border/50 pb-8">
+          <PageSpeedDashboard 
+            result={pageSpeedResult} 
+            isLoading={isLoading && !showAuditDashboard}
+            strategy={pageSpeedStrategy}
+            onStrategyChange={handleStrategyChange}
+          />
+          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+            <DownloadReportButton type="pagespeed" pageSpeedResult={pageSpeedResult} />
+            <ShareReportButton type="pagespeed" url={currentUrl} pageSpeedResult={pageSpeedResult} />
+          </div>
+        </div>
+      );
+    }
+
+    // Afficher les autres résultats existants (anciens) en dessous
+    if (activeTab !== 'crawlers' && crawlResult) {
+      dashboards.push(
+        <div key="crawlers-prev" className="border-b border-border/50 pb-8 opacity-80">
+          <ResultsDashboard result={crawlResult} isLoading={false} />
+          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+            <DownloadReportButton type="crawlers" crawlResult={crawlResult} />
+            <ShareReportButton type="crawlers" url={currentUrl} crawlResult={crawlResult} />
+          </div>
+        </div>
+      );
+    }
+
+    if (activeTab !== 'geo' && geoResult) {
+      dashboards.push(
+        <div key="geo-prev" className="border-b border-border/50 pb-8 opacity-80">
+          <GeoDashboard result={geoResult} isLoading={false} />
+          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+            <DownloadReportButton type="geo" geoResult={geoResult} />
+            <ShareReportButton type="geo" url={currentUrl} geoResult={geoResult} />
+          </div>
+        </div>
+      );
+    }
+
+    if (activeTab !== 'llm' && llmResult) {
+      dashboards.push(
+        <div key="llm-prev" className="border-b border-border/50 pb-8 opacity-80">
+          <LLMDashboard result={llmResult} isLoading={false} />
+          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+            <DownloadReportButton type="llm" llmResult={llmResult} />
+            <ShareReportButton type="llm" url={currentUrl} llmResult={llmResult} />
+          </div>
+        </div>
+      );
+    }
+
+    if (activeTab !== 'pagespeed' && pageSpeedResult) {
+      dashboards.push(
+        <div key="pagespeed-prev" className="border-b border-border/50 pb-8 opacity-80">
+          <PageSpeedDashboard 
+            result={pageSpeedResult} 
+            isLoading={false}
+            strategy={pageSpeedStrategy}
+            onStrategyChange={handleStrategyChange}
+          />
+          <div className="flex justify-center gap-4 mt-6 mb-8 flex-wrap">
+            <DownloadReportButton type="pagespeed" pageSpeedResult={pageSpeedResult} />
+            <ShareReportButton type="pagespeed" url={currentUrl} pageSpeedResult={pageSpeedResult} />
+          </div>
+        </div>
+      );
+    }
+
+    return <div className="space-y-8">{dashboards}</div>;
   };
 
   // Check if any tool has results
