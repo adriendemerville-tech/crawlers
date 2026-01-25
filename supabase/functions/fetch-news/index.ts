@@ -39,6 +39,7 @@ interface ArticleResult {
 
 const RELEVANCE_KEYWORDS = ['LLM', 'GEO', 'SEO', 'RAG', 'Search', 'AI', 'ChatGPT', 'Perplexity', 'Claude', 'Google', 'indexation', 'référencement', 'moteur'];
 const MIN_RELEVANCE_SCORE = 70;
+const TARGET_ARTICLE_COUNT = 15;
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=450&fit=crop';
 
 // Category-specific fallback images (10 per category for variety)
@@ -95,6 +96,96 @@ const GOOGLE_NEWS_FEEDS = [
   'https://news.google.com/rss/search?q=Google+AI+search&hl=en&gl=US&ceid=US:en',
   'https://news.google.com/rss/search?q=Perplexity+AI+search&hl=en&gl=US&ceid=US:en',
 ];
+
+// Generate dynamic search feed URL based on user query
+function buildSearchFeedUrl(searchTerm: string, lang: string = 'fr'): string {
+  const encodedTerm = encodeURIComponent(searchTerm);
+  const hl = lang === 'en' ? 'en' : 'fr';
+  const gl = lang === 'en' ? 'US' : 'FR';
+  const ceid = lang === 'en' ? 'US:en' : 'FR:fr';
+  return `https://news.google.com/rss/search?q=${encodedTerm}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
+}
+
+// Fetch additional articles for a specific search term
+async function fetchSupplementaryArticles(
+  searchTerm: string, 
+  lang: string, 
+  existingUrls: Set<string>,
+  neededCount: number,
+  category: string
+): Promise<ArticleResult[]> {
+  console.log(`Fetching ${neededCount} supplementary articles for "${searchTerm}"...`);
+  
+  // Try multiple search variations
+  const searchVariations = [
+    searchTerm,
+    `${searchTerm} AI`,
+    `${searchTerm} technology`,
+    `${searchTerm} actualités`,
+  ];
+  
+  const allNewItems: RSSItem[] = [];
+  
+  for (const variation of searchVariations) {
+    if (allNewItems.length >= neededCount * 2) break; // Get enough buffer
+    
+    const feedUrl = buildSearchFeedUrl(variation, lang);
+    const items = await fetchRSSFeed(feedUrl);
+    
+    for (const item of items) {
+      if (!existingUrls.has(item.link)) {
+        existingUrls.add(item.link);
+        allNewItems.push(item);
+      }
+    }
+  }
+  
+  console.log(`Found ${allNewItems.length} new articles from supplementary search`);
+  
+  // Score and filter articles
+  const articlesWithScore: Array<{ item: RSSItem; score: number }> = [];
+  
+  for (const item of allNewItems) {
+    const combinedText = `${item.title} ${item.description || ''}`;
+    const lowerCombined = combinedText.toLowerCase();
+    
+    // Must contain original search term
+    if (!lowerCombined.includes(searchTerm.toLowerCase())) {
+      continue;
+    }
+    
+    // Apply category filter if provided
+    if (category && category !== 'ALL') {
+      const detectedCategory = detectCategory(combinedText);
+      if (detectedCategory !== category) {
+        continue;
+      }
+    }
+    
+    // Lower relevance score requirement for supplementary (broader search)
+    const score = calculateRelevanceScore(combinedText);
+    articlesWithScore.push({ item, score });
+  }
+  
+  // Sort by score and take what we need
+  articlesWithScore.sort((a, b) => b.score - a.score);
+  const topItems = articlesWithScore.slice(0, neededCount);
+  
+  // Process articles
+  const CONCURRENT_REQUESTS = 3;
+  const results: ArticleResult[] = [];
+  
+  for (let i = 0; i < topItems.length; i += CONCURRENT_REQUESTS) {
+    const batch = topItems.slice(i, i + CONCURRENT_REQUESTS);
+    const batchPromises = batch.map(({ item, score }, batchIndex) => 
+      processArticle(item, score, 1000 + i + batchIndex) // Offset index to avoid conflicts
+    );
+    const batchResults = await Promise.all(batchPromises);
+    results.push(...batchResults);
+  }
+  
+  return results;
+}
 
 // Translate text using Lovable AI Gateway
 async function translateText(text: string, targetLang: string): Promise<string> {
@@ -511,13 +602,13 @@ Deno.serve(async (req) => {
     
     console.log(`${articlesWithScore.length} articles passed relevance filter (>= ${MIN_RELEVANCE_SCORE})`);
     
-    // Sort by score and take top 20
+    // Sort by score and take top articles (target count)
     articlesWithScore.sort((a, b) => b.score - a.score);
-    const topArticles = articlesWithScore.slice(0, 20);
+    const topArticles = articlesWithScore.slice(0, TARGET_ARTICLE_COUNT);
     
     // Process articles in batches with concurrency limit
     const CONCURRENT_REQUESTS = 3; // Lower concurrency to avoid rate limits
-    const results: ArticleResult[] = [];
+    let results: ArticleResult[] = [];
     
     for (let i = 0; i < topArticles.length; i += CONCURRENT_REQUESTS) {
       const batch = topArticles.slice(i, i + CONCURRENT_REQUESTS);
@@ -528,6 +619,23 @@ Deno.serve(async (req) => {
       
       const batchResults = await Promise.all(batchPromises);
       results.push(...batchResults);
+    }
+    
+    // If search query is provided and we don't have enough results, fetch supplementary articles
+    if (searchQuery && results.length < TARGET_ARTICLE_COUNT) {
+      const neededCount = TARGET_ARTICLE_COUNT - results.length;
+      console.log(`Only ${results.length} articles found for "${searchQuery}", fetching ${neededCount} more...`);
+      
+      const supplementaryArticles = await fetchSupplementaryArticles(
+        searchQuery,
+        lang,
+        seenUrls,
+        neededCount,
+        category
+      );
+      
+      results = [...results, ...supplementaryArticles];
+      console.log(`After supplementary fetch: ${results.length} total articles`);
     }
     
     // Translate titles and summaries if not French
