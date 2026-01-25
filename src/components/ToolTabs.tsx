@@ -85,7 +85,7 @@ export function ToolTabs({
         <Link to="/audit-expert">
           <Button
             variant="outline"
-            className="gap-2 bg-gradient-to-r from-primary/10 to-primary/5 text-primary hover:from-primary/20 hover:to-primary/10 border-primary/20"
+            className="gap-2 bg-gradient-to-r from-primary/10 to-primary/5 text-primary hover:from-primary/20 hover:to-primary/10 border-amber-400 border-2"
           >
             <FileSearch className="h-4 w-4" />
             <span>{auditExpertText[language]}</span>
