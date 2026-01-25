@@ -147,10 +147,10 @@ const ExpertAudit = () => {
       <Header />
       <main className="flex-1" role="main" aria-label="Audit Expert SEO & IA">
         <ExpertAuditDashboard />
-        <ExpertAuditContent />
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
           <SEOComparisonTable />
         </Suspense>
+        <ExpertAuditContent />
         <ExpertAuditFAQ />
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
           <NewsCarousel />
