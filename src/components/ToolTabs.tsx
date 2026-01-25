@@ -1,7 +1,8 @@
-import { Bot, Gauge, Sparkles, Brain, Zap, Loader2 } from 'lucide-react';
+import { Bot, Gauge, Sparkles, Brain, Zap, Loader2, FileSearch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 export type ToolTab = 'crawlers' | 'pagespeed' | 'geo' | 'llm';
 
@@ -85,6 +86,16 @@ export function ToolTabs({
           <Gauge className="h-4 w-4" />
           <span>{t.tabs.pagespeed}</span>
         </button>
+        
+        {/* Lien Audit Expert /200 */}
+        <Link
+          to="/audit-expert"
+          className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:px-6 sm:py-3 bg-gradient-to-r from-primary/10 to-primary/5 text-primary hover:from-primary/20 hover:to-primary/10 border border-primary/20"
+        >
+          <FileSearch className="h-4 w-4" />
+          <span className="hidden sm:inline">Audit Expert</span>
+          <span className="text-xs font-bold">/200</span>
+        </Link>
       </div>
 
       {/* Bouton Audit Complet */}
