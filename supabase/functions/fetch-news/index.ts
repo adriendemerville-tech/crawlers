@@ -96,6 +96,84 @@ const GOOGLE_NEWS_FEEDS = [
   'https://news.google.com/rss/search?q=Perplexity+AI+search&hl=en&gl=US&ceid=US:en',
 ];
 
+// Translate text using Lovable AI Gateway
+async function translateText(text: string, targetLang: string): Promise<string> {
+  // Skip translation if already in target language or if French (source language)
+  if (targetLang === 'fr') return text;
+  
+  const langNames: Record<string, string> = {
+    en: 'English',
+    es: 'Spanish',
+    fr: 'French',
+  };
+  
+  const targetLangName = langNames[targetLang] || 'English';
+  
+  try {
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.log('LOVABLE_API_KEY not found, skipping translation');
+      return text;
+    }
+    
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a professional translator. Translate the following text to ${targetLangName}. Only return the translated text, nothing else. Keep any technical terms (SEO, LLM, GEO, ChatGPT, etc.) unchanged.`
+          },
+          {
+            role: 'user',
+            content: text
+          }
+        ],
+        max_tokens: 500,
+      }),
+    });
+    
+    if (!response.ok) {
+      console.log('Translation API error:', response.status);
+      return text;
+    }
+    
+    const data = await response.json();
+    const translated = data.choices?.[0]?.message?.content?.trim();
+    
+    if (translated) {
+      return translated;
+    }
+    
+    return text;
+  } catch (error) {
+    console.log('Translation error:', error);
+    return text;
+  }
+}
+
+// Batch translate multiple texts
+async function batchTranslate(texts: string[], targetLang: string): Promise<string[]> {
+  if (targetLang === 'fr') return texts;
+  
+  // Translate in parallel with concurrency limit
+  const BATCH_SIZE = 5;
+  const results: string[] = [];
+  
+  for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+    const batch = texts.slice(i, i + BATCH_SIZE);
+    const translated = await Promise.all(batch.map(text => translateText(text, targetLang)));
+    results.push(...translated);
+  }
+  
+  return results;
+}
+
 function calculateRelevanceScore(text: string): number {
   const lowerText = text.toLowerCase();
   let score = 50;
@@ -456,6 +534,29 @@ Deno.serve(async (req) => {
       
       const batchResults = await Promise.all(batchPromises);
       results.push(...batchResults);
+    }
+    
+    // Translate titles and summaries if not French
+    if (lang !== 'fr' && results.length > 0) {
+      console.log(`Translating ${results.length} articles to ${lang}...`);
+      
+      // Extract all titles and summaries for batch translation
+      const titles = results.map(a => a.title);
+      const summaries = results.map(a => a.summary);
+      
+      // Translate in parallel
+      const [translatedTitles, translatedSummaries] = await Promise.all([
+        batchTranslate(titles, lang),
+        batchTranslate(summaries, lang),
+      ]);
+      
+      // Apply translations
+      for (let i = 0; i < results.length; i++) {
+        results[i].title = translatedTitles[i] || results[i].title;
+        results[i].summary = translatedSummaries[i] || results[i].summary;
+      }
+      
+      console.log(`Translation complete for ${lang}`);
     }
     
     console.log(`Returning ${results.length} processed articles with images`);
