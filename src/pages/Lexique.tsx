@@ -2,13 +2,26 @@ import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink } from 'lucide-react';
+import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Share2 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
+// Social icons as inline SVGs
+const TwitterIcon = () => (
+  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+);
+
+const LinkedInIcon = () => (
+  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+  </svg>
+);
 
 interface GlossaryTerm {
   term: string;
@@ -226,6 +239,9 @@ const pageContent = {
     downloadPdf: "Télécharger le lexique PDF",
     pdfTitle: "Lexique SEO, GEO & Performance 2026",
     pdfSubtitle: "Référence complète pour la France et l'Europe",
+    shareTwitter: "Partager sur X",
+    shareLinkedIn: "Partager sur LinkedIn",
+    shareText: "📚 Découvrez le lexique complet SEO, GEO & Performance 2026 - Plus de 70 définitions claires pour maîtriser le référencement et l'IA générative !",
   },
   en: {
     title: "SEO, GEO & Performance Glossary 2026",
@@ -240,6 +256,9 @@ const pageContent = {
     downloadPdf: "Download PDF glossary",
     pdfTitle: "SEO, GEO & Performance Glossary 2026",
     pdfSubtitle: "Complete reference for Great Britain and USA",
+    shareTwitter: "Share on X",
+    shareLinkedIn: "Share on LinkedIn",
+    shareText: "📚 Discover the complete SEO, GEO & Performance glossary 2026 - Over 70 clear definitions to master SEO and generative AI!",
   },
   es: {
     title: "Glosario SEO, GEO & Rendimiento 2026",
@@ -254,6 +273,9 @@ const pageContent = {
     downloadPdf: "Descargar glosario PDF",
     pdfTitle: "Glosario SEO, GEO & Rendimiento 2026",
     pdfSubtitle: "Referencia completa para España, México y Argentina",
+    shareTwitter: "Compartir en X",
+    shareLinkedIn: "Compartir en LinkedIn",
+    shareText: "📚 Descubre el glosario completo SEO, GEO & Rendimiento 2026 - ¡Más de 70 definiciones claras para dominar el SEO y la IA generativa!",
   },
 };
 
@@ -375,7 +397,19 @@ export default function Lexique() {
     doc.save(`lexique-seo-geo-performance-2026-${language}.pdf`);
   };
 
-  // Generate JSON-LD for DefinedTermSet (optimized for SGE and LLMs)
+  // Social share functions
+  const shareUrl = 'https://crawlers.fr/lexique';
+  
+  const shareOnTwitter = () => {
+    const text = encodeURIComponent(content.shareText);
+    const url = encodeURIComponent(shareUrl);
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'width=550,height=420');
+  };
+
+  const shareOnLinkedIn = () => {
+    const url = encodeURIComponent(shareUrl);
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank', 'width=550,height=420');
+  };
   const jsonLdDefinedTermSet = {
     "@context": "https://schema.org",
     "@type": "DefinedTermSet",
@@ -469,16 +503,43 @@ export default function Lexique() {
               {content.intro}
             </p>
             
-            {/* Download PDF Button */}
-            <Button 
-              onClick={generatePDF}
-              size="lg"
-              variant="hero"
-              className="gap-3"
-            >
-              <Download className="h-5 w-5" />
-              {content.downloadPdf}
-            </Button>
+            {/* Action buttons */}
+            <div className="flex flex-wrap justify-center gap-3">
+              {/* Download PDF Button */}
+              <Button 
+                onClick={generatePDF}
+                size="lg"
+                variant="hero"
+                className="gap-2"
+              >
+                <Download className="h-5 w-5" />
+                {content.downloadPdf}
+              </Button>
+              
+              {/* Social Share Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  onClick={shareOnTwitter}
+                  variant="outline"
+                  size="lg"
+                  className="gap-2 border-muted-foreground/30 hover:bg-muted"
+                  title={content.shareTwitter}
+                >
+                  <TwitterIcon />
+                  <span className="hidden sm:inline">X</span>
+                </Button>
+                <Button
+                  onClick={shareOnLinkedIn}
+                  variant="outline"
+                  size="lg"
+                  className="gap-2 border-muted-foreground/30 hover:bg-[#0A66C2] hover:text-white hover:border-[#0A66C2]"
+                  title={content.shareLinkedIn}
+                >
+                  <LinkedInIcon />
+                  <span className="hidden sm:inline">LinkedIn</span>
+                </Button>
+              </div>
+            </div>
           </section>
 
           {/* Search and Filters */}
