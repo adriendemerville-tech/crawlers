@@ -1,11 +1,8 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-interface LighthouseCategory {
-  score: number;
-  title: string;
 }
 
 interface PageSpeedResult {
@@ -36,7 +33,8 @@ function formatTime(ms: number): string {
   return `${Math.round(ms)}ms`;
 }
 
-Deno.serve(async (req) => {
+serve(async (req) => {
+  // Gestion du protocole CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -54,56 +52,39 @@ Deno.serve(async (req) => {
     const normalizedUrl = normalizeUrl(url);
     console.log('Checking PageSpeed for:', normalizedUrl, 'Strategy:', strategy);
 
-    // Get API key from environment
-    const apiKey = Deno.env.get('GOOGLE_PAGESPEED_API_KEY');
-    
-    // Build the base URL without API key first (PageSpeed API works without key but with lower quota)
-    const baseUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO`;
-    
-    // Try with API key first if available
-    let response: Response;
-    let usedApiKey = false;
-    
-    if (apiKey) {
-      console.log('Trying with API key...');
-      response = await fetch(`${baseUrl}&key=${apiKey}`);
-      
-      // If API key causes 403 (blocked), retry without it
-      if (response.status === 403) {
-        console.log('API key blocked, retrying without key...');
-        response = await fetch(baseUrl);
-      } else {
-        usedApiKey = true;
-      }
-    } else {
-      console.log('No API key configured, using public quota');
-      response = await fetch(baseUrl);
-    }
+    // Clé API directe
+    const apiKey = "AIzaSyALHaypJWTqbt8K1klhQkYeLPRBjaOs2hc";
+
+    // Construction de l'URL pour Google PageSpeed Insights
+    const googleApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`;
+
+    console.log('Calling Google PageSpeed API...');
+    const response = await fetch(googleApiUrl);
 
     if (!response.ok) {
       const errorData = await response.json();
       console.error('PageSpeed API error:', JSON.stringify(errorData));
       
-      // Handle quota exceeded error specifically
+      // Gestion du dépassement de quota
       if (response.status === 429 || errorData?.error?.status === 'RESOURCE_EXHAUSTED') {
         return new Response(
           JSON.stringify({ 
             success: false, 
             error: 'quota_exceeded',
-            message: 'PageSpeed API daily quota exceeded. Please try again tomorrow or configure a valid Google API key with PageSpeed Insights API enabled.'
+            message: 'PageSpeed API daily quota exceeded. Please try again tomorrow.'
           }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
       return new Response(
-        JSON.stringify({ success: false, error: `PageSpeed API error: ${response.status}` }),
+        JSON.stringify({ success: false, error: errorData?.error?.message || `PageSpeed API error: ${response.status}` }),
         { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const data = await response.json();
-    console.log('PageSpeed response received');
+    console.log('PageSpeed response received successfully');
 
     const categories = data.lighthouseResult?.categories || {};
     const audits = data.lighthouseResult?.audits || {};
