@@ -4,8 +4,9 @@ import { Footer } from '@/components/Footer';
 import { ExpertAuditDashboard, ExpertAuditContent, ExpertAuditFAQ } from '@/components/ExpertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-// Lazy load the NewsCarousel
+// Lazy load components
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
+const SEOComparisonTable = lazy(() => import('@/components/SEOComparisonTable').then(m => ({ default: m.SEOComparisonTable })));
 
 // FAQ data for Schema.org
 const faqSchemaData = {
@@ -147,6 +148,9 @@ const ExpertAudit = () => {
       <main className="flex-1" role="main" aria-label="Audit Expert SEO & IA">
         <ExpertAuditDashboard />
         <ExpertAuditContent />
+        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+          <SEOComparisonTable />
+        </Suspense>
         <ExpertAuditFAQ />
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
           <NewsCarousel />

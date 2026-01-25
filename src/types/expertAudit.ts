@@ -50,6 +50,9 @@ export interface Recommendation {
   icon: string;
   title: string;
   description: string;
+  strengths?: string[];
+  weaknesses?: string[];
+  fixes?: string[];
   completed?: boolean;
 }
 

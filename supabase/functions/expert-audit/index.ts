@@ -237,6 +237,9 @@ interface RecommendationItem {
   icon: string;
   title: string;
   description: string;
+  strengths?: string[];
+  weaknesses?: string[];
+  fixes?: string[];
 }
 
 function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiData: any): RecommendationItem[] {
@@ -245,26 +248,66 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
   
   // Performance recommendations
   const lcpMs = audits['largest-contentful-paint']?.numericValue || 0;
+  const lcpSeconds = (lcpMs / 1000).toFixed(1);
+  
   if (lcpMs > 2500) {
     recommendations.push({
       id: 'lcp-slow',
       priority: 'critical',
       category: 'performance',
       icon: '🔴',
-      title: 'LCP trop lent (> 2.5s)',
-      description: 'Votre contenu principal met trop de temps à charger. Optimisez la taille de vos images (WebP), activez la compression Brotli et améliorez le temps de réponse serveur (TTFB).'
+      title: 'LCP trop lent : contenu principal inaccessible rapidement',
+      description: `Votre Largest Contentful Paint (LCP) est de ${lcpSeconds}s, bien au-delà du seuil recommandé de 2.5s. Cela signifie que vos visiteurs attendent trop longtemps avant de voir le contenu principal, ce qui augmente significativement le taux de rebond et pénalise votre référencement Google.`,
+      strengths: [
+        "La page se charge et répond au serveur",
+        "Le contenu est accessible après chargement complet"
+      ],
+      weaknesses: [
+        `LCP actuel : ${lcpSeconds}s (objectif < 2.5s)`,
+        "Les utilisateurs mobiles sont particulièrement impactés (connexions plus lentes)",
+        "Google utilise le LCP comme facteur de classement Core Web Vitals",
+        "Les crawlers IA (GPTBot, ClaudeBot) peuvent abandonner avant chargement complet"
+      ],
+      fixes: [
+        "Convertir toutes les images en format WebP ou AVIF (gain moyen 30-50% de taille)",
+        "Implémenter le lazy loading sur les images sous la ligne de flottaison avec loading='lazy'",
+        "Activer la compression Brotli côté serveur (meilleure que Gzip)",
+        "Optimiser le TTFB en utilisant un CDN (Cloudflare, Fastly) et le caching HTTP",
+        "Précharger les ressources critiques avec <link rel='preload'> pour fonts et hero images",
+        "Réduire les requêtes bloquantes en différant les CSS non critiques"
+      ]
     });
+  } else if (lcpMs <= 2500) {
+    // Add as strength context for other recommendations
   }
   
-  const tbpMs = audits['total-blocking-time']?.numericValue || 0;
-  if (tbpMs > 300) {
+  const tbtMs = audits['total-blocking-time']?.numericValue || 0;
+  if (tbtMs > 300) {
     recommendations.push({
       id: 'tbt-high',
       priority: 'critical',
       category: 'performance',
       icon: '🔴',
-      title: 'Temps de blocage élevé',
-      description: 'Le JavaScript bloque le thread principal trop longtemps. Divisez le code en chunks, différez les scripts non critiques avec defer/async.'
+      title: 'JavaScript bloquant : interactivité dégradée',
+      description: `Le Total Blocking Time (TBT) de ${Math.round(tbtMs)}ms dépasse largement le seuil de 200ms. Le thread principal est monopolisé par des scripts JavaScript, empêchant toute interaction utilisateur pendant ce temps.`,
+      strengths: [
+        "Le JavaScript est exécuté correctement",
+        "Les fonctionnalités interactives finissent par se charger"
+      ],
+      weaknesses: [
+        `TBT actuel : ${Math.round(tbtMs)}ms (objectif < 200ms)`,
+        "L'interface semble 'gelée' pendant le chargement",
+        "Impact négatif sur le score Performance de Lighthouse",
+        "Les utilisateurs impatients quittent avant l'interactivité complète"
+      ],
+      fixes: [
+        "Diviser le bundle JavaScript en chunks avec code splitting (React.lazy, dynamic imports)",
+        "Différer les scripts non critiques avec les attributs defer ou async",
+        "Supprimer ou remplacer les bibliothèques JavaScript lourdes (moment.js → date-fns)",
+        "Utiliser le tree-shaking pour éliminer le code mort",
+        "Déplacer les scripts analytics et third-party en chargement asynchrone",
+        "Implémenter le Server-Side Rendering (SSR) pour le contenu critique"
+      ]
     });
   }
   
@@ -275,8 +318,26 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
       priority: 'important',
       category: 'performance',
       icon: '🟠',
-      title: 'Instabilité visuelle (CLS)',
-      description: 'Les éléments de la page bougent pendant le chargement. Définissez des dimensions fixes pour les images et les embeds.'
+      title: 'Instabilité visuelle : éléments qui bougent au chargement',
+      description: `Votre Cumulative Layout Shift (CLS) de ${cls.toFixed(3)} indique que des éléments de la page se déplacent de manière inattendue pendant le chargement, créant une expérience frustrante pour l'utilisateur.`,
+      strengths: [
+        "Le layout final est stable une fois chargé",
+        "La structure HTML est correctement définie"
+      ],
+      weaknesses: [
+        `CLS actuel : ${cls.toFixed(3)} (objectif < 0.1)`,
+        "Les utilisateurs peuvent cliquer accidentellement sur le mauvais élément",
+        "Pénalité Core Web Vitals appliquée par Google",
+        "Expérience utilisateur dégradée, surtout sur mobile"
+      ],
+      fixes: [
+        "Définir des dimensions explicites (width/height) sur toutes les images et vidéos",
+        "Réserver l'espace pour les publicités et embeds avec aspect-ratio CSS",
+        "Éviter d'injecter du contenu au-dessus du contenu existant sans réservation d'espace",
+        "Utiliser font-display: swap avec des fonts de fallback de taille similaire",
+        "Précharger les fonts critiques avec <link rel='preload' as='font'>",
+        "Tester avec Chrome DevTools > Performance > Layout Shift Regions"
+      ]
     });
   }
   
@@ -287,8 +348,21 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
       priority: 'critical',
       category: 'technique',
       icon: '🔴',
-      title: 'Balise Title manquante',
-      description: 'Ajoutez une balise <title> unique et descriptive (50-60 caractères) contenant vos mots-clés principaux.'
+      title: 'Balise Title absente : page non identifiable',
+      description: 'Votre page ne possède pas de balise <title>. C\'est le premier élément analysé par Google et les moteurs de recherche pour comprendre le sujet de votre page. Sans titre, votre page apparaîtra avec un libellé générique ou l\'URL dans les résultats de recherche.',
+      weaknesses: [
+        "Aucune balise <title> détectée dans le <head>",
+        "Impossible de se positionner correctement dans les SERP",
+        "Les partages sociaux afficheront l'URL au lieu d'un titre attractif",
+        "Les LLM ne peuvent pas identifier le sujet principal de la page"
+      ],
+      fixes: [
+        "Ajouter une balise <title> unique dans le <head> de la page",
+        "Limiter le titre à 50-60 caractères pour éviter la troncature",
+        "Inclure le mot-clé principal au début du titre",
+        "Formuler le titre de manière engageante pour inciter au clic",
+        "Éviter les titres dupliqués entre les pages du site"
+      ]
     });
   } else if (htmlAnalysis.titleLength > 70) {
     recommendations.push({
@@ -296,9 +370,26 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
       priority: 'important',
       category: 'technique',
       icon: '🟠',
-      title: 'Title trop long',
-      description: `Votre titre fait ${htmlAnalysis.titleLength} caractères. Réduisez-le à 60 caractères maximum pour éviter la troncature dans les SERP.`
+      title: 'Titre trop long : troncature dans les résultats de recherche',
+      description: `Votre titre fait ${htmlAnalysis.titleLength} caractères. Google tronque généralement les titres au-delà de 60 caractères, ce qui peut couper des informations importantes et réduire le taux de clic.`,
+      strengths: [
+        "Une balise <title> est présente",
+        `Titre actuel : "${htmlAnalysis.titleContent?.substring(0, 50)}..."`
+      ],
+      weaknesses: [
+        `Longueur actuelle : ${htmlAnalysis.titleLength} caractères (recommandé : 50-60)`,
+        "Le titre sera tronqué avec '...' dans les résultats Google",
+        "Les informations clés en fin de titre ne seront pas visibles"
+      ],
+      fixes: [
+        "Réduire le titre à 60 caractères maximum",
+        "Placer le mot-clé principal dans les 30 premiers caractères",
+        "Supprimer les mots inutiles (le, la, les, de, etc.)",
+        "Tester l'affichage avec un outil de prévisualisation SERP"
+      ]
     });
+  } else {
+    // Title is good - can be used as strength elsewhere
   }
   
   if (!htmlAnalysis.hasMetaDesc) {
@@ -307,8 +398,21 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
       priority: 'important',
       category: 'contenu',
       icon: '🟠',
-      title: 'Meta Description absente',
-      description: 'Ajoutez une meta description de 150-160 caractères incitant au clic et contenant vos mots-clés.'
+      title: 'Meta Description manquante : opportunité de clic perdue',
+      description: 'Votre page n\'a pas de meta description. Google génèrera automatiquement un extrait à partir du contenu de la page, mais ce texte sera souvent moins pertinent et moins incitatif qu\'une description rédigée manuellement.',
+      weaknesses: [
+        "Aucune balise <meta name='description'> détectée",
+        "Google choisira un extrait aléatoire du contenu",
+        "Taux de clic (CTR) potentiellement réduit",
+        "Opportunité manquée d'inclure un appel à l'action"
+      ],
+      fixes: [
+        "Ajouter <meta name='description' content='...'> dans le <head>",
+        "Rédiger 150-160 caractères maximum pour éviter la troncature",
+        "Inclure le mot-clé principal naturellement",
+        "Ajouter un appel à l'action (Découvrez, Apprenez, Obtenez...)",
+        "Rendre la description unique pour chaque page"
+      ]
     });
   }
   
@@ -318,8 +422,21 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
       priority: 'critical',
       category: 'contenu',
       icon: '🔴',
-      title: 'Balise H1 manquante',
-      description: 'Chaque page doit avoir un unique titre H1 contenant votre mot-clé principal. C\'est crucial pour le SEO et la compréhension par les LLM.'
+      title: 'Balise H1 absente : structure sémantique brisée',
+      description: 'Votre page ne contient aucune balise H1. Le H1 est le titre principal de votre contenu et joue un rôle crucial pour le SEO et l\'accessibilité. Les moteurs de recherche et les LLM utilisent cette balise pour comprendre le sujet central de la page.',
+      weaknesses: [
+        "Aucune balise <h1> détectée sur la page",
+        "Les moteurs de recherche ne peuvent pas identifier le sujet principal",
+        "Structure de heading non conforme aux standards d'accessibilité",
+        "Les LLM (ChatGPT, Perplexity) auront du mal à extraire le contexte"
+      ],
+      fixes: [
+        "Ajouter exactement une balise <h1> par page",
+        "Placer le H1 en haut du contenu principal (pas dans le header/nav)",
+        "Inclure le mot-clé principal dans le H1",
+        "S'assurer que le H1 résume le contenu de la page en une phrase",
+        "Vérifier que les autres titres suivent la hiérarchie (H2, H3, etc.)"
+      ]
     });
   } else if (htmlAnalysis.h1Count > 1) {
     recommendations.push({
@@ -327,8 +444,23 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
       priority: 'important',
       category: 'contenu',
       icon: '🟡',
-      title: 'Plusieurs H1 détectés',
-      description: `Vous avez ${htmlAnalysis.h1Count} balises H1. Conservez-en une seule et convertissez les autres en H2.`
+      title: 'Plusieurs H1 détectés : confusion sémantique',
+      description: `Votre page contient ${htmlAnalysis.h1Count} balises H1. Bien que HTML5 autorise techniquement plusieurs H1 dans des sections, il est recommandé d'en avoir un seul pour une hiérarchie claire et un meilleur référencement.`,
+      strengths: [
+        "Des balises de titre sont présentes sur la page",
+        "La structure de heading existe"
+      ],
+      weaknesses: [
+        `${htmlAnalysis.h1Count} balises H1 détectées au lieu d'une seule`,
+        "Les moteurs de recherche peuvent confondre le sujet principal",
+        "Dilution du poids sémantique du titre principal"
+      ],
+      fixes: [
+        "Conserver uniquement le H1 le plus représentatif du contenu",
+        "Convertir les autres H1 en H2 ou H3 selon leur importance",
+        "Vérifier que le H1 restant contient le mot-clé principal",
+        "Utiliser des outils comme HeadingsMap pour visualiser la hiérarchie"
+      ]
     });
   }
   
@@ -338,8 +470,25 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
       priority: 'important',
       category: 'contenu',
       icon: '🟠',
-      title: 'Contenu insuffisant',
-      description: `Seulement ~${htmlAnalysis.wordCount} mots détectés. Les pages performantes en SEO contiennent généralement 800+ mots de contenu pertinent.`
+      title: 'Contenu trop léger : risque de thin content',
+      description: `Votre page ne contient qu'environ ${htmlAnalysis.wordCount} mots. Les pages avec un contenu limité ont moins de chances de se positionner sur des requêtes compétitives et offrent moins de valeur aux utilisateurs et aux LLM.`,
+      strengths: [
+        "Du contenu textuel est présent sur la page",
+        "La page n'est pas vide"
+      ],
+      weaknesses: [
+        `Seulement ~${htmlAnalysis.wordCount} mots détectés (recommandé : 800+)`,
+        "Difficulté à couvrir un sujet en profondeur",
+        "Moins d'opportunités pour les mots-clés longue traîne",
+        "Les LLM disposeront de peu de contexte pour les citations"
+      ],
+      fixes: [
+        "Enrichir le contenu pour atteindre 800-1500 mots selon le sujet",
+        "Ajouter des sections FAQ pour répondre aux questions fréquentes",
+        "Inclure des exemples concrets, études de cas ou statistiques",
+        "Développer les sous-sections avec des H2/H3 et du contenu détaillé",
+        "Ajouter des tableaux comparatifs ou des listes à puces pour structurer l'information"
+      ]
     });
   }
   
@@ -350,8 +499,41 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
       priority: 'important',
       category: 'ia',
       icon: '🟠',
-      title: 'Schema.org absent',
-      description: 'Ajoutez des données structurées (JSON-LD) pour aider ChatGPT, Perplexity et Google SGE à comprendre votre contenu. Types recommandés : Organization, Article, FAQPage, Product.'
+      title: 'Données structurées absentes : invisibilité pour les IA',
+      description: 'Votre page ne contient pas de données structurées Schema.org (JSON-LD). Ces balises permettent aux moteurs de recherche et aux LLM de comprendre précisément le contexte et le type de contenu de votre page.',
+      weaknesses: [
+        "Aucun balisage JSON-LD ou Schema.org détecté",
+        "Pas de rich snippets possibles dans les résultats Google",
+        "Les LLM (ChatGPT, Perplexity, Claude) manquent de contexte structuré",
+        "Opportunité manquée pour les featured snippets et les réponses IA"
+      ],
+      fixes: [
+        "Implémenter Schema.org en JSON-LD (plus simple que microdata)",
+        "Pour un site vitrine : ajouter Organization et WebSite",
+        "Pour des articles : ajouter Article avec author, datePublished",
+        "Pour des produits : ajouter Product avec price, availability",
+        "Ajouter FAQPage pour les sections FAQ (très citable par les LLM)",
+        "Valider avec Google Rich Results Test : search.google.com/test/rich-results"
+      ]
+    });
+  } else {
+    recommendations.push({
+      id: 'schema-present',
+      priority: 'optional',
+      category: 'ia',
+      icon: '✅',
+      title: 'Données structurées détectées : bonne base GEO',
+      description: `Votre page contient des données structurées Schema.org : ${htmlAnalysis.schemaTypes.join(', ')}. C'est un excellent point de départ pour la visibilité auprès des LLM et les rich snippets Google.`,
+      strengths: [
+        `Types Schema détectés : ${htmlAnalysis.schemaTypes.join(', ')}`,
+        "Les moteurs de recherche peuvent créer des rich snippets",
+        "Les LLM ont un contexte structuré pour les citations"
+      ],
+      fixes: [
+        "Enrichir avec des types complémentaires (FAQPage, HowTo, Review)",
+        "Vérifier que tous les champs requis sont renseignés",
+        "Tester régulièrement avec le Rich Results Test de Google"
+      ]
     });
   }
   
@@ -362,8 +544,22 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
       priority: 'critical',
       category: 'securite',
       icon: '🔴',
-      title: 'HTTPS non activé',
-      description: 'Installez immédiatement un certificat SSL. Google pénalise les sites HTTP et les navigateurs affichent des avertissements de sécurité.'
+      title: 'HTTPS non activé : site marqué "Non sécurisé"',
+      description: 'Votre site n\'utilise pas HTTPS. Les navigateurs modernes affichent un avertissement "Non sécurisé" et Google pénalise les sites HTTP dans son classement. C\'est un critère éliminatoire pour le référencement moderne.',
+      weaknesses: [
+        "Le site est accessible en HTTP non chiffré",
+        "Chrome affiche 'Non sécurisé' dans la barre d'adresse",
+        "Pénalité de classement Google appliquée",
+        "Les données utilisateur transitent en clair (problème RGPD)",
+        "Certains navigateurs bloquent les fonctionnalités avancées (géolocalisation, etc.)"
+      ],
+      fixes: [
+        "Obtenir un certificat SSL gratuit via Let's Encrypt",
+        "Configurer la redirection HTTP → HTTPS au niveau serveur",
+        "Mettre à jour tous les liens internes en HTTPS",
+        "Configurer HSTS (HTTP Strict Transport Security)",
+        "Vérifier qu'aucune ressource n'est chargée en HTTP (mixed content)"
+      ]
     });
   }
   
@@ -377,10 +573,46 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
         priority: 'critical',
         category: 'technique',
         icon: '🔴',
-        title: 'Éléments tactiles trop petits',
-        description: 'Les boutons et liens sont trop proches sur mobile. Augmentez la taille des zones tactiles à 48x48px minimum.'
+        title: 'Éléments tactiles trop petits : navigation mobile difficile',
+        description: 'Les zones cliquables de votre site sont trop petites ou trop proches les unes des autres. Sur mobile, les utilisateurs auront du mal à cliquer précisément, ce qui génère de la frustration et des erreurs de navigation.',
+        weaknesses: [
+          "Boutons et liens trop petits pour les doigts",
+          "Espacement insuffisant entre les éléments interactifs",
+          "Pénalité mobile-first indexing de Google",
+          "Taux de rebond mobile probablement élevé"
+        ],
+        fixes: [
+          "Agrandir toutes les zones tactiles à 48x48 pixels minimum",
+          "Ajouter un padding de 8px minimum entre les éléments cliquables",
+          "Utiliser des boutons plutôt que des liens texte pour les actions importantes",
+          "Tester sur de vrais appareils mobiles, pas seulement en émulation",
+          "Utiliser Chrome DevTools > Device Mode pour simuler différents écrans"
+        ]
       });
     }
+  }
+  
+  // Robots.txt analysis
+  if (!scores.aiReady?.robotsPermissive) {
+    recommendations.push({
+      id: 'robots-restrictive',
+      priority: 'important',
+      category: 'ia',
+      icon: '🟠',
+      title: 'Robots.txt restrictif : crawlers IA potentiellement bloqués',
+      description: 'Votre fichier robots.txt pourrait bloquer les crawlers des LLM (GPTBot, ClaudeBot, PerplexityBot). Cela réduit vos chances d\'être cité dans les réponses génératives.',
+      weaknesses: [
+        "Le robots.txt contient des règles Disallow restrictives",
+        "Les bots IA modernes pourraient être bloqués",
+        "Réduction de la visibilité dans les moteurs génératifs"
+      ],
+      fixes: [
+        "Vérifier que GPTBot, ClaudeBot, PerplexityBot ne sont pas bloqués",
+        "Ajouter des règles Allow explicites pour les crawlers IA si nécessaire",
+        "Supprimer les Disallow: / génériques qui bloquent tout",
+        "Tester avec robots.txt Tester de Google Search Console"
+      ]
+    });
   }
   
   // Sort by priority

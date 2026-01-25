@@ -22,6 +22,7 @@ const StrategicAuditDashboard = lazy(() => import('@/components/StrategicAuditDa
 const QuotaExceeded = lazy(() => import('@/components/QuotaExceeded').then(m => ({ default: m.QuotaExceeded })));
 const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
+const GEOComparisonTable = lazy(() => import('@/components/GEOComparisonTable').then(m => ({ default: m.GEOComparisonTable })));
 
 // Skeleton loader for dashboards
 const DashboardSkeleton = () => (
@@ -418,6 +419,9 @@ const Index = () => {
             {renderDashboard()}
           </Suspense>
         </section>
+        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+          <GEOComparisonTable />
+        </Suspense>
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
           <NewsCarousel />
         </Suspense>
