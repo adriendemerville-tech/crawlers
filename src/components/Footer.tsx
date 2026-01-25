@@ -1,4 +1,5 @@
-import { Bot, Gauge, Globe, Brain, FileText, HelpCircle, Shield, Mail, ExternalLink } from 'lucide-react';
+import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function Footer() {
@@ -57,19 +58,19 @@ export function Footer() {
   const legalLinks = [
     { 
       label: language === 'fr' ? 'Mentions légales' : language === 'es' ? 'Aviso legal' : 'Legal Notice',
-      href: '#legal'
+      href: '/mentions-legales'
     },
     { 
       label: language === 'fr' ? 'Politique de confidentialité' : language === 'es' ? 'Política de privacidad' : 'Privacy Policy',
-      href: '#privacy'
+      href: '/politique-confidentialite'
     },
     { 
       label: language === 'fr' ? 'Conditions d\'utilisation' : language === 'es' ? 'Términos de uso' : 'Terms of Use',
-      href: '#terms'
+      href: '/conditions-utilisation'
     },
     { 
       label: 'RGPD / GDPR',
-      href: '#gdpr'
+      href: '/rgpd'
     },
   ];
 
@@ -203,14 +204,14 @@ export function Footer() {
             {/* Legal Links */}
             <nav aria-label="Mentions légales" className="flex flex-wrap gap-x-6 gap-y-2">
               {legalLinks.map((link) => (
-                <a
+                <Link
                   key={link.href}
-                  href={link.href}
+                  to={link.href}
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
                 >
                   <Shield className="h-3 w-3" />
                   {link.label}
-                </a>
+                </Link>
               ))}
             </nav>
 
