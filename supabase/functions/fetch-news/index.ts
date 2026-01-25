@@ -447,16 +447,21 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Parse request body for language parameter
+    // Parse request body for parameters
     let lang = 'fr';
+    let searchQuery = '';
+    let category = '';
+    
     try {
       const body = await req.json();
       lang = body.lang || 'fr';
+      searchQuery = (body.search || '').trim().toLowerCase();
+      category = (body.category || '').toUpperCase();
     } catch {
-      // No body or invalid JSON, use default
+      // No body or invalid JSON, use defaults
     }
     
-    console.log(`Fetching news from Google News RSS feeds (lang: ${lang})...`);
+    console.log(`Fetching news (lang: ${lang}, search: "${searchQuery}", category: "${category}")...`);
     
     // Fetch all RSS feeds in parallel
     const feedPromises = GOOGLE_NEWS_FEEDS.map(feed => fetchRSSFeed(feed));
@@ -482,6 +487,21 @@ Deno.serve(async (req) => {
     
     for (const item of allItems) {
       const combinedText = `${item.title} ${item.description || ''}`;
+      const lowerCombined = combinedText.toLowerCase();
+      
+      // Apply search filter if provided
+      if (searchQuery && !lowerCombined.includes(searchQuery)) {
+        continue; // Skip articles that don't match search
+      }
+      
+      // Apply category filter if provided
+      if (category && category !== 'ALL') {
+        const detectedCategory = detectCategory(combinedText);
+        if (detectedCategory !== category) {
+          continue; // Skip articles that don't match category
+        }
+      }
+      
       const score = calculateRelevanceScore(combinedText);
       
       if (score >= MIN_RELEVANCE_SCORE) {

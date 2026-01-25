@@ -40,10 +40,15 @@ export function NewsCarousel() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
 
-  const loadArticles = useCallback(async () => {
+  // Debounce search to avoid too many API calls
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  const loadArticles = useCallback(async (search = '', category = '') => {
     setIsLoading(true);
     try {
-      const data = await fetchArticles(whitelist, false, language);
+      const categoryParam = category === 'ALL' ? '' : category;
+      const data = await fetchArticles(whitelist, false, language, search, categoryParam);
       setArticles(data);
       setFilteredArticles(data);
     } catch (error) {
@@ -53,33 +58,32 @@ export function NewsCarousel() {
     }
   }, [whitelist, language]);
 
+  // Initial load
   useEffect(() => {
-    loadArticles();
-  }, [loadArticles]);
+    loadArticles(debouncedSearch, categoryFilter);
+  }, [debouncedSearch, categoryFilter, language]);
 
-  // Filter articles based on search query and category
+  // Debounce search input
   useEffect(() => {
-    let filtered = articles;
-
-    // Apply category filter
-    if (categoryFilter !== 'ALL') {
-      filtered = filtered.filter(article => article.category === categoryFilter);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500); // 500ms debounce
+    
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
 
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        article =>
-          article.title.toLowerCase().includes(query) ||
-          article.summary.toLowerCase().includes(query) ||
-          article.category.toLowerCase().includes(query) ||
-          article.source.name.toLowerCase().includes(query)
-      );
-    }
-
-    setFilteredArticles(filtered);
-  }, [searchQuery, categoryFilter, articles]);
+  // Articles are now filtered server-side, just update filteredArticles when articles change
+  useEffect(() => {
+    setFilteredArticles(articles);
+  }, [articles]);
 
   // Auto-scroll functionality
   useEffect(() => {
@@ -112,8 +116,9 @@ export function NewsCarousel() {
   const handleRefresh = async () => {
     setIsLoading(true);
     try {
-      // Force refresh - appel API réel avec la langue courante
-      const data = await refreshArticles(whitelist, language);
+      // Force refresh - appel API réel avec les paramètres actuels
+      const categoryParam = categoryFilter === 'ALL' ? '' : categoryFilter;
+      const data = await refreshArticles(whitelist, language, debouncedSearch, categoryParam);
       setArticles(data);
       setFilteredArticles(data);
       
