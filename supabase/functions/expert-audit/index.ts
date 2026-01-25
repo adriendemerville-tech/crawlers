@@ -730,6 +730,74 @@ serve(async (req) => {
     
     const recommendations = generateRecommendations(scores, htmlAnalysis, psiData);
     
+    // Generate narrative introduction using AI
+    let introduction = null;
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    
+    if (LOVABLE_API_KEY) {
+      try {
+        console.log('Generating narrative introduction...');
+        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-3-flash-preview',
+            messages: [
+              { 
+                role: 'system', 
+                content: `Tu es un expert SEO technique. Tu dois générer une introduction structurée en 3 paragraphes pour un audit technique SEO. Réponds UNIQUEMENT en JSON valide.`
+              },
+              { 
+                role: 'user', 
+                content: `Analyse les données suivantes pour le site ${domain} (${normalizedUrl}) et génère 3 paragraphes d'introduction:
+
+DONNÉES TECHNIQUES:
+- Score total: ${totalScore}/200
+- Performance: ${performanceScore}/40 (LCP: ${(audits['largest-contentful-paint']?.numericValue / 1000).toFixed(1)}s, TBT: ${Math.round(audits['total-blocking-time']?.numericValue || 0)}ms)
+- Technique SEO: ${technicalScore}/50 (Score PSI SEO: ${Math.round(psiSeo * 100)}%)
+- Sémantique: ${semanticScore}/60 (Titre: ${htmlAnalysis.hasTitle ? 'oui' : 'non'}, Meta desc: ${htmlAnalysis.hasMetaDesc ? 'oui' : 'non'}, H1: ${htmlAnalysis.h1Count}, Mots: ${htmlAnalysis.wordCount})
+- Préparation IA: ${aiReadyScore}/30 (Schema.org: ${htmlAnalysis.hasSchemaOrg ? 'oui' : 'non'}, Types: ${htmlAnalysis.schemaTypes.join(', ') || 'aucun'})
+- Sécurité: ${securityScore}/20 (HTTPS: ${htmlAnalysis.isHttps ? 'oui' : 'non'})
+- Titre: "${htmlAnalysis.titleContent}"
+- Meta description: "${htmlAnalysis.metaDescContent?.substring(0, 100) || 'absente'}"
+
+Réponds avec ce JSON exact:
+{
+  "presentation": "Paragraphe 1 (4-5 phrases): Présentation du site, core business déduit du titre/contenu, secteur d'activité, zone géographique probable, ancienneté estimée, publics cibles.",
+  "strengths": "Paragraphe 2 (4-5 phrases): Un aspect technique positif ET un aspect sémantique/référencement positif. Expliquer pourquoi ce sont des atouts dans le contexte concurrentiel actuel.",
+  "improvement": "Paragraphe 3 (4-5 phrases): Une donnée moins bonne, sa conséquence technique/SEO, et pourquoi c'est prioritaire à corriger dans le contexte concurrentiel actuel."
+}`
+              }
+            ],
+            temperature: 0.4,
+          }),
+        });
+
+        if (aiResponse.ok) {
+          const aiData = await aiResponse.json();
+          const content = aiData.choices?.[0]?.message?.content;
+          if (content) {
+            let jsonContent = content;
+            if (content.includes('```json')) {
+              jsonContent = content.split('```json')[1].split('```')[0].trim();
+            } else if (content.includes('```')) {
+              jsonContent = content.split('```')[1].split('```')[0].trim();
+            }
+            introduction = JSON.parse(jsonContent);
+            console.log('Narrative introduction generated successfully');
+          }
+        } else {
+          console.error('AI introduction generation failed:', aiResponse.status);
+        }
+      } catch (aiError) {
+        console.error('Error generating introduction:', aiError);
+        // Continue without introduction - not critical
+      }
+    }
+    
     console.log('Expert Audit complete. Score:', totalScore, '/200');
     
     return new Response(
@@ -743,6 +811,7 @@ serve(async (req) => {
           maxScore: 200,
           scores,
           recommendations,
+          introduction,
           rawData: {
             psi: { categories, audits: Object.keys(audits).slice(0, 10) },
             safeBrowsing,
