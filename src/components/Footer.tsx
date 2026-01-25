@@ -19,7 +19,8 @@ export function Footer() {
             title="Humanizz - Humanisation de contenu IA"
           >
             Humanizz.fr
-          </a>
+          </a>{' '}
+          - apprenez à rédiger avec l'IA
         </p>
       </div>
     </footer>
