@@ -1,12 +1,17 @@
 {
-  "name": "Crawlers AI",
-  "short_name": "Crawlers AI",
-  "description": "Analyseur de bots IA et score GEO pour votre site",
+  "name": "Crawlers.fr - Audit SEO & IA Gratuit",
+  "short_name": "Crawlers.fr",
+  "description": "Audit SEO complet sur 200 points, Score GEO, analyse des bots IA et rapport gratuit. Optimisez le référencement de votre site web ou boutique e-commerce. Analyse mobile et desktop, code source, clients et visibilité LLM.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0a0a0b",
   "theme_color": "#7c3aed",
   "orientation": "portrait-primary",
+  "lang": "fr-FR",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "utilities"],
+  "keywords": ["audit", "seo", "geo", "bots", "référencement", "site", "boutique", "mobile", "clients", "analyse", "code", "rapport gratuit", "crawlers", "français"],
   "icons": [
     {
       "src": "/favicon.svg",
@@ -40,5 +45,8 @@
       "sizes": "180x180",
       "type": "image/png"
     }
-  ]
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
 }
