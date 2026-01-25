@@ -10,13 +10,16 @@
 # - Audit SEO complet sur 200 points
 # - Score GEO (Generative Engine Optimization)
 # - Analyse des bots IA (GPTBot, ClaudeBot, etc.)
-# - Vérification PageSpeed mobile et desktop
+# - Vérification PageSpeed Insights mobile et desktop
+# - Analyse des performances et Core Web Vitals (LCP, CLS, FCP)
+# - Mesure de la vitesse de chargement et accessibilité
 # - Rapport gratuit et instantané
-# - Analyse du code source et structure
+# - Analyse du code source, contenu et structure
 # - Optimisation pour clients et boutiques e-commerce
 # 
 # Mots-clés : audit, français, seo, geo, bots, référencement,
-# site, boutique, mobile, clients, analyse, code, rapport gratuit
+# site, boutique, mobile, clients, analyse, code, rapport gratuit,
+# performances, page speed insight, chargement, LCP, vitesse, content, accessibilité
 #
 # ============================================
 

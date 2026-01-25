@@ -140,17 +140,21 @@ Analyse avancée par intelligence artificielle :
 
 ## 🏷️ MOTS-CLÉS SEO & GEO
 
-**Français**: audit, seo, geo, bots, référencement, site, boutique, mobile, 
+**Français**: audit, français, seo, geo, bots, référencement, site, boutique, mobile, 
 clients, analyse, code, rapport gratuit, crawlers, optimisation, visibilité, 
 intelligence artificielle, LLM, PageSpeed, Core Web Vitals, données structurées,
-Schema.org, JSON-LD, robots.txt, sitemap, meta description, balise title
+Schema.org, JSON-LD, robots.txt, sitemap, meta description, balise title,
+performances, page speed insight, chargement, LCP, vitesse, content, accessibilité,
+temps de chargement, First Contentful Paint, Largest Contentful Paint, CLS
 
 **English**: audit, seo, geo, bots, ranking, website, e-commerce, mobile,
 customers, analysis, code, free report, crawlers, optimization, visibility,
-artificial intelligence, LLM, PageSpeed, Core Web Vitals, structured data
+artificial intelligence, LLM, PageSpeed, Core Web Vitals, structured data,
+performance, page speed insight, loading, LCP, speed, content, accessibility
 
 **Español**: auditoría, seo, geo, bots, posicionamiento, sitio web, tienda,
-móvil, clientes, análisis, código, informe gratuito, rastreadores, optimización
+móvil, clientes, análisis, código, informe gratuito, rastreadores, optimización,
+rendimiento, velocidad de carga, LCP, accesibilidad, contenido
 
 ## 📈 DONNÉES STRUCTURÉES
 
