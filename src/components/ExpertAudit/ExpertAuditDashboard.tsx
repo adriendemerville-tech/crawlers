@@ -12,9 +12,11 @@ import { ScoreGauge200 } from './ScoreGauge200';
 import { CategoryCard, MetricRow } from './CategoryCard';
 import { RecommendationList } from './RecommendationList';
 import { LoadingSteps } from './LoadingSteps';
-import { ExpertAuditResult } from '@/types/expertAudit';
+import { StrategicInsights } from './StrategicInsights';
+import { ExpertAuditResult, StrategicAnalysis } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function formatMs(ms: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
@@ -24,8 +26,10 @@ function formatMs(ms: number): string {
 export function ExpertAuditDashboard() {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isStrategicLoading, setIsStrategicLoading] = useState(false);
   const [result, setResult] = useState<ExpertAuditResult | null>(null);
   const { toast } = useToast();
+  const { language } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +39,7 @@ export function ExpertAuditDashboard() {
     setResult(null);
 
     try {
+      // Step 1: Run expert-audit
       const { data, error } = await supabase.functions.invoke('expert-audit', {
         body: { url: url.trim() }
       });
@@ -42,7 +47,68 @@ export function ExpertAuditDashboard() {
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Audit failed');
 
-      setResult(data.data);
+      // Set initial result
+      const auditResult = data.data as ExpertAuditResult;
+      setResult(auditResult);
+      setIsLoading(false);
+
+      // Step 2: Run strategic AI analysis in background
+      setIsStrategicLoading(true);
+      
+      try {
+        // Prepare toolsData for strategic audit
+        const toolsData = {
+          crawlers: null, // We don't have this data in expert-audit
+          geo: {
+            hasSchemaOrg: auditResult.scores.aiReady.hasSchemaOrg,
+            schemaTypes: auditResult.scores.aiReady.schemaTypes,
+            robotsPermissive: auditResult.scores.aiReady.robotsPermissive,
+          },
+          llm: {
+            semanticScore: auditResult.scores.semantic.score,
+            wordCount: auditResult.scores.semantic.wordCount,
+            hasTitle: auditResult.scores.semantic.hasTitle,
+            hasMetaDesc: auditResult.scores.semantic.hasMetaDesc,
+          },
+          pagespeed: {
+            performance: auditResult.scores.performance.psiPerformance,
+            lcp: auditResult.scores.performance.lcp,
+            cls: auditResult.scores.performance.cls,
+            tbt: auditResult.scores.performance.tbt,
+            seoScore: auditResult.scores.technical.psiSeo,
+          },
+        };
+
+        const { data: strategicData, error: strategicError } = await supabase.functions.invoke('audit-strategic', {
+          body: { url: url.trim(), toolsData }
+        });
+
+        if (!strategicError && strategicData?.success) {
+          // Merge strategic analysis into result
+          setResult(prev => prev ? {
+            ...prev,
+            strategicAnalysis: {
+              brandPerception: strategicData.data.brandPerception,
+              geoAnalysis: strategicData.data.geoAnalysis,
+              llmVisibility: strategicData.data.llmVisibility,
+              testQueries: strategicData.data.testQueries,
+              executiveSummary: strategicData.data.executiveSummary,
+              overallScore: strategicData.data.overallScore,
+            }
+          } : null);
+          
+          toast({
+            title: 'Analyse IA terminée !',
+            description: 'Les recommandations stratégiques sont disponibles.',
+          });
+        }
+      } catch (strategicErr) {
+        console.error('Strategic analysis error:', strategicErr);
+        // Don't fail the whole audit, just skip strategic analysis
+      } finally {
+        setIsStrategicLoading(false);
+      }
+
       toast({
         title: 'Audit terminé !',
         description: `Score global : ${data.data.totalScore}/200`,
@@ -54,7 +120,6 @@ export function ExpertAuditDashboard() {
         description: error instanceof Error ? error.message : 'Échec de l\'audit',
         variant: 'destructive',
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -257,6 +322,22 @@ export function ExpertAuditDashboard() {
               )}
             </CategoryCard>
           </div>
+
+          {/* Strategic AI Insights */}
+          {isStrategicLoading && (
+            <Card className="border-dashed border-primary/30">
+              <CardContent className="p-6 text-center">
+                <div className="flex items-center justify-center gap-3">
+                  <Brain className="h-5 w-5 animate-pulse text-primary" />
+                  <span className="text-muted-foreground">Analyse stratégique IA en cours...</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {result.strategicAnalysis && !isStrategicLoading && (
+            <StrategicInsights analysis={result.strategicAnalysis} />
+          )}
 
           {/* Recommendations */}
           <RecommendationList recommendations={result.recommendations} />

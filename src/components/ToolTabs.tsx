@@ -86,36 +86,41 @@ export function ToolTabs({
           <Gauge className="h-4 w-4" />
           <span>{t.tabs.pagespeed}</span>
         </button>
-        
-        {/* Lien Audit Expert /200 */}
-        <Link
-          to="/audit-expert"
-          className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:px-6 sm:py-3 bg-gradient-to-r from-primary/10 to-primary/5 text-primary hover:from-primary/20 hover:to-primary/10 border border-primary/20"
-        >
-          <FileSearch className="h-4 w-4" />
-          <span>Score SEO 200</span>
-        </Link>
       </div>
 
-      {/* Bouton Audit Complet */}
-      {showAuditButton && onFullAudit && (
-        <Button
-          onClick={onFullAudit}
-          disabled={isAuditLoading}
-          variant={isAuditActive ? "default" : "outline"}
-          className={cn(
-            "gap-2 transition-all",
-            isAuditActive && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-          )}
-        >
-          {isAuditLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Zap className="h-4 w-4" />
-          )}
-          {auditButtonText[language]}
-        </Button>
-      )}
+      {/* Boutons d'action en dessous des onglets */}
+      <div className="flex flex-wrap justify-center gap-2">
+        {/* Bouton Audit Complet IA */}
+        {showAuditButton && onFullAudit && (
+          <Button
+            onClick={onFullAudit}
+            disabled={isAuditLoading}
+            variant={isAuditActive ? "default" : "outline"}
+            className={cn(
+              "gap-2 transition-all",
+              isAuditActive && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+            )}
+          >
+            {isAuditLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Zap className="h-4 w-4" />
+            )}
+            {auditButtonText[language]}
+          </Button>
+        )}
+
+        {/* Lien Score SEO 200 */}
+        <Link to="/audit-expert">
+          <Button
+            variant="outline"
+            className="gap-2 bg-gradient-to-r from-primary/10 to-primary/5 text-primary hover:from-primary/20 hover:to-primary/10 border-primary/20"
+          >
+            <FileSearch className="h-4 w-4" />
+            <span>Score SEO 200</span>
+          </Button>
+        </Link>
+      </div>
     </nav>
   );
 }
