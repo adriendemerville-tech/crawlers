@@ -93,8 +93,7 @@ export function ToolTabs({
           className="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:px-6 sm:py-3 bg-gradient-to-r from-primary/10 to-primary/5 text-primary hover:from-primary/20 hover:to-primary/10 border border-primary/20"
         >
           <FileSearch className="h-4 w-4" />
-          <span className="hidden sm:inline">Audit Expert</span>
-          <span className="text-xs font-bold">/200</span>
+          <span>Score SEO 200</span>
         </Link>
       </div>
 
