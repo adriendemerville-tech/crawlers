@@ -2,14 +2,17 @@ import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Share2, Link2 } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Share2, Link2, Star } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from 'sonner';
+
+// Local storage key for favorites
+const FAVORITES_KEY = 'lexique-favorites';
 
 // Social icons as inline SVGs
 const TwitterIcon = () => (
@@ -287,6 +290,36 @@ export default function Lexique() {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  
+  // Favorites management
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(FAVORITES_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+  }, [favorites]);
+
+  const toggleFavorite = useCallback((termName: string) => {
+    setFavorites(prev => {
+      const isFavorite = prev.includes(termName);
+      if (isFavorite) {
+        toast.success(language === 'fr' ? 'Retiré des favoris' : language === 'es' ? 'Eliminado de favoritos' : 'Removed from favorites');
+        return prev.filter(t => t !== termName);
+      } else {
+        toast.success(language === 'fr' ? 'Ajouté aux favoris' : language === 'es' ? 'Añadido a favoritos' : 'Added to favorites');
+        return [...prev, termName];
+      }
+    });
+  }, [language]);
+
+  const isFavorite = useCallback((termName: string) => favorites.includes(termName), [favorites]);
   
   const filteredTerms = useMemo(() => {
     return terms.filter(term => {
@@ -296,10 +329,11 @@ export default function Lexique() {
         term.definition.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesCategory = selectedCategory === null || term.category === selectedCategory;
+      const matchesFavorites = !showFavoritesOnly || favorites.includes(term.term);
       
-      return matchesSearch && matchesCategory;
+      return matchesSearch && matchesCategory && matchesFavorites;
     });
-  }, [terms, searchQuery, selectedCategory]);
+  }, [terms, searchQuery, selectedCategory, showFavoritesOnly, favorites]);
 
   const groupedTerms = useMemo(() => {
     const grouped: Record<string, GlossaryTerm[]> = {};
@@ -597,22 +631,34 @@ export default function Lexique() {
             <div className="flex flex-wrap gap-2">
               <Button
                 onClick={() => setSelectedCategory(null)}
-                variant={selectedCategory === null ? 'default' : 'outline'}
+                variant={selectedCategory === null && !showFavoritesOnly ? 'default' : 'outline'}
                 size="sm"
                 className="gap-2"
               >
                 {content.allCategories}
               </Button>
+              
+              {/* Favorites filter */}
+              <Button
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                variant={showFavoritesOnly ? 'default' : 'outline'}
+                size="sm"
+                className="gap-2"
+              >
+                <Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+                {language === 'fr' ? `Favoris (${favorites.length})` : language === 'es' ? `Favoritos (${favorites.length})` : `Favorites (${favorites.length})`}
+              </Button>
+              
               {Object.entries(categoryConfig).map(([key, config]) => {
                 const Icon = config.icon;
                 const isActive = selectedCategory === key;
                 return (
                   <Button
                     key={key}
-                    onClick={() => setSelectedCategory(key)}
+                    onClick={() => setSelectedCategory(isActive ? null : key)}
                     variant={isActive ? 'default' : 'outline'}
                     size="sm"
-                    className="gap-2"
+                    className={`gap-2 ${isActive ? '' : `badge-${key}`}`}
                   >
                     <Icon className="h-4 w-4" />
                     {config.label[language]}
@@ -636,14 +682,22 @@ export default function Lexique() {
                     {groupedTerms[letter].map((term, index) => {
                       const config = categoryConfig[term.category];
                       const anchorId = generateAnchorId(term.term);
+                      const termIsFavorite = isFavorite(term.term);
                       return (
                         <div 
                           key={`${term.term}-${index}`}
-                          className="rounded-lg border border-border bg-card p-4 hover:bg-muted/20 transition-all"
+                          className={`rounded-lg border p-4 transition-all category-${term.category}`}
                           id={anchorId}
                         >
                           <dt className="flex items-start justify-between gap-3 mb-2">
                             <div className="flex-1 flex items-center gap-2">
+                              <button
+                                onClick={() => toggleFavorite(term.term)}
+                                className={`p-1 rounded transition-colors ${termIsFavorite ? 'text-amber-500' : 'text-muted-foreground hover:text-amber-500'}`}
+                                title={language === 'fr' ? (termIsFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris') : language === 'es' ? (termIsFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos') : (termIsFavorite ? 'Remove from favorites' : 'Add to favorites')}
+                              >
+                                <Star className={`h-4 w-4 ${termIsFavorite ? 'fill-current' : ''}`} />
+                              </button>
                               <a 
                                 href={`#${anchorId}`}
                                 className="text-base font-semibold text-foreground hover:text-primary transition-colors"
@@ -657,22 +711,22 @@ export default function Lexique() {
                               )}
                               <button
                                 onClick={() => copyTermLink(term.term)}
-                                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                                className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
                                 title={language === 'fr' ? 'Copier le lien' : language === 'es' ? 'Copiar enlace' : 'Copy link'}
                               >
                                 <Link2 className="h-3.5 w-3.5" />
                               </button>
                             </div>
-                            <span className="text-xs px-2 py-1 rounded border border-border text-muted-foreground bg-muted/50">
+                            <span className={`text-xs px-2 py-1 rounded border badge-${term.category}`}>
                               {config.label[language]}
                             </span>
                           </dt>
-                          <dd className="text-sm text-muted-foreground leading-relaxed">
+                          <dd className="text-sm text-muted-foreground leading-relaxed pl-7">
                             {term.definition}
                           </dd>
                           {/* Internal tool link */}
                           {term.toolLink && (
-                            <div className="mt-2">
+                            <div className="mt-2 pl-7">
                               <Link 
                                 to={term.toolLink.path}
                                 className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
