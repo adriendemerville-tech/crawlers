@@ -12,22 +12,65 @@ interface SitemapPage {
   lastmod: string;
   changefreq: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
   priority: number;
+  alternates?: { lang: string; href: string }[];
+  images?: { loc: string; title: string; caption?: string }[];
+}
+
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 function generateSitemap(pages: SitemapPage[]): string {
-  const urlEntries = pages.map(page => `
+  const urlEntries = pages.map(page => {
+    let entry = `
   <url>
-    <loc>${page.loc}</loc>
+    <loc>${escapeXml(page.loc)}</loc>
     <lastmod>${page.lastmod}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority.toFixed(1)}</priority>
-  </url>`).join('');
+    <priority>${page.priority.toFixed(1)}</priority>`;
+    
+    // Add hreflang alternates for multilingual pages
+    if (page.alternates && page.alternates.length > 0) {
+      for (const alt of page.alternates) {
+        entry += `
+    <xhtml:link rel="alternate" hreflang="${alt.lang}" href="${escapeXml(alt.href)}" />`;
+      }
+    }
+    
+    // Add image tags for rich indexing
+    if (page.images && page.images.length > 0) {
+      for (const img of page.images) {
+        entry += `
+    <image:image>
+      <image:loc>${escapeXml(img.loc)}</image:loc>
+      <image:title>${escapeXml(img.title)}</image:title>${img.caption ? `
+      <image:caption>${escapeXml(img.caption)}</image:caption>` : ''}
+    </image:image>`;
+      }
+    }
+    
+    entry += `
+  </url>`;
+    return entry;
+  }).join('');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<!-- 
+  Crawlers.fr Sitemap - Generated dynamically
+  Tools: AI Crawler Check, GEO Score, LLM Visibility, PageSpeed Analysis, Score SEO 200
+  Languages: French (default), English, Spanish
+-->
 ${urlEntries}
 </urlset>`;
 }
@@ -39,21 +82,61 @@ serve(async (req) => {
 
   try {
     const today = new Date().toISOString().split('T')[0];
+    const languages = ['fr', 'en', 'es'];
     
-    // Pages principales du site
+    // ========================================
+    // PAGE PRINCIPALE - Homepage
+    // ========================================
+    const homepageAlternates = languages.map(lang => ({
+      lang: lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'es-ES',
+      href: lang === 'fr' ? SITE_URL : `${SITE_URL}/?lang=${lang}`
+    }));
+    homepageAlternates.push({ lang: 'x-default', href: SITE_URL });
+    
+    // ========================================
+    // SCORE SEO 200 - Audit Expert
+    // ========================================
+    const auditAlternates = languages.map(lang => ({
+      lang: lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'es-ES',
+      href: lang === 'fr' ? `${SITE_URL}/audit-expert` : `${SITE_URL}/audit-expert?lang=${lang}`
+    }));
+    auditAlternates.push({ lang: 'x-default', href: `${SITE_URL}/audit-expert` });
+
+    // Pages principales du site avec hreflang
     const pages: SitemapPage[] = [
+      // ===== HOMEPAGE =====
       {
         loc: SITE_URL,
         lastmod: today,
         changefreq: 'daily',
         priority: 1.0,
+        alternates: homepageAlternates,
+        images: [
+          {
+            loc: `${SITE_URL}/favicon.svg`,
+            title: 'Crawlers.fr - AI SEO & GEO Tools',
+            caption: 'Logo Crawlers.fr - Outils d\'analyse SEO et IA'
+          }
+        ]
       },
+      
+      // ===== SCORE SEO 200 (Audit Expert) =====
       {
         loc: `${SITE_URL}/audit-expert`,
         lastmod: today,
         changefreq: 'weekly',
         priority: 0.9,
+        alternates: auditAlternates,
+        images: [
+          {
+            loc: `${SITE_URL}/favicon.svg`,
+            title: 'Score SEO 200 - Audit Expert',
+            caption: 'Audit complet sur 200 points : Performance, Technique, Sémantique, IA/GEO, Sécurité'
+          }
+        ]
       },
+      
+      // ===== PAGES LÉGALES =====
       {
         loc: `${SITE_URL}/mentions-legales`,
         lastmod: '2025-01-01',
@@ -80,32 +163,48 @@ serve(async (req) => {
       },
     ];
 
-    // Versions multilingues (hreflang alternates)
-    const languages = ['fr', 'en', 'es'];
-    const mainPages = ['', '/audit-expert'];
-    
-    for (const page of mainPages) {
-      for (const lang of languages) {
-        if (lang !== 'fr') { // FR est la version par défaut
-          pages.push({
-            loc: `${SITE_URL}${page}?lang=${lang}`,
-            lastmod: today,
-            changefreq: page === '' ? 'daily' : 'weekly',
-            priority: page === '' ? 0.9 : 0.8,
-          });
-        }
+    // Ajouter les versions EN et ES des pages principales
+    pages.push(
+      {
+        loc: `${SITE_URL}/?lang=en`,
+        lastmod: today,
+        changefreq: 'daily',
+        priority: 0.9,
+        alternates: homepageAlternates,
+      },
+      {
+        loc: `${SITE_URL}/?lang=es`,
+        lastmod: today,
+        changefreq: 'daily',
+        priority: 0.9,
+        alternates: homepageAlternates,
+      },
+      {
+        loc: `${SITE_URL}/audit-expert?lang=en`,
+        lastmod: today,
+        changefreq: 'weekly',
+        priority: 0.8,
+        alternates: auditAlternates,
+      },
+      {
+        loc: `${SITE_URL}/audit-expert?lang=es`,
+        lastmod: today,
+        changefreq: 'weekly',
+        priority: 0.8,
+        alternates: auditAlternates,
       }
-    }
+    );
 
     const sitemap = generateSitemap(pages);
 
-    console.log(`Generated sitemap with ${pages.length} URLs`);
+    console.log(`Generated sitemap with ${pages.length} URLs, including hreflang and image tags`);
 
     return new Response(sitemap, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/xml; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600', // Cache 1 heure
+        'Cache-Control': 'public, max-age=3600, s-maxage=86400',
+        'X-Robots-Tag': 'noindex',
       },
     });
 
@@ -118,6 +217,11 @@ serve(async (req) => {
     <loc>https://crawlers.fr</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://crawlers.fr/audit-expert</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <priority>0.9</priority>
   </url>
 </urlset>`,
       { 
