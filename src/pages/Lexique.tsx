@@ -218,11 +218,11 @@ const glossaryTerms: Record<string, GlossaryTerm[]> = {
 };
 
 const categoryConfig = {
-  seo: { icon: Search, label: { fr: 'SEO', en: 'SEO', es: 'SEO' }, color: 'text-blue-500' },
-  geo: { icon: Globe, label: { fr: 'GEO & IA', en: 'GEO & AI', es: 'GEO & IA' }, color: 'text-purple-500' },
-  performance: { icon: Zap, label: { fr: 'Performance', en: 'Performance', es: 'Rendimiento' }, color: 'text-green-500' },
-  technical: { icon: FileCode, label: { fr: 'Technique', en: 'Technical', es: 'Técnico' }, color: 'text-orange-500' },
-  ai: { icon: Brain, label: { fr: 'Intelligence Artificielle', en: 'Artificial Intelligence', es: 'Inteligencia Artificial' }, color: 'text-pink-500' },
+  seo: { icon: Search, label: { fr: 'SEO', en: 'SEO', es: 'SEO' } },
+  geo: { icon: Globe, label: { fr: 'GEO & IA', en: 'GEO & AI', es: 'GEO & IA' } },
+  performance: { icon: Zap, label: { fr: 'Performance', en: 'Performance', es: 'Rendimiento' } },
+  technical: { icon: FileCode, label: { fr: 'Technique', en: 'Technical', es: 'Técnico' } },
+  ai: { icon: Brain, label: { fr: 'IA', en: 'AI', es: 'IA' } },
 };
 
 const pageContent = {
@@ -558,31 +558,28 @@ export default function Lexique() {
             
             {/* Category Filters */}
             <div className="flex flex-wrap gap-2">
-              <button
+              <Button
                 onClick={() => setSelectedCategory(null)}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  selectedCategory === null
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
+                variant={selectedCategory === null ? 'default' : 'outline'}
+                size="sm"
+                className="gap-2"
               >
                 {content.allCategories}
-              </button>
+              </Button>
               {Object.entries(categoryConfig).map(([key, config]) => {
                 const Icon = config.icon;
+                const isActive = selectedCategory === key;
                 return (
-                  <button
+                  <Button
                     key={key}
                     onClick={() => setSelectedCategory(key)}
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                      selectedCategory === key
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    }`}
+                    variant={isActive ? 'default' : 'outline'}
+                    size="sm"
+                    className="gap-2"
                   >
                     <Icon className="h-4 w-4" />
                     {config.label[language]}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -595,23 +592,21 @@ export default function Lexique() {
             ) : (
               sortedLetters.map(letter => (
                 <div key={letter} id={`letter-${letter}`}>
-                  <h2 className="mb-4 text-2xl font-bold text-primary border-b border-border pb-2">
+                  <h2 className="mb-4 text-xl font-bold text-foreground border-b border-border pb-2">
                     {letter}
                   </h2>
-                  <dl className="space-y-4">
+                  <dl className="space-y-3">
                     {groupedTerms[letter].map((term, index) => {
                       const config = categoryConfig[term.category];
-                      const Icon = config.icon;
                       return (
                         <div 
                           key={`${term.term}-${index}`}
-                          className="rounded-lg border border-border bg-card p-4 hover:bg-muted/30 transition-colors"
+                          className="rounded-lg border border-border bg-card p-4 hover:bg-muted/20 transition-colors"
                           id={term.term.toLowerCase().replace(/\s+/g, '-')}
                         >
-                          <dt className="flex items-start gap-3 mb-2">
-                            <Icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${config.color}`} />
+                          <dt className="flex items-start justify-between gap-3 mb-2">
                             <div className="flex-1">
-                              <span className="text-lg font-semibold text-foreground">
+                              <span className="text-base font-semibold text-foreground">
                                 {term.term}
                               </span>
                               {term.acronym && (
@@ -620,21 +615,21 @@ export default function Lexique() {
                                 </span>
                               )}
                             </div>
-                            <span className={`text-xs px-2 py-1 rounded-full bg-muted ${config.color}`}>
+                            <span className="text-xs px-2 py-1 rounded border border-border text-muted-foreground bg-muted/50">
                               {config.label[language]}
                             </span>
                           </dt>
-                          <dd className="ml-8 text-muted-foreground leading-relaxed">
+                          <dd className="text-sm text-muted-foreground leading-relaxed">
                             {term.definition}
                           </dd>
                           {/* Internal tool link */}
                           {term.toolLink && (
-                            <div className="ml-8 mt-3">
+                            <div className="mt-2">
                               <Link 
                                 to={term.toolLink.path}
-                                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
                               >
-                                <ExternalLink className="h-3.5 w-3.5" />
+                                <ExternalLink className="h-3 w-3" />
                                 {term.toolLink.label}
                               </Link>
                             </div>
