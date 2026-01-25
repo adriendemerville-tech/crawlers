@@ -2,9 +2,15 @@
 # Robots.txt - Crawlers.fr
 # Audit SEO, GEO & IA Gratuit en Français
 # Analyse complète pour site web et boutique
+# Version 2026
 # ============================================
 # 
-# CRAWLERS.FR - Plateforme d'audit SEO et référencement IA
+# CRAWLERS.FR - Plateforme d'audit SEO et référencement IA 2026
+# 
+# Langues supportées : Français (FR), English (EN), Español (ES)
+# Zones cibles : Europe, Amérique du Nord, Amérique du Sud
+# Pays prioritaires : France, Espagne, Royaume-Uni, États-Unis, Mexique, Argentine
+# Année de référence : 2026
 # 
 # Fonctionnalités :
 # - Audit SEO complet sur 200 points
@@ -201,11 +207,12 @@ Sitemap: https://crawlers.fr/sitemap.xml
 # https://crawlers.fr/apple-touch-icon.png (iOS)
 
 # ============================================
-# À PROPOS DE CRAWLERS.FR
+# À PROPOS DE CRAWLERS.FR - 2026
 # ============================================
 # 
 # Crawlers.fr est un outil français gratuit d'audit SEO et GEO.
 # Analysez votre site web ou boutique e-commerce en quelques secondes.
+# Référence 2026 pour l'optimisation SEO et GEO.
 # 
 # Services gratuits :
 # ✓ Audit SEO 200 points (Performance, Technique, Sémantique, IA, Sécurité)
@@ -215,6 +222,9 @@ Sitemap: https://crawlers.fr/sitemap.xml
 # ✓ Rapport PDF téléchargeable
 # ✓ Recommandations de référencement personnalisées
 # 
-# Langues : Français, English, Español
+# Langues supportées : Français (FR), English (EN), Español (ES)
+# Zones géographiques : Europe, Amérique du Nord, Amérique du Sud
+# Pays cibles : France, Espagne, Royaume-Uni, États-Unis, Canada, Mexique, Argentine
+# Année : 2026
 # Contact : https://crawlers.fr
 # ============================================
