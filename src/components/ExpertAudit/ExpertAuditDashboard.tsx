@@ -248,7 +248,7 @@ export function ExpertAuditDashboard() {
         <Card 
           className={`relative overflow-hidden transition-all cursor-pointer ${
             auditMode === 'technical' 
-              ? 'border-2 border-amber-400 shadow-[0_0_20px_-5px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)]' 
+              ? 'border-2 border-amber-400 shadow-[0_0_10px_-3px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)]' 
               : 'border-border/60 hover:border-primary/50'
           }`}
           onClick={() => !isLoading && !isStrategicLoading && setAuditMode('technical')}
@@ -271,7 +271,7 @@ export function ExpertAuditDashboard() {
               <Button 
                 onClick={(e) => { e.stopPropagation(); handleTechnicalAudit(); }}
                 disabled={isLoading || isStrategicLoading || !url.trim()}
-                className="w-full mt-4 bg-primary hover:bg-primary/90"
+                className="w-full mt-4 bg-primary hover:bg-primary/90 shadow-[2px_2px_6px_rgba(0,0,0,0.35)]"
               >
                 {isLoading && auditMode === 'technical' ? t.analyzing : t.launch}
               </Button>
@@ -283,7 +283,7 @@ export function ExpertAuditDashboard() {
         <Card 
           className={`relative overflow-hidden transition-all cursor-pointer ${
             auditMode === 'strategic' 
-              ? 'border-2 border-amber-400 shadow-[0_0_20px_-5px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)]' 
+              ? 'border-2 border-amber-400 shadow-[0_0_10px_-3px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)]' 
               : 'border-border/60 hover:border-primary/50'
           }`}
           onClick={() => !isLoading && !isStrategicLoading && setAuditMode('strategic')}
@@ -306,7 +306,7 @@ export function ExpertAuditDashboard() {
               <Button 
                 onClick={(e) => { e.stopPropagation(); handleStrategicAudit(); }}
                 disabled={isLoading || isStrategicLoading || !url.trim()}
-                className="w-full mt-4 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                className="w-full mt-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-[2px_2px_6px_rgba(0,0,0,0.35)]"
               >
                 {isStrategicLoading ? t.analyzing : t.launch}
               </Button>
