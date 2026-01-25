@@ -1,7 +1,7 @@
 {
   "name": "Crawlers.fr - Audit SEO & IA Gratuit",
   "short_name": "Crawlers.fr",
-  "description": "Audit SEO complet sur 200 points, Score GEO, analyse des bots IA et rapport gratuit. Optimisez le référencement de votre site web ou boutique e-commerce. Analyse mobile et desktop, code source, clients et visibilité LLM.",
+  "description": "Audit SEO complet sur 200 points, Score GEO, analyse des bots IA et rapport gratuit. Optimisez le référencement de votre site web ou boutique e-commerce. Analyse mobile et desktop, code source, clients et visibilité LLM. Performances PageSpeed Insights, vitesse de chargement, LCP, accessibilité et contenu optimisé.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -11,7 +11,7 @@
   "lang": "fr-FR",
   "dir": "ltr",
   "categories": ["business", "productivity", "utilities"],
-  "keywords": ["audit", "seo", "geo", "bots", "référencement", "site", "boutique", "mobile", "clients", "analyse", "code", "rapport gratuit", "crawlers", "français"],
+  "keywords": ["audit", "français", "seo", "geo", "bots", "référencement", "site", "boutique", "mobile", "clients", "analyse", "code", "rapport gratuit", "crawlers", "performances", "page speed insight", "chargement", "LCP", "vitesse", "content", "accessibilité"],
   "icons": [
     {
       "src": "/favicon.svg",
