@@ -42,12 +42,14 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isAuditLoading, setIsAuditLoading] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
-  const [pageSpeedResult, setPageSpeedResult] = useState<PageSpeedResult | null>(null);
+  const [mobilePageSpeedResult, setMobilePageSpeedResult] = useState<PageSpeedResult | null>(null);
+  const [desktopPageSpeedResult, setDesktopPageSpeedResult] = useState<PageSpeedResult | null>(null);
   const [geoResult, setGeoResult] = useState<GeoResult | null>(null);
   const [llmResult, setLlmResult] = useState<LLMAnalysisResult | null>(null);
   const [auditResult, setAuditResult] = useState<StrategicAuditResult | null>(null);
   const [showAuditDashboard, setShowAuditDashboard] = useState(false);
   const [pageSpeedStrategy, setPageSpeedStrategy] = useState<'mobile' | 'desktop'>('mobile');
+  const [isPageSpeedLoading, setIsPageSpeedLoading] = useState(false);
   const [currentUrl, setCurrentUrl] = useState<string>('');
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   const { toast } = useToast();
@@ -100,6 +102,7 @@ const Index = () => {
           description: `LLM Visibility Score: ${data.data.overallScore}/100`,
         });
       } else {
+        setIsPageSpeedLoading(true);
         const { data, error } = await supabase.functions.invoke('check-pagespeed', {
           body: { url, strategy: pageSpeedStrategy }
         });
@@ -107,6 +110,7 @@ const Index = () => {
         if (error) {
           if (error.message?.includes('429') || error.message?.includes('quota')) {
             setQuotaExceeded(true);
+            setIsPageSpeedLoading(false);
             return;
           }
           throw new Error(error.message);
@@ -115,12 +119,18 @@ const Index = () => {
         if (!data.success) {
           if (data.error === 'quota_exceeded') {
             setQuotaExceeded(true);
+            setIsPageSpeedLoading(false);
             return;
           }
           throw new Error(data.message || data.error || 'Failed to check PageSpeed');
         }
 
-        setPageSpeedResult(data.data);
+        if (pageSpeedStrategy === 'mobile') {
+          setMobilePageSpeedResult(data.data);
+        } else {
+          setDesktopPageSpeedResult(data.data);
+        }
+        setIsPageSpeedLoading(false);
         toast({
           title: 'Analysis complete!',
           description: `PageSpeed score: ${data.data.scores.performance}/100`,
@@ -147,9 +157,15 @@ const Index = () => {
 
   const handleStrategyChange = async (strategy: 'mobile' | 'desktop') => {
     setPageSpeedStrategy(strategy);
+    
+    // Si on a déjà les résultats pour cette stratégie, pas besoin de recharger
+    const existingResult = strategy === 'mobile' ? mobilePageSpeedResult : desktopPageSpeedResult;
+    if (existingResult) {
+      return;
+    }
+    
     if (currentUrl && activeTab === 'pagespeed' && !quotaExceeded) {
-      setIsLoading(true);
-      setPageSpeedResult(null);
+      setIsPageSpeedLoading(true);
 
       try {
         const { data, error } = await supabase.functions.invoke('check-pagespeed', {
@@ -172,7 +188,11 @@ const Index = () => {
           throw new Error(data.message || data.error || 'Failed to check PageSpeed');
         }
 
-        setPageSpeedResult(data.data);
+        if (strategy === 'mobile') {
+          setMobilePageSpeedResult(data.data);
+        } else {
+          setDesktopPageSpeedResult(data.data);
+        }
       } catch (error) {
         console.error('Error:', error);
         toast({
@@ -181,7 +201,7 @@ const Index = () => {
           variant: 'destructive',
         });
       } finally {
-        setIsLoading(false);
+        setIsPageSpeedLoading(false);
       }
     }
   };
@@ -234,7 +254,7 @@ const Index = () => {
       if (crawlersRes.data?.success) setCrawlResult(crawlersRes.data.data);
       if (geoRes.data?.success) setGeoResult(geoRes.data.data);
       if (llmRes.data?.success) setLlmResult(llmRes.data.data);
-      if (pagespeedRes.data?.success) setPageSpeedResult(pagespeedRes.data.data);
+      if (pagespeedRes.data?.success) setMobilePageSpeedResult(pagespeedRes.data.data);
 
       // Generate strategic audit with AI
       const { data: auditData, error: auditError } = await supabase.functions.invoke('audit-strategic', {
@@ -302,16 +322,33 @@ const Index = () => {
         </div>
       );
     } else if (activeTab === 'pagespeed') {
+      const currentResult = pageSpeedStrategy === 'mobile' ? mobilePageSpeedResult : desktopPageSpeedResult;
+      const otherResult = pageSpeedStrategy === 'mobile' ? desktopPageSpeedResult : mobilePageSpeedResult;
+      
       dashboards.push(
         <div key="pagespeed-current" className="border-b border-border/50 pb-8">
           <PageSpeedDashboard 
-            result={pageSpeedResult} 
-            isLoading={isLoading && !showAuditDashboard}
+            result={currentResult} 
+            isLoading={isPageSpeedLoading}
             strategy={pageSpeedStrategy}
             onStrategyChange={handleStrategyChange}
           />
         </div>
       );
+      
+      // Afficher l'autre résultat (mobile/desktop) en dessous s'il existe
+      if (otherResult) {
+        dashboards.push(
+          <div key="pagespeed-other" className="border-b border-border/50 pb-8 opacity-80">
+            <PageSpeedDashboard 
+              result={otherResult} 
+              isLoading={false}
+              strategy={otherResult.strategy}
+              onStrategyChange={handleStrategyChange}
+            />
+          </div>
+        );
+      }
     }
 
     // Afficher les autres résultats existants (anciens) en dessous
@@ -339,13 +376,14 @@ const Index = () => {
       );
     }
 
-    if (activeTab !== 'pagespeed' && pageSpeedResult) {
+    if (activeTab !== 'pagespeed' && (mobilePageSpeedResult || desktopPageSpeedResult)) {
+      const resultToShow = desktopPageSpeedResult || mobilePageSpeedResult;
       dashboards.push(
         <div key="pagespeed-prev" className="border-b border-border/50 pb-8 opacity-80">
           <PageSpeedDashboard 
-            result={pageSpeedResult} 
+            result={resultToShow} 
             isLoading={false}
-            strategy={pageSpeedStrategy}
+            strategy={resultToShow?.strategy || 'mobile'}
             onStrategyChange={handleStrategyChange}
           />
         </div>
@@ -356,7 +394,7 @@ const Index = () => {
   };
 
   // Check if any tool has results
-  const hasAnyResult = !!(crawlResult || geoResult || llmResult || pageSpeedResult);
+  const hasAnyResult = !!(crawlResult || geoResult || llmResult || mobilePageSpeedResult || desktopPageSpeedResult);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -394,7 +432,7 @@ const Index = () => {
         crawlResult={crawlResult}
         geoResult={geoResult}
         llmResult={llmResult}
-        pageSpeedResult={pageSpeedResult}
+        pageSpeedResult={mobilePageSpeedResult || desktopPageSpeedResult}
         currentUrl={currentUrl}
       />
     </div>

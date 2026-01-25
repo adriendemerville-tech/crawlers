@@ -1,9 +1,7 @@
 import { PageSpeedResult } from '@/types/pagespeed';
 import { ScoreGauge } from './ScoreGauge';
 import { MetricCard } from './MetricCard';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card } from '@/components/ui/card';
-import { Smartphone, Monitor, Clock, Zap, Move, Timer, Gauge, MousePointer } from 'lucide-react';
+import { Smartphone, Monitor, Clock, Zap, Move, Timer, Gauge, MousePointer, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -14,28 +12,64 @@ interface PageSpeedDashboardProps {
   onStrategyChange: (strategy: 'mobile' | 'desktop') => void;
 }
 
+// Composant d'animation de chargement
+function LoadingAnimation() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16">
+      <div className="relative">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+      <div className="mt-6 flex items-center gap-1 text-lg font-medium text-foreground">
+        <span>Analyse</span>
+        <span className="inline-flex w-6">
+          <span className="animate-bounce" style={{ animationDelay: '0ms' }}>.</span>
+          <span className="animate-bounce" style={{ animationDelay: '150ms' }}>.</span>
+          <span className="animate-bounce" style={{ animationDelay: '300ms' }}>.</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function PageSpeedDashboard({ result, isLoading, strategy, onStrategyChange }: PageSpeedDashboardProps) {
   const { t } = useLanguage();
 
-  if (isLoading) {
+  if (isLoading && !result) {
     return (
       <section className="px-4 pb-12">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-xl font-semibold text-foreground">{t.pagespeed.title}</h2>
             <div className="flex gap-2">
-              <Skeleton className="h-10 w-24 rounded-lg" />
-              <Skeleton className="h-10 w-24 rounded-lg" />
+              <button
+                disabled
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all",
+                  strategy === 'mobile'
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                <Smartphone className="h-4 w-4" />
+                {t.pagespeed.mobile}
+              </button>
+              <button
+                disabled
+                className={cn(
+                  "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all",
+                  strategy === 'desktop'
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                <Monitor className="h-4 w-4" />
+                {t.pagespeed.desktop}
+              </button>
             </div>
           </div>
           
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <Card key={i} className="p-6">
-                <Skeleton className="mx-auto h-24 w-24 rounded-full" />
-                <Skeleton className="mx-auto mt-4 h-4 w-20" />
-              </Card>
-            ))}
+          <div className="rounded-xl border border-border bg-card card-shadow">
+            <LoadingAnimation />
           </div>
         </div>
       </section>
