@@ -120,17 +120,27 @@ export function StrategicAuditDashboard({ result, isLoading }: StrategicAuditDas
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-6">
-          <Skeleton className="h-10 w-64 mx-auto" />
-          <div className="flex justify-center">
-            <Skeleton className="h-32 w-32 rounded-full" />
+        <div className="flex flex-col items-center justify-center space-y-6 py-16">
+          {/* Spinning loader */}
+          <div className="relative">
+            <div className="h-16 w-16 rounded-full border-4 border-muted"></div>
+            <div className="absolute inset-0 h-16 w-16 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
           </div>
-          <Skeleton className="h-24 w-full" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-40" />
-            ))}
+          
+          {/* Animated "Analyse..." text */}
+          <div className="flex items-center gap-1 text-lg font-medium text-foreground">
+            <span>Analyse</span>
+            <span className="inline-flex">
+              <span className="animate-[bounce_1s_ease-in-out_infinite]">.</span>
+              <span className="animate-[bounce_1s_ease-in-out_0.2s_infinite]">.</span>
+              <span className="animate-[bounce_1s_ease-in-out_0.4s_infinite]">.</span>
+            </span>
           </div>
+          
+          <p className="text-sm text-muted-foreground text-center max-w-md">
+            L'intelligence artificielle analyse votre site en profondeur. 
+            Cette opération peut prendre quelques secondes.
+          </p>
         </div>
       </div>
     );

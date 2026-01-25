@@ -187,7 +187,7 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'les LLMs',
       },
       subheadline: {
-        crawlers: "Vérifiez instantanément si les crawlers IA majeurs peuvent accéder à votre contenu. Optimisez pour la visibilité LLM ou protégez vos données.",
+        crawlers: "Interrogez gratuitement toutes les intelligences artificielles grand public en une seule fois. Vérifiez instantanément si les crawlers IA majeurs peuvent accéder à votre contenu.",
         geo: "Mesurez votre score d'Optimisation pour Moteurs Génératifs. Obtenez des recommandations actionnables pour améliorer votre visibilité IA.",
         pagespeed: "Obtenez des insights PageSpeed détaillés avec les Core Web Vitals. Comprenez performance, accessibilité, SEO et bonnes pratiques.",
         llm: "Analysez comment GPT-4, Claude, Gemini et Perplexity perçoivent et recommandent votre site. Découvrez votre réputation IA.",
@@ -369,7 +369,7 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'LLMs',
       },
       subheadline: {
-        crawlers: 'Instantly verify if major AI crawlers can access your content. Optimize for LLM visibility or protect your data—you choose.',
+        crawlers: 'Query all major public AI systems at once for free. Instantly verify if AI crawlers can access your content.',
         geo: 'Measure your Generative Engine Optimization score. Get actionable recommendations to improve AI visibility.',
         pagespeed: 'Get detailed PageSpeed Insights with Core Web Vitals. Understand performance, accessibility, SEO and best practices.',
         llm: 'Analyze how GPT-4, Claude, Gemini and Perplexity perceive and recommend your site. Discover your AI reputation.',
@@ -551,7 +551,7 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'los LLMs',
       },
       subheadline: {
-        crawlers: 'Verifica instantáneamente si los principales crawlers de IA pueden acceder a tu contenido. Optimiza para visibilidad LLM o protege tus datos.',
+        crawlers: 'Consulta gratis todas las inteligencias artificiales públicas de una sola vez. Verifica instantáneamente si los crawlers IA pueden acceder a tu contenido.',
         geo: 'Mide tu puntuación de Optimización para Motores Generativos. Obtén recomendaciones accionables para mejorar tu visibilidad IA.',
         pagespeed: 'Obtén información detallada de PageSpeed con Core Web Vitals. Entiende rendimiento, accesibilidad, SEO y mejores prácticas.',
         llm: 'Analiza cómo GPT-4, Claude, Gemini y Perplexity perciben y recomiendan tu sitio. Descubre tu reputación IA.',
