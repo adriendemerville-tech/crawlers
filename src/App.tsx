@@ -8,6 +8,10 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
+const MentionsLegales = lazy(() => import("./pages/MentionsLegales"));
+const PolitiqueConfidentialite = lazy(() => import("./pages/PolitiqueConfidentialite"));
+const ConditionsUtilisation = lazy(() => import("./pages/ConditionsUtilisation"));
+const RGPD = lazy(() => import("./pages/RGPD"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
@@ -32,6 +36,10 @@ const App = () => (
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/mentions-legales" element={<MentionsLegales />} />
+              <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+              <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
+              <Route path="/rgpd" element={<RGPD />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
