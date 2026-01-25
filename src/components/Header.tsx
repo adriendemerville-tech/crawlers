@@ -1,7 +1,8 @@
-import { Bot, Sun, Moon } from 'lucide-react';
+import { Bot, Sun, Moon, Book } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from 'next-themes';
+import { Link } from 'react-router-dom';
 
 // Flag emoji components for better accessibility and consistency
 const FlagFR = () => (
@@ -15,6 +16,12 @@ const FlagEN = () => (
 const FlagES = () => (
   <span className="text-base" role="img" aria-label="Español">🇪🇸</span>
 );
+
+const lexiqueLabels = {
+  fr: 'Lexique',
+  en: 'Glossary',
+  es: 'Glosario',
+};
 
 export function Header() {
   const { language, setLanguage } = useLanguage();
@@ -35,6 +42,18 @@ export function Header() {
         </a>
 
         <div className="flex items-center gap-3">
+          {/* Lexique link - discrete */}
+          <Link to="/lexique">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hidden sm:flex gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <Book className="h-4 w-4" />
+              <span className="text-sm">{lexiqueLabels[language]}</span>
+            </Button>
+          </Link>
+
           {/* Theme toggle */}
           <Button
             variant="ghost"
