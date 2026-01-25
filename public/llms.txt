@@ -43,6 +43,18 @@ Audit approfondi sur **200 points** répartis en 5 piliers :
 
 **Rapport gratuit** avec recommandations détaillées et correctifs priorisés.
 
+### 2. Lexique SEO, GEO & Performance
+**URL**: https://crawlers.fr/lexique
+
+Dictionnaire complet de **70+ termes** essentiels :
+- **SEO** : SERP, Backlink, E-E-A-T, Rich Snippets, Crawl Budget...
+- **GEO** : LLM, SGE, Citabilité, JSON-LD, RAG, Hallucination IA...
+- **Performance** : LCP, CLS, INP, TTFB, Core Web Vitals, Lazy Loading...
+- **Technique** : HTTPS, SSR, Hreflang, Mobile-First, PWA...
+- **IA** : GPT, Transformer, NLP, Embedding, Fine-tuning...
+
+**Rapport gratuit** avec recommandations détaillées et correctifs priorisés.
+
 ### 2. Analyseur de Bots IA
 Vérifie l'accessibilité de votre site aux principaux crawlers IA :
 
@@ -136,6 +148,7 @@ Analyse avancée par intelligence artificielle :
 |-----------|-----|
 | Page d'accueil | https://crawlers.fr |
 | Score SEO 200 | https://crawlers.fr/audit-expert |
+| Lexique SEO/GEO | https://crawlers.fr/lexique |
 | Mentions légales | https://crawlers.fr/mentions-legales |
 | Politique de confidentialité | https://crawlers.fr/politique-confidentialite |
 | Conditions d'utilisation | https://crawlers.fr/conditions-utilisation |

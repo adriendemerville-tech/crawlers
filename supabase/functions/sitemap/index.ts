@@ -102,6 +102,15 @@ serve(async (req) => {
     }));
     auditAlternates.push({ lang: 'x-default', href: `${SITE_URL}/audit-expert` });
 
+    // ========================================
+    // LEXIQUE SEO/GEO - Glossary
+    // ========================================
+    const lexiqueAlternates = languages.map(lang => ({
+      lang: lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'es-ES',
+      href: lang === 'fr' ? `${SITE_URL}/lexique` : `${SITE_URL}/lexique?lang=${lang}`
+    }));
+    lexiqueAlternates.push({ lang: 'x-default', href: `${SITE_URL}/lexique` });
+
     // Pages principales du site avec hreflang
     const pages: SitemapPage[] = [
       // ===== HOMEPAGE =====
@@ -132,6 +141,22 @@ serve(async (req) => {
             loc: `${SITE_URL}/favicon.svg`,
             title: 'Score SEO 200 - Audit Expert',
             caption: 'Audit complet sur 200 points : Performance, Technique, Sémantique, IA/GEO, Sécurité'
+          }
+        ]
+      },
+      
+      // ===== LEXIQUE SEO/GEO (Glossary) =====
+      {
+        loc: `${SITE_URL}/lexique`,
+        lastmod: today,
+        changefreq: 'weekly',
+        priority: 0.8,
+        alternates: lexiqueAlternates,
+        images: [
+          {
+            loc: `${SITE_URL}/favicon.svg`,
+            title: 'Lexique SEO, GEO & Performance 2026',
+            caption: 'Dictionnaire complet des termes SEO, GEO et Performance web pour SGE et LLMs'
           }
         ]
       },
@@ -192,6 +217,20 @@ serve(async (req) => {
         changefreq: 'weekly',
         priority: 0.8,
         alternates: auditAlternates,
+      },
+      {
+        loc: `${SITE_URL}/lexique?lang=en`,
+        lastmod: today,
+        changefreq: 'weekly',
+        priority: 0.7,
+        alternates: lexiqueAlternates,
+      },
+      {
+        loc: `${SITE_URL}/lexique?lang=es`,
+        lastmod: today,
+        changefreq: 'weekly',
+        priority: 0.7,
+        alternates: lexiqueAlternates,
       }
     );
 

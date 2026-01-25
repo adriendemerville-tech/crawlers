@@ -39,6 +39,11 @@ export function Footer() {
       description: language === 'fr' ? 'Questions fréquentes' : 'Frequently asked questions'
     },
     { 
+      label: language === 'fr' ? 'Lexique SEO/GEO' : language === 'es' ? 'Glosario SEO/GEO' : 'SEO/GEO Glossary',
+      href: '/lexique',
+      description: language === 'fr' ? 'Définitions des termes SEO et GEO' : 'SEO and GEO terms definitions'
+    },
+    { 
       label: language === 'fr' ? 'Actualités IA' : language === 'es' ? 'Noticias IA' : 'AI News',
       href: '#news',
       description: language === 'fr' ? 'Veille technologique IA' : 'AI technology watch'
