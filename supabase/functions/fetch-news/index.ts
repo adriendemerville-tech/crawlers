@@ -263,7 +263,7 @@ function extractSourceFromUrl(url: string): { name: string; baseUrl: string } {
 
 // Check if URL is a Google News redirect URL
 function isGoogleNewsUrl(url: string): boolean {
-  return url.includes('news.google.com/rss/articles/') || url.includes('news.google.com/articles/');
+  return url.includes('news.google.com');
 }
 
 // Check if image URL is a Google placeholder
@@ -274,52 +274,23 @@ function isGooglePlaceholder(imageUrl: string | null): boolean {
          imageUrl.includes('news.google.com');
 }
 
-// Follow redirects to get final URL
-async function getActualUrl(googleNewsUrl: string): Promise<string> {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    
-    // Follow redirects manually to get the final URL
-    const response = await fetch(googleNewsUrl, {
-      signal: controller.signal,
-      redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      }
-    });
-    clearTimeout(timeout);
-    
-    // The response.url should be the final URL after redirects
-    if (response.url && !isGoogleNewsUrl(response.url)) {
-      console.log(`Resolved: ${googleNewsUrl.slice(0, 60)}... -> ${response.url.slice(0, 60)}...`);
-      return response.url;
-    }
-    
-    // Try to extract URL from the HTML content if redirect didn't work
-    const html = await response.text();
-    
-    // Look for canonical link
-    const canonicalMatch = html.match(/<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["']/i) ||
-                          html.match(/<link[^>]*href=["']([^"']+)["'][^>]*rel=["']canonical["']/i);
-    if (canonicalMatch && canonicalMatch[1] && !isGoogleNewsUrl(canonicalMatch[1])) {
-      return canonicalMatch[1];
-    }
-    
-    // Look for og:url
-    const ogUrlMatch = html.match(/<meta[^>]*property=["']og:url["'][^>]*content=["']([^"']+)["']/i) ||
-                       html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:url["']/i);
-    if (ogUrlMatch && ogUrlMatch[1] && !isGoogleNewsUrl(ogUrlMatch[1])) {
-      return ogUrlMatch[1];
-    }
-    
-    return googleNewsUrl;
-  } catch (error) {
-    console.log('Failed to resolve URL:', googleNewsUrl.slice(0, 50), error);
-    return googleNewsUrl;
+// Extract source name from title (Google News format: "Title - Source")
+function extractSourceFromTitle(title: string): string | null {
+  const match = title.match(/\s-\s([^-]+)$/);
+  if (match && match[1]) {
+    return match[1].trim();
   }
+  return null;
 }
+
+// Clean title by removing source suffix
+function cleanTitle(title: string): string {
+  return title.replace(/\s-\s[^-]+$/, '').trim();
+}
+
+// The Google News RSS URLs redirect properly when clicked by users
+// We keep them as-is since decoding server-side is not reliable
+// The redirect happens in the user's browser when they click the link
 
 // Fetch og:image from actual article URL
 async function fetchOgImage(url: string): Promise<string | null> {
@@ -416,12 +387,15 @@ async function processArticle(item: RSSItem, score: number, index: number): Prom
   const combinedText = `${item.title} ${item.description || ''}`;
   const category = detectCategory(combinedText);
   
-  // Resolve actual URL if it's a Google News redirect
-  let actualUrl = item.link;
-  if (isGoogleNewsUrl(item.link)) {
-    actualUrl = await getActualUrl(item.link);
-  }
+  // Google News RSS URLs redirect properly in browser - keep them as-is
+  // The URL works when clicked by users (browser follows redirects)
+  const actualUrl = item.link;
   
+  // Extract source from title (format: "Title - Source Name")
+  const sourceName = extractSourceFromTitle(item.title);
+  const cleanedTitle = cleanTitle(item.title);
+  
+  // Try to get source info from URL (may not work for Google News URLs)
   const sourceInfo = extractSourceFromUrl(actualUrl);
   
   // Try to get image - first check if RSS thumbnail is valid (not Google placeholder)
@@ -447,15 +421,15 @@ async function processArticle(item: RSSItem, score: number, index: number): Prom
   
   const article: ArticleResult = {
     id: `news-${Date.now()}-${index}`,
-    title: item.title,
+    title: cleanedTitle || item.title,
     summary: item.description?.replace(/<[^>]*>/g, '').slice(0, 200) || '',
     url: actualUrl,
     imageUrl,
     category,
     source: {
-      id: `src-${sourceInfo.name.toLowerCase().replace(/\s/g, '-')}`,
-      name: sourceInfo.name,
-      url: sourceInfo.baseUrl,
+      id: `src-${(sourceName || sourceInfo.name).toLowerCase().replace(/\s/g, '-')}`,
+      name: sourceName || sourceInfo.name,
+      url: sourceInfo.baseUrl || actualUrl,
       trustScore: 85,
       lastCrawled: new Date().toISOString(),
     },
