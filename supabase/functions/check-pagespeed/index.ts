@@ -56,18 +56,29 @@ Deno.serve(async (req) => {
 
     // Get API key from environment
     const apiKey = Deno.env.get('GOOGLE_PAGESPEED_API_KEY');
-    if (!apiKey) {
-      console.error('GOOGLE_PAGESPEED_API_KEY not configured');
-      return new Response(
-        JSON.stringify({ success: false, error: 'API key not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    
+    // Build the base URL without API key first (PageSpeed API works without key but with lower quota)
+    const baseUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO`;
+    
+    // Try with API key first if available
+    let response: Response;
+    let usedApiKey = false;
+    
+    if (apiKey) {
+      console.log('Trying with API key...');
+      response = await fetch(`${baseUrl}&key=${apiKey}`);
+      
+      // If API key causes 403 (blocked), retry without it
+      if (response.status === 403) {
+        console.log('API key blocked, retrying without key...');
+        response = await fetch(baseUrl);
+      } else {
+        usedApiKey = true;
+      }
+    } else {
+      console.log('No API key configured, using public quota');
+      response = await fetch(baseUrl);
     }
-
-    // Build the URL with API key and multiple categories
-    const fullApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&key=${apiKey}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO`;
-
-    const response = await fetch(fullApiUrl);
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -79,7 +90,7 @@ Deno.serve(async (req) => {
           JSON.stringify({ 
             success: false, 
             error: 'quota_exceeded',
-            message: 'PageSpeed API daily quota exceeded. Please try again tomorrow or use your own Google API key.'
+            message: 'PageSpeed API daily quota exceeded. Please try again tomorrow or configure a valid Google API key with PageSpeed Insights API enabled.'
           }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
