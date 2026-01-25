@@ -2,69 +2,74 @@ import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Book, Search, Zap, Globe, Brain, Shield, BarChart3, Clock, Eye, FileCode } from 'lucide-react';
+import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface GlossaryTerm {
   term: string;
   acronym?: string;
   definition: string;
   category: 'seo' | 'geo' | 'performance' | 'technical' | 'ai';
+  toolLink?: { path: string; label: string };
 }
 
 const glossaryTerms: Record<string, GlossaryTerm[]> = {
   fr: [
     // SEO Terms
-    { term: "SEO", acronym: "Search Engine Optimization", definition: "Ensemble des techniques visant à améliorer le positionnement d'un site web dans les résultats des moteurs de recherche comme Google. L'objectif est d'augmenter la visibilité et le trafic organique.", category: "seo" },
+    { term: "SEO", acronym: "Search Engine Optimization", definition: "Ensemble des techniques visant à améliorer le positionnement d'un site web dans les résultats des moteurs de recherche comme Google. L'objectif est d'augmenter la visibilité et le trafic organique.", category: "seo", toolLink: { path: "/audit-expert", label: "Testez avec l'Audit Expert" } },
     { term: "SERP", acronym: "Search Engine Results Page", definition: "Page de résultats affichée par un moteur de recherche après une requête. Elle contient les liens organiques, les annonces payantes et les fonctionnalités enrichies.", category: "seo" },
-    { term: "Balise Title", definition: "Élément HTML qui définit le titre d'une page web. C'est le texte cliquable affiché dans les résultats de recherche. Idéalement moins de 60 caractères.", category: "seo" },
-    { term: "Meta Description", definition: "Court résumé de 150-160 caractères décrivant le contenu d'une page. Affichée sous le titre dans les SERP, elle influence le taux de clic.", category: "seo" },
+    { term: "Balise Title", definition: "Élément HTML qui définit le titre d'une page web. C'est le texte cliquable affiché dans les résultats de recherche. Idéalement moins de 60 caractères.", category: "seo", toolLink: { path: "/audit-expert", label: "Analysez vos balises" } },
+    { term: "Meta Description", definition: "Court résumé de 150-160 caractères décrivant le contenu d'une page. Affichée sous le titre dans les SERP, elle influence le taux de clic.", category: "seo", toolLink: { path: "/audit-expert", label: "Vérifiez vos metas" } },
     { term: "Backlink", definition: "Lien entrant provenant d'un autre site web pointant vers le vôtre. Les backlinks de qualité améliorent l'autorité et le classement SEO.", category: "seo" },
     { term: "Mots-clés", definition: "Termes et expressions que les internautes tapent dans les moteurs de recherche. L'optimisation des mots-clés est fondamentale pour le référencement.", category: "seo" },
-    { term: "Indexation", definition: "Processus par lequel les moteurs de recherche ajoutent les pages web à leur base de données. Une page non indexée n'apparaît pas dans les résultats.", category: "seo" },
-    { term: "Robots.txt", definition: "Fichier texte à la racine d'un site indiquant aux robots des moteurs de recherche quelles pages crawler ou ignorer.", category: "seo" },
+    { term: "Indexation", definition: "Processus par lequel les moteurs de recherche ajoutent les pages web à leur base de données. Une page non indexée n'apparaît pas dans les résultats.", category: "seo", toolLink: { path: "/?tab=crawlers", label: "Testez vos crawlers" } },
+    { term: "Robots.txt", definition: "Fichier texte à la racine d'un site indiquant aux robots des moteurs de recherche quelles pages crawler ou ignorer.", category: "seo", toolLink: { path: "/?tab=crawlers", label: "Analysez votre robots.txt" } },
     { term: "Sitemap XML", definition: "Fichier listant toutes les URLs importantes d'un site pour faciliter leur découverte et indexation par les moteurs de recherche.", category: "seo" },
     { term: "Canonical URL", definition: "Balise HTML indiquant la version principale d'une page lorsque plusieurs URLs affichent un contenu similaire, évitant le contenu dupliqué.", category: "seo" },
-    { term: "E-E-A-T", acronym: "Experience, Expertise, Authoritativeness, Trustworthiness", definition: "Critères de qualité utilisés par Google pour évaluer la fiabilité d'un contenu : Expérience, Expertise, Autorité et Fiabilité.", category: "seo" },
+    { term: "E-E-A-T", acronym: "Experience, Expertise, Authoritativeness, Trustworthiness", definition: "Critères de qualité utilisés par Google pour évaluer la fiabilité d'un contenu : Expérience, Expertise, Autorité et Fiabilité.", category: "seo", toolLink: { path: "/audit-expert", label: "Évaluez votre E-E-A-T" } },
     { term: "Rich Snippets", definition: "Résultats de recherche enrichis affichant des informations supplémentaires (étoiles, prix, images) grâce aux données structurées.", category: "seo" },
-    { term: "Balises Hn", definition: "Hiérarchie de titres HTML (H1 à H6) structurant le contenu d'une page. Le H1 est le titre principal, les H2-H6 sont des sous-titres.", category: "seo" },
+    { term: "Balises Hn", definition: "Hiérarchie de titres HTML (H1 à H6) structurant le contenu d'une page. Le H1 est le titre principal, les H2-H6 sont des sous-titres.", category: "seo", toolLink: { path: "/audit-expert", label: "Analysez vos H1-H6" } },
     { term: "Alt Text", definition: "Texte alternatif décrivant une image pour l'accessibilité et le SEO. Aide les moteurs de recherche à comprendre le contenu visuel.", category: "seo" },
     { term: "Anchor Text", definition: "Texte cliquable d'un lien hypertexte. Un anchor text descriptif améliore le SEO et l'expérience utilisateur.", category: "seo" },
-    { term: "Crawl Budget", definition: "Nombre de pages qu'un moteur de recherche va explorer sur un site pendant une période donnée. Important pour les grands sites.", category: "seo" },
+    { term: "Crawl Budget", definition: "Nombre de pages qu'un moteur de recherche va explorer sur un site pendant une période donnée. Important pour les grands sites.", category: "seo", toolLink: { path: "/?tab=crawlers", label: "Optimisez votre crawl" } },
     { term: "Domain Authority", acronym: "DA", definition: "Score de 0 à 100 estimant la capacité d'un domaine à se positionner dans les résultats de recherche. Métrique développée par Moz.", category: "seo" },
     { term: "Nofollow", definition: "Attribut de lien indiquant aux moteurs de recherche de ne pas transmettre d'autorité SEO vers la page de destination.", category: "seo" },
     { term: "Long Tail Keywords", definition: "Mots-clés de longue traîne, expressions de 3+ mots plus spécifiques et moins concurrentiels, souvent à meilleur taux de conversion.", category: "seo" },
     { term: "Featured Snippet", definition: "Encadré affiché en position zéro des résultats Google, répondant directement à une question de l'utilisateur.", category: "seo" },
     
     // GEO Terms
-    { term: "GEO", acronym: "Generative Engine Optimization", definition: "Optimisation pour les moteurs de recherche génératifs comme ChatGPT, Claude, Gemini et Perplexity. L'objectif est d'être cité dans les réponses IA.", category: "geo" },
-    { term: "SGE", acronym: "Search Generative Experience", definition: "Expérience de recherche générative de Google intégrant des réponses générées par IA directement dans les résultats de recherche.", category: "geo" },
-    { term: "LLM", acronym: "Large Language Model", definition: "Grand modèle de langage entraîné sur d'immenses corpus de textes, capable de comprendre et générer du langage naturel (GPT-4, Claude, Gemini).", category: "geo" },
-    { term: "Crawler IA", definition: "Robot d'exploration utilisé par les entreprises d'IA pour collecter des données web et entraîner leurs modèles de langage.", category: "geo" },
-    { term: "GPTBot", definition: "Crawler d'OpenAI collectant des données pour entraîner les modèles GPT. Peut être bloqué ou autorisé via robots.txt.", category: "geo" },
-    { term: "ClaudeBot", definition: "Crawler d'Anthropic collectant des données pour entraîner Claude. Respecte les directives robots.txt.", category: "geo" },
-    { term: "Citabilité", definition: "Capacité d'un contenu à être cité comme source par les modèles de langage dans leurs réponses. Dépend de la qualité et de la structure.", category: "geo" },
+    { term: "GEO", acronym: "Generative Engine Optimization", definition: "Optimisation pour les moteurs de recherche génératifs comme ChatGPT, Claude, Gemini et Perplexity. L'objectif est d'être cité dans les réponses IA.", category: "geo", toolLink: { path: "/?tab=geo", label: "Calculez votre score GEO" } },
+    { term: "SGE", acronym: "Search Generative Experience", definition: "Expérience de recherche générative de Google intégrant des réponses générées par IA directement dans les résultats de recherche.", category: "geo", toolLink: { path: "/?tab=geo", label: "Préparez-vous pour SGE" } },
+    { term: "LLM", acronym: "Large Language Model", definition: "Grand modèle de langage entraîné sur d'immenses corpus de textes, capable de comprendre et générer du langage naturel (GPT-4, Claude, Gemini).", category: "geo", toolLink: { path: "/?tab=llm", label: "Testez votre visibilité LLM" } },
+    { term: "Crawler IA", definition: "Robot d'exploration utilisé par les entreprises d'IA pour collecter des données web et entraîner leurs modèles de langage.", category: "geo", toolLink: { path: "/?tab=crawlers", label: "Détectez les crawlers IA" } },
+    { term: "GPTBot", definition: "Crawler d'OpenAI collectant des données pour entraîner les modèles GPT. Peut être bloqué ou autorisé via robots.txt.", category: "geo", toolLink: { path: "/?tab=crawlers", label: "Vérifiez GPTBot" } },
+    { term: "ClaudeBot", definition: "Crawler d'Anthropic collectant des données pour entraîner Claude. Respecte les directives robots.txt.", category: "geo", toolLink: { path: "/?tab=crawlers", label: "Vérifiez ClaudeBot" } },
+    { term: "Citabilité", definition: "Capacité d'un contenu à être cité comme source par les modèles de langage dans leurs réponses. Dépend de la qualité et de la structure.", category: "geo", toolLink: { path: "/?tab=llm", label: "Mesurez votre citabilité" } },
     { term: "Hallucination IA", definition: "Erreur d'un LLM générant des informations fausses ou inventées présentées comme vraies. Problème majeur de fiabilité.", category: "geo" },
     { term: "Prompt", definition: "Instruction ou question envoyée à un modèle de langage pour obtenir une réponse. La qualité du prompt influence la qualité de la réponse.", category: "geo" },
-    { term: "llms.txt", definition: "Fichier texte fournissant des informations structurées aux LLMs sur un site web, similaire au robots.txt pour les moteurs de recherche.", category: "geo" },
-    { term: "Données Structurées", definition: "Balisage (JSON-LD, Schema.org) permettant aux moteurs et IA de mieux comprendre le contenu d'une page web.", category: "geo" },
+    { term: "llms.txt", definition: "Fichier texte fournissant des informations structurées aux LLMs sur un site web, similaire au robots.txt pour les moteurs de recherche.", category: "geo", toolLink: { path: "/?tab=geo", label: "Optimisez pour les LLMs" } },
+    { term: "Données Structurées", definition: "Balisage (JSON-LD, Schema.org) permettant aux moteurs et IA de mieux comprendre le contenu d'une page web.", category: "geo", toolLink: { path: "/?tab=geo", label: "Analysez vos données structurées" } },
     { term: "JSON-LD", acronym: "JavaScript Object Notation for Linked Data", definition: "Format de données structurées recommandé par Google, intégré dans le HTML pour décrire le contenu aux machines.", category: "geo" },
     { term: "Schema.org", definition: "Vocabulaire standardisé de données structurées créé par Google, Microsoft, Yahoo et Yandex pour baliser le contenu web.", category: "geo" },
     { term: "RAG", acronym: "Retrieval-Augmented Generation", definition: "Technique combinant recherche d'information et génération de texte pour améliorer la précision des réponses LLM.", category: "geo" },
     { term: "Token", definition: "Unité de base traitée par un LLM, correspondant approximativement à 4 caractères ou 0.75 mot en anglais.", category: "geo" },
     
     // Performance Terms
-    { term: "Core Web Vitals", definition: "Métriques de performance web essentielles définies par Google : LCP, FID/INP et CLS. Facteur de classement SEO.", category: "performance" },
-    { term: "LCP", acronym: "Largest Contentful Paint", definition: "Temps de chargement du plus grand élément visible (image, texte). Objectif : moins de 2.5 secondes.", category: "performance" },
+    { term: "Core Web Vitals", definition: "Métriques de performance web essentielles définies par Google : LCP, FID/INP et CLS. Facteur de classement SEO.", category: "performance", toolLink: { path: "/?tab=pagespeed", label: "Mesurez vos Core Web Vitals" } },
+    { term: "LCP", acronym: "Largest Contentful Paint", definition: "Temps de chargement du plus grand élément visible (image, texte). Objectif : moins de 2.5 secondes.", category: "performance", toolLink: { path: "/?tab=pagespeed", label: "Analysez votre LCP" } },
     { term: "FID", acronym: "First Input Delay", definition: "Délai entre la première interaction utilisateur et la réponse du navigateur. Objectif : moins de 100 ms. Remplacé par INP.", category: "performance" },
-    { term: "INP", acronym: "Interaction to Next Paint", definition: "Nouvelle métrique Core Web Vitals mesurant la réactivité globale aux interactions. Remplace FID depuis mars 2024.", category: "performance" },
-    { term: "CLS", acronym: "Cumulative Layout Shift", definition: "Score mesurant la stabilité visuelle d'une page (éléments qui bougent pendant le chargement). Objectif : moins de 0.1.", category: "performance" },
-    { term: "FCP", acronym: "First Contentful Paint", definition: "Temps avant l'affichage du premier élément de contenu (texte ou image). Indicateur de vitesse perçue.", category: "performance" },
-    { term: "TTFB", acronym: "Time To First Byte", definition: "Temps entre la requête HTTP et la réception du premier octet de réponse du serveur. Indicateur de performance serveur.", category: "performance" },
-    { term: "TTI", acronym: "Time To Interactive", definition: "Temps nécessaire pour qu'une page devienne entièrement interactive et réponde aux actions utilisateur.", category: "performance" },
-    { term: "TBT", acronym: "Total Blocking Time", definition: "Temps total pendant lequel le thread principal est bloqué, empêchant les interactions utilisateur.", category: "performance" },
-    { term: "Speed Index", definition: "Métrique mesurant la vitesse à laquelle le contenu visible est progressivement affiché pendant le chargement.", category: "performance" },
+    { term: "INP", acronym: "Interaction to Next Paint", definition: "Nouvelle métrique Core Web Vitals mesurant la réactivité globale aux interactions. Remplace FID depuis mars 2024.", category: "performance", toolLink: { path: "/?tab=pagespeed", label: "Testez votre INP" } },
+    { term: "CLS", acronym: "Cumulative Layout Shift", definition: "Score mesurant la stabilité visuelle d'une page (éléments qui bougent pendant le chargement). Objectif : moins de 0.1.", category: "performance", toolLink: { path: "/?tab=pagespeed", label: "Vérifiez votre CLS" } },
+    { term: "FCP", acronym: "First Contentful Paint", definition: "Temps avant l'affichage du premier élément de contenu (texte ou image). Indicateur de vitesse perçue.", category: "performance", toolLink: { path: "/?tab=pagespeed", label: "Mesurez votre FCP" } },
+    { term: "TTFB", acronym: "Time To First Byte", definition: "Temps entre la requête HTTP et la réception du premier octet de réponse du serveur. Indicateur de performance serveur.", category: "performance", toolLink: { path: "/?tab=pagespeed", label: "Analysez votre TTFB" } },
+    { term: "TTI", acronym: "Time To Interactive", definition: "Temps nécessaire pour qu'une page devienne entièrement interactive et réponde aux actions utilisateur.", category: "performance", toolLink: { path: "/?tab=pagespeed", label: "Testez votre TTI" } },
+    { term: "TBT", acronym: "Total Blocking Time", definition: "Temps total pendant lequel le thread principal est bloqué, empêchant les interactions utilisateur.", category: "performance", toolLink: { path: "/?tab=pagespeed", label: "Optimisez votre TBT" } },
+    { term: "Speed Index", definition: "Métrique mesurant la vitesse à laquelle le contenu visible est progressivement affiché pendant le chargement.", category: "performance", toolLink: { path: "/?tab=pagespeed", label: "Calculez votre Speed Index" } },
     { term: "Lazy Loading", definition: "Technique chargeant les images et ressources uniquement lorsqu'elles deviennent visibles à l'écran, améliorant les performances.", category: "performance" },
     { term: "CDN", acronym: "Content Delivery Network", definition: "Réseau de serveurs distribués géographiquement pour livrer le contenu plus rapidement aux utilisateurs.", category: "performance" },
     { term: "Minification", definition: "Réduction de la taille des fichiers CSS, JavaScript et HTML en supprimant espaces, commentaires et caractères inutiles.", category: "performance" },
@@ -218,6 +223,9 @@ const pageContent = {
     categories: "Catégories",
     allCategories: "Toutes les catégories",
     noResults: "Aucun terme trouvé pour cette recherche.",
+    downloadPdf: "Télécharger le lexique PDF",
+    pdfTitle: "Lexique SEO, GEO & Performance 2026",
+    pdfSubtitle: "Référence complète pour la France et l'Europe",
   },
   en: {
     title: "SEO, GEO & Performance Glossary 2026",
@@ -229,6 +237,9 @@ const pageContent = {
     categories: "Categories",
     allCategories: "All categories",
     noResults: "No terms found for this search.",
+    downloadPdf: "Download PDF glossary",
+    pdfTitle: "SEO, GEO & Performance Glossary 2026",
+    pdfSubtitle: "Complete reference for Great Britain and USA",
   },
   es: {
     title: "Glosario SEO, GEO & Rendimiento 2026",
@@ -240,6 +251,9 @@ const pageContent = {
     categories: "Categorías",
     allCategories: "Todas las categorías",
     noResults: "No se encontraron términos para esta búsqueda.",
+    downloadPdf: "Descargar glosario PDF",
+    pdfTitle: "Glosario SEO, GEO & Rendimiento 2026",
+    pdfSubtitle: "Referencia completa para España, México y Argentina",
   },
 };
 
@@ -277,6 +291,89 @@ export default function Lexique() {
   }, [filteredTerms]);
 
   const sortedLetters = Object.keys(groupedTerms).sort();
+
+  // PDF Generation function
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(124, 58, 237);
+    doc.text(content.pdfTitle, 20, 25);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text(content.pdfSubtitle, 20, 35);
+    doc.text(`crawlers.fr | ${terms.length} ${content.termsCount}`, 20, 42);
+    
+    // Category labels for PDF
+    const categoryLabels: Record<string, Record<string, string>> = {
+      seo: { fr: 'SEO', en: 'SEO', es: 'SEO' },
+      geo: { fr: 'GEO & IA', en: 'GEO & AI', es: 'GEO & IA' },
+      performance: { fr: 'Performance', en: 'Performance', es: 'Rendimiento' },
+      technical: { fr: 'Technique', en: 'Technical', es: 'Técnico' },
+      ai: { fr: 'IA', en: 'AI', es: 'IA' },
+    };
+    
+    // Group terms by category for better organization
+    const termsByCategory: Record<string, GlossaryTerm[]> = {};
+    terms.forEach(term => {
+      if (!termsByCategory[term.category]) {
+        termsByCategory[term.category] = [];
+      }
+      termsByCategory[term.category].push(term);
+    });
+    
+    let yPosition = 55;
+    const pageHeight = doc.internal.pageSize.height;
+    
+    Object.entries(termsByCategory).forEach(([category, categoryTerms]) => {
+      // Add category header
+      if (yPosition > pageHeight - 40) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      
+      doc.setFontSize(14);
+      doc.setTextColor(124, 58, 237);
+      doc.text(categoryLabels[category]?.[language] || category.toUpperCase(), 20, yPosition);
+      yPosition += 8;
+      
+      // Create table for this category
+      const tableData = categoryTerms.map(term => [
+        term.term + (term.acronym ? ` (${term.acronym})` : ''),
+        term.definition.length > 150 ? term.definition.substring(0, 147) + '...' : term.definition
+      ]);
+      
+      autoTable(doc, {
+        startY: yPosition,
+        head: [[
+          language === 'fr' ? 'Terme' : language === 'es' ? 'Término' : 'Term',
+          'Description'
+        ]],
+        body: tableData,
+        theme: 'striped',
+        headStyles: { fillColor: [124, 58, 237], fontSize: 10 },
+        bodyStyles: { fontSize: 9 },
+        columnStyles: {
+          0: { cellWidth: 50, fontStyle: 'bold' },
+          1: { cellWidth: 130 }
+        },
+        margin: { left: 20, right: 20 },
+        didDrawPage: () => {
+          // Footer on each page
+          doc.setFontSize(8);
+          doc.setTextColor(150);
+          doc.text('Crawlers.fr - Lexique SEO, GEO & Performance 2026', 20, pageHeight - 10);
+          doc.text(`${doc.getCurrentPageInfo().pageNumber}`, doc.internal.pageSize.width - 25, pageHeight - 10);
+        }
+      });
+      
+      yPosition = (doc as any).lastAutoTable.finalY + 15;
+    });
+    
+    doc.save(`lexique-seo-geo-performance-2026-${language}.pdf`);
+  };
 
   // Generate JSON-LD for DefinedTermSet (optimized for SGE and LLMs)
   const jsonLdDefinedTermSet = {
@@ -368,9 +465,20 @@ export default function Lexique() {
               {content.title}
             </h1>
             
-            <p className="mx-auto max-w-3xl text-lg text-muted-foreground">
+            <p className="mx-auto max-w-3xl text-lg text-muted-foreground mb-6">
               {content.intro}
             </p>
+            
+            {/* Download PDF Button */}
+            <Button 
+              onClick={generatePDF}
+              size="lg"
+              variant="hero"
+              className="gap-3"
+            >
+              <Download className="h-5 w-5" />
+              {content.downloadPdf}
+            </Button>
           </section>
 
           {/* Search and Filters */}
@@ -458,6 +566,18 @@ export default function Lexique() {
                           <dd className="ml-8 text-muted-foreground leading-relaxed">
                             {term.definition}
                           </dd>
+                          {/* Internal tool link */}
+                          {term.toolLink && (
+                            <div className="ml-8 mt-3">
+                              <Link 
+                                to={term.toolLink.path}
+                                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                {term.toolLink.label}
+                              </Link>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
