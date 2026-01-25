@@ -86,26 +86,31 @@ function calculatePriorityScore(article: NewsArticle, sourceTrustScore: number):
 let cachedArticles: NewsArticle[] | null = null;
 let cacheTimestamp: number = 0;
 let cachedLanguage: string = '';
+let cachedSearch: string = '';
+let cachedCategory: string = '';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export async function fetchArticles(
   whitelist: WhitelistState, 
   forceRefresh = false,
-  lang = 'fr'
+  lang = 'fr',
+  search = '',
+  category = ''
 ): Promise<NewsArticle[]> {
   const now = Date.now();
   
-  // Retourner le cache si valide, pas de refresh forcé et même langue
-  if (!forceRefresh && cachedArticles && (now - cacheTimestamp) < CACHE_DURATION && cachedLanguage === lang) {
+  // Retourner le cache si valide, pas de refresh forcé et mêmes paramètres
+  const sameParams = cachedLanguage === lang && cachedSearch === search && cachedCategory === category;
+  if (!forceRefresh && cachedArticles && (now - cacheTimestamp) < CACHE_DURATION && sameParams) {
     console.log('Returning cached articles');
     return cachedArticles;
   }
   
   try {
-    console.log(`Fetching fresh news from edge function (lang: ${lang})...`);
+    console.log(`Fetching fresh news from edge function (lang: ${lang}, search: "${search}", category: "${category}")...`);
     
     const { data, error } = await supabase.functions.invoke('fetch-news', {
-      body: { lang }
+      body: { lang, search, category }
     });
     
     if (error) {
@@ -157,6 +162,8 @@ export async function fetchArticles(
     cachedArticles = processedArticles;
     cacheTimestamp = now;
     cachedLanguage = lang;
+    cachedSearch = search;
+    cachedCategory = category;
     
     // Mettre à jour la whitelist avec les nouvelles sources découvertes
     const newSources: NewsSource[] = [];
@@ -195,6 +202,11 @@ export async function fetchArticles(
 }
 
 // Fonction pour forcer le refresh (utilisée par le bouton Actualiser)
-export async function refreshArticles(whitelist: WhitelistState, lang = 'fr'): Promise<NewsArticle[]> {
-  return fetchArticles(whitelist, true, lang);
+export async function refreshArticles(
+  whitelist: WhitelistState, 
+  lang = 'fr',
+  search = '',
+  category = ''
+): Promise<NewsArticle[]> {
+  return fetchArticles(whitelist, true, lang, search, category);
 }
