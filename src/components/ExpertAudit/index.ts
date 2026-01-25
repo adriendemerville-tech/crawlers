@@ -3,6 +3,7 @@ import { ScoreGauge200 } from './ScoreGauge200';
 import { CategoryCard, MetricRow } from './CategoryCard';
 import { RecommendationList } from './RecommendationList';
 import { LoadingSteps } from './LoadingSteps';
+import { StrategicInsights } from './StrategicInsights';
 
 export {
   ExpertAuditDashboard,
@@ -11,4 +12,5 @@ export {
   MetricRow,
   RecommendationList,
   LoadingSteps,
+  StrategicInsights,
 };

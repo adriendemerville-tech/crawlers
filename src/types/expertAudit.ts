@@ -53,6 +53,40 @@ export interface Recommendation {
   completed?: boolean;
 }
 
+export interface StrategicAnalysis {
+  brandPerception?: {
+    semanticUniverse: string;
+    targetAudience: 'B2B' | 'B2C' | 'Both';
+    marketPosition: 'entry-level' | 'mid-range' | 'premium';
+    valueProposition: string;
+  };
+  geoAnalysis?: {
+    citabilityIndex: number;
+    hasFactualData: boolean;
+    hasComparativeTables: boolean;
+    hasExpertCitations: boolean;
+    contextualStrategy: string;
+    recommendations: string[];
+  };
+  llmVisibility?: {
+    entityAuthority: 'high' | 'moderate' | 'low';
+    ecosystemPresence: {
+      wikidata: boolean;
+      press: boolean;
+      reddit: boolean;
+      other: string[];
+    };
+    recommendations: string[];
+  };
+  testQueries?: Array<{
+    query: string;
+    purpose: string;
+    targetLLMs: string[];
+  }>;
+  executiveSummary?: string;
+  overallScore?: number;
+}
+
 export interface ExpertAuditResult {
   url: string;
   domain: string;
@@ -66,4 +100,5 @@ export interface ExpertAuditResult {
     safeBrowsing: any;
     htmlAnalysis: any;
   };
+  strategicAnalysis?: StrategicAnalysis;
 }
