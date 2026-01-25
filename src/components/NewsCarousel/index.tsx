@@ -8,9 +8,9 @@ import { NewsCardSkeleton } from './NewsCardSkeleton';
 import { NewsArticle, WhitelistState } from '@/types/news';
 import {
   fetchArticles,
+  refreshArticles,
   getWhitelistFromStorage,
   saveWhitelistToStorage,
-  discoverNewSource,
 } from '@/data/mockNewsData';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -93,39 +93,47 @@ export function NewsCarousel() {
   }, [filteredArticles.length]);
 
   const handleRefresh = async () => {
-    // Check for new source discovery
-    const newSource = discoverNewSource();
-    if (newSource) {
-      const existingSource = whitelist.sources.find(s => s.name === newSource.name);
-      if (!existingSource) {
-        const updatedWhitelist: WhitelistState = {
-          sources: [...whitelist.sources, newSource],
-          lastUpdated: new Date().toISOString(),
-        };
-        setWhitelist(updatedWhitelist);
-        saveWhitelistToStorage(updatedWhitelist);
-        setNewSourceDiscovered(newSource.name);
+    setIsLoading(true);
+    try {
+      // Force refresh - appel API réel
+      const data = await refreshArticles(whitelist);
+      setArticles(data);
+      setFilteredArticles(data);
+      
+      // Mettre à jour la whitelist avec les nouvelles sources découvertes
+      const currentWhitelist = getWhitelistFromStorage();
+      if (currentWhitelist.sources.length > whitelist.sources.length) {
+        const newSourceNames = currentWhitelist.sources
+          .filter(s => !whitelist.sources.some(ws => ws.name === s.name))
+          .map(s => s.name);
         
-        // Hide notification after 5 seconds
-        setTimeout(() => setNewSourceDiscovered(null), 5000);
+        if (newSourceNames.length > 0) {
+          setNewSourceDiscovered(newSourceNames[0]);
+          setTimeout(() => setNewSourceDiscovered(null), 5000);
+        }
+        
+        setWhitelist(currentWhitelist);
       }
+      
+      // Mettre à jour les trust scores
+      const updatedSources = currentWhitelist.sources.map(source => ({
+        ...source,
+        trustScore: Math.min(source.trustScore + 1, 100),
+        lastCrawled: new Date().toISOString(),
+      }));
+      
+      const updatedWhitelist: WhitelistState = {
+        sources: updatedSources,
+        lastUpdated: new Date().toISOString(),
+      };
+      setWhitelist(updatedWhitelist);
+      saveWhitelistToStorage(updatedWhitelist);
+      
+    } catch (error) {
+      console.error('Error refreshing articles:', error);
+    } finally {
+      setIsLoading(false);
     }
-
-    // Increase trust score for relevant sources
-    const updatedSources = whitelist.sources.map(source => ({
-      ...source,
-      trustScore: Math.min(source.trustScore + 1, 100),
-      lastCrawled: new Date().toISOString(),
-    }));
-    
-    const updatedWhitelist: WhitelistState = {
-      sources: updatedSources,
-      lastUpdated: new Date().toISOString(),
-    };
-    setWhitelist(updatedWhitelist);
-    saveWhitelistToStorage(updatedWhitelist);
-
-    await loadArticles();
   };
 
   const scrollLeft = () => {
