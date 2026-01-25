@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
   Zap, Settings2, FileText, Brain, Shield, 
-  ExternalLink, Search, Sparkles 
+  ExternalLink, Search, Sparkles, BarChart3, Target
 } from 'lucide-react';
 import { ScoreGauge200 } from './ScoreGauge200';
 import { CategoryCard, MetricRow } from './CategoryCard';
 import { RecommendationList } from './RecommendationList';
 import { LoadingSteps } from './LoadingSteps';
 import { StrategicInsights } from './StrategicInsights';
-import { ExpertAuditResult, StrategicAnalysis } from '@/types/expertAudit';
+import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -23,44 +23,110 @@ function formatMs(ms: number): string {
   return `${Math.round(ms)}ms`;
 }
 
+type AuditMode = 'technical' | 'strategic' | null;
+
+const translations = {
+  fr: {
+    badge: 'Audit Expert SEO & IA',
+    title: 'Analysez votre site en profondeur',
+    subtitle: 'Choisissez le type d\'audit adapté à vos besoins',
+    technicalTitle: 'Audit Technique',
+    technicalDesc: 'Performance, SEO, sécurité, Core Web Vitals. Score sur 200 points.',
+    strategicTitle: 'Audit Stratégique IA',
+    strategicDesc: 'Analyse de positionnement, citabilité LLM, stratégie GEO 2026.',
+    placeholder: 'example.com',
+    launch: 'Analyser',
+    analyzing: 'Analyse...',
+    auditComplete: 'Audit terminé !',
+    globalScore: 'Score global',
+    strategicComplete: 'Analyse IA terminée !',
+    strategicDesc2: 'Les recommandations stratégiques sont disponibles.',
+    error: 'Erreur',
+    auditFailed: 'Échec de l\'audit',
+    toImprove: 'À améliorer',
+    correct: 'Correct',
+    excellent: 'Excellent',
+    generatedAt: 'Audit généré le',
+    or: 'ou',
+  },
+  en: {
+    badge: 'Expert SEO & AI Audit',
+    title: 'Analyze your site in depth',
+    subtitle: 'Choose the audit type suited to your needs',
+    technicalTitle: 'Technical Audit',
+    technicalDesc: 'Performance, SEO, security, Core Web Vitals. Score out of 200 points.',
+    strategicTitle: 'Strategic AI Audit',
+    strategicDesc: 'Positioning analysis, LLM citability, GEO 2026 strategy.',
+    placeholder: 'example.com',
+    launch: 'Analyze',
+    analyzing: 'Analyzing...',
+    auditComplete: 'Audit complete!',
+    globalScore: 'Global score',
+    strategicComplete: 'AI analysis complete!',
+    strategicDesc2: 'Strategic recommendations are available.',
+    error: 'Error',
+    auditFailed: 'Audit failed',
+    toImprove: 'Needs improvement',
+    correct: 'Good',
+    excellent: 'Excellent',
+    generatedAt: 'Audit generated on',
+    or: 'or',
+  },
+  es: {
+    badge: 'Auditoría Experta SEO e IA',
+    title: 'Analiza tu sitio en profundidad',
+    subtitle: 'Elige el tipo de auditoría adaptado a tus necesidades',
+    technicalTitle: 'Auditoría Técnica',
+    technicalDesc: 'Rendimiento, SEO, seguridad, Core Web Vitals. Puntuación sobre 200.',
+    strategicTitle: 'Auditoría Estratégica IA',
+    strategicDesc: 'Análisis de posicionamiento, citabilidad LLM, estrategia GEO 2026.',
+    placeholder: 'example.com',
+    launch: 'Analizar',
+    analyzing: 'Analizando...',
+    auditComplete: '¡Auditoría completa!',
+    globalScore: 'Puntuación global',
+    strategicComplete: '¡Análisis IA completo!',
+    strategicDesc2: 'Las recomendaciones estratégicas están disponibles.',
+    error: 'Error',
+    auditFailed: 'Auditoría fallida',
+    toImprove: 'A mejorar',
+    correct: 'Correcto',
+    excellent: 'Excelente',
+    generatedAt: 'Auditoría generada el',
+    or: 'o',
+  },
+};
+
 export function ExpertAuditDashboard() {
   const [url, setUrl] = useState('');
+  const [auditMode, setAuditMode] = useState<AuditMode>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isStrategicLoading, setIsStrategicLoading] = useState(false);
   const [result, setResult] = useState<ExpertAuditResult | null>(null);
   const { toast } = useToast();
   const { language } = useLanguage();
+  const t = translations[language] || translations.fr;
 
-  // Normalize URL: add https:// if missing, don't modify the input display
   const normalizeUrl = (input: string): string => {
     let normalized = input.trim();
     if (!normalized) return '';
-    
-    // Remove any leading/trailing whitespace
     normalized = normalized.toLowerCase();
-    
-    // If no protocol, add https://
     if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
       normalized = `https://${input.trim()}`;
     } else {
       normalized = input.trim();
     }
-    
     return normalized;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleTechnicalAudit = async () => {
     if (!url.trim()) return;
-
-    // Normalize URL silently (don't update the input field)
     const normalizedUrl = normalizeUrl(url);
-
+    setAuditMode('technical');
     setIsLoading(true);
     setResult(null);
 
     try {
-      // Step 1: Run expert-audit with normalized URL
       const { data, error } = await supabase.functions.invoke('expert-audit', {
         body: { url: normalizedUrl }
       });
@@ -68,121 +134,172 @@ export function ExpertAuditDashboard() {
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Audit failed');
 
-      // Set initial result
       const auditResult = data.data as ExpertAuditResult;
       setResult(auditResult);
-      setIsLoading(false);
-
-      // Step 2: Run strategic AI analysis in background
-      setIsStrategicLoading(true);
-      
-      try {
-        // Prepare toolsData for strategic audit
-        const toolsData = {
-          crawlers: null, // We don't have this data in expert-audit
-          geo: {
-            hasSchemaOrg: auditResult.scores.aiReady.hasSchemaOrg,
-            schemaTypes: auditResult.scores.aiReady.schemaTypes,
-            robotsPermissive: auditResult.scores.aiReady.robotsPermissive,
-          },
-          llm: {
-            semanticScore: auditResult.scores.semantic.score,
-            wordCount: auditResult.scores.semantic.wordCount,
-            hasTitle: auditResult.scores.semantic.hasTitle,
-            hasMetaDesc: auditResult.scores.semantic.hasMetaDesc,
-          },
-          pagespeed: {
-            performance: auditResult.scores.performance.psiPerformance,
-            lcp: auditResult.scores.performance.lcp,
-            cls: auditResult.scores.performance.cls,
-            tbt: auditResult.scores.performance.tbt,
-            seoScore: auditResult.scores.technical.psiSeo,
-          },
-        };
-
-        const { data: strategicData, error: strategicError } = await supabase.functions.invoke('audit-strategic', {
-          body: { url: normalizedUrl, toolsData }
-        });
-
-        if (!strategicError && strategicData?.success) {
-          // Merge strategic analysis into result
-          setResult(prev => prev ? {
-            ...prev,
-            strategicAnalysis: {
-              brandPerception: strategicData.data.brandPerception,
-              geoAnalysis: strategicData.data.geoAnalysis,
-              llmVisibility: strategicData.data.llmVisibility,
-              testQueries: strategicData.data.testQueries,
-              executiveSummary: strategicData.data.executiveSummary,
-              overallScore: strategicData.data.overallScore,
-            }
-          } : null);
-          
-          toast({
-            title: 'Analyse IA terminée !',
-            description: 'Les recommandations stratégiques sont disponibles.',
-          });
-        }
-      } catch (strategicErr) {
-        console.error('Strategic analysis error:', strategicErr);
-        // Don't fail the whole audit, just skip strategic analysis
-      } finally {
-        setIsStrategicLoading(false);
-      }
 
       toast({
-        title: 'Audit terminé !',
-        description: `Score global : ${data.data.totalScore}/200`,
+        title: t.auditComplete,
+        description: `${t.globalScore} : ${data.data.totalScore}/200`,
       });
     } catch (error) {
       console.error('Audit error:', error);
       toast({
-        title: 'Erreur',
-        description: error instanceof Error ? error.message : 'Échec de l\'audit',
+        title: t.error,
+        description: error instanceof Error ? error.message : t.auditFailed,
         variant: 'destructive',
       });
+    } finally {
       setIsLoading(false);
     }
   };
 
+  const handleStrategicAudit = async () => {
+    if (!url.trim()) return;
+    const normalizedUrl = normalizeUrl(url);
+    setAuditMode('strategic');
+    setIsStrategicLoading(true);
+    setResult(null);
+
+    try {
+      // Run audit-strategic directly (full strategic analysis)
+      const { data, error } = await supabase.functions.invoke('audit-strategic', {
+        body: { url: normalizedUrl, toolsData: null }
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data.success) throw new Error(data.error || 'Strategic audit failed');
+
+      // Create a minimal result structure for strategic display
+      setResult({
+        url: normalizedUrl,
+        domain: new URL(normalizedUrl).hostname,
+        totalScore: data.data.overallScore * 2,
+        maxScore: 200,
+        scores: {
+          performance: { score: 0, maxScore: 40, psiPerformance: 0, lcp: 0, cls: 0, tbt: 0, fcp: 0 },
+          technical: { score: 0, maxScore: 50, psiSeo: 0, httpStatus: 200, isHttps: true },
+          semantic: { score: 0, maxScore: 60, hasTitle: false, titleLength: 0, hasMetaDesc: false, metaDescLength: 0, h1Count: 0, hasUniqueH1: false, wordCount: 0 },
+          aiReady: { score: 0, maxScore: 30, hasSchemaOrg: false, schemaTypes: [], hasRobotsTxt: false, robotsPermissive: false },
+          security: { score: 0, maxScore: 20, isHttps: true, safeBrowsingOk: true, threats: [] },
+        },
+        recommendations: [],
+        rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
+        scannedAt: new Date().toISOString(),
+        strategicAnalysis: {
+          brandPerception: data.data.brandPerception,
+          geoAnalysis: data.data.geoAnalysis,
+          llmVisibility: data.data.llmVisibility,
+          testQueries: data.data.testQueries,
+          executiveSummary: data.data.executiveSummary,
+          overallScore: data.data.overallScore,
+        },
+      });
+
+      toast({
+        title: t.strategicComplete,
+        description: t.strategicDesc2,
+      });
+    } catch (error) {
+      console.error('Strategic audit error:', error);
+      toast({
+        title: t.error,
+        description: error instanceof Error ? error.message : t.auditFailed,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsStrategicLoading(false);
+    }
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <Badge variant="outline" className="mb-4">
-          <Sparkles className="h-3 w-3 mr-1" />
-          Audit Expert SEO & IA
+    <div className="container mx-auto px-4 py-10 max-w-5xl">
+      {/* Header - Premium SaaS style */}
+      <div className="text-center mb-10">
+        <Badge variant="outline" className="mb-4 text-xs font-medium tracking-wide uppercase">
+          <Sparkles className="h-3 w-3 mr-1.5" />
+          {t.badge}
         </Badge>
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          Analysez votre site en profondeur
+        <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
+          {t.title}
         </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Score global sur 200 points couvrant Performance, Technique SEO, Sémantique, 
-          Préparation IA/GEO et Sécurité.
+        <p className="text-muted-foreground max-w-xl mx-auto text-base">
+          {t.subtitle}
         </p>
       </div>
 
-      {/* Search Form */}
-      <Card className="mb-8">
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="flex gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="example.com"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="pl-10 h-12 text-lg"
-                disabled={isLoading}
-              />
+      {/* URL Input - Clean minimal style */}
+      <div className="mb-8">
+        <div className="relative max-w-2xl mx-auto">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder={t.placeholder}
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="pl-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50"
+            disabled={isLoading || isStrategicLoading}
+          />
+        </div>
+      </div>
+
+      {/* Audit Type Selection - Premium Cards */}
+      <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto mb-8">
+        {/* Technical Audit */}
+        <Card 
+          className={`relative overflow-hidden transition-all cursor-pointer hover:border-primary/50 ${
+            auditMode === 'technical' ? 'border-primary ring-1 ring-primary/20' : 'border-border/60'
+          }`}
+          onClick={() => !isLoading && !isStrategicLoading && setAuditMode('technical')}
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primary/80" />
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-md bg-primary/10">
+                <BarChart3 className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground mb-1">{t.technicalTitle}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{t.technicalDesc}</p>
+              </div>
             </div>
-            <Button type="submit" size="lg" disabled={isLoading || !url.trim()}>
-              {isLoading ? 'Analyse...' : 'Lancer l\'Audit'}
+            <Button 
+              onClick={(e) => { e.stopPropagation(); handleTechnicalAudit(); }}
+              disabled={isLoading || isStrategicLoading || !url.trim()}
+              className="w-full mt-4 bg-primary hover:bg-primary/90"
+            >
+              {isLoading && auditMode === 'technical' ? t.analyzing : t.launch}
             </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Strategic Audit */}
+        <Card 
+          className={`relative overflow-hidden transition-all cursor-pointer hover:border-primary/50 ${
+            auditMode === 'strategic' ? 'border-primary ring-1 ring-primary/20' : 'border-border/60'
+          }`}
+          onClick={() => !isLoading && !isStrategicLoading && setAuditMode('strategic')}
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-foreground/60 to-accent-foreground/40" />
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-md bg-accent">
+                <Target className="h-6 w-6 text-accent-foreground" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground mb-1">{t.strategicTitle}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{t.strategicDesc}</p>
+              </div>
+            </div>
+            <Button 
+              onClick={(e) => { e.stopPropagation(); handleStrategicAudit(); }}
+              disabled={isLoading || isStrategicLoading || !url.trim()}
+              className="w-full mt-4 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            >
+              {isStrategicLoading ? t.analyzing : t.launch}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Loading State */}
       {isLoading && <LoadingSteps />}
