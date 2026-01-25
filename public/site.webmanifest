@@ -1,7 +1,7 @@
 {
-  "name": "Crawlers.fr - Audit SEO & IA Gratuit",
+  "name": "Crawlers.fr - Audit SEO & IA Gratuit 2026",
   "short_name": "Crawlers.fr",
-  "description": "Audit SEO complet sur 200 points, Score GEO, analyse des bots IA et rapport gratuit. Optimisez le référencement de votre site web ou boutique e-commerce. Analyse mobile et desktop, code source, clients et visibilité LLM. Performances PageSpeed Insights, vitesse de chargement, LCP, accessibilité et contenu optimisé.",
+  "description": "Audit SEO complet sur 200 points, Score GEO, analyse des bots IA et rapport gratuit 2026. Optimisez le référencement de votre site web ou boutique e-commerce. Analyse mobile et desktop, code source, clients et visibilité LLM. Performances PageSpeed Insights, vitesse de chargement, LCP, accessibilité et contenu optimisé. Disponible en Français, English, Español pour l'Europe et les Amériques.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -11,7 +11,10 @@
   "lang": "fr-FR",
   "dir": "ltr",
   "categories": ["business", "productivity", "utilities"],
-  "keywords": ["audit", "français", "seo", "geo", "bots", "référencement", "site", "boutique", "mobile", "clients", "analyse", "code", "rapport gratuit", "crawlers", "performances", "page speed insight", "chargement", "LCP", "vitesse", "content", "accessibilité"],
+  "keywords": ["audit", "français", "seo", "geo", "bots", "référencement", "site", "boutique", "mobile", "clients", "analyse", "code", "rapport gratuit", "crawlers", "performances", "page speed insight", "chargement", "LCP", "vitesse", "content", "accessibilité", "2026", "France", "Europe", "Amériques", "English", "Español"],
+  "related_languages": ["fr", "en", "es"],
+  "target_regions": ["Europe", "North America", "South America"],
+  "target_countries": ["France", "Spain", "United Kingdom", "USA", "Canada", "Mexico", "Argentina"],
   "icons": [
     {
       "src": "/favicon.svg",

@@ -187,10 +187,10 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'les LLMs',
       },
       subheadline: {
-        crawlers: "Interrogez gratuitement toutes les intelligences artificielles grand public en une seule fois. Vérifiez instantanément si les crawlers IA majeurs peuvent accéder à votre contenu.",
-        geo: "Mesurez votre score d'Optimisation pour Moteurs Génératifs. Obtenez des recommandations actionnables pour améliorer votre visibilité IA.",
-        pagespeed: "Obtenez des insights PageSpeed détaillés avec les Core Web Vitals. Comprenez performance, accessibilité, SEO et bonnes pratiques.",
-        llm: "Analysez comment GPT-4, Claude, Gemini et Perplexity perçoivent et recommandent votre site. Découvrez votre réputation IA.",
+        crawlers: "Interrogez gratuitement toutes les intelligences artificielles grand public en une seule fois. Vérifiez instantanément si les crawlers IA majeurs peuvent accéder à votre contenu. Outil de référence 2026 en France.",
+        geo: "Mesurez votre score d'Optimisation pour Moteurs Génératifs 2026. Obtenez des recommandations actionnables pour améliorer votre visibilité IA en France et en Europe.",
+        pagespeed: "Obtenez des insights PageSpeed détaillés avec les Core Web Vitals 2026. Comprenez performance, accessibilité, SEO et bonnes pratiques pour votre site en France.",
+        llm: "Analysez comment GPT-4, Claude, Gemini et Perplexity perçoivent et recommandent votre site en 2026. Découvrez votre réputation IA en France.",
       },
       button: {
         crawlers: 'Vérifier les Bots',
@@ -369,10 +369,10 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'LLMs',
       },
       subheadline: {
-        crawlers: 'Query all major public AI systems at once for free. Instantly verify if AI crawlers can access your content.',
-        geo: 'Measure your Generative Engine Optimization score. Get actionable recommendations to improve AI visibility.',
-        pagespeed: 'Get detailed PageSpeed Insights with Core Web Vitals. Understand performance, accessibility, SEO and best practices.',
-        llm: 'Analyze how GPT-4, Claude, Gemini and Perplexity perceive and recommend your site. Discover your AI reputation.',
+        crawlers: 'Query all major public AI systems at once for free. Instantly verify if AI crawlers can access your content. 2026 reference tool for Great Britain and USA.',
+        geo: 'Measure your Generative Engine Optimization score 2026. Get actionable recommendations to improve AI visibility in Great Britain and USA.',
+        pagespeed: 'Get detailed PageSpeed Insights with Core Web Vitals 2026. Understand performance, accessibility, SEO and best practices for Great Britain and USA.',
+        llm: 'Analyze how GPT-4, Claude, Gemini and Perplexity perceive and recommend your site in 2026. Discover your AI reputation in Great Britain and USA.',
       },
       button: {
         crawlers: 'Check Bots',
@@ -551,10 +551,10 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'los LLMs',
       },
       subheadline: {
-        crawlers: 'Consulta gratis todas las inteligencias artificiales públicas de una sola vez. Verifica instantáneamente si los crawlers IA pueden acceder a tu contenido.',
-        geo: 'Mide tu puntuación de Optimización para Motores Generativos. Obtén recomendaciones accionables para mejorar tu visibilidad IA.',
-        pagespeed: 'Obtén información detallada de PageSpeed con Core Web Vitals. Entiende rendimiento, accesibilidad, SEO y mejores prácticas.',
-        llm: 'Analiza cómo GPT-4, Claude, Gemini y Perplexity perciben y recomiendan tu sitio. Descubre tu reputación IA.',
+        crawlers: 'Consulta gratis todas las inteligencias artificiales públicas de una sola vez. Verifica instantáneamente si los crawlers IA pueden acceder a tu contenido. Herramienta de referencia 2026 para España, México y Argentina.',
+        geo: 'Mide tu puntuación de Optimización para Motores Generativos 2026. Obtén recomendaciones accionables para mejorar tu visibilidad IA en España, México y Argentina.',
+        pagespeed: 'Obtén información detallada de PageSpeed con Core Web Vitals 2026. Entiende rendimiento, accesibilidad, SEO y mejores prácticas para España, México y Argentina.',
+        llm: 'Analiza cómo GPT-4, Claude, Gemini y Perplexity perciben y recomiendan tu sitio en 2026. Descubre tu reputación IA en España, México y Argentina.',
       },
       button: {
         crawlers: 'Verificar Bots',

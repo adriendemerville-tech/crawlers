@@ -105,10 +105,10 @@ export function Footer() {
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               {language === 'fr' 
-                ? 'Analysez et optimisez la visibilité de votre site web pour les moteurs de recherche IA et les LLM. Outils gratuits pour le SEO et le GEO.'
+                ? 'Analysez et optimisez la visibilité de votre site web pour les moteurs de recherche IA et les LLM en 2026. Outils gratuits pour le SEO et le GEO en France et en Europe.'
                 : language === 'es'
-                ? 'Analice y optimice la visibilidad de su sitio web para motores de búsqueda IA y LLM.'
-                : 'Analyze and optimize your website visibility for AI search engines and LLMs. Free tools for SEO and GEO.'}
+                ? 'Analice y optimice la visibilidad de su sitio web para motores de búsqueda IA y LLM en 2026. Herramientas gratuitas para SEO y GEO en España, México y Argentina.'
+                : 'Analyze and optimize your website visibility for AI search engines and LLMs in 2026. Free tools for SEO and GEO in Great Britain and USA.'}
             </p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Mail className="h-4 w-4" />
