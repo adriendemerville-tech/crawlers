@@ -9,7 +9,7 @@ const translations = {
     subtitle: "Ce que Google et les moteurs de recherche évaluent en priorité",
     mobile: "Mobile",
     desktop: "Desktop",
-    critical: "Critique",
+    critical: "Essentiel",
     important: "Important",
     optional: "Recommandé",
     factors: [
@@ -63,16 +63,6 @@ const translations = {
         mobile: { status: "important", note: "Découverte des pages" },
         desktop: { status: "critical", note: "Contrôle du crawl budget" },
       },
-      {
-        factor: "Temps de réponse serveur (TTFB < 200ms)",
-        mobile: { status: "critical", note: "Connexions mobiles plus lentes" },
-        desktop: { status: "important", note: "Expérience utilisateur fluide" },
-      },
-      {
-        factor: "Alt text sur toutes les images",
-        mobile: { status: "important", note: "Accessibilité et SEO images" },
-        desktop: { status: "important", note: "Référencement Google Images" },
-      },
     ],
   },
   en: {
@@ -80,7 +70,7 @@ const translations = {
     subtitle: "What Google and search engines evaluate first",
     mobile: "Mobile",
     desktop: "Desktop",
-    critical: "Critical",
+    critical: "Essential",
     important: "Important",
     optional: "Recommended",
     factors: [
@@ -134,16 +124,6 @@ const translations = {
         mobile: { status: "important", note: "Page discovery" },
         desktop: { status: "critical", note: "Crawl budget control" },
       },
-      {
-        factor: "Server response time (TTFB < 200ms)",
-        mobile: { status: "critical", note: "Slower mobile connections" },
-        desktop: { status: "important", note: "Smooth user experience" },
-      },
-      {
-        factor: "Alt text on all images",
-        mobile: { status: "important", note: "Accessibility and image SEO" },
-        desktop: { status: "important", note: "Google Images ranking" },
-      },
     ],
   },
   es: {
@@ -151,7 +131,7 @@ const translations = {
     subtitle: "Lo que Google y los motores de búsqueda evalúan primero",
     mobile: "Móvil",
     desktop: "Escritorio",
-    critical: "Crítico",
+    critical: "Esencial",
     important: "Importante",
     optional: "Recomendado",
     factors: [
@@ -205,23 +185,13 @@ const translations = {
         mobile: { status: "important", note: "Descubrimiento de páginas" },
         desktop: { status: "critical", note: "Control crawl budget" },
       },
-      {
-        factor: "Tiempo respuesta servidor (TTFB < 200ms)",
-        mobile: { status: "critical", note: "Conexiones móviles más lentas" },
-        desktop: { status: "important", note: "Experiencia usuario fluida" },
-      },
-      {
-        factor: "Alt text en todas las imágenes",
-        mobile: { status: "important", note: "Accesibilidad y SEO imágenes" },
-        desktop: { status: "important", note: "Ranking Google Images" },
-      },
     ],
   },
 };
 
 const getStatusStyles = (status: string) => {
   if (status === 'critical') {
-    return 'bg-destructive-muted';
+    return ''; // No background for essential
   }
   if (status === 'important') {
     return 'bg-warning-muted';
@@ -232,7 +202,7 @@ const getStatusStyles = (status: string) => {
 const StatusLabel = ({ status, labels }: { status: string; labels: any }) => {
   if (status === 'critical') {
     return (
-      <span className="font-bold text-destructive dark:text-red-400">{labels.critical}</span>
+      <span className="font-bold text-pink-600 dark:text-pink-400">{labels.critical}</span>
     );
   }
   if (status === 'important') {
@@ -250,31 +220,31 @@ export function SEOComparisonTable() {
   const t = translations[language as keyof typeof translations] || translations.fr;
 
   return (
-    <section className="py-12 bg-muted/30" aria-label="Tableau comparatif SEO">
+    <section className="py-8 bg-muted/30" aria-label="Tableau comparatif SEO">
       <div className="container mx-auto px-4">
-        <Card className="overflow-hidden border-2">
-          <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
-            <CardTitle className="flex items-center gap-3 text-xl md:text-2xl">
-              <Search className="h-6 w-6 text-primary" />
+        <Card className="overflow-hidden border max-w-4xl mx-auto">
+          <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 py-4">
+            <CardTitle className="flex items-center gap-3 text-lg md:text-xl">
+              <Search className="h-5 w-5 text-primary" />
               {t.title}
             </CardTitle>
-            <p className="text-muted-foreground">{t.subtitle}</p>
+            <p className="text-sm text-muted-foreground">{t.subtitle}</p>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse" role="table">
+              <table className="w-full text-xs border-collapse" role="table">
                 <thead>
-                  <tr className="border-b-2 border-border bg-muted/70">
-                    <th className="text-left p-4 font-semibold min-w-[280px] border-r border-border">Critère SEO</th>
-                    <th className="text-center p-4 font-semibold min-w-[200px] border-r border-border">
-                      <div className="flex items-center justify-center gap-2">
-                        <Smartphone className="h-4 w-4" />
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="text-left p-2.5 font-semibold min-w-[180px] border-r border-border">Critère SEO</th>
+                    <th className="text-center p-2.5 font-semibold min-w-[130px] border-r border-border">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Smartphone className="h-3.5 w-3.5" />
                         {t.mobile}
                       </div>
                     </th>
-                    <th className="text-center p-4 font-semibold min-w-[200px]">
-                      <div className="flex items-center justify-center gap-2">
-                        <Monitor className="h-4 w-4" />
+                    <th className="text-center p-2.5 font-semibold min-w-[130px]">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Monitor className="h-3.5 w-3.5" />
                         {t.desktop}
                       </div>
                     </th>
@@ -282,18 +252,18 @@ export function SEOComparisonTable() {
                 </thead>
                 <tbody>
                   {t.factors.map((row, idx) => (
-                    <tr key={idx} className="border-b border-border hover:bg-muted/30 transition-colors">
-                      <td className="p-4 font-medium border-r border-border bg-card">{row.factor}</td>
-                      <td className={`p-4 text-center border-r border-border ${getStatusStyles(row.mobile.status)}`}>
-                        <div className="flex flex-col items-center gap-1">
+                    <tr key={idx} className="border-b border-border hover:bg-muted/20 transition-colors">
+                      <td className="p-2.5 font-medium border-r border-border bg-card text-xs">{row.factor}</td>
+                      <td className={`p-2.5 text-center border-r border-border ${getStatusStyles(row.mobile.status)}`}>
+                        <div className="flex flex-col items-center gap-0.5">
                           <StatusLabel status={row.mobile.status} labels={t} />
-                          <span className="text-xs text-muted-foreground">{row.mobile.note}</span>
+                          <span className="text-[10px] text-muted-foreground leading-tight">{row.mobile.note}</span>
                         </div>
                       </td>
-                      <td className={`p-4 text-center ${getStatusStyles(row.desktop.status)}`}>
-                        <div className="flex flex-col items-center gap-1">
+                      <td className={`p-2.5 text-center ${getStatusStyles(row.desktop.status)}`}>
+                        <div className="flex flex-col items-center gap-0.5">
                           <StatusLabel status={row.desktop.status} labels={t} />
-                          <span className="text-xs text-muted-foreground">{row.desktop.note}</span>
+                          <span className="text-[10px] text-muted-foreground leading-tight">{row.desktop.note}</span>
                         </div>
                       </td>
                     </tr>
