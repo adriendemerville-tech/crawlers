@@ -9,7 +9,7 @@ const translations = {
     subtitle: "Qu'est-ce qui compte pour être cité par les IA génératives ?",
     mobile: "Mobile",
     desktop: "Desktop",
-    critical: "Critique",
+    critical: "Essentiel",
     important: "Important",
     optional: "Recommandé",
     factors: [
@@ -53,16 +53,6 @@ const translations = {
         mobile: { status: "important", note: "Contexte social et partage" },
         desktop: { status: "important", note: "Enrichit les réponses génératives" },
       },
-      {
-        factor: "Sources et citations d'experts",
-        mobile: { status: "optional", note: "Renforce l'autorité perçue" },
-        desktop: { status: "critical", note: "Critère E-E-A-T pour crédibilité" },
-      },
-      {
-        factor: "Liens internes contextuels",
-        mobile: { status: "important", note: "Navigation et découverte" },
-        desktop: { status: "important", note: "Profondeur de l'information" },
-      },
     ],
   },
   en: {
@@ -70,7 +60,7 @@ const translations = {
     subtitle: "What matters to get cited by generative AI?",
     mobile: "Mobile",
     desktop: "Desktop",
-    critical: "Critical",
+    critical: "Essential",
     important: "Important",
     optional: "Recommended",
     factors: [
@@ -114,16 +104,6 @@ const translations = {
         mobile: { status: "important", note: "Social context and sharing" },
         desktop: { status: "important", note: "Enriches generative responses" },
       },
-      {
-        factor: "Expert Sources and Citations",
-        mobile: { status: "optional", note: "Reinforces perceived authority" },
-        desktop: { status: "critical", note: "E-E-A-T criterion for credibility" },
-      },
-      {
-        factor: "Contextual Internal Links",
-        mobile: { status: "important", note: "Navigation and discovery" },
-        desktop: { status: "important", note: "Information depth" },
-      },
     ],
   },
   es: {
@@ -131,7 +111,7 @@ const translations = {
     subtitle: "¿Qué importa para ser citado por la IA generativa?",
     mobile: "Móvil",
     desktop: "Escritorio",
-    critical: "Crítico",
+    critical: "Esencial",
     important: "Importante",
     optional: "Recomendado",
     factors: [
@@ -175,23 +155,13 @@ const translations = {
         mobile: { status: "important", note: "Contexto social y compartir" },
         desktop: { status: "important", note: "Enriquece respuestas generativas" },
       },
-      {
-        factor: "Fuentes y citas de expertos",
-        mobile: { status: "optional", note: "Refuerza autoridad percibida" },
-        desktop: { status: "critical", note: "Criterio E-E-A-T para credibilidad" },
-      },
-      {
-        factor: "Enlaces internos contextuales",
-        mobile: { status: "important", note: "Navegación y descubrimiento" },
-        desktop: { status: "important", note: "Profundidad de información" },
-      },
     ],
   },
 };
 
 const getStatusStyles = (status: string) => {
   if (status === 'critical') {
-    return 'bg-destructive-muted';
+    return ''; // No background for essential
   }
   if (status === 'important') {
     return 'bg-warning-muted';
@@ -202,7 +172,7 @@ const getStatusStyles = (status: string) => {
 const StatusLabel = ({ status, labels }: { status: string; labels: any }) => {
   if (status === 'critical') {
     return (
-      <span className="font-bold text-destructive dark:text-red-400">{labels.critical}</span>
+      <span className="font-bold text-pink-600 dark:text-pink-400">{labels.critical}</span>
     );
   }
   if (status === 'important') {
@@ -220,31 +190,31 @@ export function GEOComparisonTable() {
   const t = translations[language as keyof typeof translations] || translations.fr;
 
   return (
-    <section className="py-12 bg-muted/30" aria-label="Tableau comparatif GEO">
+    <section className="py-8 bg-muted/30" aria-label="Tableau comparatif GEO">
       <div className="container mx-auto px-4">
-        <Card className="overflow-hidden border-2">
-          <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
-            <CardTitle className="flex items-center gap-3 text-xl md:text-2xl">
-              <Brain className="h-6 w-6 text-primary" />
+        <Card className="overflow-hidden border max-w-4xl mx-auto">
+          <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 py-4">
+            <CardTitle className="flex items-center gap-3 text-lg md:text-xl">
+              <Brain className="h-5 w-5 text-primary" />
               {t.title}
             </CardTitle>
-            <p className="text-muted-foreground">{t.subtitle}</p>
+            <p className="text-sm text-muted-foreground">{t.subtitle}</p>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse" role="table">
+              <table className="w-full text-xs border-collapse" role="table">
                 <thead>
-                  <tr className="border-b-2 border-border bg-muted/70">
-                    <th className="text-left p-4 font-semibold min-w-[250px] border-r border-border">Facteur GEO</th>
-                    <th className="text-center p-4 font-semibold min-w-[200px] border-r border-border">
-                      <div className="flex items-center justify-center gap-2">
-                        <Smartphone className="h-4 w-4" />
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="text-left p-2.5 font-semibold min-w-[180px] border-r border-border">Facteur GEO</th>
+                    <th className="text-center p-2.5 font-semibold min-w-[130px] border-r border-border">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Smartphone className="h-3.5 w-3.5" />
                         {t.mobile}
                       </div>
                     </th>
-                    <th className="text-center p-4 font-semibold min-w-[200px]">
-                      <div className="flex items-center justify-center gap-2">
-                        <Monitor className="h-4 w-4" />
+                    <th className="text-center p-2.5 font-semibold min-w-[130px]">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Monitor className="h-3.5 w-3.5" />
                         {t.desktop}
                       </div>
                     </th>
@@ -252,18 +222,18 @@ export function GEOComparisonTable() {
                 </thead>
                 <tbody>
                   {t.factors.map((row, idx) => (
-                    <tr key={idx} className="border-b border-border hover:bg-muted/30 transition-colors">
-                      <td className="p-4 font-medium border-r border-border bg-card">{row.factor}</td>
-                      <td className={`p-4 text-center border-r border-border ${getStatusStyles(row.mobile.status)}`}>
-                        <div className="flex flex-col items-center gap-1">
+                    <tr key={idx} className="border-b border-border hover:bg-muted/20 transition-colors">
+                      <td className="p-2.5 font-medium border-r border-border bg-card text-xs">{row.factor}</td>
+                      <td className={`p-2.5 text-center border-r border-border ${getStatusStyles(row.mobile.status)}`}>
+                        <div className="flex flex-col items-center gap-0.5">
                           <StatusLabel status={row.mobile.status} labels={t} />
-                          <span className="text-xs text-muted-foreground">{row.mobile.note}</span>
+                          <span className="text-[10px] text-muted-foreground leading-tight">{row.mobile.note}</span>
                         </div>
                       </td>
-                      <td className={`p-4 text-center ${getStatusStyles(row.desktop.status)}`}>
-                        <div className="flex flex-col items-center gap-1">
+                      <td className={`p-2.5 text-center ${getStatusStyles(row.desktop.status)}`}>
+                        <div className="flex flex-col items-center gap-0.5">
                           <StatusLabel status={row.desktop.status} labels={t} />
-                          <span className="text-xs text-muted-foreground">{row.desktop.note}</span>
+                          <span className="text-[10px] text-muted-foreground leading-tight">{row.desktop.note}</span>
                         </div>
                       </td>
                     </tr>
