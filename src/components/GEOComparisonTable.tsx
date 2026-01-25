@@ -191,10 +191,10 @@ const translations = {
 
 const getStatusStyles = (status: string) => {
   if (status === 'critical') {
-    return 'bg-destructive/15 dark:bg-destructive/25';
+    return 'bg-destructive-muted';
   }
   if (status === 'important') {
-    return 'bg-warning/15 dark:bg-warning/25';
+    return 'bg-warning-muted';
   }
   return 'bg-muted/50';
 };
@@ -202,12 +202,12 @@ const getStatusStyles = (status: string) => {
 const StatusLabel = ({ status, labels }: { status: string; labels: any }) => {
   if (status === 'critical') {
     return (
-      <span className="font-semibold text-destructive">{labels.critical}</span>
+      <span className="font-bold text-destructive dark:text-red-400">{labels.critical}</span>
     );
   }
   if (status === 'important') {
     return (
-      <span className="font-semibold text-warning">{labels.important}</span>
+      <span className="font-bold text-amber-700 dark:text-amber-400">{labels.important}</span>
     );
   }
   return (
