@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, RefreshCw, Search, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { NewsCard } from './NewsCard';
 import { NewsCardSkeleton } from './NewsCardSkeleton';
 import { NewsArticle, WhitelistState } from '@/types/news';
@@ -17,12 +18,22 @@ import { useLanguage } from '@/contexts/LanguageContext';
 const AUTO_SCROLL_INTERVAL = 30000; // 30 seconds
 const CARD_WIDTH = 356; // 340px card + 16px gap
 
+type CategoryFilter = 'ALL' | 'SEO' | 'LLM' | 'GEO';
+
+const categoryColors: Record<CategoryFilter, string> = {
+  ALL: 'bg-primary hover:bg-primary/90',
+  SEO: 'bg-emerald-500 hover:bg-emerald-600',
+  LLM: 'bg-violet-500 hover:bg-violet-600',
+  GEO: 'bg-amber-500 hover:bg-amber-600',
+};
+
 export function NewsCarousel() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [filteredArticles, setFilteredArticles] = useState<NewsArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('ALL');
   const [whitelist, setWhitelist] = useState<WhitelistState>(getWhitelistFromStorage);
   const [newSourceDiscovered, setNewSourceDiscovered] = useState<string | null>(null);
   
@@ -32,7 +43,7 @@ export function NewsCarousel() {
   const loadArticles = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await fetchArticles(whitelist);
+      const data = await fetchArticles(whitelist, false, language);
       setArticles(data);
       setFilteredArticles(data);
     } catch (error) {
@@ -40,29 +51,35 @@ export function NewsCarousel() {
     } finally {
       setIsLoading(false);
     }
-  }, [whitelist]);
+  }, [whitelist, language]);
 
   useEffect(() => {
     loadArticles();
   }, [loadArticles]);
 
-  // Filter articles based on search query
+  // Filter articles based on search query and category
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredArticles(articles);
-      return;
+    let filtered = articles;
+
+    // Apply category filter
+    if (categoryFilter !== 'ALL') {
+      filtered = filtered.filter(article => article.category === categoryFilter);
     }
 
-    const query = searchQuery.toLowerCase();
-    const filtered = articles.filter(
-      article =>
-        article.title.toLowerCase().includes(query) ||
-        article.summary.toLowerCase().includes(query) ||
-        article.category.toLowerCase().includes(query) ||
-        article.source.name.toLowerCase().includes(query)
-    );
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        article =>
+          article.title.toLowerCase().includes(query) ||
+          article.summary.toLowerCase().includes(query) ||
+          article.category.toLowerCase().includes(query) ||
+          article.source.name.toLowerCase().includes(query)
+      );
+    }
+
     setFilteredArticles(filtered);
-  }, [searchQuery, articles]);
+  }, [searchQuery, categoryFilter, articles]);
 
   // Auto-scroll functionality
   useEffect(() => {
@@ -95,8 +112,8 @@ export function NewsCarousel() {
   const handleRefresh = async () => {
     setIsLoading(true);
     try {
-      // Force refresh - appel API réel
-      const data = await refreshArticles(whitelist);
+      // Force refresh - appel API réel avec la langue courante
+      const data = await refreshArticles(whitelist, language);
       setArticles(data);
       setFilteredArticles(data);
       
@@ -144,11 +161,19 @@ export function NewsCarousel() {
     scrollContainerRef.current?.scrollBy({ left: CARD_WIDTH, behavior: 'smooth' });
   };
 
+  const handleCategoryClick = (category: CategoryFilter) => {
+    setCategoryFilter(category);
+  };
+
+  const getCategoryCount = (category: 'SEO' | 'LLM' | 'GEO') => {
+    return articles.filter(a => a.category === category).length;
+  };
+
   return (
     <section className="py-12 bg-muted/30">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <Sparkles className="h-6 w-6 text-primary" />
             <h2 className="text-2xl font-bold text-foreground">
@@ -178,6 +203,42 @@ export function NewsCarousel() {
               {t.news?.refresh || 'Actualiser'}
             </Button>
           </div>
+        </div>
+
+        {/* Category Filters */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <Button
+            variant={categoryFilter === 'ALL' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleCategoryClick('ALL')}
+            className={categoryFilter === 'ALL' ? categoryColors.ALL : ''}
+          >
+            {language === 'fr' ? 'Tous' : language === 'es' ? 'Todos' : 'All'} ({articles.length})
+          </Button>
+          <Button
+            variant={categoryFilter === 'SEO' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleCategoryClick('SEO')}
+            className={categoryFilter === 'SEO' ? `${categoryColors.SEO} text-white border-0` : 'border-emerald-500 text-emerald-600 hover:bg-emerald-50'}
+          >
+            SEO ({getCategoryCount('SEO')})
+          </Button>
+          <Button
+            variant={categoryFilter === 'LLM' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleCategoryClick('LLM')}
+            className={categoryFilter === 'LLM' ? `${categoryColors.LLM} text-white border-0` : 'border-violet-500 text-violet-600 hover:bg-violet-50'}
+          >
+            LLM ({getCategoryCount('LLM')})
+          </Button>
+          <Button
+            variant={categoryFilter === 'GEO' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleCategoryClick('GEO')}
+            className={categoryFilter === 'GEO' ? `${categoryColors.GEO} text-white border-0` : 'border-amber-500 text-amber-600 hover:bg-amber-50'}
+          >
+            GEO ({getCategoryCount('GEO')})
+          </Button>
         </div>
 
         {/* New source notification */}
@@ -230,8 +291,8 @@ export function NewsCarousel() {
                 <NewsCardSkeleton key={index} />
               ))
             ) : filteredArticles.length > 0 ? (
-              // Article cards
-              filteredArticles.map((article, index) => (
+              // Article cards - limit to 15
+              filteredArticles.slice(0, 15).map((article, index) => (
                 <NewsCard key={article.id} article={article} index={index} />
               ))
             ) : (
@@ -246,7 +307,7 @@ export function NewsCarousel() {
         {/* Source info */}
         <div className="mt-6 text-center text-xs text-muted-foreground">
           {t.news?.sourcesCount?.replace('{count}', whitelist.sources.length.toString()) || 
-            `${whitelist.sources.length} sources surveillées`} • {t.news?.lastUpdate || 'Dernière mise à jour'}: {new Date(whitelist.lastUpdated).toLocaleDateString('fr-FR')}
+            `${whitelist.sources.length} sources surveillées`} • {t.news?.lastUpdate || 'Dernière mise à jour'}: {new Date(whitelist.lastUpdated).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
         </div>
       </div>
     </section>
