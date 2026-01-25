@@ -10,6 +10,19 @@ export function Footer() {
           © {new Date().getFullYear()} Crawlers AI - crawlers.fr
         </p>
         <p className="text-sm text-muted-foreground">
+          Découvrez{' '}
+          <a 
+            href="https://iktracker.fr" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-primary hover:underline font-medium"
+            title="IKTracker - Suivi d'indemnités kilométriques"
+          >
+            iktracker.fr
+          </a>
+          , l'application gratuite pour suivre vos indemnités kilométriques
+        </p>
+        <p className="text-sm text-muted-foreground">
           {t.footer.alsoDiscover}{' '}
           <a 
             href="https://humanizz.fr" 
