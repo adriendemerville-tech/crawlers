@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ThemeProvider } from "next-themes";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -29,26 +30,28 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/audit-expert" element={<ExpertAudit />} />
-              <Route path="/mentions-legales" element={<MentionsLegales />} />
-              <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
-              <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
-              <Route path="/rgpd" element={<RGPD />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </TooltipProvider>
-    </LanguageProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <LanguageProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/audit-expert" element={<ExpertAudit />} />
+                <Route path="/mentions-legales" element={<MentionsLegales />} />
+                <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+                <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
+                <Route path="/rgpd" element={<RGPD />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

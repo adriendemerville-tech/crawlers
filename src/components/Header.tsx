@@ -1,6 +1,7 @@
-import { Bot } from 'lucide-react';
+import { Bot, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTheme } from 'next-themes';
 
 // Flag emoji components for better accessibility and consistency
 const FlagFR = () => (
@@ -17,6 +18,11 @@ const FlagES = () => (
 
 export function Header() {
   const { language, setLanguage } = useLanguage();
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm" role="banner">
@@ -28,37 +34,52 @@ export function Header() {
           <span className="text-lg font-semibold text-foreground">Crawlers AI</span>
         </a>
 
-        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1" role="group" aria-label="Sélection de la langue">
+        <div className="flex items-center gap-3">
+          {/* Theme toggle */}
           <Button
-            variant={language === 'fr' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setLanguage('fr')}
-            className="h-8 w-10 p-0"
-            aria-pressed={language === 'fr'}
-            aria-label="Français"
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="h-9 w-9"
+            aria-label={theme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}
           >
-            <FlagFR />
+            <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           </Button>
-          <Button
-            variant={language === 'en' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setLanguage('en')}
-            className="h-8 w-10 p-0"
-            aria-pressed={language === 'en'}
-            aria-label="English"
-          >
-            <FlagEN />
-          </Button>
-          <Button
-            variant={language === 'es' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setLanguage('es')}
-            className="h-8 w-10 p-0"
-            aria-pressed={language === 'es'}
-            aria-label="Español"
-          >
-            <FlagES />
-          </Button>
+
+          {/* Language selector */}
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1" role="group" aria-label="Sélection de la langue">
+            <Button
+              variant={language === 'fr' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setLanguage('fr')}
+              className="h-8 w-10 p-0"
+              aria-pressed={language === 'fr'}
+              aria-label="Français"
+            >
+              <FlagFR />
+            </Button>
+            <Button
+              variant={language === 'en' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setLanguage('en')}
+              className="h-8 w-10 p-0"
+              aria-pressed={language === 'en'}
+              aria-label="English"
+            >
+              <FlagEN />
+            </Button>
+            <Button
+              variant={language === 'es' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setLanguage('es')}
+              className="h-8 w-10 p-0"
+              aria-pressed={language === 'es'}
+              aria-label="Español"
+            >
+              <FlagES />
+            </Button>
+          </div>
         </div>
       </nav>
     </header>

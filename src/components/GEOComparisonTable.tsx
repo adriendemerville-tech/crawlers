@@ -189,27 +189,29 @@ const translations = {
   },
 };
 
-const StatusBadge = ({ status, labels }: { status: string; labels: any }) => {
+const getStatusStyles = (status: string) => {
+  if (status === 'critical') {
+    return 'bg-destructive/15 dark:bg-destructive/25';
+  }
+  if (status === 'important') {
+    return 'bg-warning/15 dark:bg-warning/25';
+  }
+  return 'bg-muted/50';
+};
+
+const StatusLabel = ({ status, labels }: { status: string; labels: any }) => {
   if (status === 'critical') {
     return (
-      <Badge variant="destructive" className="gap-1">
-        <CheckCircle2 className="h-3 w-3" />
-        {labels.critical}
-      </Badge>
+      <span className="font-semibold text-destructive">{labels.critical}</span>
     );
   }
   if (status === 'important') {
     return (
-      <Badge variant="outline" className="border-warning text-warning gap-1">
-        <CheckCircle2 className="h-3 w-3" />
-        {labels.important}
-      </Badge>
+      <span className="font-semibold text-warning">{labels.important}</span>
     );
   }
   return (
-    <Badge variant="secondary" className="gap-1">
-      {labels.optional}
-    </Badge>
+    <span className="font-medium text-muted-foreground">{labels.optional}</span>
   );
 };
 
@@ -220,7 +222,7 @@ export function GEOComparisonTable() {
   return (
     <section className="py-12 bg-muted/30" aria-label="Tableau comparatif GEO">
       <div className="container mx-auto px-4">
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden border-2">
           <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
             <CardTitle className="flex items-center gap-3 text-xl md:text-2xl">
               <Brain className="h-6 w-6 text-primary" />
@@ -230,11 +232,11 @@ export function GEOComparisonTable() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm" role="table">
+              <table className="w-full text-sm border-collapse" role="table">
                 <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left p-4 font-semibold min-w-[250px]">Facteur GEO</th>
-                    <th className="text-center p-4 font-semibold min-w-[200px]">
+                  <tr className="border-b-2 border-border bg-muted/70">
+                    <th className="text-left p-4 font-semibold min-w-[250px] border-r border-border">Facteur GEO</th>
+                    <th className="text-center p-4 font-semibold min-w-[200px] border-r border-border">
                       <div className="flex items-center justify-center gap-2">
                         <Smartphone className="h-4 w-4" />
                         {t.mobile}
@@ -250,17 +252,17 @@ export function GEOComparisonTable() {
                 </thead>
                 <tbody>
                   {t.factors.map((row, idx) => (
-                    <tr key={idx} className="border-b hover:bg-muted/30 transition-colors">
-                      <td className="p-4 font-medium">{row.factor}</td>
-                      <td className="p-4 text-center">
+                    <tr key={idx} className="border-b border-border hover:bg-muted/30 transition-colors">
+                      <td className="p-4 font-medium border-r border-border bg-card">{row.factor}</td>
+                      <td className={`p-4 text-center border-r border-border ${getStatusStyles(row.mobile.status)}`}>
                         <div className="flex flex-col items-center gap-1">
-                          <StatusBadge status={row.mobile.status} labels={t} />
+                          <StatusLabel status={row.mobile.status} labels={t} />
                           <span className="text-xs text-muted-foreground">{row.mobile.note}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-center">
+                      <td className={`p-4 text-center ${getStatusStyles(row.desktop.status)}`}>
                         <div className="flex flex-col items-center gap-1">
-                          <StatusBadge status={row.desktop.status} labels={t} />
+                          <StatusLabel status={row.desktop.status} labels={t} />
                           <span className="text-xs text-muted-foreground">{row.desktop.note}</span>
                         </div>
                       </td>
