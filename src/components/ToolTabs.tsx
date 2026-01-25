@@ -1,4 +1,4 @@
-import { Bot, Gauge, Sparkles, Brain, Zap, Loader2, FileSearch, TrendingUp } from 'lucide-react';
+import { Bot, Gauge, Sparkles, Brain, FileSearch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -9,38 +9,18 @@ export type ToolTab = 'crawlers' | 'pagespeed' | 'geo' | 'llm';
 interface ToolTabsProps {
   activeTab: ToolTab;
   onTabChange: (tab: ToolTab) => void;
-  onFullAudit?: () => void;
-  onStrategicAudit?: () => void;
-  isAuditLoading?: boolean;
-  isStrategicLoading?: boolean;
-  showAuditButton?: boolean;
-  isAuditActive?: boolean;
-  isStrategicActive?: boolean;
 }
 
 export function ToolTabs({ 
   activeTab, 
   onTabChange, 
-  onFullAudit, 
-  onStrategicAudit,
-  isAuditLoading = false,
-  isStrategicLoading = false,
-  showAuditButton = false,
-  isAuditActive = false,
-  isStrategicActive = false
 }: ToolTabsProps) {
   const { t, language } = useLanguage();
 
-  const auditButtonText = {
-    fr: isAuditLoading ? 'Audit en cours...' : 'Audit Complet IA',
-    en: isAuditLoading ? 'Audit in progress...' : 'Full AI Audit',
-    es: isAuditLoading ? 'Auditoría en curso...' : 'Auditoría IA Completa',
-  };
-
-  const strategicButtonText = {
-    fr: isStrategicLoading ? 'Analyse en cours...' : 'Audit Stratégique',
-    en: isStrategicLoading ? 'Analyzing...' : 'Strategic Audit',
-    es: isStrategicLoading ? 'Analizando...' : 'Auditoría Estratégica',
+  const auditExpertText = {
+    fr: 'Audit Expert',
+    en: 'Expert Audit',
+    es: 'Auditoría Experta',
   };
 
   return (
@@ -50,11 +30,11 @@ export function ToolTabs({
           onClick={() => onTabChange('crawlers')}
           className={cn(
             "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:px-6 sm:py-3",
-            activeTab === 'crawlers' && !isAuditActive
+            activeTab === 'crawlers'
               ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
-          aria-current={activeTab === 'crawlers' && !isAuditActive ? 'page' : undefined}
+          aria-current={activeTab === 'crawlers' ? 'page' : undefined}
         >
           <Bot className="h-4 w-4" />
           <span>{t.tabs.crawlers}</span>
@@ -63,11 +43,11 @@ export function ToolTabs({
           onClick={() => onTabChange('geo')}
           className={cn(
             "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:px-6 sm:py-3",
-            activeTab === 'geo' && !isAuditActive
+            activeTab === 'geo'
               ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
-          aria-current={activeTab === 'geo' && !isAuditActive ? 'page' : undefined}
+          aria-current={activeTab === 'geo' ? 'page' : undefined}
         >
           <Sparkles className="h-4 w-4" />
           <span>{t.tabs.geo}</span>
@@ -76,11 +56,11 @@ export function ToolTabs({
           onClick={() => onTabChange('llm')}
           className={cn(
             "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:px-6 sm:py-3",
-            activeTab === 'llm' && !isAuditActive
+            activeTab === 'llm'
               ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
-          aria-current={activeTab === 'llm' && !isAuditActive ? 'page' : undefined}
+          aria-current={activeTab === 'llm' ? 'page' : undefined}
         >
           <Brain className="h-4 w-4" />
           <span>{t.tabs.llm}</span>
@@ -89,67 +69,26 @@ export function ToolTabs({
           onClick={() => onTabChange('pagespeed')}
           className={cn(
             "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:px-6 sm:py-3",
-            activeTab === 'pagespeed' && !isAuditActive
+            activeTab === 'pagespeed'
               ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           )}
-          aria-current={activeTab === 'pagespeed' && !isAuditActive ? 'page' : undefined}
+          aria-current={activeTab === 'pagespeed' ? 'page' : undefined}
         >
           <Gauge className="h-4 w-4" />
           <span>{t.tabs.pagespeed}</span>
         </button>
       </div>
 
-      {/* Boutons d'action en dessous des onglets */}
-      <div className="flex flex-wrap justify-center gap-2">
-        {/* Bouton Audit Complet IA */}
-        {showAuditButton && onFullAudit && (
-          <Button
-            onClick={onFullAudit}
-            disabled={isAuditLoading}
-            variant={isAuditActive ? "default" : "outline"}
-            className={cn(
-              "gap-2 transition-all",
-              isAuditActive && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-            )}
-          >
-            {isAuditLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Zap className="h-4 w-4" />
-            )}
-            {auditButtonText[language]}
-          </Button>
-        )}
-
-        {/* Bouton Audit Stratégique */}
-        {showAuditButton && onStrategicAudit && (
-          <Button
-            onClick={onStrategicAudit}
-            disabled={isStrategicLoading}
-            variant={isStrategicActive ? "default" : "outline"}
-            className={cn(
-              "gap-2 transition-all",
-              isStrategicActive && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-            )}
-          >
-            {isStrategicLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <TrendingUp className="h-4 w-4" />
-            )}
-            {strategicButtonText[language]}
-          </Button>
-        )}
-
-        {/* Lien Score SEO 200 */}
+      {/* Lien Audit Expert (anciennement Score SEO 200) */}
+      <div className="flex justify-center">
         <Link to="/audit-expert">
           <Button
             variant="outline"
             className="gap-2 bg-gradient-to-r from-primary/10 to-primary/5 text-primary hover:from-primary/20 hover:to-primary/10 border-primary/20"
           >
             <FileSearch className="h-4 w-4" />
-            <span>Score SEO 200</span>
+            <span>{auditExpertText[language]}</span>
           </Button>
         </Link>
       </div>
