@@ -175,7 +175,7 @@ export function NewsCarousel() {
   };
 
   return (
-    <section className="py-12 bg-muted/30">
+    <section className="py-6 bg-muted/30">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">

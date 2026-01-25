@@ -91,7 +91,7 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
   const content = getHeroContent();
 
   return (
-    <section className="relative overflow-hidden px-4 py-16 sm:py-24">
+    <section className="relative overflow-hidden px-4 py-10 sm:py-16">
       {/* Background decoration */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-40 -top-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
