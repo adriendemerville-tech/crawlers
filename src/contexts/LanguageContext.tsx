@@ -171,7 +171,7 @@ const translations: Record<Language, Translations> = {
   fr: {
     hero: {
       badge: {
-        crawlers: 'Vérificateur de Bots IA',
+        crawlers: 'Partenaire pédagogue de votre référencement',
         geo: 'Analyseur GEO',
         pagespeed: 'Analyse de Performance',
         llm: 'Vérification LLM',
