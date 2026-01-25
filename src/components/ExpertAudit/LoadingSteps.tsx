@@ -26,12 +26,37 @@ export function LoadingSteps() {
 
   return (
     <div className="flex flex-col items-center justify-center py-16 space-y-8">
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-      >
-        <Loader2 className="h-16 w-16 text-primary" />
-      </motion.div>
+      {/* Spinning loader with ring */}
+      <div className="relative">
+        <div className="h-20 w-20 rounded-full border-4 border-muted"></div>
+        <div className="absolute inset-0 h-20 w-20 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+        <motion.div 
+          className="absolute inset-0 flex items-center justify-center"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+        >
+          <Brain className="h-8 w-8 text-primary" />
+        </motion.div>
+      </div>
+
+      {/* Animated "Analyse..." text */}
+      <div className="flex items-center gap-1 text-xl font-semibold text-foreground">
+        <span>Analyse</span>
+        <span className="inline-flex">
+          <motion.span
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+          >.</motion.span>
+          <motion.span
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+          >.</motion.span>
+          <motion.span
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
+          >.</motion.span>
+        </span>
+      </div>
 
       <div className="space-y-3 w-full max-w-md">
         <AnimatePresence mode="wait">
