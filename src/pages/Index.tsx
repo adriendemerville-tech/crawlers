@@ -9,7 +9,6 @@ import { CrawlResult } from '@/types/crawler';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
-import { StrategicAuditResult } from '@/types/audit';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -18,7 +17,6 @@ const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then
 const PageSpeedDashboard = lazy(() => import('@/components/PageSpeedDashboard').then(m => ({ default: m.PageSpeedDashboard })));
 const GeoDashboard = lazy(() => import('@/components/GeoDashboard').then(m => ({ default: m.GeoDashboard })));
 const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({ default: m.LLMDashboard })));
-const StrategicAuditDashboard = lazy(() => import('@/components/StrategicAuditDashboard').then(m => ({ default: m.StrategicAuditDashboard })));
 const QuotaExceeded = lazy(() => import('@/components/QuotaExceeded').then(m => ({ default: m.QuotaExceeded })));
 const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
@@ -41,16 +39,11 @@ const DashboardSkeleton = () => (
 const Index = () => {
   const [activeTab, setActiveTab] = useState<ToolTab>('crawlers');
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuditLoading, setIsAuditLoading] = useState(false);
-  const [isStrategicLoading, setIsStrategicLoading] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
   const [mobilePageSpeedResult, setMobilePageSpeedResult] = useState<PageSpeedResult | null>(null);
   const [desktopPageSpeedResult, setDesktopPageSpeedResult] = useState<PageSpeedResult | null>(null);
   const [geoResult, setGeoResult] = useState<GeoResult | null>(null);
   const [llmResult, setLlmResult] = useState<LLMAnalysisResult | null>(null);
-  const [auditResult, setAuditResult] = useState<StrategicAuditResult | null>(null);
-  const [showAuditDashboard, setShowAuditDashboard] = useState(false);
-  const [showStrategicDashboard, setShowStrategicDashboard] = useState(false);
   const [pageSpeedStrategy, setPageSpeedStrategy] = useState<'mobile' | 'desktop'>('mobile');
   const [isPageSpeedLoading, setIsPageSpeedLoading] = useState(false);
   const [currentUrl, setCurrentUrl] = useState<string>('');
@@ -222,155 +215,9 @@ const Index = () => {
     }
   };
 
-  // Run all 4 tools in parallel and generate strategic audit
-  const handleFullAudit = async () => {
-    if (!currentUrl) {
-      toast({
-        title: 'URL requise',
-        description: 'Veuillez d\'abord analyser une URL avec l\'un des outils.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsAuditLoading(true);
-    setShowAuditDashboard(true);
-    setShowStrategicDashboard(false);
-    setAuditResult(null);
-
-    try {
-      // Run all 4 checks in parallel
-      const [crawlersRes, geoRes, llmRes, pagespeedRes] = await Promise.all([
-        supabase.functions.invoke('check-crawlers', { body: { url: currentUrl } }),
-        supabase.functions.invoke('check-geo', { body: { url: currentUrl, lang: language } }),
-        supabase.functions.invoke('check-llm', { body: { url: currentUrl, lang: language } }),
-        supabase.functions.invoke('check-pagespeed', { body: { url: currentUrl, strategy: 'mobile' } }),
-      ]);
-
-      const toolsData = {
-        crawlers: crawlersRes.data?.data || null,
-        geo: geoRes.data?.data || null,
-        llm: llmRes.data?.data || null,
-        pagespeed: pagespeedRes.data?.data || null,
-      };
-
-      // Update individual results for other tabs
-      if (crawlersRes.data?.success) setCrawlResult(crawlersRes.data.data);
-      if (geoRes.data?.success) setGeoResult(geoRes.data.data);
-      if (llmRes.data?.success) setLlmResult(llmRes.data.data);
-      if (pagespeedRes.data?.success) setMobilePageSpeedResult(pagespeedRes.data.data);
-
-      // Generate strategic audit with AI
-      const { data: auditData, error: auditError } = await supabase.functions.invoke('audit-strategic', {
-        body: { url: currentUrl, toolsData }
-      });
-
-      if (auditError) throw new Error(auditError.message);
-      if (!auditData.success) throw new Error(auditData.error || 'Failed to generate audit');
-
-      setAuditResult(auditData.data);
-      toast({
-        title: 'Audit stratégique terminé !',
-        description: `Score de citabilité 2026 : ${auditData.data.overallScore}/100`,
-      });
-
-    } catch (error) {
-      console.error('Audit error:', error);
-      toast({
-        title: 'Erreur',
-        description: error instanceof Error ? error.message : 'Échec de l\'audit stratégique',
-        variant: 'destructive',
-      });
-      setShowAuditDashboard(false);
-    } finally {
-      setIsAuditLoading(false);
-    }
-  };
-
-  // Run strategic audit only (without re-running other tools)
-  const handleStrategicAudit = async () => {
-    if (!currentUrl) {
-      toast({
-        title: 'URL requise',
-        description: 'Veuillez d\'abord analyser une URL avec l\'un des outils.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsStrategicLoading(true);
-    setShowStrategicDashboard(true);
-    setShowAuditDashboard(false);
-    setAuditResult(null);
-
-    try {
-      // Use existing results if available, otherwise fetch them
-      const toolsData = {
-        crawlers: crawlResult || null,
-        geo: geoResult || null,
-        llm: llmResult || null,
-        pagespeed: mobilePageSpeedResult || desktopPageSpeedResult || null,
-      };
-
-      // If we don't have any data, run all tools first
-      if (!toolsData.crawlers && !toolsData.geo && !toolsData.llm && !toolsData.pagespeed) {
-        const [crawlersRes, geoRes, llmRes, pagespeedRes] = await Promise.all([
-          supabase.functions.invoke('check-crawlers', { body: { url: currentUrl } }),
-          supabase.functions.invoke('check-geo', { body: { url: currentUrl, lang: language } }),
-          supabase.functions.invoke('check-llm', { body: { url: currentUrl, lang: language } }),
-          supabase.functions.invoke('check-pagespeed', { body: { url: currentUrl, strategy: 'mobile' } }),
-        ]);
-
-        toolsData.crawlers = crawlersRes.data?.data || null;
-        toolsData.geo = geoRes.data?.data || null;
-        toolsData.llm = llmRes.data?.data || null;
-        toolsData.pagespeed = pagespeedRes.data?.data || null;
-
-        if (crawlersRes.data?.success) setCrawlResult(crawlersRes.data.data);
-        if (geoRes.data?.success) setGeoResult(geoRes.data.data);
-        if (llmRes.data?.success) setLlmResult(llmRes.data.data);
-        if (pagespeedRes.data?.success) setMobilePageSpeedResult(pagespeedRes.data.data);
-      }
-
-      // Generate strategic audit with AI
-      const { data: auditData, error: auditError } = await supabase.functions.invoke('audit-strategic', {
-        body: { url: currentUrl, toolsData }
-      });
-
-      if (auditError) throw new Error(auditError.message);
-      if (!auditData.success) throw new Error(auditData.error || 'Failed to generate audit');
-
-      setAuditResult(auditData.data);
-      toast({
-        title: 'Audit stratégique terminé !',
-        description: `Score de citabilité 2026 : ${auditData.data.overallScore}/100`,
-      });
-
-    } catch (error) {
-      console.error('Strategic audit error:', error);
-      toast({
-        title: 'Erreur',
-        description: error instanceof Error ? error.message : 'Échec de l\'audit stratégique',
-        variant: 'destructive',
-      });
-      setShowStrategicDashboard(false);
-    } finally {
-      setIsStrategicLoading(false);
-    }
-  };
-
   const renderDashboard = () => {
     // Afficher tous les résultats empilés : récents en haut, anciens en bas
     const dashboards = [];
-
-    // Audit stratégique toujours en premier s'il est actif
-    if (showAuditDashboard || showStrategicDashboard) {
-      dashboards.push(
-        <div key="audit" className="border-b border-border/50 pb-8">
-          <StrategicAuditDashboard result={auditResult} isLoading={isAuditLoading || isStrategicLoading} />
-        </div>
-      );
-    }
 
     // Afficher le dashboard de l'onglet actif en premier
     if (activeTab === 'pagespeed' && quotaExceeded) {
@@ -382,19 +229,19 @@ const Index = () => {
     } else if (activeTab === 'crawlers') {
       dashboards.push(
         <div key="crawlers-current" className="border-b border-border/50 pb-8">
-          <ResultsDashboard result={crawlResult} isLoading={isLoading && !showAuditDashboard} />
+          <ResultsDashboard result={crawlResult} isLoading={isLoading} />
         </div>
       );
     } else if (activeTab === 'geo') {
       dashboards.push(
         <div key="geo-current" className="border-b border-border/50 pb-8">
-          <GeoDashboard result={geoResult} isLoading={isLoading && !showAuditDashboard} />
+          <GeoDashboard result={geoResult} isLoading={isLoading} />
         </div>
       );
     } else if (activeTab === 'llm') {
       dashboards.push(
         <div key="llm-current" className="border-b border-border/50 pb-8">
-          <LLMDashboard result={llmResult} isLoading={isLoading && !showAuditDashboard} />
+          <LLMDashboard result={llmResult} isLoading={isLoading} />
         </div>
       );
     } else if (activeTab === 'pagespeed') {
@@ -469,8 +316,6 @@ const Index = () => {
     return <div className="space-y-8 pb-24">{dashboards}</div>;
   };
 
-  // Check if any tool has results
-  const hasAnyResult = !!(crawlResult || geoResult || llmResult || mobilePageSpeedResult || desktopPageSpeedResult);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -485,13 +330,6 @@ const Index = () => {
           <ToolTabs 
             activeTab={activeTab} 
             onTabChange={handleTabChange}
-            onFullAudit={handleFullAudit}
-            onStrategicAudit={handleStrategicAudit}
-            isAuditLoading={isAuditLoading}
-            isStrategicLoading={isStrategicLoading}
-            showAuditButton={!!currentUrl || hasAnyResult}
-            isAuditActive={showAuditDashboard}
-            isStrategicActive={showStrategicDashboard}
           />
           <Suspense fallback={<DashboardSkeleton />}>
             {renderDashboard()}
