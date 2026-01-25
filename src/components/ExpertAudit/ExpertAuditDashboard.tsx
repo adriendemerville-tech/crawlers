@@ -31,17 +31,38 @@ export function ExpertAuditDashboard() {
   const { toast } = useToast();
   const { language } = useLanguage();
 
+  // Normalize URL: add https:// if missing, don't modify the input display
+  const normalizeUrl = (input: string): string => {
+    let normalized = input.trim();
+    if (!normalized) return '';
+    
+    // Remove any leading/trailing whitespace
+    normalized = normalized.toLowerCase();
+    
+    // If no protocol, add https://
+    if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+      normalized = `https://${input.trim()}`;
+    } else {
+      normalized = input.trim();
+    }
+    
+    return normalized;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
+
+    // Normalize URL silently (don't update the input field)
+    const normalizedUrl = normalizeUrl(url);
 
     setIsLoading(true);
     setResult(null);
 
     try {
-      // Step 1: Run expert-audit
+      // Step 1: Run expert-audit with normalized URL
       const { data, error } = await supabase.functions.invoke('expert-audit', {
-        body: { url: url.trim() }
+        body: { url: normalizedUrl }
       });
 
       if (error) throw new Error(error.message);
@@ -80,7 +101,7 @@ export function ExpertAuditDashboard() {
         };
 
         const { data: strategicData, error: strategicError } = await supabase.functions.invoke('audit-strategic', {
-          body: { url: url.trim(), toolsData }
+          body: { url: normalizedUrl, toolsData }
         });
 
         if (!strategicError && strategicData?.success) {
@@ -148,8 +169,8 @@ export function ExpertAuditDashboard() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
-                type="url"
-                placeholder="https://example.com"
+                type="text"
+                placeholder="example.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 className="pl-10 h-12 text-lg"
