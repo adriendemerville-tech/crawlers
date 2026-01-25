@@ -41,12 +41,51 @@ const RELEVANCE_KEYWORDS = ['LLM', 'GEO', 'SEO', 'RAG', 'Search', 'AI', 'ChatGPT
 const MIN_RELEVANCE_SCORE = 70;
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=450&fit=crop';
 
-// Category-specific fallback images
-const CATEGORY_IMAGES: Record<string, string> = {
-  SEO: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&h=450&fit=crop',
-  LLM: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=450&fit=crop',
-  GEO: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=450&fit=crop',
+// Category-specific fallback images (10 per category for variety)
+const CATEGORY_IMAGES: Record<string, string[]> = {
+  SEO: [
+    'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&h=450&fit=crop', // Analytics dashboard
+    'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop', // Data charts
+    'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=800&h=450&fit=crop', // Marketing data
+    'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=450&fit=crop', // Dashboard screens
+    'https://images.unsplash.com/photo-1533750349088-cd871a92f312?w=800&h=450&fit=crop', // Marketing strategy
+    'https://images.unsplash.com/photo-1562577309-4932fdd64cd1?w=800&h=450&fit=crop', // SEO concept
+    'https://images.unsplash.com/photo-1542744094-24638eff58bb?w=800&h=450&fit=crop', // Google search
+    'https://images.unsplash.com/photo-1553484771-371a605b060b?w=800&h=450&fit=crop', // Team analytics
+    'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=450&fit=crop', // Growth charts
+    'https://images.unsplash.com/photo-1611926653458-09294b3142bf?w=800&h=450&fit=crop', // Digital marketing
+  ],
+  LLM: [
+    'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=450&fit=crop', // AI abstract
+    'https://images.unsplash.com/photo-1676299081847-824916de030a?w=800&h=450&fit=crop', // ChatGPT style
+    'https://images.unsplash.com/photo-1684369176170-463e84248b70?w=800&h=450&fit=crop', // AI brain
+    'https://images.unsplash.com/photo-1655720828018-edd2daec9349?w=800&h=450&fit=crop', // Neural network
+    'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=450&fit=crop', // AI robot
+    'https://images.unsplash.com/photo-1666597107756-ef489e9f1f09?w=800&h=450&fit=crop', // Machine learning
+    'https://images.unsplash.com/photo-1673187402824-7502cae3e6fe?w=800&h=450&fit=crop', // AI chat
+    'https://images.unsplash.com/photo-1694903089396-3aace4f52427?w=800&h=450&fit=crop', // Generative AI
+    'https://images.unsplash.com/photo-1675271591211-126ad94e495d?w=800&h=450&fit=crop', // AI technology
+    'https://images.unsplash.com/photo-1712002641088-9d76f9080889?w=800&h=450&fit=crop', // AI future
+  ],
+  GEO: [
+    'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=450&fit=crop', // Robot
+    'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800&h=450&fit=crop', // Voice assistant
+    'https://images.unsplash.com/photo-1535378917042-10a22c95931a?w=800&h=450&fit=crop', // AI assistant
+    'https://images.unsplash.com/photo-1589254065878-42c9da997008?w=800&h=450&fit=crop', // Smart device
+    'https://images.unsplash.com/photo-1617791160505-6f00504e3519?w=800&h=450&fit=crop', // AI search
+    'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=450&fit=crop', // AI overview
+    'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&h=450&fit=crop', // Matrix data
+    'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=450&fit=crop', // Tech network
+    'https://images.unsplash.com/photo-1488229297570-58520851e868?w=800&h=450&fit=crop', // Data flow
+    'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=450&fit=crop', // Circuit board
+  ],
 };
+
+// Get random fallback image for a category
+function getRandomFallbackImage(category: string): string {
+  const images = CATEGORY_IMAGES[category] || CATEGORY_IMAGES['SEO'];
+  return images[Math.floor(Math.random() * images.length)];
+}
 
 // Google News RSS feeds for different queries
 const GOOGLE_NEWS_FEEDS = [
@@ -308,7 +347,7 @@ async function processArticle(item: RSSItem, score: number, index: number): Prom
   const sourceInfo = extractSourceFromUrl(actualUrl);
   
   // Try to get image - first check if RSS thumbnail is valid (not Google placeholder)
-  let imageUrl: string | null = null;
+  let imageUrl: string = '';
   
   const rssThumbnail = item.thumbnail || item.enclosure?.link;
   if (rssThumbnail && !isGooglePlaceholder(rssThumbnail)) {
@@ -317,12 +356,15 @@ async function processArticle(item: RSSItem, score: number, index: number): Prom
   
   // If no valid image from RSS, fetch og:image from actual article
   if (!imageUrl && !isGoogleNewsUrl(actualUrl)) {
-    imageUrl = await fetchOgImage(actualUrl);
+    const ogImage = await fetchOgImage(actualUrl);
+    if (ogImage) {
+      imageUrl = ogImage;
+    }
   }
   
-  // Use category-specific fallback if still no image
+  // Use category-specific random fallback if still no image
   if (!imageUrl) {
-    imageUrl = CATEGORY_IMAGES[category] || DEFAULT_IMAGE;
+    imageUrl = getRandomFallbackImage(category);
   }
   
   const article: ArticleResult = {
