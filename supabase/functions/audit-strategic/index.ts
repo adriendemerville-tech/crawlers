@@ -103,9 +103,9 @@ Deno.serve(async (req) => {
   try {
     const { url, toolsData } = await req.json();
 
-    if (!url || !toolsData) {
+    if (!url) {
       return new Response(
-        JSON.stringify({ success: false, error: 'URL and tools data are required' }),
+        JSON.stringify({ success: false, error: 'URL is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -118,6 +118,14 @@ Deno.serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Use empty toolsData if not provided (standalone strategic audit)
+    const effectiveToolsData: ToolsData = toolsData || {
+      crawlers: { note: 'Données non disponibles - audit stratégique autonome' },
+      geo: { note: 'Données non disponibles - audit stratégique autonome' },
+      llm: { note: 'Données non disponibles - audit stratégique autonome' },
+      pagespeed: { note: 'Données non disponibles - audit stratégique autonome' },
+    };
 
     // Extract domain from URL
     let domain = url;
@@ -140,7 +148,7 @@ Deno.serve(async (req) => {
         model: 'google/gemini-3-flash-preview',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: buildUserPrompt(url, domain, toolsData) }
+          { role: 'user', content: buildUserPrompt(url, domain, effectiveToolsData) }
         ],
         temperature: 0.3,
       }),
