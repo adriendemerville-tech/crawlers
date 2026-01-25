@@ -2,13 +2,14 @@ import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Share2 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { Book, Search, Zap, Globe, Brain, FileCode, Download, ExternalLink, Share2, Link2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { toast } from 'sonner';
 
 // Social icons as inline SVGs
 const TwitterIcon = () => (
@@ -397,8 +398,44 @@ export default function Lexique() {
     doc.save(`lexique-seo-geo-performance-2026-${language}.pdf`);
   };
 
+  // Generate anchor ID from term
+  const generateAnchorId = (term: string) => {
+    return term
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove accents
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
   // Social share functions
   const shareUrl = 'https://crawlers.fr/lexique';
+  const location = useLocation();
+
+  // Scroll to anchor on page load
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      setTimeout(() => {
+        const element = document.getElementById(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+          setTimeout(() => {
+            element.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+          }, 2000);
+        }
+      }, 100);
+    }
+  }, [location]);
+
+  const copyTermLink = (term: string) => {
+    const anchorId = generateAnchorId(term);
+    const url = `${window.location.origin}/lexique#${anchorId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success(language === 'fr' ? 'Lien copié !' : language === 'es' ? '¡Enlace copiado!' : 'Link copied!');
+    });
+  };
   
   const shareOnTwitter = () => {
     const text = encodeURIComponent(content.shareText);
@@ -598,22 +635,33 @@ export default function Lexique() {
                   <dl className="space-y-3">
                     {groupedTerms[letter].map((term, index) => {
                       const config = categoryConfig[term.category];
+                      const anchorId = generateAnchorId(term.term);
                       return (
                         <div 
                           key={`${term.term}-${index}`}
-                          className="rounded-lg border border-border bg-card p-4 hover:bg-muted/20 transition-colors"
-                          id={term.term.toLowerCase().replace(/\s+/g, '-')}
+                          className="rounded-lg border border-border bg-card p-4 hover:bg-muted/20 transition-all"
+                          id={anchorId}
                         >
                           <dt className="flex items-start justify-between gap-3 mb-2">
-                            <div className="flex-1">
-                              <span className="text-base font-semibold text-foreground">
+                            <div className="flex-1 flex items-center gap-2">
+                              <a 
+                                href={`#${anchorId}`}
+                                className="text-base font-semibold text-foreground hover:text-primary transition-colors"
+                              >
                                 {term.term}
-                              </span>
+                              </a>
                               {term.acronym && (
-                                <span className="ml-2 text-sm text-muted-foreground">
+                                <span className="text-sm text-muted-foreground">
                                   ({term.acronym})
                                 </span>
                               )}
+                              <button
+                                onClick={() => copyTermLink(term.term)}
+                                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
+                                title={language === 'fr' ? 'Copier le lien' : language === 'es' ? 'Copiar enlace' : 'Copy link'}
+                              >
+                                <Link2 className="h-3.5 w-3.5" />
+                              </button>
                             </div>
                             <span className="text-xs px-2 py-1 rounded border border-border text-muted-foreground bg-muted/50">
                               {config.label[language]}
