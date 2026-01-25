@@ -30,12 +30,12 @@ const translations = {
     badge: 'Audit Expert SEO & IA',
     title: 'Analysez votre site en profondeur',
     subtitle: 'Choisissez le type d\'audit adapté à vos besoins',
-    technicalTitle: 'Audit Technique',
+    technicalTitle: 'Audit Technique SEO',
     technicalDesc: 'Performance, SEO, sécurité, Core Web Vitals. Score sur 200 points.',
     strategicTitle: 'Audit Stratégique IA',
     strategicDesc: 'Analyse de positionnement, citabilité LLM, stratégie GEO 2026.',
     placeholder: 'example.com',
-    launch: 'Analyser',
+    launch: 'Démarrer',
     analyzing: 'Analyse...',
     auditComplete: 'Audit terminé !',
     globalScore: 'Score global',
@@ -53,12 +53,12 @@ const translations = {
     badge: 'Expert SEO & AI Audit',
     title: 'Analyze your site in depth',
     subtitle: 'Choose the audit type suited to your needs',
-    technicalTitle: 'Technical Audit',
+    technicalTitle: 'Technical SEO Audit',
     technicalDesc: 'Performance, SEO, security, Core Web Vitals. Score out of 200 points.',
     strategicTitle: 'Strategic AI Audit',
     strategicDesc: 'Positioning analysis, LLM citability, GEO 2026 strategy.',
     placeholder: 'example.com',
-    launch: 'Analyze',
+    launch: 'Start',
     analyzing: 'Analyzing...',
     auditComplete: 'Audit complete!',
     globalScore: 'Global score',
@@ -76,12 +76,12 @@ const translations = {
     badge: 'Auditoría Experta SEO e IA',
     title: 'Analiza tu sitio en profundidad',
     subtitle: 'Elige el tipo de auditoría adaptado a tus necesidades',
-    technicalTitle: 'Auditoría Técnica',
+    technicalTitle: 'Auditoría Técnica SEO',
     technicalDesc: 'Rendimiento, SEO, seguridad, Core Web Vitals. Puntuación sobre 200.',
     strategicTitle: 'Auditoría Estratégica IA',
     strategicDesc: 'Análisis de posicionamiento, citabilidad LLM, estrategia GEO 2026.',
     placeholder: 'example.com',
-    launch: 'Analizar',
+    launch: 'Iniciar',
     analyzing: 'Analizando...',
     auditComplete: '¡Auditoría completa!',
     globalScore: 'Puntuación global',
@@ -246,13 +246,18 @@ export function ExpertAuditDashboard() {
       <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto mb-8">
         {/* Technical Audit */}
         <Card 
-          className={`relative overflow-hidden transition-all cursor-pointer hover:border-primary/50 ${
-            auditMode === 'technical' ? 'border-primary ring-1 ring-primary/20' : 'border-border/60'
+          className={`relative overflow-hidden transition-all cursor-pointer ${
+            auditMode === 'technical' 
+              ? 'border-2 border-amber-400 shadow-[0_0_20px_-5px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)]' 
+              : 'border-border/60 hover:border-primary/50'
           }`}
           onClick={() => !isLoading && !isStrategicLoading && setAuditMode('technical')}
         >
+          {auditMode === 'technical' && (
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 via-transparent to-amber-400/10 pointer-events-none" />
+          )}
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primary/80" />
-          <CardContent className="p-6">
+          <CardContent className="p-6 relative">
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-md bg-primary/10">
                 <BarChart3 className="h-6 w-6 text-primary" />
@@ -262,25 +267,32 @@ export function ExpertAuditDashboard() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{t.technicalDesc}</p>
               </div>
             </div>
-            <Button 
-              onClick={(e) => { e.stopPropagation(); handleTechnicalAudit(); }}
-              disabled={isLoading || isStrategicLoading || !url.trim()}
-              className="w-full mt-4 bg-primary hover:bg-primary/90"
-            >
-              {isLoading && auditMode === 'technical' ? t.analyzing : t.launch}
-            </Button>
+            {auditMode === 'technical' && (
+              <Button 
+                onClick={(e) => { e.stopPropagation(); handleTechnicalAudit(); }}
+                disabled={isLoading || isStrategicLoading || !url.trim()}
+                className="w-full mt-4 bg-primary hover:bg-primary/90"
+              >
+                {isLoading && auditMode === 'technical' ? t.analyzing : t.launch}
+              </Button>
+            )}
           </CardContent>
         </Card>
 
         {/* Strategic Audit */}
         <Card 
-          className={`relative overflow-hidden transition-all cursor-pointer hover:border-primary/50 ${
-            auditMode === 'strategic' ? 'border-primary ring-1 ring-primary/20' : 'border-border/60'
+          className={`relative overflow-hidden transition-all cursor-pointer ${
+            auditMode === 'strategic' 
+              ? 'border-2 border-amber-400 shadow-[0_0_20px_-5px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)]' 
+              : 'border-border/60 hover:border-primary/50'
           }`}
           onClick={() => !isLoading && !isStrategicLoading && setAuditMode('strategic')}
         >
+          {auditMode === 'strategic' && (
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 via-transparent to-amber-400/10 pointer-events-none" />
+          )}
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-foreground/60 to-accent-foreground/40" />
-          <CardContent className="p-6">
+          <CardContent className="p-6 relative">
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-md bg-accent">
                 <Target className="h-6 w-6 text-accent-foreground" />
@@ -290,13 +302,15 @@ export function ExpertAuditDashboard() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{t.strategicDesc}</p>
               </div>
             </div>
-            <Button 
-              onClick={(e) => { e.stopPropagation(); handleStrategicAudit(); }}
-              disabled={isLoading || isStrategicLoading || !url.trim()}
-              className="w-full mt-4 bg-secondary text-secondary-foreground hover:bg-secondary/80"
-            >
-              {isStrategicLoading ? t.analyzing : t.launch}
-            </Button>
+            {auditMode === 'strategic' && (
+              <Button 
+                onClick={(e) => { e.stopPropagation(); handleStrategicAudit(); }}
+                disabled={isLoading || isStrategicLoading || !url.trim()}
+                className="w-full mt-4 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              >
+                {isStrategicLoading ? t.analyzing : t.launch}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
