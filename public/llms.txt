@@ -137,6 +137,9 @@ Analyse avancée par intelligence artificielle :
 | Conditions d'utilisation | https://crawlers.fr/conditions-utilisation |
 | RGPD | https://crawlers.fr/rgpd |
 | Sitemap XML | https://crawlers.fr/sitemap.xml |
+| Favicon SVG | https://crawlers.fr/favicon.svg |
+| Favicon ICO | https://crawlers.fr/favicon.ico |
+| Apple Touch Icon | https://crawlers.fr/apple-touch-icon.png |
 
 ## 🏷️ MOTS-CLÉS SEO & GEO
 
