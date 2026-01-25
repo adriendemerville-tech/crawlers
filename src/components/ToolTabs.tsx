@@ -1,4 +1,4 @@
-import { Bot, Gauge, Sparkles, Brain, Zap, Loader2, FileSearch } from 'lucide-react';
+import { Bot, Gauge, Sparkles, Brain, Zap, Loader2, FileSearch, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
@@ -10,18 +10,24 @@ interface ToolTabsProps {
   activeTab: ToolTab;
   onTabChange: (tab: ToolTab) => void;
   onFullAudit?: () => void;
+  onStrategicAudit?: () => void;
   isAuditLoading?: boolean;
+  isStrategicLoading?: boolean;
   showAuditButton?: boolean;
   isAuditActive?: boolean;
+  isStrategicActive?: boolean;
 }
 
 export function ToolTabs({ 
   activeTab, 
   onTabChange, 
   onFullAudit, 
+  onStrategicAudit,
   isAuditLoading = false,
+  isStrategicLoading = false,
   showAuditButton = false,
-  isAuditActive = false
+  isAuditActive = false,
+  isStrategicActive = false
 }: ToolTabsProps) {
   const { t, language } = useLanguage();
 
@@ -29,6 +35,12 @@ export function ToolTabs({
     fr: isAuditLoading ? 'Audit en cours...' : 'Audit Complet IA',
     en: isAuditLoading ? 'Audit in progress...' : 'Full AI Audit',
     es: isAuditLoading ? 'Auditoría en curso...' : 'Auditoría IA Completa',
+  };
+
+  const strategicButtonText = {
+    fr: isStrategicLoading ? 'Analyse en cours...' : 'Audit Stratégique',
+    en: isStrategicLoading ? 'Analyzing...' : 'Strategic Audit',
+    es: isStrategicLoading ? 'Analizando...' : 'Auditoría Estratégica',
   };
 
   return (
@@ -107,6 +119,26 @@ export function ToolTabs({
               <Zap className="h-4 w-4" />
             )}
             {auditButtonText[language]}
+          </Button>
+        )}
+
+        {/* Bouton Audit Stratégique */}
+        {showAuditButton && onStrategicAudit && (
+          <Button
+            onClick={onStrategicAudit}
+            disabled={isStrategicLoading}
+            variant={isStrategicActive ? "default" : "outline"}
+            className={cn(
+              "gap-2 transition-all",
+              isStrategicActive && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+            )}
+          >
+            {isStrategicLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <TrendingUp className="h-4 w-4" />
+            )}
+            {strategicButtonText[language]}
           </Button>
         )}
 
