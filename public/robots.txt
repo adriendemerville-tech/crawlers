@@ -194,6 +194,12 @@ Sitemap: https://crawlers.fr/sitemap.xml
 # Documentation LLM pour IA
 # https://crawlers.fr/llms.txt
 
+# Favicon et icônes
+# https://crawlers.fr/favicon.svg (principal, scalable)
+# https://crawlers.fr/favicon.ico (fallback multi-résolution)
+# https://crawlers.fr/favicon-48x48.png (Google SERP)
+# https://crawlers.fr/apple-touch-icon.png (iOS)
+
 # ============================================
 # À PROPOS DE CRAWLERS.FR
 # ============================================
