@@ -18,7 +18,19 @@ PRÉ-REQUIS: Intègre les derniers critères de GEO (Generative Engine Optimizat
 - Impact des Core Web Vitals sur les réponses IA
 - Attribution des sources dans les réponses génératives
 
-Tu dois analyser les données fournies et produire un rapport stratégique structuré au format JSON.`;
+Tu dois analyser les données fournies et produire un rapport stratégique structuré au format JSON.
+
+STRUCTURE OBLIGATOIRE DU RAPPORT:
+Le rapport DOIT IMPÉRATIVEMENT commencer par 3 paragraphes introductifs dans le champ "introduction" :
+
+1. PARAGRAPHE 1 - PRÉSENTATION (Qui, Où, Quand):
+Présentation du site analysé, de son core business, de son secteur d'activité, de sa zone géographique d'activité, de son ancienneté estimée, et de son ou ses publics cibles.
+
+2. PARAGRAPHE 2 - POINTS FORTS (Quoi + Pourquoi):
+Analyse d'un ou deux aspects positifs de l'analyse : un aspect technique ET un aspect sémantique ou de référencement. Expliquer pourquoi, dans le contexte concurrentiel actuel du secteur, ce sont des points forts.
+
+3. PARAGRAPHE 3 - POINT D'AMÉLIORATION PRIORITAIRE:
+Présentation d'une donnée moins bonne, de sa conséquence technique, SEO ou GEO, et de pourquoi c'est important à corriger dans le contexte concurrentiel actuel du secteur.`;
 
 function buildUserPrompt(url: string, domain: string, toolsData: ToolsData): string {
   return `Analyse le domaine "${domain}" (${url}) avec les données suivantes:
@@ -37,6 +49,11 @@ ${JSON.stringify(toolsData.pagespeed, null, 2)}
 
 Produis un rapport stratégique JSON avec la structure suivante:
 {
+  "introduction": {
+    "presentation": "Paragraphe 1: Présentation complète du site (core business, secteur, zone géographique, ancienneté estimée, publics cibles). 4-5 phrases.",
+    "strengths": "Paragraphe 2: Un ou deux aspects positifs (un technique + un sémantique/référencement) avec explication du contexte concurrentiel. 4-5 phrases.",
+    "improvement": "Paragraphe 3: Une donnée moins bonne, sa conséquence technique/SEO/GEO, et pourquoi c'est important dans le contexte concurrentiel. 4-5 phrases."
+  },
   "brandPerception": {
     "semanticUniverse": "Description de l'univers sémantique et visuel (2-3 phrases)",
     "targetAudience": "B2B" | "B2C" | "Both",
@@ -90,6 +107,7 @@ Produis un rapport stratégique JSON avec la structure suivante:
 }
 
 IMPORTANT: 
+- Le champ "introduction" avec ses 3 sous-champs est OBLIGATOIRE et doit contenir des paragraphes narratifs riches et contextualisés
 - Génère 10 requêtes de test variées et adaptées au positionnement détecté
 - Le score global doit refléter la "citabilité 2026" (capacité à être référencé par les IA)
 - Les recommandations doivent être actionnables et priorisées`;

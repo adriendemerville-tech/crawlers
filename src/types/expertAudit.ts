@@ -56,7 +56,14 @@ export interface Recommendation {
   completed?: boolean;
 }
 
+export interface StrategicIntroduction {
+  presentation: string;
+  strengths: string;
+  improvement: string;
+}
+
 export interface StrategicAnalysis {
+  introduction?: StrategicIntroduction;
   brandPerception?: {
     semanticUniverse: string;
     targetAudience: 'B2B' | 'B2C' | 'Both';
@@ -98,6 +105,7 @@ export interface ExpertAuditResult {
   maxScore: 200;
   scores: ExpertAuditScores;
   recommendations: Recommendation[];
+  introduction?: StrategicIntroduction;
   rawData: {
     psi: any;
     safeBrowsing: any;
