@@ -4,6 +4,8 @@ import { CategoryCard, MetricRow } from './CategoryCard';
 import { RecommendationList } from './RecommendationList';
 import { LoadingSteps } from './LoadingSteps';
 import { StrategicInsights } from './StrategicInsights';
+import { ExpertAuditFAQ } from './ExpertAuditFAQ';
+import { ExpertAuditContent } from './ExpertAuditContent';
 
 export {
   ExpertAuditDashboard,
@@ -13,4 +15,6 @@ export {
   RecommendationList,
   LoadingSteps,
   StrategicInsights,
+  ExpertAuditFAQ,
+  ExpertAuditContent,
 };
