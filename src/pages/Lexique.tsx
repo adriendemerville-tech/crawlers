@@ -352,16 +352,79 @@ export default function Lexique() {
   // PDF Generation function
   const generatePDF = () => {
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
     
-    // Header
-    doc.setFontSize(22);
-    doc.setTextColor(124, 58, 237);
-    doc.text(content.pdfTitle, 20, 25);
+    // Brand colors - Blue from crawlers.fr
+    const brandBlue = { r: 37, g: 99, b: 235 }; // #2563eb
+    const brandBlueLight = { r: 59, g: 130, b: 246 }; // #3b82f6
     
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    doc.text(content.pdfSubtitle, 20, 35);
-    doc.text(`crawlers.fr | ${terms.length} ${content.termsCount}`, 20, 42);
+    // Draw header on first page
+    const drawHeader = () => {
+      // Header background
+      doc.setFillColor(brandBlue.r, brandBlue.g, brandBlue.b);
+      doc.rect(0, 0, pageWidth, 35, 'F');
+      
+      // Brand name
+      doc.setFontSize(24);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Crawlers AI', 20, 22);
+      
+      // Tagline
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('crawlers.fr', pageWidth - 20, 22, { align: 'right' });
+    };
+    
+    // Draw footer on each page
+    const drawFooter = (pageNum: number) => {
+      // Footer background
+      doc.setFillColor(245, 247, 250);
+      doc.rect(0, pageHeight - 25, pageWidth, 25, 'F');
+      
+      // Footer line
+      doc.setDrawColor(brandBlue.r, brandBlue.g, brandBlue.b);
+      doc.setLineWidth(0.5);
+      doc.line(20, pageHeight - 25, pageWidth - 20, pageHeight - 25);
+      
+      // Footer text
+      doc.setFontSize(9);
+      doc.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Crawlers AI', 20, pageHeight - 15);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(8);
+      doc.text('Audit expert du SEO et du GEO de votre site, analyse stratégique rapide.', 20, pageHeight - 9);
+      
+      // Clickable link
+      doc.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
+      doc.textWithLink('→ crawlers.fr/audit-expert', pageWidth - 20, pageHeight - 12, { 
+        url: 'https://crawlers.fr/audit-expert',
+        align: 'right'
+      });
+      
+      // Page number
+      doc.setTextColor(150, 150, 150);
+      doc.text(`${pageNum}`, pageWidth / 2, pageHeight - 9, { align: 'center' });
+    };
+    
+    // Draw header on first page
+    drawHeader();
+    
+    // Title section
+    doc.setFontSize(18);
+    doc.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
+    doc.setFont('helvetica', 'bold');
+    doc.text(content.pdfTitle, 20, 50);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont('helvetica', 'normal');
+    doc.text(content.pdfSubtitle, 20, 58);
+    doc.text(`${terms.length} ${content.termsCount}`, 20, 65);
     
     // Category labels for PDF
     const categoryLabels: Record<string, Record<string, string>> = {
@@ -381,20 +444,23 @@ export default function Lexique() {
       termsByCategory[term.category].push(term);
     });
     
-    let yPosition = 55;
-    const pageHeight = doc.internal.pageSize.height;
+    let yPosition = 75;
+    let currentPage = 1;
     
     Object.entries(termsByCategory).forEach(([category, categoryTerms]) => {
       // Add category header
-      if (yPosition > pageHeight - 40) {
+      if (yPosition > pageHeight - 60) {
+        drawFooter(currentPage);
         doc.addPage();
-        yPosition = 20;
+        currentPage++;
+        yPosition = 25;
       }
       
-      doc.setFontSize(14);
-      doc.setTextColor(124, 58, 237);
+      doc.setFontSize(13);
+      doc.setTextColor(brandBlue.r, brandBlue.g, brandBlue.b);
+      doc.setFont('helvetica', 'bold');
       doc.text(categoryLabels[category]?.[language] || category.toUpperCase(), 20, yPosition);
-      yPosition += 8;
+      yPosition += 6;
       
       // Create table for this category
       const tableData = categoryTerms.map(term => [
@@ -410,26 +476,35 @@ export default function Lexique() {
         ]],
         body: tableData,
         theme: 'striped',
-        headStyles: { fillColor: [124, 58, 237], fontSize: 10 },
-        bodyStyles: { fontSize: 9 },
+        headStyles: { fillColor: [brandBlue.r, brandBlue.g, brandBlue.b], fontSize: 9 },
+        bodyStyles: { fontSize: 8 },
         columnStyles: {
-          0: { cellWidth: 50, fontStyle: 'bold' },
-          1: { cellWidth: 130 }
+          0: { cellWidth: 45, fontStyle: 'bold' },
+          1: { cellWidth: 135 }
         },
-        margin: { left: 20, right: 20 },
-        didDrawPage: () => {
-          // Footer on each page
-          doc.setFontSize(8);
-          doc.setTextColor(150);
-          doc.text('Crawlers.fr - Lexique SEO, GEO & Performance 2026', 20, pageHeight - 10);
-          doc.text(`${doc.getCurrentPageInfo().pageNumber}`, doc.internal.pageSize.width - 25, pageHeight - 10);
+        margin: { left: 20, right: 20, bottom: 30 },
+        didDrawPage: (data) => {
+          if (data.pageNumber > 1) {
+            // Mini header on subsequent pages
+            doc.setFillColor(brandBlue.r, brandBlue.g, brandBlue.b);
+            doc.rect(0, 0, pageWidth, 15, 'F');
+            doc.setFontSize(10);
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Crawlers AI - Lexique SEO & GEO', 20, 10);
+          }
+          drawFooter(data.pageNumber);
+          currentPage = data.pageNumber;
         }
       });
       
-      yPosition = (doc as any).lastAutoTable.finalY + 15;
+      yPosition = (doc as any).lastAutoTable.finalY + 12;
     });
     
-    doc.save(`lexique-seo-geo-performance-2026-${language}.pdf`);
+    // Draw footer on last page if not already drawn
+    drawFooter(currentPage);
+    
+    doc.save(`lexique-seo-geo-2026-${language}.pdf`);
   };
 
   // Generate anchor ID from term
