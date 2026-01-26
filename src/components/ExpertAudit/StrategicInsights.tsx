@@ -37,65 +37,7 @@ export function StrategicInsights({ analysis }: StrategicInsightsProps) {
       transition={{ duration: 0.5, delay: 0.2 }}
       className="space-y-6"
     >
-      {/* Introduction - 3 paragraphes structurés */}
-      {analysis.introduction && (
-        <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Lightbulb className="h-5 w-5 text-primary" />
-              Analyse Stratégique IA
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Paragraphe 1 - Présentation */}
-            {analysis.introduction.presentation && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  Présentation du site
-                </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed pl-6">
-                  {analysis.introduction.presentation}
-                </p>
-              </div>
-            )}
-            
-            {/* Paragraphe 2 - Points forts */}
-            {analysis.introduction.strengths && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-success flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Points forts identifiés
-                </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed pl-6">
-                  {analysis.introduction.strengths}
-                </p>
-              </div>
-            )}
-            
-            {/* Paragraphe 3 - Axe d'amélioration */}
-            {analysis.introduction.improvement && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold text-warning flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4" />
-                  Axe d'amélioration prioritaire
-                </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed pl-6">
-                  {analysis.introduction.improvement}
-                </p>
-              </div>
-            )}
-            
-            {analysis.overallScore !== undefined && (
-              <div className="mt-4 flex items-center gap-2 pt-2 border-t border-border/50">
-                <Badge variant="outline" className="text-sm">
-                  Score Citabilité 2026 : {analysis.overallScore}/100
-                </Badge>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/* Note: L'introduction est maintenant affichée en haut du dashboard via IntroductionCard */}
 
       {/* Executive Summary - Fallback si pas d'introduction */}
       {!analysis.introduction && analysis.executiveSummary && (

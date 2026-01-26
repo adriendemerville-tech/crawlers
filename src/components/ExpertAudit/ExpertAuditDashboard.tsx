@@ -13,6 +13,7 @@ import { CategoryCard, MetricRow } from './CategoryCard';
 import { RecommendationList } from './RecommendationList';
 import { LoadingSteps } from './LoadingSteps';
 import { StrategicInsights } from './StrategicInsights';
+import { IntroductionCard } from './IntroductionCard';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -327,7 +328,15 @@ export function ExpertAuditDashboard() {
           transition={{ duration: 0.5 }}
           className="space-y-8"
         >
-          {/* Hero Score */}
+          {/* Introduction en premier - Toujours en haut */}
+          {result.introduction && auditMode === 'technical' && (
+            <IntroductionCard introduction={result.introduction} variant="technical" />
+          )}
+          {result.strategicAnalysis?.introduction && auditMode === 'strategic' && (
+            <IntroductionCard introduction={result.strategicAnalysis.introduction} variant="strategic" />
+          )}
+
+          {/* Hero Score - Après l'introduction */}
           <Card className="bg-gradient-to-br from-card via-card to-muted/30 border-2">
             <CardContent className="p-8">
               <div className="flex flex-col md:flex-row items-center justify-between gap-8">
@@ -354,47 +363,6 @@ export function ExpertAuditDashboard() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Introduction narrative - Technical Audit */}
-          {result.introduction && auditMode === 'technical' && (
-            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
-              <CardContent className="p-6 space-y-4">
-                {result.introduction.presentation && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
-                      <ExternalLink className="h-4 w-4" />
-                      Présentation du site
-                    </h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed pl-6">
-                      {result.introduction.presentation}
-                    </p>
-                  </div>
-                )}
-                {result.introduction.strengths && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-success flex items-center gap-2">
-                      <Zap className="h-4 w-4" />
-                      Points forts identifiés
-                    </h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed pl-6">
-                      {result.introduction.strengths}
-                    </p>
-                  </div>
-                )}
-                {result.introduction.improvement && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-warning flex items-center gap-2">
-                      <Target className="h-4 w-4" />
-                      Axe d'amélioration prioritaire
-                    </h4>
-                    <p className="text-sm text-muted-foreground leading-relaxed pl-6">
-                      {result.introduction.improvement}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
 
           {/* Category Cards Grid */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
