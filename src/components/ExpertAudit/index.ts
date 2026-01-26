@@ -7,6 +7,7 @@ import { StrategicInsights } from './StrategicInsights';
 import { ExpertAuditFAQ } from './ExpertAuditFAQ';
 import { ExpertAuditContent } from './ExpertAuditContent';
 import { IntroductionCard } from './IntroductionCard';
+import { ExpertInsightsCard } from './ExpertInsightsCard';
 
 export {
   ExpertAuditDashboard,
@@ -19,4 +20,5 @@ export {
   ExpertAuditFAQ,
   ExpertAuditContent,
   IntroductionCard,
+  ExpertInsightsCard,
 };
