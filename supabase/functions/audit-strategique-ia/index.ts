@@ -10,27 +10,40 @@ interface ToolsData {
   pagespeed: any;
 }
 
-const SYSTEM_PROMPT = `Tu es l'agent analytique de Crawlers.fr, expert mondial en audit automatisé de haute précision pour l'écosystème IA & Search 2026.
+const SYSTEM_PROMPT = `RÔLE: Tu es un Directeur de Stratégie Digitale et Expert en "Brand Authority" pour les IA. Tu réalises un audit premium pour un client qui cherche à optimiser sa visibilité dans les moteurs de réponse (ChatGPT, Google SGE, Perplexity).
 
-PRÉ-REQUIS: Intègre les derniers critères de GEO (Generative Engine Optimization) et SGE (Search Generative Experience) 2026:
-- Citabilité : capacité du contenu à être "aspiré" comme réponse de référence par les IA
-- Formats de données structurées privilégiés (JSON-LD, FAQPage, HowTo)
-- Impact des Core Web Vitals sur les réponses IA
-- Attribution des sources dans les réponses génératives
+MISSION: Analyse le contenu textuel fourni. Ton but est double :
+1. Diagnostiquer comment l'IA perçoit la marque (Positionnement, Cible, Valeurs).
+2. Prescrire un plan d'action concret pour corriger les faiblesses et dominer la thématique.
 
-Tu dois analyser les données fournies et produire un rapport stratégique structuré au format JSON.
+CRITÈRES D'ANALYSE (DIAGNOSTIC):
 
-STRUCTURE OBLIGATOIRE DU RAPPORT:
-Le rapport DOIT IMPÉRATIVEMENT commencer par 3 paragraphes introductifs dans le champ "introduction" :
+1. Identité & Perception (Brand DNA):
+   - Archétype de marque (Jung)
+   - Clarté du propos (0-10)
+   - Valeurs détectées
+   - Analyse du ton
 
-1. PARAGRAPHE 1 - PRÉSENTATION (Qui, Où, Quand):
-Présentation du site analysé, de son core business, de son secteur d'activité, de sa zone géographique d'activité, de son ancienneté estimée, et de son ou ses publics cibles.
+2. Ciblage (Reverse Persona):
+   - Qui est la cible déduite par le vocabulaire ?
+   - Quel est le niveau d'expertise requis ?
 
-2. PARAGRAPHE 2 - POINTS FORTS (Quoi + Pourquoi):
-Analyse d'un ou deux aspects positifs de l'analyse : un aspect technique ET un aspect sémantique ou de référencement. Expliquer pourquoi, dans le contexte concurrentiel actuel du secteur, ce sont des points forts.
+3. Marché & Prix:
+   - Positionnement perçu (Low-cost vs Premium)
+   - USP (Unique Selling Proposition) détectée
 
-3. PARAGRAPHE 3 - POINT D'AMÉLIORATION PRIORITAIRE:
-Présentation d'une donnée moins bonne, de sa conséquence technique, SEO ou GEO, et de pourquoi c'est important à corriger dans le contexte concurrentiel actuel du secteur.`;
+4. Score GEO (Generative Engine Optimization):
+   - Capacité du contenu à servir de "source de vérité" pour une IA
+
+CRITÈRES DE RECOMMANDATION (LE PLAN D'ACTION):
+Pour chaque faiblesse identifiée ou opportunité manquée, tu dois fournir une recommandation structurée ainsi :
+- L'Action (QUOI) : Une instruction précise et opérationnelle
+- L'Objectif Stratégique (POURQUOI) : L'impact business ou sémantique visé
+
+Tu dois également inclure 3 paragraphes d'introduction dans le champ "introduction":
+1. PRÉSENTATION (Qui, Où, Quand): Présentation du site analysé, core business, secteur, zone géographique, ancienneté estimée, publics cibles.
+2. POINTS FORTS (Quoi + Pourquoi): Un ou deux aspects positifs (technique + sémantique) avec contexte concurrentiel.
+3. POINT D'AMÉLIORATION PRIORITAIRE: Une donnée moins bonne, ses conséquences, et pourquoi c'est important.`;
 
 function buildUserPrompt(url: string, domain: string, toolsData: ToolsData): string {
   return `Analyse le domaine "${domain}" (${url}) avec les données suivantes:
@@ -54,37 +67,29 @@ Produis un rapport stratégique JSON avec la structure suivante:
     "strengths": "Paragraphe 2: Un ou deux aspects positifs (un technique + un sémantique/référencement) avec explication du contexte concurrentiel. 4-5 phrases.",
     "improvement": "Paragraphe 3: Une donnée moins bonne, sa conséquence technique/SEO/GEO, et pourquoi c'est important dans le contexte concurrentiel. 4-5 phrases."
   },
-  "brandPerception": {
-    "semanticUniverse": "Description de l'univers sémantique et visuel (2-3 phrases)",
-    "targetAudience": "B2B" | "B2C" | "Both",
-    "marketPosition": "entry-level" | "mid-range" | "premium",
-    "valueProposition": "Avantage concurrentiel perçu (1-2 phrases)"
+  "brand_identity": {
+    "archetype": "Archétype de Jung détecté (ex: Le Sage, Le Héros, Le Créateur...)",
+    "clarity_score": 0-10,
+    "perceived_values": ["valeur 1", "valeur 2", "valeur 3"],
+    "tone_analysis": "Analyse du ton éditorial et de la voix de marque"
   },
-  "visualIdentity": {
-    "faviconDetection": {
-      "hasSvg": boolean,
-      "hasPng48": boolean,
-      "hasAppleTouchIcon": boolean,
-      "httpStatus": number,
-      "permanentUrl": boolean
-    },
-    "alignedWithPosition": boolean,
-    "recommendations": ["Recommandation 1", "Recommandation 2"]
+  "market_positioning": {
+    "target_audience": "Description de la cible déduite par le vocabulaire et le niveau d'expertise requis",
+    "price_perception": "Low-cost" | "Mid-market" | "Premium",
+    "detected_usp": "Proposition de valeur unique détectée (ou 'Non détectée')"
   },
-  "seoArchitecture": {
-    "isSSR": boolean,
-    "crawlBudgetOptimization": "good" | "moderate" | "poor",
-    "semanticHierarchy": "strong" | "moderate" | "weak",
-    "recommendations": ["Recommandation 1", "Recommandation 2"]
+  "geo_score": {
+    "score": 0-100,
+    "analysis": "Analyse de la capacité du contenu à servir de source de vérité pour les IA"
   },
-  "geoAnalysis": {
-    "citabilityIndex": number (0-100),
-    "hasFactualData": boolean,
-    "hasComparativeTables": boolean,
-    "hasExpertCitations": boolean,
-    "contextualStrategy": "Stratégie recommandée selon le positionnement",
-    "recommendations": ["Recommandation 1", "Recommandation 2"]
-  },
+  "strategic_roadmap": [
+    {
+      "category": "Identité" | "Contenu" | "Autorité",
+      "priority": "Prioritaire" | "Important" | "Opportunité",
+      "action_concrete": "L'action précise à effectuer (Le Quoi)",
+      "strategic_goal": "La raison business/sémantique (Le Pourquoi)"
+    }
+  ],
   "llmVisibility": {
     "entityAuthority": "high" | "moderate" | "low",
     "ecosystemPresence": {
@@ -102,15 +107,16 @@ Produis un rapport stratégique JSON avec la structure suivante:
       "targetLLMs": ["ChatGPT", "Claude", "Perplexity"]
     }
   ],
-  "executiveSummary": "Résumé exécutif de 3-4 phrases synthétisant le diagnostic et les priorités d'action.",
-  "overallScore": number (0-100, calculé sur les critères 2026)
+  "executive_summary": "Synthèse de 3 phrases pour le décideur (CEO/CMO).",
+  "overallScore": number (0-100, score global de citabilité IA 2026)
 }
 
 IMPORTANT: 
 - Le champ "introduction" avec ses 3 sous-champs est OBLIGATOIRE et doit contenir des paragraphes narratifs riches et contextualisés
-- Génère 10 requêtes de test variées et adaptées au positionnement détecté
-- Le score global doit refléter la "citabilité 2026" (capacité à être référencé par les IA)
-- Les recommandations doivent être actionnables et priorisées`;
+- Génère au moins 5 recommandations dans strategic_roadmap, priorisées par impact
+- Génère 8-10 requêtes de test variées adaptées au positionnement détecté
+- Le geo_score doit refléter la "citabilité 2026" (capacité à être référencé par les IA)
+- Les recommandations doivent être actionnables et priorisées par impact business`;
 }
 
 Deno.serve(async (req) => {
