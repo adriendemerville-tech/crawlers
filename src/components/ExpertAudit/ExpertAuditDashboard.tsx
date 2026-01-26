@@ -178,8 +178,8 @@ export function ExpertAuditDashboard() {
     setResult(null);
 
     try {
-      // Run audit-strategic directly (full strategic analysis)
-      const { data, error } = await supabase.functions.invoke('audit-strategic', {
+      // Run audit-strategique-ia directly (full strategic analysis)
+      const { data, error } = await supabase.functions.invoke('audit-strategique-ia', {
         body: { url: normalizedUrl, toolsData: null }
       });
 
