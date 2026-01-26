@@ -943,12 +943,19 @@ serve(async (req) => {
       smartFetchResult = await smartFetch(normalizedUrl);
     } catch (fetchError) {
       console.error('[SmartFetch] Erreur critique:', fetchError);
+      const errorMessage = fetchError instanceof Error ? fetchError.message : 'Erreur inconnue';
+      const isConnectionError = errorMessage.includes('ECONNREFUSED') || 
+                                 errorMessage.includes('Connection refused') ||
+                                 errorMessage.includes('timeout') ||
+                                 errorMessage.includes('abort');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Impossible d'accéder à l'URL: ${fetchError instanceof Error ? fetchError.message : 'Erreur inconnue'}` 
+          error: isConnectionError 
+            ? `Site inaccessible: Le serveur de ${url} ne répond pas. Vérifiez que l'URL est correcte et que le site est en ligne.`
+            : `Impossible d'accéder à l'URL: ${errorMessage}` 
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
