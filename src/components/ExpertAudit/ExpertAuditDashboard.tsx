@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { 
   Zap, Settings2, FileText, Brain, Shield, 
   ExternalLink, Search, Sparkles, BarChart3, Target
@@ -376,11 +377,82 @@ export function ExpertAuditDashboard() {
             <IntroductionCard introduction={result.strategicAnalysis.introduction} variant="strategic" />
           )}
 
-          {/* Executive Summary Teaser - First sentence only, before blur */}
-          {(() => {
+          {/* === TECHNICAL AUDIT TEASER (before blur) === */}
+          {auditMode === 'technical' && (
+            <>
+              {/* Hero Score - Visible */}
+              <Card className="bg-gradient-to-br from-card via-card to-muted/30 border-2">
+                <CardContent className="p-8">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="text-center md:text-left">
+                      <h2 className="text-2xl font-bold text-foreground mb-2">{result.domain}</h2>
+                      <a 
+                        href={result.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+                      >
+                        {result.url} <ExternalLink className="h-3 w-3" />
+                      </a>
+                      <div className="mt-4 space-y-1">
+                        <p className="text-sm text-muted-foreground">Score Global</p>
+                        <p className="text-lg">
+                          {result.totalScore < 100 && <span className="text-destructive font-medium">À améliorer</span>}
+                          {result.totalScore >= 100 && result.totalScore < 150 && <span className="text-warning font-medium">Correct</span>}
+                          {result.totalScore >= 150 && <span className="text-success font-medium">Excellent</span>}
+                        </p>
+                      </div>
+                    </div>
+                    <ScoreGauge200 score={result.totalScore} />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Performance Card Header Teaser - Half visible */}
+              <Card className="overflow-hidden">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <span className="text-blue-500"><Zap className="h-5 w-5" /></span>
+                      Performance
+                    </CardTitle>
+                    <Badge variant="outline" className={cn('text-sm font-bold', 
+                      (result.scores.performance.score / result.scores.performance.maxScore) >= 0.8 ? 'text-success' : 
+                      (result.scores.performance.score / result.scores.performance.maxScore) >= 0.5 ? 'text-warning' : 'text-destructive'
+                    )}>
+                      {result.scores.performance.score}/{result.scores.performance.maxScore}
+                    </Badge>
+                  </div>
+                  <div className="relative h-2 mt-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className={cn("h-full transition-all duration-500 rounded-full", 
+                        (result.scores.performance.score / result.scores.performance.maxScore) >= 0.8 ? 'bg-success' : 
+                        (result.scores.performance.score / result.scores.performance.maxScore) >= 0.5 ? 'bg-warning' : 'bg-destructive'
+                      )}
+                      style={{ width: `${Math.min((result.scores.performance.score / result.scores.performance.maxScore) * 100, 100)}%` }}
+                    />
+                  </div>
+                </CardHeader>
+                {/* Content fades out */}
+                <CardContent className="space-y-2 relative">
+                  <MetricRow 
+                    label="Score PSI" 
+                    value={`${result.scores.performance.psiPerformance}%`} 
+                    status={result.scores.performance.psiPerformance >= 90 ? 'good' : result.scores.performance.psiPerformance >= 50 ? 'warning' : 'bad'}
+                  />
+                  {/* Gradient fade overlay */}
+                  {!userEmail && (
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/70 to-background pointer-events-none" />
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* === STRATEGIC AUDIT TEASER (before blur) === */}
+          {auditMode === 'strategic' && (() => {
             const executiveSummary = result.strategicAnalysis?.executive_summary || result.strategicAnalysis?.executiveSummary;
-            if (executiveSummary && auditMode === 'strategic') {
-              // Extract first sentence
+            if (executiveSummary) {
               const firstSentence = executiveSummary.split(/[.!?]/)[0] + '.';
               return (
                 <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
@@ -402,7 +474,7 @@ export function ExpertAuditDashboard() {
             return null;
           })()}
 
-          {/* Email Gate - Displayed after introduction/teaser */}
+          {/* Email Gate - Displayed after teaser content */}
           {!userEmail && (
             <EmailGateCard onEmailSubmit={handleEmailSubmit} />
           )}
@@ -417,68 +489,11 @@ export function ExpertAuditDashboard() {
             {/* Content that gets blurred/unblurred */}
             <div className={`space-y-8 ${!userEmail ? 'pointer-events-none select-none' : ''}`}>
               
-              {/* === TECHNICAL AUDIT CONTENT === */}
+              {/* === TECHNICAL AUDIT CONTENT (continued - blurred) === */}
               {auditMode === 'technical' && (
                 <>
-                  {/* Hero Score */}
-                  <Card className="bg-gradient-to-br from-card via-card to-muted/30 border-2">
-                    <CardContent className="p-8">
-                      <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="text-center md:text-left">
-                          <h2 className="text-2xl font-bold text-foreground mb-2">{result.domain}</h2>
-                          <a 
-                            href={result.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1"
-                          >
-                            {result.url} <ExternalLink className="h-3 w-3" />
-                          </a>
-                          <div className="mt-4 space-y-1">
-                            <p className="text-sm text-muted-foreground">Score Global</p>
-                            <p className="text-lg">
-                              {result.totalScore < 100 && <span className="text-destructive font-medium">À améliorer</span>}
-                              {result.totalScore >= 100 && result.totalScore < 150 && <span className="text-warning font-medium">Correct</span>}
-                              {result.totalScore >= 150 && <span className="text-success font-medium">Excellent</span>}
-                            </p>
-                          </div>
-                        </div>
-                        <ScoreGauge200 score={result.totalScore} />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Category Cards Grid - ONLY for technical */}
+                  {/* Category Cards Grid - Starting from Technical (Performance teaser shown above) */}
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {/* Performance */}
-                    <CategoryCard
-                      icon={<Zap className="h-5 w-5" />}
-                      title="Performance"
-                      score={result.scores.performance.score}
-                      maxScore={result.scores.performance.maxScore}
-                      variant="performance"
-                    >
-                      <MetricRow 
-                        label="Score PSI" 
-                        value={`${result.scores.performance.psiPerformance}%`} 
-                        status={result.scores.performance.psiPerformance >= 90 ? 'good' : result.scores.performance.psiPerformance >= 50 ? 'warning' : 'bad'}
-                      />
-                      <MetricRow 
-                        label="LCP" 
-                        value={formatMs(result.scores.performance.lcp)} 
-                        status={result.scores.performance.lcp <= 2500 ? 'good' : result.scores.performance.lcp <= 4000 ? 'warning' : 'bad'}
-                      />
-                      <MetricRow 
-                        label="CLS" 
-                        value={result.scores.performance.cls.toFixed(3)} 
-                        status={result.scores.performance.cls <= 0.1 ? 'good' : result.scores.performance.cls <= 0.25 ? 'warning' : 'bad'}
-                      />
-                      <MetricRow 
-                        label="TBT" 
-                        value={formatMs(result.scores.performance.tbt)} 
-                        status={result.scores.performance.tbt <= 200 ? 'good' : result.scores.performance.tbt <= 600 ? 'warning' : 'bad'}
-                      />
-                    </CategoryCard>
 
                     {/* Technical */}
                     <CategoryCard

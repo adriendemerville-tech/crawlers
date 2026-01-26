@@ -31,6 +31,13 @@ export function CategoryCard({ icon, title, score, maxScore, children, variant =
     return 'text-destructive';
   };
 
+  const getProgressColor = () => {
+    if (percentage >= 100) return 'bg-success';
+    if (percentage >= 80) return 'bg-success';
+    if (percentage >= 50) return 'bg-warning';
+    return 'bg-destructive';
+  };
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
@@ -43,7 +50,12 @@ export function CategoryCard({ icon, title, score, maxScore, children, variant =
             {score}/{maxScore}
           </Badge>
         </div>
-        <Progress value={percentage} className="h-2 mt-2" />
+        <div className="relative h-2 mt-2 bg-muted rounded-full overflow-hidden">
+          <div 
+            className={cn("h-full transition-all duration-500 rounded-full", getProgressColor())}
+            style={{ width: `${Math.min(percentage, 100)}%` }}
+          />
+        </div>
       </CardHeader>
       <CardContent className="space-y-2">
         {children}
