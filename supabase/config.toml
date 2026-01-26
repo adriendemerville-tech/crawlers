@@ -3,8 +3,11 @@ project_id = "tutlimtasnjabdfhpewu"
 [functions.fetch-news]
 verify_jwt = false
 
-[functions.expert-audit]
+[functions.audit-expert-seo]
 verify_jwt = false
 
 [functions.sitemap]
+verify_jwt = false
+
+[functions.expert-audit]
 verify_jwt = false

@@ -33,6 +33,11 @@ export interface ExpertAuditScores {
     schemaTypes: string[];
     hasRobotsTxt: boolean;
     robotsPermissive: boolean;
+    allowsAIBots?: {
+      gptBot: boolean;
+      claudeBot: boolean;
+      perplexityBot: boolean;
+    };
   };
   security: {
     score: number;
@@ -60,6 +65,49 @@ export interface StrategicIntroduction {
   presentation: string;
   strengths: string;
   improvement: string;
+}
+
+// Expert Insights from smart analysis
+export interface SemanticConsistency {
+  titleH1Similarity: number;
+  verdict: 'redundant' | 'optimal' | 'acceptable' | 'inconsistent' | 'missing' | 'unknown';
+  details: string;
+}
+
+export interface ContentDensity {
+  ratio: number;
+  verdict: 'critical' | 'warning' | 'acceptable' | 'optimal' | 'unknown';
+  htmlSize: number;
+  textSize: number;
+}
+
+export interface LinkProfile {
+  internal: number;
+  external: number;
+  total: number;
+  toxicAnchors: string[];
+  toxicAnchorsCount: number;
+}
+
+export interface JsonLdValidation {
+  valid: boolean;
+  types: string[];
+  parseErrors: string[];
+  count: number;
+}
+
+export interface ExpertInsights {
+  semanticConsistency: SemanticConsistency;
+  contentDensity: ContentDensity;
+  linkProfile: LinkProfile;
+  jsonLdValidation: JsonLdValidation;
+}
+
+export interface AuditMeta {
+  scannedAt: string;
+  renderingMode: 'static_fast' | 'dynamic_rendered';
+  reliabilityScore: number;
+  blockingError?: string;
 }
 
 export interface StrategicAnalysis {
@@ -103,13 +151,16 @@ export interface ExpertAuditResult {
   scannedAt: string;
   totalScore: number;
   maxScore: 200;
+  meta?: AuditMeta;
   scores: ExpertAuditScores;
+  insights?: ExpertInsights;
   recommendations: Recommendation[];
   introduction?: StrategicIntroduction;
   rawData: {
     psi: any;
     safeBrowsing: any;
     htmlAnalysis: any;
+    robotsAnalysis?: any;
   };
   strategicAnalysis?: StrategicAnalysis;
 }

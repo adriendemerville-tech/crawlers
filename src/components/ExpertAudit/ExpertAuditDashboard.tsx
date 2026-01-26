@@ -14,6 +14,7 @@ import { RecommendationList } from './RecommendationList';
 import { LoadingSteps } from './LoadingSteps';
 import { StrategicInsights } from './StrategicInsights';
 import { IntroductionCard } from './IntroductionCard';
+import { ExpertInsightsCard } from './ExpertInsightsCard';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -128,19 +129,34 @@ export function ExpertAuditDashboard() {
     setResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('expert-audit', {
+      // Call the new audit-expert-seo function
+      const { data, error } = await supabase.functions.invoke('audit-expert-seo', {
         body: { url: normalizedUrl }
       });
 
       if (error) throw new Error(error.message);
-      if (!data.success) throw new Error(data.error || 'Audit failed');
+      if (!data.success) {
+        // Handle RENDERING_REQUIRED error specifically
+        if (data.error === 'RENDERING_REQUIRED') {
+          throw new Error(`Rendu JavaScript requis: ${data.message || 'Site SPA non accessible sans navigateur'}`);
+        }
+        throw new Error(data.error || 'Audit failed');
+      }
 
       const auditResult = data.data as ExpertAuditResult;
+      // Map scannedAt from meta if available
+      if (auditResult.meta?.scannedAt && !auditResult.scannedAt) {
+        auditResult.scannedAt = auditResult.meta.scannedAt;
+      }
       setResult(auditResult);
+
+      const reliabilityInfo = auditResult.meta?.reliabilityScore 
+        ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
+        : '';
 
       toast({
         title: t.auditComplete,
-        description: `${t.globalScore} : ${data.data.totalScore}/200`,
+        description: `${t.globalScore} : ${data.data.totalScore}/200${reliabilityInfo}`,
       });
     } catch (error) {
       console.error('Audit error:', error);
@@ -484,6 +500,11 @@ export function ExpertAuditDashboard() {
               )}
             </CategoryCard>
           </div>
+
+          {/* Expert Insights Card - Only for technical audit */}
+          {auditMode === 'technical' && result.insights && (
+            <ExpertInsightsCard insights={result.insights} />
+          )}
 
           {/* Strategic AI Insights */}
           {isStrategicLoading && (
