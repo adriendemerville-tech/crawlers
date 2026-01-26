@@ -5,6 +5,8 @@ import {
   XCircle, Percent, Scale, ExternalLink
 } from 'lucide-react';
 import { ExpertInsights } from '@/types/expertAudit';
+import { InsightEducationalPanel } from './InsightEducationalPanel';
+import { HelpButton } from '@/components/HelpButton';
 
 interface ExpertInsightsCardProps {
   insights: ExpertInsights;
@@ -39,6 +41,7 @@ export function ExpertInsightsCard({ insights }: ExpertInsightsCardProps) {
         <CardTitle className="text-lg flex items-center gap-2">
           <Scale className="h-5 w-5 text-primary" />
           Insights Experts
+          <HelpButton term="audit-seo" size="sm" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -60,6 +63,10 @@ export function ExpertInsightsCard({ insights }: ExpertInsightsCardProps) {
           <p className="text-xs text-muted-foreground leading-relaxed">
             {semanticConsistency.details}
           </p>
+          <InsightEducationalPanel 
+            type="semantic" 
+            data={{ similarity: semanticConsistency.titleH1Similarity }} 
+          />
         </div>
 
         {/* Content Density */}
@@ -91,6 +98,10 @@ export function ExpertInsightsCard({ insights }: ExpertInsightsCardProps) {
               Thin Content : risque de pénalité SEO
             </p>
           )}
+          <InsightEducationalPanel 
+            type="density" 
+            data={{ ratio: contentDensity.ratio }} 
+          />
         </div>
 
         {/* Link Profile */}
@@ -127,6 +138,10 @@ export function ExpertInsightsCard({ insights }: ExpertInsightsCardProps) {
               </div>
             </div>
           )}
+          <InsightEducationalPanel 
+            type="links" 
+            data={{ internalLinks: linkProfile.internal, externalLinks: linkProfile.external }} 
+          />
         </div>
 
         {/* JSON-LD Validation */}
@@ -163,6 +178,10 @@ export function ExpertInsightsCard({ insights }: ExpertInsightsCardProps) {
               ))}
             </div>
           )}
+          <InsightEducationalPanel 
+            type="jsonld" 
+            data={{ jsonLdCount: jsonLdValidation.count }} 
+          />
         </div>
       </CardContent>
     </Card>

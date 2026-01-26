@@ -8,6 +8,7 @@ import { ExpertAuditFAQ } from './ExpertAuditFAQ';
 import { ExpertAuditContent } from './ExpertAuditContent';
 import { IntroductionCard } from './IntroductionCard';
 import { ExpertInsightsCard } from './ExpertInsightsCard';
+import { InsightEducationalPanel } from './InsightEducationalPanel';
 
 export {
   ExpertAuditDashboard,
@@ -21,4 +22,5 @@ export {
   ExpertAuditContent,
   IntroductionCard,
   ExpertInsightsCard,
+  InsightEducationalPanel,
 };
