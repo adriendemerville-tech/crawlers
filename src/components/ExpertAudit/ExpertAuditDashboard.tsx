@@ -376,14 +376,16 @@ export function ExpertAuditDashboard() {
             <IntroductionCard introduction={result.strategicAnalysis.introduction} variant="strategic" />
           )}
 
-          {/* Email Gate + Blurred Content */}
+          {/* Email Gate - Displayed right after introduction */}
+          {!userEmail && (
+            <EmailGateCard onEmailSubmit={handleEmailSubmit} />
+          )}
+
+          {/* Blurred Content when not authenticated */}
           <div className="relative">
-            {/* Blur overlay and email form when not authenticated */}
+            {/* Blur overlay */}
             {!userEmail && (
-              <>
-                <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-md rounded-lg" />
-                <EmailGateCard onEmailSubmit={handleEmailSubmit} />
-              </>
+              <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-md rounded-lg pointer-events-none" />
             )}
 
             {/* Content that gets blurred/unblurred */}
