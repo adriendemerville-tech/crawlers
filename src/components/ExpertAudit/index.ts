@@ -6,6 +6,7 @@ import { LoadingSteps } from './LoadingSteps';
 import { StrategicInsights } from './StrategicInsights';
 import { ExpertAuditFAQ } from './ExpertAuditFAQ';
 import { ExpertAuditContent } from './ExpertAuditContent';
+import { IntroductionCard } from './IntroductionCard';
 
 export {
   ExpertAuditDashboard,
@@ -17,4 +18,5 @@ export {
   StrategicInsights,
   ExpertAuditFAQ,
   ExpertAuditContent,
+  IntroductionCard,
 };
