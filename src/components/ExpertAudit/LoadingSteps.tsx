@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Loader2, Globe, Code, Shield, Brain, CheckCircle2 } from 'lucide-react';
+import { Loader2, Globe, Code, Shield, Brain, CheckCircle2, Target } from 'lucide-react';
 
-const steps = [
+const technicalSteps = [
   { id: 'connect', label: 'Connexion à Google PageSpeed...', icon: Globe },
   { id: 'html', label: 'Analyse du code HTML...', icon: Code },
   { id: 'security', label: 'Vérification Safe Browsing...', icon: Shield },
@@ -10,8 +10,22 @@ const steps = [
   { id: 'done', label: 'Génération du rapport...', icon: CheckCircle2 },
 ];
 
-export function LoadingSteps() {
+const strategicSteps = [
+  { id: 'fetch', label: 'Récupération du contenu...', icon: Globe },
+  { id: 'brand', label: 'Analyse de l\'identité de marque...', icon: Target },
+  { id: 'geo', label: 'Évaluation du score GEO...', icon: Brain },
+  { id: 'roadmap', label: 'Construction de la roadmap stratégique...', icon: Code },
+  { id: 'done', label: 'Génération du rapport...', icon: CheckCircle2 },
+];
+
+interface LoadingStepsProps {
+  siteName?: string;
+  variant?: 'technical' | 'strategic';
+}
+
+export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const steps = variant === 'strategic' ? strategicSteps : technicalSteps;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -19,10 +33,10 @@ export function LoadingSteps() {
         if (prev < steps.length - 1) return prev + 1;
         return prev;
       });
-    }, 2500);
+    }, variant === 'strategic' ? 8000 : 2500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [steps.length, variant]);
 
   return (
     <div className="flex flex-col items-center justify-center py-16 space-y-8">
@@ -35,13 +49,17 @@ export function LoadingSteps() {
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
         >
-          <Brain className="h-8 w-8 text-primary" />
+          {variant === 'strategic' ? (
+            <Target className="h-8 w-8 text-primary" />
+          ) : (
+            <Brain className="h-8 w-8 text-primary" />
+          )}
         </motion.div>
       </div>
 
-      {/* Animated "Analyse..." text */}
+      {/* Animated "Analyse de [site]..." text */}
       <div className="flex items-center gap-1 text-xl font-semibold text-foreground">
-        <span>Analyse</span>
+        <span>Analyse {siteName ? `de ${siteName}` : ''}</span>
         <span className="inline-flex">
           <motion.span
             animate={{ opacity: [0, 1, 0] }}
@@ -104,8 +122,10 @@ export function LoadingSteps() {
         </AnimatePresence>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        L'analyse complète prend environ 15 secondes...
+      <p className="text-sm text-muted-foreground text-center">
+        L'analyse peut prendre jusqu'à 9 minutes.
+        <br />
+        <span className="text-xs opacity-70">Veuillez patienter pendant que nous analysons votre site en profondeur.</span>
       </p>
     </div>
   );
