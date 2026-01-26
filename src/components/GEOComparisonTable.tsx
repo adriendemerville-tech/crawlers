@@ -161,10 +161,10 @@ const translations = {
 
 const getStatusStyles = (status: string) => {
   if (status === 'critical') {
-    return ''; // No background for essential
+    return 'bg-orange-100 dark:bg-orange-950/40'; // Orange background for essential
   }
   if (status === 'important') {
-    return 'bg-warning-muted';
+    return 'bg-fuchsia-100 dark:bg-fuchsia-950/40'; // Fuchsia background for important
   }
   return 'bg-muted/50';
 };
@@ -172,12 +172,12 @@ const getStatusStyles = (status: string) => {
 const StatusLabel = ({ status, labels }: { status: string; labels: any }) => {
   if (status === 'critical') {
     return (
-      <span className="font-bold text-pink-600 dark:text-pink-400">{labels.critical}</span>
+      <span className="font-bold text-orange-600 dark:text-orange-400">{labels.critical}</span>
     );
   }
   if (status === 'important') {
     return (
-      <span className="font-bold text-amber-700 dark:text-amber-400">{labels.important}</span>
+      <span className="font-bold text-fuchsia-600 dark:text-fuchsia-400">{labels.important}</span>
     );
   }
   return (
