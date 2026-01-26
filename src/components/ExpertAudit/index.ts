@@ -12,6 +12,7 @@ import { InsightEducationalPanel } from './InsightEducationalPanel';
 import { GeoScoreVisualization } from './GeoScoreVisualization';
 import { StrategicRoadmapCard } from './StrategicRoadmapCard';
 import { BrandIdentityCard } from './BrandIdentityCard';
+import { EmailGateCard } from './EmailGateCard';
 
 export {
   ExpertAuditDashboard,
@@ -29,4 +30,5 @@ export {
   GeoScoreVisualization,
   StrategicRoadmapCard,
   BrandIdentityCard,
+  EmailGateCard,
 };
