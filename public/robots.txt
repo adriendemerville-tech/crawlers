@@ -1,11 +1,10 @@
 # ============================================
 # Robots.txt - Crawlers.fr
-# Audit SEO, GEO & IA Gratuit en Français
-# Analyse complète pour site web et boutique
-# Version 2026
+# Audit Technique SEO & GEO Expert Gratuit 2026
+# Référencement Rapide pour IA, ChatGPT, Gemini
 # ============================================
 # 
-# CRAWLERS.FR - Plateforme d'audit SEO et référencement IA 2026
+# CRAWLERS.FR - Plateforme d'audit SEO expert et référencement IA 2026
 # 
 # Langues supportées : Français (FR), English (EN), Español (ES)
 # Zones cibles : Europe, Amérique du Nord, Amérique du Sud
@@ -13,19 +12,18 @@
 # Année de référence : 2026
 # 
 # Fonctionnalités :
-# - Audit SEO complet sur 200 points
-# - Score GEO (Generative Engine Optimization)
-# - Analyse des bots IA (GPTBot, ClaudeBot, etc.)
+# - Audit technique SEO expert sur 200 points (gratuit et rapide)
+# - Score GEO (Generative Engine Optimization) pour ChatGPT, Gemini, LLM
+# - Analyse des bots IA (GPTBot, ClaudeBot, PerplexityBot, etc.)
 # - Vérification PageSpeed Insights mobile et desktop
 # - Analyse des performances et Core Web Vitals (LCP, CLS, FCP)
-# - Mesure de la vitesse de chargement et accessibilité
+# - Référencement expert pour moteurs de recherche et IA
+# - Analyse marketing pour visibilité LLM
 # - Rapport gratuit et instantané
-# - Analyse du code source, contenu et structure
-# - Optimisation pour clients et boutiques e-commerce
 # 
-# Mots-clés : audit, français, seo, geo, bots, référencement,
-# site, boutique, mobile, clients, analyse, code, rapport gratuit,
-# performances, page speed insight, chargement, LCP, vitesse, content, accessibilité
+# Mots-clés : audit technique, seo, geo, référencement, rapide, gratuit,
+# expert, IA, LLM, marketing, chatgpt, moteur de recherche, google gemini,
+# performances, page speed insight, chargement, LCP, vitesse, accessibilité
 #
 # ============================================
 
@@ -95,10 +93,10 @@ Allow: /
 
 # ============================================
 # CRAWLERS IA - GEO (Generative Engine Optimization)
-# Optimisation pour moteurs de recherche génératifs
+# Optimisation pour ChatGPT, Gemini, LLM et moteurs génératifs
 # ============================================
 
-# OpenAI
+# OpenAI - ChatGPT
 User-agent: GPTBot
 Allow: /
 
@@ -118,7 +116,7 @@ Allow: /
 User-agent: Anthropic-AI
 Allow: /
 
-# Google AI
+# Google AI - Gemini
 User-agent: Google-Extended
 Allow: /
 
@@ -171,8 +169,12 @@ Allow: /
 User-agent: Amazonbot
 Allow: /
 
+# xAI - Grok
+User-agent: GrokBot
+Allow: /
+
 # ============================================
-# OUTILS SEO ET ANALYTICS
+# OUTILS SEO ET MARKETING
 # ============================================
 
 User-agent: AhrefsBot
@@ -197,7 +199,7 @@ Allow: /
 # Sitemap XML dynamique multilingue (FR, EN, ES)
 Sitemap: https://crawlers.fr/sitemap.xml
 
-# Documentation LLM pour IA
+# Documentation LLM pour IA et ChatGPT
 # https://crawlers.fr/llms.txt
 
 # Favicon et icônes
@@ -208,23 +210,22 @@ Sitemap: https://crawlers.fr/sitemap.xml
 
 # ============================================
 # À PROPOS DE CRAWLERS.FR - 2026
+# Audit Technique SEO & GEO Expert Gratuit
 # ============================================
 # 
-# Crawlers.fr est un outil français gratuit d'audit SEO et GEO.
-# Analysez votre site web ou boutique e-commerce en quelques secondes.
-# Référence 2026 pour l'optimisation SEO et GEO.
+# Crawlers.fr est l'outil français de référence pour l'audit technique
+# SEO expert et le référencement GEO rapide et gratuit.
+# Optimisé pour ChatGPT, Google Gemini, et les LLM.
 # 
 # Services gratuits :
-# ✓ Audit SEO 200 points (Performance, Technique, Sémantique, IA, Sécurité)
-# ✓ Score GEO pour optimisation moteurs génératifs
-# ✓ Vérification des bots IA (GPTBot, ClaudeBot, etc.)
+# ✓ Audit technique SEO expert 200 points
+# ✓ Score GEO pour ChatGPT, Gemini, Perplexity
+# ✓ Vérification des bots IA et marketing
 # ✓ Analyse PageSpeed mobile et desktop
-# ✓ Rapport PDF téléchargeable
-# ✓ Recommandations de référencement personnalisées
+# ✓ Rapport PDF téléchargeable gratuit
+# ✓ Recommandations référencement personnalisées
 # 
-# Langues supportées : Français (FR), English (EN), Español (ES)
-# Zones géographiques : Europe, Amérique du Nord, Amérique du Sud
-# Pays cibles : France, Espagne, Royaume-Uni, États-Unis, Canada, Mexique, Argentine
-# Année : 2026
+# Langues : Français (FR), English (EN), Español (ES)
+# Zones : Europe, Amérique du Nord, Amérique du Sud
 # Contact : https://crawlers.fr
 # ============================================

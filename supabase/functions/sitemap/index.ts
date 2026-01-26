@@ -68,7 +68,8 @@ function generateSitemap(pages: SitemapPage[]): string {
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 <!-- 
   Crawlers.fr Sitemap - Generated dynamically
-  Tools: AI Crawler Check, GEO Score, LLM Visibility, PageSpeed Analysis, Score SEO 200
+  Audit Technique SEO & GEO Expert Gratuit | ChatGPT, Gemini, LLM
+  Mots-clés: audit technique, seo, geo, référencement, rapide, gratuit, expert, IA, LLM, marketing, chatgpt, moteur de recherche, google gemini
   Languages: French (default), English, Spanish
 -->
 ${urlEntries}
