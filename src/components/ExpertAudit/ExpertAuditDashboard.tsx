@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { 
   Zap, Settings2, FileText, Brain, Shield, 
-  ExternalLink, Search, Sparkles, BarChart3, Target
+  ExternalLink, Search, Sparkles, BarChart3, Target, FileDown
 } from 'lucide-react';
 import { ScoreGauge200 } from './ScoreGauge200';
 import { CategoryCard, MetricRow } from './CategoryCard';
@@ -17,6 +17,7 @@ import { StrategicInsights } from './StrategicInsights';
 import { IntroductionCard } from './IntroductionCard';
 import { ExpertInsightsCard } from './ExpertInsightsCard';
 import { EmailGateCard } from './EmailGateCard';
+import { ExpertReportPreviewModal } from './ExpertReportPreviewModal';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -54,6 +55,7 @@ const translations = {
     excellent: 'Excellent',
     generatedAt: 'Audit généré le',
     or: 'ou',
+    viewReport: 'Rapport',
   },
   en: {
     badge: 'Expert SEO & AI Audit',
@@ -77,6 +79,7 @@ const translations = {
     excellent: 'Excellent',
     generatedAt: 'Audit generated on',
     or: 'or',
+    viewReport: 'Report',
   },
   es: {
     badge: 'Auditoría Experta SEO e IA',
@@ -100,6 +103,7 @@ const translations = {
     excellent: 'Excelente',
     generatedAt: 'Auditoría generada el',
     or: 'o',
+    viewReport: 'Informe',
   },
 };
 
@@ -110,6 +114,7 @@ export function ExpertAuditDashboard() {
   const [isStrategicLoading, setIsStrategicLoading] = useState(false);
   const [result, setResult] = useState<ExpertAuditResult | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const { toast } = useToast();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
@@ -607,13 +612,33 @@ export function ExpertAuditDashboard() {
                 </>
               )}
 
-              {/* Timestamp */}
-              <p className="text-center text-xs text-muted-foreground">
-                Audit généré le {new Date(result.scannedAt).toLocaleString('fr-FR')}
-              </p>
+              {/* Timestamp + Report Button */}
+              <div className="flex flex-col items-center gap-4">
+                <p className="text-xs text-muted-foreground">
+                  {t.generatedAt} {new Date(result.scannedAt).toLocaleString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
+                </p>
+                <Button
+                  onClick={() => setIsReportModalOpen(true)}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <FileDown className="h-4 w-4" />
+                  {t.viewReport}
+                </Button>
+              </div>
             </div>
           </div>
         </motion.div>
+      )}
+
+      {/* Report Preview Modal */}
+      {result && auditMode && (
+        <ExpertReportPreviewModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          result={result}
+          auditMode={auditMode}
+        />
       )}
     </div>
   );
