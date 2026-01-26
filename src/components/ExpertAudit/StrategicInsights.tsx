@@ -13,9 +13,10 @@ import { BrandIdentityCard } from './BrandIdentityCard';
 
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
+  hideExecutiveSummary?: boolean;
 }
 
-export function StrategicInsights({ analysis }: StrategicInsightsProps) {
+export function StrategicInsights({ analysis, hideExecutiveSummary = false }: StrategicInsightsProps) {
   const getAuthorityColor = (authority: string) => {
     switch (authority) {
       case 'high': return 'text-success';
@@ -43,8 +44,8 @@ export function StrategicInsights({ analysis }: StrategicInsightsProps) {
       transition={{ duration: 0.5, delay: 0.2 }}
       className="space-y-6"
     >
-      {/* Executive Summary - Always first if available */}
-      {(analysis.executive_summary || analysis.executiveSummary) && (
+      {/* Executive Summary - Only show if not hidden */}
+      {!hideExecutiveSummary && (analysis.executive_summary || analysis.executiveSummary) && (
         <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
