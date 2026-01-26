@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
 import { Sparkles, ExternalLink, Clock } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { HelpButton } from './HelpButton';
 
 interface GeoDashboardProps {
   result: GeoResult | null;
@@ -58,6 +59,7 @@ export function GeoDashboard({ result, isLoading }: GeoDashboardProps) {
               <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1">
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium text-primary">{t.geo.title}</span>
+                <HelpButton term="geo" size="sm" />
               </div>
               <h2 className="flex items-center gap-2 text-xl font-semibold text-foreground">
                 {result.url}

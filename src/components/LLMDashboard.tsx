@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { HelpButton } from './HelpButton';
 
 interface LLMDashboardProps {
   result: LLMAnalysisResult | null;
@@ -170,6 +171,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
               <CardTitle className="flex items-center gap-2 text-base">
                 <Eye className="h-5 w-5 text-primary" />
                 {t.llm.citationRate}
+                <HelpButton term="taux-de-citation" size="sm" />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -238,6 +240,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
               <CardTitle className="flex items-center gap-2 text-base">
                 <Target className="h-5 w-5 text-primary" />
                 {t.llm.iterationDepth}
+                <HelpButton term="profondeur-iteration" size="sm" />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -274,6 +277,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
               <CardTitle className="flex items-center gap-2 text-base">
                 <Sparkles className="h-5 w-5 text-primary" />
                 {t.llm.sentimentAnalysis}
+                <HelpButton term="analyse-sentiment" size="sm" />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -300,6 +304,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                   <XCircle className="h-5 w-5 text-destructive" />
                 )}
                 {t.llm.recommendationStatus}
+                <HelpButton term="e-e-a-t" size="sm" />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -336,6 +341,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
             <CardTitle className="flex items-center gap-2 text-base">
               <AlertTriangle className="h-5 w-5 text-primary" />
               {t.llm.coreValueUnderstanding}
+              <HelpButton term="hallucination-ia" size="sm" />
             </CardTitle>
           </CardHeader>
           <CardContent>

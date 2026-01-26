@@ -4,6 +4,7 @@ import { MetricCard } from './MetricCard';
 import { Smartphone, Monitor, Clock, Zap, Move, Timer, Gauge, MousePointer, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { HelpButton } from './HelpButton';
 
 interface PageSpeedDashboardProps {
   result: PageSpeedResult | null;
@@ -125,7 +126,10 @@ export function PageSpeedDashboard({ result, isLoading, strategy, onStrategyChan
 
         {/* Core Web Vitals */}
         <div className="rounded-xl border border-border bg-card p-6 card-shadow">
-          <h3 className="mb-4 text-lg font-semibold text-foreground">{t.pagespeed.coreWebVitals}</h3>
+          <h3 className="mb-4 text-lg font-semibold text-foreground flex items-center gap-2">
+            {t.pagespeed.coreWebVitals}
+            <HelpButton term="core-web-vitals" size="md" />
+          </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <MetricCard
               icon={Zap}
