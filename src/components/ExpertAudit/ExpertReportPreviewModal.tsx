@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Download, Share2, X, Loader2, Check, Copy } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Download, Share2, X, Loader2, Check, Copy, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,6 +24,7 @@ const translations = {
     title: 'Rapport d\'Audit Expert',
     download: 'Télécharger .pdf',
     share: 'Partager',
+    print: 'Imprimer',
     generating: 'Génération...',
     sharing: 'Création du lien...',
     shareLink: 'Lien de partage (valide 7 jours)',
@@ -57,6 +58,7 @@ const translations = {
     title: 'Expert Audit Report',
     download: 'Download .pdf',
     share: 'Share',
+    print: 'Print',
     generating: 'Generating...',
     sharing: 'Creating link...',
     shareLink: 'Share link (valid 7 days)',
@@ -90,6 +92,7 @@ const translations = {
     title: 'Informe de Auditoría Experta',
     download: 'Descargar .pdf',
     share: 'Compartir',
+    print: 'Imprimir',
     generating: 'Generando...',
     sharing: 'Creando enlace...',
     shareLink: 'Enlace para compartir (válido 7 días)',
@@ -525,6 +528,17 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
     }
   };
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0">
@@ -543,6 +557,14 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
                 <Download className="h-4 w-4" />
               )}
               {isGeneratingPDF ? t.generating : t.download}
+            </Button>
+            <Button
+              onClick={handlePrint}
+              variant="outline"
+              className="gap-2"
+            >
+              <Printer className="h-4 w-4" />
+              {t.print}
             </Button>
             <Button
               onClick={handleShare}
