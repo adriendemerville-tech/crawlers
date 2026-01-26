@@ -358,8 +358,11 @@ export function ExpertAuditDashboard() {
         </Card>
       </div>
 
-      {/* Loading State */}
-      {isLoading && <LoadingSteps />}
+      {/* Loading State - Technical */}
+      {isLoading && <LoadingSteps siteName={url} variant="technical" />}
+      
+      {/* Loading State - Strategic */}
+      {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" />}
 
       {/* Results */}
       {result && !isLoading && (
@@ -597,18 +600,6 @@ export function ExpertAuditDashboard() {
               {/* === STRATEGIC AUDIT CONTENT === */}
               {auditMode === 'strategic' && (
                 <>
-                  {/* Strategic AI Insights Loading */}
-                  {isStrategicLoading && (
-                    <Card className="border-dashed border-primary/30">
-                      <CardContent className="p-6 text-center">
-                        <div className="flex items-center justify-center gap-3">
-                          <Brain className="h-5 w-5 animate-pulse text-primary" />
-                          <span className="text-muted-foreground">Analyse stratégique IA en cours...</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
                   {/* Strategic Insights - Brand Identity, GEO Score, Roadmap (executive summary already shown above) */}
                   {result.strategicAnalysis && !isStrategicLoading && (
                     <StrategicInsights analysis={result.strategicAnalysis} hideExecutiveSummary={true} />
