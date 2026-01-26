@@ -201,15 +201,22 @@ export function ExpertAuditDashboard() {
         },
         recommendations: [],
         rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
-        scannedAt: new Date().toISOString(),
+        scannedAt: data.data.scannedAt || new Date().toISOString(),
         strategicAnalysis: {
           introduction: data.data.introduction,
+          // New format fields
+          brand_identity: data.data.brand_identity,
+          market_positioning: data.data.market_positioning,
+          geo_score: data.data.geo_score,
+          strategic_roadmap: data.data.strategic_roadmap,
+          executive_summary: data.data.executive_summary,
+          // Legacy format fields (for backward compatibility)
           brandPerception: data.data.brandPerception,
           geoAnalysis: data.data.geoAnalysis,
           llmVisibility: data.data.llmVisibility,
           testQueries: data.data.testQueries,
           executiveSummary: data.data.executiveSummary,
-          overallScore: data.data.overallScore,
+          overallScore: data.data.overallScore || data.data.geo_score?.score,
         },
       });
 

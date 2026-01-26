@@ -110,37 +110,81 @@ export interface AuditMeta {
   blockingError?: string;
 }
 
+// ============= NEW STRATEGIC AUDIT TYPES =============
+
+export interface BrandIdentity {
+  archetype: string;
+  clarity_score: number;
+  perceived_values: string[];
+  tone_analysis: string;
+}
+
+export interface MarketPositioning {
+  target_audience: string;
+  price_perception: 'Low-cost' | 'Mid-market' | 'Premium';
+  detected_usp: string;
+}
+
+export interface GeoScore {
+  score: number;
+  analysis: string;
+}
+
+export interface StrategicRoadmapItem {
+  category: 'Identité' | 'Contenu' | 'Autorité';
+  priority: 'Prioritaire' | 'Important' | 'Opportunité';
+  action_concrete: string;
+  strategic_goal: string;
+}
+
+export interface LLMVisibility {
+  entityAuthority: 'high' | 'moderate' | 'low';
+  ecosystemPresence: {
+    wikidata: boolean;
+    press: boolean;
+    reddit: boolean;
+    other: string[];
+  };
+  recommendations: string[];
+}
+
+export interface TestQuery {
+  query: string;
+  purpose: string;
+  targetLLMs: string[];
+}
+
+// Legacy GEO Analysis (for backward compatibility)
+export interface GeoAnalysis {
+  citabilityIndex: number;
+  hasFactualData: boolean;
+  hasComparativeTables: boolean;
+  hasExpertCitations: boolean;
+  contextualStrategy: string;
+  recommendations: string[];
+}
+
+// Legacy Brand Perception (for backward compatibility)
+export interface BrandPerception {
+  semanticUniverse: string;
+  targetAudience: 'B2B' | 'B2C' | 'Both';
+  marketPosition: 'entry-level' | 'mid-range' | 'premium';
+  valueProposition: string;
+}
+
 export interface StrategicAnalysis {
   introduction?: StrategicIntroduction;
-  brandPerception?: {
-    semanticUniverse: string;
-    targetAudience: 'B2B' | 'B2C' | 'Both';
-    marketPosition: 'entry-level' | 'mid-range' | 'premium';
-    valueProposition: string;
-  };
-  geoAnalysis?: {
-    citabilityIndex: number;
-    hasFactualData: boolean;
-    hasComparativeTables: boolean;
-    hasExpertCitations: boolean;
-    contextualStrategy: string;
-    recommendations: string[];
-  };
-  llmVisibility?: {
-    entityAuthority: 'high' | 'moderate' | 'low';
-    ecosystemPresence: {
-      wikidata: boolean;
-      press: boolean;
-      reddit: boolean;
-      other: string[];
-    };
-    recommendations: string[];
-  };
-  testQueries?: Array<{
-    query: string;
-    purpose: string;
-    targetLLMs: string[];
-  }>;
+  // New format
+  brand_identity?: BrandIdentity;
+  market_positioning?: MarketPositioning;
+  geo_score?: GeoScore;
+  strategic_roadmap?: StrategicRoadmapItem[];
+  executive_summary?: string;
+  // Legacy format (backward compatibility)
+  brandPerception?: BrandPerception;
+  geoAnalysis?: GeoAnalysis;
+  llmVisibility?: LLMVisibility;
+  testQueries?: TestQuery[];
   executiveSummary?: string;
   overallScore?: number;
 }

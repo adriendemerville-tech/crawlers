@@ -9,6 +9,9 @@ import { ExpertAuditContent } from './ExpertAuditContent';
 import { IntroductionCard } from './IntroductionCard';
 import { ExpertInsightsCard } from './ExpertInsightsCard';
 import { InsightEducationalPanel } from './InsightEducationalPanel';
+import { GeoScoreVisualization } from './GeoScoreVisualization';
+import { StrategicRoadmapCard } from './StrategicRoadmapCard';
+import { BrandIdentityCard } from './BrandIdentityCard';
 
 export {
   ExpertAuditDashboard,
@@ -23,4 +26,7 @@ export {
   IntroductionCard,
   ExpertInsightsCard,
   InsightEducationalPanel,
+  GeoScoreVisualization,
+  StrategicRoadmapCard,
+  BrandIdentityCard,
 };
