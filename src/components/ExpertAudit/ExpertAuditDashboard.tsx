@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -376,7 +376,33 @@ export function ExpertAuditDashboard() {
             <IntroductionCard introduction={result.strategicAnalysis.introduction} variant="strategic" />
           )}
 
-          {/* Email Gate - Displayed right after introduction */}
+          {/* Executive Summary Teaser - First sentence only, before blur */}
+          {(() => {
+            const executiveSummary = result.strategicAnalysis?.executive_summary || result.strategicAnalysis?.executiveSummary;
+            if (executiveSummary && auditMode === 'strategic') {
+              // Extract first sentence
+              const firstSentence = executiveSummary.split(/[.!?]/)[0] + '.';
+              return (
+                <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      Synthèse Exécutive
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {firstSentence}
+                      {!userEmail && <span className="text-muted-foreground/50">...</span>}
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            }
+            return null;
+          })()}
+
+          {/* Email Gate - Displayed after introduction/teaser */}
           {!userEmail && (
             <EmailGateCard onEmailSubmit={handleEmailSubmit} />
           )}
@@ -568,9 +594,9 @@ export function ExpertAuditDashboard() {
                     </Card>
                   )}
 
-                  {/* Strategic Insights - Brand Identity, GEO Score, Roadmap */}
+                  {/* Strategic Insights - Brand Identity, GEO Score, Roadmap (executive summary already shown above) */}
                   {result.strategicAnalysis && !isStrategicLoading && (
-                    <StrategicInsights analysis={result.strategicAnalysis} />
+                    <StrategicInsights analysis={result.strategicAnalysis} hideExecutiveSummary={true} />
                   )}
                 </>
               )}
