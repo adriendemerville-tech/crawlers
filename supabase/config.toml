@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.expert-audit]
 verify_jwt = false
+
+[functions.audit-strategique-ia]
+verify_jwt = false
