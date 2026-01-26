@@ -165,6 +165,10 @@ interface Translations {
     sourcesCount: string;
     lastUpdate: string;
   };
+  help: {
+    learnMore: string;
+    viewInLexicon: string;
+  };
 }
 
 const translations: Record<Language, Translations> = {
@@ -349,6 +353,10 @@ const translations: Record<Language, Translations> = {
       sourcesCount: '{count} sources surveillées',
       lastUpdate: 'Dernière mise à jour',
     },
+    help: {
+      learnMore: 'En savoir plus',
+      viewInLexicon: 'Voir dans le lexique',
+    },
   },
   en: {
     hero: {
@@ -531,6 +539,10 @@ const translations: Record<Language, Translations> = {
       sourcesCount: '{count} sources monitored',
       lastUpdate: 'Last update',
     },
+    help: {
+      learnMore: 'Learn more',
+      viewInLexicon: 'View in glossary',
+    },
   },
   es: {
     hero: {
@@ -712,6 +724,10 @@ const translations: Record<Language, Translations> = {
       noResults: 'No se encontraron artículos',
       sourcesCount: '{count} fuentes monitoreadas',
       lastUpdate: 'Última actualización',
+    },
+    help: {
+      learnMore: 'Más información',
+      viewInLexicon: 'Ver en el glosario',
     },
   },
 };

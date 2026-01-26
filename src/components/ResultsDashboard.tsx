@@ -3,6 +3,7 @@ import { BotCard } from './BotCard';
 import { BotCardSkeleton } from './BotCardSkeleton';
 import { ExternalLink, Globe, FileText, Clock } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { HelpButton } from './HelpButton';
 
 interface ResultsDashboardProps {
   result: CrawlResult | null;
@@ -82,11 +83,17 @@ export function ResultsDashboard({ result, isLoading }: ResultsDashboardProps) {
             <div className="flex gap-4">
               <div className="rounded-lg bg-success/10 px-4 py-2 text-center">
                 <div className="text-2xl font-bold text-success">{allowedCount}</div>
-                <div className="text-xs text-success/80">{t.results.allowed}</div>
+                <div className="text-xs text-success/80 flex items-center gap-1">
+                  {t.results.allowed}
+                  <HelpButton term="robots-txt" size="sm" />
+                </div>
               </div>
               <div className="rounded-lg bg-destructive/10 px-4 py-2 text-center">
                 <div className="text-2xl font-bold text-destructive">{blockedCount}</div>
-                <div className="text-xs text-destructive/80">{t.results.blocked}</div>
+                <div className="text-xs text-destructive/80 flex items-center gap-1">
+                  {t.results.blocked}
+                  <HelpButton term="robots-txt" size="sm" />
+                </div>
               </div>
             </div>
           </div>
