@@ -359,35 +359,75 @@ function analyzeOpenGraph(doc: ReturnType<DOMParser['parseFromString']>): { hasO
 // ANALYSE ROBOTS.TXT
 // ============================================================================
 
+/**
+ * Parse robots.txt et vérifie si un bot spécifique est bloqué
+ * Logique alignée avec check-crawlers pour garantir la cohérence
+ */
+function parseRobotsTxtForBot(robotsTxt: string, botUserAgent: string): { allowed: boolean } {
+  const lines = robotsTxt.split('\n');
+  let currentUserAgent = '';
+  let isMatchingBot = false;
+  let isWildcard = false;
+  let wildcardDisallowed = false;
+  let botSpecificAllowed: boolean | null = null; // null = pas de règle spécifique
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim().toLowerCase();
+    const originalLine = lines[i].trim();
+    
+    // Skip comments and empty lines
+    if (line.startsWith('#') || line === '') continue;
+
+    if (line.startsWith('user-agent:')) {
+      const agent = originalLine.substring(11).trim();
+      currentUserAgent = agent.toLowerCase();
+      isMatchingBot = currentUserAgent === botUserAgent.toLowerCase();
+      isWildcard = currentUserAgent === '*';
+    } else if (line.startsWith('disallow:')) {
+      const path = originalLine.substring(9).trim();
+      
+      // Check for specific bot block
+      if (isMatchingBot && path === '/') {
+        botSpecificAllowed = false;
+      }
+      
+      // Track wildcard disallow
+      if (isWildcard && path === '/') {
+        wildcardDisallowed = true;
+      }
+    } else if (line.startsWith('allow:')) {
+      const path = originalLine.substring(6).trim();
+      
+      // Check for specific bot allow (overrides disallow)
+      if (isMatchingBot && (path === '/' || path === '')) {
+        botSpecificAllowed = true;
+      }
+    }
+  }
+
+  // Priorité : règle spécifique au bot > règle wildcard
+  if (botSpecificAllowed !== null) {
+    return { allowed: botSpecificAllowed };
+  }
+  
+  // Si pas de règle spécifique, utiliser la règle wildcard
+  if (wildcardDisallowed) {
+    return { allowed: false };
+  }
+
+  return { allowed: true };
+}
+
 function checkAIBotsAllowed(robotsTxt: string | null): { allowed: number; total: number; blocked: string[] } {
   if (!robotsTxt) return { allowed: AI_BOTS.length, total: AI_BOTS.length, blocked: [] };
   
   const blocked: string[] = [];
-  const lines = robotsTxt.toLowerCase().split('\n');
   
   for (const bot of AI_BOTS) {
-    let currentAgent = '';
-    let isBlocked = false;
-    
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('user-agent:')) {
-        currentAgent = trimmed.substring(11).trim();
-      } else if (trimmed.startsWith('disallow:') && trimmed.includes('/')) {
-        if (currentAgent === bot.toLowerCase() || currentAgent === '*') {
-          const botSection = robotsTxt.toLowerCase().includes(`user-agent: ${bot.toLowerCase()}`);
-          if (currentAgent === '*' && !botSection) {
-            isBlocked = true;
-          } else if (currentAgent === bot.toLowerCase()) {
-            isBlocked = true;
-          }
-        }
-      } else if (trimmed.startsWith('allow:') && currentAgent === bot.toLowerCase()) {
-        isBlocked = false;
-      }
+    const result = parseRobotsTxtForBot(robotsTxt, bot);
+    if (!result.allowed) {
+      blocked.push(bot);
     }
-    
-    if (isBlocked) blocked.push(bot);
   }
   
   return { allowed: AI_BOTS.length - blocked.length, total: AI_BOTS.length, blocked };
