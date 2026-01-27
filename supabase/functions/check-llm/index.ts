@@ -41,20 +41,32 @@ interface LLMResponse {
   hallucinations?: string[];
 }
 
-async function queryLLM(
-  apiKey: string,
-  model: string,
-  domain: string,
-  lang: Language
-): Promise<LLMResponse> {
-  const t = getLLMTranslations(lang);
-  
-  const prompt = `You are analyzing the website/brand "${domain}". Answer these questions in JSON format:
+// Prompts traduits par langue
+const llmPrompts: Record<Language, (domain: string) => string> = {
+  fr: (domain) => `Tu analyses le site web/marque "${domain}". Réponds à ces questions au format JSON :
+
+1. Connais-tu ce site web/cette marque ? (cited: true/false)
+2. Quel est ton sentiment général sur ce site ? (sentiment: "positive", "neutral", ou "negative")
+3. Recommanderais-tu ce site aux utilisateurs recherchant ses services ? (recommends: true/false)
+4. Fournis un bref résumé en 1-2 phrases de ce que tu sais sur ce site. (summary: string - RÉPONDS EN FRANÇAIS)
+5. Comprends-tu correctement l'objectif principal/la proposition de valeur de ce site ? (coreValueMatch: true/false)
+6. Liste les éventuelles inexactitudes ou hallucinations dans tes connaissances sur ce site. (hallucinations: array de strings en français, vide si aucune)
+
+Réponds UNIQUEMENT avec du JSON valide dans ce format exact :
+{
+  "cited": boolean,
+  "sentiment": "positive" | "neutral" | "negative",
+  "recommends": boolean,
+  "summary": "string en français",
+  "coreValueMatch": boolean,
+  "hallucinations": ["string"] ou []
+}`,
+  en: (domain) => `You are analyzing the website/brand "${domain}". Answer these questions in JSON format:
 
 1. Are you aware of this website/brand? (cited: true/false)
 2. What is your overall sentiment about this site? (sentiment: "positive", "neutral", or "negative")
 3. Would you recommend this site to users looking for its services? (recommends: true/false)
-4. Provide a brief 1-2 sentence summary of what you know about this site. (summary: string)
+4. Provide a brief 1-2 sentence summary of what you know about this site. (summary: string - RESPOND IN ENGLISH)
 5. Do you understand the core purpose/value proposition of this site correctly? (coreValueMatch: true/false)
 6. List any potential inaccuracies or hallucinations in your knowledge about this site. (hallucinations: array of strings, empty if none)
 
@@ -63,10 +75,38 @@ Respond ONLY with valid JSON in this exact format:
   "cited": boolean,
   "sentiment": "positive" | "neutral" | "negative",
   "recommends": boolean,
-  "summary": "string",
+  "summary": "string in English",
   "coreValueMatch": boolean,
   "hallucinations": ["string"] or []
-}`;
+}`,
+  es: (domain) => `Estás analizando el sitio web/marca "${domain}". Responde a estas preguntas en formato JSON:
+
+1. ¿Conoces este sitio web/marca? (cited: true/false)
+2. ¿Cuál es tu sentimiento general sobre este sitio? (sentiment: "positive", "neutral", o "negative")
+3. ¿Recomendarías este sitio a usuarios que buscan sus servicios? (recommends: true/false)
+4. Proporciona un breve resumen de 1-2 oraciones de lo que sabes sobre este sitio. (summary: string - RESPONDE EN ESPAÑOL)
+5. ¿Comprendes correctamente el propósito principal/propuesta de valor de este sitio? (coreValueMatch: true/false)
+6. Lista cualquier inexactitud potencial o alucinación en tu conocimiento sobre este sitio. (hallucinations: array de strings en español, vacío si no hay ninguna)
+
+Responde ÚNICAMENTE con JSON válido en este formato exacto:
+{
+  "cited": boolean,
+  "sentiment": "positive" | "neutral" | "negative",
+  "recommends": boolean,
+  "summary": "string en español",
+  "coreValueMatch": boolean,
+  "hallucinations": ["string"] o []
+}`
+};
+
+async function queryLLM(
+  apiKey: string,
+  model: string,
+  domain: string,
+  lang: Language
+): Promise<LLMResponse> {
+  const t = getLLMTranslations(lang);
+  const prompt = llmPrompts[lang](domain);
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
