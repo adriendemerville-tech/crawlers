@@ -91,37 +91,37 @@ export function Header() {
             <span className="text-lg font-semibold text-foreground">Crawlers AI</span>
           </a>
 
-          {/* Language selector - next to logo */}
-          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1" role="group" aria-label="Sélection de la langue">
+          {/* Language selector - compact, next to logo */}
+          <div className="flex items-center gap-0.5 rounded-md border border-border bg-muted/50 p-0.5" role="group" aria-label="Sélection de la langue">
             <Button
               variant={language === 'fr' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setLanguage('fr')}
-              className="h-7 w-9 p-0"
+              className="h-6 w-7 p-0 text-xs"
               aria-pressed={language === 'fr'}
               aria-label="Français"
             >
-              <FlagFR />
+              <span className="text-sm">🇫🇷</span>
             </Button>
             <Button
               variant={language === 'en' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setLanguage('en')}
-              className="h-7 w-9 p-0"
+              className="h-6 w-7 p-0 text-xs"
               aria-pressed={language === 'en'}
               aria-label="English"
             >
-              <FlagEN />
+              <span className="text-sm">🇬🇧</span>
             </Button>
             <Button
               variant={language === 'es' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setLanguage('es')}
-              className="h-7 w-9 p-0"
+              className="h-6 w-7 p-0 text-xs"
               aria-pressed={language === 'es'}
               aria-label="Español"
             >
-              <FlagES />
+              <span className="text-sm">🇪🇸</span>
             </Button>
           </div>
         </div>
