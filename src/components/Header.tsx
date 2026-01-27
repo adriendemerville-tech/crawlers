@@ -82,13 +82,51 @@ export function Header() {
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm" role="banner">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4" aria-label="Navigation principale">
-        <a href="/" className="flex items-center gap-2" aria-label="Crawlers AI - Accueil">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Bot className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
-          </div>
-          <span className="text-lg font-semibold text-foreground">Crawlers AI</span>
-        </a>
+        {/* Left side: Logo + Language selector */}
+        <div className="flex items-center gap-4">
+          <a href="/" className="flex items-center gap-2" aria-label="Crawlers AI - Accueil">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+              <Bot className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
+            </div>
+            <span className="text-lg font-semibold text-foreground">Crawlers AI</span>
+          </a>
 
+          {/* Language selector - next to logo */}
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1" role="group" aria-label="Sélection de la langue">
+            <Button
+              variant={language === 'fr' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setLanguage('fr')}
+              className="h-7 w-9 p-0"
+              aria-pressed={language === 'fr'}
+              aria-label="Français"
+            >
+              <FlagFR />
+            </Button>
+            <Button
+              variant={language === 'en' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setLanguage('en')}
+              className="h-7 w-9 p-0"
+              aria-pressed={language === 'en'}
+              aria-label="English"
+            >
+              <FlagEN />
+            </Button>
+            <Button
+              variant={language === 'es' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setLanguage('es')}
+              className="h-7 w-9 p-0"
+              aria-pressed={language === 'es'}
+              aria-label="Español"
+            >
+              <FlagES />
+            </Button>
+          </div>
+        </div>
+
+        {/* Right side: Lexique, Theme, User */}
         <div className="flex items-center gap-3">
           {/* Lexique link - discrete */}
           <Link to="/lexique">
@@ -113,40 +151,6 @@ export function Header() {
             <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           </Button>
-
-          {/* Language selector */}
-          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1" role="group" aria-label="Sélection de la langue">
-            <Button
-              variant={language === 'fr' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setLanguage('fr')}
-              className="h-8 w-10 p-0"
-              aria-pressed={language === 'fr'}
-              aria-label="Français"
-            >
-              <FlagFR />
-            </Button>
-            <Button
-              variant={language === 'en' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setLanguage('en')}
-              className="h-8 w-10 p-0"
-              aria-pressed={language === 'en'}
-              aria-label="English"
-            >
-              <FlagEN />
-            </Button>
-            <Button
-              variant={language === 'es' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setLanguage('es')}
-              className="h-8 w-10 p-0"
-              aria-pressed={language === 'es'}
-              aria-label="Español"
-            >
-              <FlagES />
-            </Button>
-          </div>
 
           {/* User menu or login button */}
           {!loading && (
