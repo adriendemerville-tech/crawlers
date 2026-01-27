@@ -421,13 +421,27 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                           <XCircle className="h-4 w-4 text-muted-foreground" />
                         )}
                       </div>
+
+                      {/* Always show the model's short explanation/summary */}
+                      {citation.summary && (
+                        <div className="pt-2">
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {citation.summary}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                   
                   {!citation.cited && (
-                    <p className="text-sm text-muted-foreground">
-                      {t.llm.notMentioned}
-                    </p>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">{t.llm.notMentioned}</p>
+                      {citation.summary && (
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {citation.summary}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </Card>
