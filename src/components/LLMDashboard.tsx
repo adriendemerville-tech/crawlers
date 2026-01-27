@@ -97,8 +97,8 @@ function ScoreGauge({ score }: { score: number }) {
 
 const sentimentTranslations = {
   fr: {
-    positive: 'Positif',
-    mostly_positive: 'Plutôt Positif',
+    positive: 'très positif !',
+    mostly_positive: 'plutôt positif.',
     neutral: 'Neutre',
     mixed: 'Mitigé',
     negative: 'Négatif',
@@ -108,10 +108,12 @@ const sentimentTranslations = {
     neutralDesc: 'Les LLMs n\'ont pas d\'opinion marquée sur ce site.',
     mixedDesc: 'Les LLMs ont des opinions partagées ou contradictoires.',
     negativeDesc: 'Les LLMs ont une opinion défavorable de ce site.',
+    legendTitle: 'Échelle de sentiment :',
+    legendValues: ['très positif !', 'plutôt positif.', 'Neutre', 'Mitigé', 'Négatif'],
   },
   en: {
-    positive: 'Positive',
-    mostly_positive: 'Mostly Positive',
+    positive: 'very positive!',
+    mostly_positive: 'mostly positive.',
     neutral: 'Neutral',
     mixed: 'Mixed',
     negative: 'Negative',
@@ -121,10 +123,12 @@ const sentimentTranslations = {
     neutralDesc: 'LLMs have no strong opinion about this site.',
     mixedDesc: 'LLMs have mixed or contradictory opinions.',
     negativeDesc: 'LLMs have an unfavorable opinion of this site.',
+    legendTitle: 'Sentiment scale:',
+    legendValues: ['very positive!', 'mostly positive.', 'Neutral', 'Mixed', 'Negative'],
   },
   es: {
-    positive: 'Positivo',
-    mostly_positive: 'Mayormente Positivo',
+    positive: '¡muy positivo!',
+    mostly_positive: 'mayormente positivo.',
     neutral: 'Neutro',
     mixed: 'Mixto',
     negative: 'Negativo',
@@ -134,6 +138,8 @@ const sentimentTranslations = {
     neutralDesc: 'Los LLMs no tienen una opinión marcada sobre este sitio.',
     mixedDesc: 'Los LLMs tienen opiniones mixtas o contradictorias.',
     negativeDesc: 'Los LLMs tienen una opinión desfavorable de este sitio.',
+    legendTitle: 'Escala de sentimiento:',
+    legendValues: ['¡muy positivo!', 'mayormente positivo.', 'Neutro', 'Mixto', 'Negativo'],
   },
 };
 
@@ -144,12 +150,12 @@ function SentimentBadge({ sentiment, language }: { sentiment: SentimentType; lan
     positive: { 
       icon: CheckCircle2, 
       label: st.positive, 
-      className: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' 
+      className: 'bg-green-200 text-green-900 border-green-400 font-semibold dark:bg-green-700/50 dark:text-green-200 dark:border-green-500' 
     },
     mostly_positive: { 
       icon: ThumbsUp, 
       label: st.mostly_positive, 
-      className: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' 
+      className: 'bg-teal-50 text-teal-700 border-teal-200/60 dark:bg-teal-900/20 dark:text-teal-300 dark:border-teal-700/50' 
     },
     neutral: { 
       icon: Minus, 
@@ -826,6 +832,22 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                 </CardContent>
               </Card>
             ))}
+          </div>
+          
+          {/* Sentiment Legend */}
+          <div className="mt-4 text-center">
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium">{sentimentTranslations[language as keyof typeof sentimentTranslations]?.legendTitle || sentimentTranslations.fr.legendTitle}</span>{' '}
+              <span className="text-green-700 dark:text-green-300 font-semibold">très positif !</span>
+              {' • '}
+              <span className="text-teal-600 dark:text-teal-400">plutôt positif.</span>
+              {' • '}
+              <span className="text-gray-600 dark:text-gray-400">Neutre</span>
+              {' • '}
+              <span className="text-orange-600 dark:text-orange-400">Mitigé</span>
+              {' • '}
+              <span className="text-red-600 dark:text-red-400">Négatif</span>
+            </p>
           </div>
         </div>
       </div>
