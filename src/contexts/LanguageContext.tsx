@@ -209,7 +209,7 @@ const translations: Record<Language, Translations> = {
         },
       },
       trust: {
-        noSignup: 'Sans inscription',
+        noSignup: '',
         instant: 'Résultats instantanés',
         free: '100% gratuit',
       },
@@ -395,7 +395,7 @@ const translations: Record<Language, Translations> = {
         },
       },
       trust: {
-        noSignup: 'No signup required',
+        noSignup: '',
         instant: 'Instant results',
         free: '100% free',
       },
@@ -581,7 +581,7 @@ const translations: Record<Language, Translations> = {
         },
       },
       trust: {
-        noSignup: 'Sin registro',
+        noSignup: '',
         instant: 'Resultados instantáneos',
         free: '100% gratis',
       },
