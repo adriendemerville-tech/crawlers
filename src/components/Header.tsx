@@ -1,9 +1,9 @@
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from 'next-themes';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,18 +38,21 @@ const translations = {
     myReports: 'Mes rapports',
     logout: 'Déconnexion',
     login: 'Connexion',
+    back: 'Retour',
   },
   en: {
     profile: 'My profile',
     myReports: 'My reports',
     logout: 'Log out',
     login: 'Log in',
+    back: 'Back',
   },
   es: {
     profile: 'Mi perfil',
     myReports: 'Mis informes',
     logout: 'Cerrar sesión',
     login: 'Iniciar sesión',
+    back: 'Volver',
   },
 };
 
@@ -58,7 +61,11 @@ export function Header() {
   const { theme, setTheme } = useTheme();
   const { user, profile, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const t = translations[language];
+
+  // Check if we're on the audit-expert page
+  const isAuditExpertPage = location.pathname === '/audit-expert';
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -82,48 +89,65 @@ export function Header() {
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm" role="banner">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4" aria-label="Navigation principale">
-        {/* Left side: Logo + Language selector */}
+        {/* Left side: Back button OR Logo + Language selector */}
         <div className="flex items-center gap-4">
-          <a href="/" className="flex items-center gap-2" aria-label="Crawlers AI - Accueil">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <Bot className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
-            </div>
-            <span className="text-lg font-semibold text-foreground">Crawlers AI</span>
-          </a>
+          {isAuditExpertPage ? (
+            // Back button on audit-expert page
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="gap-2 text-muted-foreground hover:text-foreground"
+              aria-label={t.back}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">{t.back}</span>
+            </Button>
+          ) : (
+            // Logo + Language selector on other pages
+            <>
+              <a href="/" className="flex items-center gap-2" aria-label="Crawlers AI - Accueil">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+                  <Bot className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
+                </div>
+                <span className="text-lg font-semibold text-foreground">Crawlers AI</span>
+              </a>
 
-          {/* Language selector - compact, next to logo */}
-          <div className="flex items-center gap-0.5 rounded-md border border-border bg-muted/50 p-0.5" role="group" aria-label="Sélection de la langue">
-            <Button
-              variant={language === 'fr' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setLanguage('fr')}
-              className="h-6 w-7 p-0 text-xs"
-              aria-pressed={language === 'fr'}
-              aria-label="Français"
-            >
-              <span className="text-sm">🇫🇷</span>
-            </Button>
-            <Button
-              variant={language === 'en' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setLanguage('en')}
-              className="h-6 w-7 p-0 text-xs"
-              aria-pressed={language === 'en'}
-              aria-label="English"
-            >
-              <span className="text-sm">🇬🇧</span>
-            </Button>
-            <Button
-              variant={language === 'es' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setLanguage('es')}
-              className="h-6 w-7 p-0 text-xs"
-              aria-pressed={language === 'es'}
-              aria-label="Español"
-            >
-              <span className="text-sm">🇪🇸</span>
-            </Button>
-          </div>
+              {/* Language selector - compact, next to logo */}
+              <div className="flex items-center gap-0.5 rounded-md border border-border bg-muted/50 p-0.5" role="group" aria-label="Sélection de la langue">
+                <Button
+                  variant={language === 'fr' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setLanguage('fr')}
+                  className="h-6 w-7 p-0 text-xs"
+                  aria-pressed={language === 'fr'}
+                  aria-label="Français"
+                >
+                  <span className="text-sm">🇫🇷</span>
+                </Button>
+                <Button
+                  variant={language === 'en' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setLanguage('en')}
+                  className="h-6 w-7 p-0 text-xs"
+                  aria-pressed={language === 'en'}
+                  aria-label="English"
+                >
+                  <span className="text-sm">🇬🇧</span>
+                </Button>
+                <Button
+                  variant={language === 'es' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setLanguage('es')}
+                  className="h-6 w-7 p-0 text-xs"
+                  aria-pressed={language === 'es'}
+                  aria-label="Español"
+                >
+                  <span className="text-sm">🇪🇸</span>
+                </Button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Right side: Lexique, Theme, User */}
