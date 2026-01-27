@@ -43,24 +43,27 @@ interface LLMResponse {
   hallucinations?: string[];
 }
 
-// Prompts traduits par langue avec 5 niveaux de sentiment
+// Helper function for delay between API calls
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Prompts traduits par langue avec 5 niveaux de sentiment (descriptions améliorées)
 const llmPrompts: Record<Language, (domain: string) => string> = {
   fr: (domain) => `Tu analyses le site web/marque "${domain}". Réponds à ces questions au format JSON :
 
 1. Connais-tu ce site web/cette marque ? (cited: true/false)
-2. Quel est ton sentiment général sur ce site ? Choisis parmi ces 5 options :
-   - "positive" : Très bon, recommandé sans réserve
-   - "mostly_positive" : Plutôt bon, avec quelques réserves mineures
-   - "neutral" : Pas d'opinion particulière, manque d'informations
-   - "mixed" : Avis partagés, controverses ou opinions contradictoires
-   - "negative" : Mauvais, problèmes significatifs détectés
+2. Quel est ton sentiment général sur ce site ? Choisis EXACTEMENT l'une de ces 5 valeurs :
+   - "positive" : Excellent, recommandé sans aucune réserve, très bonne réputation
+   - "mostly_positive" : Bon service/produit mais avec quelques critiques mineures ou petits défauts
+   - "neutral" : Pas d'opinion particulière, manque d'informations pour juger
+   - "mixed" : Avis très partagés, polémiques, controverses (ex: bon produit mais mauvais support client)
+   - "negative" : Mauvais, problèmes significatifs détectés, mauvaise réputation
    (sentiment: "positive" | "mostly_positive" | "neutral" | "mixed" | "negative")
 3. Recommanderais-tu ce site aux utilisateurs recherchant ses services ? (recommends: true/false)
 4. Fournis un bref résumé en 1-2 phrases de ce que tu sais sur ce site. (summary: string - RÉPONDS EN FRANÇAIS)
 5. Comprends-tu correctement l'objectif principal/la proposition de valeur de ce site ? (coreValueMatch: true/false)
 6. Liste les éventuelles inexactitudes ou hallucinations dans tes connaissances sur ce site. (hallucinations: array de strings en français, vide si aucune)
 
-Réponds UNIQUEMENT avec du JSON valide dans ce format exact :
+IMPORTANT : Réponds UNIQUEMENT avec du JSON valide, sans texte avant ou après. Format exact :
 {
   "cited": boolean,
   "sentiment": "positive" | "mostly_positive" | "neutral" | "mixed" | "negative",
@@ -72,19 +75,19 @@ Réponds UNIQUEMENT avec du JSON valide dans ce format exact :
   en: (domain) => `You are analyzing the website/brand "${domain}". Answer these questions in JSON format:
 
 1. Are you aware of this website/brand? (cited: true/false)
-2. What is your overall sentiment about this site? Choose from these 5 options:
-   - "positive": Very good, recommended without reservation
-   - "mostly_positive": Mostly good, with some minor reservations
-   - "neutral": No particular opinion, lack of information
-   - "mixed": Mixed opinions, controversies or contradictory views
-   - "negative": Bad, significant problems detected
+2. What is your overall sentiment about this site? Choose EXACTLY one of these 5 values:
+   - "positive": Excellent, recommended without any reservation, very good reputation
+   - "mostly_positive": Good service/product but with some minor criticisms or small flaws
+   - "neutral": No particular opinion, lack of information to judge
+   - "mixed": Very divided opinions, controversies, polarizing (e.g., good product but bad customer support)
+   - "negative": Bad, significant problems detected, poor reputation
    (sentiment: "positive" | "mostly_positive" | "neutral" | "mixed" | "negative")
 3. Would you recommend this site to users looking for its services? (recommends: true/false)
 4. Provide a brief 1-2 sentence summary of what you know about this site. (summary: string - RESPOND IN ENGLISH)
 5. Do you understand the core purpose/value proposition of this site correctly? (coreValueMatch: true/false)
 6. List any potential inaccuracies or hallucinations in your knowledge about this site. (hallucinations: array of strings, empty if none)
 
-Respond ONLY with valid JSON in this exact format:
+IMPORTANT: Respond ONLY with valid JSON, no text before or after. Exact format:
 {
   "cited": boolean,
   "sentiment": "positive" | "mostly_positive" | "neutral" | "mixed" | "negative",
@@ -96,19 +99,19 @@ Respond ONLY with valid JSON in this exact format:
   es: (domain) => `Estás analizando el sitio web/marca "${domain}". Responde a estas preguntas en formato JSON:
 
 1. ¿Conoces este sitio web/marca? (cited: true/false)
-2. ¿Cuál es tu sentimiento general sobre este sitio? Elige entre estas 5 opciones:
-   - "positive": Muy bueno, recomendado sin reservas
-   - "mostly_positive": Mayormente bueno, con algunas reservas menores
-   - "neutral": Sin opinión particular, falta de información
-   - "mixed": Opiniones mixtas, controversias o puntos de vista contradictorios
-   - "negative": Malo, problemas significativos detectados
+2. ¿Cuál es tu sentimiento general sobre este sitio? Elige EXACTAMENTE uno de estos 5 valores:
+   - "positive": Excelente, recomendado sin ninguna reserva, muy buena reputación
+   - "mostly_positive": Buen servicio/producto pero con algunas críticas menores o pequeños defectos
+   - "neutral": Sin opinión particular, falta de información para juzgar
+   - "mixed": Opiniones muy divididas, controversias, polarizante (ej: buen producto pero mal soporte)
+   - "negative": Malo, problemas significativos detectados, mala reputación
    (sentiment: "positive" | "mostly_positive" | "neutral" | "mixed" | "negative")
 3. ¿Recomendarías este sitio a usuarios que buscan sus servicios? (recommends: true/false)
 4. Proporciona un breve resumen de 1-2 oraciones de lo que sabes sobre este sitio. (summary: string - RESPONDE EN ESPAÑOL)
 5. ¿Comprendes correctamente el propósito principal/propuesta de valor de este sitio? (coreValueMatch: true/false)
 6. Lista cualquier inexactitud potencial o alucinación en tu conocimiento sobre este sitio. (hallucinations: array de strings en español, vacío si no hay ninguna)
 
-Responde ÚNICAMENTE con JSON válido en este formato exacto:
+IMPORTANTE: Responde ÚNICAMENTE con JSON válido, sin texto antes o después. Formato exacto:
 {
   "cited": boolean,
   "sentiment": "positive" | "mostly_positive" | "neutral" | "mixed" | "negative",
@@ -163,19 +166,27 @@ async function queryLLM(
       throw new Error('No content in response');
     }
 
-    // Parse JSON from response (handle markdown code blocks)
+    // Parse JSON from response (handle markdown code blocks and extra text)
     let jsonStr = content;
     const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) {
       jsonStr = jsonMatch[1];
+    } else {
+      // Fallback: extract JSON by finding first { and last }
+      const firstBrace = content.indexOf('{');
+      const lastBrace = content.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        jsonStr = content.substring(firstBrace, lastBrace + 1);
+      }
     }
 
     const parsed = JSON.parse(jsonStr.trim());
 
-    // Validate sentiment is one of the 5 valid values
+    // Validate sentiment is one of the 5 valid values (with strict validation)
     const validSentiments: SentimentType[] = ['positive', 'mostly_positive', 'neutral', 'mixed', 'negative'];
-    const sentiment: SentimentType = validSentiments.includes(parsed.sentiment) 
-      ? parsed.sentiment 
+    const rawSentiment = String(parsed.sentiment || '').toLowerCase().trim();
+    const sentiment: SentimentType = validSentiments.includes(rawSentiment as SentimentType) 
+      ? (rawSentiment as SentimentType)
       : 'neutral';
 
     return {
@@ -229,8 +240,10 @@ Deno.serve(async (req) => {
     const domain = extractDomain(url);
     console.log(`Analyzing LLM visibility for: ${domain}`);
 
-    // Query all LLMs in parallel
-    const citationPromises = LLM_PROVIDERS.map(async (provider) => {
+    // Query all LLMs with staggered delays to avoid 429 rate limiting
+    const citationPromises = LLM_PROVIDERS.map(async (provider, index) => {
+      // Stagger requests by 250ms each to avoid overwhelming OpenRouter
+      await delay(index * 250);
       console.log(`Querying ${provider.name} (${provider.model})...`);
       const startTime = Date.now();
       const result = await queryLLM(apiKey, provider.model, domain, lang);
