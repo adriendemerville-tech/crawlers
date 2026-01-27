@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -16,14 +16,16 @@ import { LoadingSteps } from './LoadingSteps';
 import { StrategicInsights } from './StrategicInsights';
 import { IntroductionCard } from './IntroductionCard';
 import { ExpertInsightsCard } from './ExpertInsightsCard';
-import { EmailGateCard } from './EmailGateCard';
 import { ExpertReportPreviewModal } from './ExpertReportPreviewModal';
+import { StepperProgress } from './StepperProgress';
+import { RegistrationGate } from './RegistrationGate';
+import { PaymentModal } from './PaymentModal';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-const EMAIL_SESSION_KEY = 'crawlers_audit_email';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 function formatMs(ms: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
@@ -56,6 +58,9 @@ const translations = {
     generatedAt: 'Audit généré le',
     or: 'ou',
     viewReport: 'Rapport',
+    strategicSectionTitle: 'Analyse de Visibilité IA',
+    strategicSectionDesc: 'Résultats détaillés de GPT-4, Claude et Gemini.',
+    generateCode: 'Générer Code Correctif (5€)',
   },
   en: {
     badge: 'Expert SEO & AI Audit',
@@ -80,6 +85,9 @@ const translations = {
     generatedAt: 'Audit generated on',
     or: 'or',
     viewReport: 'Report',
+    strategicSectionTitle: 'AI Visibility Analysis',
+    strategicSectionDesc: 'Detailed results from GPT-4, Claude and Gemini.',
+    generateCode: 'Generate Corrective Code (€5)',
   },
   es: {
     badge: 'Auditoría Experta SEO e IA',
@@ -104,6 +112,9 @@ const translations = {
     generatedAt: 'Auditoría generada el',
     or: 'o',
     viewReport: 'Informe',
+    strategicSectionTitle: 'Análisis de Visibilidad IA',
+    strategicSectionDesc: 'Resultados detallados de GPT-4, Claude y Gemini.',
+    generateCode: 'Generar Código Correctivo (5€)',
   },
 };
 
@@ -113,23 +124,29 @@ export function ExpertAuditDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [isStrategicLoading, setIsStrategicLoading] = useState(false);
   const [result, setResult] = useState<ExpertAuditResult | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  
   const { toast } = useToast();
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const t = translations[language] || translations.fr;
 
-  // Check for existing email in session on mount
-  useEffect(() => {
-    const storedEmail = sessionStorage.getItem(EMAIL_SESSION_KEY);
-    if (storedEmail) {
-      setUserEmail(storedEmail);
-    }
-  }, []);
+  const isLoggedIn = !!user;
 
-  const handleEmailSubmit = (email: string) => {
-    sessionStorage.setItem(EMAIL_SESSION_KEY, email);
-    setUserEmail(email);
+  // Update step based on audit mode and result
+  useEffect(() => {
+    if (result && auditMode === 'strategic') {
+      setCurrentStep(2);
+    } else if (result && auditMode === 'technical') {
+      setCurrentStep(1);
+    }
+  }, [result, auditMode]);
+
+  const handleRegister = () => {
+    navigate('/auth');
   };
 
   const normalizeUrl = (input: string): string => {
@@ -150,16 +167,15 @@ export function ExpertAuditDashboard() {
     setAuditMode('technical');
     setIsLoading(true);
     setResult(null);
+    setCurrentStep(1);
 
     try {
-      // Call the new audit-expert-seo function
       const { data, error } = await supabase.functions.invoke('audit-expert-seo', {
         body: { url: normalizedUrl }
       });
 
       if (error) throw new Error(error.message);
       if (!data.success) {
-        // Handle RENDERING_REQUIRED error specifically
         if (data.error === 'RENDERING_REQUIRED') {
           throw new Error(`Rendu JavaScript requis: ${data.message || 'Site SPA non accessible sans navigateur'}`);
         }
@@ -167,7 +183,6 @@ export function ExpertAuditDashboard() {
       }
 
       const auditResult = data.data as ExpertAuditResult;
-      // Map scannedAt from meta if available
       if (auditResult.meta?.scannedAt && !auditResult.scannedAt) {
         auditResult.scannedAt = auditResult.meta.scannedAt;
       }
@@ -199,9 +214,9 @@ export function ExpertAuditDashboard() {
     setAuditMode('strategic');
     setIsStrategicLoading(true);
     setResult(null);
+    setCurrentStep(2);
 
     try {
-      // Run audit-strategique-ia directly (full strategic analysis)
       const { data, error } = await supabase.functions.invoke('audit-strategique-ia', {
         body: { url: normalizedUrl, toolsData: null }
       });
@@ -209,7 +224,6 @@ export function ExpertAuditDashboard() {
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Strategic audit failed');
 
-      // Create a minimal result structure for strategic display
       setResult({
         url: normalizedUrl,
         domain: new URL(normalizedUrl).hostname,
@@ -227,13 +241,11 @@ export function ExpertAuditDashboard() {
         scannedAt: data.data.scannedAt || new Date().toISOString(),
         strategicAnalysis: {
           introduction: data.data.introduction,
-          // New format fields
           brand_identity: data.data.brand_identity,
           market_positioning: data.data.market_positioning,
           geo_score: data.data.geo_score,
           strategic_roadmap: data.data.strategic_roadmap,
           executive_summary: data.data.executive_summary,
-          // Legacy format fields (for backward compatibility)
           brandPerception: data.data.brandPerception,
           geoAnalysis: data.data.geoAnalysis,
           llmVisibility: data.data.llmVisibility,
@@ -261,8 +273,20 @@ export function ExpertAuditDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-5xl">
+      {/* Stepper Progress - Only show when audit is started */}
+      <AnimatePresence>
+        {(auditMode || result) && (
+          <StepperProgress currentStep={currentStep} />
+        )}
+      </AnimatePresence>
+
       {/* Header - Premium SaaS style */}
-      <div className="text-center mb-10">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-center mb-10"
+      >
         <Badge variant="outline" className="mb-4 text-xs font-medium tracking-wide uppercase">
           <Sparkles className="h-3 w-3 mr-1.5" />
           {t.badge}
@@ -273,10 +297,15 @@ export function ExpertAuditDashboard() {
         <p className="text-muted-foreground max-w-xl mx-auto text-base">
           {t.subtitle}
         </p>
-      </div>
+      </motion.div>
 
       {/* URL Input - Clean minimal style */}
-      <div className="mb-8">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="mb-8"
+      >
         <div className="relative max-w-2xl mx-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -288,16 +317,21 @@ export function ExpertAuditDashboard() {
             disabled={isLoading || isStrategicLoading}
           />
         </div>
-      </div>
+      </motion.div>
 
       {/* Audit Type Selection - Premium Cards */}
-      <div className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto mb-8">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto mb-8"
+      >
         {/* Technical Audit */}
         <Card 
-          className={`relative overflow-hidden transition-all cursor-pointer ${
+          className={`relative overflow-hidden transition-all duration-300 cursor-pointer ${
             auditMode === 'technical' 
               ? 'border-2 border-amber-400 shadow-[0_0_10px_-3px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)]' 
-              : 'border-border/60 hover:border-primary/50'
+              : 'border-border/60 hover:border-primary/50 hover:shadow-md'
           }`}
           onClick={() => !isLoading && !isStrategicLoading && setAuditMode('technical')}
         >
@@ -315,24 +349,33 @@ export function ExpertAuditDashboard() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{t.technicalDesc}</p>
               </div>
             </div>
-            {auditMode === 'technical' && (
-              <Button 
-                onClick={(e) => { e.stopPropagation(); handleTechnicalAudit(); }}
-                disabled={isLoading || isStrategicLoading || !url.trim()}
-                className="w-full mt-4 bg-primary hover:bg-primary/90 shadow-[2px_2px_6px_rgba(0,0,0,0.35)]"
-              >
-                {isLoading && auditMode === 'technical' ? t.analyzing : t.launch}
-              </Button>
-            )}
+            <AnimatePresence>
+              {auditMode === 'technical' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Button 
+                    onClick={(e) => { e.stopPropagation(); handleTechnicalAudit(); }}
+                    disabled={isLoading || isStrategicLoading || !url.trim()}
+                    className="w-full mt-4 shadow-[2px_2px_6px_rgba(0,0,0,0.35)]"
+                  >
+                    {isLoading && auditMode === 'technical' ? t.analyzing : t.launch}
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </CardContent>
         </Card>
 
         {/* Strategic Audit */}
         <Card 
-          className={`relative overflow-hidden transition-all cursor-pointer ${
+          className={`relative overflow-hidden transition-all duration-300 cursor-pointer ${
             auditMode === 'strategic' 
               ? 'border-2 border-amber-400 shadow-[0_0_10px_-3px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)]' 
-              : 'border-border/60 hover:border-primary/50'
+              : 'border-border/60 hover:border-primary/50 hover:shadow-md'
           }`}
           onClick={() => !isLoading && !isStrategicLoading && setAuditMode('strategic')}
         >
@@ -350,18 +393,28 @@ export function ExpertAuditDashboard() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{t.strategicDesc}</p>
               </div>
             </div>
-            {auditMode === 'strategic' && (
-              <Button 
-                onClick={(e) => { e.stopPropagation(); handleStrategicAudit(); }}
-                disabled={isLoading || isStrategicLoading || !url.trim()}
-                className="w-full mt-4 bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-[2px_2px_6px_rgba(0,0,0,0.35)]"
-              >
-                {isStrategicLoading ? t.analyzing : t.launch}
-              </Button>
-            )}
+            <AnimatePresence>
+              {auditMode === 'strategic' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Button 
+                    onClick={(e) => { e.stopPropagation(); handleStrategicAudit(); }}
+                    disabled={isLoading || isStrategicLoading || !url.trim()}
+                    variant="secondary"
+                    className="w-full mt-4 shadow-[2px_2px_6px_rgba(0,0,0,0.35)]"
+                  >
+                    {isStrategicLoading ? t.analyzing : t.launch}
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
 
       {/* Loading State - Technical */}
       {isLoading && <LoadingSteps siteName={url} variant="technical" />}
@@ -370,25 +423,22 @@ export function ExpertAuditDashboard() {
       {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" />}
 
       {/* Results */}
-      {result && !isLoading && (
+      {result && !isLoading && !isStrategicLoading && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="space-y-8"
         >
-          {/* Introduction en premier - Toujours en haut (AVANT le gate email) */}
-          {result.introduction && auditMode === 'technical' && (
-            <IntroductionCard introduction={result.introduction} variant="technical" />
-          )}
-          {result.strategicAnalysis?.introduction && auditMode === 'strategic' && (
-            <IntroductionCard introduction={result.strategicAnalysis.introduction} variant="strategic" />
-          )}
-
-          {/* === TECHNICAL AUDIT TEASER (before blur) === */}
+          {/* === STEP 1: TECHNICAL AUDIT SECTION === */}
           {auditMode === 'technical' && (
             <>
-              {/* Hero Score - Visible */}
+              {/* Introduction */}
+              {result.introduction && (
+                <IntroductionCard introduction={result.introduction} variant="technical" />
+              )}
+
+              {/* Hero Score */}
               <Card className="bg-gradient-to-br from-card via-card to-muted/30 border-2">
                 <CardContent className="p-8">
                   <div className="flex flex-col md:flex-row items-center justify-between gap-8">
@@ -405,9 +455,9 @@ export function ExpertAuditDashboard() {
                       <div className="mt-4 space-y-1">
                         <p className="text-sm text-muted-foreground">Score Global</p>
                         <p className="text-lg">
-                          {result.totalScore < 100 && <span className="text-destructive font-medium">À améliorer</span>}
-                          {result.totalScore >= 100 && result.totalScore < 150 && <span className="text-warning font-medium">Correct</span>}
-                          {result.totalScore >= 150 && <span className="text-success font-medium">Excellent</span>}
+                          {result.totalScore < 100 && <span className="text-destructive font-medium">{t.toImprove}</span>}
+                          {result.totalScore >= 100 && result.totalScore < 150 && <span className="text-warning font-medium">{t.correct}</span>}
+                          {result.totalScore >= 150 && <span className="text-success font-medium">{t.excellent}</span>}
                         </p>
                       </div>
                     </div>
@@ -416,218 +466,203 @@ export function ExpertAuditDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Performance Card Header Teaser - Half visible */}
-              <Card className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <span className="text-blue-500"><Zap className="h-5 w-5" /></span>
-                      Performance
-                    </CardTitle>
-                    <Badge variant="outline" className={cn('text-sm font-bold', 
-                      (result.scores.performance.score / result.scores.performance.maxScore) >= 0.8 ? 'text-success' : 
-                      (result.scores.performance.score / result.scores.performance.maxScore) >= 0.5 ? 'text-warning' : 'text-destructive'
-                    )}>
-                      {result.scores.performance.score}/{result.scores.performance.maxScore}
-                    </Badge>
-                  </div>
-                  <div className="relative h-2 mt-2 bg-muted rounded-full overflow-hidden">
-                    <div 
-                      className={cn("h-full transition-all duration-500 rounded-full", 
-                        (result.scores.performance.score / result.scores.performance.maxScore) >= 0.8 ? 'bg-success' : 
-                        (result.scores.performance.score / result.scores.performance.maxScore) >= 0.5 ? 'bg-warning' : 'bg-destructive'
-                      )}
-                      style={{ width: `${Math.min((result.scores.performance.score / result.scores.performance.maxScore) * 100, 100)}%` }}
-                    />
-                  </div>
-                </CardHeader>
-                {/* Content fades out */}
-                <CardContent className="space-y-2 relative">
+              {/* Category Cards Grid */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {/* Performance */}
+                <CategoryCard
+                  icon={<Zap className="h-5 w-5" />}
+                  title="Performance"
+                  score={result.scores.performance.score}
+                  maxScore={result.scores.performance.maxScore}
+                  variant="performance"
+                >
                   <MetricRow 
                     label="Score PSI" 
                     value={`${result.scores.performance.psiPerformance}%`} 
                     status={result.scores.performance.psiPerformance >= 90 ? 'good' : result.scores.performance.psiPerformance >= 50 ? 'warning' : 'bad'}
                   />
-                  {/* Gradient fade overlay */}
-                  {!userEmail && (
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/70 to-background pointer-events-none" />
+                  <MetricRow label="LCP" value={formatMs(result.scores.performance.lcp)} status={result.scores.performance.lcp <= 2500 ? 'good' : 'warning'} />
+                  <MetricRow label="CLS" value={result.scores.performance.cls.toFixed(2)} status={result.scores.performance.cls <= 0.1 ? 'good' : 'warning'} />
+                  <MetricRow label="TBT" value={formatMs(result.scores.performance.tbt)} status={result.scores.performance.tbt <= 200 ? 'good' : 'warning'} />
+                </CategoryCard>
+
+                {/* Technical */}
+                <CategoryCard
+                  icon={<Settings2 className="h-5 w-5" />}
+                  title="Socle Technique"
+                  score={result.scores.technical.score}
+                  maxScore={result.scores.technical.maxScore}
+                  variant="technical"
+                >
+                  <MetricRow 
+                    label="Score SEO PSI" 
+                    value={`${result.scores.technical.psiSeo}%`} 
+                    status={result.scores.technical.psiSeo >= 90 ? 'good' : result.scores.technical.psiSeo >= 70 ? 'warning' : 'bad'}
+                  />
+                  <MetricRow label="Status HTTP" value={result.scores.technical.httpStatus} status="good" />
+                  <MetricRow label="HTTPS" value={result.scores.technical.isHttps} />
+                </CategoryCard>
+
+                {/* Semantic */}
+                <CategoryCard
+                  icon={<FileText className="h-5 w-5" />}
+                  title="Sémantique & Contenu"
+                  score={result.scores.semantic.score}
+                  maxScore={result.scores.semantic.maxScore}
+                  variant="semantic"
+                >
+                  <MetricRow 
+                    label="Balise Title" 
+                    value={result.scores.semantic.hasTitle ? `${result.scores.semantic.titleLength} car.` : 'Absente'} 
+                    status={result.scores.semantic.hasTitle && result.scores.semantic.titleLength <= 70 ? 'good' : 'bad'}
+                  />
+                  <MetricRow label="Meta Description" value={result.scores.semantic.hasMetaDesc} />
+                  <MetricRow 
+                    label="H1 unique" 
+                    value={result.scores.semantic.hasUniqueH1 ? 'Oui' : `${result.scores.semantic.h1Count} trouvés`} 
+                    status={result.scores.semantic.hasUniqueH1 ? 'good' : 'bad'}
+                  />
+                  <MetricRow 
+                    label="Contenu" 
+                    value={`~${result.scores.semantic.wordCount} mots`} 
+                    status={result.scores.semantic.wordCount >= 500 ? 'good' : 'warning'}
+                  />
+                </CategoryCard>
+
+                {/* AI Ready */}
+                <CategoryCard
+                  icon={<Brain className="h-5 w-5" />}
+                  title="Préparation IA & GEO"
+                  score={result.scores.aiReady.score}
+                  maxScore={result.scores.aiReady.maxScore}
+                  variant="ai"
+                >
+                  <MetricRow label="Schema.org (JSON-LD)" value={result.scores.aiReady.hasSchemaOrg} />
+                  {result.scores.aiReady.schemaTypes.length > 0 && (
+                    <div className="flex flex-wrap gap-1 py-1">
+                      {result.scores.aiReady.schemaTypes.slice(0, 3).map((type) => (
+                        <Badge key={type} variant="secondary" className="text-xs">{type}</Badge>
+                      ))}
+                    </div>
                   )}
-                </CardContent>
-              </Card>
+                  <MetricRow label="Robots.txt" value={result.scores.aiReady.hasRobotsTxt} />
+                  <MetricRow 
+                    label="Permissif aux bots" 
+                    value={result.scores.aiReady.robotsPermissive} 
+                    status={result.scores.aiReady.robotsPermissive ? 'good' : 'warning'}
+                  />
+                </CategoryCard>
+
+                {/* Security */}
+                <CategoryCard
+                  icon={<Shield className="h-5 w-5" />}
+                  title="Santé & Sécurité"
+                  score={result.scores.security.score}
+                  maxScore={result.scores.security.maxScore}
+                  variant="security"
+                >
+                  <MetricRow label="HTTPS activé" value={result.scores.security.isHttps} />
+                  <MetricRow 
+                    label="Safe Browsing" 
+                    value={result.scores.security.safeBrowsingOk ? 'OK' : 'Menaces détectées'} 
+                    status={result.scores.security.safeBrowsingOk ? 'good' : 'bad'}
+                  />
+                  {result.scores.security.threats.length > 0 && (
+                    <div className="text-xs text-destructive">
+                      Menaces : {result.scores.security.threats.join(', ')}
+                    </div>
+                  )}
+                </CategoryCard>
+              </div>
+
+              {/* Expert Insights Card */}
+              {result.insights && (
+                <ExpertInsightsCard insights={result.insights} />
+              )}
+
+              {/* Recommendations */}
+              <RecommendationList recommendations={result.recommendations} />
             </>
           )}
 
-          {/* === STRATEGIC AUDIT TEASER (before blur) === */}
-          {auditMode === 'strategic' && (() => {
-            const executiveSummary = result.strategicAnalysis?.executive_summary || result.strategicAnalysis?.executiveSummary;
-            if (executiveSummary) {
-              const firstSentence = executiveSummary.split(/[.!?]/)[0] + '.';
-              return (
-                <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      Synthèse Exécutive
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {firstSentence}
-                      {!userEmail && <span className="text-muted-foreground/50">...</span>}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            }
-            return null;
-          })()}
-
-          {/* Email Gate - Displayed after teaser content */}
-          {!userEmail && (
-            <EmailGateCard onEmailSubmit={handleEmailSubmit} />
-          )}
-
-          {/* Blurred Content when not authenticated */}
-          <div className="relative">
-            {/* Blur overlay */}
-            {!userEmail && (
-              <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-md rounded-lg pointer-events-none" />
-            )}
-
-            {/* Content that gets blurred/unblurred */}
-            <div className={`space-y-8 ${!userEmail ? 'pointer-events-none select-none' : ''}`}>
-              
-              {/* === TECHNICAL AUDIT CONTENT (continued - blurred) === */}
-              {auditMode === 'technical' && (
-                <>
-                  {/* Category Cards Grid - Starting from Technical (Performance teaser shown above) */}
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-
-                    {/* Technical */}
-                    <CategoryCard
-                      icon={<Settings2 className="h-5 w-5" />}
-                      title="Socle Technique"
-                      score={result.scores.technical.score}
-                      maxScore={result.scores.technical.maxScore}
-                      variant="technical"
+          {/* === STEP 2: STRATEGIC AUDIT SECTION (with Registration Gate) === */}
+          {auditMode === 'strategic' && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="relative"
+            >
+              {/* Header Desktop : Titre + Bouton d'action */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">{t.strategicSectionTitle}</h2>
+                  <p className="text-muted-foreground">{t.strategicSectionDesc}</p>
+                </div>
+                
+                {/* BOUTON D'ACTION PAYANT - HAUT DROITE */}
+                {isLoggedIn && (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Button 
+                      onClick={() => setIsPaymentModalOpen(true)}
+                      className="bg-primary hover:bg-primary/90 shadow-lg flex items-center gap-2"
                     >
-                      <MetricRow 
-                        label="Score SEO PSI" 
-                        value={`${result.scores.technical.psiSeo}%`} 
-                        status={result.scores.technical.psiSeo >= 90 ? 'good' : result.scores.technical.psiSeo >= 70 ? 'warning' : 'bad'}
-                      />
-                      <MetricRow label="Status HTTP" value={result.scores.technical.httpStatus} status="good" />
-                      <MetricRow label="HTTPS" value={result.scores.technical.isHttps} />
-                    </CategoryCard>
+                      <Sparkles className="w-4 h-4" />
+                      {t.generateCode}
+                    </Button>
+                  </motion.div>
+                )}
+              </div>
 
-                    {/* Semantic */}
-                    <CategoryCard
-                      icon={<FileText className="h-5 w-5" />}
-                      title="Sémantique & Contenu"
-                      score={result.scores.semantic.score}
-                      maxScore={result.scores.semantic.maxScore}
-                      variant="semantic"
-                    >
-                      <MetricRow 
-                        label="Balise Title" 
-                        value={result.scores.semantic.hasTitle ? `${result.scores.semantic.titleLength} car.` : 'Absente'} 
-                        status={result.scores.semantic.hasTitle && result.scores.semantic.titleLength <= 70 ? 'good' : 'bad'}
-                      />
-                      <MetricRow label="Meta Description" value={result.scores.semantic.hasMetaDesc} />
-                      <MetricRow 
-                        label="H1 unique" 
-                        value={result.scores.semantic.hasUniqueH1 ? 'Oui' : `${result.scores.semantic.h1Count} trouvés`} 
-                        status={result.scores.semantic.hasUniqueH1 ? 'good' : 'bad'}
-                      />
-                      <MetricRow 
-                        label="Contenu" 
-                        value={`~${result.scores.semantic.wordCount} mots`} 
-                        status={result.scores.semantic.wordCount >= 500 ? 'good' : 'warning'}
-                      />
-                    </CategoryCard>
-
-                    {/* AI Ready */}
-                    <CategoryCard
-                      icon={<Brain className="h-5 w-5" />}
-                      title="Préparation IA & GEO"
-                      score={result.scores.aiReady.score}
-                      maxScore={result.scores.aiReady.maxScore}
-                      variant="ai"
-                    >
-                      <MetricRow label="Schema.org (JSON-LD)" value={result.scores.aiReady.hasSchemaOrg} />
-                      {result.scores.aiReady.schemaTypes.length > 0 && (
-                        <div className="flex flex-wrap gap-1 py-1">
-                          {result.scores.aiReady.schemaTypes.slice(0, 3).map((type) => (
-                            <Badge key={type} variant="secondary" className="text-xs">{type}</Badge>
-                          ))}
-                        </div>
-                      )}
-                      <MetricRow label="Robots.txt" value={result.scores.aiReady.hasRobotsTxt} />
-                      <MetricRow 
-                        label="Permissif aux bots" 
-                        value={result.scores.aiReady.robotsPermissive} 
-                        status={result.scores.aiReady.robotsPermissive ? 'good' : 'warning'}
-                      />
-                    </CategoryCard>
-
-                    {/* Security */}
-                    <CategoryCard
-                      icon={<Shield className="h-5 w-5" />}
-                      title="Santé & Sécurité"
-                      score={result.scores.security.score}
-                      maxScore={result.scores.security.maxScore}
-                      variant="security"
-                    >
-                      <MetricRow label="HTTPS activé" value={result.scores.security.isHttps} />
-                      <MetricRow 
-                        label="Safe Browsing" 
-                        value={result.scores.security.safeBrowsingOk ? 'OK' : 'Menaces détectées'} 
-                        status={result.scores.security.safeBrowsingOk ? 'good' : 'bad'}
-                      />
-                      {result.scores.security.threats.length > 0 && (
-                        <div className="text-xs text-destructive">
-                          Menaces : {result.scores.security.threats.join(', ')}
-                        </div>
-                      )}
-                    </CategoryCard>
-                  </div>
-
-                  {/* Expert Insights Card - Only for technical audit */}
-                  {result.insights && (
-                    <ExpertInsightsCard insights={result.insights} />
-                  )}
-
-                  {/* Recommendations */}
-                  <RecommendationList recommendations={result.recommendations} />
-                </>
+              {/* Introduction - Toujours visible */}
+              {result.strategicAnalysis?.introduction && (
+                <IntroductionCard introduction={result.strategicAnalysis.introduction} variant="strategic" />
               )}
 
-              {/* === STRATEGIC AUDIT CONTENT === */}
-              {auditMode === 'strategic' && (
-                <>
-                  {/* Strategic Insights - Brand Identity, GEO Score, Roadmap (executive summary already shown above) */}
-                  {result.strategicAnalysis && !isStrategicLoading && (
+              {/* Zone de Contenu Protégée */}
+              <div className="relative min-h-[400px] mt-6">
+                {/* Le contenu existant (Flouté si pas loggé) */}
+                <div className={cn(
+                  "transition-all duration-500 space-y-6",
+                  !isLoggedIn && "filter blur-md pointer-events-none select-none opacity-50"
+                )}>
+                  {/* Strategic Insights */}
+                  {result.strategicAnalysis && (
                     <StrategicInsights analysis={result.strategicAnalysis} hideExecutiveSummary={true} />
                   )}
-                </>
-              )}
+                </div>
 
-              {/* Timestamp + Report Button */}
-              <div className="flex flex-col items-center gap-4">
-                <p className="text-xs text-muted-foreground">
-                  {t.generatedAt} {new Date(result.scannedAt).toLocaleString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
-                </p>
-                <Button
-                  onClick={() => setIsReportModalOpen(true)}
-                  variant="outline"
-                  className="gap-2"
-                >
-                  <FileDown className="h-4 w-4" />
-                  {t.viewReport}
-                </Button>
+                {/* La Carte d'Inscription (Apparaît par-dessus si pas loggé) */}
+                {!isLoggedIn && (
+                  <RegistrationGate onRegister={handleRegister} />
+                )}
               </div>
-            </div>
-          </div>
+            </motion.div>
+          )}
+
+          {/* Timestamp + Report Button */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="flex flex-col items-center gap-4 pt-4"
+          >
+            <p className="text-xs text-muted-foreground">
+              {t.generatedAt} {new Date(result.scannedAt).toLocaleString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
+            </p>
+            <Button
+              onClick={() => setIsReportModalOpen(true)}
+              variant="outline"
+              className="gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              {t.viewReport}
+            </Button>
+          </motion.div>
         </motion.div>
       )}
 
@@ -640,6 +675,14 @@ export function ExpertAuditDashboard() {
           auditMode={auditMode}
         />
       )}
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        siteUrl={result?.url || url}
+        siteName={result?.domain || url}
+      />
     </div>
   );
 }
