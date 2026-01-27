@@ -521,30 +521,9 @@ Deno.serve(async (req) => {
     const selfAudit = performSelfAudit(doc, pageHtml.length);
     console.log('[GEO-AUDIT] Self-audit result:', selfAudit);
 
-    if (!selfAudit.isReliable && selfAudit.reliabilityScore < 0.3) {
-      // Échec critique - on ne peut pas auditer
-      return new Response(
-        JSON.stringify({
-          success: false,
-          reliabilityScore: selfAudit.reliabilityScore,
-          blockingError: selfAudit.reason,
-          data: {
-            url: normalizedUrl,
-            totalScore: 0,
-            factors: [],
-            renderingInfo: detectSPAMarkers(doc),
-            scannedAt: new Date().toISOString(),
-            auditMetadata: {
-              htmlLength: pageHtml.length,
-              textLength: doc.body?.textContent?.trim().length || 0,
-              reliabilityScore: selfAudit.reliabilityScore,
-              selfAuditPassed: false
-            }
-          }
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // IMPORTANT: Même pour les SPA, on continue l'analyse avec les données disponibles
+    // (robots.txt, meta tags dans le head, etc.) mais on ajuste le score final
+    const isSPAWithLimitedContent = !selfAudit.isReliable && selfAudit.reliabilityScore < 0.3;
 
     // =========================================================================
     // ÉTAPE 2 : ANALYSE COMPLÈTE
@@ -622,29 +601,39 @@ Deno.serve(async (req) => {
     });
 
     // Factor 4: Content Structure (15 points)
+    // Pour les SPA sans SSR, on donne un score neutre car l'analyse n'est pas fiable
     let contentScore = 0;
     const contentIssues: string[] = [];
     
-    if (spaInfo.isSPA && !spaInfo.hasSSR) {
+    if (isSPAWithLimitedContent) {
+      // SPA détecté : on ne peut pas analyser le contenu, score neutre
+      contentScore = 8; // Score moyen pour ne pas pénaliser
       contentIssues.push(t.factors.contentStructure.spaWarning(spaInfo.framework || 'SPA'));
-    }
-    
-    if (contentResult.hasH1) contentScore += 5;
-    if (contentResult.headingsCount >= 3) contentScore += 5;
-    if (contentResult.wordCount >= 300) contentScore += 5;
-    
-    if (!contentResult.hasH1) contentIssues.push(t.factors.contentStructure.addH1);
-    if (contentResult.headingsCount < 3) contentIssues.push(t.factors.contentStructure.moreHeadings);
-    if (contentResult.wordCount < 300) {
+    } else {
       if (spaInfo.isSPA && !spaInfo.hasSSR) {
-        contentIssues.push(t.factors.contentStructure.lowWordCountSPA);
-      } else {
-        contentIssues.push(t.factors.contentStructure.moreContent);
+        contentIssues.push(t.factors.contentStructure.spaWarning(spaInfo.framework || 'SPA'));
+      }
+      
+      if (contentResult.hasH1) contentScore += 5;
+      if (contentResult.headingsCount >= 3) contentScore += 5;
+      if (contentResult.wordCount >= 300) contentScore += 5;
+      
+      if (!contentResult.hasH1) contentIssues.push(t.factors.contentStructure.addH1);
+      if (contentResult.headingsCount < 3) contentIssues.push(t.factors.contentStructure.moreHeadings);
+      if (contentResult.wordCount < 300) {
+        if (spaInfo.isSPA && !spaInfo.hasSSR) {
+          contentIssues.push(t.factors.contentStructure.lowWordCountSPA);
+        } else {
+          contentIssues.push(t.factors.contentStructure.moreContent);
+        }
       }
     }
     
-    let contentDetails = `H1: ${contentResult.hasH1 ? '✓' : '✗'} (${contentResult.h1Count}) | Headings: ${contentResult.headingsCount} | Words: ~${contentResult.wordCount}`;
-    if (spaInfo.framework) {
+    let contentDetails = isSPAWithLimitedContent
+      ? `⚠️ SPA détecté - analyse limitée | ${spaInfo.framework || 'JavaScript'} (CSR)`
+      : `H1: ${contentResult.hasH1 ? '✓' : '✗'} (${contentResult.h1Count}) | Headings: ${contentResult.headingsCount} | Words: ~${contentResult.wordCount}`;
+    
+    if (!isSPAWithLimitedContent && spaInfo.framework) {
       contentDetails += ` | ${spaInfo.framework}${spaInfo.hasSSR ? ' (SSR)' : ' (CSR)'}`;
     }
     
@@ -654,28 +643,45 @@ Deno.serve(async (req) => {
       description: t.factors.contentStructure.description,
       score: contentScore,
       maxScore: 15,
-      status: contentScore >= 12 ? 'good' : contentScore >= 8 ? 'warning' : 'error',
+      status: isSPAWithLimitedContent ? 'warning' : (contentScore >= 12 ? 'good' : contentScore >= 8 ? 'warning' : 'error'),
       recommendation: contentIssues.length > 0 ? contentIssues.join('. ') : undefined,
       details: contentDetails
     });
 
     // Factor 5: Image Alt Text (10 points)
-    const altScore = contentResult.imagesTotal === 0 
-      ? 10 
-      : Math.round((contentResult.imagesWithAlt / contentResult.imagesTotal) * 10);
+    // Pour les SPA, on donne un score neutre car les images sont chargées en JS
+    let altScore: number;
+    let altDetails: string;
+    let altStatus: 'good' | 'warning' | 'error';
+    let altRecommendation: string | undefined;
+    
+    if (isSPAWithLimitedContent) {
+      altScore = 5; // Score neutre
+      altDetails = '⚠️ SPA détecté - images non analysables sans rendu JS';
+      altStatus = 'warning';
+      altRecommendation = undefined;
+    } else {
+      altScore = contentResult.imagesTotal === 0 
+        ? 10 
+        : Math.round((contentResult.imagesWithAlt / contentResult.imagesTotal) * 10);
+      altDetails = contentResult.imagesTotal === 0 
+        ? t.details.noImages 
+        : t.details.imagesWithAlt(contentResult.imagesWithAlt, contentResult.imagesTotal);
+      altStatus = altScore >= 8 ? 'good' : altScore >= 5 ? 'warning' : 'error';
+      altRecommendation = altScore < 10 && contentResult.imagesTotal > 0
+        ? t.factors.imageAlt.recommendation(contentResult.imagesTotal - contentResult.imagesWithAlt)
+        : undefined;
+    }
+    
     factors.push({
       id: 'image-alt',
       name: t.factors.imageAlt.name,
       description: t.factors.imageAlt.description,
       score: altScore,
       maxScore: 10,
-      status: altScore >= 8 ? 'good' : altScore >= 5 ? 'warning' : 'error',
-      recommendation: altScore < 10 && contentResult.imagesTotal > 0
-        ? t.factors.imageAlt.recommendation(contentResult.imagesTotal - contentResult.imagesWithAlt)
-        : undefined,
-      details: contentResult.imagesTotal === 0 
-        ? t.details.noImages 
-        : t.details.imagesWithAlt(contentResult.imagesWithAlt, contentResult.imagesTotal)
+      status: altStatus,
+      recommendation: altRecommendation,
+      details: altDetails
     });
 
     // Factor 6: Open Graph (10 points)
