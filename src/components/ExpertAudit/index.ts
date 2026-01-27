@@ -13,6 +13,9 @@ import { GeoScoreVisualization } from './GeoScoreVisualization';
 import { StrategicRoadmapCard } from './StrategicRoadmapCard';
 import { BrandIdentityCard } from './BrandIdentityCard';
 import { EmailGateCard } from './EmailGateCard';
+import { StepperProgress } from './StepperProgress';
+import { RegistrationGate } from './RegistrationGate';
+import { PaymentModal } from './PaymentModal';
 
 export {
   ExpertAuditDashboard,
@@ -31,4 +34,7 @@ export {
   StrategicRoadmapCard,
   BrandIdentityCard,
   EmailGateCard,
+  StepperProgress,
+  RegistrationGate,
+  PaymentModal,
 };
