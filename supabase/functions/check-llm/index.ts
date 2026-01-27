@@ -32,21 +32,29 @@ function extractDomain(url: string): string {
   }
 }
 
+type SentimentType = 'positive' | 'mostly_positive' | 'neutral' | 'mixed' | 'negative';
+
 interface LLMResponse {
   cited: boolean;
-  sentiment: 'positive' | 'neutral' | 'negative';
+  sentiment: SentimentType;
   recommends: boolean;
   summary: string;
   coreValueMatch: boolean;
   hallucinations?: string[];
 }
 
-// Prompts traduits par langue
+// Prompts traduits par langue avec 5 niveaux de sentiment
 const llmPrompts: Record<Language, (domain: string) => string> = {
   fr: (domain) => `Tu analyses le site web/marque "${domain}". Réponds à ces questions au format JSON :
 
 1. Connais-tu ce site web/cette marque ? (cited: true/false)
-2. Quel est ton sentiment général sur ce site ? (sentiment: "positive", "neutral", ou "negative")
+2. Quel est ton sentiment général sur ce site ? Choisis parmi ces 5 options :
+   - "positive" : Très bon, recommandé sans réserve
+   - "mostly_positive" : Plutôt bon, avec quelques réserves mineures
+   - "neutral" : Pas d'opinion particulière, manque d'informations
+   - "mixed" : Avis partagés, controverses ou opinions contradictoires
+   - "negative" : Mauvais, problèmes significatifs détectés
+   (sentiment: "positive" | "mostly_positive" | "neutral" | "mixed" | "negative")
 3. Recommanderais-tu ce site aux utilisateurs recherchant ses services ? (recommends: true/false)
 4. Fournis un bref résumé en 1-2 phrases de ce que tu sais sur ce site. (summary: string - RÉPONDS EN FRANÇAIS)
 5. Comprends-tu correctement l'objectif principal/la proposition de valeur de ce site ? (coreValueMatch: true/false)
@@ -55,7 +63,7 @@ const llmPrompts: Record<Language, (domain: string) => string> = {
 Réponds UNIQUEMENT avec du JSON valide dans ce format exact :
 {
   "cited": boolean,
-  "sentiment": "positive" | "neutral" | "negative",
+  "sentiment": "positive" | "mostly_positive" | "neutral" | "mixed" | "negative",
   "recommends": boolean,
   "summary": "string en français",
   "coreValueMatch": boolean,
@@ -64,7 +72,13 @@ Réponds UNIQUEMENT avec du JSON valide dans ce format exact :
   en: (domain) => `You are analyzing the website/brand "${domain}". Answer these questions in JSON format:
 
 1. Are you aware of this website/brand? (cited: true/false)
-2. What is your overall sentiment about this site? (sentiment: "positive", "neutral", or "negative")
+2. What is your overall sentiment about this site? Choose from these 5 options:
+   - "positive": Very good, recommended without reservation
+   - "mostly_positive": Mostly good, with some minor reservations
+   - "neutral": No particular opinion, lack of information
+   - "mixed": Mixed opinions, controversies or contradictory views
+   - "negative": Bad, significant problems detected
+   (sentiment: "positive" | "mostly_positive" | "neutral" | "mixed" | "negative")
 3. Would you recommend this site to users looking for its services? (recommends: true/false)
 4. Provide a brief 1-2 sentence summary of what you know about this site. (summary: string - RESPOND IN ENGLISH)
 5. Do you understand the core purpose/value proposition of this site correctly? (coreValueMatch: true/false)
@@ -73,7 +87,7 @@ Réponds UNIQUEMENT avec du JSON valide dans ce format exact :
 Respond ONLY with valid JSON in this exact format:
 {
   "cited": boolean,
-  "sentiment": "positive" | "neutral" | "negative",
+  "sentiment": "positive" | "mostly_positive" | "neutral" | "mixed" | "negative",
   "recommends": boolean,
   "summary": "string in English",
   "coreValueMatch": boolean,
@@ -82,7 +96,13 @@ Respond ONLY with valid JSON in this exact format:
   es: (domain) => `Estás analizando el sitio web/marca "${domain}". Responde a estas preguntas en formato JSON:
 
 1. ¿Conoces este sitio web/marca? (cited: true/false)
-2. ¿Cuál es tu sentimiento general sobre este sitio? (sentiment: "positive", "neutral", o "negative")
+2. ¿Cuál es tu sentimiento general sobre este sitio? Elige entre estas 5 opciones:
+   - "positive": Muy bueno, recomendado sin reservas
+   - "mostly_positive": Mayormente bueno, con algunas reservas menores
+   - "neutral": Sin opinión particular, falta de información
+   - "mixed": Opiniones mixtas, controversias o puntos de vista contradictorios
+   - "negative": Malo, problemas significativos detectados
+   (sentiment: "positive" | "mostly_positive" | "neutral" | "mixed" | "negative")
 3. ¿Recomendarías este sitio a usuarios que buscan sus servicios? (recommends: true/false)
 4. Proporciona un breve resumen de 1-2 oraciones de lo que sabes sobre este sitio. (summary: string - RESPONDE EN ESPAÑOL)
 5. ¿Comprendes correctamente el propósito principal/propuesta de valor de este sitio? (coreValueMatch: true/false)
@@ -91,7 +111,7 @@ Respond ONLY with valid JSON in this exact format:
 Responde ÚNICAMENTE con JSON válido en este formato exacto:
 {
   "cited": boolean,
-  "sentiment": "positive" | "neutral" | "negative",
+  "sentiment": "positive" | "mostly_positive" | "neutral" | "mixed" | "negative",
   "recommends": boolean,
   "summary": "string en español",
   "coreValueMatch": boolean,
@@ -152,9 +172,15 @@ async function queryLLM(
 
     const parsed = JSON.parse(jsonStr.trim());
 
+    // Validate sentiment is one of the 5 valid values
+    const validSentiments: SentimentType[] = ['positive', 'mostly_positive', 'neutral', 'mixed', 'negative'];
+    const sentiment: SentimentType = validSentiments.includes(parsed.sentiment) 
+      ? parsed.sentiment 
+      : 'neutral';
+
     return {
       cited: Boolean(parsed.cited),
-      sentiment: parsed.sentiment || 'neutral',
+      sentiment,
       recommends: Boolean(parsed.recommends),
       summary: parsed.summary || `Analysis of ${domain}`,
       coreValueMatch: Boolean(parsed.coreValueMatch),
@@ -236,21 +262,46 @@ Deno.serve(async (req) => {
       ? citations.filter(c => c.cited).reduce((sum, c) => sum + c.iterationDepth, 0) / citedCount
       : 0;
 
-    const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
-    citations.filter(c => c.cited).forEach(c => sentimentCounts[c.sentiment]++);
+    const sentimentCounts: Record<SentimentType, number> = { 
+      positive: 0, 
+      mostly_positive: 0, 
+      neutral: 0, 
+      mixed: 0, 
+      negative: 0 
+    };
+    citations.filter(c => c.cited).forEach(c => {
+      if (sentimentCounts[c.sentiment] !== undefined) {
+        sentimentCounts[c.sentiment]++;
+      }
+    });
 
-    let overallSentiment: 'positive' | 'neutral' | 'negative' = 'neutral';
-    if (sentimentCounts.positive > sentimentCounts.negative && sentimentCounts.positive > sentimentCounts.neutral) {
-      overallSentiment = 'positive';
-    } else if (sentimentCounts.negative > sentimentCounts.positive) {
+    // Determine overall sentiment based on 5-level scale
+    let overallSentiment: SentimentType = 'neutral';
+    const positiveTotal = sentimentCounts.positive + sentimentCounts.mostly_positive;
+    const negativeTotal = sentimentCounts.negative;
+    const mixedTotal = sentimentCounts.mixed;
+    
+    if (mixedTotal > positiveTotal && mixedTotal > negativeTotal && mixedTotal > sentimentCounts.neutral) {
+      overallSentiment = 'mixed';
+    } else if (positiveTotal > negativeTotal && positiveTotal > sentimentCounts.neutral) {
+      // More positive than negative - determine if "positive" or "mostly_positive"
+      overallSentiment = sentimentCounts.positive >= sentimentCounts.mostly_positive ? 'positive' : 'mostly_positive';
+    } else if (negativeTotal > positiveTotal) {
       overallSentiment = 'negative';
     }
 
     const overallRecommendation = citations.filter(c => c.recommends).length > citations.length / 2;
 
-    // Calculate overall score
+    // Calculate overall score with 5-level sentiment
     const citationScore = (citedCount / LLM_PROVIDERS.length) * 40;
-    const sentimentScore = overallSentiment === 'positive' ? 30 : overallSentiment === 'neutral' ? 15 : 0;
+    const sentimentScoreMap: Record<SentimentType, number> = {
+      positive: 30,
+      mostly_positive: 22,
+      neutral: 15,
+      mixed: 10,
+      negative: 0
+    };
+    const sentimentScore = sentimentScoreMap[overallSentiment];
     const recommendationScore = overallRecommendation ? 20 : 0;
     const coreValueScore = citations.filter(c => c.coreValueMatch).length / LLM_PROVIDERS.length * 10;
 

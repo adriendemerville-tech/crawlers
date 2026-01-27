@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LLMAnalysisResult } from '@/types/llm';
+import { LLMAnalysisResult, SentimentType } from '@/types/llm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
@@ -12,6 +12,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { 
   Brain, 
   ExternalLink, 
@@ -27,7 +33,8 @@ import {
   Sparkles,
   Target,
   Search,
-  Loader2
+  Loader2,
+  Scale
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -88,21 +95,107 @@ function ScoreGauge({ score }: { score: number }) {
   );
 }
 
-function SentimentBadge({ sentiment, t }: { sentiment: 'positive' | 'neutral' | 'negative'; t: ReturnType<typeof useLanguage>['t'] }) {
-  const config = {
-    positive: { icon: ThumbsUp, label: t.llm.positive, className: 'bg-success/10 text-success border-success/20' },
-    neutral: { icon: Minus, label: t.llm.neutral, className: 'bg-warning/10 text-warning border-warning/20' },
-    negative: { icon: ThumbsDown, label: t.llm.negative, className: 'bg-destructive/10 text-destructive border-destructive/20' },
+const sentimentTranslations = {
+  fr: {
+    positive: 'Positif',
+    mostly_positive: 'Plutôt Positif',
+    neutral: 'Neutre',
+    mixed: 'Mitigé',
+    negative: 'Négatif',
+    mixedTooltip: 'Avis partagés ou controverses détectées',
+    positiveDesc: 'Les LLMs ont une opinion très favorable de ce site.',
+    mostly_positiveDesc: 'Les LLMs ont une opinion globalement positive avec quelques réserves.',
+    neutralDesc: 'Les LLMs n\'ont pas d\'opinion marquée sur ce site.',
+    mixedDesc: 'Les LLMs ont des opinions partagées ou contradictoires.',
+    negativeDesc: 'Les LLMs ont une opinion défavorable de ce site.',
+  },
+  en: {
+    positive: 'Positive',
+    mostly_positive: 'Mostly Positive',
+    neutral: 'Neutral',
+    mixed: 'Mixed',
+    negative: 'Negative',
+    mixedTooltip: 'Mixed opinions or controversies detected',
+    positiveDesc: 'LLMs have a very favorable opinion of this site.',
+    mostly_positiveDesc: 'LLMs have an overall positive opinion with some reservations.',
+    neutralDesc: 'LLMs have no strong opinion about this site.',
+    mixedDesc: 'LLMs have mixed or contradictory opinions.',
+    negativeDesc: 'LLMs have an unfavorable opinion of this site.',
+  },
+  es: {
+    positive: 'Positivo',
+    mostly_positive: 'Mayormente Positivo',
+    neutral: 'Neutro',
+    mixed: 'Mixto',
+    negative: 'Negativo',
+    mixedTooltip: 'Opiniones divididas o controversias detectadas',
+    positiveDesc: 'Los LLMs tienen una opinión muy favorable de este sitio.',
+    mostly_positiveDesc: 'Los LLMs tienen una opinión generalmente positiva con algunas reservas.',
+    neutralDesc: 'Los LLMs no tienen una opinión marcada sobre este sitio.',
+    mixedDesc: 'Los LLMs tienen opiniones mixtas o contradictorias.',
+    negativeDesc: 'Los LLMs tienen una opinión desfavorable de este sitio.',
+  },
+};
+
+function SentimentBadge({ sentiment, language }: { sentiment: SentimentType; language: string }) {
+  const st = sentimentTranslations[language as keyof typeof sentimentTranslations] || sentimentTranslations.fr;
+  
+  const config: Record<SentimentType, { icon: typeof CheckCircle2; label: string; className: string }> = {
+    positive: { 
+      icon: CheckCircle2, 
+      label: st.positive, 
+      className: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' 
+    },
+    mostly_positive: { 
+      icon: ThumbsUp, 
+      label: st.mostly_positive, 
+      className: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' 
+    },
+    neutral: { 
+      icon: Minus, 
+      label: st.neutral, 
+      className: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700' 
+    },
+    mixed: { 
+      icon: Scale, 
+      label: st.mixed, 
+      className: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800' 
+    },
+    negative: { 
+      icon: XCircle, 
+      label: st.negative, 
+      className: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' 
+    },
   };
   
-  const { icon: Icon, label, className } = config[sentiment];
+  // Fallback to neutral if sentiment is unknown
+  const sentimentKey = Object.keys(config).includes(sentiment) ? sentiment : 'neutral';
+  const { icon: Icon, label, className } = config[sentimentKey];
   
-  return (
+  const badge = (
     <Badge variant="outline" className={cn("gap-1.5 px-3 py-1.5", className)}>
       <Icon className="h-3.5 w-3.5" />
       {label}
     </Badge>
   );
+  
+  // Add tooltip for "mixed" sentiment
+  if (sentimentKey === 'mixed') {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {badge}
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{st.mixedTooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  
+  return badge;
 }
 
 interface HallucinationDiagnosis {
@@ -436,13 +529,13 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-3">
-                <SentimentBadge sentiment={result.overallSentiment} t={t} />
+                <SentimentBadge sentiment={result.overallSentiment} language={language} />
                 <p className="text-sm text-muted-foreground">
-                  {result.overallSentiment === 'positive'
-                    ? t.llm.sentimentPositiveDesc
-                    : result.overallSentiment === 'negative'
-                    ? t.llm.sentimentNegativeDesc
-                    : t.llm.sentimentNeutralDesc}
+                  {(() => {
+                    const st = sentimentTranslations[language as keyof typeof sentimentTranslations] || sentimentTranslations.fr;
+                    const descKey = `${result.overallSentiment}Desc` as keyof typeof st;
+                    return st[descKey] || st.neutralDesc;
+                  })()}
                 </p>
               </div>
             </CardContent>
@@ -698,7 +791,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">{t.llm.sentiment} :</span>
-                        <SentimentBadge sentiment={citation.sentiment} t={t} />
+                        <SentimentBadge sentiment={citation.sentiment} language={language} />
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">{t.llm.recommends} :</span>
