@@ -5,11 +5,13 @@ export interface LLMProvider {
   icon?: string;
 }
 
+export type SentimentType = 'positive' | 'mostly_positive' | 'neutral' | 'mixed' | 'negative';
+
 export interface LLMCitation {
   provider: LLMProvider;
   cited: boolean;
   iterationDepth: number; // 1 = immediate, higher = more prompts needed
-  sentiment: 'positive' | 'neutral' | 'negative';
+  sentiment: SentimentType;
   recommends: boolean;
   coreValueMatch: boolean;
   summary: string;
@@ -27,7 +29,7 @@ export interface LLMAnalysisResult {
   };
   invisibleList: LLMProvider[];
   averageIterationDepth: number;
-  overallSentiment: 'positive' | 'neutral' | 'negative';
+  overallSentiment: SentimentType;
   overallRecommendation: boolean;
   coreValueSummary: string;
   citations: LLMCitation[];
