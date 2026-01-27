@@ -107,10 +107,51 @@ function SentimentBadge({ sentiment, t }: { sentiment: 'positive' | 'neutral' | 
 
 interface HallucinationDiagnosis {
   trueValue: string;
-  hallucinationAnalysis: string;
-  confusionSources: string[];
-  recommendations: string[];
+  hallucinationAnalysis: string | { status?: string; details?: string };
+  confusionSources: (string | { source?: string; description?: string })[];
+  recommendations: (string | { action?: string; description?: string })[];
 }
+
+// Helper to safely extract text from potentially complex objects
+function safeText(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    // Try common fields
+    if (obj.details) return String(obj.details);
+    if (obj.description) return String(obj.description);
+    if (obj.status) return String(obj.status);
+    if (obj.action) return String(obj.action);
+    if (obj.source) return String(obj.source);
+    // Fallback to JSON
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
+
+const methodologyTranslations = {
+  fr: {
+    title: 'Méthodologie d\'interrogation',
+    description: 'Chaque LLM a été interrogé avec un prompt standardisé demandant s\'il connaît le site cible, quelle est sa proposition de valeur, et s\'il le recommande. Les réponses sont analysées pour extraire le sentiment, les citations et les éventuelles hallucinations.',
+    models: 'Modèles interrogés',
+    prompt: 'Type de prompt',
+    promptDesc: 'Demande directe de connaissance + recommandation',
+  },
+  en: {
+    title: 'Query Methodology',
+    description: 'Each LLM was queried with a standardized prompt asking if it knows the target site, what its value proposition is, and if it recommends it. Responses are analyzed to extract sentiment, citations, and potential hallucinations.',
+    models: 'Models queried',
+    prompt: 'Prompt type',
+    promptDesc: 'Direct knowledge + recommendation request',
+  },
+  es: {
+    title: 'Metodología de consulta',
+    description: 'Cada LLM fue consultado con un prompt estandarizado preguntando si conoce el sitio objetivo, cuál es su propuesta de valor y si lo recomienda. Las respuestas se analizan para extraer el sentimiento, las citaciones y las posibles alucinaciones.',
+    models: 'Modelos consultados',
+    prompt: 'Tipo de prompt',
+    promptDesc: 'Solicitud directa de conocimiento + recomendación',
+  },
+};
 
 const hallucinationTranslations = {
   fr: {
@@ -161,6 +202,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
   const [diagnosis, setDiagnosis] = useState<HallucinationDiagnosis | null>(null);
 
   const ht = hallucinationTranslations[language as keyof typeof hallucinationTranslations] || hallucinationTranslations.fr;
+  const mt = methodologyTranslations[language as keyof typeof methodologyTranslations] || methodologyTranslations.fr;
 
   const handleDiagnoseHallucination = async () => {
     if (!result) return;
@@ -543,7 +585,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                     {ht.analysis}
                   </h4>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    {diagnosis.hallucinationAnalysis}
+                    {safeText(diagnosis.hallucinationAnalysis)}
                   </p>
                 </div>
 
@@ -556,7 +598,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                     </h4>
                     <ul className="text-sm text-muted-foreground space-y-1">
                       {diagnosis.confusionSources.map((source, i) => (
-                        <li key={i}>• {source}</li>
+                        <li key={i}>• {safeText(source)}</li>
                       ))}
                     </ul>
                   </div>
@@ -573,7 +615,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                       {diagnosis.recommendations.map((rec, i) => (
                         <li key={i} className="flex items-start gap-2">
                           <span className="text-primary font-medium">{i + 1}.</span>
-                          <span>{rec}</span>
+                          <span>{safeText(rec)}</span>
                         </li>
                       ))}
                     </ul>
@@ -583,6 +625,37 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
             ) : null}
           </DialogContent>
         </Dialog>
+
+        {/* Methodology Card */}
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-primary/10 p-2">
+                <Brain className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-foreground mb-1">
+                  {mt.title}
+                </h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  {mt.description}
+                </p>
+                <div className="flex flex-wrap gap-4 text-xs">
+                  <div>
+                    <span className="text-muted-foreground">{mt.models} : </span>
+                    <span className="font-medium text-foreground">
+                      {result.citations.map(c => c.provider.name).join(', ')}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">{mt.prompt} : </span>
+                    <span className="font-medium text-foreground">{mt.promptDesc}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Individual LLM Cards */}
         <div>
