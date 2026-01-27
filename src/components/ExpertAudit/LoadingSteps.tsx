@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Loader2, Globe, Code, Shield, Brain, CheckCircle2, Target } from 'lucide-react';
 
 const technicalSteps = [
-  { id: 'connect', label: 'Connexion à Google PageSpeed...', icon: Globe },
+  { id: 'connect', label: 'Audit Speed et Performances...', icon: Globe },
   { id: 'html', label: 'Analyse du code HTML...', icon: Code },
   { id: 'security', label: 'Vérification Safe Browsing...', icon: Shield },
   { id: 'ai', label: 'Calcul du score GEO & IA...', icon: Brain },

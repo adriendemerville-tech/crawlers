@@ -52,6 +52,7 @@ const translations = {
     geoScore: 'Score GEO',
     roadmap: 'Roadmap Stratégique',
     executiveSummary: 'Synthèse Exécutive',
+    introduction: 'Introduction',
     poweredBy: 'Crawlers.fr - Audit SEO & GEO Expert',
   },
   en: {
@@ -86,6 +87,7 @@ const translations = {
     geoScore: 'GEO Score',
     roadmap: 'Strategic Roadmap',
     executiveSummary: 'Executive Summary',
+    introduction: 'Introduction',
     poweredBy: 'Crawlers.fr - Expert SEO & GEO Audit',
   },
   es: {
@@ -120,6 +122,7 @@ const translations = {
     geoScore: 'Puntuación GEO',
     roadmap: 'Hoja de Ruta Estratégica',
     executiveSummary: 'Resumen Ejecutivo',
+    introduction: 'Introducción',
     poweredBy: 'Crawlers.fr - Auditoría Experta SEO & GEO',
   },
 };
@@ -364,6 +367,34 @@ function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technical' | '
     doc.setTextColor(0);
     doc.text(t.score + ' Global', 75, 78);
     
+    let currentY = 90;
+    
+    // Introduction narrative (3 paragraphes)
+    if (result.introduction) {
+      doc.setFontSize(14);
+      doc.setTextColor(124, 58, 237);
+      doc.text(t.introduction, 20, currentY);
+      currentY += 8;
+      
+      doc.setFontSize(10);
+      doc.setTextColor(60);
+      
+      // Paragraph 1 - Presentation
+      const presentationLines = doc.splitTextToSize(result.introduction.presentation, 170);
+      doc.text(presentationLines, 20, currentY);
+      currentY += presentationLines.length * 5 + 4;
+      
+      // Paragraph 2 - Strengths
+      const strengthsLines = doc.splitTextToSize(result.introduction.strengths, 170);
+      doc.text(strengthsLines, 20, currentY);
+      currentY += strengthsLines.length * 5 + 4;
+      
+      // Paragraph 3 - Improvement
+      const improvementLines = doc.splitTextToSize(result.introduction.improvement, 170);
+      doc.text(improvementLines, 20, currentY);
+      currentY += improvementLines.length * 5 + 10;
+    }
+    
     // Category scores table
     const scoresData = [
       [t.performance, `${result.scores.performance.score}/${result.scores.performance.maxScore}`],
@@ -374,7 +405,7 @@ function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technical' | '
     ];
     
     autoTable(doc, {
-      startY: 90,
+      startY: currentY,
       head: [['Catégorie', t.score]],
       body: scoresData,
       theme: 'striped',
@@ -384,7 +415,7 @@ function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technical' | '
     
     // Recommendations
     if (result.recommendations.length > 0) {
-      const finalY = (doc as any).lastAutoTable.finalY || 140;
+      const finalY = (doc as any).lastAutoTable.finalY || currentY + 50;
       doc.setFontSize(14);
       doc.setTextColor(0);
       doc.text(t.recommendations, 20, finalY + 15);
@@ -417,21 +448,51 @@ function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technical' | '
     doc.setTextColor(0);
     doc.text(t.geoScore, 70, 78);
     
+    let currentY = 90;
+    
+    // Introduction narrative (si présente dans strategicAnalysis)
+    if (result.introduction) {
+      doc.setFontSize(14);
+      doc.setTextColor(5, 150, 105);
+      doc.text(t.introduction, 20, currentY);
+      currentY += 8;
+      
+      doc.setFontSize(10);
+      doc.setTextColor(60);
+      
+      const presentationLines = doc.splitTextToSize(result.introduction.presentation, 170);
+      doc.text(presentationLines, 20, currentY);
+      currentY += presentationLines.length * 5 + 4;
+      
+      const strengthsLines = doc.splitTextToSize(result.introduction.strengths, 170);
+      doc.text(strengthsLines, 20, currentY);
+      currentY += strengthsLines.length * 5 + 4;
+      
+      const improvementLines = doc.splitTextToSize(result.introduction.improvement, 170);
+      doc.text(improvementLines, 20, currentY);
+      currentY += improvementLines.length * 5 + 10;
+    }
+    
     // Executive summary
     if (strategic?.executive_summary || strategic?.executiveSummary) {
-      doc.setFontSize(11);
+      doc.setFontSize(14);
+      doc.setTextColor(5, 150, 105);
+      doc.text(t.executiveSummary, 20, currentY);
+      currentY += 8;
+      
+      doc.setFontSize(10);
       doc.setTextColor(60);
       const summary = strategic?.executive_summary || strategic?.executiveSummary || '';
       const lines = doc.splitTextToSize(summary, 170);
-      doc.text(lines, 20, 95);
+      doc.text(lines, 20, currentY);
+      currentY += lines.length * 5 + 10;
     }
     
     // Roadmap
     if (strategic?.strategic_roadmap && strategic.strategic_roadmap.length > 0) {
-      const startY = strategic?.executive_summary ? 130 : 95;
       doc.setFontSize(14);
       doc.setTextColor(0);
-      doc.text(t.roadmap, 20, startY);
+      doc.text(t.roadmap, 20, currentY);
       
       const roadmapData = strategic.strategic_roadmap.map(item => [
         item.priority,
@@ -440,7 +501,7 @@ function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technical' | '
       ]);
       
       autoTable(doc, {
-        startY: startY + 5,
+        startY: currentY + 5,
         head: [['Priorité', 'Action', 'Objectif']],
         body: roadmapData,
         theme: 'striped',
