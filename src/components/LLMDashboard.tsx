@@ -124,6 +124,7 @@ const hallucinationTranslations = {
     recommendations: 'Recommandations',
     errorTitle: 'Erreur',
     errorDesc: 'Impossible de générer le diagnostic. Veuillez réessayer.',
+    noCitation: 'Aucune citation explicite des LLMs n\'a été constatée.',
   },
   en: {
     diagnoseButton: 'Hallucination Diagnosis',
@@ -136,6 +137,7 @@ const hallucinationTranslations = {
     recommendations: 'Recommendations',
     errorTitle: 'Error',
     errorDesc: 'Unable to generate diagnosis. Please try again.',
+    noCitation: 'No explicit citation from LLMs was observed.',
   },
   es: {
     diagnoseButton: 'Diagnóstico Alucinación',
@@ -148,6 +150,7 @@ const hallucinationTranslations = {
     recommendations: 'Recomendaciones',
     errorTitle: 'Error',
     errorDesc: 'No se pudo generar el diagnóstico. Por favor, inténtelo de nuevo.',
+    noCitation: 'No se observó ninguna citación explícita de los LLMs.',
   },
 };
 
@@ -340,34 +343,38 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
         {/* Qualitative Analysis */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {/* Iteration Depth */}
-          <Card>
+          <Card className={cn(result.citationRate.cited === 0 && "opacity-60")}>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <Target className="h-5 w-5 text-primary" />
+                <Target className={cn("h-5 w-5", result.citationRate.cited === 0 ? "text-muted-foreground" : "text-primary")} />
                 {t.llm.iterationDepth}
                 <HelpButton term="profondeur-iteration" size="sm" />
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="mb-3">
-                <span className="text-3xl font-bold text-foreground">
+                <span className={cn("text-3xl font-bold", result.citationRate.cited === 0 ? "text-muted-foreground" : "text-foreground")}>
                   {result.averageIterationDepth.toFixed(1)}
                 </span>
                 <span className="text-sm text-muted-foreground ml-1">{t.llm.avgPrompts}</span>
               </div>
-              <Progress 
-                value={(5 - result.averageIterationDepth) / 4 * 100} 
-                className={cn(
-                  "h-2",
-                  result.averageIterationDepth <= 2 
-                    ? "[&>div]:bg-success" 
-                    : result.averageIterationDepth <= 3.5
-                    ? "[&>div]:bg-warning"
-                    : "[&>div]:bg-destructive"
-                )}
-              />
+              {result.citationRate.cited > 0 && (
+                <Progress 
+                  value={(5 - result.averageIterationDepth) / 4 * 100} 
+                  className={cn(
+                    "h-2",
+                    result.averageIterationDepth <= 2 
+                      ? "[&>div]:bg-success" 
+                      : result.averageIterationDepth <= 3.5
+                      ? "[&>div]:bg-warning"
+                      : "[&>div]:bg-destructive"
+                  )}
+                />
+              )}
               <p className="mt-3 text-sm text-muted-foreground">
-                {result.averageIterationDepth <= 2 
+                {result.citationRate.cited === 0
+                  ? ht.noCitation
+                  : result.averageIterationDepth <= 2 
                   ? t.llm.iterationExcellent
                   : result.averageIterationDepth <= 3.5
                   ? t.llm.iterationModerate
@@ -480,7 +487,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                 size="sm"
                 onClick={handleDiagnoseHallucination}
                 disabled={isDiagnosing}
-                className="gap-2 border-warning/50 text-warning hover:bg-warning/10 hover:text-warning"
+                className="gap-2 border-foreground text-foreground hover:bg-muted hover:text-foreground"
               >
                 {isDiagnosing ? (
                   <>
