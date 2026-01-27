@@ -1,8 +1,17 @@
-import { Bot, Sun, Moon, Book } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from 'next-themes';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Flag emoji components for better accessibility and consistency
 const FlagFR = () => (
@@ -23,12 +32,51 @@ const lexiqueLabels = {
   es: 'Glosario',
 };
 
+const translations = {
+  fr: {
+    profile: 'Mon profil',
+    myReports: 'Mes rapports',
+    logout: 'Déconnexion',
+    login: 'Connexion',
+  },
+  en: {
+    profile: 'My profile',
+    myReports: 'My reports',
+    logout: 'Log out',
+    login: 'Log in',
+  },
+  es: {
+    profile: 'Mi perfil',
+    myReports: 'Mis informes',
+    logout: 'Cerrar sesión',
+    login: 'Iniciar sesión',
+  },
+};
+
 export function Header() {
   const { language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
+  const { user, profile, signOut, loading } = useAuth();
+  const navigate = useNavigate();
+  const t = translations[language];
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const getInitials = () => {
+    if (profile) {
+      return `${profile.first_name?.[0] || ''}${profile.last_name?.[0] || ''}`.toUpperCase();
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
   };
 
   return (
@@ -99,6 +147,59 @@ export function Header() {
               <FlagES />
             </Button>
           </div>
+
+          {/* User menu or login button */}
+          {!loading && (
+            user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <div className="flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      {profile && (
+                        <p className="font-medium">{profile.first_name} {profile.last_name}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profil" className="gap-2 cursor-pointer">
+                      <User className="h-4 w-4" />
+                      {t.profile}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profil?tab=reports" className="gap-2 cursor-pointer">
+                      <FileText className="h-4 w-4" />
+                      {t.myReports}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
+                    <LogOut className="h-4 w-4" />
+                    {t.logout}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <LogIn className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t.login}</span>
+                </Button>
+              </Link>
+            )
+          )}
         </div>
       </nav>
     </header>
