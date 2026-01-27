@@ -5,7 +5,7 @@ import { CheckCircle2, XCircle, Smartphone, Monitor, Brain } from 'lucide-react'
 
 const translations = {
   fr: {
-    title: "Facteurs GEO essentiels par plateforme",
+    title: "Facteurs GEO essentiels",
     subtitle: "Qu'est-ce qui compte pour être cité par les IA génératives ?",
     mobile: "Mobile",
     desktop: "Desktop",
@@ -56,7 +56,7 @@ const translations = {
     ],
   },
   en: {
-    title: "Essential GEO Factors by Platform",
+    title: "Essential GEO Factors",
     subtitle: "What matters to get cited by generative AI?",
     mobile: "Mobile",
     desktop: "Desktop",
@@ -107,7 +107,7 @@ const translations = {
     ],
   },
   es: {
-    title: "Factores GEO esenciales por plataforma",
+    title: "Factores GEO esenciales",
     subtitle: "¿Qué importa para ser citado por la IA generativa?",
     mobile: "Móvil",
     desktop: "Escritorio",
@@ -192,7 +192,7 @@ export function GEOComparisonTable() {
   return (
     <section className="py-8 bg-muted/30" aria-label="Tableau comparatif GEO">
       <div className="container mx-auto px-4">
-        <Card className="overflow-hidden border max-w-4xl mx-auto">
+        <Card className="overflow-hidden border max-w-5xl mx-auto">
           <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 py-4">
             <CardTitle className="flex items-center gap-3 text-lg md:text-xl">
               <Brain className="h-5 w-5 text-primary" />
