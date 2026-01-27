@@ -1,8 +1,17 @@
+import { useState } from 'react';
 import { LLMAnalysisResult } from '@/types/llm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { 
   Brain, 
   ExternalLink, 
@@ -16,11 +25,15 @@ import {
   XCircle,
   AlertTriangle,
   Sparkles,
-  Target
+  Target,
+  Search,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { HelpButton } from './HelpButton';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 interface LLMDashboardProps {
   result: LLMAnalysisResult | null;
@@ -92,8 +105,100 @@ function SentimentBadge({ sentiment, t }: { sentiment: 'positive' | 'neutral' | 
   );
 }
 
+interface HallucinationDiagnosis {
+  trueValue: string;
+  hallucinationAnalysis: string;
+  confusionSources: string[];
+  recommendations: string[];
+}
+
+const hallucinationTranslations = {
+  fr: {
+    diagnoseButton: 'Diagnostic Hallucination',
+    diagnosing: 'Analyse en cours...',
+    modalTitle: 'Diagnostic des Hallucinations IA',
+    modalDescription: 'Analyse des erreurs de perception et recommandations pour améliorer la visibilité LLM',
+    trueValue: 'Vraie Proposition de Valeur',
+    analysis: 'Analyse des Hallucinations',
+    confusionSources: 'Sources de Confusion',
+    recommendations: 'Recommandations',
+    errorTitle: 'Erreur',
+    errorDesc: 'Impossible de générer le diagnostic. Veuillez réessayer.',
+  },
+  en: {
+    diagnoseButton: 'Hallucination Diagnosis',
+    diagnosing: 'Analyzing...',
+    modalTitle: 'AI Hallucination Diagnosis',
+    modalDescription: 'Analysis of perception errors and recommendations to improve LLM visibility',
+    trueValue: 'True Value Proposition',
+    analysis: 'Hallucination Analysis',
+    confusionSources: 'Confusion Sources',
+    recommendations: 'Recommendations',
+    errorTitle: 'Error',
+    errorDesc: 'Unable to generate diagnosis. Please try again.',
+  },
+  es: {
+    diagnoseButton: 'Diagnóstico Alucinación',
+    diagnosing: 'Analizando...',
+    modalTitle: 'Diagnóstico de Alucinaciones IA',
+    modalDescription: 'Análisis de errores de percepción y recomendaciones para mejorar la visibilidad LLM',
+    trueValue: 'Verdadera Propuesta de Valor',
+    analysis: 'Análisis de Alucinaciones',
+    confusionSources: 'Fuentes de Confusión',
+    recommendations: 'Recomendaciones',
+    errorTitle: 'Error',
+    errorDesc: 'No se pudo generar el diagnóstico. Por favor, inténtelo de nuevo.',
+  },
+};
+
 export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
+  const [diagnosisModalOpen, setDiagnosisModalOpen] = useState(false);
+  const [diagnosis, setDiagnosis] = useState<HallucinationDiagnosis | null>(null);
+
+  const ht = hallucinationTranslations[language as keyof typeof hallucinationTranslations] || hallucinationTranslations.fr;
+
+  const handleDiagnoseHallucination = async () => {
+    if (!result) return;
+
+    setIsDiagnosing(true);
+    setDiagnosisModalOpen(true);
+
+    try {
+      // Collect all hallucinations from citations
+      const allHallucinations = result.citations
+        .filter(c => c.hallucinations && c.hallucinations.length > 0)
+        .flatMap(c => c.hallucinations!);
+
+      const { data, error } = await supabase.functions.invoke('diagnose-hallucination', {
+        body: {
+          domain: result.domain,
+          coreValueSummary: result.coreValueSummary,
+          hallucinations: allHallucinations,
+          lang: language,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.data) {
+        setDiagnosis(data.data);
+      } else {
+        throw new Error(data?.error || 'Diagnosis failed');
+      }
+    } catch (error) {
+      console.error('Diagnosis error:', error);
+      toast({
+        title: ht.errorTitle,
+        description: ht.errorDesc,
+        variant: 'destructive',
+      });
+      setDiagnosisModalOpen(false);
+    } finally {
+      setIsDiagnosing(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -367,8 +472,110 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
                 </ul>
               </div>
             )}
+            
+            {/* Hallucination Diagnosis Button */}
+            <div className="mt-4 flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDiagnoseHallucination}
+                disabled={isDiagnosing}
+                className="gap-2 border-warning/50 text-warning hover:bg-warning/10 hover:text-warning"
+              >
+                {isDiagnosing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {ht.diagnosing}
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4" />
+                    {ht.diagnoseButton}
+                  </>
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
+
+        {/* Hallucination Diagnosis Modal */}
+        <Dialog open={diagnosisModalOpen} onOpenChange={setDiagnosisModalOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Search className="h-5 w-5 text-primary" />
+                {ht.modalTitle}
+              </DialogTitle>
+              <DialogDescription>
+                {ht.modalDescription}
+              </DialogDescription>
+            </DialogHeader>
+
+            {isDiagnosing ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">{ht.diagnosing}</p>
+              </div>
+            ) : diagnosis ? (
+              <div className="space-y-6">
+                {/* True Value */}
+                <div className="rounded-lg border border-success/30 bg-success/5 p-4">
+                  <h4 className="flex items-center gap-2 text-sm font-semibold text-success mb-2">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {ht.trueValue}
+                  </h4>
+                  <p className="text-sm text-foreground leading-relaxed">
+                    {diagnosis.trueValue}
+                  </p>
+                </div>
+
+                {/* Hallucination Analysis */}
+                <div className="rounded-lg border border-border bg-muted/30 p-4">
+                  <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground mb-2">
+                    <AlertTriangle className="h-4 w-4 text-warning" />
+                    {ht.analysis}
+                  </h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {diagnosis.hallucinationAnalysis}
+                  </p>
+                </div>
+
+                {/* Confusion Sources */}
+                {diagnosis.confusionSources && diagnosis.confusionSources.length > 0 && (
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+                    <h4 className="flex items-center gap-2 text-sm font-semibold text-destructive mb-2">
+                      <XCircle className="h-4 w-4" />
+                      {ht.confusionSources}
+                    </h4>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      {diagnosis.confusionSources.map((source, i) => (
+                        <li key={i}>• {source}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Recommendations */}
+                {diagnosis.recommendations && diagnosis.recommendations.length > 0 && (
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                    <h4 className="flex items-center gap-2 text-sm font-semibold text-primary mb-2">
+                      <Sparkles className="h-4 w-4" />
+                      {ht.recommendations}
+                    </h4>
+                    <ul className="text-sm text-muted-foreground space-y-2">
+                      {diagnosis.recommendations.map((rec, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-primary font-medium">{i + 1}.</span>
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </DialogContent>
+        </Dialog>
 
         {/* Individual LLM Cards */}
         <div>
