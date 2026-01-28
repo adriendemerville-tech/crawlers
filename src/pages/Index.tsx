@@ -19,6 +19,8 @@ const GeoDashboard = lazy(() => import('@/components/GeoDashboard').then(m => ({
 const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({ default: m.LLMDashboard })));
 const QuotaExceeded = lazy(() => import('@/components/QuotaExceeded').then(m => ({ default: m.QuotaExceeded })));
 const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
+const GEOFAQSection = lazy(() => import('@/components/GEOFAQSection').then(m => ({ default: m.GEOFAQSection })));
+const WhyVital2026Section = lazy(() => import('@/components/WhyVital2026Section').then(m => ({ default: m.WhyVital2026Section })));
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
 const GEOComparisonTable = lazy(() => import('@/components/GEOComparisonTable').then(m => ({ default: m.GEOComparisonTable })));
 
@@ -336,10 +338,16 @@ const Index = () => {
           </Suspense>
         </section>
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+          <WhyVital2026Section />
+        </Suspense>
+        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
           <GEOComparisonTable />
         </Suspense>
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
           <NewsCarousel />
+        </Suspense>
+        <Suspense fallback={<div className="h-96" />}>
+          <GEOFAQSection />
         </Suspense>
         <Suspense fallback={<div className="h-96" />}>
           <FAQSection />

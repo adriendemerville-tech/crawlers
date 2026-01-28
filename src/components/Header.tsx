@@ -190,13 +190,19 @@ export function Header() {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
+                <DropdownMenuContent className="w-64" align="end" forceMount>
+                  <div className="flex items-center justify-start gap-3 p-3">
+                    <Avatar className="h-10 w-10 shrink-0">
+                      <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col space-y-0.5 leading-none min-w-0 flex-1">
                       {profile && (
-                        <p className="font-medium">{profile.first_name} {profile.last_name}</p>
+                        <p className="font-medium text-sm truncate">{profile.first_name} {profile.last_name}</p>
                       )}
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
                   </div>
                   <DropdownMenuSeparator />

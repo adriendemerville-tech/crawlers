@@ -43,37 +43,38 @@ export function RegistrationGate({ onRegister }: RegistrationGateProps) {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
-      className="absolute inset-0 z-10 flex items-center justify-center p-4"
+      className="absolute inset-x-0 top-0 z-10 flex items-start justify-center pt-8 px-4"
     >
       <motion.div 
-        className="bg-background/95 backdrop-blur-md border border-border/60 p-8 rounded-2xl shadow-2xl max-w-sm text-center"
+        className="bg-background/95 backdrop-blur-md border border-border/60 p-6 rounded-xl shadow-2xl max-w-sm w-full text-center"
         initial={{ y: 20 }}
         animate={{ y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: 'spring', stiffness: 500 }}
-          className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5"
-        >
-          <Lock className="w-8 h-8 text-primary" />
-        </motion.div>
-
-        <motion.h3 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-xl font-bold mb-2 text-foreground"
-        >
-          {t.title}
-        </motion.h3>
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 500 }}
+            className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"
+          >
+            <Lock className="w-5 h-5 text-primary" />
+          </motion.div>
+          <motion.h3 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-lg font-bold text-foreground"
+          >
+            {t.title}
+          </motion.h3>
+        </div>
 
         <motion.p 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="text-muted-foreground mb-6 text-sm leading-relaxed"
+          className="text-muted-foreground mb-5 text-sm leading-relaxed"
         >
           {t.subtitle}
         </motion.p>
@@ -82,11 +83,11 @@ export function RegistrationGate({ onRegister }: RegistrationGateProps) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="space-y-3"
+          className="space-y-2"
         >
           <Button 
             onClick={onRegister} 
-            className="w-full gap-2 h-12 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+            className="w-full gap-2 h-10 text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <UserPlus className="w-4 h-4" />
             {t.button}
@@ -94,7 +95,7 @@ export function RegistrationGate({ onRegister }: RegistrationGateProps) {
 
           <button 
             onClick={handleLogin}
-            className="text-sm text-primary hover:underline transition-all"
+            className="text-xs text-primary hover:underline transition-all"
           >
             {t.loginLink}
           </button>
@@ -111,9 +112,9 @@ export function RegistrationGate({ onRegister }: RegistrationGateProps) {
             duration: 3,
             ease: "easeInOut"
           }}
-          className="absolute -top-3 -right-3"
+          className="absolute -top-2 -right-2"
         >
-          <Sparkles className="w-6 h-6 text-amber-400" />
+          <Sparkles className="w-5 h-5 text-amber-400" />
         </motion.div>
       </motion.div>
     </motion.div>

@@ -370,31 +370,43 @@ export function ExpertAuditDashboard() {
           </CardContent>
         </Card>
 
-        {/* Strategic Audit */}
+        {/* Strategic Audit - Disabled until technical audit completed */}
         <Card 
-          className={`relative overflow-hidden transition-all duration-300 cursor-pointer ${
-            auditMode === 'strategic' 
-              ? 'border-2 border-amber-400 shadow-[0_0_10px_-3px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)]' 
-              : 'border-border/60 hover:border-primary/50 hover:shadow-md'
+          className={`relative overflow-hidden transition-all duration-300 ${
+            !result
+              ? 'opacity-60 cursor-not-allowed'
+              : auditMode === 'strategic' 
+                ? 'border-2 border-amber-400 shadow-[0_0_10px_-3px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)] cursor-pointer' 
+                : 'border-border/60 hover:border-primary/50 hover:shadow-md cursor-pointer'
           }`}
-          onClick={() => !isLoading && !isStrategicLoading && setAuditMode('strategic')}
+          onClick={() => {
+            // Only allow clicking if any audit result exists
+            if (result && !isLoading && !isStrategicLoading) {
+              setAuditMode('strategic');
+            }
+          }}
         >
           {auditMode === 'strategic' && (
             <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 via-transparent to-amber-400/10 pointer-events-none" />
           )}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-accent-foreground/60 to-accent-foreground/40" />
+          <div className={`absolute top-0 left-0 w-full h-1 ${result ? 'bg-gradient-to-r from-accent-foreground/60 to-accent-foreground/40' : 'bg-muted'}`} />
           <CardContent className="p-6 relative">
             <div className="flex items-start gap-4">
-              <div className="p-3 rounded-md bg-accent">
-                <Target className="h-6 w-6 text-accent-foreground" />
+              <div className={`p-3 rounded-md ${result ? 'bg-accent' : 'bg-muted'}`}>
+                <Target className={`h-6 w-6 ${result ? 'text-accent-foreground' : 'text-muted-foreground'}`} />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-foreground mb-1">{t.strategicTitle}</h3>
+                <h3 className={`font-semibold mb-1 ${result ? 'text-foreground' : 'text-muted-foreground'}`}>{t.strategicTitle}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{t.strategicDesc}</p>
+                {!result && (
+                  <p className="text-xs text-warning mt-2 font-medium">
+                    {language === 'fr' ? '→ Terminez d\'abord l\'audit technique' : language === 'es' ? '→ Complete primero la auditoría técnica' : '→ Complete technical audit first'}
+                  </p>
+                )}
               </div>
             </div>
             <AnimatePresence>
-              {auditMode === 'strategic' && (
+              {auditMode === 'strategic' && result && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
