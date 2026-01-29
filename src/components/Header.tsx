@@ -76,8 +76,9 @@ export function Header() {
   const location = useLocation();
   const t = translations[language];
 
-  // Check if we're on the audit-expert page
+  // Check if we're on specific pages
   const isAuditExpertPage = location.pathname === '/audit-expert';
+  const isProfilePage = location.pathname === '/profil';
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -125,39 +126,41 @@ export function Header() {
                 <span className="text-lg font-semibold text-foreground">Crawlers AI</span>
               </a>
 
-              {/* Language selector - compact, next to logo */}
-              <div className="flex items-center gap-0.5 rounded-md border border-border bg-muted/50 p-0.5" role="group" aria-label="Sélection de la langue">
-                <Button
-                  variant={language === 'fr' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setLanguage('fr')}
-                  className="h-6 w-7 p-0 text-xs"
-                  aria-pressed={language === 'fr'}
-                  aria-label="Français"
-                >
-                  <span className="text-sm">🇫🇷</span>
-                </Button>
-                <Button
-                  variant={language === 'en' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setLanguage('en')}
-                  className="h-6 w-7 p-0 text-xs"
-                  aria-pressed={language === 'en'}
-                  aria-label="English"
-                >
-                  <span className="text-sm">🇬🇧</span>
-                </Button>
-                <Button
-                  variant={language === 'es' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setLanguage('es')}
-                  className="h-6 w-7 p-0 text-xs"
-                  aria-pressed={language === 'es'}
-                  aria-label="Español"
-                >
-                  <span className="text-sm">🇪🇸</span>
-                </Button>
-              </div>
+              {/* Language selector - hidden on profile page (available in settings) */}
+              {!isProfilePage && (
+                <div className="flex items-center gap-0.5 rounded-md border border-border bg-muted/50 p-0.5" role="group" aria-label="Sélection de la langue">
+                  <Button
+                    variant={language === 'fr' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setLanguage('fr')}
+                    className="h-6 w-7 p-0 text-xs"
+                    aria-pressed={language === 'fr'}
+                    aria-label="Français"
+                  >
+                    <span className="text-sm">🇫🇷</span>
+                  </Button>
+                  <Button
+                    variant={language === 'en' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setLanguage('en')}
+                    className="h-6 w-7 p-0 text-xs"
+                    aria-pressed={language === 'en'}
+                    aria-label="English"
+                  >
+                    <span className="text-sm">🇬🇧</span>
+                  </Button>
+                  <Button
+                    variant={language === 'es' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setLanguage('es')}
+                    className="h-6 w-7 p-0 text-xs"
+                    aria-pressed={language === 'es'}
+                    aria-label="Español"
+                  >
+                    <span className="text-sm">🇪🇸</span>
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </div>
