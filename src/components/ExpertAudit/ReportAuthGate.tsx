@@ -58,20 +58,16 @@ export function ReportAuthGate({ isOpen, onClose, onAuthenticated, returnPath }:
   if (!isOpen) return null;
 
   const handleSignup = () => {
-    // Store return path for after auth
-    if (returnPath) {
-      sessionStorage.setItem('audit_return_path', returnPath);
-      sessionStorage.setItem('audit_pending_action', 'open_report');
-    }
+    // Always store return path to /audit-expert for after auth
+    sessionStorage.setItem('audit_return_path', '/audit-expert');
+    sessionStorage.setItem('audit_pending_action', 'open_report');
     navigate('/auth?mode=signup');
   };
 
   const handleLogin = () => {
-    // Store return path for after auth
-    if (returnPath) {
-      sessionStorage.setItem('audit_return_path', returnPath);
-      sessionStorage.setItem('audit_pending_action', 'open_report');
-    }
+    // Always store return path to /audit-expert for after auth
+    sessionStorage.setItem('audit_return_path', '/audit-expert');
+    sessionStorage.setItem('audit_pending_action', 'open_report');
     navigate('/auth?mode=login');
   };
 

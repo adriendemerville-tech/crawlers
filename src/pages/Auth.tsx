@@ -113,10 +113,17 @@ export default function Auth() {
   const navigate = useNavigate();
   const t = translations[language];
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated - check for return path first
   useEffect(() => {
     if (user) {
-      navigate('/');
+      const returnPath = sessionStorage.getItem('audit_return_path');
+      if (returnPath) {
+        // Clear return path but keep pending action for the destination to handle
+        sessionStorage.removeItem('audit_return_path');
+        navigate(returnPath);
+      } else {
+        navigate('/');
+      }
     }
   }, [user, navigate]);
 
@@ -151,7 +158,7 @@ export default function Auth() {
       toast.error(t.loginError);
     } else {
       toast.success(t.loginSuccess);
-      navigate('/');
+      // Navigation handled by useEffect when user state updates
     }
   };
 
@@ -168,7 +175,7 @@ export default function Auth() {
       }
     } else {
       toast.success(t.signupSuccess);
-      navigate('/');
+      // Navigation handled by useEffect when user state updates
     }
   };
 
