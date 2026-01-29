@@ -23,6 +23,7 @@ import { ReportAuthGate } from './ReportAuthGate';
 import { PaymentModal } from './PaymentModal';
 import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 import { WorkflowCarousel } from './WorkflowCarousel';
+import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -140,11 +141,9 @@ export function ExpertAuditDashboard() {
   const [pendingReportOpen, setPendingReportOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [hallucinationData, setHallucinationData] = useState<{
-    trueValue: string;
-    confusionSources: string[];
-    correctedIntro?: string;
-  } | null>(null);
+  // Hallucination diagnosis data - using any to support both legacy and new formats
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [hallucinationDiagnosis, setHallucinationDiagnosis] = useState<any>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
@@ -714,8 +713,13 @@ export function ExpertAuditDashboard() {
                   variant="strategic"
                   domain={result.domain || url}
                   siteName={result.domain || url}
-                  onHallucinationData={setHallucinationData}
+                  onHallucinationData={setHallucinationDiagnosis}
                 />
+              )}
+
+              {/* Hallucination Diagnosis Results - Displayed under introduction after diagnosis */}
+              {hallucinationDiagnosis && hallucinationDiagnosis.discrepancies && (
+                <HallucinationDiagnosisCard diagnosis={hallucinationDiagnosis} />
               )}
 
               {/* Zone de Contenu Protégée */}
@@ -732,7 +736,7 @@ export function ExpertAuditDashboard() {
                       hideExecutiveSummary={true}
                       domain={result.domain || url}
                       siteName={result.domain || url}
-                      onHallucinationData={setHallucinationData}
+                      onHallucinationData={setHallucinationDiagnosis}
                     />
                   )}
                 </div>
@@ -801,7 +805,7 @@ export function ExpertAuditDashboard() {
         strategicResult={strategicResult}
         siteUrl={result?.url || url}
         siteName={result?.domain || url}
-        hallucinationData={hallucinationData}
+        hallucinationData={hallucinationDiagnosis}
       />
     </div>
   );

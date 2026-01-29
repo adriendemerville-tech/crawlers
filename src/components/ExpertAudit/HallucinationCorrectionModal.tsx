@@ -1,17 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { 
-  BrainCircuit, AlertTriangle, Lightbulb, CheckCircle2, 
-  Loader2, Sparkles, FileCode2, Copy, Check
+  BrainCircuit, Loader2, Sparkles, Edit3, Building2, MapPin, 
+  Target, Calendar, FileText, Globe, Users
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+interface DetectedValues {
+  sector: string;
+  country: string;
+  valueProposition: string;
+  targetAudience: string;
+  businessAge: string;
+  businessType: string;
+  mainProducts: string;
+}
 
 interface HallucinationCorrectionModalProps {
   open: boolean;
@@ -19,15 +30,105 @@ interface HallucinationCorrectionModalProps {
   introduction: string;
   domain: string;
   siteName: string;
-  onHallucinationDataReady?: (data: HallucinationAnalysis) => void;
+  onDiagnosisComplete?: (data: HallucinationDiagnosis) => void;
+  // Legacy prop name for backward compatibility
+  onHallucinationDataReady?: (data: HallucinationDiagnosis) => void;
 }
 
-export interface HallucinationAnalysis {
-  trueValue: string;
-  hallucinationAnalysis: string;
+export interface HallucinationDiagnosis {
+  originalValues: DetectedValues;
+  correctedValues: DetectedValues;
+  discrepancies: Discrepancy[];
   confusionSources: string[];
-  recommendations: string[];
-  correctedIntro?: string;
+  recommendations: HallucinationRecommendation[];
+  analysisNarrative: string;
+}
+
+export interface Discrepancy {
+  field: string;
+  original: string;
+  corrected: string;
+  impact: 'high' | 'medium' | 'low';
+  explanation: string;
+}
+
+export interface HallucinationRecommendation {
+  id: string;
+  category: 'metadata' | 'content' | 'schema' | 'authority';
+  priority: 'critical' | 'important' | 'optional';
+  title: string;
+  description: string;
+  codeSnippet?: string;
+}
+
+const translations = {
+  fr: {
+    title: 'Correction des Informations IA',
+    description: 'Vérifiez et corrigez les informations détectées par l\'IA sur votre site',
+    detectedInfo: 'Informations Détectées',
+    editInfo: 'Vous pouvez modifier les valeurs incorrectes ci-dessous',
+    sector: 'Secteur d\'activité',
+    country: 'Pays / Zone géographique',
+    valueProposition: 'Proposition de valeur',
+    targetAudience: 'Cible / Audience',
+    businessAge: 'Ancienneté',
+    businessType: 'Type d\'entreprise',
+    mainProducts: 'Produits/Services principaux',
+    diagnose: 'Lancer le Diagnostic',
+    diagnosing: 'Analyse des incohérences...',
+    success: 'Diagnostic terminé',
+    successDesc: 'Les incohérences ont été analysées et les recommandations sont disponibles dans le rapport.',
+  },
+  en: {
+    title: 'AI Information Correction',
+    description: 'Review and correct information detected by AI about your site',
+    detectedInfo: 'Detected Information',
+    editInfo: 'You can edit incorrect values below',
+    sector: 'Industry Sector',
+    country: 'Country / Geographic Area',
+    valueProposition: 'Value Proposition',
+    targetAudience: 'Target Audience',
+    businessAge: 'Business Age',
+    businessType: 'Business Type',
+    mainProducts: 'Main Products/Services',
+    diagnose: 'Run Diagnosis',
+    diagnosing: 'Analyzing discrepancies...',
+    success: 'Diagnosis complete',
+    successDesc: 'Discrepancies have been analyzed and recommendations are available in the report.',
+  },
+  es: {
+    title: 'Corrección de Información IA',
+    description: 'Revise y corrija la información detectada por la IA sobre su sitio',
+    detectedInfo: 'Información Detectada',
+    editInfo: 'Puede editar los valores incorrectos a continuación',
+    sector: 'Sector de Actividad',
+    country: 'País / Zona Geográfica',
+    valueProposition: 'Propuesta de Valor',
+    targetAudience: 'Público Objetivo',
+    businessAge: 'Antigüedad',
+    businessType: 'Tipo de Empresa',
+    mainProducts: 'Productos/Servicios Principales',
+    diagnose: 'Ejecutar Diagnóstico',
+    diagnosing: 'Analizando discrepancias...',
+    success: 'Diagnóstico completo',
+    successDesc: 'Las discrepancias han sido analizadas y las recomendaciones están disponibles en el informe.',
+  },
+};
+
+function parseIntroductionToValues(introduction: string, domain: string): DetectedValues {
+  // Parse the introduction to extract initial values
+  // This is a heuristic extraction - the AI will refine it
+  const lines = introduction.split('\n').filter(l => l.trim());
+  
+  return {
+    sector: '',
+    country: 'France',
+    valueProposition: lines[0]?.substring(0, 200) || '',
+    targetAudience: '',
+    businessAge: '',
+    businessType: '',
+    mainProducts: '',
+  };
 }
 
 export function HallucinationCorrectionModal({
@@ -36,249 +137,308 @@ export function HallucinationCorrectionModal({
   introduction,
   domain,
   siteName,
+  onDiagnosisComplete,
   onHallucinationDataReady
 }: HallucinationCorrectionModalProps) {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysis, setAnalysis] = useState<HallucinationAnalysis | null>(null);
-  const [correctedIntro, setCorrectedIntro] = useState('');
-  const [copied, setCopied] = useState(false);
+  const { language } = useLanguage();
+  const t = translations[language] || translations.fr;
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [detectedValues, setDetectedValues] = useState<DetectedValues>({
+    sector: '',
+    country: '',
+    valueProposition: '',
+    targetAudience: '',
+    businessAge: '',
+    businessType: '',
+    mainProducts: '',
+  });
+  const [correctedValues, setCorrectedValues] = useState<DetectedValues>({
+    sector: '',
+    country: '',
+    valueProposition: '',
+    targetAudience: '',
+    businessAge: '',
+    businessType: '',
+    mainProducts: '',
+  });
 
-  const analyzeHallucination = async () => {
-    setIsAnalyzing(true);
+  // Extract values from introduction when modal opens
+  useEffect(() => {
+    if (open && introduction) {
+      extractValuesFromIntroduction();
+    }
+  }, [open, introduction]);
+
+  const extractValuesFromIntroduction = async () => {
+    setIsExtracting(true);
     try {
       const { data, error } = await supabase.functions.invoke('diagnose-hallucination', {
         body: {
           domain,
           coreValueSummary: introduction,
-          hallucinations: [],
-          lang: 'fr'
+          action: 'extract',
+          lang: language
         }
       });
 
       if (error) throw error;
-      
-      if (data?.success && data?.data) {
-        const analysisData = data.data as HallucinationAnalysis;
-        setAnalysis(analysisData);
-        
-        // Generate corrected intro based on true value
-        const corrected = generateCorrectedIntro(introduction, analysisData.trueValue);
-        setCorrectedIntro(corrected);
-        analysisData.correctedIntro = corrected;
-        
-        // Notify parent component
-        if (onHallucinationDataReady) {
-          onHallucinationDataReady(analysisData);
-        }
-        
-        toast.success('Analyse d\'hallucination terminée');
+
+      if (data?.success && data?.extractedValues) {
+        const extracted = data.extractedValues as DetectedValues;
+        setDetectedValues(extracted);
+        setCorrectedValues(extracted);
       } else {
-        throw new Error(data?.error || 'Analyse échouée');
+        // Fallback to heuristic extraction
+        const parsed = parseIntroductionToValues(introduction, domain);
+        setDetectedValues(parsed);
+        setCorrectedValues(parsed);
       }
     } catch (err) {
-      console.error('Hallucination analysis error:', err);
-      toast.error('Erreur lors de l\'analyse');
+      console.error('Value extraction error:', err);
+      // Fallback
+      const parsed = parseIntroductionToValues(introduction, domain);
+      setDetectedValues(parsed);
+      setCorrectedValues(parsed);
     } finally {
-      setIsAnalyzing(false);
+      setIsExtracting(false);
     }
   };
 
-  const generateCorrectedIntro = (original: string, trueValue: string): string => {
-    // Replace the first paragraph with the true value
-    const paragraphs = original.split('\n\n');
-    if (paragraphs.length > 0) {
-      paragraphs[0] = trueValue;
-    }
-    return paragraphs.join('\n\n');
+  const handleFieldChange = (field: keyof DetectedValues, value: string) => {
+    setCorrectedValues(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const copyToClipboard = async () => {
+  const runDiagnosis = async () => {
+    setIsLoading(true);
     try {
-      await navigator.clipboard.writeText(correctedIntro);
-      setCopied(true);
-      toast.success('Introduction corrigée copiée');
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error('Erreur lors de la copie');
+      const { data, error } = await supabase.functions.invoke('diagnose-hallucination', {
+        body: {
+          domain,
+          coreValueSummary: introduction,
+          action: 'compare',
+          originalValues: detectedValues,
+          correctedValues: correctedValues,
+          lang: language
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.diagnosis) {
+        const diagnosis = data.diagnosis as HallucinationDiagnosis;
+        
+        toast.success(t.success, {
+          description: t.successDesc
+        });
+
+        // Close modal and notify parent (support both prop names)
+        const callback = onDiagnosisComplete || onHallucinationDataReady;
+        if (callback) {
+          callback(diagnosis);
+        }
+        onOpenChange(false);
+      } else {
+        throw new Error(data?.error || 'Diagnosis failed');
+      }
+    } catch (err) {
+      console.error('Diagnosis error:', err);
+      toast.error('Erreur lors du diagnostic');
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const fieldIcons: Record<keyof DetectedValues, React.ReactNode> = {
+    sector: <Building2 className="h-4 w-4 text-muted-foreground" />,
+    country: <MapPin className="h-4 w-4 text-muted-foreground" />,
+    valueProposition: <Target className="h-4 w-4 text-muted-foreground" />,
+    targetAudience: <Users className="h-4 w-4 text-muted-foreground" />,
+    businessAge: <Calendar className="h-4 w-4 text-muted-foreground" />,
+    businessType: <FileText className="h-4 w-4 text-muted-foreground" />,
+    mainProducts: <Globe className="h-4 w-4 text-muted-foreground" />,
+  };
+
+  const fieldLabels: Record<keyof DetectedValues, string> = {
+    sector: t.sector,
+    country: t.country,
+    valueProposition: t.valueProposition,
+    targetAudience: t.targetAudience,
+    businessAge: t.businessAge,
+    businessType: t.businessType,
+    mainProducts: t.mainProducts,
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <BrainCircuit className="h-6 w-6 text-slate-600" />
-            Correction Hallucination IA
+            {t.title}
           </DialogTitle>
           <DialogDescription>
-            Analysez ce qui induit les LLM en erreur et corrigez l'introduction pour améliorer la perception IA de {siteName}
+            {t.description} : <strong>{siteName}</strong>
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Original Introduction */}
-          <div>
-            <Label className="text-sm font-medium text-muted-foreground mb-2 block">
-              Introduction actuelle générée par l'IA
-            </Label>
-            <Card className="border-amber-500/30 bg-amber-50/30 dark:bg-amber-950/20">
-              <CardContent className="p-4">
-                <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">
-                  {introduction}
-                </p>
+          {/* Loading state while extracting */}
+          {isExtracting ? (
+            <Card className="border-slate-500/30">
+              <CardContent className="p-8 flex flex-col items-center justify-center gap-4">
+                <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
+                <p className="text-sm text-muted-foreground">Extraction des informations détectées...</p>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Analyze Button */}
-          {!analysis && (
-            <Button 
-              onClick={analyzeHallucination}
-              disabled={isAnalyzing}
-              className="w-full h-12 bg-slate-600 hover:bg-slate-700 text-white"
-            >
-              {isAnalyzing ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                  Analyse des sources de confusion...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-5 w-5 mr-2" />
-                  Diagnostiquer les Hallucinations
-                </>
-              )}
-            </Button>
-          )}
-
-          {/* Analysis Results */}
-          <AnimatePresence>
-            {analysis && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-4"
-              >
-                {/* True Value */}
-                <Card className="border-success/30 bg-success/5">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="font-semibold text-foreground mb-2">Vraie Proposition de Valeur</h4>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {analysis.trueValue}
-                        </p>
-                      </div>
+          ) : (
+            <>
+              {/* Header Info */}
+              <Card className="border-slate-500/30 bg-slate-50/30 dark:bg-slate-900/20">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Edit3 className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-1">{t.detectedInfo}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {t.editInfo}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Confusion Sources */}
-                <Card className="border-amber-500/30 bg-amber-50/30 dark:bg-amber-950/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-foreground mb-3">Sources de Confusion pour les Robots</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {analysis.confusionSources.map((source, i) => (
-                            <Badge key={i} variant="outline" className="bg-amber-100/50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-300/50">
-                              {source}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Hallucination Analysis */}
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <BrainCircuit className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="font-semibold text-foreground mb-2">Analyse des Hallucinations</h4>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {analysis.hallucinationAnalysis}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Recommendations */}
-                <Card className="border-primary/30">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Lightbulb className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="font-semibold text-foreground mb-3">Recommandations Correctives</h4>
-                        <ul className="space-y-2">
-                          {analysis.recommendations.map((rec, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                              <span className="text-primary font-bold">•</span>
-                              <span>{rec}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Corrected Introduction */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium flex items-center gap-2">
-                    <FileCode2 className="h-4 w-4 text-slate-600" />
-                    Introduction Corrigée (Proposition)
-                  </Label>
-                  <Textarea
-                    value={correctedIntro}
-                    onChange={(e) => setCorrectedIntro(e.target.value)}
-                    rows={6}
-                    className="resize-none border-slate-500/30 focus:border-slate-500"
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={copyToClipboard}
-                      className="flex-1"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="h-4 w-4 mr-2 text-success" />
-                          Copié !
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copier l'introduction corrigée
-                        </>
-                      )}
-                    </Button>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Editable Fields Grid */}
+              <div className="grid gap-4 md:grid-cols-2">
+                {/* Sector */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm">
+                    {fieldIcons.sector}
+                    {fieldLabels.sector}
+                  </Label>
+                  <Input
+                    value={correctedValues.sector}
+                    onChange={(e) => handleFieldChange('sector', e.target.value)}
+                    placeholder="Ex: E-commerce, SaaS, Restauration..."
+                    className="border-slate-300 dark:border-slate-700"
+                  />
                 </div>
 
-                {/* Info about code generator */}
-                <Card className="border-violet-500/30 bg-violet-50/30 dark:bg-violet-950/20">
-                  <CardContent className="p-4">
-                    <p className="text-sm text-muted-foreground flex items-start gap-2">
-                      <Sparkles className="h-4 w-4 text-violet-500 shrink-0 mt-0.5" />
-                      <span>
-                        <strong className="text-violet-600 dark:text-violet-400">Patch automatique disponible !</strong> Le générateur de code correctif intègrera un script pour injecter les bonnes métadonnées et corriger la perception IA de votre site.
-                      </span>
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {/* Country */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm">
+                    {fieldIcons.country}
+                    {fieldLabels.country}
+                  </Label>
+                  <Input
+                    value={correctedValues.country}
+                    onChange={(e) => handleFieldChange('country', e.target.value)}
+                    placeholder="Ex: France, Europe, Monde..."
+                    className="border-slate-300 dark:border-slate-700"
+                  />
+                </div>
+
+                {/* Business Type */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm">
+                    {fieldIcons.businessType}
+                    {fieldLabels.businessType}
+                  </Label>
+                  <Input
+                    value={correctedValues.businessType}
+                    onChange={(e) => handleFieldChange('businessType', e.target.value)}
+                    placeholder="Ex: TPE, PME, Grande entreprise, Startup..."
+                    className="border-slate-300 dark:border-slate-700"
+                  />
+                </div>
+
+                {/* Business Age */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-sm">
+                    {fieldIcons.businessAge}
+                    {fieldLabels.businessAge}
+                  </Label>
+                  <Input
+                    value={correctedValues.businessAge}
+                    onChange={(e) => handleFieldChange('businessAge', e.target.value)}
+                    placeholder="Ex: 2 ans, 10+ ans, Nouvelle entreprise..."
+                    className="border-slate-300 dark:border-slate-700"
+                  />
+                </div>
+
+                {/* Target Audience */}
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="flex items-center gap-2 text-sm">
+                    {fieldIcons.targetAudience}
+                    {fieldLabels.targetAudience}
+                  </Label>
+                  <Input
+                    value={correctedValues.targetAudience}
+                    onChange={(e) => handleFieldChange('targetAudience', e.target.value)}
+                    placeholder="Ex: Particuliers 25-45 ans, Entreprises B2B, Professionnels de santé..."
+                    className="border-slate-300 dark:border-slate-700"
+                  />
+                </div>
+
+                {/* Main Products/Services */}
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="flex items-center gap-2 text-sm">
+                    {fieldIcons.mainProducts}
+                    {fieldLabels.mainProducts}
+                  </Label>
+                  <Input
+                    value={correctedValues.mainProducts}
+                    onChange={(e) => handleFieldChange('mainProducts', e.target.value)}
+                    placeholder="Ex: Vêtements bio, Logiciel de comptabilité, Conseil en stratégie..."
+                    className="border-slate-300 dark:border-slate-700"
+                  />
+                </div>
+
+                {/* Value Proposition (full width, textarea) */}
+                <div className="space-y-2 md:col-span-2">
+                  <Label className="flex items-center gap-2 text-sm">
+                    {fieldIcons.valueProposition}
+                    {fieldLabels.valueProposition}
+                  </Label>
+                  <Textarea
+                    value={correctedValues.valueProposition}
+                    onChange={(e) => handleFieldChange('valueProposition', e.target.value)}
+                    placeholder="Décrivez en quelques phrases ce que fait vraiment votre entreprise et ce qui la différencie..."
+                    rows={3}
+                    className="border-slate-300 dark:border-slate-700 resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Diagnose Button */}
+              <Button
+                onClick={runDiagnosis}
+                disabled={isLoading}
+                className="w-full h-12 bg-slate-600 hover:bg-slate-700 text-white shadow-md"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    {t.diagnosing}
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-5 w-5 mr-2" />
+                    {t.diagnose}
+                  </>
+                )}
+              </Button>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+
+// Re-export for backward compatibility
+export interface HallucinationAnalysis extends HallucinationDiagnosis {}

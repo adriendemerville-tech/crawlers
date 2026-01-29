@@ -4,14 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Globe, CheckCircle2, AlertCircle, Lightbulb, Zap, Users, BrainCircuit } from 'lucide-react';
 import { StrategicIntroduction } from '@/types/expertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { HallucinationCorrectionModal, HallucinationAnalysis } from './HallucinationCorrectionModal';
+import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
 
 interface IntroductionCardProps {
   introduction: StrategicIntroduction;
   variant: 'technical' | 'strategic';
   domain?: string;
   siteName?: string;
-  onHallucinationData?: (data: HallucinationAnalysis) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onHallucinationData?: (data: any) => void;
 }
 
 const translations = {
