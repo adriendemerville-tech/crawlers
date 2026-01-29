@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Save, Check, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export interface ActionPlanTask {
@@ -16,11 +18,41 @@ export interface ActionPlanTask {
 interface ActionPlanSaveButtonProps {
   tasks: ActionPlanTask[];
   url: string;
+  auditType?: 'technical' | 'strategic';
   onSaved?: () => void;
 }
 
-export function ActionPlanSaveButton({ tasks, url, onSaved }: ActionPlanSaveButtonProps) {
+const translations = {
+  fr: {
+    save: 'Sauvegarder dans mon espace',
+    saving: 'Sauvegarde...',
+    saved: 'Sauvegardé',
+    success: 'Plan d\'action sauvegardé dans votre espace',
+    error: 'Erreur lors de la sauvegarde',
+    loginRequired: 'Connectez-vous pour sauvegarder',
+  },
+  en: {
+    save: 'Save to my account',
+    saving: 'Saving...',
+    saved: 'Saved',
+    success: 'Action plan saved to your account',
+    error: 'Error saving action plan',
+    loginRequired: 'Log in to save',
+  },
+  es: {
+    save: 'Guardar en mi espacio',
+    saving: 'Guardando...',
+    saved: 'Guardado',
+    success: 'Plan de acción guardado en tu espacio',
+    error: 'Error al guardar el plan',
+    loginRequired: 'Inicia sesión para guardar',
+  },
+};
+
+export function ActionPlanSaveButton({ tasks, url, auditType = 'technical', onSaved }: ActionPlanSaveButtonProps) {
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const t = translations[language];
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -30,30 +62,39 @@ export function ActionPlanSaveButton({ tasks, url, onSaved }: ActionPlanSaveButt
     setIsSaving(true);
     
     try {
-      // TODO: Implement actual save to Supabase
-      // For now, simulate save with localStorage
-      const planData = {
-        id: crypto.randomUUID(),
+      // Extract domain from URL for title
+      let domain = url;
+      try {
+        domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
+      } catch {
+        // Keep original if parsing fails
+      }
+
+      const title = `${auditType === 'technical' ? 'Audit Technique' : 'Audit Stratégique'} - ${domain}`;
+
+      const { error } = await supabase.from('action_plans').insert({
+        user_id: user.id,
         url,
-        tasks,
-        savedAt: new Date().toISOString(),
-        completedCount: tasks.filter(t => t.isCompleted).length,
-        totalCount: tasks.length,
-      };
-      
-      // Get existing plans
-      const existingPlans = JSON.parse(localStorage.getItem('actionPlans') || '[]');
-      existingPlans.push(planData);
-      localStorage.setItem('actionPlans', JSON.stringify(existingPlans));
+        title,
+        audit_type: auditType,
+        tasks: JSON.parse(JSON.stringify(tasks)),
+      });
+
+      if (error) {
+        console.error('Error saving action plan:', error);
+        toast.error(t.error);
+        return;
+      }
       
       setIsSaved(true);
-      toast.success('Plan d\'action sauvegardé dans votre espace');
+      toast.success(t.success);
       onSaved?.();
       
       // Reset saved state after 3 seconds
       setTimeout(() => setIsSaved(false), 3000);
     } catch (error) {
-      toast.error('Erreur lors de la sauvegarde');
+      console.error('Error saving action plan:', error);
+      toast.error(t.error);
     } finally {
       setIsSaving(false);
     }
@@ -74,17 +115,17 @@ export function ActionPlanSaveButton({ tasks, url, onSaved }: ActionPlanSaveButt
         {isSaving ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Sauvegarde...
+            {t.saving}
           </>
         ) : isSaved ? (
           <>
             <Check className="h-4 w-4" />
-            Sauvegardé
+            {t.saved}
           </>
         ) : (
           <>
             <Save className="h-4 w-4" />
-            Sauvegarder dans mon espace
+            {t.save}
           </>
         )}
       </Button>

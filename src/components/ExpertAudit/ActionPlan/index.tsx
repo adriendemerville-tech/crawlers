@@ -9,9 +9,10 @@ import { ActionPlanSaveButton, ActionPlanTask } from './ActionPlanSaveButton';
 interface ActionPlanProps {
   recommendations: Recommendation[];
   url: string;
+  auditType?: 'technical' | 'strategic';
 }
 
-export function ActionPlan({ recommendations, url }: ActionPlanProps) {
+export function ActionPlan({ recommendations, url, auditType = 'technical' }: ActionPlanProps) {
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
 
   const toggleComplete = (id: string) => {
@@ -104,7 +105,7 @@ export function ActionPlan({ recommendations, url }: ActionPlanProps) {
           </p>
         </motion.div>
         
-        <ActionPlanSaveButton tasks={tasks} url={url} />
+        <ActionPlanSaveButton tasks={tasks} url={url} auditType={auditType} />
       </div>
 
       {/* Progress Bar */}
