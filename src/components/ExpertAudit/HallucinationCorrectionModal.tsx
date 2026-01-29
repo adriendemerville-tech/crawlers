@@ -228,9 +228,9 @@ export function HallucinationCorrectionModal({
     return modified;
   }, [correctedValues, detectedValues]);
 
-  // Common input classes with caret visibility and focus styling
-  const inputClasses = "border-slate-300 dark:border-slate-700 caret-primary focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all";
-  const textareaClasses = "border-slate-300 dark:border-slate-700 caret-primary focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none";
+  // Common input classes with caret visibility (! modifier to override global transparent caret)
+  const inputClasses = "border-slate-300 dark:border-slate-700 !caret-primary focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all";
+  const textareaClasses = "border-slate-300 dark:border-slate-700 !caret-primary focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none";
 
   const runDiagnosis = async () => {
     setIsLoading(true);
