@@ -780,15 +780,64 @@ async function fetchPageSpeedData(url: string): Promise<any> {
   const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=PERFORMANCE&category=SEO&category=BEST_PRACTICES&key=${GOOGLE_API_KEY}`;
   
   console.log('[PSI] Récupération données PageSpeed...');
-  const response = await fetch(apiUrl);
   
-  if (!response.ok) {
-    const error = await response.json();
-    console.error('[PSI] Erreur:', error);
-    throw new Error(error?.error?.message || 'PageSpeed API error');
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+    
+    const response = await fetch(apiUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[PSI] Erreur:', error);
+      
+      // Gestion gracieuse des erreurs PageSpeed (NO_FCP, timeout, quota, etc.)
+      const errorMessage = error?.error?.message || 'PageSpeed API error';
+      const isRenderingError = errorMessage.includes('NO_FCP') || 
+                               errorMessage.includes('NO_LCP') ||
+                               errorMessage.includes('page did not paint');
+      const isQuotaError = response.status === 429 || errorMessage.includes('quota');
+      
+      console.log(`[PSI] ⚠️ Erreur gérée: ${isRenderingError ? 'rendu impossible' : isQuotaError ? 'quota dépassé' : 'autre'}`);
+      
+      // Retourner des données vides au lieu de throw - l'audit continuera avec les autres analyses
+      return {
+        lighthouseResult: {
+          categories: {
+            performance: { score: null },
+            seo: { score: null },
+            'best-practices': { score: null }
+          },
+          audits: {}
+        },
+        psiError: {
+          type: isRenderingError ? 'rendering_failed' : isQuotaError ? 'quota_exceeded' : 'api_error',
+          message: errorMessage
+        }
+      };
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('[PSI] Erreur réseau:', error);
+    
+    // Erreur réseau ou timeout - retourner des données vides
+    return {
+      lighthouseResult: {
+        categories: {
+          performance: { score: null },
+          seo: { score: null },
+          'best-practices': { score: null }
+        },
+        audits: {}
+      },
+      psiError: {
+        type: 'network_error',
+        message: error instanceof Error ? error.message : 'Network error'
+      }
+    };
   }
-  
-  return await response.json();
 }
 
 async function checkSafeBrowsing(url: string): Promise<{ safe: boolean; threats: string[] }> {
