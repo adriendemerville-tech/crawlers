@@ -16,6 +16,7 @@ import { EmailGateCard } from './EmailGateCard';
 import { StepperProgress } from './StepperProgress';
 import { RegistrationGate } from './RegistrationGate';
 import { PaymentModal } from './PaymentModal';
+import { WorkflowCarousel } from './WorkflowCarousel';
 
 export {
   ExpertAuditDashboard,
@@ -37,4 +38,5 @@ export {
   StepperProgress,
   RegistrationGate,
   PaymentModal,
+  WorkflowCarousel,
 };
