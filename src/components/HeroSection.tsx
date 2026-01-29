@@ -1,10 +1,16 @@
-import { useState, useEffect, memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, memo, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Zap } from 'lucide-react';
 import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
+
+// Lazy load framer-motion to avoid blocking LCP
+const MotionSpan = lazy(() => 
+  import('framer-motion').then(mod => ({
+    default: ({ children, ...props }: any) => <mod.motion.span {...props}>{children}</mod.motion.span>
+  }))
+);
 
 interface HeroSectionProps {
   onSubmit: (url: string) => void;
@@ -18,6 +24,12 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
   const [url, setUrl] = useState('');
   const { t, language } = useLanguage();
   const [wordIndex, setWordIndex] = useState(0);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Mark as hydrated after first render for animations
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // Rotate words every 2.5 seconds
   useEffect(() => {
@@ -124,27 +136,36 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
 
   const content = getHeroContent();
 
-  // Animated headline for crawlers tab
+  // Animated headline for crawlers tab - with SSR-safe fallback
   const renderAnimatedHeadline = () => (
     <h1 className="mb-4 text-4xl font-extrabold tracking-tight leading-tight sm:text-5xl lg:text-6xl">
       <span className="inline-flex items-center justify-center gap-2 sm:gap-3 flex-wrap pb-1">
-        {/* Animated word container - uses auto height to respect descenders */}
+        {/* Animated word container */}
         <span
-          className="relative inline-flex items-center justify-end overflow-visible"
-          style={{ minWidth: '280px', width: '280px', height: 'auto', minHeight: '1.2em' }}
+          className="hero-word-container relative inline-flex items-center justify-end overflow-hidden"
+          style={{ minWidth: '280px', width: '280px' }}
         >
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={wordIndex}
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -50, opacity: 0 }}
-              transition={{ duration: 0.4, ease: 'easeInOut' }}
-              className="relative bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap leading-tight"
-            >
-              {animatedWords[wordIndex]}
-            </motion.span>
-          </AnimatePresence>
+          {isHydrated ? (
+            <Suspense fallback={
+              <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap leading-tight">
+                {animatedWords[wordIndex]}
+              </span>
+            }>
+              <MotionSpan
+                key={wordIndex}
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.4, ease: 'easeInOut' }}
+                className="relative bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap leading-tight"
+              >
+                {animatedWords[wordIndex]}
+              </MotionSpan>
+            </Suspense>
+          ) : (
+            <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap leading-tight">
+              {animatedWords[0]}
+            </span>
+          )}
         </span>
         <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase leading-tight">
           {getIgnoreText()} {getSiteText()}
