@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      action_plans: {
+        Row: {
+          audit_type: string
+          created_at: string
+          id: string
+          tasks: Json
+          title: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          audit_type: string
+          created_at?: string
+          id?: string
+          tasks?: Json
+          title: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          audit_type?: string
+          created_at?: string
+          id?: string
+          tasks?: Json
+          title?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       billing_info: {
         Row: {
           billing_address: string | null

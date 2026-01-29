@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe } from 'lucide-react';
+import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { MyReports } from '@/components/Profile/MyReports';
+import { MyActionPlans } from '@/components/Profile/MyActionPlans';
 
 const translations = {
   fr: {
@@ -23,6 +24,7 @@ const translations = {
     identity: 'Identité',
     settings: 'Paramètres',
     myReports: 'Mes Rapports',
+    actionPlans: 'Plans d\'Action',
     firstName: 'Prénom',
     lastName: 'Nom',
     email: 'Email',
@@ -49,6 +51,7 @@ const translations = {
     identity: 'Identity',
     settings: 'Settings',
     myReports: 'My Reports',
+    actionPlans: 'Action Plans',
     firstName: 'First Name',
     lastName: 'Last Name',
     email: 'Email',
@@ -75,6 +78,7 @@ const translations = {
     identity: 'Identidad',
     settings: 'Configuración',
     myReports: 'Mis Informes',
+    actionPlans: 'Planes de Acción',
     firstName: 'Nombre',
     lastName: 'Apellido',
     email: 'Correo electrónico',
@@ -194,7 +198,7 @@ export default function Profile() {
             </div>
 
             <Tabs defaultValue="identity" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="identity" className="gap-2">
                   <User className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.identity}</span>
@@ -206,6 +210,10 @@ export default function Profile() {
                 <TabsTrigger value="reports" className="gap-2">
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.myReports}</span>
+                </TabsTrigger>
+                <TabsTrigger value="action-plans" className="gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t.actionPlans}</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -352,6 +360,10 @@ export default function Profile() {
 
               <TabsContent value="reports">
                 <MyReports />
+              </TabsContent>
+
+              <TabsContent value="action-plans">
+                <MyActionPlans />
               </TabsContent>
             </Tabs>
           </motion.div>
