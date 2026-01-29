@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ import { IntroductionCard } from './IntroductionCard';
 import { ExpertInsightsCard } from './ExpertInsightsCard';
 import { ExpertReportPreviewModal } from './ExpertReportPreviewModal';
 import { RegistrationGate } from './RegistrationGate';
+import { ReportAuthGate } from './ReportAuthGate';
 import { PaymentModal } from './PaymentModal';
 import { WorkflowCarousel } from './WorkflowCarousel';
 import { ExpertAuditResult } from '@/types/expertAudit';
@@ -25,7 +26,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useSaveReport } from '@/hooks/useSaveReport';
 
 function formatMs(ms: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
@@ -128,6 +130,8 @@ export function ExpertAuditDashboard() {
   const [strategicResult, setStrategicResult] = useState<ExpertAuditResult | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isReportAuthGateOpen, setIsReportAuthGateOpen] = useState(false);
+  const [pendingReportOpen, setPendingReportOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   
@@ -135,9 +139,60 @@ export function ExpertAuditDashboard() {
   const { language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { saveReport, isAuthenticated } = useSaveReport();
   const t = translations[language] || translations.fr;
 
   const isLoggedIn = !!user;
+
+  // Restore audit state from session storage on mount / after auth
+  useEffect(() => {
+    const savedUrl = sessionStorage.getItem('audit_url');
+    const savedTechnicalResult = sessionStorage.getItem('audit_technical_result');
+    const savedStrategicResult = sessionStorage.getItem('audit_strategic_result');
+    const savedAuditMode = sessionStorage.getItem('audit_mode');
+    const pendingAction = sessionStorage.getItem('audit_pending_action');
+
+    if (savedUrl) setUrl(savedUrl);
+    if (savedTechnicalResult) {
+      const parsed = JSON.parse(savedTechnicalResult);
+      setTechnicalResult(parsed);
+      setResult(parsed);
+      setCompletedSteps(prev => [...prev.filter(s => s !== 1), 1]);
+    }
+    if (savedStrategicResult) {
+      const parsed = JSON.parse(savedStrategicResult);
+      setStrategicResult(parsed);
+      setResult(parsed);
+      setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+    }
+    if (savedAuditMode) {
+      setAuditMode(savedAuditMode as AuditMode);
+    }
+
+    // Handle pending actions after auth
+    if (isLoggedIn && pendingAction === 'open_report') {
+      sessionStorage.removeItem('audit_pending_action');
+      sessionStorage.removeItem('audit_return_path');
+      setPendingReportOpen(true);
+    }
+  }, [isLoggedIn]);
+
+  // Open report modal after auth if pending
+  useEffect(() => {
+    if (pendingReportOpen && isLoggedIn && (technicalResult || strategicResult)) {
+      setIsReportModalOpen(true);
+      setPendingReportOpen(false);
+    }
+  }, [pendingReportOpen, isLoggedIn, technicalResult, strategicResult]);
+
+  // Save audit state to session storage
+  const saveAuditState = useCallback(() => {
+    if (url) sessionStorage.setItem('audit_url', url);
+    if (technicalResult) sessionStorage.setItem('audit_technical_result', JSON.stringify(technicalResult));
+    if (strategicResult) sessionStorage.setItem('audit_strategic_result', JSON.stringify(strategicResult));
+    if (auditMode) sessionStorage.setItem('audit_mode', auditMode);
+  }, [url, technicalResult, strategicResult, auditMode]);
 
   // Update step based on completed steps
   useEffect(() => {
@@ -150,8 +205,55 @@ export function ExpertAuditDashboard() {
     }
   }, [technicalResult, strategicResult]);
 
+  // Save report to profile when modal opens and user is logged in
+  const handleSaveReportToProfile = useCallback(async (reportResult: ExpertAuditResult, mode: 'technical' | 'strategic') => {
+    if (!isAuthenticated || !reportResult) return;
+
+    const reportType = mode === 'technical' ? 'seo_technical' : 'seo_strategic';
+    const title = `${mode === 'technical' ? 'Audit Technique' : 'Audit Stratégique'} - ${reportResult.domain}`;
+    
+    await saveReport({
+      reportType: reportType as any,
+      title,
+      url: reportResult.url,
+      reportData: reportResult,
+    });
+  }, [isAuthenticated, saveReport]);
+
   const handleRegister = () => {
+    saveAuditState();
+    sessionStorage.setItem('audit_pending_action', 'unblur_strategic');
     navigate('/auth');
+  };
+
+  const handleReportButtonClick = () => {
+    if (!isLoggedIn) {
+      saveAuditState();
+      setIsReportAuthGateOpen(true);
+    } else {
+      openReportAndSave();
+    }
+  };
+
+  const openReportAndSave = async () => {
+    setIsReportModalOpen(true);
+    // Save the report to profile
+    if (result && auditMode) {
+      await handleSaveReportToProfile(result, auditMode);
+    }
+  };
+
+  const handleReportAuthSuccess = () => {
+    setIsReportAuthGateOpen(false);
+    openReportAndSave();
+  };
+
+  const handleReportModalClose = () => {
+    setIsReportModalOpen(false);
+    // If we just came from technical audit, navigate to strategic
+    if (auditMode === 'technical' && technicalResult && !strategicResult) {
+      setCurrentStep(2);
+    }
   };
 
   const normalizeUrl = (input: string): string => {
@@ -554,7 +656,7 @@ export function ExpertAuditDashboard() {
               {t.generatedAt} {new Date(result.scannedAt).toLocaleString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
             </p>
             <Button
-              onClick={() => setIsReportModalOpen(true)}
+              onClick={handleReportButtonClick}
               variant="outline"
               className="gap-2"
             >
@@ -569,11 +671,19 @@ export function ExpertAuditDashboard() {
       {result && auditMode && (
         <ExpertReportPreviewModal
           isOpen={isReportModalOpen}
-          onClose={() => setIsReportModalOpen(false)}
+          onClose={handleReportModalClose}
           result={result}
           auditMode={auditMode}
         />
       )}
+
+      {/* Report Auth Gate */}
+      <ReportAuthGate
+        isOpen={isReportAuthGateOpen}
+        onClose={() => setIsReportAuthGateOpen(false)}
+        onAuthenticated={handleReportAuthSuccess}
+        returnPath="/audit-expert"
+      />
 
       {/* Payment Modal */}
       <PaymentModal
