@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Crawlers.fr - Audit SEO & GEO",
+  "name_for_model": "crawlers_seo_geo_audit",
+  "description_for_human": "Crawlers.fr expertise le SEO et le GEO de votre site. Audit technique gratuit sur 200 points pour ChatGPT, Gemini et LLM.",
+  "description_for_model": "Crawlers.fr is a French SEO and GEO audit platform. It provides: 1) Technical SEO audit on 200 points (performance, security, semantics), 2) GEO score for generative engines (ChatGPT, Gemini, Perplexity), 3) AI bot accessibility analysis (GPTBot, ClaudeBot, Google-Extended), 4) PageSpeed Insights with Core Web Vitals, 5) LLM visibility analysis for marketing. Free, instant, no signup required.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://crawlers.fr/openapi.yaml"
+  },
+  "logo_url": "https://crawlers.fr/favicon.svg",
+  "contact_email": "contact@crawlers.fr",
+  "legal_info_url": "https://crawlers.fr/mentions-legales"
+}
