@@ -285,25 +285,32 @@ export function WorkflowCarousel({
                 // Calculate visual state
                 const getCardOpacity = () => {
                   if (isActive) return 1;
-                  if (isNext) return 0.7;
-                  if (isPrevious) return 0.5;
+                  if (isNext) return 0.85;
+                  if (isPrevious) return 0.75;
                   return 0; // Hidden (step 3 at start)
                 };
 
                 const getCardScale = () => {
                   if (isActive) return 1;
-                  return 0.88; // Smaller scale for side cards
+                  return 0.92; // Slightly larger scale for side cards (was 0.88)
                 };
 
-                // Calculate blur intensity - reduced by half
+                // Calculate blur intensity - reduced for clickable cards
                 const getBlurAmount = () => {
                   if (isActive) return 0;
-                  if (isNext || isPrevious) return 1.5; // Reduced from 3
-                  return 2.5; // Reduced from 5
+                  if (isNext || isPrevious) return 0.5; // Very subtle blur for clickable cards
+                  return 1.5;
                 };
 
                 // Step 3 should be completely hidden at step 1
                 const shouldHide = activeStep === 1 && step.id === 3;
+
+                // Handle card click to navigate
+                const handleCardClick = () => {
+                  if (!isActive && !shouldHide) {
+                    setActiveStep(step.id);
+                  }
+                };
 
                 return (
                   <motion.div
@@ -318,19 +325,21 @@ export function WorkflowCarousel({
                       opacity: shouldHide ? 0 : getCardOpacity(),
                       filter: isActive 
                         ? 'grayscale(0%) blur(0px)' 
-                        : `grayscale(50%) blur(${getBlurAmount()}px)`,
+                        : `grayscale(20%) blur(${getBlurAmount()}px)`,
                       x: 0,
                     }}
                     transition={{ 
                       duration: 0.7, 
                       ease: [0.22, 1, 0.36, 1] 
                     }}
+                    onClick={handleCardClick}
                     className={cn(
                       "flex-shrink-0 w-[340px] sm:w-[380px] relative z-20",
-                      !isActive && "pointer-events-none"
+                      !isActive && !shouldHide && "cursor-pointer hover:scale-[0.94] transition-transform duration-300"
                     )}
                     style={{
-                      visibility: shouldHide ? 'hidden' : 'visible'
+                      visibility: shouldHide ? 'hidden' : 'visible',
+                      pointerEvents: shouldHide ? 'none' : 'auto'
                     }}
                   >
                     {/* Glassmorphism Card with shadow */}
@@ -344,7 +353,9 @@ export function WorkflowCarousel({
                       step.id === 2 && !isCompleted && "border-2 border-slate-500/70 bg-gradient-to-br from-card via-card to-slate-100/20 dark:to-slate-900/40 shadow-[0_0_20px_rgba(100,116,139,0.25)]",
                       step.id === 2 && isActive && !isCompleted && "shadow-[0_0_25px_rgba(100,116,139,0.35)]",
                       // Violet/purple accent for step 3 (Code Correctif) with glow
-                      step.id === 3 && !isCompleted && "border-2 border-violet-500/70 shadow-[0_0_20px_rgba(139,92,246,0.4)]"
+                      step.id === 3 && !isCompleted && "border-2 border-violet-500/70 shadow-[0_0_20px_rgba(139,92,246,0.4)]",
+                      // Hover effect for non-active cards
+                      !isActive && !shouldHide && "hover:shadow-[0_12px_35px_rgba(0,0,0,0.18)]"
                     )}>
                       {/* Top accent line */}
                       <div className={cn(
@@ -395,41 +406,42 @@ export function WorkflowCarousel({
                           {step.description}
                         </p>
 
-                        {/* Action Button - Always visible for active step */}
-                        {isActive && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
+                        {/* Action Button - Visible on all cards */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: isActive ? 0.2 : 0 }}
+                        >
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card click when clicking button
+                              handleStepAction(step.id);
+                            }}
+                            disabled={
+                              isLocked || 
+                              isLoading || 
+                              isStrategicLoading || 
+                              (step.id === 1 && !url.trim()) ||
+                              isCompleted
+                            }
+                            className={cn(
+                              "w-full h-12 text-base font-medium transition-all duration-300",
+                              "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
+                              isCompleted && "bg-success hover:bg-success/90",
+                              isLocked && "opacity-50 cursor-not-allowed",
+                              // Dark metallic gray button for step 2
+                              step.id === 2 && !isCompleted && !isLocked && "bg-slate-600 hover:bg-slate-700 text-white border-0 shadow-[0_0_15px_rgba(100,116,139,0.3)]",
+                              // Violet/purple button for step 3 with glow
+                              step.id === 3 && !isCompleted && !isLocked && "bg-violet-600 hover:bg-violet-700 text-white border-0 shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                            )}
                           >
-                            <Button
-                              onClick={() => handleStepAction(step.id)}
-                              disabled={
-                                isLocked || 
-                                isLoading || 
-                                isStrategicLoading || 
-                                (step.id === 1 && !url.trim()) ||
-                                isCompleted
-                              }
-                              className={cn(
-                                "w-full h-12 text-base font-medium transition-all duration-300",
-                                "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
-                                isCompleted && "bg-success hover:bg-success/90",
-                                isLocked && "opacity-50 cursor-not-allowed",
-                                // Dark metallic gray button for step 2
-                                step.id === 2 && !isCompleted && !isLocked && "bg-slate-600 hover:bg-slate-700 text-white border-0 shadow-[0_0_15px_rgba(100,116,139,0.3)]",
-                                // Violet/purple button for step 3 with glow
-                                step.id === 3 && !isCompleted && !isLocked && "bg-violet-600 hover:bg-violet-700 text-white border-0 shadow-[0_0_15px_rgba(139,92,246,0.4)]"
-                              )}
-                            >
-                              {getStepButtonText(step.id)}
-                            </Button>
-                          </motion.div>
-                        )}
+                            {getStepButtonText(step.id)}
+                          </Button>
+                        </motion.div>
 
-                        {/* Completed badge */}
-                        {isCompleted && !isActive && (
-                          <div className="flex items-center gap-2 text-success text-sm font-medium">
+                        {/* Completed badge - shown below button when completed */}
+                        {isCompleted && (
+                          <div className="flex items-center justify-center gap-2 text-success text-sm font-medium mt-3">
                             <Check className="h-4 w-4" />
                             {t.complete}
                           </div>
