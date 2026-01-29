@@ -132,11 +132,11 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
   // Animated headline for crawlers tab
   const renderAnimatedHeadline = () => (
     <h1 className="mb-10 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-      <span className="inline-flex items-baseline justify-center gap-2 sm:gap-3 flex-wrap">
-        {/* Animated word container - aligned baseline with text */}
+      <span className="inline-flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+        {/* Animated word container - vertically centered with text */}
         <span
-          className="relative inline-block overflow-hidden align-baseline"
-          style={{ minWidth: '280px', width: '280px', height: '1.15em' }}
+          className="relative inline-flex items-center justify-end overflow-hidden"
+          style={{ minWidth: '280px', width: '280px', height: '1.2em' }}
         >
           <AnimatePresence mode="wait">
             <motion.span
@@ -145,7 +145,7 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -50, opacity: 0 }}
               transition={{ duration: 0.4, ease: 'easeInOut' }}
-              className="absolute right-0 bottom-0 bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap"
+              className="absolute right-0 bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap"
             >
               {animatedWords[wordIndex]}
             </motion.span>
