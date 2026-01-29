@@ -19,46 +19,43 @@ export default defineConfig(({ mode }) => ({
     // Optimize chunking for better LCP and reduced HTTP requests
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Isolate ExpertAudit components to their own chunk (loaded only on /audit-expert)
-          if (id.includes('src/components/ExpertAudit/')) {
-            return 'page-audit-expert';
-          }
-          // Core React vendors - loaded first (critical)
-          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
-            return 'vendor-react';
-          }
-          if (id.includes('node_modules/react-router')) {
-            return 'vendor-router';
-          }
-          // Animation library - deferred via lazy loading
-          if (id.includes('node_modules/framer-motion')) {
-            return 'vendor-motion';
-          }
-          // Radix UI components - bundled together
-          if (id.includes('node_modules/@radix-ui')) {
-            return 'vendor-ui';
-          }
+        manualChunks: {
+          // Core React vendors - loaded first
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // UI framework - Radix components bundled together
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-select',
+            '@radix-ui/react-scroll-area',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-checkbox',
+            '@radix-ui/react-switch',
+            '@radix-ui/react-label',
+            '@radix-ui/react-slot',
+            '@radix-ui/react-separator',
+            '@radix-ui/react-progress',
+            '@radix-ui/react-avatar',
+            '@radix-ui/react-collapsible',
+            '@radix-ui/react-toggle',
+            '@radix-ui/react-toggle-group',
+          ],
+          // Animation library - deferred
+          'vendor-motion': ['framer-motion'],
           // Data & state management
-          if (id.includes('node_modules/@tanstack/react-query') || id.includes('node_modules/@supabase')) {
-            return 'vendor-data';
-          }
+          'vendor-data': ['@tanstack/react-query', '@supabase/supabase-js'],
+          // Heavy utilities - lazy loaded
+          'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge', 'class-variance-authority'],
           // PDF generation - only loaded when needed
-          if (id.includes('node_modules/jspdf')) {
-            return 'vendor-pdf';
-          }
+          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
           // Charts - only loaded when needed
-          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3')) {
-            return 'vendor-charts';
-          }
+          'vendor-charts': ['recharts'],
           // Lucide icons - bundled together
-          if (id.includes('node_modules/lucide-react')) {
-            return 'vendor-icons';
-          }
-          // Other node_modules go to a common vendor chunk
-          if (id.includes('node_modules/')) {
-            return 'vendor-common';
-          }
+          'vendor-icons': ['lucide-react'],
         },
       },
     },

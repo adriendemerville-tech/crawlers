@@ -1,32 +1,12 @@
-import { lazy, Suspense, useEffect, memo } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { ExpertAuditDashboard, ExpertAuditContent, ExpertAuditFAQ } from '@/components/ExpertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ExpertAuditSkeleton } from '@/components/ExpertAudit/ExpertAuditSkeleton';
 
-// Lazy load ALL heavy components to reduce initial bundle
-const ExpertAuditDashboard = lazy(() => 
-  import('@/components/ExpertAudit/ExpertAuditDashboard').then(m => ({ default: m.ExpertAuditDashboard }))
-);
-const ExpertAuditContent = lazy(() => 
-  import('@/components/ExpertAudit/ExpertAuditContent').then(m => ({ default: m.ExpertAuditContent }))
-);
-const ExpertAuditFAQ = lazy(() => 
-  import('@/components/ExpertAudit/ExpertAuditFAQ').then(m => ({ default: m.ExpertAuditFAQ }))
-);
-const Footer = lazy(() => 
-  import('@/components/Footer').then(m => ({ default: m.Footer }))
-);
-const NewsCarousel = lazy(() => 
-  import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel }))
-);
-const SEOComparisonTable = lazy(() => 
-  import('@/components/SEOComparisonTable').then(m => ({ default: m.SEOComparisonTable }))
-);
-
-// Minimal section skeleton
-const SectionSkeleton = memo(() => (
-  <div className="h-64 animate-pulse bg-muted/20" />
-));
+// Lazy load components
+const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
+const SEOComparisonTable = lazy(() => import('@/components/SEOComparisonTable').then(m => ({ default: m.SEOComparisonTable })));
 
 // FAQ data for Schema.org
 const faqSchemaData = {
@@ -166,42 +146,17 @@ const ExpertAudit = () => {
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
       <main className="flex-1" role="main" aria-label="Audit Expert SEO & IA">
-        {/* Critical static content for SEO/GEO - rendered immediately */}
-        <noscript>
-          <div className="px-4 pt-8 pb-6 text-center">
-            <h1 className="text-3xl font-bold mb-4">Score SEO 200 - Audit Expert SEO & IA</h1>
-            <p className="text-lg text-muted-foreground">
-              Analysez votre site en profondeur avec notre audit SEO & IA complet sur 200 points.
-              Performance, SEO technique, sécurité, Core Web Vitals et préparation IA/GEO.
-            </p>
-          </div>
-        </noscript>
-        
-        {/* Main dashboard - lazy loaded with skeleton */}
-        <Suspense fallback={<ExpertAuditSkeleton />}>
-          <ExpertAuditDashboard />
-        </Suspense>
-        
-        <Suspense fallback={<SectionSkeleton />}>
+        <ExpertAuditDashboard />
+        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
           <SEOComparisonTable />
         </Suspense>
-        
-        <Suspense fallback={<SectionSkeleton />}>
-          <ExpertAuditContent />
-        </Suspense>
-        
-        <Suspense fallback={<SectionSkeleton />}>
-          <ExpertAuditFAQ />
-        </Suspense>
-        
-        <Suspense fallback={<SectionSkeleton />}>
+        <ExpertAuditContent />
+        <ExpertAuditFAQ />
+        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
           <NewsCarousel />
         </Suspense>
       </main>
-      
-      <Suspense fallback={<div className="h-48 bg-muted/10" />}>
-        <Footer />
-      </Suspense>
+      <Footer />
     </div>
   );
 };
