@@ -19,6 +19,7 @@ import { RegistrationGate } from './RegistrationGate';
 import { ReportAuthGate } from './ReportAuthGate';
 import { PaymentModal } from './PaymentModal';
 import { WorkflowCarousel } from './WorkflowCarousel';
+import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 
 export {
   ExpertAuditDashboard,
@@ -46,4 +47,5 @@ export {
   ReportAuthGate,
   PaymentModal,
   WorkflowCarousel,
+  CorrectiveCodeEditor,
 };

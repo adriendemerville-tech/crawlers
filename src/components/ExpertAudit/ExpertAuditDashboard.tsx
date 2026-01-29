@@ -20,6 +20,7 @@ import { ExpertReportPreviewModal } from './ExpertReportPreviewModal';
 import { RegistrationGate } from './RegistrationGate';
 import { ReportAuthGate } from './ReportAuthGate';
 import { PaymentModal } from './PaymentModal';
+import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 import { WorkflowCarousel } from './WorkflowCarousel';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
@@ -133,6 +134,7 @@ export function ExpertAuditDashboard() {
   const [strategicResult, setStrategicResult] = useState<ExpertAuditResult | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isCodeEditorOpen, setIsCodeEditorOpen] = useState(false);
   const [isReportAuthGateOpen, setIsReportAuthGateOpen] = useState(false);
   const [pendingReportOpen, setPendingReportOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -457,7 +459,7 @@ export function ExpertAuditDashboard() {
         onUrlChange={setUrl}
         onStartTechnical={handleTechnicalAudit}
         onStartStrategic={handleStrategicAudit}
-        onStartPayment={() => setIsPaymentModalOpen(true)}
+        onStartPayment={() => setIsCodeEditorOpen(true)}
         isLoading={isLoading}
         isStrategicLoading={isStrategicLoading}
         hasTechnicalResult={!!technicalResult}
@@ -715,10 +717,20 @@ export function ExpertAuditDashboard() {
         returnPath="/audit-expert"
       />
 
-      {/* Payment Modal */}
+      {/* Payment Modal (legacy) */}
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
+        siteUrl={result?.url || url}
+        siteName={result?.domain || url}
+      />
+
+      {/* Corrective Code Editor */}
+      <CorrectiveCodeEditor
+        isOpen={isCodeEditorOpen}
+        onClose={() => setIsCodeEditorOpen(false)}
+        technicalResult={technicalResult}
+        strategicResult={strategicResult}
         siteUrl={result?.url || url}
         siteName={result?.domain || url}
       />
