@@ -191,7 +191,7 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'ChatGPT et Gemini',
       },
       subheadline: {
-        crawlers: "Testez votre robots.txt AI en 30 secondes. Bloquer un crawler IA = perdre 40% du trafic 2026.",
+        crawlers: "Testez votre visibilité en 30 secondes. Corriger facilement le code de votre site avec notre Audit expert. Gagner sur la concurrence.",
         geo: "Mesurez votre score GEO et votre potentiel de citation par les moteurs génératifs. Optimisation Search Generative Experience incluse.",
         pagespeed: "Core Web Vitals + impact sur le crawling IA. Si votre site est lent, les LLM ne vous indexent pas.",
         llm: "Analysez votre visibilité ChatGPT, Claude et Gemini. Découvrez si votre marque est citée ou ignorée.",
@@ -377,7 +377,7 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'ChatGPT & Gemini',
       },
       subheadline: {
-        crawlers: 'Test your AI robots.txt in 30 seconds. Blocking an AI crawler = losing 40% of 2026 traffic.',
+        crawlers: 'Test your visibility in 30 seconds. Easily fix your site code with our Expert Audit. Outperform the competition.',
         geo: 'Measure your GEO score and citation potential by generative engines. Search Generative Experience Optimization included.',
         pagespeed: 'Core Web Vitals + AI crawling impact. Slow sites don\'t get indexed by LLMs.',
         llm: 'Analyze your ChatGPT, Claude, and Gemini visibility. Discover if your brand is cited or ignored.',
@@ -563,7 +563,7 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'ChatGPT y Gemini',
       },
       subheadline: {
-        crawlers: 'Prueba tu robots.txt AI en 30 segundos. Bloquear un crawler IA = perder 40% del tráfico 2026.',
+        crawlers: 'Prueba tu visibilidad en 30 segundos. Corrige fácilmente el código de tu sitio con nuestra Auditoría experta. Supera a la competencia.',
         geo: 'Mide tu puntuación GEO y potencial de citación por motores generativos. Optimización Search Generative Experience incluida.',
         pagespeed: 'Core Web Vitals + impacto en crawling IA. Los sitios lentos no son indexados por los LLM.',
         llm: 'Analiza tu visibilidad en ChatGPT, Claude y Gemini. Descubre si tu marca es citada o ignorada.',
