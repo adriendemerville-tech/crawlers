@@ -210,7 +210,7 @@ const translations: Record<Language, Translations> = {
       },
       trust: {
         noSignup: '',
-        instant: 'Résultats en 30 secondes',
+        instant: 'Plus besoin de consultant',
         free: 'Audit GEO 100% gratuit',
       },
     },
@@ -396,7 +396,7 @@ const translations: Record<Language, Translations> = {
       },
       trust: {
         noSignup: '',
-        instant: 'Results in 30 seconds',
+        instant: 'No consultant needed',
         free: '100% free GEO audit',
       },
     },
@@ -582,7 +582,7 @@ const translations: Record<Language, Translations> = {
       },
       trust: {
         noSignup: '',
-        instant: 'Resultados en 30 segundos',
+        instant: 'Sin necesidad de consultor',
         free: 'Auditoría GEO 100% gratis',
       },
     },

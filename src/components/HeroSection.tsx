@@ -131,12 +131,12 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
 
   // Animated headline for crawlers tab
   const renderAnimatedHeadline = () => (
-    <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-      <span className="inline-flex items-baseline justify-center gap-2 sm:gap-3">
+    <h1 className="mb-6 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+      <span className="inline-flex items-baseline justify-center gap-2 sm:gap-3 flex-wrap">
         {/* Animated word container */}
         <span
-          className="relative inline-block overflow-hidden text-white"
-          style={{ minWidth: '180px', width: '180px' }}
+          className="relative inline-block overflow-hidden bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent dark:text-white dark:bg-none"
+          style={{ minWidth: '220px', width: '220px' }}
         >
           <AnimatePresence mode="wait">
             <motion.span
@@ -151,10 +151,8 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
             </motion.span>
           </AnimatePresence>
         </span>
-        <span className="text-white">{getIgnoreText()}</span>
+        <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent dark:text-white dark:bg-none lowercase">{getIgnoreText()} {getSiteText()}</span>
       </span>
-      {' '}
-      <span className="text-gradient">{getSiteText()}</span>
       {' '}?
     </h1>
   );
