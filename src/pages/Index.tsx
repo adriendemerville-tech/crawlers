@@ -23,6 +23,7 @@ const GEOFAQSection = lazy(() => import('@/components/GEOFAQSection').then(m => 
 const WhyVital2026Section = lazy(() => import('@/components/WhyVital2026Section').then(m => ({ default: m.WhyVital2026Section })));
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
 const GEOComparisonTable = lazy(() => import('@/components/GEOComparisonTable').then(m => ({ default: m.GEOComparisonTable })));
+const SolutionSection = lazy(() => import('@/components/SolutionSection').then(m => ({ default: m.SolutionSection })));
 
 // Skeleton loader for dashboards
 const DashboardSkeleton = () => (
@@ -337,6 +338,9 @@ const Index = () => {
             {renderDashboard()}
           </Suspense>
         </section>
+        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+          <SolutionSection />
+        </Suspense>
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
           <WhyVital2026Section />
         </Suspense>
