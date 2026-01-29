@@ -160,7 +160,7 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
   );
 
   return (
-    <section className="relative overflow-hidden px-4 py-6 sm:py-10">
+    <section className="relative overflow-hidden px-4 py-6 sm:py-8">
       {/* Background decoration */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-40 -top-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
@@ -168,11 +168,6 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
       </div>
 
       <div className="relative mx-auto max-w-4xl text-center">
-        {/* Badge */}
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted-foreground">
-          {content.icon}
-          <span>{content.badge}</span>
-        </div>
 
         {/* H1 Headline - SEO optimized */}
         {content.useAnimatedHeadline ? (
