@@ -406,38 +406,40 @@ export function WorkflowCarousel({
                           {step.description}
                         </p>
 
-                        {/* Action Button - Visible on all cards */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: isActive ? 0.2 : 0 }}
-                        >
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent card click when clicking button
-                              handleStepAction(step.id);
-                            }}
-                            disabled={
-                              isLocked || 
-                              isLoading || 
-                              isStrategicLoading || 
-                              (step.id === 1 && !url.trim()) ||
-                              isCompleted
-                            }
-                            className={cn(
-                              "w-full h-12 text-base font-medium transition-all duration-300",
-                              "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
-                              isCompleted && "bg-success hover:bg-success/90",
-                              isLocked && "opacity-50 cursor-not-allowed",
-                              // Dark metallic gray button for step 2
-                              step.id === 2 && !isCompleted && !isLocked && "bg-slate-600 hover:bg-slate-700 text-white border-0 shadow-[0_0_15px_rgba(100,116,139,0.3)]",
-                              // Violet/purple button for step 3 with glow
-                              step.id === 3 && !isCompleted && !isLocked && "bg-violet-600 hover:bg-violet-700 text-white border-0 shadow-[0_0_15px_rgba(139,92,246,0.4)]"
-                            )}
+                        {/* Action Button - Only visible on active (center) card */}
+                        {isActive && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
                           >
-                            {getStepButtonText(step.id)}
-                          </Button>
-                        </motion.div>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStepAction(step.id);
+                              }}
+                              disabled={
+                                isLocked || 
+                                isLoading || 
+                                isStrategicLoading || 
+                                (step.id === 1 && !url.trim()) ||
+                                isCompleted
+                              }
+                              className={cn(
+                                "w-full h-12 text-base font-medium transition-all duration-300",
+                                "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
+                                isCompleted && "bg-success hover:bg-success/90",
+                                isLocked && "opacity-50 cursor-not-allowed",
+                                // Dark metallic gray button for step 2
+                                step.id === 2 && !isCompleted && !isLocked && "bg-slate-600 hover:bg-slate-700 text-white border-0 shadow-[0_0_15px_rgba(100,116,139,0.3)]",
+                                // Violet/purple button for step 3 with glow
+                                step.id === 3 && !isCompleted && !isLocked && "bg-violet-600 hover:bg-violet-700 text-white border-0 shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                              )}
+                            >
+                              {getStepButtonText(step.id)}
+                            </Button>
+                          </motion.div>
+                        )}
 
                         {/* Completed badge - shown below button when completed */}
                         {isCompleted && (
