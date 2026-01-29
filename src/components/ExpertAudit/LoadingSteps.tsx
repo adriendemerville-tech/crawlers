@@ -44,15 +44,17 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
     <div className="flex flex-col items-center justify-center py-16 space-y-8">
       {/* Spinning loader with ring */}
       <div className="relative">
-        <div className="h-20 w-20 rounded-full border-4 border-muted"></div>
-        <div className="absolute inset-0 h-20 w-20 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+        <div className={`h-20 w-20 rounded-full border-4 border-muted`}></div>
+        <div className={`absolute inset-0 h-20 w-20 rounded-full border-4 border-t-transparent animate-spin ${
+          variant === 'strategic' ? 'border-emerald-500' : 'border-primary'
+        }`}></div>
         <motion.div 
           className="absolute inset-0 flex items-center justify-center"
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
         >
           {variant === 'strategic' ? (
-            <Target className="h-8 w-8 text-primary" />
+            <Target className="h-8 w-8 text-emerald-500" />
           ) : (
             <Brain className="h-8 w-8 text-primary" />
           )}
@@ -95,13 +97,18 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
                   scale: isActive ? 1.02 : 1
                 }}
                 className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                  isActive ? 'bg-primary/10 border border-primary/30' : 
-                  isComplete ? 'bg-success/10' : 'bg-muted/30'
+                  isActive 
+                    ? variant === 'strategic' 
+                      ? 'bg-emerald-500/10 border border-emerald-500/30' 
+                      : 'bg-primary/10 border border-primary/30'
+                    : isComplete ? 'bg-success/10' : 'bg-muted/30'
                 }`}
               >
                 <StepIcon className={`h-5 w-5 ${
                   isComplete ? 'text-success' : 
-                  isActive ? 'text-primary' : 'text-muted-foreground'
+                  isActive 
+                    ? variant === 'strategic' ? 'text-emerald-500' : 'text-primary' 
+                    : 'text-muted-foreground'
                 }`} />
                 <span className={`text-sm ${isActive ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
                   {step.label}
@@ -115,7 +122,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
                     animate={{ opacity: [1, 0.5, 1] }}
                     transition={{ duration: 1, repeat: Infinity }}
                   >
-                    <div className="h-2 w-2 rounded-full bg-primary" />
+                    <div className={`h-2 w-2 rounded-full ${variant === 'strategic' ? 'bg-emerald-500' : 'bg-primary'}`} />
                   </motion.div>
                 )}
               </motion.div>
