@@ -140,30 +140,13 @@ export function WorkflowCarousel({
   // Calculate progress percentage
   const progressPercentage = ((completedSteps.length) / steps.length) * 100;
 
-  // Calculate card width + gap for smooth sliding
-  const CARD_WIDTH = 384; // max-w-sm = 24rem = 384px
+  // Card dimensions for sliding calculation
+  const CARD_WIDTH = 380; // w-[380px]
   const GAP = 24; // gap-6 = 1.5rem = 24px
   const SLIDE_DISTANCE = CARD_WIDTH + GAP;
 
-  // Calculate translateX based on active step (center the active card)
-  const getTranslateX = () => {
-    // Step 1: center position (no offset)
-    // Step 2: slide left by one card width
-    // Step 3: slide left by two card widths
-    return (activeStep - 1) * -SLIDE_DISTANCE;
-  };
-
-  // Visibility logic: only show cards within view range
-  const isCardVisible = (stepId: number) => {
-    // Active step and next step are visible
-    // Previous completed steps are also visible
-    if (activeStep === 1) return stepId <= 2; // Show step 1 & 2, hide step 3
-    if (activeStep === 2) return stepId >= 1 && stepId <= 3;
-    return stepId >= 2; // Step 3: show steps 2 & 3
-  };
-
   return (
-    <div className="w-full overflow-hidden">
+    <div className="w-full">
       {/* Progress Bar - Minimal SaaS style */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
@@ -233,171 +216,168 @@ export function WorkflowCarousel({
         )}
       </AnimatePresence>
 
-      {/* Carousel Container with Light Fade Edges */}
+      {/* Carousel Container */}
       <div className="relative py-8">
-        {/* Left fade mask - lighter, only visible when not at step 1 */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: activeStep > 1 ? 0.8 : 0 }}
-          transition={{ duration: 0.5 }}
-          className="absolute left-0 top-0 bottom-0 w-16 z-10 pointer-events-none bg-gradient-to-r from-background/90 to-transparent" 
-        />
-        
-        {/* Right fade mask - subtle hint of more content */}
-        <div className="absolute right-0 top-0 bottom-0 w-20 z-10 pointer-events-none bg-gradient-to-l from-background/70 via-background/30 to-transparent" />
+        {/* Right fade mask - subtle hint that more content exists */}
+        <div className="absolute right-0 top-0 bottom-0 w-32 z-10 pointer-events-none bg-gradient-to-l from-background via-background/50 to-transparent" />
 
-        {/* Carousel Track - Centered with proper transform */}
-        <div className="flex justify-center">
-          <motion.div 
-            className="flex items-stretch gap-6"
-            initial={{ x: 0 }}
-            animate={{ x: getTranslateX() }}
-            transition={{ 
-              duration: 0.7, 
-              ease: [0.22, 1, 0.36, 1] 
-            }}
-          >
-            {steps.map((step) => {
-              const isActive = activeStep === step.id;
-              const isCompleted = isStepCompleted(step.id);
-              const isLocked = isStepLocked(step.id);
-              const isNext = step.id === activeStep + 1;
-              const isPrevious = step.id < activeStep;
-              const visible = isCardVisible(step.id);
+        {/* Carousel Viewport - centered with proper padding */}
+        <div className="overflow-x-clip">
+          <div className="max-w-[900px] mx-auto px-4 sm:px-8">
+            <motion.div 
+              className="flex items-stretch gap-6"
+              animate={{ 
+                x: (activeStep - 1) * -SLIDE_DISTANCE
+              }}
+              transition={{ 
+                duration: 0.7, 
+                ease: [0.22, 1, 0.36, 1] 
+              }}
+            >
+              {steps.map((step) => {
+                const isActive = activeStep === step.id;
+                const isCompleted = isStepCompleted(step.id);
+                const isLocked = isStepLocked(step.id);
+                const isNext = step.id === activeStep + 1;
+                const isPrevious = step.id < activeStep;
 
-              // Calculate visual state
-              const getCardOpacity = () => {
-                if (isActive) return 1;
-                if (isNext) return 0.5; // Partially visible hint
-                if (isPrevious) return 0.3;
-                return 0; // Hidden (step 3 at start)
-              };
+                // Calculate visual state
+                const getCardOpacity = () => {
+                  if (isActive) return 1;
+                  if (isNext) return 0.6;
+                  if (isPrevious) return 0.4;
+                  return 0; // Hidden (step 3 at start)
+                };
 
-              const getCardScale = () => {
-                if (isActive) return 1;
-                return 0.88;
-              };
+                const getCardScale = () => {
+                  if (isActive) return 1;
+                  return 0.92;
+                };
 
-              const getCardBlur = () => {
-                if (isActive) return 'blur(0px)';
-                if (isNext) return 'blur(1px)';
-                return 'blur(2px)';
-              };
+                // Step 3 should be completely hidden at step 1
+                const shouldHide = activeStep === 1 && step.id === 3;
 
-              return (
-                <motion.div
-                  key={step.id}
-                  initial={{ 
-                    opacity: step.id === 1 ? 1 : step.id === 2 ? 0.5 : 0,
-                    scale: step.id === 1 ? 1 : 0.88
-                  }}
-                  animate={{
-                    scale: getCardScale(),
-                    opacity: getCardOpacity(),
-                    filter: `grayscale(${isActive ? 0 : 100}%) ${getCardBlur()}`,
-                  }}
-                  transition={{ 
-                    duration: 0.7, 
-                    ease: [0.22, 1, 0.36, 1] 
-                  }}
-                  className={cn(
-                    "flex-shrink-0 w-[340px] sm:w-[380px]",
-                    !isActive && "pointer-events-none",
-                    !visible && "invisible"
-                  )}
-                >
-                  {/* Glassmorphism Card */}
-                  <Card className={cn(
-                    "relative overflow-hidden transition-all duration-500 h-full",
-                    "bg-card/95 backdrop-blur-sm border border-border/40",
-                    "shadow-[0_20px_40px_rgba(0,0,0,0.05)]",
-                    isActive && "border-primary/30 shadow-[0_25px_50px_rgba(0,0,0,0.08)]",
-                    isCompleted && "border-success/30"
-                  )}>
-                    {/* Top accent line */}
-                    <div className={cn(
-                      "absolute top-0 left-0 right-0 h-1",
-                      isCompleted 
-                        ? "bg-gradient-to-r from-success to-success/80"
-                        : isActive 
-                        ? "bg-gradient-to-r from-primary to-primary/80"
-                        : "bg-muted"
-                    )} />
-
-                    <CardContent className="p-8">
-                      {/* Icon */}
+                return (
+                  <motion.div
+                    key={step.id}
+                    initial={{ 
+                      opacity: step.id === 1 ? 1 : step.id === 2 ? 0.6 : 0,
+                      scale: step.id === 1 ? 1 : 0.92,
+                      x: 0
+                    }}
+                    animate={{
+                      scale: getCardScale(),
+                      opacity: shouldHide ? 0 : getCardOpacity(),
+                      filter: isActive 
+                        ? 'grayscale(0%) blur(0px)' 
+                        : `grayscale(100%) blur(${isNext ? 1 : 2}px)`,
+                      x: 0,
+                    }}
+                    transition={{ 
+                      duration: 0.7, 
+                      ease: [0.22, 1, 0.36, 1] 
+                    }}
+                    className={cn(
+                      "flex-shrink-0 w-[340px] sm:w-[380px]",
+                      !isActive && "pointer-events-none"
+                    )}
+                    style={{
+                      visibility: shouldHide ? 'hidden' : 'visible'
+                    }}
+                  >
+                    {/* Glassmorphism Card */}
+                    <Card className={cn(
+                      "relative overflow-hidden transition-all duration-500 h-full",
+                      "bg-card/95 backdrop-blur-sm border border-border/40",
+                      "shadow-[0_20px_40px_rgba(0,0,0,0.05)]",
+                      isActive && "border-primary/30 shadow-[0_25px_50px_rgba(0,0,0,0.08)]",
+                      isCompleted && "border-success/30"
+                    )}>
+                      {/* Top accent line */}
                       <div className={cn(
-                        "w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-all duration-300",
+                        "absolute top-0 left-0 right-0 h-1",
                         isCompleted 
-                          ? "bg-success/10 text-success"
+                          ? "bg-gradient-to-r from-success to-success/80"
                           : isActive 
-                          ? "bg-primary/10 text-primary"
-                          : "bg-muted text-muted-foreground"
-                      )}>
-                        {isCompleted ? (
-                          <Check className="h-7 w-7" />
-                        ) : isLocked ? (
-                          <Lock className="h-6 w-6" />
-                        ) : (
-                          step.icon
-                        )}
-                      </div>
+                          ? "bg-gradient-to-r from-primary to-primary/80"
+                          : "bg-muted"
+                      )} />
 
-                      {/* Title & Description */}
-                      <h3 className={cn(
-                        "text-xl font-semibold mb-2 transition-colors",
-                        isActive || isCompleted ? "text-foreground" : "text-muted-foreground"
-                      )}>
-                        {step.title}
-                        {step.isPaid && (
-                          <span className="ml-2 text-sm font-normal text-primary">({t.paid})</span>
-                        )}
-                      </h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                        {step.description}
-                      </p>
-
-                      {/* Action Button - Always visible for active step */}
-                      {isActive && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2 }}
-                        >
-                          <Button
-                            onClick={() => handleStepAction(step.id)}
-                            disabled={
-                              isLocked || 
-                              isLoading || 
-                              isStrategicLoading || 
-                              (step.id === 1 && !url.trim()) ||
-                              isCompleted
-                            }
-                            className={cn(
-                              "w-full h-12 text-base font-medium transition-all duration-300",
-                              "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
-                              isCompleted && "bg-success hover:bg-success/90",
-                              isLocked && "opacity-50 cursor-not-allowed"
-                            )}
-                          >
-                            {getStepButtonText(step.id)}
-                          </Button>
-                        </motion.div>
-                      )}
-
-                      {/* Completed badge */}
-                      {isCompleted && !isActive && (
-                        <div className="flex items-center gap-2 text-success text-sm font-medium">
-                          <Check className="h-4 w-4" />
-                          {t.complete}
+                      <CardContent className="p-8">
+                        {/* Icon */}
+                        <div className={cn(
+                          "w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-all duration-300",
+                          isCompleted 
+                            ? "bg-success/10 text-success"
+                            : isActive 
+                            ? "bg-primary/10 text-primary"
+                            : "bg-muted text-muted-foreground"
+                        )}>
+                          {isCompleted ? (
+                            <Check className="h-7 w-7" />
+                          ) : isLocked ? (
+                            <Lock className="h-6 w-6" />
+                          ) : (
+                            step.icon
+                          )}
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+
+                        {/* Title & Description */}
+                        <h3 className={cn(
+                          "text-xl font-semibold mb-2 transition-colors",
+                          isActive || isCompleted ? "text-foreground" : "text-muted-foreground"
+                        )}>
+                          {step.title}
+                          {step.isPaid && (
+                            <span className="ml-2 text-sm font-normal text-primary">({t.paid})</span>
+                          )}
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                          {step.description}
+                        </p>
+
+                        {/* Action Button - Always visible for active step */}
+                        {isActive && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                          >
+                            <Button
+                              onClick={() => handleStepAction(step.id)}
+                              disabled={
+                                isLocked || 
+                                isLoading || 
+                                isStrategicLoading || 
+                                (step.id === 1 && !url.trim()) ||
+                                isCompleted
+                              }
+                              className={cn(
+                                "w-full h-12 text-base font-medium transition-all duration-300",
+                                "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
+                                isCompleted && "bg-success hover:bg-success/90",
+                                isLocked && "opacity-50 cursor-not-allowed"
+                              )}
+                            >
+                              {getStepButtonText(step.id)}
+                            </Button>
+                          </motion.div>
+                        )}
+
+                        {/* Completed badge */}
+                        {isCompleted && !isActive && (
+                          <div className="flex items-center gap-2 text-success text-sm font-medium">
+                            <Check className="h-4 w-4" />
+                            {t.complete}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </div>
         </div>
       </div>
 
