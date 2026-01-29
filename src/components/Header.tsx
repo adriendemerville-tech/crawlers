@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -75,6 +76,10 @@ export function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const t = translations[language];
+  
+  // Hover state for profile dropdown
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check if we're on specific pages
   const isAuditExpertPage = location.pathname === '/audit-expert';
@@ -85,6 +90,7 @@ export function Header() {
   };
 
   const handleLogout = async () => {
+    setIsProfileOpen(false);
     await signOut();
     navigate('/');
   };
@@ -97,6 +103,20 @@ export function Header() {
       return user.email[0].toUpperCase();
     }
     return 'U';
+  };
+
+  const handleMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsProfileOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsProfileOpen(false);
+    }, 150);
   };
 
   return (
@@ -197,16 +217,88 @@ export function Header() {
           {/* User menu or login button */}
           {!loading && (
             user ? (
-              <Link to="/profil" aria-label={t.profile}>
-                <Button variant="ghost" className="relative h-9 w-9 rounded-full" aria-label={t.profile}>
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                      {getInitials()}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </Link>
+              <div 
+                className="relative"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
+                <DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      className="relative h-9 w-9 rounded-full" 
+                      aria-label={t.profile}
+                      onClick={() => navigate('/profil')}
+                    >
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    className="w-72 bg-popover border border-border shadow-lg" 
+                    align="end" 
+                    forceMount
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <div className="flex items-center justify-start gap-3 p-3">
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
+                        <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                          {getInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col space-y-0.5 leading-none min-w-0 flex-1">
+                        {profile && (
+                          <p className="font-medium text-sm truncate">{profile.first_name} {profile.last_name}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profil?tab=identity" className="gap-2 cursor-pointer">
+                        <User className="h-4 w-4" />
+                        {t.identity}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/profil?tab=settings" className="gap-2 cursor-pointer">
+                        <Settings className="h-4 w-4" />
+                        {t.settings}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profil?tab=reports" className="gap-2 cursor-pointer">
+                        <FileText className="h-4 w-4" />
+                        {t.myReports}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/profil?tab=action-plans" className="gap-2 cursor-pointer">
+                        <ClipboardList className="h-4 w-4" />
+                        {t.actionPlans}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/profil?tab=corrective-codes" className="gap-2 cursor-pointer">
+                        <Code2 className="h-4 w-4" />
+                        {t.correctiveCodes}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
+                      <LogOut className="h-4 w-4" />
+                      {t.logout}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             ) : (
               <Link to="/auth" aria-label={t.login}>
                 <Button variant="outline" size="sm" className="gap-2" aria-label={t.login}>
