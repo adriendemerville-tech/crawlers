@@ -165,19 +165,22 @@ export function Header() {
           )}
         </div>
 
-        {/* Right side: Lexique, Theme, User */}
-        <div className="flex items-center gap-3">
-          {/* Lexique link - discrete */}
+        {/* Center: Lexique link */}
+        <div className="absolute left-1/2 -translate-x-1/2">
           <Link to="/lexique">
             <Button
               variant="ghost"
               size="sm"
-              className="hidden sm:flex gap-1.5 text-muted-foreground hover:text-foreground"
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
             >
               <Book className="h-4 w-4" />
               <span className="text-sm">{lexiqueLabels[language]}</span>
             </Button>
           </Link>
+        </div>
+
+        {/* Right side: Theme, User */}
+        <div className="flex items-center gap-3">
 
           {/* Theme toggle */}
           <Button
