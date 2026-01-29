@@ -263,11 +263,12 @@ export function WorkflowCarousel({
 
         {/* Carousel Viewport - centered with proper padding */}
         <div className="overflow-x-clip">
-          <div className="max-w-[900px] mx-auto px-4 sm:px-8">
+          <div className="flex justify-center px-4">
             <motion.div 
               className="flex items-stretch gap-6"
               animate={{ 
-                x: (activeStep - 1) * -SLIDE_DISTANCE
+                // Center the active step: step 1 needs +SLIDE, step 2 needs 0, step 3 needs -SLIDE
+                x: (2 - activeStep) * SLIDE_DISTANCE
               }}
               transition={{ 
                 duration: 0.7, 
@@ -294,11 +295,11 @@ export function WorkflowCarousel({
                   return 0.88; // Smaller scale for side cards
                 };
 
-                // Calculate blur intensity - stronger for side cards
+                // Calculate blur intensity - reduced by half
                 const getBlurAmount = () => {
                   if (isActive) return 0;
-                  if (isNext || isPrevious) return 3;
-                  return 5;
+                  if (isNext || isPrevious) return 1.5; // Reduced from 3
+                  return 2.5; // Reduced from 5
                 };
 
                 // Step 3 should be completely hidden at step 1
