@@ -1,10 +1,8 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, lazy, Suspense, memo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { ToolTabs, ToolTab } from '@/components/ToolTabs';
-import { Footer } from '@/components/Footer';
-import { FloatingReportButton } from '@/components/FloatingReportButton';
 import { CrawlResult } from '@/types/crawler';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { GeoResult } from '@/types/geo';
@@ -18,6 +16,8 @@ const PageSpeedDashboard = lazy(() => import('@/components/PageSpeedDashboard').
 const GeoDashboard = lazy(() => import('@/components/GeoDashboard').then(m => ({ default: m.GeoDashboard })));
 const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({ default: m.LLMDashboard })));
 const QuotaExceeded = lazy(() => import('@/components/QuotaExceeded').then(m => ({ default: m.QuotaExceeded })));
+
+// Lazy load below-the-fold components with higher priority grouping
 const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
 const GEOFAQSection = lazy(() => import('@/components/GEOFAQSection').then(m => ({ default: m.GEOFAQSection })));
 const WhyVital2026Section = lazy(() => import('@/components/WhyVital2026Section').then(m => ({ default: m.WhyVital2026Section })));
@@ -27,8 +27,12 @@ const SolutionSection = lazy(() => import('@/components/SolutionSection').then(m
 const MarketingBudgetSection = lazy(() => import('@/components/MarketingBudgetSection').then(m => ({ default: m.MarketingBudgetSection })));
 const SEOvsGEOSection = lazy(() => import('@/components/SEOvsGEOSection').then(m => ({ default: m.SEOvsGEOSection })));
 
-// Skeleton loader for dashboards
-const DashboardSkeleton = () => (
+// Lazy load Footer - not needed for initial render
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
+const FloatingReportButton = lazy(() => import('@/components/FloatingReportButton').then(m => ({ default: m.FloatingReportButton })));
+
+// Lightweight skeleton for dashboards
+const DashboardSkeleton = memo(() => (
   <div className="container mx-auto px-4 py-8">
     <div className="animate-pulse space-y-4">
       <div className="h-8 w-48 rounded bg-muted" />
@@ -39,7 +43,12 @@ const DashboardSkeleton = () => (
       </div>
     </div>
   </div>
-);
+));
+
+// Minimal skeleton for below-fold sections
+const SectionSkeleton = memo(() => (
+  <div className="h-64 animate-pulse bg-muted/20" />
+));
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<ToolTab>('crawlers');
@@ -341,41 +350,45 @@ const Index = () => {
             {renderDashboard()}
           </Suspense>
         </section>
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+        <Suspense fallback={<SectionSkeleton />}>
           <SolutionSection />
         </Suspense>
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+        <Suspense fallback={<SectionSkeleton />}>
           <WhyVital2026Section />
         </Suspense>
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+        <Suspense fallback={<SectionSkeleton />}>
           <GEOComparisonTable />
         </Suspense>
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+        <Suspense fallback={<SectionSkeleton />}>
           <MarketingBudgetSection />
         </Suspense>
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+        <Suspense fallback={<SectionSkeleton />}>
           <SEOvsGEOSection />
         </Suspense>
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
+        <Suspense fallback={<SectionSkeleton />}>
           <NewsCarousel />
         </Suspense>
-        <Suspense fallback={<div className="h-96" />}>
+        <Suspense fallback={<SectionSkeleton />}>
           <GEOFAQSection />
         </Suspense>
-        <Suspense fallback={<div className="h-96" />}>
+        <Suspense fallback={<SectionSkeleton />}>
           <FAQSection />
         </Suspense>
       </main>
-      <Footer />
+      <Suspense fallback={<div className="h-48 bg-muted/10" />}>
+        <Footer />
+      </Suspense>
       
-      {/* Bouton rapport flottant */}
-      <FloatingReportButton
-        crawlResult={crawlResult}
-        geoResult={geoResult}
-        llmResult={llmResult}
-        pageSpeedResult={mobilePageSpeedResult || desktopPageSpeedResult}
-        currentUrl={currentUrl}
-      />
+      {/* Bouton rapport flottant - lazy loaded */}
+      <Suspense fallback={null}>
+        <FloatingReportButton
+          crawlResult={crawlResult}
+          geoResult={geoResult}
+          llmResult={llmResult}
+          pageSpeedResult={mobilePageSpeedResult || desktopPageSpeedResult}
+          currentUrl={currentUrl}
+        />
+      </Suspense>
     </div>
   );
 };
