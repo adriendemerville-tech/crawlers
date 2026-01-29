@@ -239,27 +239,44 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
     
     const selfAudit = performSelfAudit(doc, htmlLength);
     
-    // If self-audit fails, try JavaScript rendering fallback
+    // If self-audit fails, try JavaScript rendering fallback via Browserless.io
     if (!selfAudit.isReliable) {
       console.log('[SmartFetch] Auto-contrôle échoué:', selfAudit.reason);
-      console.log('[SmartFetch] Tentative 2: Fallback rendu JavaScript...');
+      console.log('[SmartFetch] Tentative 2: Fallback rendu JavaScript via Browserless.io...');
       
-      const RENDERING_API_KEY = Deno.env.get('RENDERING_API_KEY');
+      const BROWSERLESS_API_KEY = Deno.env.get('BROWSERLESS_API_KEY');
       
-      if (RENDERING_API_KEY) {
+      if (BROWSERLESS_API_KEY) {
         try {
-          // Use Browserless or similar rendering service
-          const renderUrl = `https://chrome.browserless.io/content?token=${RENDERING_API_KEY}`;
+          // Browserless.io /content endpoint for full HTML rendering
+          const renderUrl = `https://chrome.browserless.io/content?token=${BROWSERLESS_API_KEY}`;
+          
+          // User-Agent identique au fetch initial pour éviter les blocages
+          const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CrawlersFR/2.0';
+          
+          const renderController = new AbortController();
+          const renderTimeoutId = setTimeout(() => renderController.abort(), 30000); // 30s timeout for rendering
           
           const renderResponse = await fetch(renderUrl, {
             method: 'POST',
+            signal: renderController.signal,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               url: url,
+              // Optimisation: bloquer les ressources inutiles pour accélérer et réduire les coûts
+              rejectResourceTypes: ['image', 'media', 'font'],
+              // Attendre que le réseau soit inactif (JS chargé)
               waitFor: 3000,
-              gotoOptions: { waitUntil: 'networkidle2' }
+              gotoOptions: { 
+                waitUntil: 'networkidle0',
+                timeout: 25000
+              },
+              // Passer le même User-Agent
+              userAgent: userAgent
             })
           });
+          
+          clearTimeout(renderTimeoutId);
           
           if (renderResponse.ok) {
             const renderedHtml = await renderResponse.text();
@@ -269,22 +286,41 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
               const renderedAudit = performSelfAudit(renderedDoc, renderedHtml.length);
               
               if (renderedAudit.isReliable) {
-                console.log('[SmartFetch] ✅ Fallback JS réussi! Contenu rendu récupéré.');
+                console.log('[SmartFetch] ✅ Fallback Browserless.io réussi! Contenu rendu récupéré.');
                 return {
                   html: renderedHtml,
                   renderingMode: 'dynamic_rendered',
                   selfAudit: { ...renderedAudit, reliabilityScore: 0.95 }
                 };
+              } else {
+                console.log('[SmartFetch] ⚠️ Contenu rendu toujours insuffisant après Browserless');
               }
             }
           } else {
-            console.log('[SmartFetch] ⚠️ Service de rendu indisponible:', renderResponse.status);
+            // Gestion des erreurs HTTP Browserless (403, 429, timeout, etc.)
+            const errorStatus = renderResponse.status;
+            const errorText = await renderResponse.text().catch(() => 'Unknown error');
+            console.log(`[SmartFetch] ⚠️ Browserless.io erreur HTTP ${errorStatus}:`, errorText);
+            
+            if (errorStatus === 403) {
+              console.log('[SmartFetch] ⚠️ Browserless.io: Accès refusé (clé invalide ou quota dépassé)');
+            } else if (errorStatus === 429) {
+              console.log('[SmartFetch] ⚠️ Browserless.io: Rate limit atteint');
+            } else if (errorStatus === 504 || errorStatus === 524) {
+              console.log('[SmartFetch] ⚠️ Browserless.io: Timeout du service');
+            }
           }
-        } catch (renderError) {
-          console.log('[SmartFetch] ⚠️ Erreur fallback JS:', renderError);
+        } catch (renderError: unknown) {
+          const error = renderError as Error;
+          if (error.name === 'AbortError') {
+            console.log('[SmartFetch] ⚠️ Browserless.io: Timeout local (30s dépassées)');
+          } else {
+            console.log('[SmartFetch] ⚠️ Erreur fallback Browserless.io:', error.message || renderError);
+          }
         }
       } else {
-        console.log('[SmartFetch] ⚠️ RENDERING_API_KEY non configurée, fallback JS impossible');
+        console.log('[SmartFetch] ⚠️ BROWSERLESS_API_KEY non configurée dans les secrets - fallback JS impossible');
+        console.log('[SmartFetch] 💡 Configurez la clé API Browserless.io pour activer le rendu des SPA');
       }
       
       // Return original with degraded reliability
