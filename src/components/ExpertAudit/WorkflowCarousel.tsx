@@ -278,7 +278,7 @@ export function WorkflowCarousel({
                       ease: [0.22, 1, 0.36, 1] 
                     }}
                     className={cn(
-                      "flex-shrink-0 w-[340px] sm:w-[380px]",
+                      "flex-shrink-0 w-[340px] sm:w-[380px] relative z-20",
                       !isActive && "pointer-events-none"
                     )}
                     style={{
@@ -313,13 +313,11 @@ export function WorkflowCarousel({
                             ? "bg-primary/10 text-primary"
                             : "bg-muted text-muted-foreground"
                         )}>
-                          {isCompleted ? (
-                            <Check className="h-7 w-7" />
-                          ) : isLocked ? (
-                            <Lock className="h-6 w-6" />
-                          ) : (
-                            step.icon
-                          )}
+                        {isCompleted ? (
+                          <Check className="h-7 w-7" />
+                        ) : (
+                          step.icon
+                        )}
                         </div>
 
                         {/* Title & Description */}
