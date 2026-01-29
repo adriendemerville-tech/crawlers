@@ -1,12 +1,19 @@
 // Types for fix configuration
 export interface FixConfig {
   id: string;
-  category: 'seo' | 'performance' | 'accessibility' | 'tracking';
+  category: 'seo' | 'performance' | 'accessibility' | 'tracking' | 'hallucination';
   label: string;
   description: string;
   enabled: boolean;
   priority: 'critical' | 'important' | 'optional';
   data?: Record<string, any>;
+}
+
+// Hallucination fix data
+export interface HallucinationFixData {
+  trueValue: string;
+  confusionSources: string[];
+  correctedIntro: string;
 }
 
 // Generate the complete corrective script
@@ -315,6 +322,52 @@ function generateFixCode(
     console.log('[Crawlers.fr] Google Tag Manager injecté:', gtmId);
   }`,
         call: 'injectGTM();'
+      };
+
+    case 'fix_hallucination':
+      const hallucinationData = fix.data || {};
+      const trueValue = hallucinationData.trueValue || siteName;
+      const confusionFixes = (hallucinationData.confusionSources || []).slice(0, 3);
+      return {
+        fn: `  // Correction Hallucination IA - Injection métadonnées anti-confusion
+  function fixHallucination() {
+    // Ajouter des métadonnées claires pour les crawlers IA
+    var metas = [
+      { name: 'ai-description', content: '${trueValue.replace(/'/g, "\\'")}' },
+      { name: 'dc.description', content: '${trueValue.replace(/'/g, "\\'")}' },
+      { property: 'og:description', content: '${trueValue.replace(/'/g, "\\'")}' }
+    ];
+    
+    metas.forEach(function(meta) {
+      var existing = document.querySelector('meta[name="' + meta.name + '"], meta[property="' + meta.property + '"]');
+      if (!existing) {
+        var el = document.createElement('meta');
+        if (meta.name) el.setAttribute('name', meta.name);
+        if (meta.property) el.setAttribute('property', meta.property);
+        el.content = meta.content;
+        document.head.appendChild(el);
+      }
+    });
+    
+    // Ajouter un schema.org enrichi pour clarifier l'entité
+    var clarificationSchema = {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "${siteName}",
+      "description": "${trueValue.replace(/"/g, '\\"').replace(/'/g, "\\'")}",
+      "url": "${siteUrl}",
+      "knowsAbout": ${JSON.stringify(confusionFixes.length > 0 ? confusionFixes : [siteName])}
+    };
+    
+    var schemaScript = document.createElement('script');
+    schemaScript.type = 'application/ld+json';
+    schemaScript.setAttribute('data-crawlers-hallucination-fix', 'true');
+    schemaScript.textContent = JSON.stringify(clarificationSchema, null, 2);
+    document.head.appendChild(schemaScript);
+    
+    console.log('[Crawlers.fr] ✓ Correction hallucination IA appliquée - métadonnées clarificatrices injectées');
+  }`,
+        call: 'fixHallucination();'
       };
 
     case 'fix_ga4':

@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Target, TrendingUp, Brain, MessageSquare, 
   CheckCircle2, XCircle, AlertCircle, Lightbulb,
-  Globe, Building2, Users
+  Globe, Building2, Users, BrainCircuit
 } from 'lucide-react';
 import { StrategicAnalysis } from '@/types/expertAudit';
 import { GeoScoreVisualization } from './GeoScoreVisualization';
@@ -14,13 +16,25 @@ import { CompetitiveLandscapeCard } from './CompetitiveLandscapeCard';
 import { SocialSignalsCard } from './SocialSignalsCard';
 import { MarketIntelligenceCard } from './MarketIntelligenceCard';
 import { PremiumRoadmapCard } from './PremiumRoadmapCard';
+import { HallucinationCorrectionModal, HallucinationAnalysis } from './HallucinationCorrectionModal';
 
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
   hideExecutiveSummary?: boolean;
+  domain?: string;
+  siteName?: string;
+  onHallucinationData?: (data: HallucinationAnalysis) => void;
 }
 
-export function StrategicInsights({ analysis, hideExecutiveSummary = false }: StrategicInsightsProps) {
+export function StrategicInsights({ 
+  analysis, 
+  hideExecutiveSummary = false,
+  domain = '',
+  siteName = '',
+  onHallucinationData
+}: StrategicInsightsProps) {
+  const [showHallucinationModal, setShowHallucinationModal] = useState(false);
+  
   const getAuthorityColor = (authority: string) => {
     switch (authority) {
       case 'high': return 'text-success';
@@ -54,6 +68,18 @@ export function StrategicInsights({ analysis, hideExecutiveSummary = false }: St
     ? { score: analysis.geo_readiness.citability_score, analysis: analysis.geo_readiness.performance_impact || '' }
     : analysis.geo_score;
 
+  // Get introduction text for hallucination analysis
+  const getIntroductionText = (): string => {
+    if (typeof analysis.introduction === 'string') return analysis.introduction;
+    if (analysis.introduction?.presentation) {
+      return `${analysis.introduction.presentation}\n\n${analysis.introduction.strengths || ''}\n\n${analysis.introduction.improvement || ''}`;
+    }
+    if (analysis.executive_summary) return analysis.executive_summary;
+    if (analysis.executiveSummary) return analysis.executiveSummary;
+    return '';
+  };
+  const introductionText = getIntroductionText();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -70,20 +96,40 @@ export function StrategicInsights({ analysis, hideExecutiveSummary = false }: St
               Synthèse Exécutive
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <p className="text-muted-foreground leading-relaxed">
               {analysis.executive_summary || analysis.executiveSummary}
             </p>
-            {analysis.overallScore !== undefined && (
-              <div className="mt-4 flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3">
+              {analysis.overallScore !== undefined && (
                 <Badge variant="outline" className="text-sm">
                   Score Citabilité 2026 : {analysis.overallScore}/100
                 </Badge>
-              </div>
-            )}
+              )}
+              {/* Hallucination IA Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHallucinationModal(true)}
+                className="gap-2 border-slate-500/50 text-slate-600 hover:bg-slate-500/10 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+              >
+                <BrainCircuit className="h-4 w-4" />
+                Hallucination IA
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Hallucination Correction Modal */}
+      <HallucinationCorrectionModal
+        open={showHallucinationModal}
+        onOpenChange={setShowHallucinationModal}
+        introduction={introductionText}
+        domain={domain}
+        siteName={siteName || domain}
+        onHallucinationDataReady={onHallucinationData}
+      />
 
       {/* PREMIUM FORMAT: Full 13 Modules Display */}
       {hasPremiumFormat && (

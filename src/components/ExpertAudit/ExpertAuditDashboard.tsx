@@ -140,6 +140,11 @@ export function ExpertAuditDashboard() {
   const [pendingReportOpen, setPendingReportOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [hallucinationData, setHallucinationData] = useState<{
+    trueValue: string;
+    confusionSources: string[];
+    correctedIntro?: string;
+  } | null>(null);
   const loadingRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
@@ -707,7 +712,13 @@ export function ExpertAuditDashboard() {
                 )}>
                   {/* Strategic Insights */}
                   {result.strategicAnalysis && (
-                    <StrategicInsights analysis={result.strategicAnalysis} hideExecutiveSummary={true} />
+                    <StrategicInsights 
+                      analysis={result.strategicAnalysis} 
+                      hideExecutiveSummary={true}
+                      domain={result.domain || url}
+                      siteName={result.domain || url}
+                      onHallucinationData={setHallucinationData}
+                    />
                   )}
                 </div>
 
@@ -775,6 +786,7 @@ export function ExpertAuditDashboard() {
         strategicResult={strategicResult}
         siteUrl={result?.url || url}
         siteName={result?.domain || url}
+        hallucinationData={hallucinationData}
       />
     </div>
   );
