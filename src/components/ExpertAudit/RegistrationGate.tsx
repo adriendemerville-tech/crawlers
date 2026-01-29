@@ -34,8 +34,15 @@ export function RegistrationGate({ onRegister }: RegistrationGateProps) {
   const t = translations[language] || translations.fr;
   const navigate = useNavigate();
 
+  const handleRegisterClick = () => {
+    // Save pending action for after auth
+    sessionStorage.setItem('audit_pending_action', 'unblur_strategic');
+    onRegister();
+  };
+
   const handleLogin = () => {
-    navigate('/auth');
+    sessionStorage.setItem('audit_pending_action', 'unblur_strategic');
+    navigate('/auth?mode=login');
   };
 
   return (
@@ -86,7 +93,7 @@ export function RegistrationGate({ onRegister }: RegistrationGateProps) {
           className="space-y-2"
         >
           <Button 
-            onClick={onRegister} 
+            onClick={handleRegisterClick} 
             className="w-full gap-2 h-10 text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <UserPlus className="w-4 h-4" />
