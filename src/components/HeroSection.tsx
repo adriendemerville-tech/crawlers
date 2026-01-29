@@ -131,12 +131,12 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
 
   // Animated headline for crawlers tab
   const renderAnimatedHeadline = () => (
-    <h1 className="mb-10 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-      <span className="inline-flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-        {/* Animated word container - vertically centered with text */}
+    <h1 className="mb-10 text-4xl font-extrabold tracking-tight leading-tight sm:text-5xl lg:text-6xl">
+      <span className="inline-flex items-center justify-center gap-2 sm:gap-3 flex-wrap pb-1">
+        {/* Animated word container - uses auto height to respect descenders */}
         <span
-          className="relative inline-flex items-center justify-end overflow-hidden"
-          style={{ minWidth: '280px', width: '280px', height: '1.3em' }}
+          className="relative inline-flex items-center justify-end overflow-visible"
+          style={{ minWidth: '280px', width: '280px', height: 'auto', minHeight: '1.2em' }}
         >
           <AnimatePresence mode="wait">
             <motion.span
@@ -145,13 +145,13 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -50, opacity: 0 }}
               transition={{ duration: 0.4, ease: 'easeInOut' }}
-              className="absolute right-0 bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap"
+              className="relative bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap leading-tight"
             >
               {animatedWords[wordIndex]}
             </motion.span>
           </AnimatePresence>
         </span>
-        <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase">
+        <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase leading-tight">
           {getIgnoreText()} {getSiteText()}
         </span>
         <span className="text-foreground">?</span>
