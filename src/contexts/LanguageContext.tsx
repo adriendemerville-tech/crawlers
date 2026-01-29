@@ -211,7 +211,7 @@ const translations: Record<Language, Translations> = {
       trust: {
         noSignup: '',
         instant: 'Plus besoin de consultant',
-        free: 'Audit GEO 100% gratuit',
+        free: 'Audit Flash gratuit',
       },
     },
     tabs: {
