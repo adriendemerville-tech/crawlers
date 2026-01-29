@@ -119,11 +119,11 @@ export function Header() {
           ) : (
             // Logo + Language selector on other pages
             <>
-              <a href="/" className="flex items-center gap-2" aria-label="Crawlers AI - Accueil">
+              <a href="/" className="flex items-center gap-2" aria-label="Crawlers.AI - Accueil">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
                   <Bot className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
                 </div>
-                <span className="text-lg font-semibold text-foreground">Crawlers AI</span>
+                <span className="text-lg font-semibold text-foreground">Crawlers.AI</span>
               </a>
 
               {/* Language selector - hidden on profile page (available in settings) */}

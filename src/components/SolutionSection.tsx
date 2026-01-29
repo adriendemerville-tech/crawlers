@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 const translations = {
   fr: {
     title: 'Vos corrections techniques, générées en un clic.',
-    subtitle: 'Identifier un problème sans solution, c\'est frustrant. Crawlers AI va plus loin : après chaque diagnostic, recevez le code correctif prêt à être déployé sur votre site.',
+    subtitle: 'Identifier un problème sans solution, c\'est frustrant. Après chaque Audit Expert, Crawlers.AI conçoit le code correctif prêt à être déployé sur votre site.',
     pillar1Title: 'Diagnostic Clair',
     pillar1Desc: 'Analysez votre visibilité auprès des IA en toute sérénité. Chaque point d\'amélioration est expliqué simplement.',
     pillar2Title: 'Code Prêt-à-Copier',
