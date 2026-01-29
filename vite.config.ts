@@ -83,43 +83,50 @@ export default defineConfig(({ mode }) => ({
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
-        manualChunks: {
-          // Core React vendors - loaded first
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          // UI framework - Radix components bundled together
-          'vendor-ui': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-select',
-            '@radix-ui/react-scroll-area',
-            '@radix-ui/react-toast',
-            '@radix-ui/react-checkbox',
-            '@radix-ui/react-switch',
-            '@radix-ui/react-label',
-            '@radix-ui/react-slot',
-            '@radix-ui/react-separator',
-            '@radix-ui/react-progress',
-            '@radix-ui/react-avatar',
-            '@radix-ui/react-collapsible',
-            '@radix-ui/react-toggle',
-            '@radix-ui/react-toggle-group',
-          ],
-          // Animation library - deferred
-          'vendor-motion': ['framer-motion'],
-          // Data & state management
-          'vendor-data': ['@tanstack/react-query', '@supabase/supabase-js'],
-          // Heavy utilities - lazy loaded
-          'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge', 'class-variance-authority'],
-          // PDF generation - only loaded when needed
-          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
+        manualChunks(id) {
+          // Core React - always needed
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/react-router')) {
+            return 'vendor-router';
+          }
+          // Supabase - needed early for auth
+          if (id.includes('node_modules/@supabase')) {
+            return 'vendor-supabase';
+          }
+          // TanStack Query - needed for data fetching
+          if (id.includes('node_modules/@tanstack')) {
+            return 'vendor-query';
+          }
+          // UI components - loaded together
+          if (id.includes('node_modules/@radix-ui')) {
+            return 'vendor-radix';
+          }
+          // Animations - can be deferred
+          if (id.includes('node_modules/framer-motion')) {
+            return 'vendor-motion';
+          }
+          // PDF - only loaded when needed
+          if (id.includes('node_modules/jspdf')) {
+            return 'vendor-pdf';
+          }
           // Charts - only loaded when needed
-          'vendor-charts': ['recharts'],
-          // Lucide icons - bundled together
-          'vendor-icons': ['lucide-react'],
+          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) {
+            return 'vendor-charts';
+          }
+          // Icons - needed for UI
+          if (id.includes('node_modules/lucide-react')) {
+            return 'vendor-icons';
+          }
+          // Date utilities
+          if (id.includes('node_modules/date-fns')) {
+            return 'vendor-date';
+          }
+          // Drag and drop - only on profile page
+          if (id.includes('node_modules/@dnd-kit')) {
+            return 'vendor-dnd';
+          }
         },
       },
     },
@@ -134,14 +141,17 @@ export default defineConfig(({ mode }) => ({
     // Source maps only in dev
     sourcemap: mode === 'development',
   },
-  // Optimize dependencies
+  // Optimize dependencies - only critical ones for faster cold start
   optimizeDeps: {
     include: [
       'react',
       'react-dom',
       'react-router-dom',
-      'framer-motion',
-      'lucide-react',
+    ],
+    exclude: [
+      'jspdf',
+      'jspdf-autotable',
+      'recharts',
     ],
   },
 }));
