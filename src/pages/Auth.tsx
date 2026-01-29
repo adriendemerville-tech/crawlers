@@ -122,7 +122,13 @@ export default function Auth() {
         sessionStorage.removeItem('audit_return_path');
         navigate(returnPath);
       } else {
-        navigate('/');
+        // Default redirect to audit-expert if coming from audit flow
+        const auditUrl = sessionStorage.getItem('audit_url');
+        if (auditUrl) {
+          navigate('/audit-expert');
+        } else {
+          navigate('/');
+        }
       }
     }
   }, [user, navigate]);

@@ -248,6 +248,7 @@ export function ExpertAuditDashboard() {
   const handleRegister = () => {
     saveAuditState();
     sessionStorage.setItem('audit_pending_action', 'unblur_strategic');
+    sessionStorage.setItem('audit_return_path', '/audit-expert');
     navigate('/auth');
   };
 
