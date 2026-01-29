@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Globe, CheckCircle2, AlertCircle, Lightbulb, Zap, Target } from 'lucide-react';
+import { Globe, CheckCircle2, AlertCircle, Lightbulb, Zap, Target, Users } from 'lucide-react';
 import { StrategicIntroduction } from '@/types/expertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -15,6 +15,7 @@ const translations = {
     presentation: 'Présentation du site',
     strengths: 'Points forts identifiés',
     improvement: 'Axe d\'amélioration prioritaire',
+    competitors: 'Concurrents identifiés',
   },
   en: {
     technicalTitle: 'Technical SEO Analysis',
@@ -22,6 +23,7 @@ const translations = {
     presentation: 'Site Presentation',
     strengths: 'Key Strengths',
     improvement: 'Priority Improvement Area',
+    competitors: 'Identified Competitors',
   },
   es: {
     technicalTitle: 'Análisis Técnico SEO',
@@ -29,6 +31,7 @@ const translations = {
     presentation: 'Presentación del sitio',
     strengths: 'Puntos fuertes identificados',
     improvement: 'Área de mejora prioritaria',
+    competitors: 'Competidores identificados',
   },
 };
 
@@ -87,6 +90,23 @@ export function IntroductionCard({ introduction, variant }: IntroductionCardProp
             <p className="text-sm text-muted-foreground leading-relaxed pl-6">
               {introduction.improvement}
             </p>
+          </div>
+        )}
+
+        {/* Concurrents - uniquement pour l'audit stratégique */}
+        {variant === 'strategic' && introduction.competitors && introduction.competitors.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              {t.competitors}
+            </h4>
+            <ul className="text-sm text-muted-foreground pl-6 flex flex-wrap gap-2">
+              {introduction.competitors.map((competitor, index) => (
+                <li key={index} className="bg-muted/50 px-3 py-1 rounded-full text-xs font-medium">
+                  {competitor}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </CardContent>
