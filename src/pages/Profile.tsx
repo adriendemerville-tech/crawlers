@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList } from 'lucide-react';
+import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { MyReports } from '@/components/Profile/MyReports';
 import { MyActionPlans } from '@/components/Profile/MyActionPlans';
+import { MyCorrectiveCodes } from '@/components/Profile/MyCorrectiveCodes';
 
 const translations = {
   fr: {
@@ -25,6 +26,7 @@ const translations = {
     settings: 'Paramètres',
     myReports: 'Mes Rapports',
     actionPlans: 'Plans d\'Action',
+    correctiveCodes: 'Codes Correctifs',
     firstName: 'Prénom',
     lastName: 'Nom',
     email: 'Email',
@@ -52,6 +54,7 @@ const translations = {
     settings: 'Settings',
     myReports: 'My Reports',
     actionPlans: 'Action Plans',
+    correctiveCodes: 'Corrective Codes',
     firstName: 'First Name',
     lastName: 'Last Name',
     email: 'Email',
@@ -79,6 +82,7 @@ const translations = {
     settings: 'Configuración',
     myReports: 'Mis Informes',
     actionPlans: 'Planes de Acción',
+    correctiveCodes: 'Códigos Correctivos',
     firstName: 'Nombre',
     lastName: 'Apellido',
     email: 'Correo electrónico',
@@ -198,7 +202,7 @@ export default function Profile() {
             </div>
 
             <Tabs defaultValue="identity" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="identity" className="gap-2">
                   <User className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.identity}</span>
@@ -214,6 +218,10 @@ export default function Profile() {
                 <TabsTrigger value="action-plans" className="gap-2">
                   <ClipboardList className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.actionPlans}</span>
+                </TabsTrigger>
+                <TabsTrigger value="corrective-codes" className="gap-2">
+                  <Code2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t.correctiveCodes}</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -364,6 +372,10 @@ export default function Profile() {
 
               <TabsContent value="action-plans">
                 <MyActionPlans />
+              </TabsContent>
+
+              <TabsContent value="corrective-codes">
+                <MyCorrectiveCodes />
               </TabsContent>
             </Tabs>
           </motion.div>
