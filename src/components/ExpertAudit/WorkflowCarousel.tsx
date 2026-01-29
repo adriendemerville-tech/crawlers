@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { BarChart3, Target, Code, Search, Check, Lock } from 'lucide-react';
+import { BarChart3, Target, Code, Search, Check } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
@@ -88,15 +88,47 @@ export function WorkflowCarousel({
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const [activeStep, setActiveStep] = useState(1);
+  const [isCarouselVisible, setIsCarouselVisible] = useState(false);
+  const [pendingStep2Animation, setPendingStep2Animation] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
-  // Auto-advance to step 2 when step 1 is completed
+  // Detect when carousel is visible in viewport
   useEffect(() => {
-    if (completedSteps.includes(1) && !completedSteps.includes(2)) {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsCarouselVisible(entry.isIntersecting);
+      },
+      { threshold: 0.5 } // Trigger when 50% of carousel is visible
+    );
+
+    if (carouselRef.current) {
+      observer.observe(carouselRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Mark pending animation when step 1 completes
+  useEffect(() => {
+    if (completedSteps.includes(1) && !completedSteps.includes(2) && activeStep === 1) {
+      setPendingStep2Animation(true);
+    }
+  }, [completedSteps, activeStep]);
+
+  // Trigger animation to step 2 only when carousel becomes visible
+  useEffect(() => {
+    if (pendingStep2Animation && isCarouselVisible) {
       setActiveStep(2);
-    } else {
+      setPendingStep2Animation(false);
+    }
+  }, [pendingStep2Animation, isCarouselVisible]);
+
+  // Sync with currentStep for other cases
+  useEffect(() => {
+    if (!pendingStep2Animation) {
       setActiveStep(currentStep);
     }
-  }, [currentStep, completedSteps]);
+  }, [currentStep, pendingStep2Animation]);
 
   const steps: WorkflowStep[] = [
     {
@@ -151,7 +183,7 @@ export function WorkflowCarousel({
   const SLIDE_DISTANCE = CARD_WIDTH + GAP;
 
   return (
-    <div className="w-full">
+    <div className="w-full" ref={carouselRef}>
       {/* Progress Bar - Minimal SaaS style */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
