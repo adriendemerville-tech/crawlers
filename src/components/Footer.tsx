@@ -92,6 +92,12 @@ export function Footer() {
       description: language === 'fr' ? 'Apprenez à rédiger avec l\'IA' : 'Learn to write with AI',
       external: true
     },
+    { 
+      label: 'MossAI Tools',
+      href: 'https://mossai.org',
+      description: language === 'fr' ? 'Outils IA pour le SEO' : 'AI tools for SEO',
+      external: true
+    },
   ];
 
   return (
