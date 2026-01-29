@@ -9,11 +9,13 @@ export type ToolTab = 'crawlers' | 'pagespeed' | 'geo' | 'llm';
 interface ToolTabsProps {
   activeTab: ToolTab;
   onTabChange: (tab: ToolTab) => void;
+  currentUrl?: string;
 }
 
 export function ToolTabs({ 
   activeTab, 
-  onTabChange, 
+  onTabChange,
+  currentUrl,
 }: ToolTabsProps) {
   const { t, language } = useLanguage();
 
@@ -82,7 +84,7 @@ export function ToolTabs({
 
       {/* Lien Audit Expert (anciennement Score SEO 200) */}
       <div className="flex justify-center">
-        <Link to="/audit-expert">
+        <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}` : '/audit-expert'}>
           <Button
             variant="outline"
             size="lg"
