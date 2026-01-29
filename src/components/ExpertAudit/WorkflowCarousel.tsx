@@ -337,10 +337,11 @@ export function WorkflowCarousel({
                       "relative overflow-hidden transition-all duration-500 h-full",
                       "bg-card/95 backdrop-blur-sm border border-border/40",
                       "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
-                      isActive && "border-primary/30 shadow-[0_12px_40px_rgba(0,0,0,0.15)]",
+                      isActive && step.id !== 2 && "border-primary/30 shadow-[0_12px_40px_rgba(0,0,0,0.15)]",
                       isCompleted && "border-success/30",
-                      // Gold border for step 2 (Strategic Audit) - using warning token for amber/gold
-                      step.id === 2 && !isCompleted && "border-2 border-warning",
+                      // Metallic gray/silver theme for step 2 (Strategic Audit)
+                      step.id === 2 && !isCompleted && "border-2 border-[#6b7280] bg-gradient-to-br from-card via-card to-[#f3f4f6]/30 dark:to-[#374151]/30 shadow-[0_12px_40px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]",
+                      step.id === 2 && isActive && !isCompleted && "shadow-[0_16px_50px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.15)]",
                       // Teal/cyan accent for step 3 (Code Correctif) - premium tech feel
                       step.id === 3 && !isCompleted && "border-2 border-cyan-500/60"
                     )}>
@@ -349,6 +350,8 @@ export function WorkflowCarousel({
                         "absolute top-0 left-0 right-0 h-1",
                         isCompleted 
                           ? "bg-gradient-to-r from-success to-success/80"
+                          : step.id === 2
+                          ? "bg-gradient-to-r from-[#4b5563] via-[#9ca3af] to-[#4b5563]"
                           : isActive 
                           ? "bg-gradient-to-r from-primary to-primary/80"
                           : "bg-muted"
@@ -360,6 +363,8 @@ export function WorkflowCarousel({
                           "w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-all duration-300",
                           isCompleted 
                             ? "bg-success/10 text-success"
+                            : step.id === 2
+                            ? "bg-[#374151]/20 text-[#4b5563] dark:bg-[#6b7280]/20 dark:text-[#9ca3af]"
                             : isActive 
                             ? "bg-primary/10 text-primary"
                             : "bg-muted text-muted-foreground"
