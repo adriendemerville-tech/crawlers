@@ -367,10 +367,10 @@ export function CorrectiveCodeEditor({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[92vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[92vh] overflow-hidden flex flex-col border-violet-500/30">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileCode className="w-5 h-5 text-primary" />
+            <FileCode className="w-5 h-5 text-violet-500" />
             {t.title}
           </DialogTitle>
           <DialogDescription>
@@ -403,7 +403,7 @@ export function CorrectiveCodeEditor({
             <Button
               onClick={handleGenerate}
               disabled={enabledCount === 0 || isGenerating}
-              className="w-full gap-2"
+              className="w-full gap-2 bg-violet-600 hover:bg-violet-700 text-white shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all duration-300"
               size="lg"
             >
               {isGenerating ? (
@@ -430,7 +430,7 @@ export function CorrectiveCodeEditor({
             <Card className="flex-1 flex flex-col">
               <CardHeader className="pb-2 flex-row items-center justify-between">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Code className="w-4 h-4 text-primary" />
+                  <Code className="w-4 h-4 text-violet-500" />
                   {t.previewTitle}
                 </CardTitle>
                 {generatedCode && (
@@ -440,7 +440,7 @@ export function CorrectiveCodeEditor({
                         onClick={handleSaveToProfile}
                         variant="outline"
                         size="sm"
-                        className="gap-2"
+                        className="gap-2 border-violet-500/50 text-violet-600 hover:bg-violet-500/10 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
                         disabled={isTyping || isSaving}
                       >
                         <Save className="w-3 h-3" />
@@ -450,7 +450,7 @@ export function CorrectiveCodeEditor({
                       onClick={handleCopy}
                       variant="outline"
                       size="sm"
-                      className="gap-2"
+                      className="gap-2 border-violet-500/50 text-violet-600 hover:bg-violet-500/10 hover:text-violet-700 dark:text-violet-400 dark:hover:text-violet-300"
                       disabled={isTyping}
                     >
                       {copied ? (
