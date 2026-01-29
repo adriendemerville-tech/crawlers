@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -134,6 +134,7 @@ export function ExpertAuditDashboard() {
   const [pendingReportOpen, setPendingReportOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const loadingRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
   const { language } = useLanguage();
@@ -204,6 +205,13 @@ export function ExpertAuditDashboard() {
       setCurrentStep(1);
     }
   }, [technicalResult, strategicResult]);
+
+  // Auto-scroll to loading area when analysis starts
+  useEffect(() => {
+    if ((isLoading || isStrategicLoading) && loadingRef.current) {
+      loadingRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isLoading, isStrategicLoading]);
 
   // Save report to profile when modal opens and user is logged in
   const handleSaveReportToProfile = useCallback(async (reportResult: ExpertAuditResult, mode: 'technical' | 'strategic') => {
@@ -417,11 +425,14 @@ export function ExpertAuditDashboard() {
         hasTechnicalResult={!!technicalResult}
       />
 
-      {/* Loading State - Technical */}
-      {isLoading && <LoadingSteps siteName={url} variant="technical" />}
-      
-      {/* Loading State - Strategic */}
-      {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" />}
+      {/* Loading States Container - scroll target */}
+      <div ref={loadingRef}>
+        {/* Loading State - Technical */}
+        {isLoading && <LoadingSteps siteName={url} variant="technical" />}
+        
+        {/* Loading State - Strategic */}
+        {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" />}
+      </div>
 
       {/* Results */}
       {result && !isLoading && !isStrategicLoading && (
