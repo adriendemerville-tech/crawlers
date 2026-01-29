@@ -12,15 +12,18 @@ import {
   Copy, Check, Code, ChevronDown, ChevronRight,
   Zap, Palette, Eye, Shield, FileCode, 
   Lightbulb, BookOpen, ExternalLink, AlertTriangle,
-  ShoppingBag, Tag
+  ShoppingBag, Tag, Save
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Recommendation, ExpertAuditResult } from '@/types/expertAudit';
 import { CodeBlock } from './CodeBlock';
 import { FixConfigPanel } from './FixConfigPanel';
 import { ImplementationGuide } from './ImplementationGuide';
 import { generateCorrectiveScript, FixConfig } from './scriptGenerator';
+import { toast as sonnerToast } from 'sonner';
 
 const translations = {
   fr: {
@@ -35,6 +38,8 @@ const translations = {
     implementTitle: 'Guide d\'implémentation',
     securityNote: 'Note de sécurité',
     securityDesc: 'Ce script s\'exécute côté client et ne modifie pas votre serveur. Testez toujours en environnement de staging avant la production.',
+    savedToProfile: 'Code sauvegardé dans votre profil',
+    saveError: 'Erreur lors de la sauvegarde',
     linesGenerated: 'lignes générées',
     noFixesSelected: 'Sélectionnez au moins un correctif pour générer le script',
     categories: {
@@ -56,6 +61,8 @@ const translations = {
     implementTitle: 'Implementation guide',
     securityNote: 'Security note',
     securityDesc: 'This script runs client-side and does not modify your server. Always test in a staging environment before production.',
+    savedToProfile: 'Code saved to your profile',
+    saveError: 'Error saving code',
     linesGenerated: 'lines generated',
     noFixesSelected: 'Select at least one fix to generate the script',
     categories: {
@@ -77,6 +84,8 @@ const translations = {
     implementTitle: 'Guía de implementación',
     securityNote: 'Nota de seguridad',
     securityDesc: 'Este script se ejecuta del lado del cliente y no modifica su servidor. Siempre pruebe en un entorno de staging antes de producción.',
+    savedToProfile: 'Código guardado en su perfil',
+    saveError: 'Error al guardar el código',
     linesGenerated: 'líneas generadas',
     noFixesSelected: 'Seleccione al menos una corrección para generar el script',
     categories: {
@@ -111,9 +120,11 @@ export function CorrectiveCodeEditor({
   const [displayedCode, setDisplayedCode] = useState<string>('');
   const [isTyping, setIsTyping] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   const { language } = useLanguage();
   const { toast } = useToast();
+  const { user } = useAuth();
   const t = translations[language] || translations.fr;
 
   // Generate fix configurations from audit results
@@ -319,6 +330,39 @@ export function CorrectiveCodeEditor({
     setTimeout(() => setCopied(false), 2000);
   }, [generatedCode, t.copied, t.linesGenerated, toast]);
 
+  // Save to profile
+  const handleSaveToProfile = useCallback(async () => {
+    if (!generatedCode || !user) return;
+
+    setIsSaving(true);
+    const enabledFixes = fixConfigs.filter(f => f.enabled);
+    
+    try {
+      const { error } = await supabase
+        .from('saved_corrective_codes')
+        .insert({
+          user_id: user.id,
+          title: siteName || siteUrl,
+          url: siteUrl,
+          code: generatedCode,
+          fixes_applied: enabledFixes.map(f => ({
+            id: f.id,
+            label: f.label,
+            category: f.category
+          }))
+        });
+
+      if (error) throw error;
+      
+      sonnerToast.success(t.savedToProfile);
+    } catch (error) {
+      console.error('Error saving corrective code:', error);
+      sonnerToast.error(t.saveError);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [generatedCode, user, fixConfigs, siteName, siteUrl, t.savedToProfile, t.saveError]);
+
   const enabledCount = fixConfigs.filter(f => f.enabled).length;
 
   return (
@@ -390,25 +434,38 @@ export function CorrectiveCodeEditor({
                   {t.previewTitle}
                 </CardTitle>
                 {generatedCode && (
-                  <Button
-                    onClick={handleCopy}
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    disabled={isTyping}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-3 h-3 text-success" />
-                        {t.copied}
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3" />
-                        {t.copyButton}
-                      </>
+                  <div className="flex items-center gap-2">
+                    {user && (
+                      <Button
+                        onClick={handleSaveToProfile}
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        disabled={isTyping || isSaving}
+                      >
+                        <Save className="w-3 h-3" />
+                      </Button>
                     )}
-                  </Button>
+                    <Button
+                      onClick={handleCopy}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      disabled={isTyping}
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3 h-3 text-success" />
+                          {t.copied}
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          {t.copyButton}
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 )}
               </CardHeader>
               <CardContent className="flex-1 pt-0">

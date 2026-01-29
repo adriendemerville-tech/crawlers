@@ -160,6 +160,39 @@ export type Database = {
           },
         ]
       }
+      saved_corrective_codes: {
+        Row: {
+          code: string
+          created_at: string
+          fixes_applied: Json
+          id: string
+          title: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          fixes_applied?: Json
+          id?: string
+          title: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          fixes_applied?: Json
+          id?: string
+          title?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_reports: {
         Row: {
           created_at: string
