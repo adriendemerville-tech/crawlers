@@ -20,6 +20,7 @@ import { ReportAuthGate } from './ReportAuthGate';
 import { PaymentModal } from './PaymentModal';
 import { WorkflowCarousel } from './WorkflowCarousel';
 import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
+import { HallucinationCorrectionModal } from './HallucinationCorrectionModal';
 
 export {
   ExpertAuditDashboard,
@@ -48,4 +49,7 @@ export {
   PaymentModal,
   WorkflowCarousel,
   CorrectiveCodeEditor,
+  HallucinationCorrectionModal,
 };
+
+export type { HallucinationAnalysis } from './HallucinationCorrectionModal';

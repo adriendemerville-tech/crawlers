@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Zap, FileText, Eye, Tag, AlertCircle, AlertTriangle, Info } from 'lucide-react';
+import { ChevronDown, Zap, FileText, Eye, Tag, AlertCircle, AlertTriangle, Info, BrainCircuit } from 'lucide-react';
 import { useState } from 'react';
 import { FixConfig } from './scriptGenerator';
 
@@ -14,6 +14,7 @@ interface FixConfigPanelProps {
     performance: string;
     accessibility: string;
     tracking: string;
+    hallucination?: string;
   };
 }
 
@@ -22,6 +23,7 @@ const categoryIcons = {
   performance: Zap,
   accessibility: Eye,
   tracking: Tag,
+  hallucination: BrainCircuit,
 };
 
 const categoryColors = {
@@ -29,6 +31,7 @@ const categoryColors = {
   performance: 'text-amber-500',
   accessibility: 'text-purple-500',
   tracking: 'text-emerald-500',
+  hallucination: 'text-slate-500',
 };
 
 const priorityConfig = {
@@ -50,7 +53,7 @@ const priorityConfig = {
 };
 
 export function FixConfigPanel({ fixes, onToggle, categories }: FixConfigPanelProps) {
-  const [openCategories, setOpenCategories] = useState<string[]>(['seo', 'performance', 'accessibility', 'tracking']);
+  const [openCategories, setOpenCategories] = useState<string[]>(['seo', 'performance', 'accessibility', 'tracking', 'hallucination']);
 
   // Group fixes by category
   const groupedFixes = fixes.reduce((acc, fix) => {

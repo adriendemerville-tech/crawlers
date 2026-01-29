@@ -47,6 +47,7 @@ const translations = {
       performance: 'Performance',
       accessibility: 'Accessibilité',
       tracking: 'Tracking & Analytics',
+      hallucination: 'Correction IA',
     },
   },
   en: {
@@ -70,6 +71,7 @@ const translations = {
       performance: 'Performance',
       accessibility: 'Accessibility',
       tracking: 'Tracking & Analytics',
+      hallucination: 'AI Correction',
     },
   },
   es: {
@@ -93,9 +95,16 @@ const translations = {
       performance: 'Rendimiento',
       accessibility: 'Accesibilidad',
       tracking: 'Seguimiento y Analytics',
+      hallucination: 'Corrección IA',
     },
   },
 };
+
+interface HallucinationData {
+  trueValue: string;
+  confusionSources: string[];
+  correctedIntro?: string;
+}
 
 interface CorrectiveCodeEditorProps {
   isOpen: boolean;
@@ -104,6 +113,7 @@ interface CorrectiveCodeEditorProps {
   strategicResult: ExpertAuditResult | null;
   siteUrl: string;
   siteName: string;
+  hallucinationData?: HallucinationData | null;
 }
 
 export function CorrectiveCodeEditor({
@@ -113,6 +123,7 @@ export function CorrectiveCodeEditor({
   strategicResult,
   siteUrl,
   siteName,
+  hallucinationData,
 }: CorrectiveCodeEditorProps) {
   const [fixConfigs, setFixConfigs] = useState<FixConfig[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -245,8 +256,25 @@ export function CorrectiveCodeEditor({
       data: { measurementId: 'G-XXXXXXXXXX' }
     });
 
+    // Hallucination fix (only if hallucination data is available)
+    if (hallucinationData?.trueValue) {
+      fixes.push({
+        id: 'fix_hallucination',
+        category: 'hallucination',
+        label: language === 'fr' ? 'Correction Hallucination IA' : language === 'es' ? 'Corrección Alucinación IA' : 'AI Hallucination Fix',
+        description: language === 'fr' ? 'Injecte des métadonnées clarificatrices pour les LLM' : 'Inject clarifying metadata for LLMs',
+        enabled: true,
+        priority: 'critical',
+        data: {
+          trueValue: hallucinationData.trueValue,
+          confusionSources: hallucinationData.confusionSources || [],
+          correctedIntro: hallucinationData.correctedIntro || ''
+        }
+      });
+    }
+
     return fixes;
-  }, [technicalResult, strategicResult, language, siteName, siteUrl]);
+  }, [technicalResult, strategicResult, language, siteName, siteUrl, hallucinationData]);
 
   // Initialize fix configs when modal opens
   useEffect(() => {
