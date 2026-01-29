@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Shield, Zap, Gauge, Sparkles, Brain } from 'lucide-react';
@@ -11,9 +12,20 @@ interface HeroSectionProps {
   isLoading: boolean;
 }
 
+const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
+
 export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps) {
   const [url, setUrl] = useState('');
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const [wordIndex, setWordIndex] = useState(0);
+
+  // Rotate words every 2.5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWordIndex((prev) => (prev + 1) % animatedWords.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
   const normalizeUrl = (input: string): string => {
     let normalized = input.trim();
@@ -47,13 +59,37 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
     }
   };
 
+  const getIgnoreText = () => {
+    switch (language) {
+      case 'fr':
+        return 'ignore-t-il';
+      case 'es':
+        return 'ignora';
+      default:
+        return 'ignoring';
+    }
+  };
+
+  const getSiteText = () => {
+    switch (language) {
+      case 'fr':
+        return 'votre site';
+      case 'es':
+        return 'su sitio';
+      default:
+        return 'your site';
+    }
+  };
+
   const getHeroContent = () => {
     switch (activeTab) {
       case 'crawlers':
         return {
           icon: <Shield className="h-4 w-4 text-primary" />,
           badge: t.hero.badge.crawlers,
-          headline: <>{t.hero.headline.crawlers}{' '}<span className="text-gradient">{t.hero.headline.crawlersHighlight}</span> ?</>,
+          // Use animated headline for crawlers tab
+          headline: null, // Will render custom animated headline
+          useAnimatedHeadline: true,
           subheadline: t.hero.subheadline.crawlers,
           buttonText: t.hero.button.crawlers,
           loadingText: t.hero.button.loading.crawlers
@@ -63,6 +99,7 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
           icon: <Sparkles className="h-4 w-4 text-primary" />,
           badge: t.hero.badge.geo,
           headline: <>{t.hero.headline.geo}{' '}<span className="text-gradient">{t.hero.headline.geoHighlight}</span></>,
+          useAnimatedHeadline: false,
           subheadline: t.hero.subheadline.geo,
           buttonText: t.hero.button.geo,
           loadingText: t.hero.button.loading.geo
@@ -72,6 +109,7 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
           icon: <Brain className="h-4 w-4 text-primary" />,
           badge: t.hero.badge.llm,
           headline: <>{t.hero.headline.llm}{' '}<span className="text-gradient">{t.hero.headline.llmHighlight}</span> ?</>,
+          useAnimatedHeadline: false,
           subheadline: t.hero.subheadline.llm,
           buttonText: t.hero.button.llm,
           loadingText: t.hero.button.loading.llm
@@ -81,6 +119,7 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
           icon: <Gauge className="h-4 w-4 text-primary" />,
           badge: t.hero.badge.pagespeed,
           headline: <>{t.hero.headline.pagespeed}{' '}<span className="text-gradient">{t.hero.headline.pagespeedHighlight}</span> ?</>,
+          useAnimatedHeadline: false,
           subheadline: t.hero.subheadline.pagespeed,
           buttonText: t.hero.button.pagespeed,
           loadingText: t.hero.button.loading.pagespeed
@@ -89,6 +128,36 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
   };
 
   const content = getHeroContent();
+
+  // Animated headline for crawlers tab
+  const renderAnimatedHeadline = () => (
+    <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+      <span className="inline-flex items-baseline justify-center gap-2 sm:gap-3">
+        {/* Animated word container */}
+        <span
+          className="relative inline-block overflow-hidden text-white"
+          style={{ minWidth: '180px', width: '180px' }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={wordIndex}
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -40, opacity: 0 }}
+              transition={{ duration: 0.4, ease: 'easeInOut' }}
+              className="inline-block"
+            >
+              {animatedWords[wordIndex]}
+            </motion.span>
+          </AnimatePresence>
+        </span>
+        <span className="text-white">{getIgnoreText()}</span>
+      </span>
+      {' '}
+      <span className="text-gradient">{getSiteText()}</span>
+      {' '}?
+    </h1>
+  );
 
   return (
     <section className="relative overflow-hidden px-4 py-10 sm:py-16">
@@ -106,9 +175,13 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
         </div>
 
         {/* H1 Headline - SEO optimized */}
-        <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-          {content.headline}
-        </h1>
+        {content.useAnimatedHeadline ? (
+          renderAnimatedHeadline()
+        ) : (
+          <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            {content.headline}
+          </h1>
+        )}
 
         {/* H2 Subheadline - SEO optimized */}
         <h2 className="mx-auto mb-10 max-w-2xl text-lg font-normal text-muted-foreground sm:text-xl">
