@@ -46,7 +46,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
       <div className="relative">
         <div className={`h-20 w-20 rounded-full border-4 border-muted`}></div>
         <div className={`absolute inset-0 h-20 w-20 rounded-full border-4 border-t-transparent animate-spin ${
-          variant === 'strategic' ? 'border-emerald-500' : 'border-primary'
+          variant === 'strategic' ? 'border-slate-500' : 'border-primary'
         }`}></div>
         <motion.div 
           className="absolute inset-0 flex items-center justify-center"
@@ -54,7 +54,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
           transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
         >
           {variant === 'strategic' ? (
-            <Target className="h-8 w-8 text-emerald-500" />
+            <Target className="h-8 w-8 text-slate-600 dark:text-slate-400" />
           ) : (
             <Brain className="h-8 w-8 text-primary" />
           )}
@@ -86,6 +86,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
             const StepIcon = step.icon;
             const isActive = index === currentStep;
             const isComplete = index < currentStep;
+            const isPending = index > currentStep;
 
             return (
               <motion.div
@@ -99,15 +100,21 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
                 className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
                   isActive 
                     ? variant === 'strategic' 
-                      ? 'bg-emerald-500/10 border border-emerald-500/30' 
+                      ? 'bg-slate-500/10 border border-slate-500/30' 
                       : 'bg-primary/10 border border-primary/30'
-                    : isComplete ? 'bg-success/10' : 'bg-muted/30'
+                    : isComplete 
+                    ? 'bg-success/10' 
+                    : isPending && variant === 'strategic'
+                    ? 'bg-slate-500/5 border border-slate-500/20'
+                    : 'bg-muted/30'
                 }`}
               >
                 <StepIcon className={`h-5 w-5 ${
                   isComplete ? 'text-success' : 
                   isActive 
-                    ? variant === 'strategic' ? 'text-emerald-500' : 'text-primary' 
+                    ? variant === 'strategic' ? 'text-slate-600 dark:text-slate-400' : 'text-primary' 
+                    : isPending && variant === 'strategic'
+                    ? 'text-slate-500/60'
                     : 'text-muted-foreground'
                 }`} />
                 <span className={`text-sm ${isActive ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
@@ -122,7 +129,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
                     animate={{ opacity: [1, 0.5, 1] }}
                     transition={{ duration: 1, repeat: Infinity }}
                   >
-                    <div className={`h-2 w-2 rounded-full ${variant === 'strategic' ? 'bg-emerald-500' : 'bg-primary'}`} />
+                    <div className={`h-2 w-2 rounded-full ${variant === 'strategic' ? 'bg-slate-500' : 'bg-primary'}`} />
                   </motion.div>
                 )}
               </motion.div>

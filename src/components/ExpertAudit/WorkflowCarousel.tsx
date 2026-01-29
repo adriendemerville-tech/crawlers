@@ -340,9 +340,9 @@ export function WorkflowCarousel({
                       "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
                       isActive && step.id !== 2 && step.id !== 3 && "border-primary/30 shadow-[0_12px_40px_rgba(0,0,0,0.15)]",
                       isCompleted && "border-success/30",
-                      // Emerald green theme for step 2 (Strategic Audit) with glow
-                      step.id === 2 && !isCompleted && "border-2 border-emerald-500/70 bg-gradient-to-br from-card via-card to-emerald-50/30 dark:to-emerald-950/30 shadow-[0_0_20px_rgba(16,185,129,0.3)]",
-                      step.id === 2 && isActive && !isCompleted && "shadow-[0_0_25px_rgba(16,185,129,0.4)]",
+                      // Dark metallic gray theme for step 2 (Strategic Audit) with subtle glow
+                      step.id === 2 && !isCompleted && "border-2 border-slate-500/70 bg-gradient-to-br from-card via-card to-slate-100/20 dark:to-slate-900/40 shadow-[0_0_20px_rgba(100,116,139,0.25)]",
+                      step.id === 2 && isActive && !isCompleted && "shadow-[0_0_25px_rgba(100,116,139,0.35)]",
                       // Violet/purple accent for step 3 (Code Correctif) with glow
                       step.id === 3 && !isCompleted && "border-2 border-violet-500/70 shadow-[0_0_20px_rgba(139,92,246,0.4)]"
                     )}>
@@ -352,7 +352,7 @@ export function WorkflowCarousel({
                         isCompleted 
                           ? "bg-gradient-to-r from-success to-success/80"
                           : step.id === 2
-                          ? "bg-gradient-to-r from-emerald-600 via-emerald-400 to-emerald-600"
+                          ? "bg-gradient-to-r from-slate-600 via-slate-400 to-slate-600"
                           : step.id === 3
                           ? "bg-gradient-to-r from-violet-600 via-violet-400 to-violet-600"
                           : isActive 
@@ -367,7 +367,7 @@ export function WorkflowCarousel({
                           isCompleted 
                             ? "bg-success/10 text-success"
                             : step.id === 2
-                            ? "bg-emerald-500/15 text-emerald-500"
+                            ? "bg-slate-500/15 text-slate-600 dark:text-slate-400"
                             : step.id === 3
                             ? "bg-violet-500/15 text-violet-500"
                             : isActive 
@@ -416,8 +416,8 @@ export function WorkflowCarousel({
                                 "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
                                 isCompleted && "bg-success hover:bg-success/90",
                                 isLocked && "opacity-50 cursor-not-allowed",
-                                // Premium emerald green button for step 2
-                                step.id === 2 && !isCompleted && !isLocked && "bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-[0_0_15px_rgba(16,185,129,0.3)]",
+                                // Dark metallic gray button for step 2
+                                step.id === 2 && !isCompleted && !isLocked && "bg-slate-600 hover:bg-slate-700 text-white border-0 shadow-[0_0_15px_rgba(100,116,139,0.3)]",
                                 // Violet/purple button for step 3 with glow
                                 step.id === 3 && !isCompleted && !isLocked && "bg-violet-600 hover:bg-violet-700 text-white border-0 shadow-[0_0_15px_rgba(139,92,246,0.4)]"
                               )}
