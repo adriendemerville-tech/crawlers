@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { 
   Zap, Settings2, FileText, Brain, Shield, 
-  ExternalLink, Sparkles, FileDown
+  ExternalLink, Sparkles, FileDown, RotateCcw
 } from 'lucide-react';
 import { ScoreGauge200 } from './ScoreGauge200';
 import { CategoryCard, MetricRow } from './CategoryCard';
@@ -63,6 +63,7 @@ const translations = {
     strategicSectionTitle: 'Analyse de Visibilité IA',
     strategicSectionDesc: 'Résultats détaillés de GPT-4, Claude et Gemini.',
     generateCode: 'Générer Code Correctif (5€)',
+    newAudit: 'Nouvel Audit',
   },
   en: {
     badge: 'Expert SEO & AI Audit',
@@ -90,6 +91,7 @@ const translations = {
     strategicSectionTitle: 'AI Visibility Analysis',
     strategicSectionDesc: 'Detailed results from GPT-4, Claude and Gemini.',
     generateCode: 'Generate Corrective Code (€5)',
+    newAudit: 'New Audit',
   },
   es: {
     badge: 'Auditoría Experta SEO e IA',
@@ -117,6 +119,7 @@ const translations = {
     strategicSectionTitle: 'Análisis de Visibilidad IA',
     strategicSectionDesc: 'Resultados detallados de GPT-4, Claude y Gemini.',
     generateCode: 'Generar Código Correctivo (5€)',
+    newAudit: 'Nueva Auditoría',
   },
 };
 
@@ -256,6 +259,23 @@ export function ExpertAuditDashboard() {
     openReportAndSave();
   };
 
+  const handleNewAudit = () => {
+    // Clear all state
+    setUrl('');
+    setAuditMode(null);
+    setResult(null);
+    setTechnicalResult(null);
+    setStrategicResult(null);
+    setCurrentStep(1);
+    setCompletedSteps([]);
+    // Clear session storage
+    sessionStorage.removeItem('audit_url');
+    sessionStorage.removeItem('audit_technical_result');
+    sessionStorage.removeItem('audit_strategic_result');
+    sessionStorage.removeItem('audit_mode');
+    sessionStorage.removeItem('audit_pending_action');
+  };
+
   const handleReportModalClose = () => {
     setIsReportModalOpen(false);
     // If we just came from technical audit, navigate to strategic
@@ -392,6 +412,24 @@ export function ExpertAuditDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-5xl">
+      {/* New Audit Button - show when there are results */}
+      {(technicalResult || strategicResult) && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-end mb-4"
+        >
+          <Button
+            variant="outline"
+            onClick={handleNewAudit}
+            className="gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            {t.newAudit}
+          </Button>
+        </motion.div>
+      )}
+
       {/* Header - Premium SaaS style */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
