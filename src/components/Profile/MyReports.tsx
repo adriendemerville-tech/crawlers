@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FolderPlus, FileText, Trash2, FolderOpen, ChevronRight, MoreVertical, Loader2, Download } from 'lucide-react';
+import { FolderPlus, FileText, Trash2, FolderOpen, ChevronRight, MoreVertical, Loader2, Download, ArrowLeft } from 'lucide-react';
 import {
   DndContext,
   DragOverlay,
@@ -383,25 +383,32 @@ export function MyReports() {
       </CardHeader>
       <CardContent>
         {/* Breadcrumb navigation */}
-        <div className="flex items-center gap-1 mb-4 text-sm">
-          <button
-            onClick={() => navigateToFolder(null)}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {t.rootFolder}
-          </button>
-          {folderPath.map((folder, index) => (
-            <div key={folder.id} className="flex items-center gap-1">
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              <button
-                onClick={() => navigateToFolder(folder.id)}
-                className={index === folderPath.length - 1 ? 'font-medium' : 'text-muted-foreground hover:text-foreground transition-colors'}
-              >
-                {folder.name}
-              </button>
-            </div>
-          ))}
-        </div>
+        {folderPath.length > 0 && (
+          <div className="flex items-center gap-2 mb-4 text-sm">
+            <button
+              onClick={() => {
+                // Navigate to parent folder (or root if at first level)
+                const parentId = folderPath.length > 1 ? folderPath[folderPath.length - 2].id : null;
+                navigateToFolder(parentId);
+              }}
+              className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              aria-label="Retour"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            {folderPath.map((folder, index) => (
+              <div key={folder.id} className="flex items-center gap-1">
+                {index > 0 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+                <button
+                  onClick={() => navigateToFolder(folder.id)}
+                  className={index === folderPath.length - 1 ? 'font-medium' : 'text-muted-foreground hover:text-foreground transition-colors'}
+                >
+                  {folder.name}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
