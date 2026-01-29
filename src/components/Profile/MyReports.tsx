@@ -174,21 +174,33 @@ export function MyReports() {
 
     setLoading(true);
 
-    // Fetch folders in current directory
-    const { data: foldersData } = await supabase
+    // Build folders query - handle null parent_id correctly
+    let foldersQuery = supabase
       .from('report_folders')
       .select('*')
-      .eq('user_id', user.id)
-      .eq('parent_id', currentFolderId as any)
-      .order('position');
+      .eq('user_id', user.id);
+    
+    if (currentFolderId === null) {
+      foldersQuery = foldersQuery.is('parent_id', null);
+    } else {
+      foldersQuery = foldersQuery.eq('parent_id', currentFolderId);
+    }
+    
+    const { data: foldersData } = await foldersQuery.order('position');
 
-    // Fetch reports in current directory
-    const { data: reportsData } = await supabase
+    // Build reports query - handle null folder_id correctly
+    let reportsQuery = supabase
       .from('saved_reports')
       .select('*')
-      .eq('user_id', user.id)
-      .eq('folder_id', currentFolderId as any)
-      .order('position');
+      .eq('user_id', user.id);
+    
+    if (currentFolderId === null) {
+      reportsQuery = reportsQuery.is('folder_id', null);
+    } else {
+      reportsQuery = reportsQuery.eq('folder_id', currentFolderId);
+    }
+    
+    const { data: reportsData } = await reportsQuery.order('position');
 
     setFolders((foldersData as Folder[]) || []);
     setReports((reportsData as Report[]) || []);
