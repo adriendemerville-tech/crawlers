@@ -25,7 +25,7 @@ const categoryIcons = {
 };
 
 const categoryColors = {
-  seo: 'text-blue-500',
+  seo: 'text-violet-500',
   performance: 'text-amber-500',
   accessibility: 'text-purple-500',
   tracking: 'text-emerald-500',
