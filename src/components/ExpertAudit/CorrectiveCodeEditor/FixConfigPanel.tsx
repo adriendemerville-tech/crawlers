@@ -50,7 +50,7 @@ const priorityConfig = {
 };
 
 export function FixConfigPanel({ fixes, onToggle, categories }: FixConfigPanelProps) {
-  const [openCategories, setOpenCategories] = useState<string[]>(['seo', 'performance']);
+  const [openCategories, setOpenCategories] = useState<string[]>(['seo', 'performance', 'accessibility', 'tracking']);
 
   // Group fixes by category
   const groupedFixes = fixes.reduce((acc, fix) => {
