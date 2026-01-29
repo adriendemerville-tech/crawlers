@@ -60,13 +60,13 @@ export function PremiumRoadmapCard({ roadmap }: PremiumRoadmapCardProps) {
   const getROIConfig = (roi: string) => {
     switch (roi) {
       case 'High':
-        return { color: 'text-emerald-600 dark:text-emerald-400', label: 'ROI Élevé' };
+        return { color: 'bg-success/10 text-success border-success/30', label: 'ROI Élevé', icon: '🚀' };
       case 'Medium':
-        return { color: 'text-amber-600 dark:text-amber-400', label: 'ROI Moyen' };
+        return { color: 'bg-warning/10 text-warning border-warning/30', label: 'ROI Moyen', icon: '📈' };
       case 'Low':
-        return { color: 'text-blue-600 dark:text-blue-400', label: 'ROI Faible' };
+        return { color: 'bg-muted text-muted-foreground border-border', label: 'ROI Faible', icon: '📊' };
       default:
-        return { color: 'text-muted-foreground', label: roi };
+        return { color: 'bg-muted text-muted-foreground border-border', label: roi, icon: '📊' };
     }
   };
 
@@ -136,9 +136,9 @@ export function PremiumRoadmapCard({ roadmap }: PremiumRoadmapCardProps) {
                         {priorityConfig.icon}
                         {priorityConfig.label}
                       </Badge>
-                      <span className={`text-[10px] font-medium ${roiConfig.color}`}>
-                        {roiConfig.label}
-                      </span>
+                      <Badge variant="outline" className={`text-xs ${roiConfig.color}`}>
+                        {roiConfig.icon} {roiConfig.label}
+                      </Badge>
                     </div>
                   </div>
                   
