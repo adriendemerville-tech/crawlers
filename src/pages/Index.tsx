@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, memo } from 'react';
+import { useState, Suspense, memo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
@@ -9,27 +9,56 @@ import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { lazyWithRetry } from '@/lib/lazyWithRetry';
 
-// Lazy load heavy dashboard components
-const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then(m => ({ default: m.ResultsDashboard })));
-const PageSpeedDashboard = lazy(() => import('@/components/PageSpeedDashboard').then(m => ({ default: m.PageSpeedDashboard })));
-const GeoDashboard = lazy(() => import('@/components/GeoDashboard').then(m => ({ default: m.GeoDashboard })));
-const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({ default: m.LLMDashboard })));
-const QuotaExceeded = lazy(() => import('@/components/QuotaExceeded').then(m => ({ default: m.QuotaExceeded })));
+// Lazy load heavy dashboard components (with retry)
+const ResultsDashboard = lazyWithRetry(() =>
+  import('@/components/ResultsDashboard').then((m) => ({ default: m.ResultsDashboard }))
+);
+const PageSpeedDashboard = lazyWithRetry(() =>
+  import('@/components/PageSpeedDashboard').then((m) => ({ default: m.PageSpeedDashboard }))
+);
+const GeoDashboard = lazyWithRetry(() =>
+  import('@/components/GeoDashboard').then((m) => ({ default: m.GeoDashboard }))
+);
+const LLMDashboard = lazyWithRetry(() =>
+  import('@/components/LLMDashboard').then((m) => ({ default: m.LLMDashboard }))
+);
+const QuotaExceeded = lazyWithRetry(() =>
+  import('@/components/QuotaExceeded').then((m) => ({ default: m.QuotaExceeded }))
+);
 
-// Lazy load below-the-fold components with higher priority grouping
-const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
-const GEOFAQSection = lazy(() => import('@/components/GEOFAQSection').then(m => ({ default: m.GEOFAQSection })));
-const WhyVital2026Section = lazy(() => import('@/components/WhyVital2026Section').then(m => ({ default: m.WhyVital2026Section })));
-const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
-const GEOComparisonTable = lazy(() => import('@/components/GEOComparisonTable').then(m => ({ default: m.GEOComparisonTable })));
-const SolutionSection = lazy(() => import('@/components/SolutionSection').then(m => ({ default: m.SolutionSection })));
-const MarketingBudgetSection = lazy(() => import('@/components/MarketingBudgetSection').then(m => ({ default: m.MarketingBudgetSection })));
-const SEOvsGEOSection = lazy(() => import('@/components/SEOvsGEOSection').then(m => ({ default: m.SEOvsGEOSection })));
+// Lazy load below-the-fold components (with retry)
+const FAQSection = lazyWithRetry(() =>
+  import('@/components/FAQSection').then((m) => ({ default: m.FAQSection }))
+);
+const GEOFAQSection = lazyWithRetry(() =>
+  import('@/components/GEOFAQSection').then((m) => ({ default: m.GEOFAQSection }))
+);
+const WhyVital2026Section = lazyWithRetry(() =>
+  import('@/components/WhyVital2026Section').then((m) => ({ default: m.WhyVital2026Section }))
+);
+const NewsCarousel = lazyWithRetry(() =>
+  import('@/components/NewsCarousel').then((m) => ({ default: m.NewsCarousel }))
+);
+const GEOComparisonTable = lazyWithRetry(() =>
+  import('@/components/GEOComparisonTable').then((m) => ({ default: m.GEOComparisonTable }))
+);
+const SolutionSection = lazyWithRetry(() =>
+  import('@/components/SolutionSection').then((m) => ({ default: m.SolutionSection }))
+);
+const MarketingBudgetSection = lazyWithRetry(() =>
+  import('@/components/MarketingBudgetSection').then((m) => ({ default: m.MarketingBudgetSection }))
+);
+const SEOvsGEOSection = lazyWithRetry(() =>
+  import('@/components/SEOvsGEOSection').then((m) => ({ default: m.SEOvsGEOSection }))
+);
 
-// Lazy load Footer - not needed for initial render
-const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
-const FloatingReportButton = lazy(() => import('@/components/FloatingReportButton').then(m => ({ default: m.FloatingReportButton })));
+// Lazy load Footer - not needed for initial render (with retry)
+const Footer = lazyWithRetry(() => import('@/components/Footer').then((m) => ({ default: m.Footer })));
+const FloatingReportButton = lazyWithRetry(() =>
+  import('@/components/FloatingReportButton').then((m) => ({ default: m.FloatingReportButton }))
+);
 
 // Lightweight skeleton for dashboards
 const DashboardSkeleton = memo(() => (
