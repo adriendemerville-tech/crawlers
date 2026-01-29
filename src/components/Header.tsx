@@ -1,4 +1,4 @@
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,21 +35,33 @@ const lexiqueLabels = {
 const translations = {
   fr: {
     profile: 'Mon profil',
+    identity: 'Identité',
+    settings: 'Paramètres',
     myReports: 'Mes rapports',
+    actionPlans: 'Plans d\'action',
+    correctiveCodes: 'Codes correctifs',
     logout: 'Déconnexion',
     login: 'Connexion',
     back: 'Retour',
   },
   en: {
     profile: 'My profile',
+    identity: 'Identity',
+    settings: 'Settings',
     myReports: 'My reports',
+    actionPlans: 'Action plans',
+    correctiveCodes: 'Corrective codes',
     logout: 'Log out',
     login: 'Log in',
     back: 'Back',
   },
   es: {
     profile: 'Mi perfil',
+    identity: 'Identidad',
+    settings: 'Configuración',
     myReports: 'Mis informes',
+    actionPlans: 'Planes de acción',
+    correctiveCodes: 'Códigos correctivos',
     logout: 'Cerrar sesión',
     login: 'Iniciar sesión',
     back: 'Volver',
@@ -190,7 +202,7 @@ export function Header() {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-64" align="end" forceMount>
+                <DropdownMenuContent className="w-72" align="end" forceMount>
                   <div className="flex items-center justify-start gap-3 p-3">
                     <Avatar className="h-10 w-10 shrink-0">
                       <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
@@ -207,15 +219,34 @@ export function Header() {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/profil" className="gap-2 cursor-pointer">
+                    <Link to="/profil?tab=identity" className="gap-2 cursor-pointer">
                       <User className="h-4 w-4" />
-                      {t.profile}
+                      {t.identity}
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profil?tab=settings" className="gap-2 cursor-pointer">
+                      <Settings className="h-4 w-4" />
+                      {t.settings}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/profil?tab=reports" className="gap-2 cursor-pointer">
                       <FileText className="h-4 w-4" />
                       {t.myReports}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profil?tab=action-plans" className="gap-2 cursor-pointer">
+                      <ClipboardList className="h-4 w-4" />
+                      {t.actionPlans}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/profil?tab=corrective-codes" className="gap-2 cursor-pointer">
+                      <Code2 className="h-4 w-4" />
+                      {t.correctiveCodes}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

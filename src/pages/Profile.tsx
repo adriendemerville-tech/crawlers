@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2 } from 'lucide-react';
@@ -109,7 +109,11 @@ export default function Profile() {
   const { user, profile, signOut, refreshProfile, loading } = useAuth();
   const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const t = translations[language];
+
+  // Get initial tab from URL or default to 'identity'
+  const initialTab = searchParams.get('tab') || 'identity';
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -179,7 +183,7 @@ export default function Profile() {
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+        <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -201,7 +205,7 @@ export default function Profile() {
               </Button>
             </div>
 
-            <Tabs defaultValue="identity" className="space-y-6">
+            <Tabs defaultValue={initialTab} className="space-y-6">
               <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="identity" className="gap-2">
                   <User className="h-4 w-4" />
