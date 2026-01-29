@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   BrainCircuit, Loader2, Sparkles, Edit3, Building2, MapPin, 
-  Target, Calendar, FileText, Globe, Users
+  Target, Calendar, FileText, Globe, Users, Check
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 interface DetectedValues {
   sector: string;
@@ -213,6 +214,24 @@ export function HallucinationCorrectionModal({
     }));
   };
 
+  // Track which fields have been modified
+  const modifiedFields = useMemo(() => {
+    const modified: Record<keyof DetectedValues, boolean> = {
+      sector: correctedValues.sector !== detectedValues.sector,
+      country: correctedValues.country !== detectedValues.country,
+      valueProposition: correctedValues.valueProposition !== detectedValues.valueProposition,
+      targetAudience: correctedValues.targetAudience !== detectedValues.targetAudience,
+      businessAge: correctedValues.businessAge !== detectedValues.businessAge,
+      businessType: correctedValues.businessType !== detectedValues.businessType,
+      mainProducts: correctedValues.mainProducts !== detectedValues.mainProducts,
+    };
+    return modified;
+  }, [correctedValues, detectedValues]);
+
+  // Common input classes with caret visibility and focus styling
+  const inputClasses = "border-slate-300 dark:border-slate-700 caret-primary focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all";
+  const textareaClasses = "border-slate-300 dark:border-slate-700 caret-primary focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none";
+
   const runDiagnosis = async () => {
     setIsLoading(true);
     try {
@@ -319,12 +338,15 @@ export function HallucinationCorrectionModal({
                   <Label className="flex items-center gap-2 text-sm">
                     {fieldIcons.sector}
                     {fieldLabels.sector}
+                    {modifiedFields.sector && (
+                      <Check className="h-4 w-4 text-emerald-500 ml-auto" />
+                    )}
                   </Label>
                   <Input
                     value={correctedValues.sector}
                     onChange={(e) => handleFieldChange('sector', e.target.value)}
                     placeholder="Ex: E-commerce, SaaS, Restauration..."
-                    className="border-slate-300 dark:border-slate-700"
+                    className={cn(inputClasses, modifiedFields.sector && "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/20")}
                   />
                 </div>
 
@@ -333,12 +355,15 @@ export function HallucinationCorrectionModal({
                   <Label className="flex items-center gap-2 text-sm">
                     {fieldIcons.country}
                     {fieldLabels.country}
+                    {modifiedFields.country && (
+                      <Check className="h-4 w-4 text-emerald-500 ml-auto" />
+                    )}
                   </Label>
                   <Input
                     value={correctedValues.country}
                     onChange={(e) => handleFieldChange('country', e.target.value)}
                     placeholder="Ex: France, Europe, Monde..."
-                    className="border-slate-300 dark:border-slate-700"
+                    className={cn(inputClasses, modifiedFields.country && "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/20")}
                   />
                 </div>
 
@@ -347,12 +372,15 @@ export function HallucinationCorrectionModal({
                   <Label className="flex items-center gap-2 text-sm">
                     {fieldIcons.businessType}
                     {fieldLabels.businessType}
+                    {modifiedFields.businessType && (
+                      <Check className="h-4 w-4 text-emerald-500 ml-auto" />
+                    )}
                   </Label>
                   <Input
                     value={correctedValues.businessType}
                     onChange={(e) => handleFieldChange('businessType', e.target.value)}
                     placeholder="Ex: TPE, PME, Grande entreprise, Startup..."
-                    className="border-slate-300 dark:border-slate-700"
+                    className={cn(inputClasses, modifiedFields.businessType && "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/20")}
                   />
                 </div>
 
@@ -361,12 +389,15 @@ export function HallucinationCorrectionModal({
                   <Label className="flex items-center gap-2 text-sm">
                     {fieldIcons.businessAge}
                     {fieldLabels.businessAge}
+                    {modifiedFields.businessAge && (
+                      <Check className="h-4 w-4 text-emerald-500 ml-auto" />
+                    )}
                   </Label>
                   <Input
                     value={correctedValues.businessAge}
                     onChange={(e) => handleFieldChange('businessAge', e.target.value)}
                     placeholder="Ex: 2 ans, 10+ ans, Nouvelle entreprise..."
-                    className="border-slate-300 dark:border-slate-700"
+                    className={cn(inputClasses, modifiedFields.businessAge && "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/20")}
                   />
                 </div>
 
@@ -375,12 +406,15 @@ export function HallucinationCorrectionModal({
                   <Label className="flex items-center gap-2 text-sm">
                     {fieldIcons.targetAudience}
                     {fieldLabels.targetAudience}
+                    {modifiedFields.targetAudience && (
+                      <Check className="h-4 w-4 text-emerald-500 ml-auto" />
+                    )}
                   </Label>
                   <Input
                     value={correctedValues.targetAudience}
                     onChange={(e) => handleFieldChange('targetAudience', e.target.value)}
                     placeholder="Ex: Particuliers 25-45 ans, Entreprises B2B, Professionnels de santé..."
-                    className="border-slate-300 dark:border-slate-700"
+                    className={cn(inputClasses, modifiedFields.targetAudience && "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/20")}
                   />
                 </div>
 
@@ -389,12 +423,15 @@ export function HallucinationCorrectionModal({
                   <Label className="flex items-center gap-2 text-sm">
                     {fieldIcons.mainProducts}
                     {fieldLabels.mainProducts}
+                    {modifiedFields.mainProducts && (
+                      <Check className="h-4 w-4 text-emerald-500 ml-auto" />
+                    )}
                   </Label>
                   <Input
                     value={correctedValues.mainProducts}
                     onChange={(e) => handleFieldChange('mainProducts', e.target.value)}
                     placeholder="Ex: Vêtements bio, Logiciel de comptabilité, Conseil en stratégie..."
-                    className="border-slate-300 dark:border-slate-700"
+                    className={cn(inputClasses, modifiedFields.mainProducts && "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/20")}
                   />
                 </div>
 
@@ -403,13 +440,16 @@ export function HallucinationCorrectionModal({
                   <Label className="flex items-center gap-2 text-sm">
                     {fieldIcons.valueProposition}
                     {fieldLabels.valueProposition}
+                    {modifiedFields.valueProposition && (
+                      <Check className="h-4 w-4 text-emerald-500 ml-auto" />
+                    )}
                   </Label>
                   <Textarea
                     value={correctedValues.valueProposition}
                     onChange={(e) => handleFieldChange('valueProposition', e.target.value)}
                     placeholder="Décrivez en quelques phrases ce que fait vraiment votre entreprise et ce qui la différencie..."
                     rows={3}
-                    className="border-slate-300 dark:border-slate-700 resize-none"
+                    className={cn(textareaClasses, modifiedFields.valueProposition && "border-emerald-500/50 bg-emerald-50/30 dark:bg-emerald-950/20")}
                   />
                 </div>
               </div>
