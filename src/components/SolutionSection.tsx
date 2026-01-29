@@ -9,7 +9,9 @@ const translations = {
     title: 'Vos corrections techniques, générées en un clic.',
     subtitlePart1: 'Identifier un problème sans solution, c\'est frustrant.',
     subtitleHighlight: 'Audit Expert',
-    subtitlePart2: ', recevez le code correctif prêt à être déployé sur votre site.',
+    subtitlePart2: ', recevez le',
+    subtitleCode: 'code',
+    subtitlePart3: 'correctif prêt à être déployé sur votre site.',
     pillar1Title: 'Diagnostic Clair',
     pillar1Desc: 'Analysez votre visibilité auprès des IA en toute sérénité. Chaque point d\'amélioration est expliqué simplement.',
     pillar2Title: 'Code Prêt-à-Copier',
@@ -22,7 +24,9 @@ const translations = {
     title: 'Your technical fixes, generated in one click.',
     subtitlePart1: 'Identifying a problem without a solution is frustrating.',
     subtitleHighlight: 'Expert Audit',
-    subtitlePart2: ', receive the corrective code ready to deploy on your site.',
+    subtitlePart2: ', receive the',
+    subtitleCode: 'code',
+    subtitlePart3: 'ready to deploy on your site.',
     pillar1Title: 'Clear Diagnosis',
     pillar1Desc: 'Analyze your visibility to AI with peace of mind. Each improvement point is explained simply.',
     pillar2Title: 'Ready-to-Copy Code',
@@ -35,7 +39,9 @@ const translations = {
     title: 'Sus correcciones técnicas, generadas en un clic.',
     subtitlePart1: 'Identificar un problema sin solución es frustrante.',
     subtitleHighlight: 'Auditoría Experta',
-    subtitlePart2: ', reciba el código correctivo listo para implementar en su sitio.',
+    subtitlePart2: ', reciba el',
+    subtitleCode: 'código',
+    subtitlePart3: 'correctivo listo para implementar en su sitio.',
     pillar1Title: 'Diagnóstico Claro',
     pillar1Desc: 'Analice su visibilidad ante la IA con tranquilidad. Cada punto de mejora se explica de forma sencilla.',
     pillar2Title: 'Código Listo para Copiar',
@@ -87,7 +93,7 @@ export function SolutionSection() {
             {t.subtitlePart1}
             <br />
             Après chaque <span className="text-primary font-bold">{t.subtitleHighlight}</span>
-            {t.subtitlePart2}
+            {t.subtitlePart2} <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-foreground">{t.subtitleCode}</code> {t.subtitlePart3}
           </p>
         </motion.div>
 
