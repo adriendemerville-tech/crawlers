@@ -317,6 +317,8 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
     return createEmptyAnalysis(url);
   }
   
+  // === ÉTAPE 1 : Extraction des métadonnées (DOM complet) ===
+  
   // Extract title using DOM (no regex!)
   const titleElement = doc.querySelector('title');
   const titleContent = titleElement?.textContent?.trim() || '';
@@ -333,19 +335,21 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
     if (h1Text) h1Contents.push(h1Text);
   }
   
-  // Calculate word count from visible text (excluding scripts/styles)
+  // === ÉTAPE 2 : Analyse JSON-LD AVANT suppression des scripts ===
+  const jsonLdValidation = analyzeJsonLd(doc);
+  console.log(`[JSON-LD] Trouvé ${jsonLdValidation.count} scripts, types: ${jsonLdValidation.types.join(', ') || 'aucun'}`);
+  
+  // === ÉTAPE 3 : Analyse du profil de liens (DOM complet) ===
+  const linkProfile = analyzeLinkProfile(doc, url);
+  
+  // === ÉTAPE 4 : Nettoyage du DOM pour calcul du texte ===
   const scriptsAndStyles = doc.querySelectorAll('script, style, noscript');
   scriptsAndStyles.forEach(el => (el as Element).remove());
   
+  // === ÉTAPE 5 : Calcul du word count sur le texte propre ===
   const bodyText = doc.body?.textContent || '';
-  const cleanText = bodyText.replace(/\s+/g, ' ').trim();
+  const cleanText = bodyText.replace(/\\s+/g, ' ').trim();
   const wordCount = cleanText.split(' ').filter(w => w.length > 2).length;
-  
-  // JSON-LD validation with strict parsing
-  const jsonLdValidation = analyzeJsonLd(doc);
-  
-  // Link profile analysis
-  const linkProfile = analyzeLinkProfile(doc, url);
   
   // Semantic consistency (title vs H1)
   const semanticConsistency = analyzeSemanticConsistency(titleContent, h1Contents[0] || '');
@@ -408,6 +412,8 @@ function analyzeJsonLd(doc: HTMLDocument): JsonLdValidation {
   const parseErrors: string[] = [];
   let validCount = 0;
   
+  console.log(`[JSON-LD] Analyse de ${scripts.length} balises script[type="application/ld+json"]`);
+  
   for (let i = 0; i < scripts.length; i++) {
     const script = scripts[i] as Element;
     const content = script.textContent || '';
@@ -416,25 +422,52 @@ function analyzeJsonLd(doc: HTMLDocument): JsonLdValidation {
       const parsed = JSON.parse(content);
       validCount++;
       
-      // Extract types
-      if (parsed['@type']) {
-        types.push(Array.isArray(parsed['@type']) ? parsed['@type'].join(', ') : parsed['@type']);
-      }
-      if (parsed['@graph'] && Array.isArray(parsed['@graph'])) {
-        for (const item of parsed['@graph']) {
-          if (item['@type']) {
-            types.push(Array.isArray(item['@type']) ? item['@type'].join(', ') : item['@type']);
+      // Fonction récursive pour extraire tous les @type dans des structures imbriquées
+      const findTypes = (node: any): void => {
+        if (!node || typeof node !== 'object') return;
+        
+        // Si c'est un tableau, parcourir chaque élément
+        if (Array.isArray(node)) {
+          node.forEach(item => findTypes(item));
+          return;
+        }
+        
+        // Extraire le @type s'il existe
+        if (node['@type']) {
+          if (Array.isArray(node['@type'])) {
+            types.push(...node['@type']);
+          } else {
+            types.push(node['@type']);
           }
         }
-      }
+        
+        // Traiter @graph s'il existe
+        if (node['@graph'] && Array.isArray(node['@graph'])) {
+          findTypes(node['@graph']);
+        }
+        
+        // Parcourir récursivement les autres propriétés (sauf @graph déjà traité)
+        for (const key in node) {
+          if (key !== '@graph' && node[key] && typeof node[key] === 'object') {
+            findTypes(node[key]);
+          }
+        }
+      };
+      
+      findTypes(parsed);
+      
     } catch (e) {
-      parseErrors.push(`Script ${i + 1}: ${e instanceof Error ? e.message : 'JSON invalide'}`);
+      parseErrors.push(`Script ${i + 1}: JSON invalide`);
+      console.log(`[JSON-LD] Erreur parsing script ${i + 1}:`, e);
     }
   }
   
+  const uniqueTypes = [...new Set(types)];
+  console.log(`[JSON-LD] Résultat: ${validCount} valides, ${uniqueTypes.length} types uniques: ${uniqueTypes.join(', ')}`);
+  
   return {
     valid: parseErrors.length === 0 && validCount > 0,
-    types: [...new Set(types)],
+    types: uniqueTypes,
     parseErrors,
     count: scripts.length
   };
