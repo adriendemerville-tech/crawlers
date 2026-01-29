@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse JSON from response (handle markdown code blocks)
+    // Parse JSON from response (handle markdown code blocks and trailing commas)
     let parsedAnalysis;
     try {
       let jsonContent = content;
@@ -219,14 +219,42 @@ Deno.serve(async (req) => {
       } else if (content.includes('```')) {
         jsonContent = content.split('```')[1].split('```')[0].trim();
       }
+      
+      // Fix common JSON issues from AI responses
+      // Remove trailing commas before closing braces/brackets
+      jsonContent = jsonContent
+        .replace(/,\s*}/g, '}')  // Remove trailing comma before }
+        .replace(/,\s*]/g, ']'); // Remove trailing comma before ]
+      
       parsedAnalysis = JSON.parse(jsonContent);
     } catch (e) {
       console.error('Failed to parse AI response as JSON:', e);
       console.log('Raw content:', content);
-      return new Response(
-        JSON.stringify({ success: false, error: 'Failed to parse AI analysis' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      
+      // Attempt more aggressive cleanup as fallback
+      try {
+        let jsonContent = content;
+        if (content.includes('```json')) {
+          jsonContent = content.split('```json')[1].split('```')[0].trim();
+        } else if (content.includes('```')) {
+          jsonContent = content.split('```')[1].split('```')[0].trim();
+        }
+        
+        // More aggressive fix: handle nested trailing commas
+        jsonContent = jsonContent
+          .replace(/,(\s*[\}\]])/g, '$1')  // Remove all trailing commas
+          .replace(/[\r\n]+/g, ' ')        // Normalize line breaks
+          .replace(/\s+/g, ' ');           // Normalize whitespace
+        
+        parsedAnalysis = JSON.parse(jsonContent);
+        console.log('Successfully parsed with aggressive cleanup');
+      } catch (e2) {
+        console.error('Fallback parsing also failed:', e2);
+        return new Response(
+          JSON.stringify({ success: false, error: 'Failed to parse AI analysis' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     const result = {
