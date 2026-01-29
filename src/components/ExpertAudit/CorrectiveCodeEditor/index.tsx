@@ -100,10 +100,38 @@ const translations = {
   },
 };
 
+// Hallucination data can be in legacy or new format
 interface HallucinationData {
-  trueValue: string;
-  confusionSources: string[];
+  // Legacy format
+  trueValue?: string;
   correctedIntro?: string;
+  // New diagnosis format
+  discrepancies?: Array<{ field: string; original: string; corrected: string; impact: string; explanation: string }>;
+  recommendations?: Array<{ id: string; category: string; priority: string; title: string; description: string; codeSnippet?: string }>;
+  analysisNarrative?: string;
+  originalValues?: Record<string, string>;
+  correctedValues?: Record<string, string>;
+  // Common
+  confusionSources?: string[];
+}
+
+// Helper to check if hallucination data has actionable content
+function hasHallucinationFixes(data: HallucinationData | null | undefined): boolean {
+  if (!data) return false;
+  // Legacy format check
+  if (data.trueValue) return true;
+  // New format check
+  if (data.discrepancies && data.discrepancies.length > 0) return true;
+  if (data.recommendations && data.recommendations.length > 0) return true;
+  return false;
+}
+
+// Helper to extract a "true value" statement from new format
+function extractTrueValueFromDiagnosis(data: HallucinationData): string {
+  if (data.trueValue) return data.trueValue;
+  if (data.correctedValues?.valueProposition) return data.correctedValues.valueProposition;
+  if (data.analysisNarrative) return data.analysisNarrative;
+  return '';
 }
 
 interface CorrectiveCodeEditorProps {
@@ -256,8 +284,9 @@ export function CorrectiveCodeEditor({
       data: { measurementId: 'G-XXXXXXXXXX' }
     });
 
-    // Hallucination fix (only if hallucination data is available)
-    if (hallucinationData?.trueValue) {
+    // Hallucination fix (supports both legacy and new format)
+    if (hasHallucinationFixes(hallucinationData)) {
+      const trueValue = extractTrueValueFromDiagnosis(hallucinationData!);
       fixes.push({
         id: 'fix_hallucination',
         category: 'hallucination',
@@ -266,9 +295,13 @@ export function CorrectiveCodeEditor({
         enabled: true,
         priority: 'critical',
         data: {
-          trueValue: hallucinationData.trueValue,
-          confusionSources: hallucinationData.confusionSources || [],
-          correctedIntro: hallucinationData.correctedIntro || ''
+          trueValue,
+          confusionSources: hallucinationData!.confusionSources || [],
+          correctedIntro: hallucinationData!.correctedIntro || '',
+          // New format data
+          discrepancies: hallucinationData!.discrepancies || [],
+          correctedValues: hallucinationData!.correctedValues || {},
+          recommendations: hallucinationData!.recommendations || []
         }
       });
     }

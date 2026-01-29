@@ -16,14 +16,15 @@ import { CompetitiveLandscapeCard } from './CompetitiveLandscapeCard';
 import { SocialSignalsCard } from './SocialSignalsCard';
 import { MarketIntelligenceCard } from './MarketIntelligenceCard';
 import { PremiumRoadmapCard } from './PremiumRoadmapCard';
-import { HallucinationCorrectionModal, HallucinationAnalysis } from './HallucinationCorrectionModal';
+import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
 
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
   hideExecutiveSummary?: boolean;
   domain?: string;
   siteName?: string;
-  onHallucinationData?: (data: HallucinationAnalysis) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onHallucinationData?: (data: any) => void;
 }
 
 export function StrategicInsights({ 
