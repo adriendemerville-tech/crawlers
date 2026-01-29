@@ -605,29 +605,10 @@ export function ExpertAuditDashboard() {
               transition={{ duration: 0.5 }}
               className="relative"
             >
-              {/* Header Desktop : Titre + Bouton d'action */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground">{t.strategicSectionTitle}</h2>
-                  <p className="text-muted-foreground">{t.strategicSectionDesc}</p>
-                </div>
-                
-                {/* BOUTON D'ACTION PAYANT - HAUT DROITE */}
-                {isLoggedIn && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <Button 
-                      onClick={() => setIsPaymentModalOpen(true)}
-                      className="bg-primary hover:bg-primary/90 shadow-lg flex items-center gap-2"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      {t.generateCode}
-                    </Button>
-                  </motion.div>
-                )}
+              {/* Header : Titre */}
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-foreground">{t.strategicSectionTitle}</h2>
+                <p className="text-muted-foreground">{t.strategicSectionDesc}</p>
               </div>
 
               {/* Introduction - Toujours visible */}

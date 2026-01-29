@@ -340,7 +340,9 @@ export function WorkflowCarousel({
                       isActive && "border-primary/30 shadow-[0_12px_40px_rgba(0,0,0,0.15)]",
                       isCompleted && "border-success/30",
                       // Gold border for step 2 (Strategic Audit) - using warning token for amber/gold
-                      step.id === 2 && !isCompleted && "border-2 border-warning"
+                      step.id === 2 && !isCompleted && "border-2 border-warning",
+                      // Teal/cyan accent for step 3 (Code Correctif) - premium tech feel
+                      step.id === 3 && !isCompleted && "border-2 border-cyan-500/60"
                     )}>
                       {/* Top accent line */}
                       <div className={cn(
@@ -405,7 +407,9 @@ export function WorkflowCarousel({
                                 isCompleted && "bg-success hover:bg-success/90",
                                 isLocked && "opacity-50 cursor-not-allowed",
                                 // Premium dark silver button for step 2
-                                step.id === 2 && !isCompleted && !isLocked && "bg-[#3a3f4a] hover:bg-[#4a4f5a] text-white border-0"
+                                step.id === 2 && !isCompleted && !isLocked && "bg-[#3a3f4a] hover:bg-[#4a4f5a] text-white border-0",
+                                // Cyan/teal button for step 3
+                                step.id === 3 && !isCompleted && !isLocked && "bg-cyan-600 hover:bg-cyan-700 text-white border-0"
                               )}
                             >
                               {getStepButtonText(step.id)}
