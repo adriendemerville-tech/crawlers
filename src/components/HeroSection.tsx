@@ -131,12 +131,12 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
 
   // Animated headline for crawlers tab
   const renderAnimatedHeadline = () => (
-    <h1 className="mb-6 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+    <h1 className="mb-10 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
       <span className="inline-flex items-baseline justify-center gap-2 sm:gap-3 flex-wrap">
-        {/* Animated word container */}
+        {/* Animated word container - aligned baseline with text */}
         <span
-          className="relative inline-flex items-center justify-end overflow-hidden h-[1.2em]"
-          style={{ minWidth: '280px', width: '280px' }}
+          className="relative inline-block overflow-hidden align-baseline"
+          style={{ minWidth: '280px', width: '280px', height: '1.15em' }}
         >
           <AnimatePresence mode="wait">
             <motion.span
@@ -145,7 +145,7 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -50, opacity: 0 }}
               transition={{ duration: 0.4, ease: 'easeInOut' }}
-              className="absolute right-0 bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent"
+              className="absolute right-0 bottom-0 bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap"
             >
               {animatedWords[wordIndex]}
             </motion.span>
@@ -176,7 +176,7 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
         {content.useAnimatedHeadline ? (
           renderAnimatedHeadline()
         ) : (
-          <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="mb-10 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
             {content.headline}
           </h1>
         )}
