@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-export function Footer() {
+function FooterComponent() {
   const { t, language } = useLanguage();
 
   const toolsLinks = [
@@ -261,3 +262,6 @@ export function Footer() {
     </footer>
   );
 }
+
+// Memoize Footer since it rarely changes
+export const Footer = memo(FooterComponent);

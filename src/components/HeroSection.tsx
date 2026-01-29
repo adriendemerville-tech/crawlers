@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Shield, Zap, Gauge, Sparkles, Brain } from 'lucide-react';
+import { Search, Zap } from 'lucide-react';
 import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -14,7 +14,7 @@ interface HeroSectionProps {
 
 const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 
-export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps) {
+function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionProps) {
   const [url, setUrl] = useState('');
   const { t, language } = useLanguage();
   const [wordIndex, setWordIndex] = useState(0);
@@ -81,14 +81,12 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
     }
   };
 
+  // Optimized content getter - avoid icon imports in critical path
   const getHeroContent = () => {
     switch (activeTab) {
       case 'crawlers':
         return {
-          icon: <Shield className="h-4 w-4 text-primary" />,
           badge: t.hero.badge.crawlers,
-          // Use animated headline for crawlers tab
-          headline: null, // Will render custom animated headline
           useAnimatedHeadline: true,
           subheadline: t.hero.subheadline.crawlers,
           buttonText: t.hero.button.crawlers,
@@ -96,7 +94,6 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
         };
       case 'geo':
         return {
-          icon: <Sparkles className="h-4 w-4 text-primary" />,
           badge: t.hero.badge.geo,
           headline: <>{t.hero.headline.geo}{' '}<span className="text-gradient">{t.hero.headline.geoHighlight}</span></>,
           useAnimatedHeadline: false,
@@ -106,7 +103,6 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
         };
       case 'llm':
         return {
-          icon: <Brain className="h-4 w-4 text-primary" />,
           badge: t.hero.badge.llm,
           headline: <>{t.hero.headline.llm}{' '}<span className="text-gradient">{t.hero.headline.llmHighlight}</span> ?</>,
           useAnimatedHeadline: false,
@@ -116,7 +112,6 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
         };
       case 'pagespeed':
         return {
-          icon: <Gauge className="h-4 w-4 text-primary" />,
           badge: t.hero.badge.pagespeed,
           headline: <>{t.hero.headline.pagespeed}{' '}<span className="text-gradient">{t.hero.headline.pagespeedHighlight}</span> ?</>,
           useAnimatedHeadline: false,
@@ -248,3 +243,6 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
     </section>
   );
 }
+
+// Memoize to prevent unnecessary re-renders during tab switches
+export const HeroSection = memo(HeroSectionComponent);

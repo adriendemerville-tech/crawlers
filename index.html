@@ -77,15 +77,39 @@
     <!-- Preconnect for performance - Critical resources first -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://tutlimtasnjabdfhpewu.supabase.co" />
+    <link rel="preconnect" href="https://tutlimtasnjabdfhpewu.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
     <link rel="dns-prefetch" href="https://tutlimtasnjabdfhpewu.supabase.co" />
     
+    <!-- Preload critical LCP resources -->
+    <link rel="modulepreload" href="/src/main.tsx" />
+    
     <!-- Optimized font loading with font-display: swap for better LCP -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
+    
+    <!-- Critical CSS for above-the-fold content (LCP optimization) -->
+    <style>
+      /* Critical CSS - inlined for immediate render */
+      *,::after,::before{box-sizing:border-box;border-width:0;border-style:solid}
+      html{line-height:1.5;-webkit-text-size-adjust:100%;font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+      body{margin:0;line-height:inherit;background-color:hsl(210 20% 98%);color:hsl(222 47% 11%)}
+      .dark body{background-color:hsl(222 47% 6%);color:hsl(210 40% 98%)}
+      h1,h2,h3{margin:0;font-weight:inherit;font-size:inherit}
+      button,input{font-family:inherit;font-size:100%;margin:0;padding:0}
+      /* Hero section critical styles */
+      .flex{display:flex}.flex-col{flex-direction:column}.min-h-screen{min-height:100vh}
+      .items-center{align-items:center}.justify-center{justify-content:center}
+      .text-center{text-align:center}.font-extrabold{font-weight:800}
+      .text-4xl{font-size:2.25rem;line-height:2.5rem}
+      @media(min-width:640px){.sm\:text-5xl{font-size:3rem;line-height:1}}
+      @media(min-width:1024px){.lg\:text-6xl{font-size:3.75rem;line-height:1}}
+      /* Loading spinner */
+      @keyframes spin{to{transform:rotate(360deg)}}
+      .animate-spin{animation:spin 1s linear infinite}
+    </style>
     
     <!-- JSON-LD Structured Data - SoftwareApplication (Audit SEO Expert) -->
     <script type="application/ld+json">
