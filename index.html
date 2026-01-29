@@ -86,29 +86,45 @@
     <!-- Preload critical LCP resources -->
     <link rel="modulepreload" href="/src/main.tsx" />
     
-    <!-- Optimized font loading with font-display: swap for better LCP -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <!-- Optimized font loading - preload Inter woff2 for fastest LCP -->
+    <link rel="preload" href="https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
     
     <!-- Critical CSS for above-the-fold content (LCP optimization) -->
     <style>
       /* Critical CSS - inlined for immediate render */
       *,::after,::before{box-sizing:border-box;border-width:0;border-style:solid}
-      html{line-height:1.5;-webkit-text-size-adjust:100%;font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+      html{line-height:1.5;-webkit-text-size-adjust:100%;font-family:Inter,ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
       body{margin:0;line-height:inherit;background-color:hsl(210 20% 98%);color:hsl(222 47% 11%)}
       .dark body{background-color:hsl(222 47% 6%);color:hsl(210 40% 98%)}
-      h1,h2,h3{margin:0;font-weight:inherit;font-size:inherit}
-      button,input{font-family:inherit;font-size:100%;margin:0;padding:0}
-      /* Hero section critical styles */
+      h1,h2,h3,p{margin:0}button,input{font-family:inherit;font-size:100%;margin:0;padding:0}
+      /* Layout utilities */
       .flex{display:flex}.flex-col{flex-direction:column}.min-h-screen{min-height:100vh}
-      .items-center{align-items:center}.justify-center{justify-content:center}
-      .text-center{text-align:center}.font-extrabold{font-weight:800}
+      .items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}
+      .text-center{text-align:center}.font-extrabold{font-weight:800}.font-semibold{font-weight:600}
+      .gap-2{gap:0.5rem}.gap-4{gap:1rem}.px-4{padding-left:1rem;padding-right:1rem}
+      .h-16{height:4rem}.max-w-6xl{max-width:72rem}.mx-auto{margin-left:auto;margin-right:auto}
+      /* Typography */
+      .text-lg{font-size:1.125rem;line-height:1.75rem}.text-xl{font-size:1.25rem;line-height:1.75rem}
       .text-4xl{font-size:2.25rem;line-height:2.5rem}
-      @media(min-width:640px){.sm\:text-5xl{font-size:3rem;line-height:1}}
+      @media(min-width:640px){.sm\:text-5xl{font-size:3rem;line-height:1}.sm\:text-2xl{font-size:1.5rem}}
       @media(min-width:1024px){.lg\:text-6xl{font-size:3.75rem;line-height:1}}
-      /* Loading spinner */
-      @keyframes spin{to{transform:rotate(360deg)}}
-      .animate-spin{animation:spin 1s linear infinite}
+      /* Colors */
+      .bg-background{background-color:hsl(210 20% 98%)}.text-foreground{color:hsl(222 47% 11%)}
+      .text-primary{color:hsl(221 83% 53%)}.text-muted-foreground{color:hsl(215 16% 47%)}
+      .bg-primary{background-color:hsl(221 83% 53%)}.text-primary-foreground{color:hsl(210 40% 98%)}
+      .border-border{border-color:hsl(214 32% 91%)}
+      /* Card/Header */
+      .bg-card\/50{background-color:rgba(255,255,255,0.5)}.backdrop-blur-sm{backdrop-filter:blur(4px)}
+      .border-b{border-bottom-width:1px}.rounded-lg{border-radius:0.5rem}
+      /* Gradient text for hero */
+      .text-gradient{background:linear-gradient(to right,hsl(221 83% 53%),hsl(217 91% 60%));-webkit-background-clip:text;background-clip:text;color:transparent}
+      /* Hide animated word until JS loads - prevents layout shift */
+      .hero-word-container{min-width:280px;height:1.2em;display:inline-flex;align-items:center;justify-content:flex-end}
+      /* Loading state */
+      @keyframes spin{to{transform:rotate(360deg)}}.animate-spin{animation:spin 1s linear infinite}
+      @keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(.4,0,.6,1) infinite}
     </style>
     
     <!-- JSON-LD Structured Data - SoftwareApplication (Audit SEO Expert) -->
@@ -254,12 +270,18 @@
     }
     </script>
     
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-TDGHZZ49');</script>
+    <!-- Google Tag Manager - Deferred for better FCP/LCP -->
+    <script>
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-TDGHZZ49');
+      }, 2000);
+    });
+    </script>
     <!-- End Google Tag Manager -->
   </head>
   <body>
