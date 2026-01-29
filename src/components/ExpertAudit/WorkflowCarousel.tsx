@@ -342,8 +342,8 @@ export function WorkflowCarousel({
                       // Metallic gray/silver theme for step 2 (Strategic Audit)
                       step.id === 2 && !isCompleted && "border-2 border-[#6b7280] bg-gradient-to-br from-card via-card to-[#f3f4f6]/30 dark:to-[#374151]/30 shadow-[0_12px_40px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]",
                       step.id === 2 && isActive && !isCompleted && "shadow-[0_16px_50px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.15)]",
-                      // Teal/cyan accent for step 3 (Code Correctif) - premium tech feel
-                      step.id === 3 && !isCompleted && "border-2 border-cyan-500/60"
+                      // Teal/cyan accent for step 3 (Code Correctif) - violet border with glow
+                      step.id === 3 && !isCompleted && "border-2 border-violet-500/70 shadow-[0_0_15px_rgba(139,92,246,0.3)]"
                     )}>
                       {/* Top accent line */}
                       <div className={cn(
@@ -437,29 +437,6 @@ export function WorkflowCarousel({
             </motion.div>
           </div>
         </div>
-      </div>
-
-      {/* Step indicators (dots) */}
-      <div className="flex justify-center gap-2 mt-4">
-        {steps.map((step) => (
-          <motion.button
-            key={step.id}
-            onClick={() => !isStepLocked(step.id) && setActiveStep(step.id)}
-            disabled={isStepLocked(step.id)}
-            className={cn(
-              "w-2.5 h-2.5 rounded-full transition-all duration-300",
-              activeStep === step.id 
-                ? "bg-primary w-8" 
-                : isStepCompleted(step.id)
-                ? "bg-success"
-                : isStepLocked(step.id)
-                ? "bg-muted cursor-not-allowed"
-                : "bg-muted hover:bg-muted-foreground/30"
-            )}
-            whileHover={!isStepLocked(step.id) ? { scale: 1.2 } : undefined}
-            whileTap={!isStepLocked(step.id) ? { scale: 0.95 } : undefined}
-          />
-        ))}
       </div>
     </div>
   );
