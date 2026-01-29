@@ -10,8 +10,8 @@ const translations = {
     points: [
       {
         icon: 'alert',
-        title: '80% des recherches passent par Google',
-        text: 'Si GoogleBot ne vous lit pas, vous n\'existez pas dans 80% des recherches actuelles. Ce chiffre double chaque année.',
+        title: '40% des recherches sont IA',
+        text: 'Si GPTBot ne vous lit pas, vous n\'existez pas dans 40% des recherches actuelles. Ce chiffre double chaque année.',
       },
       {
         icon: 'eye',
@@ -47,8 +47,8 @@ const translations = {
     points: [
       {
         icon: 'alert',
-        title: '80% of searches go through Google',
-        text: 'If GoogleBot can\'t read you, you don\'t exist in 80% of current searches. This doubles every year.',
+        title: '40% of searches are AI-powered',
+        text: 'If GPTBot can\'t read you, you don\'t exist in 40% of current searches. This doubles every year.',
       },
       {
         icon: 'eye',
@@ -84,8 +84,8 @@ const translations = {
     points: [
       {
         icon: 'alert',
-        title: '80% de las búsquedas pasan por Google',
-        text: 'Si GoogleBot no te lee, no existes en el 80% de las búsquedas actuales. Esta cifra se duplica cada año.',
+        title: '40% de las búsquedas son IA',
+        text: 'Si GPTBot no te lee, no existes en el 40% de las búsquedas actuales. Esta cifra se duplica cada año.',
       },
       {
         icon: 'eye',
