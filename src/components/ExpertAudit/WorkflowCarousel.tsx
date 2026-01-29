@@ -89,9 +89,14 @@ export function WorkflowCarousel({
   const t = translations[language] || translations.fr;
   const [activeStep, setActiveStep] = useState(1);
 
+  // Auto-advance to step 2 when step 1 is completed
   useEffect(() => {
-    setActiveStep(currentStep);
-  }, [currentStep]);
+    if (completedSteps.includes(1) && !completedSteps.includes(2)) {
+      setActiveStep(2);
+    } else {
+      setActiveStep(currentStep);
+    }
+  }, [currentStep, completedSteps]);
 
   const steps: WorkflowStep[] = [
     {
@@ -291,7 +296,9 @@ export function WorkflowCarousel({
                       "bg-card/95 backdrop-blur-sm border border-border/40",
                       "shadow-[0_20px_40px_rgba(0,0,0,0.05)]",
                       isActive && "border-primary/30 shadow-[0_25px_50px_rgba(0,0,0,0.08)]",
-                      isCompleted && "border-success/30"
+                      isCompleted && "border-success/30",
+                      // Gold border for step 2 (Strategic Audit) - using warning token for amber/gold
+                      step.id === 2 && !isCompleted && "border-2 border-warning"
                     )}>
                       {/* Top accent line */}
                       <div className={cn(
