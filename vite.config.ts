@@ -83,43 +83,49 @@ export default defineConfig(({ mode }) => ({
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
-        manualChunks: {
-          // Core React vendors - loaded first
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          // UI framework - Radix components bundled together
-          'vendor-ui': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-select',
-            '@radix-ui/react-scroll-area',
-            '@radix-ui/react-toast',
-            '@radix-ui/react-checkbox',
-            '@radix-ui/react-switch',
-            '@radix-ui/react-label',
-            '@radix-ui/react-slot',
-            '@radix-ui/react-separator',
-            '@radix-ui/react-progress',
-            '@radix-ui/react-avatar',
-            '@radix-ui/react-collapsible',
-            '@radix-ui/react-toggle',
-            '@radix-ui/react-toggle-group',
-          ],
-          // Animation library - deferred
-          'vendor-motion': ['framer-motion'],
-          // Data & state management
-          'vendor-data': ['@tanstack/react-query', '@supabase/supabase-js'],
-          // Heavy utilities - lazy loaded
-          'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge', 'class-variance-authority'],
-          // PDF generation - only loaded when needed
-          'vendor-pdf': ['jspdf', 'jspdf-autotable'],
-          // Charts - only loaded when needed
-          'vendor-charts': ['recharts'],
-          // Lucide icons - bundled together
-          'vendor-icons': ['lucide-react'],
+        manualChunks(id) {
+          // Critical path optimization - keep main bundle small
+          if (id.includes('node_modules')) {
+            // Core React - smallest possible initial bundle
+            if (id.includes('react-dom') || id.includes('react/')) {
+              return 'vendor-react';
+            }
+            if (id.includes('react-router-dom') || id.includes('@remix-run')) {
+              return 'vendor-router';
+            }
+            // Supabase - defer loading
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase';
+            }
+            // TanStack Query
+            if (id.includes('@tanstack')) {
+              return 'vendor-query';
+            }
+            // UI framework - Radix components bundled together
+            if (id.includes('@radix-ui')) {
+              return 'vendor-ui';
+            }
+            // Animation library - deferred
+            if (id.includes('framer-motion')) {
+              return 'vendor-motion';
+            }
+            // PDF generation - only loaded when needed
+            if (id.includes('jspdf')) {
+              return 'vendor-pdf';
+            }
+            // Charts - only loaded when needed
+            if (id.includes('recharts') || id.includes('d3-')) {
+              return 'vendor-charts';
+            }
+            // Lucide icons - bundled together
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            // Other utilities
+            if (id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
+              return 'vendor-utils';
+            }
+          }
         },
       },
     },
