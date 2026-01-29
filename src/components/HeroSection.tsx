@@ -135,23 +135,23 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
       <span className="inline-flex items-baseline justify-center gap-2 sm:gap-3 flex-wrap">
         {/* Animated word container */}
         <span
-          className="relative inline-block overflow-hidden bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent dark:text-white dark:bg-none"
-          style={{ minWidth: '220px', width: '220px' }}
+          className="relative inline-flex items-center justify-end overflow-hidden h-[1.2em]"
+          style={{ minWidth: '280px', width: '280px' }}
         >
           <AnimatePresence mode="wait">
             <motion.span
               key={wordIndex}
-              initial={{ y: 40, opacity: 0 }}
+              initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -40, opacity: 0 }}
+              exit={{ y: -50, opacity: 0 }}
               transition={{ duration: 0.4, ease: 'easeInOut' }}
-              className="inline-block"
+              className="absolute right-0 bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent"
             >
               {animatedWords[wordIndex]}
             </motion.span>
           </AnimatePresence>
         </span>
-        <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent dark:text-white dark:bg-none lowercase">{getIgnoreText()} {getSiteText()}</span>
+        <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase">{getIgnoreText()} {getSiteText()}</span>
       </span>
       {' '}?
     </h1>
