@@ -19,6 +19,8 @@ const ConditionsUtilisation = lazy(() => import("./pages/ConditionsUtilisation")
 const RGPD = lazy(() => import("./pages/RGPD"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Profile = lazy(() => import("./pages/Profile"));
+const ReportViewer = lazy(() => import("./pages/ReportViewer"));
+const SharedReportRedirect = lazy(() => import("./pages/SharedReportRedirect"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
@@ -54,6 +56,8 @@ const App = () => (
                     <Route path="/rgpd" element={<RGPD />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/profil" element={<Profile />} />
+                    <Route path="/rapport/:reportId" element={<ReportViewer />} />
+                    <Route path="/r/:shareId" element={<SharedReportRedirect />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
