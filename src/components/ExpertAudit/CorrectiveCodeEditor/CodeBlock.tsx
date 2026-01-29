@@ -18,10 +18,10 @@ function highlightSyntax(code: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  // Keywords (blue)
+  // Keywords (violet/purple)
   highlighted = highlighted.replace(
     /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|try|catch|finally|throw|new|this|typeof|instanceof|void|delete|in|of|class|extends|super|import|export|default|async|await|null|undefined|true|false)\b/g,
-    '<span class="text-blue-500 dark:text-blue-400">$1</span>'
+    '<span class="text-violet-500 dark:text-violet-400">$1</span>'
   );
 
   // Strings (green)
@@ -48,10 +48,10 @@ function highlightSyntax(code: string): string {
     '<span class="text-purple-500 dark:text-purple-400">$1</span>('
   );
 
-  // Properties after dot (cyan)
+  // Properties after dot (violet lighter)
   highlighted = highlighted.replace(
     /\.([a-zA-Z_$][a-zA-Z0-9_$]*)/g,
-    '.<span class="text-cyan-600 dark:text-cyan-400">$1</span>'
+    '.<span class="text-violet-400 dark:text-violet-300">$1</span>'
   );
 
   // HTML tags in strings (red)
