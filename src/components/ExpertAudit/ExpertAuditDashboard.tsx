@@ -395,18 +395,27 @@ export function ExpertAuditDashboard() {
         rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
         scannedAt: data.data.scannedAt || new Date().toISOString(),
         strategicAnalysis: {
+          // New 13 Modules Premium Format
           introduction: data.data.introduction,
+          brand_authority: data.data.brand_authority,
+          social_signals: data.data.social_signals,
+          market_intelligence: data.data.market_intelligence,
+          competitive_landscape: data.data.competitive_landscape,
+          geo_readiness: data.data.geo_readiness,
+          executive_roadmap: data.data.executive_roadmap,
+          // Standard Format (backward compatibility)
           brand_identity: data.data.brand_identity,
           market_positioning: data.data.market_positioning,
           geo_score: data.data.geo_score,
           strategic_roadmap: data.data.strategic_roadmap,
           executive_summary: data.data.executive_summary,
+          // Legacy format
           brandPerception: data.data.brandPerception,
           geoAnalysis: data.data.geoAnalysis,
           llmVisibility: data.data.llmVisibility,
           testQueries: data.data.testQueries,
           executiveSummary: data.data.executiveSummary,
-          overallScore: data.data.overallScore || data.data.geo_score?.score,
+          overallScore: data.data.overallScore || data.data.geo_readiness?.citability_score || data.data.geo_score?.score,
         },
       };
 
@@ -698,9 +707,15 @@ export function ExpertAuditDashboard() {
                 <p className="text-muted-foreground">{t.strategicSectionDesc}</p>
               </div>
 
-              {/* Introduction - Toujours visible */}
+              {/* Introduction - Toujours visible avec bouton Corriger */}
               {result.strategicAnalysis?.introduction && (
-                <IntroductionCard introduction={result.strategicAnalysis.introduction} variant="strategic" />
+                <IntroductionCard 
+                  introduction={result.strategicAnalysis.introduction} 
+                  variant="strategic"
+                  domain={result.domain || url}
+                  siteName={result.domain || url}
+                  onHallucinationData={setHallucinationData}
+                />
               )}
 
               {/* Zone de Contenu Protégée */}
