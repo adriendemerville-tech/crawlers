@@ -60,13 +60,13 @@ export function PremiumRoadmapCard({ roadmap }: PremiumRoadmapCardProps) {
   const getROIConfig = (roi: string) => {
     switch (roi) {
       case 'High':
-        return { color: 'bg-success/10 text-success border-success/30', label: 'ROI Élevé', icon: '🚀' };
+        return { textColor: 'text-emerald-500', label: 'ROI Élevé' };
       case 'Medium':
-        return { color: 'bg-warning/10 text-warning border-warning/30', label: 'ROI Moyen', icon: '📈' };
+        return { textColor: 'text-amber-500', label: 'ROI Moyen' };
       case 'Low':
-        return { color: 'bg-muted text-muted-foreground border-border', label: 'ROI Faible', icon: '📊' };
+        return { textColor: 'text-blue-500', label: 'ROI Faible' };
       default:
-        return { color: 'bg-muted text-muted-foreground border-border', label: roi, icon: '📊' };
+        return { textColor: 'text-muted-foreground', label: roi };
     }
   };
 
@@ -128,7 +128,7 @@ export function PremiumRoadmapCard({ roadmap }: PremiumRoadmapCardProps) {
                     <h4 className="font-semibold text-foreground flex-1">
                       {item.title}
                     </h4>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-3">
                       <Badge 
                         variant="outline" 
                         className={`text-xs ${priorityConfig.color} gap-1`}
@@ -136,9 +136,9 @@ export function PremiumRoadmapCard({ roadmap }: PremiumRoadmapCardProps) {
                         {priorityConfig.icon}
                         {priorityConfig.label}
                       </Badge>
-                      <Badge variant="outline" className={`text-xs ${roiConfig.color}`}>
-                        {roiConfig.icon} {roiConfig.label}
-                      </Badge>
+                      <span className={`text-[10px] font-medium ${roiConfig.textColor}`}>
+                        {roiConfig.label}
+                      </span>
                     </div>
                   </div>
                   
