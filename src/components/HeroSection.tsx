@@ -208,9 +208,9 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
             <Button 
               type="submit" 
               variant="hero" 
-              size="xl" 
+              size="lg" 
               disabled={isLoading}
-              className="min-w-[160px]"
+              className="min-w-[140px]"
             >
               {isLoading ? (
                 <>
