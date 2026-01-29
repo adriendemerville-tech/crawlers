@@ -95,12 +95,14 @@ export function BotCard({ bot }: BotCardProps) {
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="flex w-full items-center justify-between text-sm font-medium text-primary hover:text-primary/80"
+              aria-expanded={isExpanded}
+              aria-label={isExpanded ? t.results.howToFix : t.results.howToFix}
             >
               <span>{t.results.howToFix}</span>
               {isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
+                <ChevronUp className="h-4 w-4" aria-hidden="true" />
               ) : (
-                <ChevronDown className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
               )}
             </button>
             
@@ -118,11 +120,12 @@ export function BotCard({ bot }: BotCardProps) {
                     size="sm"
                     onClick={handleCopy}
                     className="absolute right-2 top-2 h-8 w-8 p-0"
+                    aria-label={copied ? "Copié" : "Copier le code"}
                   >
                     {copied ? (
-                      <CheckCheck className="h-4 w-4 text-success" />
+                      <CheckCheck className="h-4 w-4 text-success" aria-hidden="true" />
                     ) : (
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-4 w-4" aria-hidden="true" />
                     )}
                   </Button>
                 </div>

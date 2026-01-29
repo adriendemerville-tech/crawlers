@@ -199,7 +199,7 @@ export function Header() {
             user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full" aria-label={t.profile}>
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
                       <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
@@ -263,9 +263,9 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link to="/auth">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <LogIn className="h-4 w-4" />
+              <Link to="/auth" aria-label={t.login}>
+                <Button variant="outline" size="sm" className="gap-2" aria-label={t.login}>
+                  <LogIn className="h-4 w-4" aria-hidden="true" />
                   <span className="hidden sm:inline">{t.login}</span>
                 </Button>
               </Link>
