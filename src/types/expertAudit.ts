@@ -67,6 +67,7 @@ export interface StrategicIntroduction {
   presentation: string;
   strengths: string;
   improvement: string;
+  competitors?: string[];
 }
 
 // Expert Insights from smart analysis
