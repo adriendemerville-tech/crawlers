@@ -358,6 +358,18 @@ function generateReportHTML(type: string, data: any, url: string, language: stri
 </html>`;
 }
 
+// Generate a short alphanumeric ID (7 characters)
+function generateShortId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const randomValues = new Uint8Array(7);
+  crypto.getRandomValues(randomValues);
+  for (let i = 0; i < 7; i++) {
+    result += chars[randomValues[i] % chars.length];
+  }
+  return result;
+}
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -371,8 +383,8 @@ serve(async (req: Request) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const html = generateReportHTML(type, data, url, language);
-    const reportId = crypto.randomUUID();
-    const fileName = `reports/${reportId}.html`;
+    const shortId = generateShortId();
+    const fileName = `reports/${shortId}.html`;
 
     // Upload to storage
     const { error: uploadError } = await supabase.storage
@@ -386,19 +398,12 @@ serve(async (req: Request) => {
       throw new Error(`Upload failed: ${uploadError.message}`);
     }
 
-    // Get public URL (expires in 7 days)
-    const { data: urlData } = await supabase.storage
-      .from('shared-reports')
-      .createSignedUrl(fileName, 60 * 60 * 24 * 7); // 7 days
-
-    if (!urlData?.signedUrl) {
-      throw new Error('Failed to generate signed URL');
-    }
+    console.log(`Report uploaded with shortId: ${shortId}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        shareUrl: urlData.signedUrl,
+        shareId: shortId,
         expiresIn: '7 days'
       }),
       { 

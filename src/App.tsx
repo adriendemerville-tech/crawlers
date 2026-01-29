@@ -57,7 +57,7 @@ const App = () => (
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/profil" element={<Profile />} />
                     <Route path="/rapport/:reportId" element={<ReportViewer />} />
-                    <Route path="/r/:shareId" element={<SharedReportRedirect />} />
+                    <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
