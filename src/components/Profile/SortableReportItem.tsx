@@ -72,6 +72,8 @@ export function SortableReportItem({ report, onDelete, translations: t }: Sortab
     year: 'numeric',
   });
 
+  const reportHref = `/rapport/${report.id}`;
+
   return (
     <div
       ref={setNodeRef}
@@ -88,7 +90,13 @@ export function SortableReportItem({ report, onDelete, translations: t }: Sortab
       
       <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
       
-      <div className="flex-1 min-w-0">
+      <a
+        href={reportHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-1 min-w-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center gap-2">
           <span className="font-medium truncate">{report.title}</span>
           <Badge variant="secondary" className={`text-xs ${getReportTypeColor(report.report_type)}`}>
@@ -100,7 +108,7 @@ export function SortableReportItem({ report, onDelete, translations: t }: Sortab
           <span>•</span>
           <span>{formattedDate}</span>
         </div>
-      </div>
+      </a>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -126,3 +134,4 @@ export function SortableReportItem({ report, onDelete, translations: t }: Sortab
     </div>
   );
 }
+
