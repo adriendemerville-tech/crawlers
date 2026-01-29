@@ -191,13 +191,13 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'ChatGPT et Gemini',
       },
       subheadline: {
-        crawlers: "Testez votre visibilité en 30 secondes. Corriger facilement le code de votre site avec notre Audit expert. Gagner sur la concurrence.",
+        crawlers: "Testez votre visibilité en 30 secondes. <strong>Corriger le code</strong> de votre site avec notre <strong>Audit expert</strong>. Gagner sur la concurrence.",
         geo: "Mesurez votre score GEO et votre potentiel de citation par les moteurs génératifs. Optimisation Search Generative Experience incluse.",
         pagespeed: "Core Web Vitals + impact sur le crawling IA. Si votre site est lent, les LLM ne vous indexent pas.",
         llm: "Analysez votre visibilité ChatGPT, Claude et Gemini. Découvrez si votre marque est citée ou ignorée.",
       },
       button: {
-        crawlers: 'Lancer l\'Audit GEO Gratuit',
+        crawlers: 'Analyser Bots IA',
         geo: 'Analyser mon Score GEO',
         pagespeed: 'Tester la Vitesse',
         llm: 'Vérifier ma Visibilité IA',
@@ -377,13 +377,13 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'ChatGPT & Gemini',
       },
       subheadline: {
-        crawlers: 'Test your visibility in 30 seconds. Easily fix your site code with our Expert Audit. Outperform the competition.',
+        crawlers: 'Test your visibility in 30 seconds. <strong>Fix your code</strong> with our <strong>Expert Audit</strong>. Outperform the competition.',
         geo: 'Measure your GEO score and citation potential by generative engines. Search Generative Experience Optimization included.',
         pagespeed: 'Core Web Vitals + AI crawling impact. Slow sites don\'t get indexed by LLMs.',
         llm: 'Analyze your ChatGPT, Claude, and Gemini visibility. Discover if your brand is cited or ignored.',
       },
       button: {
-        crawlers: 'Run Free GEO Audit',
+        crawlers: 'Analyze AI Bots',
         geo: 'Analyze My GEO Score',
         pagespeed: 'Test Speed',
         llm: 'Check My AI Visibility',
@@ -563,13 +563,13 @@ const translations: Record<Language, Translations> = {
         llmHighlight: 'ChatGPT y Gemini',
       },
       subheadline: {
-        crawlers: 'Prueba tu visibilidad en 30 segundos. Corrige fácilmente el código de tu sitio con nuestra Auditoría experta. Supera a la competencia.',
+        crawlers: 'Prueba tu visibilidad en 30 segundos. <strong>Corrige el código</strong> de tu sitio con nuestra <strong>Auditoría experta</strong>. Supera a la competencia.',
         geo: 'Mide tu puntuación GEO y potencial de citación por motores generativos. Optimización Search Generative Experience incluida.',
         pagespeed: 'Core Web Vitals + impacto en crawling IA. Los sitios lentos no son indexados por los LLM.',
         llm: 'Analiza tu visibilidad en ChatGPT, Claude y Gemini. Descubre si tu marca es citada o ignorada.',
       },
       button: {
-        crawlers: 'Ejecutar Auditoría GEO Gratis',
+        crawlers: 'Analizar Bots IA',
         geo: 'Analizar Mi Puntuación GEO',
         pagespeed: 'Probar Velocidad',
         llm: 'Verificar Mi Visibilidad IA',

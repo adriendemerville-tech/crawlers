@@ -158,7 +158,7 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
   );
 
   return (
-    <section className="relative overflow-hidden px-4 py-10 sm:py-16">
+    <section className="relative overflow-hidden px-4 py-6 sm:py-10">
       {/* Background decoration */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-40 -top-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
@@ -182,9 +182,10 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
         )}
 
         {/* H2 Subheadline - SEO optimized */}
-        <h2 className="mx-auto mb-10 max-w-2xl text-lg font-normal text-muted-foreground sm:text-xl">
-          {content.subheadline}
-        </h2>
+        <h2 
+          className="mx-auto mb-10 max-w-2xl text-lg font-normal text-muted-foreground sm:text-xl"
+          dangerouslySetInnerHTML={{ __html: content.subheadline }}
+        />
 
         {/* Search Form */}
         <form onSubmit={handleSubmit} className="mx-auto max-w-2xl">
