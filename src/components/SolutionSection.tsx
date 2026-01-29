@@ -7,7 +7,9 @@ import { useNavigate } from 'react-router-dom';
 const translations = {
   fr: {
     title: 'Vos corrections techniques, générées en un clic.',
-    subtitle: 'Identifier un problème sans solution, c\'est frustrant. Après chaque Audit Expert, Crawlers.AI conçoit le code correctif prêt à être déployé sur votre site.',
+    subtitlePart1: 'Identifier un problème sans solution, c\'est frustrant. Crawlers AI va plus loin : après chaque ',
+    subtitleHighlight: 'Audit Expert',
+    subtitlePart2: ', recevez le code correctif prêt à être déployé sur votre site.',
     pillar1Title: 'Diagnostic Clair',
     pillar1Desc: 'Analysez votre visibilité auprès des IA en toute sérénité. Chaque point d\'amélioration est expliqué simplement.',
     pillar2Title: 'Code Prêt-à-Copier',
@@ -18,7 +20,9 @@ const translations = {
   },
   en: {
     title: 'Your technical fixes, generated in one click.',
-    subtitle: 'Identifying a problem without a solution is frustrating. Crawlers AI goes further: after each diagnosis, receive the corrective code ready to deploy on your site.',
+    subtitlePart1: 'Identifying a problem without a solution is frustrating. Crawlers AI goes further: after each ',
+    subtitleHighlight: 'Expert Audit',
+    subtitlePart2: ', receive the corrective code ready to deploy on your site.',
     pillar1Title: 'Clear Diagnosis',
     pillar1Desc: 'Analyze your visibility to AI with peace of mind. Each improvement point is explained simply.',
     pillar2Title: 'Ready-to-Copy Code',
@@ -29,7 +33,9 @@ const translations = {
   },
   es: {
     title: 'Sus correcciones técnicas, generadas en un clic.',
-    subtitle: 'Identificar un problema sin solución es frustrante. Crawlers AI va más allá: después de cada diagnóstico, reciba el código correctivo listo para implementar en su sitio.',
+    subtitlePart1: 'Identificar un problema sin solución es frustrante. Crawlers AI va más allá: después de cada ',
+    subtitleHighlight: 'Auditoría Experta',
+    subtitlePart2: ', reciba el código correctivo listo para implementar en su sitio.',
     pillar1Title: 'Diagnóstico Claro',
     pillar1Desc: 'Analice su visibilidad ante la IA con tranquilidad. Cada punto de mejora se explica de forma sencilla.',
     pillar2Title: 'Código Listo para Copiar',
@@ -64,7 +70,7 @@ export function SolutionSection() {
   const t = translations[language];
 
   return (
-    <section className="py-20 bg-gradient-to-b from-background to-muted/30">
+    <section className="py-10 bg-gradient-to-b from-background to-muted/30">
       <div className="container mx-auto px-4 max-w-5xl">
         {/* Header */}
         <motion.div
@@ -78,7 +84,9 @@ export function SolutionSection() {
             {t.title}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            {t.subtitle}
+            {t.subtitlePart1}
+            <span className="text-primary font-bold">{t.subtitleHighlight}</span>
+            {t.subtitlePart2}
           </p>
         </motion.div>
 
