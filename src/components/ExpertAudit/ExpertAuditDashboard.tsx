@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { ScoreGauge200 } from './ScoreGauge200';
 import { CategoryCard, MetricRow } from './CategoryCard';
-import { RecommendationList } from './RecommendationList';
+import { ActionPlan } from './ActionPlan';
 import { LoadingSteps } from './LoadingSteps';
 import { StrategicInsights } from './StrategicInsights';
 import { IntroductionCard } from './IntroductionCard';
@@ -581,8 +581,8 @@ export function ExpertAuditDashboard() {
                 <ExpertInsightsCard insights={result.insights} />
               )}
 
-              {/* Recommendations */}
-              <RecommendationList recommendations={result.recommendations} />
+              {/* Action Plan (refactored from RecommendationList) */}
+              <ActionPlan recommendations={result.recommendations} url={result.url} />
             </>
           )}
 

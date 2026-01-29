@@ -1,7 +1,8 @@
 import { ExpertAuditDashboard } from './ExpertAuditDashboard';
 import { ScoreGauge200 } from './ScoreGauge200';
 import { CategoryCard, MetricRow } from './CategoryCard';
-import { RecommendationList } from './RecommendationList';
+import { ActionPlan, ActionPlanCard, ActionPlanProgress, ActionPlanSaveButton } from './ActionPlan';
+import { RecommendationList } from './RecommendationList'; // Legacy - kept for backward compatibility
 import { LoadingSteps } from './LoadingSteps';
 import { StrategicInsights } from './StrategicInsights';
 import { ExpertAuditFAQ } from './ExpertAuditFAQ';
@@ -24,7 +25,11 @@ export {
   ScoreGauge200,
   CategoryCard,
   MetricRow,
-  RecommendationList,
+  RecommendationList, // Legacy
+  ActionPlan,
+  ActionPlanCard,
+  ActionPlanProgress,
+  ActionPlanSaveButton,
   LoadingSteps,
   StrategicInsights,
   ExpertAuditFAQ,
