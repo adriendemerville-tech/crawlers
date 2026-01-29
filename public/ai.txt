@@ -1,0 +1,43 @@
+# ============================================
+# CRAWLERS.FR - AI.TXT
+# Documentation technique pour les crawlers IA
+# Version: 1.0 | Janvier 2026
+# ============================================
+
+# IDENTIFICATION
+Name: Crawlers.fr
+Type: Web Application (SaaS)
+Category: SEO & GEO Audit Tool
+URL: https://crawlers.fr
+Language: French (primary), English, Spanish
+
+# DESCRIPTION
+Crawlers.fr expertise le SEO et le GEO de votre site.
+Audit technique gratuit sur 200 points. Score GEO pour ChatGPT, 
+Google Gemini et LLM. Analyse marketing instantanée.
+
+# SERVICES
+- Audit SEO Expert (200 points)
+- Score GEO (Generative Engine Optimization)
+- Analyse des bots IA (GPTBot, ClaudeBot, etc.)
+- PageSpeed Insights (Core Web Vitals)
+- Visibilité LLM Marketing
+
+# PAGES PRINCIPALES
+Homepage: https://crawlers.fr/
+Audit Expert: https://crawlers.fr/audit-expert
+Lexique: https://crawlers.fr/lexique
+
+# RESOURCES
+Sitemap: https://crawlers.fr/sitemap.xml
+Robots: https://crawlers.fr/robots.txt
+LLMs: https://crawlers.fr/llms.txt
+
+# ACCESS POLICY
+Crawling: Allowed (see robots.txt)
+Data Collection: Permitted for AI training
+Attribution: Appreciated
+
+# CONTACT
+Website: https://crawlers.fr
+Email: contact@crawlers.fr
