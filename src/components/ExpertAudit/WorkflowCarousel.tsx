@@ -346,17 +346,19 @@ export function WorkflowCarousel({
                       // Violet/purple accent for step 3 (Code Correctif) with glow
                       step.id === 3 && !isCompleted && "border-2 border-violet-500/70 shadow-[0_0_20px_rgba(139,92,246,0.4)]"
                     )}>
-                      {/* Top accent line */}
-                      <div className={cn(
-                        "absolute top-0 left-0 right-0 h-1",
-                        isCompleted 
-                          ? "bg-gradient-to-r from-success to-success/80"
-                          : step.id === 2
-                          ? "bg-gradient-to-r from-[#4b5563] via-[#9ca3af] to-[#4b5563]"
-                          : isActive 
-                          ? "bg-gradient-to-r from-primary to-primary/80"
-                          : "bg-muted"
-                      )} />
+                      {/* Top accent line - hidden for step 3 */}
+                      {step.id !== 3 && (
+                        <div className={cn(
+                          "absolute top-0 left-0 right-0 h-1",
+                          isCompleted 
+                            ? "bg-gradient-to-r from-success to-success/80"
+                            : step.id === 2
+                            ? "bg-gradient-to-r from-[#4b5563] via-[#9ca3af] to-[#4b5563]"
+                            : isActive 
+                            ? "bg-gradient-to-r from-primary to-primary/80"
+                            : "bg-muted"
+                        )} />
+                      )}
 
                       <CardContent className="p-8">
                         {/* Icon */}
