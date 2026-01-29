@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 const translations = {
   fr: {
     title: 'Vos corrections techniques, générées en un clic.',
-    subtitlePart1: 'Identifier un problème sans solution, c\'est frustrant. Crawlers AI va plus loin : après chaque ',
+    subtitlePart1: 'Identifier un problème sans solution, c\'est frustrant.',
     subtitleHighlight: 'Audit Expert',
     subtitlePart2: ', recevez le code correctif prêt à être déployé sur votre site.',
     pillar1Title: 'Diagnostic Clair',
@@ -20,7 +20,7 @@ const translations = {
   },
   en: {
     title: 'Your technical fixes, generated in one click.',
-    subtitlePart1: 'Identifying a problem without a solution is frustrating. Crawlers AI goes further: after each ',
+    subtitlePart1: 'Identifying a problem without a solution is frustrating.',
     subtitleHighlight: 'Expert Audit',
     subtitlePart2: ', receive the corrective code ready to deploy on your site.',
     pillar1Title: 'Clear Diagnosis',
@@ -33,7 +33,7 @@ const translations = {
   },
   es: {
     title: 'Sus correcciones técnicas, generadas en un clic.',
-    subtitlePart1: 'Identificar un problema sin solución es frustrante. Crawlers AI va más allá: después de cada ',
+    subtitlePart1: 'Identificar un problema sin solución es frustrante.',
     subtitleHighlight: 'Auditoría Experta',
     subtitlePart2: ', reciba el código correctivo listo para implementar en su sitio.',
     pillar1Title: 'Diagnóstico Claro',
@@ -85,7 +85,8 @@ export function SolutionSection() {
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             {t.subtitlePart1}
-            <span className="text-primary font-bold">{t.subtitleHighlight}</span>
+            <br />
+            Après chaque <span className="text-primary font-bold">{t.subtitleHighlight}</span>
             {t.subtitlePart2}
           </p>
         </motion.div>
