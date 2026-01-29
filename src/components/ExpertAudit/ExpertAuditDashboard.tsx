@@ -646,6 +646,23 @@ export function ExpertAuditDashboard() {
                 </CategoryCard>
               </div>
 
+              {/* Premium Report Button - Before Expert Insights */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex justify-center py-6"
+              >
+                <Button
+                  onClick={handleReportButtonClick}
+                  size="lg"
+                  className="gap-3 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+                >
+                  <FileDown className="h-5 w-5" />
+                  {t.viewReport}
+                </Button>
+              </motion.div>
+
               {/* Expert Insights Card */}
               {result.insights && (
                 <ExpertInsightsCard insights={result.insights} />
@@ -701,22 +718,22 @@ export function ExpertAuditDashboard() {
             </motion.div>
           )}
 
-          {/* Timestamp + Report Button */}
+          {/* Timestamp + Premium Report Button */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="flex flex-col items-center gap-4 pt-4"
+            className="flex flex-col items-center gap-6 pt-8"
           >
             <p className="text-xs text-muted-foreground">
               {t.generatedAt} {new Date(result.scannedAt).toLocaleString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
             </p>
             <Button
               onClick={handleReportButtonClick}
-              variant="outline"
-              className="gap-2"
+              size="lg"
+              className="gap-3 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
             >
-              <FileDown className="h-4 w-4" />
+              <FileDown className="h-5 w-5" />
               {t.viewReport}
             </Button>
           </motion.div>
