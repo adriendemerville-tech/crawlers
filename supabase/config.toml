@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.diagnose-hallucination]
 verify_jwt = false
+
+[functions.share-report]
+verify_jwt = false
+
+[functions.resolve-share]
+verify_jwt = false
