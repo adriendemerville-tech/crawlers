@@ -1,10 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Loader2, Globe, Code, Shield, Brain, CheckCircle2, Target } from 'lucide-react';
+import { Loader2, Globe, Code, Shield, Brain, CheckCircle2, Target, Link2 } from 'lucide-react';
 
 const technicalSteps = [
   { id: 'connect', label: 'Audit Speed et Performances...', icon: Globe },
   { id: 'html', label: 'Analyse du code HTML...', icon: Code },
+  { id: 'links', label: 'Vérification des liens cassés...', icon: Link2 },
   { id: 'security', label: 'Vérification Safe Browsing...', icon: Shield },
   { id: 'ai', label: 'Calcul du score GEO & IA...', icon: Brain },
   { id: 'done', label: 'Génération du rapport...', icon: CheckCircle2 },

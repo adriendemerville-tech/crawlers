@@ -43,6 +43,21 @@ interface LinkProfile {
   toxicAnchorsCount: number;
 }
 
+interface BrokenLink {
+  url: string;
+  status: number;
+  anchor: string;
+  type: 'internal' | 'external';
+}
+
+interface BrokenLinksAnalysis {
+  total: number;
+  broken: BrokenLink[];
+  checked: number;
+  corsBlocked: number;
+  verdict: 'optimal' | 'warning' | 'critical';
+}
+
 interface JsonLdValidation {
   valid: boolean;
   types: string[];
@@ -55,6 +70,7 @@ interface ExpertInsights {
   contentDensity: ContentDensity;
   linkProfile: LinkProfile;
   jsonLdValidation: JsonLdValidation;
+  brokenLinks?: BrokenLinksAnalysis;
 }
 
 interface HtmlAnalysis {
@@ -517,6 +533,125 @@ function analyzeContentDensity(html: string, visibleText: string): ContentDensit
   return { ratio, verdict, htmlSize, textSize };
 }
 
+// ==================== BROKEN LINKS CHECKER ====================
+
+async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string): Promise<BrokenLinksAnalysis> {
+  console.log('[BrokenLinks] Vérification des liens cassés...');
+  
+  const links = doc.querySelectorAll('a[href]');
+  const baseDomain = extractDomain(baseUrl);
+  const linksToCheck: { url: string; anchor: string; type: 'internal' | 'external' }[] = [];
+  const checkedUrls = new Set<string>();
+  
+  // Collect unique links (limit to 30 for performance)
+  for (let i = 0; i < links.length && linksToCheck.length < 30; i++) {
+    const link = links[i] as Element;
+    const href = link.getAttribute('href') || '';
+    const anchorText = link.textContent?.trim().substring(0, 50) || '';
+    
+    // Skip empty, javascript, anchor, mailto, tel links
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') || 
+        href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('data:')) {
+      continue;
+    }
+    
+    try {
+      const absoluteUrl = new URL(href, baseUrl).href;
+      
+      // Skip if already checked
+      if (checkedUrls.has(absoluteUrl)) continue;
+      checkedUrls.add(absoluteUrl);
+      
+      const linkDomain = new URL(absoluteUrl).hostname;
+      const isInternal = linkDomain === baseDomain || linkDomain.endsWith('.' + baseDomain);
+      
+      linksToCheck.push({
+        url: absoluteUrl,
+        anchor: anchorText,
+        type: isInternal ? 'internal' : 'external'
+      });
+    } catch {
+      // Invalid URL, skip
+    }
+  }
+  
+  console.log(`[BrokenLinks] Vérification de ${linksToCheck.length} liens...`);
+  
+  const brokenLinks: BrokenLink[] = [];
+  let corsBlocked = 0;
+  
+  // Check links in parallel with timeout
+  const checkPromises = linksToCheck.map(async (link) => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(link.url, {
+        method: 'HEAD',
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/2.0; +https://crawlers.fr)'
+        },
+        redirect: 'follow'
+      });
+      
+      clearTimeout(timeoutId);
+      
+      // 4xx and 5xx are broken
+      if (response.status >= 400) {
+        return {
+          url: link.url,
+          status: response.status,
+          anchor: link.anchor,
+          type: link.type
+        };
+      }
+      return null;
+    } catch (error) {
+      // Network errors, timeouts, CORS - mark as potentially blocked for external
+      if (link.type === 'external') {
+        corsBlocked++;
+        return null;
+      }
+      // Internal link that fails is considered broken
+      return {
+        url: link.url,
+        status: 0,
+        anchor: link.anchor,
+        type: link.type
+      };
+    }
+  });
+  
+  const results = await Promise.all(checkPromises);
+  
+  for (const result of results) {
+    if (result) {
+      brokenLinks.push(result);
+    }
+  }
+  
+  // Determine verdict
+  let verdict: 'optimal' | 'warning' | 'critical';
+  if (brokenLinks.length === 0) {
+    verdict = 'optimal';
+  } else if (brokenLinks.length <= 2) {
+    verdict = 'warning';
+  } else {
+    verdict = 'critical';
+  }
+  
+  console.log(`[BrokenLinks] ✅ ${brokenLinks.length} liens cassés trouvés sur ${linksToCheck.length} vérifiés`);
+  
+  return {
+    total: linksToCheck.length,
+    broken: brokenLinks,
+    checked: linksToCheck.length,
+    corsBlocked,
+    verdict
+  };
+}
+
 // ==================== ROBOTS.TXT ANALYSIS ====================
 
 async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
@@ -820,6 +955,30 @@ function generateRecommendations(
     });
   }
   
+  // === BROKEN LINKS RECOMMENDATION ===
+  if (insights.brokenLinks && insights.brokenLinks.broken.length > 0) {
+    const brokenCount = insights.brokenLinks.broken.length;
+    const brokenUrls = insights.brokenLinks.broken.slice(0, 3).map(b => `${b.anchor || b.url.substring(0, 40)} (${b.status || 'timeout'})`);
+    
+    recommendations.push({
+      id: 'broken-links',
+      priority: brokenCount > 2 ? 'critical' : 'important',
+      category: 'technique',
+      icon: brokenCount > 2 ? '🔴' : '🟠',
+      title: `${brokenCount} lien${brokenCount > 1 ? 's' : ''} cassé${brokenCount > 1 ? 's' : ''} détecté${brokenCount > 1 ? 's' : ''}`,
+      description: `Des liens pointent vers des pages inexistantes (erreur 404/500). Cela nuit à l'expérience utilisateur et au crawl SEO.`,
+      weaknesses: [
+        `${brokenCount} lien${brokenCount > 1 ? 's' : ''} cassé${brokenCount > 1 ? 's' : ''} sur ${insights.brokenLinks.checked} vérifiés`,
+        ...brokenUrls
+      ],
+      fixes: [
+        "Supprimer ou corriger les liens vers les pages inexistantes",
+        "Mettre en place des redirections 301 si les pages ont été déplacées",
+        "Utiliser un outil de monitoring des liens cassés"
+      ]
+    });
+  }
+  
   // Sort by priority
   const priorityOrder = { critical: 0, important: 1, optional: 2 };
   recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
@@ -977,11 +1136,14 @@ serve(async (req) => {
       );
     }
     
-    // Step 2: Run all checks in parallel
-    const [psiData, safeBrowsing, robotsAnalysis] = await Promise.all([
+    // Step 2: Run all checks in parallel (including broken links)
+    const doc = new DOMParser().parseFromString(smartFetchResult.html, 'text/html');
+    
+    const [psiData, safeBrowsing, robotsAnalysis, brokenLinksAnalysis] = await Promise.all([
       fetchPageSpeedData(normalizedUrl),
       checkSafeBrowsing(normalizedUrl),
-      checkRobotsTxt(normalizedUrl)
+      checkRobotsTxt(normalizedUrl),
+      doc ? checkBrokenLinks(doc, normalizedUrl) : Promise.resolve({ total: 0, broken: [], checked: 0, corsBlocked: 0, verdict: 'optimal' as const })
     ]);
     
     // Step 3: DOM-based HTML analysis
@@ -1007,13 +1169,23 @@ serve(async (req) => {
     if (htmlAnalysis.hasSchemaOrg) aiReadyScore += 15;
     if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 15;
     
+    // Bonus/penalty for broken links (affects technical score)
+    let brokenLinksBonus = 0;
+    if (brokenLinksAnalysis.verdict === 'optimal') {
+      brokenLinksBonus = 5; // Bonus for no broken links
+    } else if (brokenLinksAnalysis.verdict === 'critical') {
+      brokenLinksBonus = -10; // Penalty for many broken links
+    } else {
+      brokenLinksBonus = -3; // Small penalty for few broken links
+    }
+    
     let securityScore = 0;
     if (htmlAnalysis.isHttps) securityScore += 10;
     if (safeBrowsing.safe) securityScore += 10;
     
-    // Apply reliability factor to total score
-    const rawTotalScore = performanceScore + technicalScore + semanticScore + aiReadyScore + securityScore;
-    const totalScore = Math.round(rawTotalScore * smartFetchResult.selfAudit.reliabilityScore);
+    // Apply reliability factor to total score (with broken links adjustment)
+    const rawTotalScore = performanceScore + technicalScore + semanticScore + aiReadyScore + securityScore + brokenLinksBonus;
+    const totalScore = Math.round(Math.max(0, rawTotalScore) * smartFetchResult.selfAudit.reliabilityScore);
     
     const scores = {
       performance: {
@@ -1026,11 +1198,13 @@ serve(async (req) => {
         tbt: audits['total-blocking-time']?.numericValue || 0,
       },
       technical: {
-        score: technicalScore,
+        score: technicalScore + brokenLinksBonus,
         maxScore: 50,
         psiSeo: Math.round(psiSeo * 100),
         httpStatus: 200,
         isHttps: htmlAnalysis.isHttps,
+        brokenLinksCount: brokenLinksAnalysis.broken.length,
+        brokenLinksChecked: brokenLinksAnalysis.checked,
       },
       semantic: {
         score: semanticScore,
@@ -1067,11 +1241,17 @@ serve(async (req) => {
       reliabilityScore: smartFetchResult.selfAudit.reliabilityScore,
     };
     
-    const recommendations = generateRecommendations(scores, htmlAnalysis, psiData, htmlAnalysis.insights);
+    // Add broken links to insights
+    const enrichedInsights = {
+      ...htmlAnalysis.insights,
+      brokenLinks: brokenLinksAnalysis
+    };
+    
+    const recommendations = generateRecommendations(scores, htmlAnalysis, psiData, enrichedInsights);
     
     // Generate AI narrative
     const introduction = await generateNarrativeIntroduction(
-      domain, normalizedUrl, totalScore, scores, htmlAnalysis, htmlAnalysis.insights, meta
+      domain, normalizedUrl, totalScore, scores, htmlAnalysis, enrichedInsights, meta
     );
     
     console.log('='.repeat(60));
@@ -1088,7 +1268,7 @@ serve(async (req) => {
           totalScore,
           maxScore: 200,
           scores,
-          insights: htmlAnalysis.insights,
+          insights: enrichedInsights,
           recommendations,
           introduction,
           rawData: {

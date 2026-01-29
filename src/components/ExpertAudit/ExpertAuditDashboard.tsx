@@ -16,6 +16,7 @@ import { LoadingSteps } from './LoadingSteps';
 import { StrategicInsights } from './StrategicInsights';
 import { IntroductionCard } from './IntroductionCard';
 import { ExpertInsightsCard } from './ExpertInsightsCard';
+import { BrokenLinksCard } from './BrokenLinksCard';
 import { ExpertReportPreviewModal } from './ExpertReportPreviewModal';
 import { RegistrationGate } from './RegistrationGate';
 import { ReportAuthGate } from './ReportAuthGate';
@@ -553,6 +554,13 @@ export function ExpertAuditDashboard() {
                   />
                   <MetricRow label="Status HTTP" value={result.scores.technical.httpStatus} status="good" />
                   <MetricRow label="HTTPS" value={result.scores.technical.isHttps} />
+                  {result.scores.technical.brokenLinksCount !== undefined && (
+                    <MetricRow 
+                      label="Liens cassés" 
+                      value={`${result.scores.technical.brokenLinksCount}/${result.scores.technical.brokenLinksChecked || 0}`} 
+                      status={result.scores.technical.brokenLinksCount === 0 ? 'good' : result.scores.technical.brokenLinksCount <= 2 ? 'warning' : 'bad'}
+                    />
+                  )}
                 </CategoryCard>
 
                 {/* Semantic */}
@@ -630,6 +638,11 @@ export function ExpertAuditDashboard() {
               {/* Expert Insights Card */}
               {result.insights && (
                 <ExpertInsightsCard insights={result.insights} />
+              )}
+
+              {/* Broken Links Card */}
+              {result.insights?.brokenLinks && (
+                <BrokenLinksCard brokenLinks={result.insights.brokenLinks} />
               )}
 
               {/* Action Plan (refactored from RecommendationList) */}

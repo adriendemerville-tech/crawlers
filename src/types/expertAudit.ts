@@ -14,6 +14,8 @@ export interface ExpertAuditScores {
     psiSeo: number;
     httpStatus: number;
     isHttps: boolean;
+    brokenLinksCount?: number;
+    brokenLinksChecked?: number;
   };
   semantic: {
     score: number;
@@ -89,6 +91,21 @@ export interface LinkProfile {
   toxicAnchorsCount: number;
 }
 
+export interface BrokenLink {
+  url: string;
+  status: number;
+  anchor: string;
+  type: 'internal' | 'external';
+}
+
+export interface BrokenLinksAnalysis {
+  total: number;
+  broken: BrokenLink[];
+  checked: number;
+  corsBlocked: number;
+  verdict: 'optimal' | 'warning' | 'critical';
+}
+
 export interface JsonLdValidation {
   valid: boolean;
   types: string[];
@@ -101,6 +118,7 @@ export interface ExpertInsights {
   contentDensity: ContentDensity;
   linkProfile: LinkProfile;
   jsonLdValidation: JsonLdValidation;
+  brokenLinks?: BrokenLinksAnalysis;
 }
 
 export interface AuditMeta {
