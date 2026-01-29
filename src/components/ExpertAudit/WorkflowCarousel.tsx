@@ -343,8 +343,8 @@ export function WorkflowCarousel({
                       // Metallic gray/silver theme for step 2 (Strategic Audit)
                       step.id === 2 && !isCompleted && "border-2 border-[#6b7280] bg-gradient-to-br from-card via-card to-[#f3f4f6]/30 dark:to-[#374151]/30 shadow-[0_12px_40px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.1)]",
                       step.id === 2 && isActive && !isCompleted && "shadow-[0_16px_50px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.15)]",
-                      // Teal/cyan accent for step 3 (Code Correctif) - violet border with glow
-                      step.id === 3 && !isCompleted && "border-2 border-violet-500/70 shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                      // Violet/purple accent for step 3 (Code Correctif) with glow
+                      step.id === 3 && !isCompleted && "border-2 border-violet-500/70 shadow-[0_0_20px_rgba(139,92,246,0.4)]"
                     )}>
                       {/* Top accent line */}
                       <div className={cn(
@@ -366,6 +366,8 @@ export function WorkflowCarousel({
                             ? "bg-success/10 text-success"
                             : step.id === 2
                             ? "bg-[#374151]/20 text-[#4b5563] dark:bg-[#6b7280]/20 dark:text-[#9ca3af]"
+                            : step.id === 3
+                            ? "bg-violet-500/15 text-violet-500"
                             : isActive 
                             ? "bg-primary/10 text-primary"
                             : "bg-muted text-muted-foreground"
@@ -414,8 +416,8 @@ export function WorkflowCarousel({
                                 isLocked && "opacity-50 cursor-not-allowed",
                                 // Premium dark silver button for step 2
                                 step.id === 2 && !isCompleted && !isLocked && "bg-[#3a3f4a] hover:bg-[#4a4f5a] text-white border-0",
-                                // Cyan/teal button for step 3
-                                step.id === 3 && !isCompleted && !isLocked && "bg-cyan-600 hover:bg-cyan-700 text-white border-0"
+                                // Violet/purple button for step 3 with glow
+                                step.id === 3 && !isCompleted && !isLocked && "bg-violet-600 hover:bg-violet-700 text-white border-0 shadow-[0_0_15px_rgba(139,92,246,0.4)]"
                               )}
                             >
                               {getStepButtonText(step.id)}

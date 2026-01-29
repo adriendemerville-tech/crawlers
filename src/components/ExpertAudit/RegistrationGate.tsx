@@ -37,11 +37,13 @@ export function RegistrationGate({ onRegister }: RegistrationGateProps) {
   const handleRegisterClick = () => {
     // Save pending action for after auth
     sessionStorage.setItem('audit_pending_action', 'unblur_strategic');
+    sessionStorage.setItem('audit_return_path', '/audit-expert');
     onRegister();
   };
 
   const handleLogin = () => {
     sessionStorage.setItem('audit_pending_action', 'unblur_strategic');
+    sessionStorage.setItem('audit_return_path', '/audit-expert');
     navigate('/auth?mode=login');
   };
 
