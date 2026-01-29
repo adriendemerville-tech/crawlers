@@ -255,8 +255,11 @@ export function WorkflowCarousel({
 
       {/* Carousel Container */}
       <div className="relative py-8">
-        {/* Right fade mask - subtle hint that more content exists */}
-        <div className="absolute right-0 top-0 bottom-0 w-32 z-10 pointer-events-none bg-gradient-to-l from-background via-background/50 to-transparent" />
+        {/* Left fade mask - gradient blur from center to left */}
+        <div className="absolute left-0 top-0 bottom-0 w-40 z-10 pointer-events-none bg-gradient-to-r from-background via-background/80 to-transparent" />
+        
+        {/* Right fade mask - gradient blur from center to right */}
+        <div className="absolute right-0 top-0 bottom-0 w-40 z-10 pointer-events-none bg-gradient-to-l from-background via-background/80 to-transparent" />
 
         {/* Carousel Viewport - centered with proper padding */}
         <div className="overflow-x-clip">
@@ -281,14 +284,21 @@ export function WorkflowCarousel({
                 // Calculate visual state
                 const getCardOpacity = () => {
                   if (isActive) return 1;
-                  if (isNext) return 0.6;
-                  if (isPrevious) return 0.4;
+                  if (isNext) return 0.7;
+                  if (isPrevious) return 0.5;
                   return 0; // Hidden (step 3 at start)
                 };
 
                 const getCardScale = () => {
                   if (isActive) return 1;
-                  return 0.92;
+                  return 0.88; // Smaller scale for side cards
+                };
+
+                // Calculate blur intensity - stronger for side cards
+                const getBlurAmount = () => {
+                  if (isActive) return 0;
+                  if (isNext || isPrevious) return 3;
+                  return 5;
                 };
 
                 // Step 3 should be completely hidden at step 1
@@ -307,7 +317,7 @@ export function WorkflowCarousel({
                       opacity: shouldHide ? 0 : getCardOpacity(),
                       filter: isActive 
                         ? 'grayscale(0%) blur(0px)' 
-                        : `grayscale(100%) blur(${isNext ? 1 : 2}px)`,
+                        : `grayscale(50%) blur(${getBlurAmount()}px)`,
                       x: 0,
                     }}
                     transition={{ 
@@ -322,12 +332,12 @@ export function WorkflowCarousel({
                       visibility: shouldHide ? 'hidden' : 'visible'
                     }}
                   >
-                    {/* Glassmorphism Card */}
+                    {/* Glassmorphism Card with shadow */}
                     <Card className={cn(
                       "relative overflow-hidden transition-all duration-500 h-full",
                       "bg-card/95 backdrop-blur-sm border border-border/40",
-                      "shadow-[0_20px_40px_rgba(0,0,0,0.05)]",
-                      isActive && "border-primary/30 shadow-[0_25px_50px_rgba(0,0,0,0.08)]",
+                      "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
+                      isActive && "border-primary/30 shadow-[0_12px_40px_rgba(0,0,0,0.15)]",
                       isCompleted && "border-success/30",
                       // Gold border for step 2 (Strategic Audit) - using warning token for amber/gold
                       step.id === 2 && !isCompleted && "border-2 border-warning"
@@ -393,7 +403,9 @@ export function WorkflowCarousel({
                                 "w-full h-12 text-base font-medium transition-all duration-300",
                                 "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
                                 isCompleted && "bg-success hover:bg-success/90",
-                                isLocked && "opacity-50 cursor-not-allowed"
+                                isLocked && "opacity-50 cursor-not-allowed",
+                                // Premium dark silver button for step 2
+                                step.id === 2 && !isCompleted && !isLocked && "bg-[#3a3f4a] hover:bg-[#4a4f5a] text-white border-0"
                               )}
                             >
                               {getStepButtonText(step.id)}
