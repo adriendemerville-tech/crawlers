@@ -229,9 +229,9 @@ export function WorkflowCarousel({
         </div>
       </motion.div>
 
-      {/* URL Input - Only show for step 1 */}
+      {/* URL Input - Show for step 1 and step 2 */}
       <AnimatePresence>
-        {activeStep === 1 && !isStepCompleted(1) && (
+        {(activeStep === 1 || activeStep === 2) && !isStepCompleted(activeStep) && (
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
