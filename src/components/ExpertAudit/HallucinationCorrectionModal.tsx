@@ -8,12 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   BrainCircuit, Loader2, Sparkles, Edit3, Building2, MapPin, 
-  Target, Calendar, FileText, Globe, Users
+  Target, Calendar, FileText, Globe, Users, Check
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
-
+import { cn } from '@/lib/utils';
 interface DetectedValues {
   sector: string;
   country: string;
@@ -163,6 +163,7 @@ export function HallucinationCorrectionModal({
     businessType: '',
     mainProducts: '',
   });
+  const [modifiedFields, setModifiedFields] = useState<Set<keyof DetectedValues>>(new Set());
 
   // Extract values from introduction when modal opens
   useEffect(() => {
@@ -211,7 +212,35 @@ export function HallucinationCorrectionModal({
       ...prev,
       [field]: value
     }));
+    // Mark field as modified if value differs from detected
+    if (value !== detectedValues[field]) {
+      setModifiedFields(prev => new Set(prev).add(field));
+    }
   };
+
+  // Common input styles with visible caret and elegant focus
+  const inputStyles = "border-slate-300 dark:border-slate-700 caret-primary transition-all duration-200 focus:ring-2 focus:ring-primary/30 focus:border-primary focus:shadow-[0_0_0_4px_hsl(var(--primary)/0.1)]";
+
+  // Field wrapper with checkmark
+  const FieldWrapper = ({ field, children }: { field: keyof DetectedValues; children: React.ReactNode }) => (
+    <div className="relative">
+      {children}
+      <AnimatePresence>
+        {modifiedFields.has(field) && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          >
+            <div className="bg-green-500 rounded-full p-0.5">
+              <Check className="h-3 w-3 text-white" strokeWidth={3} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   const runDiagnosis = async () => {
     setIsLoading(true);
@@ -320,12 +349,14 @@ export function HallucinationCorrectionModal({
                     {fieldIcons.sector}
                     {fieldLabels.sector}
                   </Label>
-                  <Input
-                    value={correctedValues.sector}
-                    onChange={(e) => handleFieldChange('sector', e.target.value)}
-                    placeholder="Ex: E-commerce, SaaS, Restauration..."
-                    className="border-slate-300 dark:border-slate-700"
-                  />
+                  <FieldWrapper field="sector">
+                    <Input
+                      value={correctedValues.sector}
+                      onChange={(e) => handleFieldChange('sector', e.target.value)}
+                      placeholder="Ex: E-commerce, SaaS, Restauration..."
+                      className={cn(inputStyles, modifiedFields.has('sector') && 'pr-10')}
+                    />
+                  </FieldWrapper>
                 </div>
 
                 {/* Country */}
@@ -334,12 +365,14 @@ export function HallucinationCorrectionModal({
                     {fieldIcons.country}
                     {fieldLabels.country}
                   </Label>
-                  <Input
-                    value={correctedValues.country}
-                    onChange={(e) => handleFieldChange('country', e.target.value)}
-                    placeholder="Ex: France, Europe, Monde..."
-                    className="border-slate-300 dark:border-slate-700"
-                  />
+                  <FieldWrapper field="country">
+                    <Input
+                      value={correctedValues.country}
+                      onChange={(e) => handleFieldChange('country', e.target.value)}
+                      placeholder="Ex: France, Europe, Monde..."
+                      className={cn(inputStyles, modifiedFields.has('country') && 'pr-10')}
+                    />
+                  </FieldWrapper>
                 </div>
 
                 {/* Business Type */}
@@ -348,12 +381,14 @@ export function HallucinationCorrectionModal({
                     {fieldIcons.businessType}
                     {fieldLabels.businessType}
                   </Label>
-                  <Input
-                    value={correctedValues.businessType}
-                    onChange={(e) => handleFieldChange('businessType', e.target.value)}
-                    placeholder="Ex: TPE, PME, Grande entreprise, Startup..."
-                    className="border-slate-300 dark:border-slate-700"
-                  />
+                  <FieldWrapper field="businessType">
+                    <Input
+                      value={correctedValues.businessType}
+                      onChange={(e) => handleFieldChange('businessType', e.target.value)}
+                      placeholder="Ex: TPE, PME, Grande entreprise, Startup..."
+                      className={cn(inputStyles, modifiedFields.has('businessType') && 'pr-10')}
+                    />
+                  </FieldWrapper>
                 </div>
 
                 {/* Business Age */}
@@ -362,12 +397,14 @@ export function HallucinationCorrectionModal({
                     {fieldIcons.businessAge}
                     {fieldLabels.businessAge}
                   </Label>
-                  <Input
-                    value={correctedValues.businessAge}
-                    onChange={(e) => handleFieldChange('businessAge', e.target.value)}
-                    placeholder="Ex: 2 ans, 10+ ans, Nouvelle entreprise..."
-                    className="border-slate-300 dark:border-slate-700"
-                  />
+                  <FieldWrapper field="businessAge">
+                    <Input
+                      value={correctedValues.businessAge}
+                      onChange={(e) => handleFieldChange('businessAge', e.target.value)}
+                      placeholder="Ex: 2 ans, 10+ ans, Nouvelle entreprise..."
+                      className={cn(inputStyles, modifiedFields.has('businessAge') && 'pr-10')}
+                    />
+                  </FieldWrapper>
                 </div>
 
                 {/* Target Audience */}
@@ -376,12 +413,14 @@ export function HallucinationCorrectionModal({
                     {fieldIcons.targetAudience}
                     {fieldLabels.targetAudience}
                   </Label>
-                  <Input
-                    value={correctedValues.targetAudience}
-                    onChange={(e) => handleFieldChange('targetAudience', e.target.value)}
-                    placeholder="Ex: Particuliers 25-45 ans, Entreprises B2B, Professionnels de santé..."
-                    className="border-slate-300 dark:border-slate-700"
-                  />
+                  <FieldWrapper field="targetAudience">
+                    <Input
+                      value={correctedValues.targetAudience}
+                      onChange={(e) => handleFieldChange('targetAudience', e.target.value)}
+                      placeholder="Ex: Particuliers 25-45 ans, Entreprises B2B, Professionnels de santé..."
+                      className={cn(inputStyles, modifiedFields.has('targetAudience') && 'pr-10')}
+                    />
+                  </FieldWrapper>
                 </div>
 
                 {/* Main Products/Services */}
@@ -390,12 +429,14 @@ export function HallucinationCorrectionModal({
                     {fieldIcons.mainProducts}
                     {fieldLabels.mainProducts}
                   </Label>
-                  <Input
-                    value={correctedValues.mainProducts}
-                    onChange={(e) => handleFieldChange('mainProducts', e.target.value)}
-                    placeholder="Ex: Vêtements bio, Logiciel de comptabilité, Conseil en stratégie..."
-                    className="border-slate-300 dark:border-slate-700"
-                  />
+                  <FieldWrapper field="mainProducts">
+                    <Input
+                      value={correctedValues.mainProducts}
+                      onChange={(e) => handleFieldChange('mainProducts', e.target.value)}
+                      placeholder="Ex: Vêtements bio, Logiciel de comptabilité, Conseil en stratégie..."
+                      className={cn(inputStyles, modifiedFields.has('mainProducts') && 'pr-10')}
+                    />
+                  </FieldWrapper>
                 </div>
 
                 {/* Value Proposition (full width, textarea) */}
@@ -404,13 +445,29 @@ export function HallucinationCorrectionModal({
                     {fieldIcons.valueProposition}
                     {fieldLabels.valueProposition}
                   </Label>
-                  <Textarea
-                    value={correctedValues.valueProposition}
-                    onChange={(e) => handleFieldChange('valueProposition', e.target.value)}
-                    placeholder="Décrivez en quelques phrases ce que fait vraiment votre entreprise et ce qui la différencie..."
-                    rows={3}
-                    className="border-slate-300 dark:border-slate-700 resize-none"
-                  />
+                  <div className="relative">
+                    <Textarea
+                      value={correctedValues.valueProposition}
+                      onChange={(e) => handleFieldChange('valueProposition', e.target.value)}
+                      placeholder="Décrivez en quelques phrases ce que fait vraiment votre entreprise et ce qui la différencie..."
+                      rows={3}
+                      className={cn(inputStyles, "resize-none", modifiedFields.has('valueProposition') && 'pr-10')}
+                    />
+                    <AnimatePresence>
+                      {modifiedFields.has('valueProposition') && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.5 }}
+                          className="absolute right-3 top-3 pointer-events-none"
+                        >
+                          <div className="bg-green-500 rounded-full p-0.5">
+                            <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
 
