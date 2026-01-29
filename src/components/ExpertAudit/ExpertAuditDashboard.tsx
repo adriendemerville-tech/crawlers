@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { 
   Zap, Settings2, FileText, Brain, Shield, 
-  ExternalLink, Search, Sparkles, BarChart3, Target, FileDown
+  ExternalLink, Sparkles, FileDown
 } from 'lucide-react';
 import { ScoreGauge200 } from './ScoreGauge200';
 import { CategoryCard, MetricRow } from './CategoryCard';
@@ -17,9 +17,9 @@ import { StrategicInsights } from './StrategicInsights';
 import { IntroductionCard } from './IntroductionCard';
 import { ExpertInsightsCard } from './ExpertInsightsCard';
 import { ExpertReportPreviewModal } from './ExpertReportPreviewModal';
-import { StepperProgress } from './StepperProgress';
 import { RegistrationGate } from './RegistrationGate';
 import { PaymentModal } from './PaymentModal';
+import { WorkflowCarousel } from './WorkflowCarousel';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -124,9 +124,12 @@ export function ExpertAuditDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [isStrategicLoading, setIsStrategicLoading] = useState(false);
   const [result, setResult] = useState<ExpertAuditResult | null>(null);
+  const [technicalResult, setTechnicalResult] = useState<ExpertAuditResult | null>(null);
+  const [strategicResult, setStrategicResult] = useState<ExpertAuditResult | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   
   const { toast } = useToast();
   const { language } = useLanguage();
@@ -136,14 +139,16 @@ export function ExpertAuditDashboard() {
 
   const isLoggedIn = !!user;
 
-  // Update step based on audit mode and result
+  // Update step based on completed steps
   useEffect(() => {
-    if (result && auditMode === 'strategic') {
+    if (strategicResult) {
+      setCurrentStep(3);
+    } else if (technicalResult) {
       setCurrentStep(2);
-    } else if (result && auditMode === 'technical') {
+    } else {
       setCurrentStep(1);
     }
-  }, [result, auditMode]);
+  }, [technicalResult, strategicResult]);
 
   const handleRegister = () => {
     navigate('/auth');
@@ -167,7 +172,6 @@ export function ExpertAuditDashboard() {
     setAuditMode('technical');
     setIsLoading(true);
     setResult(null);
-    setCurrentStep(1);
 
     try {
       const { data, error } = await supabase.functions.invoke('audit-expert-seo', {
@@ -187,6 +191,8 @@ export function ExpertAuditDashboard() {
         auditResult.scannedAt = auditResult.meta.scannedAt;
       }
       setResult(auditResult);
+      setTechnicalResult(auditResult);
+      setCompletedSteps(prev => [...prev.filter(s => s !== 1), 1]);
 
       const reliabilityInfo = auditResult.meta?.reliabilityScore 
         ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
@@ -214,7 +220,6 @@ export function ExpertAuditDashboard() {
     setAuditMode('strategic');
     setIsStrategicLoading(true);
     setResult(null);
-    setCurrentStep(2);
 
     try {
       const { data, error } = await supabase.functions.invoke('audit-strategique-ia', {
@@ -224,7 +229,7 @@ export function ExpertAuditDashboard() {
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Strategic audit failed');
 
-      setResult({
+      const strategicData: ExpertAuditResult = {
         url: normalizedUrl,
         domain: new URL(normalizedUrl).hostname,
         totalScore: data.data.overallScore * 2,
@@ -253,7 +258,11 @@ export function ExpertAuditDashboard() {
           executiveSummary: data.data.executiveSummary,
           overallScore: data.data.overallScore || data.data.geo_score?.score,
         },
-      });
+      };
+
+      setResult(strategicData);
+      setStrategicResult(strategicData);
+      setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
 
       toast({
         title: t.strategicComplete,
@@ -273,13 +282,6 @@ export function ExpertAuditDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-5xl">
-      {/* Stepper Progress - Only show when audit is started */}
-      <AnimatePresence>
-        {(auditMode || result) && (
-          <StepperProgress currentStep={currentStep} />
-        )}
-      </AnimatePresence>
-
       {/* Header - Premium SaaS style */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -299,134 +301,19 @@ export function ExpertAuditDashboard() {
         </p>
       </motion.div>
 
-      {/* URL Input - Clean minimal style */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="mb-8"
-      >
-        <div className="relative max-w-2xl mx-auto">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder={t.placeholder}
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            className="pl-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50"
-            disabled={isLoading || isStrategicLoading}
-          />
-        </div>
-      </motion.div>
-
-      {/* Audit Type Selection - Premium Cards */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="grid md:grid-cols-2 gap-4 max-w-3xl mx-auto mb-8"
-      >
-        {/* Technical Audit */}
-        <Card 
-          className={`relative overflow-hidden transition-all duration-300 cursor-pointer ${
-            auditMode === 'technical' 
-              ? 'border-2 border-amber-400 shadow-[0_0_10px_-3px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)]' 
-              : 'border-border/60 hover:border-primary/50 hover:shadow-md'
-          }`}
-          onClick={() => !isLoading && !isStrategicLoading && setAuditMode('technical')}
-        >
-          {auditMode === 'technical' && (
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 via-transparent to-amber-400/10 pointer-events-none" />
-          )}
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-primary/80" />
-          <CardContent className="p-6 relative">
-            <div className="flex items-start gap-4">
-              <div className="p-3 rounded-md bg-primary/10">
-                <BarChart3 className="h-6 w-6 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-foreground mb-1">{t.technicalTitle}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{t.technicalDesc}</p>
-              </div>
-            </div>
-            <AnimatePresence>
-              {auditMode === 'technical' && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Button 
-                    onClick={(e) => { e.stopPropagation(); handleTechnicalAudit(); }}
-                    disabled={isLoading || isStrategicLoading || !url.trim()}
-                    className="w-full mt-4 shadow-[2px_2px_6px_rgba(0,0,0,0.35)]"
-                  >
-                    {isLoading && auditMode === 'technical' ? t.analyzing : t.launch}
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </CardContent>
-        </Card>
-
-        {/* Strategic Audit - Disabled until technical audit completed */}
-        <Card 
-          className={`relative overflow-hidden transition-all duration-300 ${
-            !result
-              ? 'opacity-60 cursor-not-allowed'
-              : auditMode === 'strategic' 
-                ? 'border-2 border-amber-400 shadow-[0_0_10px_-3px_rgba(251,191,36,0.4),inset_0_1px_0_0_rgba(255,255,255,0.2)] cursor-pointer' 
-                : 'border-border/60 hover:border-primary/50 hover:shadow-md cursor-pointer'
-          }`}
-          onClick={() => {
-            // Only allow clicking if any audit result exists
-            if (result && !isLoading && !isStrategicLoading) {
-              setAuditMode('strategic');
-            }
-          }}
-        >
-          {auditMode === 'strategic' && (
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 via-transparent to-amber-400/10 pointer-events-none" />
-          )}
-          <div className={`absolute top-0 left-0 w-full h-1 ${result ? 'bg-gradient-to-r from-accent-foreground/60 to-accent-foreground/40' : 'bg-muted'}`} />
-          <CardContent className="p-6 relative">
-            <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-md ${result ? 'bg-accent' : 'bg-muted'}`}>
-                <Target className={`h-6 w-6 ${result ? 'text-accent-foreground' : 'text-muted-foreground'}`} />
-              </div>
-              <div className="flex-1">
-                <h3 className={`font-semibold mb-1 ${result ? 'text-foreground' : 'text-muted-foreground'}`}>{t.strategicTitle}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{t.strategicDesc}</p>
-                {!result && (
-                  <p className="text-xs text-warning mt-2 font-medium">
-                    {language === 'fr' ? '→ Terminez d\'abord l\'audit technique' : language === 'es' ? '→ Complete primero la auditoría técnica' : '→ Complete technical audit first'}
-                  </p>
-                )}
-              </div>
-            </div>
-            <AnimatePresence>
-              {auditMode === 'strategic' && result && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Button 
-                    onClick={(e) => { e.stopPropagation(); handleStrategicAudit(); }}
-                    disabled={isLoading || isStrategicLoading || !url.trim()}
-                    variant="secondary"
-                    className="w-full mt-4 shadow-[2px_2px_6px_rgba(0,0,0,0.35)]"
-                  >
-                    {isStrategicLoading ? t.analyzing : t.launch}
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </CardContent>
-        </Card>
-      </motion.div>
+      {/* Premium Workflow Carousel */}
+      <WorkflowCarousel
+        currentStep={currentStep}
+        completedSteps={completedSteps}
+        url={url}
+        onUrlChange={setUrl}
+        onStartTechnical={handleTechnicalAudit}
+        onStartStrategic={handleStrategicAudit}
+        onStartPayment={() => setIsPaymentModalOpen(true)}
+        isLoading={isLoading}
+        isStrategicLoading={isStrategicLoading}
+        hasTechnicalResult={!!technicalResult}
+      />
 
       {/* Loading State - Technical */}
       {isLoading && <LoadingSteps siteName={url} variant="technical" />}
