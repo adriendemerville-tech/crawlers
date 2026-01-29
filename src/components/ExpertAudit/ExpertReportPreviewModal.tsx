@@ -640,9 +640,6 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
               )}
               {isSharing ? t.sharing : t.share}
             </Button>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </div>
 
