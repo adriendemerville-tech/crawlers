@@ -194,13 +194,13 @@ export function CorrectiveCodeEditor({
       }
     }
 
-    // Accessibility fixes (always available)
+    // Accessibility fixes (always available - enabled by default)
     fixes.push({
       id: 'fix_contrast',
       category: 'accessibility',
       label: language === 'fr' ? 'Améliorer le contraste' : language === 'es' ? 'Mejorar contraste' : 'Improve contrast',
       description: language === 'fr' ? 'Ajuste les couleurs des éléments à faible contraste' : 'Adjust colors of low contrast elements',
-      enabled: false,
+      enabled: true,
       priority: 'optional',
     });
 
@@ -209,17 +209,17 @@ export function CorrectiveCodeEditor({
       category: 'accessibility',
       label: language === 'fr' ? 'Alt text pour images' : language === 'es' ? 'Texto alt para imágenes' : 'Alt text for images',
       description: language === 'fr' ? 'Ajoute des attributs alt manquants' : 'Add missing alt attributes',
-      enabled: false,
+      enabled: true,
       priority: 'important',
     });
 
-    // Tracking fixes
+    // Tracking fixes (enabled by default)
     fixes.push({
       id: 'fix_gtm',
       category: 'tracking',
       label: language === 'fr' ? 'Intégrer Google Tag Manager' : language === 'es' ? 'Integrar Google Tag Manager' : 'Integrate Google Tag Manager',
       description: language === 'fr' ? 'Injecte le snippet GTM' : 'Inject GTM snippet',
-      enabled: false,
+      enabled: true,
       priority: 'optional',
       data: { gtmId: 'GTM-XXXXXXX' }
     });
@@ -229,7 +229,7 @@ export function CorrectiveCodeEditor({
       category: 'tracking',
       label: language === 'fr' ? 'Ajouter Google Analytics 4' : language === 'es' ? 'Añadir Google Analytics 4' : 'Add Google Analytics 4',
       description: language === 'fr' ? 'Injecte le pixel GA4' : 'Inject GA4 pixel',
-      enabled: false,
+      enabled: true,
       priority: 'optional',
       data: { measurementId: 'G-XXXXXXXXXX' }
     });
@@ -323,7 +323,7 @@ export function CorrectiveCodeEditor({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[92vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileCode className="w-5 h-5 text-primary" />
@@ -346,7 +346,7 @@ export function CorrectiveCodeEditor({
                 <p className="text-xs text-muted-foreground">{t.configDesc}</p>
               </CardHeader>
               <CardContent className="pt-0">
-                <ScrollArea className="h-[280px] pr-2">
+                <ScrollArea className="h-[340px] pr-2">
                   <FixConfigPanel 
                     fixes={fixConfigs} 
                     onToggle={toggleFix}

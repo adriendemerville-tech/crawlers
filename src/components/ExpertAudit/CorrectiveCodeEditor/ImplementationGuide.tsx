@@ -240,11 +240,12 @@ export function ImplementationGuide({ language }: ImplementationGuideProps) {
       </CollapsibleTrigger>
 
       <CollapsibleContent>
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-2 space-y-4"
-        >
+        <div className="mt-2 max-h-[300px] overflow-y-auto pr-2">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
           {/* Why it works */}
           <Card className="border-primary/20 bg-primary/5">
             <CardHeader className="pb-2">
@@ -309,12 +310,12 @@ export function ImplementationGuide({ language }: ImplementationGuideProps) {
             </CardContent>
           </Card>
 
-          {/* Tip */}
           <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
             <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-amber-700 dark:text-amber-300">{t.tip}</p>
           </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </CollapsibleContent>
     </Collapsible>
   );
