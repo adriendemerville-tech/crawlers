@@ -1,0 +1,120 @@
+import { motion } from 'framer-motion';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Crown, Target, Rocket, Sparkles, 
+  ExternalLink, Shield, TrendingUp
+} from 'lucide-react';
+import { CompetitiveLandscape, CompetitorActor } from '@/types/expertAudit';
+
+interface CompetitiveLandscapeCardProps {
+  landscape: CompetitiveLandscape;
+}
+
+function CompetitorCard({ 
+  actor, 
+  role, 
+  icon: Icon,
+  accentColor 
+}: { 
+  actor: CompetitorActor; 
+  role: string;
+  icon: React.ElementType;
+  accentColor: string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`p-4 rounded-lg border-2 ${accentColor} bg-gradient-to-br from-card to-transparent`}
+    >
+      <div className="flex items-start gap-3">
+        <div className={`p-2 rounded-lg bg-background`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <Badge variant="secondary" className="text-xs">
+              {role}
+            </Badge>
+          </div>
+          <h4 className="font-semibold text-foreground flex items-center gap-2">
+            {actor.name}
+            {actor.url && (
+              <a 
+                href={actor.url.startsWith('http') ? actor.url : `https://${actor.url}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            )}
+          </h4>
+          <p className="text-xs text-primary font-medium mt-1 flex items-center gap-1">
+            <Shield className="h-3 w-3" />
+            {actor.authority_factor}
+          </p>
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            {actor.analysis}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+export function CompetitiveLandscapeCard({ landscape }: CompetitiveLandscapeCardProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
+      <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <TrendingUp className="h-5 w-5 text-amber-500" />
+            Écosystème Concurrentiel
+            <Badge variant="outline" className="ml-auto text-xs text-amber-600 border-amber-500/50">
+              4 Acteurs Analysés
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
+          {/* Leader (Goliath) */}
+          <CompetitorCard 
+            actor={landscape.leader}
+            role="Leader (Goliath)"
+            icon={Crown}
+            accentColor="border-amber-500/40"
+          />
+
+          {/* Direct Competitor */}
+          <CompetitorCard 
+            actor={landscape.direct_competitor}
+            role="Concurrent Direct"
+            icon={Target}
+            accentColor="border-blue-500/40"
+          />
+
+          {/* Challenger */}
+          <CompetitorCard 
+            actor={landscape.challenger}
+            role="Challenger"
+            icon={Rocket}
+            accentColor="border-purple-500/40"
+          />
+
+          {/* Inspiration Source */}
+          <CompetitorCard 
+            actor={landscape.inspiration_source}
+            role="Source d'Inspiration"
+            icon={Sparkles}
+            accentColor="border-emerald-500/40"
+          />
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}

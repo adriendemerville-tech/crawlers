@@ -129,7 +129,7 @@ export interface AuditMeta {
   blockingError?: string;
 }
 
-// ============= NEW STRATEGIC AUDIT TYPES =============
+// ============= PREMIUM STRATEGIC AUDIT TYPES 2026 =============
 
 export interface BrandIdentity {
   archetype: string;
@@ -149,6 +149,79 @@ export interface GeoScore {
   analysis: string;
 }
 
+// NEW: Competitive Landscape with 4 actors
+export interface CompetitorActor {
+  name: string;
+  url?: string;
+  authority_factor: string;
+  analysis: string;
+}
+
+export interface CompetitiveLandscape {
+  leader: CompetitorActor;
+  direct_competitor: CompetitorActor;
+  challenger: CompetitorActor;
+  inspiration_source: CompetitorActor;
+}
+
+// NEW: Social & Human Authority (Off-Site Signals)
+export interface SocialProofSource {
+  platform: 'reddit' | 'x' | 'linkedin' | 'youtube' | 'other';
+  presence_level: 'strong' | 'moderate' | 'weak' | 'absent';
+  analysis: string;
+}
+
+export interface ThoughtLeadership {
+  founder_authority: 'high' | 'moderate' | 'low' | 'unknown';
+  entity_recognition: string;
+  eeat_score: number; // 0-10
+  analysis: string;
+}
+
+export interface SentimentAnalysis {
+  overall_polarity: 'positive' | 'mostly_positive' | 'neutral' | 'mixed' | 'negative';
+  hallucination_risk: 'low' | 'medium' | 'high';
+  reputation_vibration: string;
+}
+
+export interface SocialSignals {
+  proof_sources: SocialProofSource[];
+  thought_leadership: ThoughtLeadership;
+  sentiment: SentimentAnalysis;
+}
+
+// NEW: Market Intelligence
+export interface MarketSophistication {
+  level: 1 | 2 | 3 | 4 | 5;
+  description: string;
+  emotional_levers: string[];
+}
+
+export interface SemanticGapMatrix {
+  current_position: number; // 0-100
+  leader_position: number; // 0-100
+  gap_distance: number;
+  priority_themes: string[];
+  closing_strategy: string;
+}
+
+export interface MarketIntelligence {
+  sophistication: MarketSophistication;
+  semantic_gap: SemanticGapMatrix;
+  positioning_verdict: string;
+}
+
+// NEW: Premium Executive Roadmap Item
+export interface PremiumRoadmapItem {
+  title: string;
+  prescriptive_action: string; // 4-5 sentences paragraph
+  strategic_rationale: string;
+  expected_roi: 'High' | 'Medium' | 'Low';
+  category: 'Identité' | 'Contenu' | 'Autorité' | 'Social' | 'Technique';
+  priority: 'Prioritaire' | 'Important' | 'Opportunité';
+}
+
+// Legacy types (backward compatibility)
 export interface StrategicRoadmapItem {
   category: 'Identité' | 'Contenu' | 'Autorité';
   priority: 'Prioritaire' | 'Important' | 'Opportunité';
@@ -191,19 +264,47 @@ export interface BrandPerception {
   valueProposition: string;
 }
 
+// NEW: Brand Authority Analysis
+export interface BrandAuthority {
+  dna_analysis: string;
+  thought_leadership_score: number; // 0-100
+  entity_strength: 'dominant' | 'established' | 'emerging' | 'unknown';
+}
+
+// NEW: GEO Readiness 2026
+export interface GeoReadiness {
+  citability_score: number; // 0-100
+  semantic_gap_analysis: SemanticGapMatrix;
+  ai_accessibility_score: number; // 0-100
+  performance_impact: string;
+  semantic_coherence: {
+    title_h1_alignment: number; // 0-100
+    verdict: string;
+  };
+}
+
+// UPDATED: Premium Strategic Analysis
 export interface StrategicAnalysis {
   introduction?: StrategicIntroduction;
-  // New format
+  
+  // NEW PREMIUM FORMAT
+  brand_authority?: BrandAuthority;
+  social_signals?: SocialSignals;
+  market_intelligence?: MarketIntelligence;
+  competitive_landscape?: CompetitiveLandscape;
+  geo_readiness?: GeoReadiness;
+  executive_roadmap?: PremiumRoadmapItem[];
+  
+  // Legacy format (backward compatibility)
   brand_identity?: BrandIdentity;
   market_positioning?: MarketPositioning;
   geo_score?: GeoScore;
   strategic_roadmap?: StrategicRoadmapItem[];
-  executive_summary?: string;
-  // Legacy format (backward compatibility)
   brandPerception?: BrandPerception;
   geoAnalysis?: GeoAnalysis;
   llmVisibility?: LLMVisibility;
   testQueries?: TestQuery[];
+  executive_summary?: string;
   executiveSummary?: string;
   overallScore?: number;
 }
