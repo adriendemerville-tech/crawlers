@@ -136,7 +136,7 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
         {/* Animated word container - vertically centered with text */}
         <span
           className="relative inline-flex items-center justify-end overflow-hidden"
-          style={{ minWidth: '280px', width: '280px', height: '1.2em' }}
+          style={{ minWidth: '280px', width: '280px', height: '1.3em' }}
         >
           <AnimatePresence mode="wait">
             <motion.span
@@ -151,9 +151,11 @@ export function HeroSection({ onSubmit, isLoading, activeTab }: HeroSectionProps
             </motion.span>
           </AnimatePresence>
         </span>
-        <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase">{getIgnoreText()} {getSiteText()}</span>
+        <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase">
+          {getIgnoreText()} {getSiteText()}
+        </span>
+        <span className="text-foreground">?</span>
       </span>
-      {' '}?
     </h1>
   );
 

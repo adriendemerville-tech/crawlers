@@ -333,6 +333,7 @@ const Index = () => {
           <ToolTabs 
             activeTab={activeTab} 
             onTabChange={handleTabChange}
+            currentUrl={currentUrl}
           />
           <Suspense fallback={<DashboardSkeleton />}>
             {renderDashboard()}
