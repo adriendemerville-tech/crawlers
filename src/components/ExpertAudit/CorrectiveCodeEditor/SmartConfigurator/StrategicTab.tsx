@@ -55,7 +55,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
               </Label>
               <Input
                 id={`${fix.id}-title`}
-                placeholder="Nos Actualités"
+                placeholder="« Nos Actualités »"
                 value={fix.data?.sectionTitle || ''}
                 onChange={(e) => onUpdateData(fix.id, { ...fix.data, sectionTitle: e.target.value })}
                 className="mt-1 h-9 text-sm"
@@ -73,7 +73,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
               </Label>
               <Input
                 id={`${fix.id}-keyword`}
-                placeholder="consultant SEO Paris"
+                placeholder="« consultant SEO Paris »"
                 value={fix.data?.targetKeyword || ''}
                 onChange={(e) => onUpdateData(fix.id, { ...fix.data, targetKeyword: e.target.value })}
                 className="mt-1 h-9 text-sm"
@@ -85,7 +85,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
               </Label>
               <Textarea
                 id={`${fix.id}-paragraph`}
-                placeholder="Décrivez votre expertise ou votre proposition de valeur..."
+                placeholder="« Décrivez votre expertise ou votre proposition de valeur... »"
                 value={fix.data?.injectedParagraph || ''}
                 onChange={(e) => onUpdateData(fix.id, { ...fix.data, injectedParagraph: e.target.value })}
                 className="mt-1 min-h-[80px] text-sm"
@@ -104,7 +104,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                 </Label>
                 <Input
                   id={`${fix.id}-name`}
-                  placeholder="Ma Société"
+                  placeholder="« Ma Société »"
                   value={fix.data?.name || ''}
                   onChange={(e) => onUpdateData(fix.id, { ...fix.data, name: e.target.value })}
                   className="mt-1 h-9 text-sm"
@@ -116,7 +116,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                 </Label>
                 <Input
                   id={`${fix.id}-phone`}
-                  placeholder="+33 1 23 45 67 89"
+                  placeholder="« +33 1 23 45 67 89 »"
                   value={fix.data?.phone || ''}
                   onChange={(e) => onUpdateData(fix.id, { ...fix.data, phone: e.target.value })}
                   className="mt-1 h-9 text-sm"
@@ -129,7 +129,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
               </Label>
               <Input
                 id={`${fix.id}-address`}
-                placeholder="123 Rue de Paris"
+                placeholder="« 123 Rue de Paris »"
                 value={fix.data?.address || ''}
                 onChange={(e) => onUpdateData(fix.id, { ...fix.data, address: e.target.value })}
                 className="mt-1 h-9 text-sm"
@@ -142,7 +142,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                 </Label>
                 <Input
                   id={`${fix.id}-city`}
-                  placeholder="Paris"
+                  placeholder="« Paris »"
                   value={fix.data?.city || ''}
                   onChange={(e) => onUpdateData(fix.id, { ...fix.data, city: e.target.value })}
                   className="mt-1 h-9 text-sm"
@@ -154,7 +154,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                 </Label>
                 <Input
                   id={`${fix.id}-postal`}
-                  placeholder="75001"
+                  placeholder="« 75001 »"
                   value={fix.data?.postalCode || ''}
                   onChange={(e) => onUpdateData(fix.id, { ...fix.data, postalCode: e.target.value })}
                   className="mt-1 h-9 text-sm"
@@ -166,7 +166,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                 </Label>
                 <Input
                   id={`${fix.id}-country`}
-                  placeholder="France"
+                  placeholder="« France »"
                   value={fix.data?.country || ''}
                   onChange={(e) => onUpdateData(fix.id, { ...fix.data, country: e.target.value })}
                   className="mt-1 h-9 text-sm"
