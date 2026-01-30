@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.resolve-share]
 verify_jwt = false
+
+[functions.audit-local-seo]
+verify_jwt = false
