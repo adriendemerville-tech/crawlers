@@ -22,7 +22,7 @@ const translations = {
     locked: 'Terminez l\'étape précédente',
     complete: 'Terminé',
     startCode: 'Démarrer',
-    price: '3,00€',
+    priceRange: '< 3,00€ ... 12,00€ >',
     viewReport: 'Voir rapport',
   },
   en: {
@@ -38,7 +38,7 @@ const translations = {
     locked: 'Complete previous step',
     complete: 'Complete',
     startCode: 'Start',
-    price: '€3.00',
+    priceRange: '< €3.00 ... €12.00 >',
     viewReport: 'View report',
   },
   es: {
@@ -54,7 +54,7 @@ const translations = {
     locked: 'Complete el paso anterior',
     complete: 'Completado',
     startCode: 'Iniciar',
-    price: '3,00€',
+    priceRange: '< 3,00€ ... 12,00€ >',
     viewReport: 'Ver informe',
   },
 };
@@ -512,7 +512,7 @@ export function WorkflowCarousel({
                             </Button>
                             {/* Price below button for step 3 */}
                             {step.id === 3 && !isCompleted && (
-                              <p className="text-center text-sm text-muted-foreground mt-2">{t.price}</p>
+                              <p className="text-center text-sm text-muted-foreground mt-2">{t.priceRange}</p>
                             )}
                           </motion.div>
                         )}
