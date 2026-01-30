@@ -88,10 +88,10 @@ export function ToolTabs({
           <Button
             variant="outline"
             size="lg"
-            className="gap-2 bg-gradient-to-r from-primary/10 to-primary/5 text-primary hover:from-primary/20 hover:to-primary/10 border-amber-400 border-2 px-6 py-3 text-base"
+            className="gap-2 bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 border-amber-400 border-2 px-6 py-3 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
           >
-            <FileSearch className="h-5 w-5" />
-            <span className="font-bold">{auditExpertText[language]}</span>
+            <FileSearch className="h-5 w-5 text-primary" />
+            <span className="font-bold text-foreground">{auditExpertText[language]}</span>
           </Button>
         </Link>
       </div>
