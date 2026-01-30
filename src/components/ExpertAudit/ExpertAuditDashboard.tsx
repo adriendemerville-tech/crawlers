@@ -68,7 +68,7 @@ const translations = {
     viewReport: 'Rapport',
     strategicSectionTitle: 'Analyse de Visibilité IA',
     strategicSectionDesc: 'Résultats détaillés de GPT-4, Claude et Gemini.',
-    generateCode: 'Générer Code Correctif (5€)',
+    generateCode: 'Générer Code Correctif',
     newAudit: 'Nouvel Audit',
   },
   en: {
@@ -99,7 +99,7 @@ const translations = {
     viewReport: 'Report',
     strategicSectionTitle: 'AI Visibility Analysis',
     strategicSectionDesc: 'Detailed results from GPT-4, Claude and Gemini.',
-    generateCode: 'Generate Corrective Code (€5)',
+    generateCode: 'Generate Corrective Code',
     newAudit: 'New Audit',
   },
   es: {
@@ -130,7 +130,7 @@ const translations = {
     viewReport: 'Informe',
     strategicSectionTitle: 'Análisis de Visibilidad IA',
     strategicSectionDesc: 'Resultados detallados de GPT-4, Claude y Gemini.',
-    generateCode: 'Generar Código Correctivo (5€)',
+    generateCode: 'Generar Código Correctivo',
     newAudit: 'Nueva Auditoría',
   },
 };
