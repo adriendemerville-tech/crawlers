@@ -65,7 +65,7 @@ export function GenerativeTab({ fixes, onToggle }: GenerativeTabProps) {
                   <span className={`text-xs ${fix.enabled ? 'font-medium' : 'text-muted-foreground'}`}>{fix.label}</span>
                   {fix.isPremium && fix.enabled && (
                     <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-amber-500/10 text-amber-600 border-amber-500/30">
-                      💎
+                      Premium
                     </Badge>
                   )}
                 </div>
@@ -85,7 +85,7 @@ export function GenerativeTab({ fixes, onToggle }: GenerativeTabProps) {
 
       <div className="mt-3 p-2 rounded-md bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
         <p className="text-[10px] text-emerald-700 dark:text-emerald-300">
-          🚀 <strong>Super-Capacités</strong> : Fonctionnalités avancées optimisées pour le SEO et les LLMs.
+          <strong>Super-Capacités</strong> : Fonctionnalités avancées optimisées pour le SEO et les LLMs.
         </p>
       </div>
     </div>

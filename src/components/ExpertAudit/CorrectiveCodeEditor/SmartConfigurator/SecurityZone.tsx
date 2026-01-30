@@ -86,7 +86,7 @@ export function SecurityZone({
 
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 mt-2">
               <p className="text-blue-700 dark:text-blue-300">
-                💡 <strong>Conseil :</strong> Utilisez Google Tag Manager pour une intégration sans toucher au code source.
+                <strong>Conseil :</strong> Utilisez Google Tag Manager pour une intégration sans toucher au code source.
               </p>
             </div>
           </div>
