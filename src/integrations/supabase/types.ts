@@ -104,6 +104,60 @@ export type Database = {
         }
         Relationships: []
       }
+      audits: {
+        Row: {
+          audit_data: Json | null
+          created_at: string
+          domain: string
+          dynamic_price: number
+          fixes_count: number
+          fixes_metadata: Json
+          generated_code: string | null
+          id: string
+          payment_status: string
+          sector: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          updated_at: string
+          url: string
+          user_id: string | null
+        }
+        Insert: {
+          audit_data?: Json | null
+          created_at?: string
+          domain: string
+          dynamic_price?: number
+          fixes_count?: number
+          fixes_metadata?: Json
+          generated_code?: string | null
+          id?: string
+          payment_status?: string
+          sector?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          url: string
+          user_id?: string | null
+        }
+        Update: {
+          audit_data?: Json | null
+          created_at?: string
+          domain?: string
+          dynamic_price?: number
+          fixes_count?: number
+          fixes_metadata?: Json
+          generated_code?: string | null
+          id?: string
+          payment_status?: string
+          sector?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string
+          url?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       billing_info: {
         Row: {
           billing_address: string | null
