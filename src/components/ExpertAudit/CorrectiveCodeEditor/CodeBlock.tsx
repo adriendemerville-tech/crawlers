@@ -1,7 +1,8 @@
-import { useRef, useEffect, useLayoutEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Lock } from 'lucide-react';
+import { useRadixScrollStickToBottom } from './useRadixScrollStickToBottom';
 
 interface CodeBlockProps {
   code: string;
@@ -77,6 +78,7 @@ export function CodeBlock({
   const [displayedCode, setDisplayedCode] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationComplete, setAnimationComplete] = useState(false);
+  const prevRawCodeRef = useRef<string>('');
 
   // Get the code to display (truncated if locked)
   const codeToDisplay = isLocked 
@@ -84,78 +86,68 @@ export function CodeBlock({
     : code;
 
   // Typing animation effect
+  // Important: ONLY animate when the *raw code* changes.
+  // When the lock toggles (isLocked), we must NOT restart the animation from line 1.
   useEffect(() => {
     if (!codeToDisplay) {
+      prevRawCodeRef.current = '';
       setDisplayedCode('');
+      setIsAnimating(false);
       setAnimationComplete(false);
       return;
     }
 
-    // Si le code change et qu'on a du nouveau code, animer
-    if (codeToDisplay !== displayedCode && codeToDisplay.length > 0) {
-      setIsAnimating(true);
-      setAnimationComplete(false);
-      let currentIndex = 0;
-      const lines = codeToDisplay.split('\n');
-      const totalLines = lines.length;
-      
-      // Animation rapide: afficher ligne par ligne
-      const interval = setInterval(() => {
-        currentIndex += 3; // 3 lignes à la fois pour aller vite
-        if (currentIndex >= totalLines) {
-          setDisplayedCode(codeToDisplay);
-          setIsAnimating(false);
-          // Attendre plus longtemps après la fin du code avant d'afficher le verrou
-          setTimeout(() => setAnimationComplete(true), 1200);
-          clearInterval(interval);
-        } else {
-          setDisplayedCode(lines.slice(0, currentIndex).join('\n'));
-        }
-      }, 25); // 25ms entre chaque batch de lignes
+    const rawChanged = code !== prevRawCodeRef.current;
 
-      return () => clearInterval(interval);
+    // If only lock state changed (same raw code), swap view instantly without re-animating.
+    if (!rawChanged) {
+      if (!isAnimating && displayedCode !== codeToDisplay) {
+        setDisplayedCode(codeToDisplay);
+      }
+      return;
     }
-  }, [codeToDisplay]);
 
-  // Force scroll to bottom and keep it there
-  // (important: keep it during the 1.2s pause before the lock overlay appears)
-  useLayoutEffect(() => {
-    const viewport = scrollRef.current?.querySelector<HTMLElement>(
-      '[data-radix-scroll-area-viewport]'
-    );
-    if (!viewport) return;
+    prevRawCodeRef.current = code;
 
-    const lockVisible = isLocked && animationComplete;
-    const shouldStickToBottom =
-      isAnimating || lockVisible || animationComplete || displayedCode === codeToDisplay;
+    setIsAnimating(true);
+    setAnimationComplete(false);
+    let currentIndex = 0;
+    const lines = codeToDisplay.split('\n');
+    const totalLines = lines.length;
 
-    if (!shouldStickToBottom) return;
+    // Animation rapide: afficher ligne par ligne
+    const interval = setInterval(() => {
+      currentIndex += 3; // 3 lignes à la fois pour aller vite
+      if (currentIndex >= totalLines) {
+        setDisplayedCode(codeToDisplay);
+        setIsAnimating(false);
+        // Attendre plus longtemps après la fin du code avant d'afficher le verrou
+        setTimeout(() => setAnimationComplete(true), 1200);
+        clearInterval(interval);
+      } else {
+        setDisplayedCode(lines.slice(0, currentIndex).join('\n'));
+      }
+    }, 25); // 25ms entre chaque batch de lignes
 
-    const apply = () => {
-      // Using scrollHeight makes us resilient to content growth + reflows
-      viewport.scrollTop = viewport.scrollHeight;
-    };
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
 
-    let raf1 = 0;
-    let raf2 = 0;
-    let t1: number | undefined;
-    let t2: number | undefined;
+  // If the lock state (or previewLines) changes WITHOUT a new generated code,
+  // swap the displayed content instantly (no re-typing from line 1).
+  useEffect(() => {
+    if (!codeToDisplay) return;
+    if (isAnimating) return;
+    if (displayedCode === codeToDisplay) return;
+    setDisplayedCode(codeToDisplay);
+  }, [codeToDisplay, isAnimating, displayedCode]);
 
-    apply();
-    raf1 = requestAnimationFrame(() => {
-      apply();
-      raf2 = requestAnimationFrame(apply);
-    });
-    t1 = window.setTimeout(apply, 50);
-    t2 = window.setTimeout(apply, 200);
-
-    return () => {
-      cancelAnimationFrame(raf1);
-      cancelAnimationFrame(raf2);
-      if (t1) window.clearTimeout(t1);
-      if (t2) window.clearTimeout(t2);
-    };
-  }, [displayedCode, codeToDisplay, isAnimating, isLocked, animationComplete]);
+  // Keep Radix viewport pinned to bottom during generation + lock overlay.
+  // This also survives late reflows (e.g. payment banner / animations in the modal).
+  useRadixScrollStickToBottom({
+    containerRef: scrollRef,
+    enabled: isAnimating || isTyping || isLocked,
+  });
 
   if (!code) {
     return (
