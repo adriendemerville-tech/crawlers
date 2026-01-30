@@ -252,20 +252,20 @@ export function SmartConfigurator({
       });
     }
 
-    // Strategic fixes (from STRATEGIC_FIXES)
+    // Strategic fixes (from STRATEGIC_FIXES) - disabled by default
     Object.values(STRATEGIC_FIXES).forEach(strategicFix => {
       fixes.push({
         ...strategicFix,
-        enabled: strategicFix.isRecommended || false,
+        enabled: false, // Strategic fixes are disabled by default
         data: {},
       });
     });
 
-    // Generative Super-Capacities (from GENERATIVE_FIXES) - Premium features
+    // Generative Super-Capacities (from GENERATIVE_FIXES) - disabled by default
     Object.values(GENERATIVE_FIXES).forEach(generativeFix => {
       fixes.push({
         ...generativeFix,
-        enabled: generativeFix.isRecommended || false,
+        enabled: false, // Generative fixes are disabled by default
         data: {},
       });
     });
@@ -399,6 +399,32 @@ export function SmartConfigurator({
   const technicalCount = fixConfigs.filter(f => f.enabled && !['strategic', 'generative'].includes(f.category)).length;
   const strategicCount = fixConfigs.filter(f => f.enabled && f.category === 'strategic').length;
   const generativeCount = fixConfigs.filter(f => f.enabled && f.category === 'generative').length;
+
+  // Calculate dynamic price based on enabled fixes
+  // Base: 3€ minimum, 12€ maximum
+  // Weighting: technical (basic) = 0.3, strategic = 0.8, generative = 1.5
+  const calculatedPrice = useMemo(() => {
+    const MIN_PRICE = 3;
+    const MAX_PRICE = 12;
+    
+    // Count total possible fixes by category for normalization
+    const totalStrategic = fixConfigs.filter(f => f.category === 'strategic').length;
+    const totalGenerative = fixConfigs.filter(f => f.category === 'generative').length;
+    
+    // Strategic and generative selections contribute to price increase
+    // Technical fixes don't increase price (they're the default baseline)
+    const strategicWeight = totalStrategic > 0 ? (strategicCount / totalStrategic) * 0.4 : 0;
+    const generativeWeight = totalGenerative > 0 ? (generativeCount / totalGenerative) * 0.6 : 0;
+    
+    // Combined weight (0 to 1)
+    const combinedWeight = strategicWeight + generativeWeight;
+    
+    // Price scales from MIN to MAX based on combined weight
+    const price = MIN_PRICE + (MAX_PRICE - MIN_PRICE) * combinedWeight;
+    
+    // Round to nearest 0.5€
+    return Math.round(price * 2) / 2;
+  }, [fixConfigs, strategicCount, generativeCount]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -590,6 +616,7 @@ export function SmartConfigurator({
                   siteUrl={siteUrl}
                   fixesCount={enabledCount}
                   showPayment={showLockOverlay && !hasPaid}
+                  calculatedPrice={calculatedPrice}
                 />
               </div>
             )}

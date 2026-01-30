@@ -12,6 +12,7 @@ interface PaymentButtonProps {
   sector?: string;
   disabled?: boolean;
   onPaymentSuccess?: () => void;
+  calculatedPrice?: number;
 }
 
 export function PaymentButton({ 
@@ -19,7 +20,8 @@ export function PaymentButton({
   fixesCount, 
   sector = 'default',
   disabled = false,
-  onPaymentSuccess 
+  onPaymentSuccess,
+  calculatedPrice = 3
 }: PaymentButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null);
@@ -103,9 +105,9 @@ export function PaymentButton({
 
       {/* Price + explanation - Centered */}
       <div className="text-xs text-muted-foreground text-center">
-        <span className="font-medium">3,00€</span>
+        <span className="font-medium">{calculatedPrice.toFixed(2).replace('.', ',')}€</span>
         <span className="mx-1">•</span>
-        <span>Votre prix est conforme au nombre de scripts développés pour votre site</span>
+        <span>Prix adapté au nombre de correctifs sélectionnés</span>
       </div>
     </div>
   );
