@@ -140,9 +140,9 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
   const renderAnimatedHeadline = () => (
     <h1 className="mb-4 text-2xl font-extrabold tracking-tight leading-tight sm:text-5xl lg:text-6xl">
       <span className="inline-flex items-center justify-center gap-2 sm:gap-3 flex-wrap pb-1">
-        {/* Animated word container */}
+        {/* Animated word container - centered vertically on mobile */}
         <span
-          className="hero-word-container relative inline-flex items-center justify-end overflow-hidden"
+          className="hero-word-container relative inline-flex items-center justify-center sm:justify-end overflow-hidden"
           style={{ minWidth: '280px', width: '280px' }}
         >
           {isHydrated ? (
@@ -195,13 +195,13 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
         )}
 
         {/* H2 Tagline - SEO/GEO optimized */}
-        <h2 className="mb-6 text-base font-medium text-primary sm:mb-8 sm:text-2xl">
+        <h2 className="mb-6 text-lg font-medium text-primary sm:mb-8 sm:text-2xl">
           Crawlers.fr expertise le SEO et le GEO de votre site
         </h2>
 
         {/* H3 Subheadline - SEO optimized */}
         <p 
-          className="mx-auto mb-10 max-w-2xl text-lg font-normal text-muted-foreground sm:text-xl"
+          className="mx-auto mb-10 max-w-2xl text-base font-normal text-muted-foreground sm:text-xl"
           dangerouslySetInnerHTML={{ __html: content.subheadline }}
         />
 
