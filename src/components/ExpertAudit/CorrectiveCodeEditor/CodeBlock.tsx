@@ -126,19 +126,6 @@ export function CodeBlock({ code, isTyping, placeholder }: CodeBlockProps) {
         </div>
       </ScrollArea>
 
-      {/* Typing indicator */}
-      {isTyping && (
-        <div className="absolute bottom-2 right-2">
-          <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ repeat: Infinity, duration: 1 }}
-            className="flex items-center gap-1.5 bg-primary/20 text-primary px-2 py-1 rounded-full text-xs"
-          >
-            <div className="w-1.5 h-1.5 rounded-full bg-primary" style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
-            Génération...
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }
