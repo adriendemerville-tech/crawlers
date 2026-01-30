@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FileText, Quote, Navigation, MapPin, ExternalLink, Globe, Loader2, RefreshCw } from 'lucide-react';
+import { FileText, Quote, Navigation, MapPin, ExternalLink, Loader2 } from 'lucide-react';
 import { FixConfig } from './types';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 
@@ -301,27 +301,7 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
   if (siteUrl) {
     return (
       <div className="h-full flex flex-col">
-        {/* Site Preview Header */}
-        <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border-b text-xs">
-          <Globe className="w-3 h-3 text-muted-foreground" />
-          <span className="text-muted-foreground truncate flex-1">{siteUrl}</span>
-          <div className="flex items-center gap-2">
-            {enabledCount > 0 && (
-              <span className="text-violet-600 dark:text-violet-400 font-medium">
-                {enabledCount} fix{enabledCount > 1 ? 'es' : ''}
-              </span>
-            )}
-            <button
-              onClick={handleManualReload}
-              className="p-1 hover:bg-muted rounded transition-colors"
-              title="Recharger la preview"
-            >
-              <RefreshCw className={`w-3 h-3 text-muted-foreground ${isReloading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
-        
-        {/* Iframe Container */}
+        {/* Iframe Container - no header */}
         <div className="flex-1 relative bg-white">
           {(!iframeLoaded || isReloading) && (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/20 z-10">
