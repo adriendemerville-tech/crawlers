@@ -41,7 +41,7 @@ function getAuthHeader(): string {
 /**
  * Détecte le secteur d'activité et la zone géographique à partir du domaine
  */
-async function detectBusinessContext(domain: string, htmlContent?: string): Promise<{ sector: string; location: string }> {
+async function detectBusinessContext(domain: string, htmlContent?: string): Promise<{ sector: string; location: string; brandName: string }> {
   // Extraction basique depuis le domaine
   const domainParts = domain.toLowerCase().split('.');
   const tld = domainParts[domainParts.length - 1];
@@ -63,11 +63,33 @@ async function detectBusinessContext(domain: string, htmlContent?: string): Prom
   
   const location = tldToLocation[tld] || 'France';
   
-  // Pour le secteur, on utilise le nom de domaine comme indice
-  // Le LLM affinera ensuite
-  const sector = domainParts[0].replace(/-/g, ' ');
+  // Extraction du nom de marque (plus intelligent)
+  // Gère les sous-domaines comme fr.loccitane.com, www.example.com
+  let brandName = '';
+  let sector = '';
   
-  return { sector, location };
+  // Trouver le domaine principal (pas le TLD, pas les préfixes comme www, fr, en)
+  const prefixes = ['www', 'fr', 'en', 'de', 'es', 'it', 'us', 'uk', 'shop', 'store', 'm', 'mobile'];
+  const significantParts = domainParts.filter(part => 
+    !prefixes.includes(part) && 
+    part.length > 2 && 
+    !['com', 'fr', 'net', 'org', 'io', 'co', 'be', 'ch', 'de', 'es', 'it', 'uk'].includes(part)
+  );
+  
+  if (significantParts.length > 0) {
+    brandName = significantParts[0].replace(/-/g, ' ');
+    // Capitaliser le nom de marque
+    brandName = brandName.charAt(0).toUpperCase() + brandName.slice(1);
+    sector = significantParts[0].replace(/-/g, ' ');
+  } else {
+    // Fallback au premier élément non-TLD
+    brandName = domainParts[0].replace(/-/g, ' ');
+    sector = brandName;
+  }
+  
+  console.log(`📋 Marque extraite: "${brandName}", secteur initial: "${sector}"`);
+  
+  return { sector, location, brandName };
 }
 
 /**
@@ -137,18 +159,31 @@ async function getLocationCode(location: string): Promise<{ code: number; name: 
 }
 
 /**
- * Génère des mots-clés seed basés sur le domaine et secteur détecté
+ * Génère des mots-clés seed basés sur le nom de marque et secteur détecté
  */
-function generateSeedKeywords(domain: string, sector: string): string[] {
-  const cleanDomain = domain.replace(/\.(com|fr|net|org|io|co|be|ch)$/i, '').replace(/-/g, ' ');
+function generateSeedKeywords(brandName: string, sector: string): string[] {
+  // Nettoyer le nom de marque
+  const cleanBrand = brandName.toLowerCase().trim();
   
-  return [
-    cleanDomain,
-    sector,
-    `${sector} professionnel`,
-    `meilleur ${sector}`,
-    `${sector} en ligne`,
-  ].filter(kw => kw.length > 2);
+  // Générer des variations pertinentes
+  const keywords = [
+    cleanBrand,                              // "loccitane"
+    `${cleanBrand} avis`,                    // "loccitane avis"
+    `${cleanBrand} boutique`,               // "loccitane boutique"
+    `${cleanBrand} produits`,               // "loccitane produits"
+    `acheter ${cleanBrand}`,                // "acheter loccitane"
+  ];
+  
+  // Ajouter le secteur s'il est différent du nom de marque
+  if (sector.toLowerCase() !== cleanBrand) {
+    keywords.push(
+      sector,
+      `${sector} en ligne`,
+      `meilleur ${sector}`,
+    );
+  }
+  
+  return keywords.filter(kw => kw.length > 2 && !kw.includes('undefined'));
 }
 
 /**
@@ -360,7 +395,7 @@ async function fetchMarketData(domain: string): Promise<MarketData | null> {
   try {
     // 1. Détecter le contexte business
     const context = await detectBusinessContext(domain);
-    console.log(`📋 Contexte détecté: secteur="${context.sector}", location="${context.location}"`);
+    console.log(`📋 Contexte détecté: marque="${context.brandName}", secteur="${context.sector}", location="${context.location}"`);
     
     // 2. Obtenir le location_code
     const location = await getLocationCode(context.location);
@@ -369,8 +404,8 @@ async function fetchMarketData(domain: string): Promise<MarketData | null> {
       return null;
     }
     
-    // 3. Générer les mots-clés seed
-    const seedKeywords = generateSeedKeywords(domain, context.sector);
+    // 3. Générer les mots-clés seed basés sur le nom de marque
+    const seedKeywords = generateSeedKeywords(context.brandName, context.sector);
     console.log('🌱 Mots-clés seed:', seedKeywords);
     
     // 4. Récupérer les données mots-clés
