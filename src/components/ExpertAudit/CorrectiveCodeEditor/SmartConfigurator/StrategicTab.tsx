@@ -5,8 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Sparkles, ChevronDown, FileText, Newspaper, Globe, Navigation, MapPin } from 'lucide-react';
 import { FixConfig } from './types';
 
@@ -205,67 +203,61 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
     <div className="space-y-3">
       {strategicFixes.map((fix) => {
         const Icon = strategicIcons[fix.id] || Sparkles;
-        const isOpen = openCards.includes(fix.id) || fix.enabled;
+        const isOpen = fix.enabled;
 
         return (
-          <Collapsible
+          <motion.div
             key={fix.id}
-            open={isOpen}
-            onOpenChange={() => toggleCard(fix.id)}
+            layout
+            className={`rounded-lg border transition-all ${fix.enabled ? 'border-blue-500/40 bg-blue-500/5' : 'border-muted bg-muted/20'}`}
           >
-            <Card className={`transition-all ${fix.enabled ? 'border-blue-500/40 bg-blue-500/5' : 'border-muted'}`}>
-              <CardHeader className="p-3 pb-0">
-                <CollapsibleTrigger asChild>
-                  <div className="flex items-start gap-3 cursor-pointer">
-                    <Checkbox
-                      checked={fix.enabled}
-                      onCheckedChange={() => handleCheckboxChange(fix)}
-                      className="mt-0.5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Icon className="w-4 h-4 text-blue-500" />
-                        <span className={`text-sm font-medium ${fix.enabled ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {fix.label}
-                        </span>
-                        {fix.isRecommended && (
-                          <Badge className="bg-gradient-to-r from-blue-500 to-violet-500 text-white text-xs px-1.5 py-0 border-0">
-                            Recommandé
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {fix.description}
-                      </p>
-                    </div>
-                    <motion.div
-                      animate={{ rotate: isOpen ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    </motion.div>
+            <div 
+              className={`flex items-center gap-3 cursor-pointer ${fix.enabled ? 'p-3' : 'p-2 px-3'}`}
+              onClick={() => handleCheckboxChange(fix)}
+            >
+              <Checkbox
+                checked={fix.enabled}
+                onCheckedChange={() => handleCheckboxChange(fix)}
+                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <Icon className={`w-4 h-4 ${fix.enabled ? 'text-blue-500' : 'text-muted-foreground'}`} />
+              <span className={`text-sm flex-1 ${fix.enabled ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+                {fix.label}
+              </span>
+              {fix.isRecommended && fix.enabled && (
+                <Badge className="bg-gradient-to-r from-blue-500 to-violet-500 text-white text-xs px-1.5 py-0 border-0">
+                  Recommandé
+                </Badge>
+              )}
+              {fix.enabled && (
+                <motion.div
+                  animate={{ rotate: isOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </motion.div>
+              )}
+            </div>
+            
+            <AnimatePresence>
+              {isOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-3 pb-3 ml-7">
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {fix.description}
+                    </p>
+                    {renderConfigFields(fix)}
                   </div>
-                </CollapsibleTrigger>
-              </CardHeader>
-              
-              <AnimatePresence>
-                {isOpen && (
-                  <CollapsibleContent forceMount>
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                    >
-                      <CardContent className="pt-0 pb-3 px-3 ml-7">
-                        {renderConfigFields(fix)}
-                      </CardContent>
-                    </motion.div>
-                  </CollapsibleContent>
-                )}
-              </AnimatePresence>
-            </Card>
-          </Collapsible>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         );
       })}
     </div>

@@ -45,28 +45,33 @@ export function GenerativeTab({ fixes, onToggle }: GenerativeTabProps) {
           key={fix.id}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          layout
           transition={{ delay: index * 0.05 }}
-          className={`p-4 rounded-lg border transition-all ${
+          className={`rounded-lg border transition-all ${
             fix.enabled 
-              ? 'border-emerald-500/50 bg-emerald-500/5 shadow-sm' 
-              : 'border-border hover:border-emerald-500/30'
+              ? 'p-4 border-emerald-500/50 bg-emerald-500/5 shadow-sm' 
+              : 'p-2 px-3 border-border hover:border-emerald-500/30'
           }`}
         >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3 flex-1">
-              <div className={`p-2 rounded-lg ${fix.enabled ? 'bg-emerald-500/20 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
-                {GENERATIVE_ICONS[fix.id] || <Rocket className="w-4 h-4" />}
-              </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1">
+              {fix.enabled && (
+                <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-600">
+                  {GENERATIVE_ICONS[fix.id] || <Rocket className="w-4 h-4" />}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">{fix.label}</span>
-                  {fix.isPremium && (
+                  <span className={`text-sm ${fix.enabled ? 'font-medium' : 'text-muted-foreground'}`}>{fix.label}</span>
+                  {fix.isPremium && fix.enabled && (
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-600 border-amber-500/30">
                       💎
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">{fix.description}</p>
+                {fix.enabled && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{fix.description}</p>
+                )}
               </div>
             </div>
             <Switch
