@@ -139,17 +139,33 @@ export function SolutionSection() {
           transition={{ duration: 0.5, delay: 0.5 }}
           className="text-center"
         >
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => navigate('/audit-expert')}
-            className="gap-2 group font-mono border-violet-500/40 hover:border-violet-500 hover:bg-violet-500/5 bg-violet-500/5 text-foreground hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300"
-          >
-            <span className="text-violet-400">&lt;</span>
-            <span className="text-violet-500 font-semibold">{t.cta}</span>
-            <span className="text-violet-400">/&gt;</span>
-            <ArrowRight className="w-4 h-4 text-violet-500 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          <div className="relative inline-block">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => navigate('/audit-expert')}
+              className="relative z-10 gap-1.5 group font-mono border-violet-500/40 hover:border-violet-500 hover:bg-violet-500/5 bg-violet-500/5 text-foreground hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300"
+            >
+              <span className="text-violet-400">&lt;</span>
+              <span className="text-pink-500">button</span>
+              <span className="text-cyan-500 ml-1">onClick</span>
+              <span className="text-foreground/70">=</span>
+              <span className="text-amber-500">"</span>
+              <span className="text-violet-500 font-semibold">{t.cta}</span>
+              <span className="text-amber-500">"</span>
+              <span className="text-violet-400">/&gt;</span>
+              <ArrowRight className="w-4 h-4 ml-1 text-violet-500 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            {/* Golden glow shadow - wider than button, max half height */}
+            <div 
+              className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[120%] h-3 rounded-full bg-gradient-to-r from-transparent via-amber-400/40 to-transparent blur-md pointer-events-none"
+              aria-hidden="true"
+            />
+            <div 
+              className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-[110%] h-2 rounded-full bg-gradient-to-r from-transparent via-amber-500/30 to-transparent blur-sm pointer-events-none"
+              aria-hidden="true"
+            />
+          </div>
         </motion.div>
       </div>
     </section>
