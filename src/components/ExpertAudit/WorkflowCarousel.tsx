@@ -349,9 +349,9 @@ export function WorkflowCarousel({
                       "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
                       isActive && step.id !== 2 && step.id !== 3 && "border-primary/30 shadow-[0_12px_40px_rgba(0,0,0,0.15)]",
                       isCompleted && "border-success/30",
-                      // Golden yellow border for step 2 (Strategic Audit) with subtle glow
-                      step.id === 2 && !isCompleted && "border border-amber-400/80 bg-gradient-to-br from-card via-card to-amber-50/10 dark:to-amber-900/10 shadow-[0_0_12px_rgba(251,191,36,0.15)]",
-                      step.id === 2 && isActive && !isCompleted && "shadow-[0_0_18px_rgba(251,191,36,0.25)]",
+                      // Dark metallic grey border for step 2 (Strategic Audit) - elegant SaaS style
+                      step.id === 2 && !isCompleted && "border border-slate-400/50 dark:border-slate-500/60 bg-gradient-to-br from-card via-card to-slate-50/5 dark:to-slate-900/20 shadow-[0_8px_30px_rgba(0,0,0,0.15)]",
+                      step.id === 2 && isActive && !isCompleted && "border-slate-500/70 dark:border-slate-400/70 shadow-[0_12px_40px_rgba(0,0,0,0.18)]",
                       // Golden yellow border for step 3 (Code Correctif) with subtle glow
                       step.id === 3 && !isCompleted && "border border-amber-400/80 shadow-[0_0_12px_rgba(251,191,36,0.15)]",
                       step.id === 3 && isActive && !isCompleted && "shadow-[0_0_18px_rgba(251,191,36,0.25)]",
@@ -379,7 +379,7 @@ export function WorkflowCarousel({
                           isCompleted 
                             ? "bg-success/10 text-success"
                             : step.id === 2
-                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                            ? "bg-slate-500/15 text-slate-600 dark:text-slate-400"
                             : step.id === 3
                             ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                             : isActive 
@@ -431,8 +431,8 @@ export function WorkflowCarousel({
                                 "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
                                 isCompleted && "bg-success hover:bg-success/90",
                                 isLocked && "opacity-50 cursor-not-allowed",
-                                // Amber/gold button for step 2 with subtle glow
-                                step.id === 2 && !isCompleted && !isLocked && "bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-[0_0_12px_rgba(251,191,36,0.25)]",
+                                // Dark slate grey button for step 2 - elegant SaaS style
+                                step.id === 2 && !isCompleted && !isLocked && "bg-slate-600 hover:bg-slate-700 text-white border-0",
                                 // Amber/gold button for step 3 with subtle glow
                                 step.id === 3 && !isCompleted && !isLocked && "bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-[0_0_12px_rgba(251,191,36,0.25)]"
                               )}

@@ -193,12 +193,21 @@ export function ExpertAuditDashboard() {
     }
 
     // Handle pending actions after auth
-    if (isLoggedIn && pendingAction === 'open_report') {
-      sessionStorage.removeItem('audit_pending_action');
-      sessionStorage.removeItem('audit_return_path');
-      setPendingReportOpen(true);
+    if (isLoggedIn && pendingAction) {
+      if (pendingAction === 'open_report') {
+        sessionStorage.removeItem('audit_pending_action');
+        sessionStorage.removeItem('audit_return_path');
+        setPendingReportOpen(true);
+      } else if (pendingAction === 'unblur_strategic') {
+        // User came back after auth from RegistrationGate - just clear the pending action
+        // The strategic results are already restored from session storage above
+        sessionStorage.removeItem('audit_pending_action');
+        sessionStorage.removeItem('audit_return_path');
+        // If we have strategic result, the content will be unblurred automatically
+        // because user is now logged in (isLoggedIn = true)
+      }
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, location.search, navigate]);
 
   // Open report modal after auth if pending
   useEffect(() => {
