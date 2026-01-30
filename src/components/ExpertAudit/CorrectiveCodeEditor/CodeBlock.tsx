@@ -76,6 +76,7 @@ export function CodeBlock({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [displayedCode, setDisplayedCode] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [animationComplete, setAnimationComplete] = useState(false);
 
   // Get the code to display (truncated if locked)
   const codeToDisplay = isLocked 
@@ -86,12 +87,14 @@ export function CodeBlock({
   useEffect(() => {
     if (!codeToDisplay) {
       setDisplayedCode('');
+      setAnimationComplete(false);
       return;
     }
 
     // Si le code change et qu'on a du nouveau code, animer
     if (codeToDisplay !== displayedCode && codeToDisplay.length > 0) {
       setIsAnimating(true);
+      setAnimationComplete(false);
       let currentIndex = 0;
       const lines = codeToDisplay.split('\n');
       const totalLines = lines.length;
@@ -102,6 +105,8 @@ export function CodeBlock({
         if (currentIndex >= totalLines) {
           setDisplayedCode(codeToDisplay);
           setIsAnimating(false);
+          // Marquer l'animation comme terminée après un court délai
+          setTimeout(() => setAnimationComplete(true), 300);
           clearInterval(interval);
         } else {
           setDisplayedCode(lines.slice(0, currentIndex).join('\n'));
@@ -133,6 +138,9 @@ export function CodeBlock({
   const lines = displayedCode.split('\n');
   const highlightedCode = highlightSyntax(displayedCode);
   const totalLines = code.split('\n').length;
+
+  // Show lock overlay only when animation is complete AND isLocked is true
+  const showLockOverlay = isLocked && animationComplete;
 
   return (
     <div className="relative h-full min-h-[200px] rounded-lg overflow-hidden border bg-background" ref={scrollRef}>
@@ -172,13 +180,27 @@ export function CodeBlock({
         </div>
       </ScrollArea>
 
-      {/* Lock overlay - minimal */}
-      {isLocked && (
-        <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
-          <div className="w-full h-2/3 bg-gradient-to-t from-background via-background/95 to-transparent flex items-center justify-center">
-            <Lock className="w-8 h-8 text-muted-foreground/60" strokeWidth={2.5} />
-          </div>
-        </div>
+      {/* Lock overlay - animated from bottom with black blur and gold padlock */}
+      {showLockOverlay && (
+        <motion.div 
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="absolute inset-x-0 bottom-0 h-3/4 flex flex-col items-center justify-center pointer-events-none"
+        >
+          {/* Black gradient blur overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent backdrop-blur-sm" />
+          
+          {/* Gold padlock */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 0.4, ease: 'easeOut' }}
+            className="relative z-10"
+          >
+            <Lock className="w-10 h-10 text-amber-400 drop-shadow-lg" strokeWidth={2} />
+          </motion.div>
+        </motion.div>
       )}
     </div>
   );

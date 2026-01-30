@@ -567,20 +567,18 @@ export function SmartConfigurator({
               )}
             </div>
 
-            {/* Preview/Code Content - fills available space */}
-            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            {/* Preview/Code Content - fills available space with margins */}
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-4">
               {viewMode === 'visual' ? (
                 <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
               ) : (
-                <div className="p-2 flex-1 pt-4 pb-0 flex flex-col min-h-0">
-                  <div className="flex-1 min-h-0">
-                    <CodeBlock 
-                      code={generatedCode} 
-                      isTyping={false}
-                      placeholder="Cliquez sur 'Générer le script' pour voir le code"
-                      isLocked={!hasPaid && showLockOverlay}
-                    />
-                  </div>
+                <div className="flex-1 min-h-0 flex flex-col">
+                  <CodeBlock 
+                    code={generatedCode} 
+                    isTyping={false}
+                    placeholder="Cliquez sur 'Générer le script' pour voir le code"
+                    isLocked={!hasPaid && showLockOverlay}
+                  />
                 </div>
               )}
             </div>

@@ -22,11 +22,9 @@ export function SecurityZone({
 
   return (
     <div className="relative border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-4">
-      {/* Lock icon in top-right corner */}
-      <Lock className="absolute top-3 right-3 w-4 h-4 text-muted-foreground/40" />
-      {/* Payment Section - Conditional */}
+      {/* Payment Section - Conditional - Fully centered */}
       {showPayment && siteUrl && (
-        <div className="flex justify-center">
+        <div className="w-full flex items-center justify-center">
           <PaymentButton 
             siteUrl={siteUrl}
             fixesCount={fixesCount}
