@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Download, Share2, FileText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { CrawlResult } from '@/types/crawler';
 import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
@@ -19,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Copy, Mail, Check, Loader2, Linkedin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { DownloadAuthGate } from '@/components/DownloadAuthGate';
 
 interface FloatingReportButtonProps {
   crawlResult?: CrawlResult | null;
@@ -37,15 +39,48 @@ export function FloatingReportButton({
 }: FloatingReportButtonProps) {
   const { t, language } = useLanguage();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showAuthGate, setShowAuthGate] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'menu' | 'download' | 'share' | null>(null);
 
   const hasAnyResult = !!(crawlResult || geoResult || llmResult || pageSpeedResult);
 
+  // Check for pending download after auth
+  useEffect(() => {
+    if (user && hasAnyResult) {
+      const pending = sessionStorage.getItem('download_pending');
+      if (pending === 'true') {
+        sessionStorage.removeItem('download_pending');
+        sessionStorage.removeItem('download_return_path');
+        // Open menu after successful auth
+        setIsMenuOpen(true);
+      }
+    }
+  }, [user, hasAnyResult]);
+
   if (!hasAnyResult) return null;
+
+  const handleReportButtonClick = () => {
+    if (!user) {
+      setPendingAction('menu');
+      setShowAuthGate(true);
+    } else {
+      setIsMenuOpen(true);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthGate(false);
+    if (pendingAction === 'menu') {
+      setIsMenuOpen(true);
+    }
+    setPendingAction(null);
+  };
 
   const getButtonLabel = () => {
     switch (language) {
@@ -352,7 +387,7 @@ export function FloatingReportButton({
           </div>
         ) : (
           <Button
-            onClick={() => setIsMenuOpen(true)}
+            onClick={handleReportButtonClick}
             size="lg"
             className="gap-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg px-8 py-6 rounded-full shadow-2xl transition-all hover:scale-105"
           >
@@ -431,6 +466,13 @@ export function FloatingReportButton({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Auth Gate Modal */}
+      <DownloadAuthGate 
+        isOpen={showAuthGate} 
+        onClose={() => setShowAuthGate(false)} 
+        onAuthenticated={handleAuthSuccess}
+      />
     </>
   );
 }
