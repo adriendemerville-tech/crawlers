@@ -212,15 +212,6 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
     }
   });
 
-  // Add visual indicator that fixes are applied
-  scriptParts.push(`
-    const indicator = document.createElement('div');
-    indicator.innerHTML = '✨ ${enabledFixes.length} correctif(s) appliqué(s)';
-    indicator.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#8b5cf6,#6366f1);color:white;padding:6px 16px;border-radius:20px;font-size:12px;font-family:system-ui,-apple-system,sans-serif;z-index:99999;box-shadow:0 2px 12px rgba(139,92,246,0.4);';
-    document.body.appendChild(indicator);
-    setTimeout(() => indicator.style.opacity = '0.7', 2000);
-  `);
-
   return `(function(){${scriptParts.join('\n')}})();`;
 }
 
