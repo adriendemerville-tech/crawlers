@@ -32,6 +32,11 @@ interface RegistryRecommendation {
   audit_type: 'technical' | 'strategic';
 }
 
+interface AttributionConfig {
+  enabled: boolean;
+  anchorText: string;
+}
+
 interface GenerateRequest {
   fixes: FixConfig[];
   siteName: string;
@@ -39,6 +44,7 @@ interface GenerateRequest {
   language: string;
   includeRegistryContext?: boolean;
   useAI?: boolean; // NOUVEAU: Activer la génération IA pour contenu stratégique
+  attribution?: AttributionConfig | null; // NOUVEAU: Configuration attribution Crawlers
 }
 
 interface AIGeneratedContent {
@@ -975,10 +981,11 @@ function generateCorrectiveScript(
   siteUrl: string,
   language: string,
   registryContext: string = '',
-  aiContent?: AIGeneratedContent
+  aiContent?: AIGeneratedContent,
+  attribution?: AttributionConfig | null
 ): string {
   const enabledFixes = fixes.filter(f => f.enabled);
-  if (enabledFixes.length === 0) return '';
+  if (enabledFixes.length === 0 && !attribution?.enabled) return '';
 
   const fixFunctions: string[] = [];
   const fixCalls: string[] = [];
@@ -989,6 +996,45 @@ function generateCorrectiveScript(
     if (fn) fixFunctions.push(fn);
     if (call) fixCalls.push(call);
   });
+
+  // Ajouter la fonction d'attribution si activée
+  if (attribution?.enabled) {
+    const anchorText = attribution.anchorText || 'Technologie Crawlers.fr';
+    fixFunctions.push(`  // Attribution Crawlers.fr (Growth & Ethical Score)
+  function injectCrawlersAttribution() {
+    // Vérifier si l'attribution existe déjà
+    if (document.querySelector('[data-crawlers-attribution]')) return;
+    
+    // Créer le lien d'attribution
+    var link = document.createElement('a');
+    link.href = 'https://crawlers.fr';
+    link.textContent = '${anchorText.replace(/'/g, "\\'")}';
+    link.rel = 'dofollow';
+    link.target = '_blank';
+    link.setAttribute('data-crawlers-attribution', 'true');
+    link.style.cssText = 'font-size: 11px; color: #64748b; text-decoration: none; opacity: 0.8; transition: opacity 0.2s;';
+    link.onmouseover = function() { this.style.opacity = '1'; };
+    link.onmouseout = function() { this.style.opacity = '0.8'; };
+    
+    // Trouver ou créer le conteneur footer
+    var footer = document.querySelector('footer');
+    if (footer) {
+      var container = document.createElement('div');
+      container.style.cssText = 'text-align: center; padding: 10px 0; border-top: 1px solid #e2e8f0; margin-top: 20px;';
+      container.appendChild(link);
+      footer.appendChild(container);
+    } else {
+      // Fallback: injecter avant </body>
+      var container = document.createElement('div');
+      container.style.cssText = 'text-align: center; padding: 15px 0; font-size: 11px; color: #64748b; background: #f8fafc;';
+      container.appendChild(link);
+      document.body.appendChild(container);
+    }
+    
+    console.log('[Crawlers.fr] ✅ Attribution injectée');
+  }`);
+    fixCalls.push('injectCrawlersAttribution();');
+  }
 
   // Date localisée
   const dateLocale = language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US';
@@ -1079,7 +1125,8 @@ Deno.serve(async (req) => {
       siteUrl, 
       language = 'fr', 
       includeRegistryContext = true,
-      useAI = true 
+      useAI = true,
+      attribution
     }: GenerateRequest = await req.json();
 
     console.log('═══════════════════════════════════════════════════════════════');
@@ -1158,7 +1205,7 @@ Deno.serve(async (req) => {
     }
 
     // Générer le script avec contexte et contenu IA
-    const code = generateCorrectiveScript(fixes, siteName, siteUrl, language, registryContext, aiContent);
+    const code = generateCorrectiveScript(fixes, siteName, siteUrl, language, registryContext, aiContent, attribution);
     const linesCount = code.split('\n').length;
 
     // Catégoriser les fixes pour le résumé
