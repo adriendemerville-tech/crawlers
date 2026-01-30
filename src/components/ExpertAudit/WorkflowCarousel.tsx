@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, Target, Code, Search, Check, Eye } from 'lucide-react';
+import { BarChart3, Target, Code, Search, Check, Eye, Lock } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
@@ -21,7 +21,8 @@ const translations = {
     placeholder: 'example.com',
     locked: 'Terminez l\'étape précédente',
     complete: 'Terminé',
-    paid: '5€',
+    startCode: 'Démarrer',
+    price: '3,00€',
     viewReport: 'Voir rapport',
   },
   en: {
@@ -36,7 +37,8 @@ const translations = {
     placeholder: 'example.com',
     locked: 'Complete previous step',
     complete: 'Complete',
-    paid: '€5',
+    startCode: 'Start',
+    price: '€3.00',
     viewReport: 'View report',
   },
   es: {
@@ -51,7 +53,8 @@ const translations = {
     placeholder: 'example.com',
     locked: 'Complete el paso anterior',
     complete: 'Completado',
-    paid: '5€',
+    startCode: 'Iniciar',
+    price: '3,00€',
     viewReport: 'Ver informe',
   },
 };
@@ -181,7 +184,7 @@ export function WorkflowCarousel({
     if (isStrategicLoading && stepId === 2) return t.analyzing;
     if (isStepCompleted(stepId)) return t.complete;
     if (isStepLocked(stepId)) return t.locked;
-    return stepId === 3 ? `${t.start} (${t.paid})` : t.start;
+    return t.start;
   };
 
   // Calculate progress percentage
@@ -442,9 +445,6 @@ export function WorkflowCarousel({
                           ) : (
                             step.title
                           )}
-                          {step.isPaid && (
-                            <span className="ml-2 text-sm font-normal text-violet-500">({t.paid})</span>
-                          )}
                         </h3>
                         <p className={cn(
                           "text-sm leading-relaxed mb-6",
@@ -501,8 +501,19 @@ export function WorkflowCarousel({
                                 step.id === 3 && isLocked && "from-violet-600/50 via-violet-500/50 to-amber-500/50 hover:from-violet-600/50 hover:via-violet-500/50 hover:to-amber-500/50"
                               )}
                             >
-                              {getStepButtonText(step.id)}
+                              {step.id === 3 && !isCompleted ? (
+                                <span className="flex items-center justify-center gap-2">
+                                  {getStepButtonText(step.id)}
+                                  <Lock className="h-4 w-4" />
+                                </span>
+                              ) : (
+                                getStepButtonText(step.id)
+                              )}
                             </Button>
+                            {/* Price below button for step 3 */}
+                            {step.id === 3 && !isCompleted && (
+                              <p className="text-center text-sm text-muted-foreground mt-2">{t.price}</p>
+                            )}
                           </motion.div>
                         )}
 
