@@ -1371,22 +1371,10 @@ function generateCorrectiveScript(
   const hallucinationFixes = enabledFixes.filter(f => f.category === 'hallucination');
   const generativeFixes = enabledFixes.filter(f => f.category === 'generative');
 
-  // Construire le script IIFE
+  // Construire le script IIFE - Header minimal sans mention Crawlers
   const script = `/**
- * ═══════════════════════════════════════════════════════════════
- * 🏗️ Crawlers.fr - ARCHITECTE GÉNÉRATIF v2.0
- * ═══════════════════════════════════════════════════════════════
- * 
- * Généré le ${dateStr}
- * Site: ${siteName}
- * URL: ${siteUrl}
- * 
- * Correctifs appliqués: ${enabledFixes.length} au total
- *   → Techniques (SEO/Perf/A11y): ${technicalFixes.length}
- *   → Tracking: ${trackingFixes.length}
- *   → Stratégiques (Contenu/FAQ/Blog): ${strategicFixes.length}
- *   → Anti-Hallucination IA: ${hallucinationFixes.length}
- * ═══════════════════════════════════════════════════════════════
+ * Script de correction automatique
+ * Généré pour: ${siteUrl}
  */
 (function() {
   'use strict';
@@ -1404,10 +1392,48 @@ ${registryContext}
   }
 
   // ═══════════════════════════════════════════════════════════
+  // CONFIGURATION
+  // ═══════════════════════════════════════════════════════════
+  
+  var CONFIG = {
+    siteName: '${siteName}',
+    siteUrl: '${siteUrl}',
+    generatedAt: '${dateStr}',
+    fixesCount: ${enabledFixes.length},
+    categories: {
+      technical: ${technicalFixes.length},
+      tracking: ${trackingFixes.length},
+      strategic: ${strategicFixes.length},
+      hallucination: ${hallucinationFixes.length}
+    }
+  };
+
+  // ═══════════════════════════════════════════════════════════
   // FONCTIONS DE CORRECTION
   // ═══════════════════════════════════════════════════════════
 
 ${fixFunctions.join('\n\n')}
+
+  /**
+   * ═══════════════════════════════════════════════════════════
+   * Crawlers.fr - ARCHITECTE GÉNÉRATIF v2.0
+   * ═══════════════════════════════════════════════════════════
+   * 
+   * Généré le ${dateStr}
+   * Site: ${siteName}
+   * URL: ${siteUrl}
+   * 
+   * Correctifs appliqués: ${enabledFixes.length} au total
+   *   → Techniques (SEO/Perf/A11y): ${technicalFixes.length}
+   *   → Tracking: ${trackingFixes.length}
+   *   → Stratégiques (Contenu/FAQ/Blog): ${strategicFixes.length}
+   *   → Anti-Hallucination IA: ${hallucinationFixes.length}
+   * ═══════════════════════════════════════════════════════════
+   */
+
+  // ═══════════════════════════════════════════════════════════
+  // EXÉCUTION SÉQUENTIELLE DES CORRECTIONS
+  // ═══════════════════════════════════════════════════════════
 
   // ═══════════════════════════════════════════════════════════
   // EXÉCUTION SÉQUENTIELLE DES CORRECTIONS
