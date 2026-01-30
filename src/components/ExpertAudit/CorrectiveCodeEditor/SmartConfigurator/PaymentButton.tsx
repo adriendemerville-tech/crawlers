@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Sparkles, Lock, ExternalLink } from 'lucide-react';
+import { CreditCard, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,8 +76,8 @@ export function PaymentButton({
   };
 
   return (
-    <div className="space-y-2">
-      {/* Payment Button - Compact & Transparent */}
+    <div className="space-y-1">
+      {/* Payment Button - Compact & Elegant */}
       <Button
         onClick={handlePayment}
         disabled={disabled || isLoading || !siteUrl}
@@ -97,22 +97,14 @@ export function PaymentButton({
           </>
         ) : (
           <>
-            <Sparkles className="w-3 h-3" />
+            <Lock className="w-3 h-3 opacity-70" />
             Obtenir le script complet
-            <ExternalLink className="w-3 h-3 ml-1 opacity-70" />
           </>
         )}
       </Button>
 
-      {/* Security Info - Minimal */}
-      <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <Lock className="w-2.5 h-2.5" />
-          <span>Stripe</span>
-        </div>
-        <span className="text-muted-foreground/50">•</span>
-        <span>Dès 2€</span>
-      </div>
+      {/* Price below button */}
+      <p className="text-center text-xs text-muted-foreground">3,00€</p>
 
       {/* Features List */}
       <div className="text-xs text-muted-foreground space-y-1 bg-slate-100 dark:bg-slate-800/50 rounded-lg p-3">
