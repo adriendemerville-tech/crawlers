@@ -1,14 +1,15 @@
-// Types for Smart Configurator v2.0
+// Types for Smart Configurator v2.0 - Architecte Génératif
 
 export interface FixConfig {
   id: string;
-  category: 'seo' | 'performance' | 'accessibility' | 'tracking' | 'hallucination' | 'strategic';
+  category: 'seo' | 'performance' | 'accessibility' | 'tracking' | 'hallucination' | 'strategic' | 'generative';
   label: string;
   description: string;
   enabled: boolean;
   priority: 'critical' | 'important' | 'optional';
   data?: Record<string, any>;
   isRecommended?: boolean;
+  isPremium?: boolean; // Nécessite paiement
 }
 
 export interface AttributionConfig {
@@ -28,6 +29,8 @@ export const ATTRIBUTION_ANCHORS = [
 // Strategic fix configuration options
 export interface BlogSectionConfig {
   sectionTitle: string;
+  topic?: string;
+  keywords?: string[];
 }
 
 export interface SemanticInjectionConfig {
@@ -45,7 +48,50 @@ export interface LocalBusinessConfig {
   openingHours?: string;
 }
 
-// Available strategic fixes
+// ══════════════════════════════════════════════════════════════
+// SUPER-CAPACITÉS GÉNÉRATIVES (Architecte v2)
+// ══════════════════════════════════════════════════════════════
+
+export const GENERATIVE_FIXES = {
+  fix_missing_blog: {
+    id: 'fix_missing_blog',
+    category: 'generative' as const,
+    label: 'Section Blog Complète',
+    description: 'Injecte une section blog/actualités complète (HTML/CSS) avant le footer',
+    priority: 'important' as const,
+    isRecommended: true,
+    isPremium: true,
+  },
+  fix_semantic_injection: {
+    id: 'fix_semantic_injection',
+    category: 'generative' as const,
+    label: 'Info Box Expert',
+    description: 'Injecte un bloc de contenu expert riche en mots-clés sémantiques',
+    priority: 'important' as const,
+    isRecommended: true,
+    isPremium: true,
+  },
+  fix_robot_context: {
+    id: 'fix_robot_context',
+    category: 'generative' as const,
+    label: 'Calque Anti-Hallucination',
+    description: 'Injecte un calque invisible (clip-path) pour clarifier l\'entité auprès des LLMs',
+    priority: 'critical' as const,
+    isRecommended: true,
+    isPremium: true,
+  },
+  fix_pagespeed_suite: {
+    id: 'fix_pagespeed_suite',
+    category: 'generative' as const,
+    label: 'Suite PageSpeed Complète',
+    description: 'Applique CLS (dimensions), LCP (fetch priority) et Font-Display Swap',
+    priority: 'critical' as const,
+    isRecommended: true,
+    isPremium: false,
+  },
+} as const;
+
+// Available strategic fixes (Legacy)
 export const STRATEGIC_FIXES = {
   inject_faq: {
     id: 'inject_faq',
