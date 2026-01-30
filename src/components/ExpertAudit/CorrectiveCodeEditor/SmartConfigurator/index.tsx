@@ -397,7 +397,7 @@ export function SmartConfigurator({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] xl:max-w-7xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
         <DialogHeader className="p-4 pb-3 border-b flex flex-row items-center justify-between">
-          <div>
+          <div className="space-y-1">
             <DialogTitle className="flex items-center gap-2">
               <FileCode className="w-5 h-5 text-violet-500" />
               <span className="font-mono bg-gradient-to-r from-violet-500 via-amber-400 to-violet-600 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">
@@ -405,8 +405,11 @@ export function SmartConfigurator({
               </span>
               <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
             </DialogTitle>
-            <DialogDescription>
-              Configurez et prévisualisez les injections de code avant génération
+            <DialogDescription className="flex items-center gap-2">
+              <span>Site cible :</span>
+              <code className="text-xs bg-muted px-2 py-0.5 rounded font-mono text-foreground">
+                {siteUrl}
+              </code>
             </DialogDescription>
           </div>
           
