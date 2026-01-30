@@ -1,42 +1,42 @@
 import { motion } from 'framer-motion';
-import { Lock, UserPlus, LogIn, FolderCheck, ClipboardList, Code2, PiggyBank } from 'lucide-react';
+import { UserPlus, LogIn, FolderCheck, ClipboardList, Code2, PiggyBank } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 
 const translations = {
   fr: {
-    title: 'Rapport IA Prêt',
-    subtitle: 'Inscrivez-vous gratuitement pour révéler l\'analyse de sentiment et les hallucinations détectées.',
+    title: 'Rapport IA prêt',
+    subtitle: 'Révélez l\'analyse de sentiment et les hallucinations détectées.',
     benefit1: 'Retrouvez tous vos rapports',
     benefit2: 'Vos plans d\'action',
     benefit3: 'Vos codes correctifs',
-    tagline1: 'Devenez autonome sur le SEO',
+    tagline1: 'Devenez autonome',
     tagline2: 'Faites des économies',
     button: 'S\'inscrire gratuitement',
-    loginLink: 'Déjà inscrit ? Se connecter',
+    loginLink: 'Se connecter',
   },
   en: {
-    title: 'AI Report Ready',
-    subtitle: 'Sign up for free to reveal the sentiment analysis and detected hallucinations.',
+    title: 'AI Report ready',
+    subtitle: 'Reveal the sentiment analysis and detected hallucinations.',
     benefit1: 'Find all your reports',
     benefit2: 'Your action plans',
     benefit3: 'Your corrective codes',
-    tagline1: 'Become SEO autonomous',
+    tagline1: 'Become autonomous',
     tagline2: 'Save money',
     button: 'Sign up for free',
-    loginLink: 'Already registered? Log in',
+    loginLink: 'Log in',
   },
   es: {
-    title: 'Informe IA Listo',
-    subtitle: 'Regístrate gratis para revelar el análisis de sentimiento y las alucinaciones detectadas.',
+    title: 'Informe IA listo',
+    subtitle: 'Revela el análisis de sentimiento y las alucinaciones detectadas.',
     benefit1: 'Encuentra todos tus informes',
     benefit2: 'Tus planes de acción',
     benefit3: 'Tus códigos correctivos',
-    tagline1: 'Sé autónomo en SEO',
+    tagline1: 'Sé autónomo',
     tagline2: 'Ahorra dinero',
     button: 'Registrarse gratis',
-    loginLink: '¿Ya registrado? Iniciar sesión',
+    loginLink: 'Iniciar sesión',
   },
 };
 
@@ -77,19 +77,11 @@ export function RegistrationGate({ onRegister }: RegistrationGateProps) {
       >
         {/* Header */}
         <div className="text-center mb-4">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+          <motion.h3
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 500 }}
-            className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3"
-          >
-            <Lock className="w-6 h-6 text-primary" />
-          </motion.div>
-          <motion.h3 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-lg font-bold text-foreground mb-1"
+            className="text-lg font-bold text-foreground mb-2"
           >
             {t.title}
           </motion.h3>
