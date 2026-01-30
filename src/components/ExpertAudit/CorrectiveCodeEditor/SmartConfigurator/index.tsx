@@ -506,9 +506,9 @@ export function SmartConfigurator({
           </div>
 
           {/* Right Column: Preview & Security */}
-          <div className="col-span-7 flex flex-col bg-slate-50 dark:bg-slate-900/50">
+          <div className="col-span-7 flex flex-col bg-slate-50 dark:bg-slate-900/50 overflow-hidden">
             {/* View Mode Toggle */}
-            <div className="p-3 border-b flex items-center justify-between bg-background">
+            <div className="p-3 border-b flex items-center justify-between bg-background flex-shrink-0">
               <ToggleGroup 
                 type="single" 
                 value={viewMode} 
@@ -560,12 +560,12 @@ export function SmartConfigurator({
               )}
             </div>
 
-            {/* Preview/Code Content */}
-            <ScrollArea className="flex-1">
+            {/* Preview/Code Content - fills available space */}
+            <div className="flex-1 min-h-0 overflow-auto">
               {viewMode === 'visual' ? (
                 <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
               ) : (
-                <div className="p-2">
+                <div className="p-2 h-full">
                   <CodeBlock 
                     code={generatedCode} 
                     isTyping={false}
@@ -574,15 +574,17 @@ export function SmartConfigurator({
                   />
                 </div>
               )}
-            </ScrollArea>
+            </div>
 
-            {/* Security Zone with Payment - only visible in code view */}
+            {/* Security Zone - fixed at bottom, only visible in code view */}
             {viewMode === 'code' && (
-              <SecurityZone 
-                siteUrl={siteUrl}
-                fixesCount={enabledCount}
-                showPayment={!!generatedCode}
-              />
+              <div className="flex-shrink-0">
+                <SecurityZone 
+                  siteUrl={siteUrl}
+                  fixesCount={enabledCount}
+                  showPayment={!!generatedCode}
+                />
+              </div>
             )}
           </div>
         </div>
