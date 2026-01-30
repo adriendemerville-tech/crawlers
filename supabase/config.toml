@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.audit-local-seo]
 verify_jwt = false
+
+[functions.generate-corrective-code]
+verify_jwt = false

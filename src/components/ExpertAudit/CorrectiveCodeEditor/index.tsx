@@ -22,7 +22,7 @@ import { Recommendation, ExpertAuditResult } from '@/types/expertAudit';
 import { CodeBlock } from './CodeBlock';
 import { FixConfigPanel } from './FixConfigPanel';
 import { ImplementationGuide } from './ImplementationGuide';
-import { generateCorrectiveScript, FixConfig } from './scriptGenerator';
+import { FixConfig } from './scriptGenerator';
 import { toast as sonnerToast } from 'sonner';
 
 const translations = {
@@ -356,8 +356,8 @@ export function CorrectiveCodeEditor({
     typeNextChunk();
   }, [generatedCode, isTyping]);
 
-  // Generate the script
-  const handleGenerate = useCallback(() => {
+  // Generate the script via Edge Function
+  const handleGenerate = useCallback(async () => {
     const enabledFixes = fixConfigs.filter(f => f.enabled);
     if (enabledFixes.length === 0) {
       toast({
@@ -370,13 +370,34 @@ export function CorrectiveCodeEditor({
     setIsGenerating(true);
     setDisplayedCode('');
 
-    // Small delay for UX
-    setTimeout(() => {
-      const script = generateCorrectiveScript(enabledFixes, siteName, siteUrl, language);
-      setGeneratedCode(script);
-      setIsTyping(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-corrective-code', {
+        body: {
+          fixes: fixConfigs,
+          siteName,
+          siteUrl,
+          language,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.code) {
+        setGeneratedCode(data.code);
+        setIsTyping(true);
+      } else {
+        throw new Error(data?.error || 'Erreur lors de la génération');
+      }
+    } catch (error) {
+      console.error('Error generating corrective code:', error);
+      toast({
+        title: 'Erreur de génération',
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
+        variant: 'destructive',
+      });
+    } finally {
       setIsGenerating(false);
-    }, 800);
+    }
   }, [fixConfigs, siteName, siteUrl, language, t.noFixesSelected, toast]);
 
   // Copy to clipboard
