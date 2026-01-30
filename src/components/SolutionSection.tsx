@@ -90,7 +90,11 @@ export function SolutionSection() {
             {t.title}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            {t.subtitlePart1}
+            <span className="text-foreground">
+              Identifier un problème sans solution, c'est{' '}
+              <span className="bg-gradient-to-r from-foreground via-foreground to-destructive bg-clip-text text-transparent">frustrant</span>
+            </span>
+            <span className="font-bold text-destructive">.</span>
             <br />
             Après chaque <span className="text-foreground">{t.subtitleHighlight}</span>
             {t.subtitlePart2} <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-foreground">{t.subtitleCode}</code> {t.subtitlePart3}
