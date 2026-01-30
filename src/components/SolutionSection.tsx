@@ -92,7 +92,7 @@ export function SolutionSection() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             {t.subtitlePart1}
             <br />
-            Après chaque <span className="text-primary">{t.subtitleHighlight}</span>
+            Après chaque <span className="text-foreground">{t.subtitleHighlight}</span>
             {t.subtitlePart2} <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-foreground">{t.subtitleCode}</code> {t.subtitlePart3}
           </p>
         </motion.div>
