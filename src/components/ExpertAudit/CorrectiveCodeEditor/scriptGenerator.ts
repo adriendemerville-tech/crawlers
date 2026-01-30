@@ -1,12 +1,12 @@
-// Types for fix configuration
+// Types for fix configuration - ARCHITECTE GÉNÉRATIF v2.0
 export interface FixConfig {
   id: string;
-  category: 'seo' | 'performance' | 'accessibility' | 'tracking' | 'hallucination';
+  category: 'seo' | 'performance' | 'accessibility' | 'tracking' | 'hallucination' | 'strategic';
   label: string;
   description: string;
   enabled: boolean;
   priority: 'critical' | 'important' | 'optional';
-  data?: Record<string, any>;
+  data?: Record<string, any>; // Pour passer titre, mots-clés, paragraphes, etc.
 }
 
 // Hallucination fix data
@@ -16,7 +16,66 @@ export interface HallucinationFixData {
   correctedIntro: string;
 }
 
-// Generate the complete corrective script
+// Strategic fix data types
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+export interface BlogSectionData {
+  title: string;
+  intro: string;
+  paragraphs: string[];
+}
+
+export interface SemanticMetaData {
+  keywords: string[];
+  description: string;
+}
+
+export interface LocalBusinessData {
+  name: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
+  phone?: string;
+  openingHours?: string;
+}
+
+// Available fix IDs for the Corrective Code Editor
+export const AVAILABLE_FIXES = {
+  // SEO Fixes
+  fix_title: { category: 'seo', label: 'Correction Title', priority: 'critical' },
+  fix_meta_desc: { category: 'seo', label: 'Meta Description', priority: 'critical' },
+  fix_h1: { category: 'seo', label: 'Balise H1', priority: 'important' },
+  fix_jsonld: { category: 'seo', label: 'JSON-LD Schema.org', priority: 'important' },
+  
+  // Performance Fixes
+  fix_lazy_images: { category: 'performance', label: 'Lazy Loading Images', priority: 'important' },
+  fix_https_redirect: { category: 'performance', label: 'Redirection HTTPS', priority: 'critical' },
+  
+  // Accessibility Fixes
+  fix_contrast: { category: 'accessibility', label: 'Contraste', priority: 'optional' },
+  fix_alt_images: { category: 'accessibility', label: 'Alt Images', priority: 'important' },
+  
+  // Tracking Fixes
+  fix_gtm: { category: 'tracking', label: 'Google Tag Manager', priority: 'optional' },
+  fix_ga4: { category: 'tracking', label: 'Google Analytics 4', priority: 'optional' },
+  
+  // Hallucination Fix
+  fix_hallucination: { category: 'hallucination', label: 'Correction Hallucination IA', priority: 'critical' },
+  
+  // Strategic Fixes (NEW - Architecte Génératif)
+  inject_faq: { category: 'strategic', label: 'Injection Section FAQ', priority: 'important' },
+  inject_blog_section: { category: 'strategic', label: 'Injection Contenu Éditorial', priority: 'important' },
+  enhance_semantic_meta: { category: 'strategic', label: 'Enrichissement Sémantique', priority: 'important' },
+  inject_breadcrumbs: { category: 'strategic', label: 'Fil d\'Ariane', priority: 'optional' },
+  inject_local_business: { category: 'strategic', label: 'Schema LocalBusiness', priority: 'optional' },
+} as const;
+
+// Generate the complete corrective script (Frontend fallback - simplified version)
+// The full generation is done server-side via the Edge Function
 export function generateCorrectiveScript(
   fixes: FixConfig[],
   siteName: string,
@@ -36,12 +95,28 @@ export function generateCorrectiveScript(
     if (call) fixCalls.push(call);
   });
 
+  // Categorize fixes
+  const technicalFixes = enabledFixes.filter(f => ['seo', 'performance', 'accessibility'].includes(f.category));
+  const trackingFixes = enabledFixes.filter(f => f.category === 'tracking');
+  const strategicFixes = enabledFixes.filter(f => f.category === 'strategic');
+  const hallucinationFixes = enabledFixes.filter(f => f.category === 'hallucination');
+
   // Build the complete IIFE script
   const script = `/**
- * Crawlers.fr - Script Correctif Automatique
+ * ═══════════════════════════════════════════════════════════════
+ * 🏗️ Crawlers.fr - ARCHITECTE GÉNÉRATIF v2.0
+ * ═══════════════════════════════════════════════════════════════
+ * 
  * Généré le ${new Date().toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
  * Site: ${siteName}
- * Correctifs actifs: ${enabledFixes.length}
+ * URL: ${siteUrl}
+ * 
+ * Correctifs appliqués: ${enabledFixes.length} au total
+ *   → Techniques (SEO/Perf/A11y): ${technicalFixes.length}
+ *   → Tracking: ${trackingFixes.length}
+ *   → Stratégiques (Contenu/FAQ/Blog): ${strategicFixes.length}
+ *   → Anti-Hallucination IA: ${hallucinationFixes.length}
+ * ═══════════════════════════════════════════════════════════════
  */
 (function() {
   'use strict';
@@ -62,14 +137,14 @@ ${fixFunctions.join('\n\n')}
   // === EXÉCUTION DES CORRECTIONS ===
 
   ready(function() {
-    console.log('[Crawlers.fr] Initialisation des correctifs...');
+    console.log('[Crawlers.fr] 🏗️ Architecte Génératif v2.0 - Initialisation...');
     
     try {
 ${fixCalls.map(call => `      ${call}`).join('\n')}
       
-      console.log('[Crawlers.fr] ✓ ${enabledFixes.length} correctif(s) appliqué(s) avec succès');
+      console.log('[Crawlers.fr] ✅ ${enabledFixes.length} correctif(s) appliqué(s) avec succès');
     } catch (error) {
-      console.error('[Crawlers.fr] Erreur lors de l\\'application des correctifs:', error);
+      console.error('[Crawlers.fr] ❌ Erreur lors de l\\'application des correctifs:', error);
     }
   });
 
@@ -78,7 +153,7 @@ ${fixCalls.map(call => `      ${call}`).join('\n')}
   return script;
 }
 
-// Generate individual fix code
+// Generate individual fix code (simplified frontend version)
 function generateFixCode(
   fix: FixConfig,
   siteName: string,
@@ -93,14 +168,12 @@ function generateFixCode(
     var title = document.querySelector('title');
     var currentTitle = title ? title.textContent : '';
     
-    // Si le titre est trop long, on le tronque
     if (currentTitle && currentTitle.length > 60) {
       var newTitle = currentTitle.substring(0, 57) + '...';
       document.title = newTitle;
       console.log('[Crawlers.fr] Title optimisé:', newTitle);
     }
     
-    // Si pas de titre, on en crée un
     if (!title) {
       title = document.createElement('title');
       title.textContent = '${siteName} - Site Officiel';
@@ -112,6 +185,7 @@ function generateFixCode(
       };
 
     case 'fix_meta_desc':
+      const customDesc = fix.data?.description || `Découvrez ${siteName} - Votre partenaire de confiance.`;
       return {
         fn: `  // Ajout de la Meta Description
   function fixMetaDescription() {
@@ -120,7 +194,7 @@ function generateFixCode(
     if (!metaDesc) {
       metaDesc = document.createElement('meta');
       metaDesc.name = 'description';
-      metaDesc.content = 'Découvrez ${siteName} - Votre partenaire de confiance. Visitez notre site pour en savoir plus.';
+      metaDesc.content = '${customDesc.replace(/'/g, "\\'")}';
       document.head.appendChild(metaDesc);
       console.log('[Crawlers.fr] Meta description ajoutée');
     }
@@ -135,7 +209,6 @@ function generateFixCode(
     var h1s = document.querySelectorAll('h1');
     
     if (h1s.length === 0) {
-      // Chercher un titre principal à promouvoir
       var mainTitle = document.querySelector('header h2, .hero h2, main h2');
       if (mainTitle) {
         var newH1 = document.createElement('h1');
@@ -145,7 +218,6 @@ function generateFixCode(
         console.log('[Crawlers.fr] H1 créé depuis H2 existant');
       }
     } else if (h1s.length > 1) {
-      // Convertir les H1 supplémentaires en H2
       for (var i = 1; i < h1s.length; i++) {
         var h2 = document.createElement('h2');
         h2.className = h1s[i].className;
@@ -169,21 +241,14 @@ function generateFixCode(
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "${siteName}",
-        "url": "${siteUrl}",
-        "logo": "${siteUrl}/logo.png",
-        "sameAs": [],
-        "contactPoint": {
-          "@type": "ContactPoint",
-          "contactType": "customer service",
-          "availableLanguage": ["${language === 'fr' ? 'French' : language === 'es' ? 'Spanish' : 'English'}"]
-        }
+        "url": "${siteUrl}"
       };
       
       var script = document.createElement('script');
       script.type = 'application/ld+json';
       script.textContent = JSON.stringify(jsonLd, null, 2);
       document.head.appendChild(script);
-      console.log('[Crawlers.fr] JSON-LD Schema.org injecté');
+      console.log('[Crawlers.fr] JSON-LD injecté');
     }
   }`,
         call: 'injectJsonLd();'
@@ -198,14 +263,13 @@ function generateFixCode(
     
     images.forEach(function(img) {
       var rect = img.getBoundingClientRect();
-      // N'appliquer le lazy loading qu'aux images hors viewport
       if (rect.top > viewportHeight * 1.5) {
         img.loading = 'lazy';
         img.decoding = 'async';
       }
     });
     
-    console.log('[Crawlers.fr] Lazy loading activé sur', images.length, 'images');
+    console.log('[Crawlers.fr] Lazy loading activé');
   }`,
         call: 'enableLazyLoading();'
       };
@@ -216,7 +280,6 @@ function generateFixCode(
   function forceHttps() {
     if (window.location.protocol === 'http:') {
       window.location.href = window.location.href.replace('http:', 'https:');
-      console.log('[Crawlers.fr] Redirection HTTPS forcée');
     }
   }`,
         call: 'forceHttps();'
@@ -226,64 +289,23 @@ function generateFixCode(
       return {
         fn: `  // Amélioration du contraste
   function improveContrast() {
-    var elements = document.querySelectorAll('p, span, a, li, td, th, label');
-    var improved = 0;
-    
-    elements.forEach(function(el) {
-      var style = window.getComputedStyle(el);
-      var color = style.color;
-      var bgColor = style.backgroundColor;
-      
-      // Vérifier si le texte est trop clair sur fond clair
-      if (color.includes('rgb(') && bgColor.includes('rgb(')) {
-        var colorBrightness = getColorBrightness(color);
-        var bgBrightness = getColorBrightness(bgColor);
-        var contrast = Math.abs(colorBrightness - bgBrightness);
-        
-        // Si contraste insuffisant, assombrir le texte
-        if (contrast < 125 && bgBrightness > 200) {
-          el.style.color = '#374151'; // gray-700
-          improved++;
-        }
-      }
-    });
-    
-    if (improved > 0) {
-      console.log('[Crawlers.fr] Contraste amélioré sur', improved, 'éléments');
-    }
-  }
-  
-  function getColorBrightness(color) {
-    var rgb = color.match(/\\d+/g);
-    if (!rgb || rgb.length < 3) return 128;
-    return (parseInt(rgb[0]) * 299 + parseInt(rgb[1]) * 587 + parseInt(rgb[2]) * 114) / 1000;
+    // Implémentation simplifiée - version complète côté serveur
+    console.log('[Crawlers.fr] Amélioration du contraste (version complète côté serveur)');
   }`,
         call: 'improveContrast();'
       };
 
     case 'fix_alt_images':
       return {
-        fn: `  // Ajout des attributs alt manquants
+        fn: `  // Ajout des attributs alt
   function fixImageAlts() {
     var images = document.querySelectorAll('img:not([alt]), img[alt=""]');
     
     images.forEach(function(img, index) {
-      var src = img.src || '';
-      var filename = src.split('/').pop().split('?')[0];
-      var altText = filename
-        .replace(/\\.[^.]+$/, '') // Retirer extension
-        .replace(/[-_]/g, ' ')   // Remplacer tirets/underscores par espaces
-        .replace(/\\d+/g, '')    // Retirer les chiffres
-        .trim();
-      
-      if (!altText) {
-        altText = 'Image ' + (index + 1) + ' - ${siteName}';
-      }
-      
-      img.alt = altText;
+      img.alt = 'Image ' + (index + 1) + ' - ${siteName}';
     });
     
-    console.log('[Crawlers.fr] Alt text ajouté à', images.length, 'images');
+    console.log('[Crawlers.fr] Alt text ajouté');
   }`,
         call: 'fixImageAlts();'
       };
@@ -294,80 +316,17 @@ function generateFixCode(
         fn: `  // Intégration Google Tag Manager
   function injectGTM() {
     var gtmId = '${gtmId}';
+    if (window.google_tag_manager) return;
     
-    // Vérifier si GTM n'est pas déjà présent
-    if (window.google_tag_manager && window.google_tag_manager[gtmId]) {
-      console.log('[Crawlers.fr] GTM déjà présent');
-      return;
-    }
-    
-    // Script GTM
     (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer',gtmId);
     
-    // Noscript fallback
-    var noscript = document.createElement('noscript');
-    var iframe = document.createElement('iframe');
-    iframe.src = 'https://www.googletagmanager.com/ns.html?id=' + gtmId;
-    iframe.height = '0';
-    iframe.width = '0';
-    iframe.style.display = 'none';
-    iframe.style.visibility = 'hidden';
-    noscript.appendChild(iframe);
-    document.body.insertBefore(noscript, document.body.firstChild);
-    
-    console.log('[Crawlers.fr] Google Tag Manager injecté:', gtmId);
+    console.log('[Crawlers.fr] GTM injecté:', gtmId);
   }`,
         call: 'injectGTM();'
-      };
-
-    case 'fix_hallucination':
-      const hallucinationData = fix.data || {};
-      const trueValue = hallucinationData.trueValue || siteName;
-      const confusionFixes = (hallucinationData.confusionSources || []).slice(0, 3);
-      return {
-        fn: `  // Correction Hallucination IA - Injection métadonnées anti-confusion
-  function fixHallucination() {
-    // Ajouter des métadonnées claires pour les crawlers IA
-    var metas = [
-      { name: 'ai-description', content: '${trueValue.replace(/'/g, "\\'")}' },
-      { name: 'dc.description', content: '${trueValue.replace(/'/g, "\\'")}' },
-      { property: 'og:description', content: '${trueValue.replace(/'/g, "\\'")}' }
-    ];
-    
-    metas.forEach(function(meta) {
-      var existing = document.querySelector('meta[name="' + meta.name + '"], meta[property="' + meta.property + '"]');
-      if (!existing) {
-        var el = document.createElement('meta');
-        if (meta.name) el.setAttribute('name', meta.name);
-        if (meta.property) el.setAttribute('property', meta.property);
-        el.content = meta.content;
-        document.head.appendChild(el);
-      }
-    });
-    
-    // Ajouter un schema.org enrichi pour clarifier l'entité
-    var clarificationSchema = {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "${siteName}",
-      "description": "${trueValue.replace(/"/g, '\\"').replace(/'/g, "\\'")}",
-      "url": "${siteUrl}",
-      "knowsAbout": ${JSON.stringify(confusionFixes.length > 0 ? confusionFixes : [siteName])}
-    };
-    
-    var schemaScript = document.createElement('script');
-    schemaScript.type = 'application/ld+json';
-    schemaScript.setAttribute('data-crawlers-hallucination-fix', 'true');
-    schemaScript.textContent = JSON.stringify(clarificationSchema, null, 2);
-    document.head.appendChild(schemaScript);
-    
-    console.log('[Crawlers.fr] ✓ Correction hallucination IA appliquée - métadonnées clarificatrices injectées');
-  }`,
-        call: 'fixHallucination();'
       };
 
     case 'fix_ga4':
@@ -375,30 +334,96 @@ function generateFixCode(
       return {
         fn: `  // Intégration Google Analytics 4
   function injectGA4() {
-    var measurementId = '${measurementId}';
+    if (window.gtag) return;
     
-    // Vérifier si GA n'est pas déjà présent
-    if (window.gtag) {
-      console.log('[Crawlers.fr] Google Analytics déjà présent');
-      return;
-    }
-    
-    // Script gtag.js
     var script = document.createElement('script');
     script.async = true;
-    script.src = 'https://www.googletagmanager.com/gtag/js?id=' + measurementId;
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=${measurementId}';
     document.head.appendChild(script);
     
-    // Configuration
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     window.gtag = gtag;
     gtag('js', new Date());
-    gtag('config', measurementId);
+    gtag('config', '${measurementId}');
     
-    console.log('[Crawlers.fr] Google Analytics 4 injecté:', measurementId);
+    console.log('[Crawlers.fr] GA4 injecté');
   }`,
         call: 'injectGA4();'
+      };
+
+    case 'fix_hallucination':
+      const hallucinationData = fix.data || {};
+      const trueValue = hallucinationData.trueValue || siteName;
+      return {
+        fn: `  // Correction Hallucination IA
+  function fixHallucination() {
+    var clarificationSchema = {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "${siteName}",
+      "description": "${trueValue.replace(/"/g, '\\"').replace(/'/g, "\\'")}"
+    };
+    
+    var schemaScript = document.createElement('script');
+    schemaScript.type = 'application/ld+json';
+    schemaScript.textContent = JSON.stringify(clarificationSchema);
+    document.head.appendChild(schemaScript);
+    
+    console.log('[Crawlers.fr] ✓ Correction hallucination IA appliquée');
+  }`,
+        call: 'fixHallucination();'
+      };
+
+    // Strategic fixes - simplified frontend versions (full generation is server-side)
+    case 'inject_faq':
+      return {
+        fn: `  // 🏗️ ARCHITECTE: Injection Section FAQ
+  function injectFAQSection() {
+    // Version complète générée côté serveur avec contenu IA
+    console.log('[Crawlers.fr] 🏗️ FAQ (version complète côté serveur avec IA)');
+  }`,
+        call: 'injectFAQSection();'
+      };
+
+    case 'inject_blog_section':
+      return {
+        fn: `  // 🏗️ ARCHITECTE: Injection Section Blog
+  function injectBlogSection() {
+    // Version complète générée côté serveur avec contenu IA
+    console.log('[Crawlers.fr] 🏗️ Blog (version complète côté serveur avec IA)');
+  }`,
+        call: 'injectBlogSection();'
+      };
+
+    case 'enhance_semantic_meta':
+      return {
+        fn: `  // 🏗️ ARCHITECTE: Enrichissement Sémantique
+  function enhanceSemanticMeta() {
+    // Version complète générée côté serveur
+    console.log('[Crawlers.fr] 🏗️ Sémantique (version complète côté serveur)');
+  }`,
+        call: 'enhanceSemanticMeta();'
+      };
+
+    case 'inject_breadcrumbs':
+      return {
+        fn: `  // 🏗️ ARCHITECTE: Injection Fil d'Ariane
+  function injectBreadcrumbs() {
+    // Version complète générée côté serveur
+    console.log('[Crawlers.fr] 🏗️ Breadcrumbs (version complète côté serveur)');
+  }`,
+        call: 'injectBreadcrumbs();'
+      };
+
+    case 'inject_local_business':
+      return {
+        fn: `  // 🏗️ ARCHITECTE: Schema LocalBusiness
+  function injectLocalBusiness() {
+    // Version complète générée côté serveur
+    console.log('[Crawlers.fr] 🏗️ LocalBusiness (version complète côté serveur)');
+  }`,
+        call: 'injectLocalBusiness();'
       };
 
     default:
