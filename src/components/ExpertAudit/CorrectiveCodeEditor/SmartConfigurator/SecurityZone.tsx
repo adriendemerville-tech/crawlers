@@ -10,13 +10,15 @@ interface SecurityZoneProps {
   fixesCount?: number;
   sector?: string;
   showPayment?: boolean;
+  calculatedPrice?: number;
 }
 
 export function SecurityZone({ 
   siteUrl = '', 
   fixesCount = 0, 
   sector = 'default',
-  showPayment = false 
+  showPayment = false,
+  calculatedPrice = 3
 }: SecurityZoneProps) {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
@@ -29,6 +31,7 @@ export function SecurityZone({
             siteUrl={siteUrl}
             fixesCount={fixesCount}
             sector={sector}
+            calculatedPrice={calculatedPrice}
           />
         </div>
       )}
