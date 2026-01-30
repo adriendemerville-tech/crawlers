@@ -1,14 +1,19 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Crown, Target, Rocket, Sparkles, 
-  ExternalLink, Shield, TrendingUp
+  ExternalLink, Shield, TrendingUp, Pencil
 } from 'lucide-react';
 import { CompetitiveLandscape, CompetitorActor } from '@/types/expertAudit';
+import { CompetitorCorrectionModal, CompetitorCorrections } from './CompetitorCorrectionModal';
 
 interface CompetitiveLandscapeCardProps {
   landscape: CompetitiveLandscape;
+  onCorrectionSubmit?: (corrections: CompetitorCorrections) => void;
+  isReanalyzing?: boolean;
 }
 
 function CompetitorCard({ 
@@ -64,57 +69,92 @@ function CompetitorCard({
   );
 }
 
-export function CompetitiveLandscapeCard({ landscape }: CompetitiveLandscapeCardProps) {
+export function CompetitiveLandscapeCard({ 
+  landscape, 
+  onCorrectionSubmit,
+  isReanalyzing = false 
+}: CompetitiveLandscapeCardProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCorrectionSubmit = (corrections: CompetitorCorrections) => {
+    if (onCorrectionSubmit) {
+      onCorrectionSubmit(corrections);
+    }
+    setIsModalOpen(false);
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-    >
-      <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <TrendingUp className="h-5 w-5 text-amber-500" />
-            Écosystème Concurrentiel
-            <Badge variant="outline" className="ml-auto text-xs text-amber-600 border-amber-500/50">
-              4 Acteurs Analysés
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          {/* Leader (Goliath) */}
-          <CompetitorCard 
-            actor={landscape.leader}
-            role="Leader (Goliath)"
-            icon={Crown}
-            accentColor="border-amber-500/40"
-          />
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <TrendingUp className="h-5 w-5 text-amber-500" />
+              Écosystème Concurrentiel
+              <div className="ml-auto flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsModalOpen(true)}
+                  className="gap-1.5 h-7 px-2.5 text-xs font-medium bg-foreground text-background hover:bg-foreground/90 rounded-md shadow-sm"
+                >
+                  <Pencil className="h-3 w-3" />
+                  Corriger
+                </Button>
+                <Badge variant="outline" className="text-xs text-amber-600 border-amber-500/50">
+                  4 Acteurs Analysés
+                </Badge>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            {/* Leader (Goliath) */}
+            <CompetitorCard 
+              actor={landscape.leader}
+              role="Leader (Goliath)"
+              icon={Crown}
+              accentColor="border-amber-500/40"
+            />
 
-          {/* Direct Competitor */}
-          <CompetitorCard 
-            actor={landscape.direct_competitor}
-            role="Concurrent Direct"
-            icon={Target}
-            accentColor="border-blue-500/40"
-          />
+            {/* Direct Competitor */}
+            <CompetitorCard 
+              actor={landscape.direct_competitor}
+              role="Concurrent Direct"
+              icon={Target}
+              accentColor="border-blue-500/40"
+            />
 
-          {/* Challenger */}
-          <CompetitorCard 
-            actor={landscape.challenger}
-            role="Challenger"
-            icon={Rocket}
-            accentColor="border-purple-500/40"
-          />
+            {/* Challenger */}
+            <CompetitorCard 
+              actor={landscape.challenger}
+              role="Challenger"
+              icon={Rocket}
+              accentColor="border-purple-500/40"
+            />
 
-          {/* Inspiration Source */}
-          <CompetitorCard 
-            actor={landscape.inspiration_source}
-            role="Source d'Inspiration"
-            icon={Sparkles}
-            accentColor="border-emerald-500/40"
-          />
-        </CardContent>
-      </Card>
-    </motion.div>
+            {/* Inspiration Source */}
+            <CompetitorCard 
+              actor={landscape.inspiration_source}
+              role="Source d'Inspiration"
+              icon={Sparkles}
+              accentColor="border-emerald-500/40"
+            />
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Correction Modal */}
+      <CompetitorCorrectionModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        landscape={landscape}
+        onSubmit={handleCorrectionSubmit}
+        isLoading={isReanalyzing}
+      />
+    </>
   );
 }
