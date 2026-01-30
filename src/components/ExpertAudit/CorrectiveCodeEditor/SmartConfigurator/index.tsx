@@ -405,26 +405,45 @@ export function SmartConfigurator({
 
   // Calculate dynamic price based on enabled fixes
   // Base: 3€ minimum, 12€ maximum
-  // Price scales proportionally: 0% selected = 3€, 100% selected = 12€
+  // Basique only (100%) = 6€ max, Strategic + Generative add up to 12€
   const calculatedPrice = useMemo(() => {
     const MIN_PRICE = 3;
+    const MID_PRICE = 6;  // Max price for Basique only
     const MAX_PRICE = 12;
-    const INCREMENT = 0.30; // Price increases in 30 cent steps
-    const PRICE_RANGE = MAX_PRICE - MIN_PRICE; // 9€ range
     
-    // Total number of available fixes
+    // Count fixes by category
+    const technicalFixes = fixConfigs.filter(f => !['strategic', 'generative'].includes(f.category));
+    const strategicFixes = fixConfigs.filter(f => f.category === 'strategic');
+    const generativeFixes = fixConfigs.filter(f => f.category === 'generative');
+    
+    const enabledTechnical = technicalFixes.filter(f => f.enabled).length;
+    const enabledStrategic = strategicFixes.filter(f => f.enabled).length;
+    const enabledGenerative = generativeFixes.filter(f => f.enabled).length;
+    
+    // Calculate percentage for each category
+    const technicalPercent = technicalFixes.length > 0 ? enabledTechnical / technicalFixes.length : 0;
+    const strategicPercent = strategicFixes.length > 0 ? enabledStrategic / strategicFixes.length : 0;
+    const generativePercent = generativeFixes.length > 0 ? enabledGenerative / generativeFixes.length : 0;
+    
+    // Basique contributes to 3€ → 6€ range (3€ range)
+    const technicalContribution = (MID_PRICE - MIN_PRICE) * technicalPercent;
+    
+    // Strategic + Generative contribute to 6€ → 12€ range (6€ range, split 40/60)
+    const advancedRange = MAX_PRICE - MID_PRICE;
+    const strategicContribution = advancedRange * 0.4 * strategicPercent;
+    const generativeContribution = advancedRange * 0.6 * generativePercent;
+    
+    // Calculate raw price
+    const rawPrice = MIN_PRICE + technicalContribution + strategicContribution + generativeContribution;
+    
+    // Calculate dynamic increment based on total fixes
     const totalFixes = fixConfigs.length;
-    if (totalFixes === 0) return MIN_PRICE;
+    const dynamicIncrement = totalFixes > 0 ? (MAX_PRICE - MIN_PRICE) / totalFixes : 0.30;
     
-    // Percentage of fixes enabled (0 to 1)
-    const enabledPercentage = enabledCount / totalFixes;
-    
-    // Price scales linearly: 0% = 3€, 100% = 12€
-    const rawPrice = MIN_PRICE + (PRICE_RANGE * enabledPercentage);
-    
-    // Round to nearest 0.30€ increment
-    return Math.round(rawPrice / INCREMENT) * INCREMENT;
-  }, [fixConfigs.length, enabledCount]);
+    // Round to nearest dynamic increment (minimum 0.10€)
+    const increment = Math.max(0.10, dynamicIncrement);
+    return Math.round(rawPrice / increment) * increment;
+  }, [fixConfigs]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
