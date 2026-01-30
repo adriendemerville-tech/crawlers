@@ -172,19 +172,11 @@ export function CodeBlock({
         </div>
       </ScrollArea>
 
-      {/* Lock overlay */}
+      {/* Lock overlay - minimal */}
       {isLocked && (
         <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
-          <div className="w-full h-2/3 bg-gradient-to-t from-background via-background/95 to-transparent flex flex-col items-center justify-end pb-8">
-            <div className="pointer-events-auto flex flex-col items-center gap-2 bg-card/90 backdrop-blur-sm border border-amber-500/30 rounded-lg p-4 shadow-lg">
-              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
-                <Lock className="w-5 h-5" />
-                <span className="font-semibold text-sm">Code verrouillé</span>
-              </div>
-              <p className="text-xs text-muted-foreground text-center max-w-[200px]">
-                {totalLines} lignes • Payez pour débloquer le script complet
-              </p>
-            </div>
+          <div className="w-full h-2/3 bg-gradient-to-t from-background via-background/95 to-transparent flex items-center justify-center">
+            <Lock className="w-8 h-8 text-muted-foreground/60" strokeWidth={2.5} />
           </div>
         </div>
       )}
