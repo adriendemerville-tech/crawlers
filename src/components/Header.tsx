@@ -143,12 +143,13 @@ export function Header() {
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
                   <Bot className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
                 </div>
-                <span className="text-lg font-semibold text-foreground">Crawlers.AI</span>
+                {/* Hide site name on mobile */}
+                <span className="hidden sm:inline text-lg font-semibold text-foreground">Crawlers.AI</span>
               </a>
 
-              {/* Language selector - hidden on profile page (available in settings) */}
+              {/* Language selector - hidden on mobile and profile page */}
               {!isProfilePage && (
-                <div className="flex items-center gap-0.5 rounded-md border border-border bg-muted/50 p-0.5" role="group" aria-label="Sélection de la langue">
+                <div className="hidden sm:flex items-center gap-0.5 rounded-md border border-border bg-muted/50 p-0.5" role="group" aria-label="Sélection de la langue">
                   <Button
                     variant={language === 'fr' ? 'default' : 'ghost'}
                     size="sm"
@@ -185,8 +186,8 @@ export function Header() {
           )}
         </div>
 
-        {/* Center: Lexique link */}
-        <div className="absolute left-1/2 -translate-x-1/2">
+        {/* Center: Lexique link - hidden on mobile */}
+        <div className="hidden sm:block absolute left-1/2 -translate-x-1/2">
           <Link to="/lexique">
             <Button
               variant="ghost"

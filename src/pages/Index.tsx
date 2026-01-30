@@ -3,6 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
 import { ToolTabs, ToolTab } from '@/components/ToolTabs';
+import { MobileLexiqueButton } from '@/components/MobileLexiqueButton';
 import { CrawlResult } from '@/types/crawler';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { GeoResult } from '@/types/geo';
@@ -350,6 +351,10 @@ const Index = () => {
             {renderDashboard()}
           </Suspense>
         </section>
+        
+        {/* Mobile-only Lexique button */}
+        <MobileLexiqueButton />
+        
         <Suspense fallback={<SectionSkeleton />}>
           <SolutionSection />
         </Suspense>
