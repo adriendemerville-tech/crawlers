@@ -92,6 +92,9 @@ export function ExpertInsightsCard({ insights }: ExpertInsightsCardProps) {
               <div className="text-muted-foreground">Texte</div>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Ratio recommandé : <span className="font-medium text-foreground">25% – 70%</span>
+          </p>
           {contentDensity.ratio < 15 && (
             <p className="text-xs text-warning flex items-center gap-1">
               <AlertTriangle className="h-3 w-3" />
