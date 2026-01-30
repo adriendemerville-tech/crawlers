@@ -26,12 +26,17 @@ export function SecurityZone({
       <Lock className="absolute top-3 right-3 w-4 h-4 text-muted-foreground/40" />
       {/* Payment Section - Conditional */}
       {showPayment && siteUrl && (
-        <>
+        <div className="flex justify-center">
           <PaymentButton 
             siteUrl={siteUrl}
             fixesCount={fixesCount}
             sector={sector}
           />
+        </div>
+      )}
+
+      {showPayment && siteUrl && (
+        <>
           <Separator className="my-4" />
         </>
       )}

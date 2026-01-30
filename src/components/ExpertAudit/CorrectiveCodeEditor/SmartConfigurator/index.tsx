@@ -76,6 +76,7 @@ export function SmartConfigurator({
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasPaid, setHasPaid] = useState(false);
+  const [showLockOverlay, setShowLockOverlay] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   
   const { language } = useLanguage();
@@ -277,6 +278,7 @@ export function SmartConfigurator({
     if (isOpen) {
       setFixConfigs(availableFixes);
       setGeneratedCode('');
+      setShowLockOverlay(false);
       checkPaymentStatus();
     }
   }, [isOpen, availableFixes, checkPaymentStatus]);
@@ -328,6 +330,10 @@ export function SmartConfigurator({
 
       if (data?.success && data?.code) {
         setGeneratedCode(data.code);
+        // Delay showing the lock overlay for minimum 4 seconds after generation starts
+        setTimeout(() => {
+          setShowLockOverlay(true);
+        }, 4000);
       } else {
         throw new Error(data?.error || 'Erreur lors de la génération');
       }
@@ -338,6 +344,7 @@ export function SmartConfigurator({
         description: error instanceof Error ? error.message : 'Une erreur est survenue',
         variant: 'destructive',
       });
+      setShowLockOverlay(false);
     } finally {
       setIsGenerating(false);
     }
@@ -565,12 +572,12 @@ export function SmartConfigurator({
               {viewMode === 'visual' ? (
                 <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
               ) : (
-                <div className="p-2 h-full">
+                <div className="p-2 h-full pt-6">
                   <CodeBlock 
                     code={generatedCode} 
                     isTyping={false}
                     placeholder="Cliquez sur 'Générer le script' pour voir le code"
-                    isLocked={!hasPaid && !!generatedCode}
+                    isLocked={!hasPaid && showLockOverlay}
                   />
                 </div>
               )}
@@ -582,7 +589,7 @@ export function SmartConfigurator({
                 <SecurityZone 
                   siteUrl={siteUrl}
                   fixesCount={enabledCount}
-                  showPayment={!!generatedCode}
+                  showPayment={showLockOverlay && !hasPaid}
                 />
               </div>
             )}
