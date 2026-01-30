@@ -384,8 +384,8 @@ export function SmartConfigurator({
         <div className="flex-1 overflow-hidden grid grid-cols-12 h-full">
           {/* Left Column: Configurator */}
           <div className="col-span-5 border-r flex flex-col overflow-hidden">
-            <Tabs defaultValue="technical" className="flex-1 flex flex-col">
-              <TabsList className="w-full justify-start rounded-none border-b bg-transparent px-4 py-0 h-auto">
+            <Tabs defaultValue="technical" className="flex-1 flex flex-col min-h-0">
+              <TabsList className="w-full justify-start rounded-none border-b bg-transparent px-4 py-0 h-auto flex-shrink-0">
                 <TabsTrigger 
                   value="technical" 
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-500 data-[state=active]:bg-transparent py-3 px-4"
@@ -412,7 +412,7 @@ export function SmartConfigurator({
                 </TabsTrigger>
               </TabsList>
 
-              <ScrollArea className="flex-1">
+              <ScrollArea className="flex-1 min-h-0">
                 <TabsContent value="technical" className="m-0 p-4">
                   <TechnicalTab fixes={fixConfigs} onToggle={toggleFix} />
                 </TabsContent>
@@ -428,16 +428,15 @@ export function SmartConfigurator({
             </Tabs>
 
             {/* Attribution Section */}
-            <div className="border-t p-4 space-y-3">
-              <Separator className="mb-3" />
+            <div className="border-t p-3 space-y-2 flex-shrink-0">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Growth & Attribution
               </p>
               <AttributionCard config={attribution} onToggle={toggleAttribution} />
             </div>
 
-            {/* Generate Button */}
-            <div className="p-4 border-t">
+            {/* Generate Button - Always visible */}
+            <div className="p-3 border-t bg-background flex-shrink-0">
               <Button
                 onClick={handleGenerate}
                 disabled={enabledCount === 0 || isGenerating}
