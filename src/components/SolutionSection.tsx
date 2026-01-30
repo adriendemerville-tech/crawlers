@@ -92,9 +92,16 @@ export function SolutionSection() {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             <span className="text-foreground">
               Identifier un problème sans solution, c'est{' '}
-              <span className="bg-gradient-to-r from-foreground via-foreground to-destructive bg-clip-text text-transparent">frustrant</span>
+              <span className="bg-gradient-to-r from-foreground via-foreground to-destructive bg-clip-text text-transparent">frustr</span>
+              <span 
+                className="bg-gradient-to-r from-destructive/80 to-destructive bg-clip-text text-transparent"
+                style={{ textShadow: '0 4px 6px rgba(127, 29, 29, 0.5)' }}
+              >ant</span>
             </span>
-            <span className="font-bold text-destructive">.</span>
+            <span 
+              className="font-bold text-destructive"
+              style={{ textShadow: '0 0 8px rgba(220, 38, 38, 0.6), 0 0 12px rgba(220, 38, 38, 0.4)' }}
+            >.</span>
             <br />
             Après chaque <span className="text-foreground">{t.subtitleHighlight}</span>
             {t.subtitlePart2} <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-foreground">{t.subtitleCode}</code> {t.subtitlePart3}
