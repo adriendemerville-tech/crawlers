@@ -381,7 +381,7 @@ export function SmartConfigurator({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-[85vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
+      <DialogContent className="max-w-[95vw] xl:max-w-7xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
         <DialogHeader className="p-4 pb-3 border-b">
           <DialogTitle className="flex items-center gap-2">
             <FileCode className="w-5 h-5 text-violet-500" />
