@@ -349,11 +349,12 @@ export function WorkflowCarousel({
                       "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
                       isActive && step.id !== 2 && step.id !== 3 && "border-primary/30 shadow-[0_12px_40px_rgba(0,0,0,0.15)]",
                       isCompleted && "border-success/30",
-                      // Dark metallic gray theme for step 2 (Strategic Audit) with subtle glow
-                      step.id === 2 && !isCompleted && "border-2 border-slate-500/70 bg-gradient-to-br from-card via-card to-slate-100/20 dark:to-slate-900/40 shadow-[0_0_20px_rgba(100,116,139,0.25)]",
-                      step.id === 2 && isActive && !isCompleted && "shadow-[0_0_25px_rgba(100,116,139,0.35)]",
-                      // Violet/purple accent for step 3 (Code Correctif) with glow
-                      step.id === 3 && !isCompleted && "border-2 border-violet-500/70 shadow-[0_0_20px_rgba(139,92,246,0.4)]",
+                      // Golden yellow border for step 2 (Strategic Audit) with subtle glow
+                      step.id === 2 && !isCompleted && "border border-amber-400/80 bg-gradient-to-br from-card via-card to-amber-50/10 dark:to-amber-900/10 shadow-[0_0_12px_rgba(251,191,36,0.15)]",
+                      step.id === 2 && isActive && !isCompleted && "shadow-[0_0_18px_rgba(251,191,36,0.25)]",
+                      // Golden yellow border for step 3 (Code Correctif) with subtle glow
+                      step.id === 3 && !isCompleted && "border border-amber-400/80 shadow-[0_0_12px_rgba(251,191,36,0.15)]",
+                      step.id === 3 && isActive && !isCompleted && "shadow-[0_0_18px_rgba(251,191,36,0.25)]",
                       // Hover effect for non-active cards
                       !isActive && !shouldHide && "hover:shadow-[0_12px_35px_rgba(0,0,0,0.18)]"
                     )}>
@@ -363,9 +364,9 @@ export function WorkflowCarousel({
                         isCompleted 
                           ? "bg-gradient-to-r from-success to-success/80"
                           : step.id === 2
-                          ? "bg-gradient-to-r from-slate-600 via-slate-400 to-slate-600"
+                          ? "bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500"
                           : step.id === 3
-                          ? "bg-gradient-to-r from-violet-600 via-violet-400 to-violet-600"
+                          ? "bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500"
                           : isActive 
                           ? "bg-gradient-to-r from-primary to-primary/80"
                           : "bg-muted"
@@ -378,9 +379,9 @@ export function WorkflowCarousel({
                           isCompleted 
                             ? "bg-success/10 text-success"
                             : step.id === 2
-                            ? "bg-slate-500/15 text-slate-600 dark:text-slate-400"
+                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                             : step.id === 3
-                            ? "bg-violet-500/15 text-violet-500"
+                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                             : isActive 
                             ? "bg-primary/10 text-primary"
                             : "bg-muted text-muted-foreground"
@@ -430,10 +431,10 @@ export function WorkflowCarousel({
                                 "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
                                 isCompleted && "bg-success hover:bg-success/90",
                                 isLocked && "opacity-50 cursor-not-allowed",
-                                // Dark metallic gray button for step 2
-                                step.id === 2 && !isCompleted && !isLocked && "bg-slate-600 hover:bg-slate-700 text-white border-0 shadow-[0_0_15px_rgba(100,116,139,0.3)]",
-                                // Violet/purple button for step 3 with glow
-                                step.id === 3 && !isCompleted && !isLocked && "bg-violet-600 hover:bg-violet-700 text-white border-0 shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                                // Amber/gold button for step 2 with subtle glow
+                                step.id === 2 && !isCompleted && !isLocked && "bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-[0_0_12px_rgba(251,191,36,0.25)]",
+                                // Amber/gold button for step 3 with subtle glow
+                                step.id === 3 && !isCompleted && !isLocked && "bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-[0_0_12px_rgba(251,191,36,0.25)]"
                               )}
                             >
                               {getStepButtonText(step.id)}
