@@ -1,6 +1,6 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { AlertTriangle, ChevronDown, BookOpen, Lock } from 'lucide-react';
+import { Smile, ChevronDown, BookOpen, Lock } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { PaymentButton } from './PaymentButton';
@@ -44,8 +44,8 @@ export function SecurityZone({
 
       {/* Security Note - Simple inline */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <AlertTriangle className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
-        <span>Ce script s'exécute côté client et ne modifie pas votre serveur.</span>
+        <Smile className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+        <span>Pas de panique : Ce script s'exécutera uniquement côté client et ne modifiera pas votre serveur.</span>
       </div>
 
       {/* Implementation Guide */}
