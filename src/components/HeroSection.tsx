@@ -245,6 +245,10 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
 
         {/* Trust indicators */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-success" />
+            <span>Dopé à l'IA</span>
+          </div>
           {t.hero.trust.noSignup && (
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-success" />
