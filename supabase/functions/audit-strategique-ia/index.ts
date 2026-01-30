@@ -1,7 +1,116 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
+
+// Fonction pour générer un résumé promptable depuis le rapport stratégique
+function generateStrategicPromptSummary(title: string, description: string, priority: string): string {
+  const priorityLabel = priority === 'Prioritaire' ? '🔴 PRIORITAIRE' : priority === 'Important' ? '🟠 IMPORTANT' : '🟢 OPPORTUNITÉ';
+  return `[${priorityLabel}] ${title} - ${description.substring(0, 200)}`;
+}
+
+// Fonction pour sauvegarder les recommandations stratégiques dans le registre
+async function saveStrategicRecommendationsToRegistry(
+  supabaseUrl: string,
+  supabaseKey: string,
+  authHeader: string,
+  domain: string,
+  url: string,
+  parsedAnalysis: any
+): Promise<void> {
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.log('⚠️ Utilisateur non authentifié - registre stratégique non mis à jour');
+      return;
+    }
+    
+    // Supprimer les anciennes recommandations stratégiques pour ce domaine
+    await supabase
+      .from('audit_recommendations_registry')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('domain', domain)
+      .eq('audit_type', 'strategic');
+    
+    const registryEntries: any[] = [];
+    
+    // Extraire les recommandations de l'executive_roadmap
+    if (parsedAnalysis.executive_roadmap && Array.isArray(parsedAnalysis.executive_roadmap)) {
+      parsedAnalysis.executive_roadmap.forEach((item: any, idx: number) => {
+        const priorityMap: Record<string, string> = {
+          'Prioritaire': 'critical',
+          'Important': 'important',
+          'Opportunité': 'optional'
+        };
+        registryEntries.push({
+          user_id: user.id,
+          domain,
+          url,
+          audit_type: 'strategic',
+          recommendation_id: `roadmap_${idx}`,
+          title: item.title || `Recommandation ${idx + 1}`,
+          description: item.prescriptive_action || item.strategic_rationale || '',
+          category: item.category?.toLowerCase() || 'contenu',
+          priority: priorityMap[item.priority] || 'important',
+          fix_type: null,
+          fix_data: { 
+            expected_roi: item.expected_roi,
+            category: item.category,
+            full_action: item.prescriptive_action
+          },
+          prompt_summary: generateStrategicPromptSummary(
+            item.title || `Recommandation ${idx + 1}`,
+            item.prescriptive_action || '',
+            item.priority || 'Important'
+          ),
+          is_resolved: false,
+        });
+      });
+    }
+    
+    // Extraire les recommandations de keyword_positioning
+    if (parsedAnalysis.keyword_positioning?.recommendations && Array.isArray(parsedAnalysis.keyword_positioning.recommendations)) {
+      parsedAnalysis.keyword_positioning.recommendations.forEach((rec: string, idx: number) => {
+        registryEntries.push({
+          user_id: user.id,
+          domain,
+          url,
+          audit_type: 'strategic',
+          recommendation_id: `kw_rec_${idx}`,
+          title: `SEO Keywords #${idx + 1}`,
+          description: rec,
+          category: 'seo',
+          priority: 'important',
+          fix_type: null,
+          fix_data: { type: 'keyword_recommendation' },
+          prompt_summary: `[🟠 SEO] ${rec.substring(0, 200)}`,
+          is_resolved: false,
+        });
+      });
+    }
+    
+    if (registryEntries.length > 0) {
+      const { error: insertError } = await supabase
+        .from('audit_recommendations_registry')
+        .insert(registryEntries);
+      
+      if (insertError) {
+        console.error('❌ Erreur sauvegarde registre stratégique:', insertError);
+      } else {
+        console.log(`✅ ${registryEntries.length} recommandations stratégiques sauvegardées dans le registre`);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Erreur lors de la sauvegarde du registre stratégique:', error);
+  }
+}
 
 // ==================== INTERFACES ====================
 
@@ -902,6 +1011,22 @@ IMPORTANT: Utilise ces informations pour:
     console.log(`   - Mots-clés analysés: ${marketData?.top_keywords.length || 0}`);
     console.log(`   - Volume de marché: ${marketData?.total_market_volume.toLocaleString() || 'N/A'}`);
     console.log('═══════════════════════════════════════════════════════════════');
+
+    // ==================== ÉTAPE 5: SAUVEGARDER DANS LE REGISTRE ====================
+    const authHeader = req.headers.get('Authorization') || '';
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    
+    if (authHeader && supabaseUrl && supabaseKey) {
+      saveStrategicRecommendationsToRegistry(
+        supabaseUrl,
+        supabaseKey,
+        authHeader,
+        domain,
+        url,
+        parsedAnalysis
+      ).catch(err => console.error('Erreur sauvegarde registre stratégique:', err));
+    }
 
     return new Response(
       JSON.stringify(result),
