@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { FileText, Newspaper, Quote, Navigation, MapPin, ExternalLink, Calendar, User, Globe, Loader2 } from 'lucide-react';
+import { FileText, Quote, Navigation, MapPin, ExternalLink, Globe, Loader2 } from 'lucide-react';
 import { FixConfig } from './types';
 import { useState, useEffect } from 'react';
 
@@ -14,17 +14,14 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
   
   const enabledFixes = fixes.filter(f => f.enabled && f.category === 'strategic');
   
-  const hasBlog = enabledFixes.some(f => f.id === 'inject_blog_section');
   const hasFAQ = enabledFixes.some(f => f.id === 'inject_faq');
   const hasSemantic = enabledFixes.some(f => f.id === 'enhance_semantic_meta');
   const hasBreadcrumbs = enabledFixes.some(f => f.id === 'inject_breadcrumbs');
   const hasLocalBusiness = enabledFixes.some(f => f.id === 'inject_local_business');
 
-  const blogFix = fixes.find(f => f.id === 'inject_blog_section');
   const semanticFix = fixes.find(f => f.id === 'enhance_semantic_meta');
   const localBusinessFix = fixes.find(f => f.id === 'inject_local_business');
 
-  const blogTitle = blogFix?.data?.sectionTitle || 'Nos Actualités';
   const semanticParagraph = semanticFix?.data?.injectedParagraph || 'Votre paragraphe sémantique apparaîtra ici avec les mots-clés optimisés...';
   const businessName = localBusinessFix?.data?.name || 'Votre Entreprise';
 
@@ -78,7 +75,7 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
     );
   }
 
-  const noPreview = !hasBlog && !hasFAQ && !hasSemantic && !hasBreadcrumbs && !hasLocalBusiness;
+  const noPreview = !hasFAQ && !hasSemantic && !hasBreadcrumbs && !hasLocalBusiness;
 
   if (noPreview) {
     return (
@@ -127,35 +124,6 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
         </motion.div>
       )}
 
-      {/* Blog Section Preview */}
-      {hasBlog && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-3"
-        >
-          <div className="flex items-center gap-2">
-            <Newspaper className="w-4 h-4 text-blue-500" />
-            <h3 className="font-semibold">{blogTitle}</h3>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="p-3 hover:shadow-md transition-shadow cursor-pointer">
-                <div className="w-full h-16 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded mb-2" />
-                <h4 className="text-xs font-medium line-clamp-2">
-                  Article {i} : Lorem ipsum dolor sit amet consectetur
-                </h4>
-                <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
-                  <Calendar className="w-3 h-3" />
-                  <span>12 Jan 2025</span>
-                  <User className="w-3 h-3 ml-2" />
-                  <span>Admin</span>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
-      )}
 
       {/* Semantic Injection Preview */}
       {hasSemantic && (
