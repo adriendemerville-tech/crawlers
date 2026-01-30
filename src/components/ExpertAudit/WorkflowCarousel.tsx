@@ -352,9 +352,9 @@ export function WorkflowCarousel({
                       // Dark metallic grey border for step 2 (Strategic Audit) - elegant SaaS style
                       step.id === 2 && !isCompleted && "border border-slate-400/50 dark:border-slate-500/60 bg-gradient-to-br from-card via-card to-slate-50/5 dark:to-slate-900/20 shadow-[0_8px_30px_rgba(0,0,0,0.15)]",
                       step.id === 2 && isActive && !isCompleted && "border-slate-500/70 dark:border-slate-400/70 shadow-[0_12px_40px_rgba(0,0,0,0.18)]",
-                      // Golden yellow border for step 3 (Code Correctif) with subtle glow
-                      step.id === 3 && !isCompleted && "border border-amber-400/80 shadow-[0_0_12px_rgba(251,191,36,0.15)]",
-                      step.id === 3 && isActive && !isCompleted && "shadow-[0_0_18px_rgba(251,191,36,0.25)]",
+                      // Violet/purple border for step 3 (Code Correctif) with subtle glow
+                      step.id === 3 && !isCompleted && "border border-violet-500/60 dark:border-violet-400/60 shadow-[0_0_15px_rgba(139,92,246,0.2)]",
+                      step.id === 3 && isActive && !isCompleted && "border-violet-500/80 shadow-[0_0_20px_rgba(139,92,246,0.3)]",
                       // Hover effect for non-active cards
                       !isActive && !shouldHide && "hover:shadow-[0_12px_35px_rgba(0,0,0,0.18)]"
                     )}>
@@ -364,9 +364,9 @@ export function WorkflowCarousel({
                         isCompleted 
                           ? "bg-gradient-to-r from-success to-success/80"
                           : step.id === 2
-                          ? "bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500"
+                          ? "bg-gradient-to-r from-slate-600 via-slate-400 to-slate-600"
                           : step.id === 3
-                          ? "bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500"
+                          ? "bg-gradient-to-r from-violet-600 via-violet-400 to-violet-600"
                           : isActive 
                           ? "bg-gradient-to-r from-primary to-primary/80"
                           : "bg-muted"
@@ -381,7 +381,7 @@ export function WorkflowCarousel({
                             : step.id === 2
                             ? "bg-slate-500/15 text-slate-600 dark:text-slate-400"
                             : step.id === 3
-                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                            ? "bg-violet-500/15 text-violet-500"
                             : isActive 
                             ? "bg-primary/10 text-primary"
                             : "bg-muted text-muted-foreground"
@@ -398,13 +398,39 @@ export function WorkflowCarousel({
                           "text-xl font-semibold mb-2 transition-colors",
                           isActive || isCompleted ? "text-foreground" : "text-muted-foreground"
                         )}>
-                          {step.title}
+                          {step.id === 3 ? (
+                            <span className="font-mono">
+                              <span className="text-violet-500">&lt;</span>
+                              <span className="text-pink-500">Code</span>
+                              <span className="text-violet-500">/&gt;</span>
+                              <span className="ml-1 text-foreground font-sans">Correctif</span>
+                            </span>
+                          ) : (
+                            step.title
+                          )}
                           {step.isPaid && (
-                            <span className="ml-2 text-sm font-normal text-primary">({t.paid})</span>
+                            <span className="ml-2 text-sm font-normal text-violet-500">({t.paid})</span>
                           )}
                         </h3>
-                        <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                          {step.description}
+                        <p className={cn(
+                          "text-sm leading-relaxed mb-6",
+                          step.id === 3 
+                            ? "font-mono text-muted-foreground"
+                            : "text-muted-foreground"
+                        )}>
+                          {step.id === 3 ? (
+                            <>
+                              <span className="text-violet-400">&lt;</span>
+                              <span className="text-cyan-500">json-ld</span>
+                              <span className="text-violet-400">&gt;</span>
+                              <span className="text-foreground/70"> optimisé pour votre site </span>
+                              <span className="text-violet-400">&lt;/</span>
+                              <span className="text-cyan-500">json-ld</span>
+                              <span className="text-violet-400">&gt;</span>
+                            </>
+                          ) : (
+                            step.description
+                          )}
                         </p>
 
                         {/* Action Button - Only visible on active (center) card */}
@@ -431,10 +457,10 @@ export function WorkflowCarousel({
                                 "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
                                 isCompleted && "bg-success hover:bg-success/90",
                                 isLocked && "opacity-50 cursor-not-allowed",
-                                // Dark slate grey button for step 2 - elegant SaaS style
-                                step.id === 2 && !isCompleted && !isLocked && "bg-slate-600 hover:bg-slate-700 text-white border-0",
-                                // Amber/gold button for step 3 with subtle glow
-                                step.id === 3 && !isCompleted && !isLocked && "bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-[0_0_12px_rgba(251,191,36,0.25)]"
+                                // Dark slate grey button for step 2 - same as border
+                                step.id === 2 && !isCompleted && !isLocked && "bg-slate-500 hover:bg-slate-600 text-white border-0",
+                                // Violet/purple button for step 3
+                                step.id === 3 && !isCompleted && !isLocked && "bg-violet-600 hover:bg-violet-700 text-white border-0 shadow-[0_0_12px_rgba(139,92,246,0.3)]"
                               )}
                             >
                               {getStepButtonText(step.id)}
