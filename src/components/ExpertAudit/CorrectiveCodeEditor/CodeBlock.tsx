@@ -143,7 +143,7 @@ export function CodeBlock({
   const showLockOverlay = isLocked && animationComplete;
 
   return (
-    <div className="relative h-full min-h-[200px] rounded-lg overflow-hidden border bg-background" ref={scrollRef}>
+    <div className="relative h-full min-h-[200px] rounded overflow-hidden border bg-background" ref={scrollRef}>
       {/* Line numbers gutter */}
       <ScrollArea className="h-full">
         <div className="flex">
