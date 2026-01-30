@@ -144,7 +144,7 @@ export function SolutionSection() {
               variant="outline"
               size="lg"
               onClick={() => navigate('/audit-expert')}
-              className="relative z-10 gap-1.5 group font-mono border-2 border-violet-500/50 hover:border-violet-500 hover:bg-violet-500/5 bg-violet-500/5 text-foreground transition-all duration-300"
+              className="relative z-10 gap-1.5 group font-mono border-2 border-violet-500/50 hover:border-violet-500 hover:bg-violet-500/5 bg-violet-500/5 text-foreground transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
             >
               <span className="text-violet-400">&lt;</span>
               <span className="text-pink-500">button</span>
@@ -159,8 +159,10 @@ export function SolutionSection() {
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" strokeWidth={3} />
               </span>
             </Button>
-            {/* Golden reflection bar - separate element below button */}
-            <div className="mt-4 w-[90%] h-1.5 rounded-full bg-gradient-to-r from-amber-400/20 via-amber-400/60 to-amber-400/20" />
+            {/* Golden reflection bar with shimmer animation */}
+            <div className="relative mt-4 w-[90%] h-1.5 rounded-full bg-gradient-to-r from-amber-400/20 via-amber-400/60 to-amber-400/20 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent animate-shimmer" />
+            </div>
             <div className="mt-0.5 w-[70%] h-1 rounded-full bg-gradient-to-r from-transparent via-amber-500/40 to-transparent blur-[2px]" />
           </div>
         </motion.div>
