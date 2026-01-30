@@ -151,7 +151,7 @@ export function SmartConfigurator({
           category: 'seo',
           label: 'Corriger la balise H1',
           description: 'Assure un H1 unique et optimisé',
-          enabled: true,
+          enabled: false,
           priority: 'critical',
         });
       }
