@@ -533,8 +533,12 @@ export function SmartConfigurator({
               )}
             </ScrollArea>
 
-            {/* Security Zone */}
-            <SecurityZone />
+            {/* Security Zone with Payment */}
+            <SecurityZone 
+              siteUrl={siteUrl}
+              fixesCount={enabledCount}
+              showPayment={!!generatedCode}
+            />
           </div>
         </div>
       </DialogContent>
