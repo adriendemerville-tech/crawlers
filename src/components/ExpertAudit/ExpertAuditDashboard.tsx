@@ -226,20 +226,29 @@ export function ExpertAuditDashboard() {
     }
   }, [pendingReportOpen, isLoggedIn, technicalResult, strategicResult]);
 
-  // Save audit state to session storage - called automatically on state changes
-  const saveAuditState = useCallback(() => {
+  // Save audit state to session storage - only keeps the most recent audit
+  const saveAuditState = useCallback((mode: 'technical' | 'strategic' | null = auditMode) => {
     if (url) sessionStorage.setItem('audit_url', url);
-    if (technicalResult) sessionStorage.setItem('audit_technical_result', JSON.stringify(technicalResult));
-    if (strategicResult) sessionStorage.setItem('audit_strategic_result', JSON.stringify(strategicResult));
-    if (auditMode) sessionStorage.setItem('audit_mode', auditMode);
+    if (mode) sessionStorage.setItem('audit_mode', mode);
+    
+    // Only save the most recent audit - clear the other one
+    if (mode === 'technical' && technicalResult) {
+      sessionStorage.setItem('audit_technical_result', JSON.stringify(technicalResult));
+      sessionStorage.removeItem('audit_strategic_result');
+    } else if (mode === 'strategic' && strategicResult) {
+      sessionStorage.setItem('audit_strategic_result', JSON.stringify(strategicResult));
+      sessionStorage.removeItem('audit_technical_result');
+    }
   }, [url, technicalResult, strategicResult, auditMode]);
 
   // Auto-save to cache whenever results change (persistence between navigations)
   useEffect(() => {
-    if (technicalResult || strategicResult) {
-      saveAuditState();
+    if (technicalResult && auditMode === 'technical') {
+      saveAuditState('technical');
+    } else if (strategicResult && auditMode === 'strategic') {
+      saveAuditState('strategic');
     }
-  }, [technicalResult, strategicResult, saveAuditState]);
+  }, [technicalResult, strategicResult, auditMode, saveAuditState]);
 
   // Update step based on completed steps
   useEffect(() => {
