@@ -215,6 +215,140 @@ export function generateExpertReportHTML(
     const strategic = result.strategicAnalysis;
     const geoScore = strategic?.geo_score?.score || strategic?.overallScore || 0;
 
+    const keywordsTitle =
+      language === 'fr' ? 'Mots clés' : language === 'es' ? 'Palabras clave' : 'Keywords';
+    const kp = strategic?.keyword_positioning;
+    const ms = strategic?.market_data_summary;
+
+    const keywordsSection = (() => {
+      const renderNumber = (n: any) => {
+        const num = typeof n === 'number' ? n : Number(n);
+        if (!Number.isFinite(num)) return '—';
+        return num.toLocaleString();
+      };
+      const renderRank = (rank: any) => {
+        if (typeof rank === 'number' && Number.isFinite(rank)) return `#${rank}`;
+        if (typeof rank === 'string' && rank.trim()) return rank;
+        return '—';
+      };
+
+      const summary = ms
+        ? `
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;">
+            <div style="padding: 12px; background: #f8fafc; border-radius: 10px; text-align: center;">
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Volume marché / mois</div>
+              <div style="font-weight: 700; color: #0f172a;">${renderNumber(ms.total_market_volume)}</div>
+            </div>
+            <div style="padding: 12px; background: #f8fafc; border-radius: 10px; text-align: center;">
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Mots-clés classés</div>
+              <div style="font-weight: 700; color: #0f172a;">${renderNumber(ms.keywords_ranked)}/${renderNumber(ms.keywords_analyzed)}</div>
+            </div>
+            <div style="padding: 12px; background: #f8fafc; border-radius: 10px; text-align: center;">
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Position moyenne</div>
+              <div style="font-weight: 700; color: #0f172a;">${
+                typeof ms.average_position === 'number' && ms.average_position > 0
+                  ? `#${ms.average_position.toFixed(1)}`
+                  : '—'
+              }</div>
+            </div>
+          </div>
+        `
+        : '';
+
+      const mainKeywordsTable =
+        kp?.main_keywords?.length
+          ? `
+            <div style="margin-top: 6px;">
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">Top mots-clés (volume, difficulté, position)</div>
+              <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
+                <thead style="background: #f9fafb;">
+                  <tr>
+                    <th style="padding: 10px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Mot-clé</th>
+                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Volume</th>
+                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Difficulté</th>
+                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Position</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${kp.main_keywords
+                    .slice(0, 10)
+                    .map(
+                      (kw: any) => `
+                        <tr>
+                          <td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #0f172a; font-weight: 600;">${kw.keyword || '—'}</td>
+                          <td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; color: #334155;">${renderNumber(kw.volume)}</td>
+                          <td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; color: #334155;">${renderNumber(kw.difficulty)}/100</td>
+                          <td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; color: #334155; font-weight: 700;">${renderRank(kw.current_rank)}</td>
+                        </tr>
+                      `
+                    )
+                    .join('')}
+                </tbody>
+              </table>
+            </div>
+          `
+          : `<p style="color: #374151; line-height: 1.6; margin: 0;">Aucune donnée de mots-clés n'a été fournie pour ce rapport.</p>`;
+
+      const quickWins =
+        kp?.quick_wins?.length
+          ? `
+            <div style="margin-top: 14px;">
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Quick wins (positions 11–20)</div>
+              <ul style="margin: 0; padding-left: 18px; color: #334155; line-height: 1.7;">
+                ${kp.quick_wins
+                  .slice(0, 6)
+                  .map(
+                    (qw: any) =>
+                      `<li><strong>\"${qw.keyword || '—'}\"</strong> — ${renderRank(qw.current_rank)} • ${renderNumber(qw.volume)} vol/mois</li>`
+                  )
+                  .join('')}
+              </ul>
+            </div>
+          `
+          : '';
+
+      const contentGaps =
+        kp?.content_gaps?.length
+          ? `
+            <div style="margin-top: 14px;">
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Gaps de contenu (opportunités)</div>
+              <ul style="margin: 0; padding-left: 18px; color: #334155; line-height: 1.7;">
+                ${kp.content_gaps
+                  .slice(0, 6)
+                  .map(
+                    (gap: any) =>
+                      `<li><strong>\"${gap.keyword || '—'}\"</strong> — ${renderNumber(gap.volume)} vol/mois</li>`
+                  )
+                  .join('')}
+              </ul>
+            </div>
+          `
+          : '';
+
+      const recommendations =
+        kp?.recommendations?.length
+          ? `
+            <div style="margin-top: 14px; padding: 14px; background: #f8fafc; border-radius: 12px; border: 1px solid #e5e7eb;">
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Recommandations mots-clés</div>
+              <ul style="margin: 0; padding-left: 18px; color: #0f172a; line-height: 1.7;">
+                ${kp.recommendations.slice(0, 6).map((r: any) => `<li>${r}</li>`).join('')}
+              </ul>
+            </div>
+          `
+          : '';
+
+      return `
+        <div style="background: linear-gradient(135deg, #f0fdf4, #ecfeff); padding: 24px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid #0ea5e9;">
+          <h3 style="font-size: 16px; color: #0c4a6e; margin: 0 0 12px 0;">${keywordsTitle}</h3>
+          ${summary}
+          ${mainKeywordsTable}
+          ${quickWins}
+          ${contentGaps}
+          ${recommendations}
+        </div>
+      `;
+    })();
+
     content = `
       <div style="text-align: center; margin-bottom: 40px;">
         <div style="display: inline-block; padding: 30px 50px; background: linear-gradient(135deg, #059669, #0891b2); border-radius: 20px; margin-bottom: 20px;">
@@ -249,6 +383,8 @@ export function generateExpertReportHTML(
           </div>
         </div>
       ` : ''}
+
+      ${keywordsSection}
 
       ${strategic?.strategic_roadmap?.length > 0 ? `
         <h3 style="font-size: 18px; color: #1f2937; margin-bottom: 16px;">${t.roadmap}</h3>
@@ -474,6 +610,63 @@ export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technic
       const lines = doc.splitTextToSize(summary, 170);
       doc.text(lines, 20, currentY);
       currentY += lines.length * 5 + 10;
+    }
+
+    // Mots-clés (encadré dédié)
+    {
+      // Intentionally keep French wording here to match the product spec
+      // and avoid ambiguity across locales in exported PDFs.
+      const keywordsTitle = 'Mots clés';
+      const kp = strategic?.keyword_positioning;
+      const ms = strategic?.market_data_summary;
+
+      doc.setFontSize(14);
+      doc.setTextColor(5, 150, 105);
+      doc.text(keywordsTitle, 20, currentY);
+      currentY += 8;
+
+      doc.setFontSize(10);
+      doc.setTextColor(60);
+
+      if (ms) {
+        const summaryLine = `Volume marché/mois: ${ms.total_market_volume?.toLocaleString?.() || ms.total_market_volume || '—'} | Classés: ${ms.keywords_ranked}/${ms.keywords_analyzed} | Position moy.: ${
+          typeof ms.average_position === 'number' && ms.average_position > 0 ? `#${ms.average_position.toFixed(1)}` : '—'
+        }`;
+        const summaryLines = doc.splitTextToSize(summaryLine, 170);
+        doc.text(summaryLines, 20, currentY);
+        currentY += summaryLines.length * 5 + 6;
+      }
+
+      if (kp?.main_keywords?.length > 0) {
+        const rows = kp.main_keywords.slice(0, 10).map((kw: any) => [
+          kw.keyword || '—',
+          typeof kw.volume === 'number' ? kw.volume.toLocaleString() : String(kw.volume ?? '—'),
+          `${kw.difficulty ?? '—'}/100`,
+          typeof kw.current_rank === 'number' ? `#${kw.current_rank}` : String(kw.current_rank ?? '—'),
+        ]);
+
+        autoTable(doc, {
+          startY: currentY,
+          head: [[keywordsTitle, 'Volume', 'Diff.', 'Pos.']],
+          body: rows,
+          theme: 'striped',
+          headStyles: { fillColor: [5, 150, 105] },
+          styles: { fontSize: 9 },
+          columnStyles: {
+            0: { cellWidth: 70 },
+            1: { cellWidth: 30, halign: 'center' },
+            2: { cellWidth: 20, halign: 'center' },
+            3: { cellWidth: 20, halign: 'center' },
+          },
+        });
+
+        currentY = ((doc as any).lastAutoTable?.finalY || currentY) + 10;
+      } else {
+        const msg = 'Aucune donnée de mots-clés n\'a été fournie pour ce rapport.';
+        const msgLines = doc.splitTextToSize(msg, 170);
+        doc.text(msgLines, 20, currentY);
+        currentY += msgLines.length * 5 + 10;
+      }
     }
 
     // Roadmap

@@ -419,6 +419,18 @@ export function ExpertAuditDashboard() {
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Strategic audit failed');
 
+      // Keyword module normalization (support minor naming variations)
+      const keywordPositioning =
+        data?.data?.keyword_positioning ??
+        data?.data?.keywordPositioning ??
+        data?.data?.keyword_positionnement ??
+        null;
+      const marketDataSummary =
+        data?.data?.market_data_summary ??
+        data?.data?.marketDataSummary ??
+        data?.data?.market_summary ??
+        null;
+
       const strategicData: ExpertAuditResult = {
         url: normalizedUrl,
         domain: new URL(normalizedUrl).hostname,
@@ -443,6 +455,9 @@ export function ExpertAuditDashboard() {
           competitive_landscape: data.data.competitive_landscape,
           geo_readiness: data.data.geo_readiness,
           executive_roadmap: data.data.executive_roadmap,
+          // Keywords module (dedicated)
+          keyword_positioning: keywordPositioning,
+          market_data_summary: marketDataSummary,
           // Standard Format (backward compatibility)
           brand_identity: data.data.brand_identity,
           market_positioning: data.data.market_positioning,
