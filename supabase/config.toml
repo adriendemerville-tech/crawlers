@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.generate-corrective-code]
 verify_jwt = false
+
+[functions.create-checkout]
+verify_jwt = false
