@@ -200,7 +200,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-1.5">
       {strategicFixes.map((fix, index) => {
         const Icon = strategicIcons[fix.id] || Sparkles;
         const isOpen = fix.enabled;
@@ -208,43 +208,43 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
         return (
           <motion.div
             key={fix.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             layout
-            transition={{ delay: index * 0.05 }}
-            className={`rounded-lg border transition-all ${
+            transition={{ delay: index * 0.03 }}
+            className={`rounded-md border transition-all ${
               fix.enabled 
-                ? 'p-3 border-blue-500/40 bg-blue-500/5 shadow-sm' 
-                : 'p-2 px-3 border-border hover:border-blue-500/30'
+                ? 'p-2 border-blue-500/40 bg-blue-500/5' 
+                : 'p-1.5 px-2 border-border hover:border-blue-500/30'
             }`}
           >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1">
                 {fix.enabled && (
-                  <div className="p-2 rounded-lg bg-blue-500/20 text-blue-600">
-                    <Icon className="w-4 h-4" />
+                  <div className="p-1 rounded bg-blue-500/20 text-blue-600">
+                    <Icon className="w-3 h-3" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm ${fix.enabled ? 'font-medium' : 'text-muted-foreground'}`}>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-xs ${fix.enabled ? 'font-medium' : 'text-muted-foreground'}`}>
                       {fix.label}
                     </span>
                     {fix.isRecommended && fix.enabled && (
-                      <Badge className="bg-gradient-to-r from-blue-500 to-violet-500 text-white text-xs px-1.5 py-0 border-0">
+                      <Badge className="bg-gradient-to-r from-blue-500 to-violet-500 text-white text-[9px] px-1 py-0 h-4 border-0">
                         Recommandé
                       </Badge>
                     )}
                   </div>
                   {fix.enabled && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{fix.description}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{fix.description}</p>
                   )}
                 </div>
               </div>
               <Checkbox
                 checked={fix.enabled}
                 onCheckedChange={() => handleCheckboxChange(fix)}
-                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 scale-90"
               />
             </div>
             
@@ -256,7 +256,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="pt-3 ml-11">
+                  <div className="pt-2 ml-7">
                     {renderConfigFields(fix)}
                   </div>
                 </motion.div>
