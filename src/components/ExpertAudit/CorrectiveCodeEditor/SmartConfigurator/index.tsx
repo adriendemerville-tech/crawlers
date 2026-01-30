@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Copy, Check, Code, Zap, Wrench, Sparkles, Eye, Save, Rocket
+  Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
@@ -521,7 +521,7 @@ export function SmartConfigurator({
                 className="bg-muted p-0.5 rounded-md"
               >
                 <ToggleGroupItem value="visual" className="gap-1.5 text-xs px-2.5 py-1 h-7 data-[state=on]:bg-background">
-                  <Eye className="w-3 h-3" />
+                  <Globe className="w-3 h-3" />
                   Preview
                 </ToggleGroupItem>
                 <ToggleGroupItem value="code" className="gap-1.5 text-xs px-2.5 py-1 h-7 data-[state=on]:bg-background">
@@ -605,7 +605,7 @@ export function SmartConfigurator({
             </div>
 
             {/* Preview/Code Content - fills available space with margins */}
-            <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-4">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
               {viewMode === 'visual' ? (
                 <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
               ) : (
