@@ -47,6 +47,63 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_recommendations_registry: {
+        Row: {
+          audit_type: string
+          category: string
+          created_at: string
+          description: string
+          domain: string
+          fix_data: Json | null
+          fix_type: string | null
+          id: string
+          is_resolved: boolean | null
+          priority: string
+          prompt_summary: string
+          recommendation_id: string
+          title: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          audit_type: string
+          category: string
+          created_at?: string
+          description: string
+          domain: string
+          fix_data?: Json | null
+          fix_type?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          priority: string
+          prompt_summary: string
+          recommendation_id: string
+          title: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          audit_type?: string
+          category?: string
+          created_at?: string
+          description?: string
+          domain?: string
+          fix_data?: Json | null
+          fix_type?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          priority?: string
+          prompt_summary?: string
+          recommendation_id?: string
+          title?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       billing_info: {
         Row: {
           billing_address: string | null

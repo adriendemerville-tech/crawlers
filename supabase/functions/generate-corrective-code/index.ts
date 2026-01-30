@@ -1,3 +1,5 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -14,11 +16,94 @@ interface FixConfig {
   data?: Record<string, any>;
 }
 
+interface RegistryRecommendation {
+  id: string;
+  recommendation_id: string;
+  title: string;
+  description: string;
+  category: string;
+  priority: string;
+  fix_type: string | null;
+  fix_data: Record<string, any>;
+  prompt_summary: string;
+  audit_type: 'technical' | 'strategic';
+}
+
 interface GenerateRequest {
   fixes: FixConfig[];
   siteName: string;
   siteUrl: string;
   language: string;
+  includeRegistryContext?: boolean; // Nouveau: inclure le contexte du registre
+}
+
+// Fonction pour récupérer le registre de recommandations
+async function fetchRecommendationsRegistry(
+  supabaseUrl: string,
+  supabaseKey: string,
+  authHeader: string,
+  domain: string
+): Promise<RegistryRecommendation[]> {
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.log('⚠️ Utilisateur non authentifié - registre non accessible');
+      return [];
+    }
+    
+    const { data, error } = await supabase
+      .from('audit_recommendations_registry')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('domain', domain)
+      .eq('is_resolved', false)
+      .order('priority', { ascending: true });
+    
+    if (error) {
+      console.error('❌ Erreur lecture registre:', error);
+      return [];
+    }
+    
+    console.log(`📋 ${data?.length || 0} recommandations trouvées dans le registre pour ${domain}`);
+    return data || [];
+  } catch (error) {
+    console.error('❌ Erreur lors de la lecture du registre:', error);
+    return [];
+  }
+}
+
+// Générer un commentaire de contexte basé sur le registre
+function generateRegistryContextComment(recommendations: RegistryRecommendation[]): string {
+  if (recommendations.length === 0) return '';
+  
+  const technicalRecs = recommendations.filter(r => r.audit_type === 'technical');
+  const strategicRecs = recommendations.filter(r => r.audit_type === 'strategic');
+  
+  let context = `\n  // ══════════════════════════════════════════════════════════════\n`;
+  context += `  // 📋 CONTEXTE D'AUDIT - Recommandations actives\n`;
+  context += `  // ══════════════════════════════════════════════════════════════\n`;
+  
+  if (technicalRecs.length > 0) {
+    context += `  //\n  // 🔧 AUDIT TECHNIQUE (${technicalRecs.length} recommandations):\n`;
+    technicalRecs.slice(0, 5).forEach(rec => {
+      context += `  //   - ${rec.prompt_summary.substring(0, 80)}...\n`;
+    });
+  }
+  
+  if (strategicRecs.length > 0) {
+    context += `  //\n  // 📈 AUDIT STRATÉGIQUE (${strategicRecs.length} recommandations):\n`;
+    strategicRecs.slice(0, 5).forEach(rec => {
+      context += `  //   - ${rec.prompt_summary.substring(0, 80)}...\n`;
+    });
+  }
+  
+  context += `  // ══════════════════════════════════════════════════════════════\n`;
+  
+  return context;
 }
 
 // Generate individual fix code
@@ -354,7 +439,8 @@ function generateCorrectiveScript(
   fixes: FixConfig[],
   siteName: string,
   siteUrl: string,
-  language: string
+  language: string,
+  registryContext: string = ''
 ): string {
   const enabledFixes = fixes.filter(f => f.enabled);
   if (enabledFixes.length === 0) return '';
@@ -382,7 +468,7 @@ function generateCorrectiveScript(
  */
 (function() {
   'use strict';
-
+${registryContext}
   // Attendre que le DOM soit prêt
   function ready(fn) {
     if (document.readyState !== 'loading') {
@@ -423,7 +509,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { fixes, siteName, siteUrl, language = 'fr' }: GenerateRequest = await req.json();
+    const { fixes, siteName, siteUrl, language = 'fr', includeRegistryContext = true }: GenerateRequest = await req.json();
 
     console.log('🔧 Generating corrective code for:', siteName);
     console.log(`📋 Fixes requested: ${fixes?.length || 0}`);
@@ -456,8 +542,41 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate the script
-    const code = generateCorrectiveScript(fixes, siteName, siteUrl, language);
+    // Récupérer le contexte du registre si demandé
+    let registryContext = '';
+    let registryRecommendations: RegistryRecommendation[] = [];
+    
+    if (includeRegistryContext) {
+      const authHeader = req.headers.get('Authorization') || '';
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+      const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+      
+      if (authHeader && supabaseUrl && supabaseKey) {
+        // Extraire le domaine de l'URL
+        let domain = siteUrl;
+        try {
+          const urlObj = new URL(siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`);
+          domain = urlObj.hostname.replace('www.', '');
+        } catch (e) {
+          console.log('Could not parse URL for domain extraction:', siteUrl);
+        }
+        
+        registryRecommendations = await fetchRecommendationsRegistry(
+          supabaseUrl,
+          supabaseKey,
+          authHeader,
+          domain
+        );
+        
+        if (registryRecommendations.length > 0) {
+          registryContext = generateRegistryContextComment(registryRecommendations);
+          console.log(`📋 Contexte d'audit ajouté au script (${registryRecommendations.length} recommandations)`);
+        }
+      }
+    }
+
+    // Generate the script with registry context
+    const code = generateCorrectiveScript(fixes, siteName, siteUrl, language, registryContext);
     const linesCount = code.split('\n').length;
 
     console.log(`✅ Generated ${linesCount} lines of corrective code with ${enabledFixes.length} fixes`);
@@ -468,6 +587,7 @@ Deno.serve(async (req) => {
         code,
         fixesApplied: enabledFixes.length,
         linesCount,
+        registryRecommendationsCount: registryRecommendations.length,
         fixesSummary: enabledFixes.map(f => ({
           id: f.id,
           label: f.label,

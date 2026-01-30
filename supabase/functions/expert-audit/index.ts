@@ -1,8 +1,97 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Mapping des recommandations vers les types de fix pour le générateur de code
+const RECOMMENDATION_TO_FIX_MAP: Record<string, { fixType: string | null; category: string }> = {
+  'title_too_long': { fixType: 'fix_title', category: 'seo' },
+  'missing_title': { fixType: 'fix_title', category: 'seo' },
+  'missing_meta_desc': { fixType: 'fix_meta_desc', category: 'seo' },
+  'short_meta_desc': { fixType: 'fix_meta_desc', category: 'seo' },
+  'multiple_h1': { fixType: 'fix_h1', category: 'seo' },
+  'missing_h1': { fixType: 'fix_h1', category: 'seo' },
+  'no_schema_org': { fixType: 'fix_jsonld', category: 'seo' },
+  'not_https': { fixType: 'fix_https_redirect', category: 'performance' },
+  'low_content': { fixType: null, category: 'seo' },
+  'performance_critical': { fixType: 'fix_lazy_images', category: 'performance' },
+  'robots_restrictive': { fixType: null, category: 'seo' },
+};
+
+// Fonction pour générer un résumé promptable
+function generatePromptSummary(rec: { id: string; title: string; description: string; priority: string; fixes?: string[] }): string {
+  const priorityLabel = rec.priority === 'critical' ? '🔴 CRITIQUE' : rec.priority === 'important' ? '🟠 IMPORTANT' : '🟢 OPTIONNEL';
+  const fixesText = rec.fixes && rec.fixes.length > 0 ? ` Actions: ${rec.fixes.slice(0, 2).join('; ')}` : '';
+  return `[${priorityLabel}] ${rec.title} - ${rec.description.substring(0, 150)}${fixesText}`;
+}
+
+// Fonction pour sauvegarder les recommandations dans le registre
+async function saveRecommendationsToRegistry(
+  supabaseUrl: string,
+  supabaseKey: string,
+  authHeader: string,
+  domain: string,
+  url: string,
+  auditType: 'technical' | 'strategic',
+  recommendations: Array<{ id: string; title: string; description: string; priority: string; category: string; fixes?: string[] }>
+): Promise<void> {
+  try {
+    // Créer un client avec le token de l'utilisateur
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+    
+    // Récupérer l'utilisateur
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.log('⚠️ Utilisateur non authentifié - registre non mis à jour');
+      return;
+    }
+    
+    // Supprimer les anciennes recommandations pour ce domaine/type
+    await supabase
+      .from('audit_recommendations_registry')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('domain', domain)
+      .eq('audit_type', auditType);
+    
+    // Préparer les nouvelles recommandations
+    const registryEntries = recommendations.map(rec => {
+      const mapping = RECOMMENDATION_TO_FIX_MAP[rec.id] || { fixType: null, category: rec.category };
+      return {
+        user_id: user.id,
+        domain,
+        url,
+        audit_type: auditType,
+        recommendation_id: rec.id,
+        title: rec.title,
+        description: rec.description,
+        category: rec.category,
+        priority: rec.priority,
+        fix_type: mapping.fixType,
+        fix_data: { fixes: rec.fixes || [] },
+        prompt_summary: generatePromptSummary(rec),
+        is_resolved: false,
+      };
+    });
+    
+    // Insérer les nouvelles recommandations
+    const { error: insertError } = await supabase
+      .from('audit_recommendations_registry')
+      .insert(registryEntries);
+    
+    if (insertError) {
+      console.error('❌ Erreur sauvegarde registre:', insertError);
+    } else {
+      console.log(`✅ ${registryEntries.length} recommandations sauvegardées dans le registre (${auditType})`);
+    }
+  } catch (error) {
+    console.error('❌ Erreur lors de la sauvegarde du registre:', error);
+  }
 }
 
 const GOOGLE_API_KEY = "AIzaSyALHaypJWTqbt8K1klhQkYeLPRBjaOs2hc";
@@ -799,6 +888,24 @@ Réponds avec ce JSON exact:
     }
     
     console.log('Expert Audit complete. Score:', totalScore, '/200');
+    
+    // Sauvegarder les recommandations dans le registre (async, non-bloquant)
+    const authHeader = req.headers.get('Authorization') || '';
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    
+    if (authHeader && supabaseUrl && supabaseKey) {
+      // Lancer en arrière-plan (ne pas bloquer la réponse)
+      saveRecommendationsToRegistry(
+        supabaseUrl,
+        supabaseKey,
+        authHeader,
+        domain,
+        normalizedUrl,
+        'technical',
+        recommendations
+      ).catch(err => console.error('Erreur sauvegarde registre:', err));
+    }
     
     return new Response(
       JSON.stringify({
