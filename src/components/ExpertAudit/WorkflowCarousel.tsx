@@ -214,7 +214,15 @@ export function WorkflowCarousel({
                   isStepCompleted(step.id)
                     ? "bg-success text-success-foreground"
                     : activeStep === step.id
-                    ? "bg-primary text-primary-foreground"
+                    ? step.id === 2
+                      ? "bg-slate-500 text-white"
+                      : step.id === 3
+                      ? "bg-violet-500 text-white"
+                      : "bg-primary text-primary-foreground"
+                    : step.id === 2
+                    ? "bg-slate-400/30 text-slate-500"
+                    : step.id === 3
+                    ? "bg-violet-400/30 text-violet-500"
                     : "bg-muted text-muted-foreground"
                 )}
               >

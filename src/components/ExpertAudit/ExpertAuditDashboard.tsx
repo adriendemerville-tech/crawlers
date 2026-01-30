@@ -493,7 +493,7 @@ export function ExpertAuditDashboard() {
         <p className="text-muted-foreground max-w-xl mx-auto text-base">
           {t.subtitlePart1}{' '}
           {t.subtitlePart2}{' '}
-          <code className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono text-sm font-medium">
+          <code className="px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-500 font-mono text-sm font-medium">
             {t.subtitleCode}
           </code>{' '}
           {t.subtitlePart3}
