@@ -54,7 +54,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Search className="h-5 w-5 text-primary" />
-            Positionnement Mots-Clés
+            Mots clés
             {marketSummary?.data_source === 'dataforseo' && (
               <Badge variant="outline" className="ml-auto text-xs text-primary border-primary/50">
                 Données DataForSEO
