@@ -272,6 +272,45 @@ export interface BrandAuthority {
 }
 
 // NEW: GEO Readiness 2026
+// NEW: Keyword Positioning (DataForSEO based)
+export interface KeywordItem {
+  keyword: string;
+  volume: number;
+  difficulty: number;
+  current_rank: number | string;
+}
+
+export interface QuickWinKeyword {
+  keyword: string;
+  current_rank: number;
+  volume: number;
+  action: string;
+}
+
+export interface ContentGap {
+  keyword: string;
+  volume: number;
+  priority: 'high' | 'medium' | 'low';
+  action: string;
+}
+
+export interface KeywordPositioning {
+  main_keywords: KeywordItem[];
+  quick_wins: QuickWinKeyword[];
+  content_gaps: ContentGap[];
+  opportunities: string[];
+  competitive_gaps: string[];
+  recommendations: string[];
+}
+
+export interface MarketDataSummary {
+  total_market_volume: number;
+  keywords_ranked: number;
+  keywords_analyzed: number;
+  average_position: number;
+  data_source: 'dataforseo' | 'fallback';
+}
+
 export interface GeoReadiness {
   citability_score: number; // 0-100
   semantic_gap_analysis: SemanticGapMatrix;
@@ -294,6 +333,10 @@ export interface StrategicAnalysis {
   competitive_landscape?: CompetitiveLandscape;
   geo_readiness?: GeoReadiness;
   executive_roadmap?: PremiumRoadmapItem[];
+  
+  // NEW: Keyword Positioning (DataForSEO based)
+  keyword_positioning?: KeywordPositioning;
+  market_data_summary?: MarketDataSummary;
   
   // Legacy format (backward compatibility)
   brand_identity?: BrandIdentity;
