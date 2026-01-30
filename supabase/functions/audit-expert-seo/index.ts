@@ -364,11 +364,37 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
   const metaDescContent = metaDescElement?.getAttribute('content')?.trim() || '';
   
   // Extract H1 tags using DOM
+  // Extraction H1 - méthode DOM principale
   const h1Elements = doc.querySelectorAll('h1');
   const h1Contents: string[] = [];
   for (let i = 0; i < h1Elements.length; i++) {
     const h1Text = (h1Elements[i] as Element).textContent?.trim() || '';
     if (h1Text) h1Contents.push(h1Text);
+  }
+  
+  // Fallback regex si le parseur DOM n'a pas trouvé de H1
+  // (certains parseurs ont des problèmes avec les H1 contenant des attributs complexes)
+  if (h1Contents.length === 0) {
+    const h1Regex = /<h1[^>]*>([\s\S]*?)<\/h1>/gi;
+    let h1Match;
+    while ((h1Match = h1Regex.exec(html)) !== null) {
+      // Nettoyer le HTML interne pour extraire le texte brut
+      const h1Html = h1Match[1];
+      const h1Text = h1Html
+        .replace(/<[^>]+>/g, '') // Supprimer les balises HTML internes
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (h1Text && h1Text.length > 0) {
+        h1Contents.push(h1Text);
+        console.log(`[H1-Fallback] H1 trouvé via regex: "${h1Text.substring(0, 50)}..."`);
+      }
+    }
   }
   
   // === ÉTAPE 2 : Analyse JSON-LD AVANT suppression des scripts ===
