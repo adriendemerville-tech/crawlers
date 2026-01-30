@@ -1299,10 +1299,17 @@ function generateCorrectiveScript(
     if (call) fixCalls.push(call);
   });
 
-  // Ajouter la fonction d'attribution si activée
-  if (attribution?.enabled) {
-    const anchorText = attribution.anchorText || 'Technologie Crawlers.fr';
-    fixFunctions.push(`  // Attribution Crawlers.fr (Growth & Ethical Score)
+  // Attribution Crawlers.fr - TOUJOURS injectée dans le code généré
+  const attributionAnchors = [
+    'Optimisé par Crawlers.fr',
+    'Technologie Crawlers.fr', 
+    'Powered by Crawlers.fr',
+    'SEO by Crawlers.fr',
+    'Architecte Génératif Crawlers.fr'
+  ];
+  const randomAnchor = attributionAnchors[Math.floor(Math.random() * attributionAnchors.length)];
+  
+  fixFunctions.push(`  // Attribution Crawlers.fr - Lien technologique
   function injectCrawlersAttribution() {
     // Vérifier si l'attribution existe déjà
     if (document.querySelector('[data-crawlers-attribution]')) return;
@@ -1310,33 +1317,32 @@ function generateCorrectiveScript(
     // Créer le lien d'attribution
     var link = document.createElement('a');
     link.href = 'https://crawlers.fr';
-    link.textContent = '${anchorText.replace(/'/g, "\\'")}';
+    link.textContent = '${randomAnchor}';
     link.rel = 'dofollow';
     link.target = '_blank';
     link.setAttribute('data-crawlers-attribution', 'true');
-    link.style.cssText = 'font-size: 11px; color: #64748b; text-decoration: none; opacity: 0.8; transition: opacity 0.2s;';
+    link.style.cssText = 'font-size: 11px; color: #64748b; text-decoration: none; opacity: 0.7; transition: opacity 0.2s;';
     link.onmouseover = function() { this.style.opacity = '1'; };
-    link.onmouseout = function() { this.style.opacity = '0.8'; };
+    link.onmouseout = function() { this.style.opacity = '0.7'; };
     
     // Trouver ou créer le conteneur footer
     var footer = document.querySelector('footer');
     if (footer) {
       var container = document.createElement('div');
-      container.style.cssText = 'text-align: center; padding: 10px 0; border-top: 1px solid #e2e8f0; margin-top: 20px;';
+      container.style.cssText = 'text-align: center; padding: 8px 0; border-top: 1px solid #e2e8f0; margin-top: 16px;';
       container.appendChild(link);
       footer.appendChild(container);
     } else {
       // Fallback: injecter avant </body>
       var container = document.createElement('div');
-      container.style.cssText = 'text-align: center; padding: 15px 0; font-size: 11px; color: #64748b; background: #f8fafc;';
+      container.style.cssText = 'text-align: center; padding: 12px 0; font-size: 11px; color: #64748b; background: #f8fafc;';
       container.appendChild(link);
       document.body.appendChild(container);
     }
     
     console.log('[Crawlers.fr] ✅ Attribution injectée');
   }`);
-    fixCalls.push('injectCrawlersAttribution();');
-  }
+  fixCalls.push('injectCrawlersAttribution();');
 
   // Date localisée
   const dateLocale = language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US';

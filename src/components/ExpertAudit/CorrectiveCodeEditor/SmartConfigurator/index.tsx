@@ -18,10 +18,9 @@ import { CodeBlock } from '../CodeBlock';
 import { TechnicalTab } from './TechnicalTab';
 import { StrategicTab } from './StrategicTab';
 import { GenerativeTab } from './GenerativeTab';
-import { AttributionCard } from './AttributionCard';
 import { VisualPreview } from './VisualPreview';
 import { SecurityZone } from './SecurityZone';
-import { FixConfig, AttributionConfig, ATTRIBUTION_ANCHORS, STRATEGIC_FIXES, GENERATIVE_FIXES, ViewMode } from './types';
+import { FixConfig, STRATEGIC_FIXES, GENERATIVE_FIXES, ViewMode } from './types';
 import { toast as sonnerToast } from 'sonner';
 
 // Hallucination data can be in legacy or new format
@@ -71,10 +70,6 @@ export function SmartConfigurator({
   hallucinationData,
 }: SmartConfiguratorProps) {
   const [fixConfigs, setFixConfigs] = useState<FixConfig[]>([]);
-  const [attribution, setAttribution] = useState<AttributionConfig>({
-    enabled: true,
-    anchorText: ATTRIBUTION_ANCHORS[Math.floor(Math.random() * ATTRIBUTION_ANCHORS.length)],
-  });
   const [viewMode, setViewMode] = useState<ViewMode>('visual');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<string>('');
@@ -247,10 +242,6 @@ export function SmartConfigurator({
     if (isOpen) {
       setFixConfigs(availableFixes);
       setGeneratedCode('');
-      setAttribution({
-        enabled: true,
-        anchorText: ATTRIBUTION_ANCHORS[Math.floor(Math.random() * ATTRIBUTION_ANCHORS.length)],
-      });
     }
   }, [isOpen, availableFixes]);
 
@@ -272,25 +263,13 @@ export function SmartConfigurator({
     );
   }, []);
 
-  // Toggle attribution
-  const toggleAttribution = useCallback(() => {
-    setAttribution(prev => ({
-      ...prev,
-      enabled: !prev.enabled,
-      // Randomize anchor when re-enabling
-      anchorText: !prev.enabled 
-        ? ATTRIBUTION_ANCHORS[Math.floor(Math.random() * ATTRIBUTION_ANCHORS.length)]
-        : prev.anchorText,
-    }));
-  }, []);
-
   // Generate the script via Edge Function
   const handleGenerate = useCallback(async () => {
     const enabledFixes = fixConfigs.filter(f => f.enabled);
-    if (enabledFixes.length === 0 && !attribution.enabled) {
+    if (enabledFixes.length === 0) {
       toast({
         title: 'Aucun correctif sélectionné',
-        description: 'Sélectionnez au moins un correctif ou activez l\'attribution',
+        description: 'Sélectionnez au moins un correctif',
         variant: 'destructive',
       });
       return;
@@ -306,7 +285,6 @@ export function SmartConfigurator({
           siteName,
           siteUrl,
           language,
-          attribution: attribution.enabled ? attribution : null,
         },
       });
 
@@ -327,7 +305,7 @@ export function SmartConfigurator({
     } finally {
       setIsGenerating(false);
     }
-  }, [fixConfigs, attribution, siteName, siteUrl, language, toast]);
+  }, [fixConfigs, siteName, siteUrl, language, toast]);
 
   // Copy to clipboard
   const handleCopy = useCallback(async () => {
@@ -374,7 +352,7 @@ export function SmartConfigurator({
     }
   }, [generatedCode, user, fixConfigs, siteName, siteUrl]);
 
-  const enabledCount = fixConfigs.filter(f => f.enabled).length + (attribution.enabled ? 1 : 0);
+  const enabledCount = fixConfigs.filter(f => f.enabled).length;
   const technicalCount = fixConfigs.filter(f => f.enabled && !['strategic', 'generative'].includes(f.category)).length;
   const strategicCount = fixConfigs.filter(f => f.enabled && f.category === 'strategic').length;
   const generativeCount = fixConfigs.filter(f => f.enabled && f.category === 'generative').length;
@@ -458,13 +436,6 @@ export function SmartConfigurator({
               </ScrollArea>
             </Tabs>
 
-            {/* Attribution Section */}
-            <div className="border-t p-3 space-y-2 flex-shrink-0">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Growth & Attribution
-              </p>
-              <AttributionCard config={attribution} onToggle={toggleAttribution} />
-            </div>
 
             {/* Generate Button - Always visible */}
             <div className="p-3 border-t bg-background flex-shrink-0">
@@ -552,7 +523,7 @@ export function SmartConfigurator({
             {/* Preview/Code Content */}
             <ScrollArea className="flex-1">
               {viewMode === 'visual' ? (
-                <VisualPreview fixes={fixConfigs} attribution={attribution} />
+                <VisualPreview fixes={fixConfigs} />
               ) : (
                 <div className="p-4">
                   <CodeBlock 
