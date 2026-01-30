@@ -104,7 +104,14 @@ export function SolutionSection() {
             >.</span>
             <br />
             Après chaque <span className="text-foreground">{t.subtitleHighlight}</span>
-            {t.subtitlePart2} <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-foreground">{t.subtitleCode}</code> {t.subtitlePart3}
+            {t.subtitlePart2} <code className="px-1.5 py-0.5 rounded bg-muted font-mono text-foreground">{t.subtitleCode}</code>{' '}
+            <span className="bg-gradient-to-r from-foreground via-foreground to-emerald-500 bg-clip-text text-transparent">
+              correctif prêt à être déployé
+            </span>
+            <span 
+              className="font-bold text-emerald-500"
+              style={{ textShadow: '0 0 8px rgba(16, 185, 129, 0.6), 0 0 12px rgba(16, 185, 129, 0.4)' }}
+            >.</span>
           </p>
         </motion.div>
 
