@@ -143,10 +143,12 @@ export function SolutionSection() {
             variant="outline"
             size="lg"
             onClick={() => navigate('/audit-expert')}
-            className="gap-2 group border-primary/30 hover:border-primary hover:bg-primary/5"
+            className="gap-2 group font-mono border-violet-500/40 hover:border-violet-500 hover:bg-violet-500/5 bg-violet-500/5 text-foreground hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300"
           >
-            {t.cta}
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <span className="text-violet-400">&lt;</span>
+            <span className="text-violet-500 font-semibold">{t.cta}</span>
+            <span className="text-violet-400">/&gt;</span>
+            <ArrowRight className="w-4 h-4 text-violet-500 group-hover:translate-x-1 transition-transform" />
           </Button>
         </motion.div>
       </div>
