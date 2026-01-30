@@ -117,15 +117,18 @@ export function CodeBlock({
     }
   }, [codeToDisplay]);
 
-  // Auto-scroll to bottom while animating
+  // Auto-scroll to bottom while animating and keep at bottom when done
   useEffect(() => {
-    if (isAnimating && scrollRef.current) {
+    if (scrollRef.current) {
       const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollContainer) {
-        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        // Scroll to bottom during animation and when animation completes
+        if (isAnimating || animationComplete) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
       }
     }
-  }, [displayedCode, isAnimating]);
+  }, [displayedCode, isAnimating, animationComplete]);
 
   if (!code) {
     return (
