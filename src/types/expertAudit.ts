@@ -322,6 +322,17 @@ export interface GeoReadiness {
   };
 }
 
+// Hallucination correction data stored for reference
+export interface HallucinationCorrections {
+  sector?: string;
+  country?: string;
+  valueProposition?: string;
+  targetAudience?: string;
+  businessAge?: string;
+  businessType?: string;
+  mainProducts?: string;
+}
+
 // UPDATED: Premium Strategic Analysis
 export interface StrategicAnalysis {
   introduction?: StrategicIntroduction;
@@ -350,6 +361,9 @@ export interface StrategicAnalysis {
   executive_summary?: string;
   executiveSummary?: string;
   overallScore?: number;
+  
+  // Hallucination correction data (if user corrected)
+  hallucinationCorrections?: HallucinationCorrections | null;
 }
 
 export interface ExpertAuditResult {

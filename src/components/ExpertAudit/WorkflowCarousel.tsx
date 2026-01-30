@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { BarChart3, Target, Code, Search, Check } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { BarChart3, Target, Code, Search, Check, Eye } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
@@ -21,6 +22,7 @@ const translations = {
     locked: 'Terminez l\'étape précédente',
     complete: 'Terminé',
     paid: '5€',
+    viewReport: 'Voir rapport',
   },
   en: {
     step1Title: 'Technical SEO Audit',
@@ -35,6 +37,7 @@ const translations = {
     locked: 'Complete previous step',
     complete: 'Complete',
     paid: '€5',
+    viewReport: 'View report',
   },
   es: {
     step1Title: 'Auditoría Técnica SEO',
@@ -49,6 +52,7 @@ const translations = {
     locked: 'Complete el paso anterior',
     complete: 'Completado',
     paid: '5€',
+    viewReport: 'Ver informe',
   },
 };
 
@@ -71,6 +75,9 @@ interface WorkflowCarouselProps {
   isLoading: boolean;
   isStrategicLoading: boolean;
   hasTechnicalResult: boolean;
+  hasStrategicResult?: boolean;
+  onNavigateToTechnical?: () => void;
+  onNavigateToStrategic?: () => void;
 }
 
 export function WorkflowCarousel({
@@ -84,6 +91,9 @@ export function WorkflowCarousel({
   isLoading,
   isStrategicLoading,
   hasTechnicalResult,
+  hasStrategicResult = false,
+  onNavigateToTechnical,
+  onNavigateToStrategic,
 }: WorkflowCarouselProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
@@ -316,6 +326,13 @@ export function WorkflowCarousel({
                 // Handle card click to navigate
                 const handleCardClick = () => {
                   if (!isActive && !shouldHide) {
+                    // If this step has cached results, navigate to that report
+                    if (step.id === 1 && hasTechnicalResult && onNavigateToTechnical) {
+                      onNavigateToTechnical();
+                    } else if (step.id === 2 && hasStrategicResult && onNavigateToStrategic) {
+                      onNavigateToStrategic();
+                    }
+                    // Always update carousel position
                     setActiveStep(step.id);
                   }
                 };
@@ -491,9 +508,21 @@ export function WorkflowCarousel({
 
                         {/* Completed badge - shown below button when completed */}
                         {isCompleted && (
-                          <div className="flex items-center justify-center gap-2 text-success text-sm font-medium mt-3">
-                            <Check className="h-4 w-4" />
-                            {t.complete}
+                          <div className="flex flex-col items-center gap-2 mt-3">
+                            <div className="flex items-center gap-2 text-success text-sm font-medium">
+                              <Check className="h-4 w-4" />
+                              {t.complete}
+                            </div>
+                            {/* Click to view report indicator - only on non-active completed cards */}
+                            {!isActive && (step.id === 1 ? hasTechnicalResult : step.id === 2 ? hasStrategicResult : false) && (
+                              <Badge 
+                                variant="outline" 
+                                className="gap-1.5 text-xs cursor-pointer border-primary/30 text-primary hover:bg-primary/10 transition-colors"
+                              >
+                                <Eye className="h-3 w-3" />
+                                {t.viewReport}
+                              </Badge>
+                            )}
                           </div>
                         )}
                       </CardContent>

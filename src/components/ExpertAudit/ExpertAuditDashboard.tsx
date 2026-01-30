@@ -226,18 +226,17 @@ export function ExpertAuditDashboard() {
     }
   }, [pendingReportOpen, isLoggedIn, technicalResult, strategicResult]);
 
-  // Save audit state to session storage - only keeps the most recent audit
+  // Save audit state to session storage - keep BOTH audits for navigation
   const saveAuditState = useCallback((mode: 'technical' | 'strategic' | null = auditMode) => {
     if (url) sessionStorage.setItem('audit_url', url);
     if (mode) sessionStorage.setItem('audit_mode', mode);
     
-    // Only save the most recent audit - clear the other one
-    if (mode === 'technical' && technicalResult) {
+    // Keep both audits in cache for navigation between reports
+    if (technicalResult) {
       sessionStorage.setItem('audit_technical_result', JSON.stringify(technicalResult));
-      sessionStorage.removeItem('audit_strategic_result');
-    } else if (mode === 'strategic' && strategicResult) {
+    }
+    if (strategicResult) {
       sessionStorage.setItem('audit_strategic_result', JSON.stringify(strategicResult));
-      sessionStorage.removeItem('audit_technical_result');
     }
   }, [url, technicalResult, strategicResult, auditMode]);
 
@@ -397,7 +396,7 @@ export function ExpertAuditDashboard() {
     }
   };
 
-  const handleStrategicAudit = async () => {
+  const handleStrategicAudit = async (hallucinationCorrections?: any) => {
     if (!url.trim()) return;
     const normalizedUrl = normalizeUrl(url);
     setAuditMode('strategic');
@@ -406,7 +405,12 @@ export function ExpertAuditDashboard() {
 
     try {
       const { data, error } = await supabase.functions.invoke('audit-strategique-ia', {
-        body: { url: normalizedUrl, toolsData: null }
+        body: { 
+          url: normalizedUrl, 
+          toolsData: null,
+          // Pass hallucination corrections as priority weights for re-analysis
+          hallucinationCorrections: hallucinationCorrections || null
+        }
       });
 
       if (error) throw new Error(error.message);
@@ -449,16 +453,22 @@ export function ExpertAuditDashboard() {
           testQueries: data.data.testQueries,
           executiveSummary: data.data.executiveSummary,
           overallScore: data.data.overallScore || data.data.geo_readiness?.citability_score || data.data.geo_score?.score,
+          // Store correction data for reference
+          hallucinationCorrections: hallucinationCorrections || null,
         },
       };
 
       setResult(strategicData);
       setStrategicResult(strategicData);
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+      // Clear any previous hallucination diagnosis since we re-analyzed
+      setHallucinationDiagnosis(null);
 
       toast({
-        title: t.strategicComplete,
-        description: t.strategicDesc2,
+        title: hallucinationCorrections ? 'Analyse corrigée terminée !' : t.strategicComplete,
+        description: hallucinationCorrections 
+          ? 'Le rapport a été régénéré avec vos corrections.' 
+          : t.strategicDesc2,
       });
     } catch (error) {
       console.error('Strategic audit error:', error);
@@ -471,6 +481,38 @@ export function ExpertAuditDashboard() {
       setIsStrategicLoading(false);
     }
   };
+
+  // Navigate to cached technical report
+  const handleNavigateToTechnical = useCallback(() => {
+    if (technicalResult) {
+      setAuditMode('technical');
+      setResult(technicalResult);
+    }
+  }, [technicalResult]);
+
+  // Navigate to cached strategic report  
+  const handleNavigateToStrategic = useCallback(() => {
+    if (strategicResult) {
+      setAuditMode('strategic');
+      setResult(strategicResult);
+    }
+  }, [strategicResult]);
+
+  // Handle hallucination correction - triggers re-analysis
+  const handleHallucinationCorrectionComplete = useCallback((diagnosis: any) => {
+    setHallucinationDiagnosis(diagnosis);
+    
+    // If user made corrections, re-run strategic audit with corrections as weights
+    if (diagnosis?.correctedValues && diagnosis?.discrepancies?.length > 0) {
+      toast({
+        title: 'Re-analyse en cours...',
+        description: 'Le rapport stratégique va être régénéré avec vos corrections.',
+      });
+      
+      // Re-run strategic audit with corrections
+      handleStrategicAudit(diagnosis.correctedValues);
+    }
+  }, [handleStrategicAudit, toast]);
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-5xl">
@@ -523,11 +565,14 @@ export function ExpertAuditDashboard() {
         url={url}
         onUrlChange={setUrl}
         onStartTechnical={handleTechnicalAudit}
-        onStartStrategic={handleStrategicAudit}
+        onStartStrategic={() => handleStrategicAudit()}
         onStartPayment={() => setIsCodeEditorOpen(true)}
         isLoading={isLoading}
         isStrategicLoading={isStrategicLoading}
         hasTechnicalResult={!!technicalResult}
+        hasStrategicResult={!!strategicResult}
+        onNavigateToTechnical={handleNavigateToTechnical}
+        onNavigateToStrategic={handleNavigateToStrategic}
       />
 
       {/* Loading States Container - scroll target */}
@@ -752,7 +797,7 @@ export function ExpertAuditDashboard() {
                   variant="strategic"
                   domain={result.domain || url}
                   siteName={result.domain || url}
-                  onHallucinationData={setHallucinationDiagnosis}
+                  onHallucinationData={handleHallucinationCorrectionComplete}
                 />
               )}
 
@@ -775,7 +820,7 @@ export function ExpertAuditDashboard() {
                       hideExecutiveSummary={true}
                       domain={result.domain || url}
                       siteName={result.domain || url}
-                      onHallucinationData={setHallucinationDiagnosis}
+                      onHallucinationData={handleHallucinationCorrectionComplete}
                     />
                   )}
                 </div>
