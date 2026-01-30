@@ -6,17 +6,17 @@ const translations = {
   fr: {
     step1: 'Audit Technique',
     step2: 'Audit IA',
-    step3: 'Code Correctif',
+    step3: 'Architecte Génératif',
   },
   en: {
     step1: 'Technical Audit',
     step2: 'AI Audit',
-    step3: 'Corrective Code',
+    step3: 'Generative Architect',
   },
   es: {
     step1: 'Auditoría Técnica',
     step2: 'Auditoría IA',
-    step3: 'Código Correctivo',
+    step3: 'Arquitecto Generativo',
   },
 };
 
