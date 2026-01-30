@@ -95,7 +95,7 @@ export function SolutionSection() {
               <span className="bg-gradient-to-r from-foreground via-foreground to-destructive bg-clip-text text-transparent">frustr</span>
               <span 
                 className="bg-gradient-to-r from-destructive/80 to-destructive bg-clip-text text-transparent"
-                style={{ textShadow: '0 4px 6px rgba(127, 29, 29, 0.5)' }}
+                style={{ textShadow: '0 2px 2px rgba(127, 29, 29, 0.6)' }}
               >ant</span>
             </span>
             <span 
