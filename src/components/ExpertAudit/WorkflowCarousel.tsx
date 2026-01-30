@@ -437,7 +437,7 @@ export function WorkflowCarousel({
                               <span className="text-cyan-500">schema</span>
                               <span className="text-violet-400">&gt;</span>
                               <br />
-                              <span className="text-amber-500/90 text-xs font-sans not-italic">simple : copiez, collez.</span>
+                              <span className="text-amber-500/90 text-sm font-sans not-italic">déploiement simple : copiez, collez.</span>
                             </>
                           ) : (
                             step.description
