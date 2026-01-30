@@ -466,11 +466,13 @@ export function WorkflowCarousel({
                                 "w-full h-12 text-base font-medium transition-all duration-300",
                                 "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
                                 isCompleted && "bg-success hover:bg-success/90",
-                                isLocked && "opacity-50 cursor-not-allowed",
-                                // Dark slate grey button for step 2 - same as border
-                                step.id === 2 && !isCompleted && !isLocked && "bg-slate-500 hover:bg-slate-600 text-white border-0",
-                              // Gradient button for step 3 - purple to gold premium SaaS style
-                              step.id === 3 && !isCompleted && !isLocked && "bg-gradient-to-r from-violet-600 via-violet-500 to-amber-500 hover:from-violet-700 hover:via-violet-600 hover:to-amber-600 text-white border-0 shadow-[2px_4px_16px_rgba(139,92,246,0.25)]"
+                                isLocked && "cursor-not-allowed",
+                                // Dark slate grey button for step 2 - same as border (both locked and active)
+                                step.id === 2 && !isCompleted && "bg-slate-500 hover:bg-slate-600 text-white border-0",
+                                step.id === 2 && isLocked && "bg-slate-500/50 hover:bg-slate-500/50",
+                                // Gradient button for step 3 - purple to gold premium SaaS style (both locked and active)
+                                step.id === 3 && !isCompleted && "bg-gradient-to-r from-violet-600 via-violet-500 to-amber-500 hover:from-violet-700 hover:via-violet-600 hover:to-amber-600 text-white border-0 shadow-[2px_4px_16px_rgba(139,92,246,0.25)]",
+                                step.id === 3 && isLocked && "from-violet-600/50 via-violet-500/50 to-amber-500/50 hover:from-violet-600/50 hover:via-violet-500/50 hover:to-amber-500/50"
                               )}
                             >
                               {getStepButtonText(step.id)}
