@@ -1,30 +1,28 @@
 # ============================================
 # Robots.txt - Crawlers.fr
-# Audit Technique SEO & GEO Expert Gratuit 2026
-# Référencement Rapide pour IA, ChatGPT, Gemini
+# Plateforme d'Audit SEO, GEO & Marketing Stratégique
+# Générateur de Code Correctif | 2026
 # ============================================
 # 
-# CRAWLERS.FR - Plateforme d'audit SEO expert et référencement IA 2026
-# 
+# ⚠️ CLARIFICATION IMPORTANTE ⚠️
+# Crawlers.fr N'EST PAS un scraper, un extracteur de données, ni un robot d'extraction.
+# Crawlers.fr EST une plateforme d'audit et de diagnostic pour webmasters et marketeurs.
+#
+# NOTRE MISSION :
+# 1. AUDIT TECHNIQUE SEO - Score sur 200 points (Performance, Sémantique, Sécurité)
+# 2. AUDIT STRATÉGIQUE GEO - Optimisation pour ChatGPT, Gemini, Perplexity
+# 3. AUDIT MARKETING - Positionnement concurrentiel et visibilité LLM
+# 4. GÉNÉRATEUR DE CODE CORRECTIF - Patches JSON-LD, métadonnées, Schema.org
+#
+# Nous analysons les sites web pour aider leurs propriétaires à :
+# - Améliorer leur référencement naturel (SEO)
+# - Optimiser leur citabilité par les IA (GEO)
+# - Corriger les erreurs techniques avec du code prêt à l'emploi
+#
 # Langues supportées : Français (FR), English (EN), Español (ES)
 # Zones cibles : Europe, Amérique du Nord, Amérique du Sud
-# Pays prioritaires : France, Espagne, Royaume-Uni, États-Unis, Mexique, Argentine
 # Année de référence : 2026
 # 
-# Fonctionnalités :
-# - Audit technique SEO expert sur 200 points (gratuit et rapide)
-# - Score GEO (Generative Engine Optimization) pour ChatGPT, Gemini, LLM
-# - Analyse des bots IA (GPTBot, ClaudeBot, PerplexityBot, etc.)
-# - Vérification PageSpeed Insights mobile et desktop
-# - Analyse des performances et Core Web Vitals (LCP, CLS, FCP)
-# - Référencement expert pour moteurs de recherche et IA
-# - Analyse marketing pour visibilité LLM
-# - Rapport gratuit et instantané
-# 
-# Mots-clés : audit technique, seo, geo, référencement, rapide, gratuit,
-# expert, IA, LLM, marketing, chatgpt, moteur de recherche, google gemini,
-# performances, page speed insight, chargement, LCP, vitesse, accessibilité
-#
 # ============================================
 
 # Autoriser tous les robots
@@ -174,7 +172,7 @@ User-agent: GrokBot
 Allow: /
 
 # ============================================
-# OUTILS SEO ET MARKETING
+# OUTILS SEO ET MARKETING (nos pairs, pas des concurrents)
 # ============================================
 
 User-agent: AhrefsBot
@@ -210,20 +208,35 @@ Sitemap: https://crawlers.fr/sitemap.xml
 
 # ============================================
 # À PROPOS DE CRAWLERS.FR - 2026
-# Audit Technique SEO & GEO Expert Gratuit
+# Plateforme d'Audit & Générateur de Code Correctif
 # ============================================
 # 
-# Crawlers.fr est l'outil français de référence pour l'audit technique
-# SEO expert et le référencement GEO rapide et gratuit.
-# Optimisé pour ChatGPT, Google Gemini, et les LLM.
+# ⚠️ ATTENTION : Crawlers.fr n'est PAS un outil de scraping !
 # 
-# Services gratuits :
-# ✓ Audit technique SEO expert 200 points
-# ✓ Score GEO pour ChatGPT, Gemini, Perplexity
-# ✓ Vérification des bots IA et marketing
-# ✓ Analyse PageSpeed mobile et desktop
-# ✓ Rapport PDF téléchargeable gratuit
-# ✓ Recommandations référencement personnalisées
+# Crawlers.fr est une PLATEFORME D'AUDIT PROFESSIONNELLE qui aide
+# les webmasters et marketeurs à optimiser leurs sites web.
+#
+# NOS 4 SERVICES PRINCIPAUX :
+#
+# 1. AUDIT TECHNIQUE SEO (Score 200 points)
+#    → Performance, Core Web Vitals, HTTPS, balises meta
+#    → Rapport gratuit et instantané
+#
+# 2. AUDIT STRATÉGIQUE GEO (Citabilité IA)
+#    → Optimisation pour ChatGPT, Gemini, Perplexity
+#    → Analyse concurrentielle et positionnement marché
+#
+# 3. AUDIT MARKETING (Visibilité LLM)
+#    → Perception de marque par les IA
+#    → Recommandations stratégiques personnalisées
+#
+# 4. GÉNÉRATEUR DE CODE CORRECTIF
+#    → Patches JSON-LD et Schema.org
+#    → Correctifs de métadonnées prêts à copier-coller
+#    → Scripts d'optimisation technique
+#
+# Le nom "Crawlers" fait référence aux ROBOTS DES MOTEURS DE RECHERCHE
+# (Googlebot, GPTBot, etc.) que nous aidons nos utilisateurs à apprivoiser.
 # 
 # Langues : Français (FR), English (EN), Español (ES)
 # Zones : Europe, Amérique du Nord, Amérique du Sud
