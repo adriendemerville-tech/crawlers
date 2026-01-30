@@ -146,9 +146,9 @@ export function CodeBlock({
   const showLockOverlay = isLocked && animationComplete;
 
   return (
-    <div className="relative h-full min-h-[200px] rounded overflow-hidden border bg-background" ref={scrollRef}>
-      {/* Line numbers gutter */}
-      <ScrollArea className="h-full">
+    <div className="relative h-full min-h-[200px] rounded overflow-hidden border bg-background flex flex-col" ref={scrollRef}>
+      {/* Scrollable code area */}
+      <ScrollArea className="flex-1">
         <div className="flex">
           {/* Line numbers */}
           <div className="flex-shrink-0 py-3 px-2 bg-muted/50 select-none border-r border-border">
@@ -183,25 +183,29 @@ export function CodeBlock({
         </div>
       </ScrollArea>
 
-      {/* Lock overlay - gray blur with elegant gold padlock */}
+      {/* Lock overlay - positioned fixed at bottom of visible area */}
       {showLockOverlay && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.2, ease: 'easeOut' }}
-          className="absolute inset-x-0 bottom-0 h-3/4 flex flex-col items-center justify-center pointer-events-none"
+          className="absolute inset-x-0 bottom-0 h-2/3 flex flex-col items-center justify-end pb-8 pointer-events-none"
+          style={{ zIndex: 10 }}
         >
-          {/* Gray gradient blur overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-400/95 via-slate-400/80 to-transparent dark:from-slate-600/95 dark:via-slate-600/80" />
+          {/* Gray gradient blur overlay - from bottom to top */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-400/98 via-slate-400/85 to-transparent dark:from-slate-600/98 dark:via-slate-600/85" />
           
-          {/* Elegant small filled gold padlock */}
+          {/* Padlock and line count */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.6, duration: 0.5, ease: 'easeOut' }}
-            className="relative z-10"
+            className="relative z-10 flex flex-col items-center gap-2"
           >
             <Lock className="w-6 h-6 text-violet-500" strokeWidth={1.5} />
+            <span className="text-xs font-mono text-slate-600 dark:text-slate-300">
+              {totalLines} lignes
+            </span>
           </motion.div>
         </motion.div>
       )}
