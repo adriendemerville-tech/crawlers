@@ -402,28 +402,28 @@ export function SmartConfigurator({
 
   // Calculate dynamic price based on enabled fixes
   // Base: 3€ minimum, 12€ maximum
-  // Weighting: technical (basic) = 0.3, strategic = 0.8, generative = 1.5
+  // Weighting: strategic and generative increase price by 0.30€ increments
   const calculatedPrice = useMemo(() => {
     const MIN_PRICE = 3;
     const MAX_PRICE = 12;
+    const INCREMENT = 0.30; // Price increases in 30 cent steps
     
     // Count total possible fixes by category for normalization
     const totalStrategic = fixConfigs.filter(f => f.category === 'strategic').length;
     const totalGenerative = fixConfigs.filter(f => f.category === 'generative').length;
     
-    // Strategic and generative selections contribute to price increase
-    // Technical fixes don't increase price (they're the default baseline)
-    const strategicWeight = totalStrategic > 0 ? (strategicCount / totalStrategic) * 0.4 : 0;
-    const generativeWeight = totalGenerative > 0 ? (generativeCount / totalGenerative) * 0.6 : 0;
+    // Each strategic fix adds 0.30€, each generative fix adds 0.60€ (2 increments)
+    const strategicContribution = strategicCount * INCREMENT;
+    const generativeContribution = generativeCount * (INCREMENT * 2);
     
-    // Combined weight (0 to 1)
-    const combinedWeight = strategicWeight + generativeWeight;
+    // Calculate raw price
+    let price = MIN_PRICE + strategicContribution + generativeContribution;
     
-    // Price scales from MIN to MAX based on combined weight
-    const price = MIN_PRICE + (MAX_PRICE - MIN_PRICE) * combinedWeight;
+    // Cap at maximum
+    if (price > MAX_PRICE) price = MAX_PRICE;
     
-    // Round to nearest 0.5€
-    return Math.round(price * 2) / 2;
+    // Round to nearest 0.30€ increment
+    return Math.round(price / INCREMENT) * INCREMENT;
   }, [fixConfigs, strategicCount, generativeCount]);
 
   return (
@@ -530,31 +530,44 @@ export function SmartConfigurator({
                 </ToggleGroupItem>
               </ToggleGroup>
 
-              {/* Generate Button */}
-              <Button
-                onClick={handleGenerate}
-                disabled={enabledCount === 0 || isGenerating}
-                variant="outline"
-                className="gap-2 border-violet-500/50 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10"
-                size="sm"
-              >
-                {isGenerating ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                    >
-                      <Code className="w-3 h-3" />
-                    </motion.div>
-                    Génération...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-3 h-3" />
-                    Générer ({enabledCount})
-                  </>
-                )}
-              </Button>
+              {/* Price Display + Generate Button */}
+              <div className="flex items-center gap-4">
+                {/* Dynamic Price */}
+                <motion.span 
+                  key={calculatedPrice}
+                  initial={{ scale: 1.1, opacity: 0.7 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="text-sm font-semibold text-foreground tabular-nums"
+                >
+                  {calculatedPrice.toFixed(2).replace('.', ',')}€
+                </motion.span>
+
+                {/* Generate Button */}
+                <Button
+                  onClick={handleGenerate}
+                  disabled={enabledCount === 0 || isGenerating}
+                  variant="outline"
+                  className="gap-2 border-violet-500/50 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10"
+                  size="sm"
+                >
+                  {isGenerating ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                      >
+                        <Code className="w-3 h-3" />
+                      </motion.div>
+                      Génération...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-3 h-3" />
+                      Générer ({enabledCount})
+                    </>
+                  )}
+                </Button>
+              </div>
 
               {generatedCode && viewMode === 'code' && hasPaid && (
                 <div className="flex items-center gap-2">
