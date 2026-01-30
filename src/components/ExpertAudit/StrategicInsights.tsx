@@ -16,7 +16,7 @@ import { CompetitiveLandscapeCard } from './CompetitiveLandscapeCard';
 import { SocialSignalsCard } from './SocialSignalsCard';
 import { MarketIntelligenceCard } from './MarketIntelligenceCard';
 import { PremiumRoadmapCard } from './PremiumRoadmapCard';
-import { KeywordPositioningCard } from './KeywordPositioningCard';
+import { KeywordModuleSection } from './KeywordModuleSection';
 import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
 
 interface StrategicInsightsProps {
@@ -55,12 +55,15 @@ export function StrategicInsights({
   };
 
   // Check for PREMIUM format (new 13 modules)
+  // Include the keywords module so “Mots clés” can render immediately when provided.
   const hasPremiumFormat = analysis.brand_authority || 
                            analysis.social_signals || 
                            analysis.market_intelligence || 
                            analysis.competitive_landscape ||
                            analysis.geo_readiness ||
-                           analysis.executive_roadmap;
+                           analysis.executive_roadmap ||
+                           analysis.keyword_positioning ||
+                           analysis.market_data_summary;
 
   // Check for standard new format
   const hasNewFormat = analysis.brand_identity || analysis.geo_score || analysis.strategic_roadmap;
@@ -146,6 +149,9 @@ export function StrategicInsights({
             <CompetitiveLandscapeCard landscape={analysis.competitive_landscape} />
           )}
 
+          {/* Mots clés (doit apparaître entre Écosystème Concurrentiel et Autorité Sociale & Humaine) */}
+          <KeywordModuleSection analysis={analysis} />
+
           {/* Social Signals & Human Authority */}
           {analysis.social_signals && (
             <SocialSignalsCard signals={analysis.social_signals} />
@@ -154,15 +160,6 @@ export function StrategicInsights({
           {/* Market Intelligence & Psychology */}
           {analysis.market_intelligence && (
             <MarketIntelligenceCard intelligence={analysis.market_intelligence} />
-          )}
-
-          {/* Keyword Positioning (DataForSEO based) */}
-          {analysis.keyword_positioning && (
-            <KeywordPositioningCard 
-              positioning={analysis.keyword_positioning}
-              marketSummary={analysis.market_data_summary}
-              competitors={analysis.competitive_landscape}
-            />
           )}
 
           {/* Premium Executive Roadmap (Narrative) */}
