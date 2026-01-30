@@ -117,16 +117,32 @@ export function CodeBlock({
     }
   }, [codeToDisplay]);
 
-  // Auto-scroll to bottom while animating and keep at bottom when done
+  // Force scroll to bottom and keep it there
   useEffect(() => {
-    if (scrollRef.current) {
-      const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        // Scroll to bottom during animation and when animation completes
-        if (isAnimating || animationComplete) {
+    const scrollToBottom = () => {
+      if (scrollRef.current) {
+        const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
           scrollContainer.scrollTop = scrollContainer.scrollHeight;
         }
       }
+    };
+    
+    // Scroll during animation
+    if (isAnimating) {
+      scrollToBottom();
+    }
+    
+    // Scroll when animation completes and LOCK it there
+    if (animationComplete) {
+      scrollToBottom();
+      // Re-apply scroll position after a brief delay to prevent any reflow
+      const timer = setTimeout(scrollToBottom, 50);
+      const timer2 = setTimeout(scrollToBottom, 200);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(timer2);
+      };
     }
   }, [displayedCode, isAnimating, animationComplete]);
 
@@ -195,17 +211,14 @@ export function CodeBlock({
           {/* Gray gradient blur overlay - from bottom to top */}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-400/98 via-slate-400/85 to-transparent dark:from-slate-600/98 dark:via-slate-600/85" />
           
-          {/* Padlock and line count */}
+          {/* Padlock */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.6, duration: 0.5, ease: 'easeOut' }}
-            className="relative z-10 flex flex-col items-center gap-2"
+            className="relative z-10"
           >
             <Lock className="w-6 h-6 text-violet-500" strokeWidth={1.5} />
-            <span className="text-xs font-mono text-slate-600 dark:text-slate-300">
-              {totalLines} lignes
-            </span>
           </motion.div>
         </motion.div>
       )}
