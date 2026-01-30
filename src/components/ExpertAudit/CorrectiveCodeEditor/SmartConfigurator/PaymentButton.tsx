@@ -75,8 +75,8 @@ export function PaymentButton({
   };
 
   return (
-    <div className="space-y-2">
-      {/* Payment Button - Compact */}
+    <div className="flex flex-col items-center space-y-2">
+      {/* Payment Button - Centered */}
       <Button
         onClick={handlePayment}
         disabled={disabled || isLoading || !siteUrl}
@@ -101,8 +101,8 @@ export function PaymentButton({
         )}
       </Button>
 
-      {/* Price + explanation */}
-      <div className="text-xs text-muted-foreground">
+      {/* Price + explanation - Centered */}
+      <div className="text-xs text-muted-foreground text-center">
         <span className="font-medium">3,00€</span>
         <span className="mx-1">•</span>
         <span>Votre prix est conforme au nombre de scripts développés pour votre site</span>

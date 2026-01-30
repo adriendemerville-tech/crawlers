@@ -105,8 +105,8 @@ export function CodeBlock({
         if (currentIndex >= totalLines) {
           setDisplayedCode(codeToDisplay);
           setIsAnimating(false);
-          // Marquer l'animation comme terminée après un court délai
-          setTimeout(() => setAnimationComplete(true), 300);
+          // Attendre plus longtemps après la fin du code avant d'afficher le verrou
+          setTimeout(() => setAnimationComplete(true), 1200);
           clearInterval(interval);
         } else {
           setDisplayedCode(lines.slice(0, currentIndex).join('\n'));
@@ -180,25 +180,25 @@ export function CodeBlock({
         </div>
       </ScrollArea>
 
-      {/* Lock overlay - animated from bottom with black blur and gold padlock */}
+      {/* Lock overlay - gray blur with elegant gold padlock */}
       {showLockOverlay && (
         <motion.div 
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
           className="absolute inset-x-0 bottom-0 h-3/4 flex flex-col items-center justify-center pointer-events-none"
         >
-          {/* Black gradient blur overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent backdrop-blur-sm" />
+          {/* Gray gradient blur overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-400/95 via-slate-400/80 to-transparent dark:from-slate-600/95 dark:via-slate-600/80" />
           
-          {/* Gold padlock */}
+          {/* Elegant small filled gold padlock */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, duration: 0.4, ease: 'easeOut' }}
+            transition={{ delay: 0.6, duration: 0.5, ease: 'easeOut' }}
             className="relative z-10"
           >
-            <Lock className="w-10 h-10 text-amber-400 drop-shadow-lg" strokeWidth={2} />
+            <Lock className="w-6 h-6 text-amber-500 fill-amber-500" strokeWidth={1.5} />
           </motion.div>
         </motion.div>
       )}
