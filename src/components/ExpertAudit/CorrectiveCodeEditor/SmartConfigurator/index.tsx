@@ -210,13 +210,13 @@ export function SmartConfigurator({
       priority: 'important',
     });
 
-    // Tracking fixes
+    // Tracking fixes - disabled by default (not part of base 6)
     fixes.push({
       id: 'fix_gtm',
       category: 'tracking',
       label: 'Intégrer Google Tag Manager',
       description: 'Injecte le snippet GTM',
-      enabled: true,
+      enabled: false,
       priority: 'optional',
       data: { gtmId: 'GTM-XXXXXXX' }
     });
@@ -226,7 +226,7 @@ export function SmartConfigurator({
       category: 'tracking',
       label: 'Ajouter Google Analytics 4',
       description: 'Injecte le pixel GA4',
-      enabled: true,
+      enabled: false,
       priority: 'optional',
       data: { measurementId: 'G-XXXXXXXXXX' }
     });
@@ -404,44 +404,33 @@ export function SmartConfigurator({
   const generativeCount = fixConfigs.filter(f => f.enabled && f.category === 'generative').length;
 
   // Calculate dynamic price based on enabled fixes
-  // Base: 3€ minimum, 12€ maximum
-  // Basique only (100%) = 6€ max, Strategic + Generative add up to 12€
+  // Base: 3€ minimum (all basic fixes included), 12€ maximum
+  // ONLY Strategic and Generative fixes increase the price
   const calculatedPrice = useMemo(() => {
     const MIN_PRICE = 3;
-    const MID_PRICE = 6;  // Max price for Basique only
     const MAX_PRICE = 12;
+    const PRICE_RANGE = MAX_PRICE - MIN_PRICE; // 9€ range
     
-    // Count fixes by category
-    const technicalFixes = fixConfigs.filter(f => !['strategic', 'generative'].includes(f.category));
+    // Only count strategic and generative fixes for pricing
     const strategicFixes = fixConfigs.filter(f => f.category === 'strategic');
     const generativeFixes = fixConfigs.filter(f => f.category === 'generative');
     
-    const enabledTechnical = technicalFixes.filter(f => f.enabled).length;
     const enabledStrategic = strategicFixes.filter(f => f.enabled).length;
     const enabledGenerative = generativeFixes.filter(f => f.enabled).length;
     
-    // Calculate percentage for each category
-    const technicalPercent = technicalFixes.length > 0 ? enabledTechnical / technicalFixes.length : 0;
-    const strategicPercent = strategicFixes.length > 0 ? enabledStrategic / strategicFixes.length : 0;
-    const generativePercent = generativeFixes.length > 0 ? enabledGenerative / generativeFixes.length : 0;
+    const totalAdvanced = strategicFixes.length + generativeFixes.length;
+    if (totalAdvanced === 0) return MIN_PRICE;
     
-    // Basique contributes to 3€ → 6€ range (3€ range)
-    const technicalContribution = (MID_PRICE - MIN_PRICE) * technicalPercent;
+    // Calculate percentage of advanced fixes enabled
+    const advancedPercent = (enabledStrategic + enabledGenerative) / totalAdvanced;
     
-    // Strategic + Generative contribute to 6€ → 12€ range (6€ range, split 40/60)
-    const advancedRange = MAX_PRICE - MID_PRICE;
-    const strategicContribution = advancedRange * 0.4 * strategicPercent;
-    const generativeContribution = advancedRange * 0.6 * generativePercent;
+    // Price = 3€ base + up to 9€ for advanced features
+    const rawPrice = MIN_PRICE + (PRICE_RANGE * advancedPercent);
     
-    // Calculate raw price
-    const rawPrice = MIN_PRICE + technicalContribution + strategicContribution + generativeContribution;
-    
-    // Calculate dynamic increment based on total fixes
-    const totalFixes = fixConfigs.length;
-    const dynamicIncrement = totalFixes > 0 ? (MAX_PRICE - MIN_PRICE) / totalFixes : 0.30;
-    
-    // Round to nearest dynamic increment (minimum 0.10€)
+    // Dynamic increment based on total advanced fixes
+    const dynamicIncrement = PRICE_RANGE / totalAdvanced;
     const increment = Math.max(0.10, dynamicIncrement);
+    
     return Math.round(rawPrice / increment) * increment;
   }, [fixConfigs]);
 
