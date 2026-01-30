@@ -346,8 +346,7 @@ export function WorkflowCarousel({
                     {step.id === 3 && !isCompleted && (
                       <div className={cn(
                         "absolute -inset-[3px] rounded-[10px] pointer-events-none",
-                        "bg-gradient-to-br from-amber-400/60 via-amber-500/40 to-amber-600/60",
-                        isActive && "from-amber-400/80 via-amber-500/60 to-amber-600/80 shadow-[0_0_20px_rgba(251,191,36,0.25)]"
+                        "bg-gradient-to-br from-amber-400/50 via-amber-500/40 to-amber-600/50"
                       )} />
                     )}
                     
@@ -470,8 +469,8 @@ export function WorkflowCarousel({
                                 isLocked && "opacity-50 cursor-not-allowed",
                                 // Dark slate grey button for step 2 - same as border
                                 step.id === 2 && !isCompleted && !isLocked && "bg-slate-500 hover:bg-slate-600 text-white border-0",
-                                // Violet/purple button for step 3
-                                step.id === 3 && !isCompleted && !isLocked && "bg-violet-600 hover:bg-violet-700 text-white border-0 shadow-[0_0_12px_rgba(139,92,246,0.3)]"
+                              // Gradient button for step 3 - purple to gold premium SaaS style
+                              step.id === 3 && !isCompleted && !isLocked && "bg-gradient-to-r from-violet-600 via-violet-500 to-amber-500 hover:from-violet-700 hover:via-violet-600 hover:to-amber-600 text-white border-0 shadow-[2px_4px_16px_rgba(139,92,246,0.25)]"
                               )}
                             >
                               {getStepButtonText(step.id)}
