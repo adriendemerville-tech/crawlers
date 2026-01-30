@@ -226,13 +226,20 @@ export function ExpertAuditDashboard() {
     }
   }, [pendingReportOpen, isLoggedIn, technicalResult, strategicResult]);
 
-  // Save audit state to session storage
+  // Save audit state to session storage - called automatically on state changes
   const saveAuditState = useCallback(() => {
     if (url) sessionStorage.setItem('audit_url', url);
     if (technicalResult) sessionStorage.setItem('audit_technical_result', JSON.stringify(technicalResult));
     if (strategicResult) sessionStorage.setItem('audit_strategic_result', JSON.stringify(strategicResult));
     if (auditMode) sessionStorage.setItem('audit_mode', auditMode);
   }, [url, technicalResult, strategicResult, auditMode]);
+
+  // Auto-save to cache whenever results change (persistence between navigations)
+  useEffect(() => {
+    if (technicalResult || strategicResult) {
+      saveAuditState();
+    }
+  }, [technicalResult, strategicResult, saveAuditState]);
 
   // Update step based on completed steps
   useEffect(() => {
