@@ -83,44 +83,51 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
             </div>
 
             <div className="space-y-2">
-              {categoryFixes.map((fix) => {
+              {categoryFixes.map((fix, index) => {
                 const PriorityIcon = priorityConfig[fix.priority].icon;
                 
                 return (
                   <motion.div
                     key={fix.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     layout
-                    className={`
-                      flex items-center gap-3 rounded-lg border transition-all cursor-pointer
-                      ${fix.enabled 
-                        ? 'p-2.5 bg-primary/5 border-primary/30' 
-                        : 'p-1.5 px-2.5 bg-muted/30 border-transparent hover:border-muted-foreground/20'
-                      }
-                    `}
-                    onClick={() => onToggle(fix.id)}
+                    transition={{ delay: index * 0.05 }}
+                    className={`rounded-lg border transition-all ${
+                      fix.enabled 
+                        ? 'p-3 border-primary/30 bg-primary/5 shadow-sm' 
+                        : 'p-2 px-3 border-border hover:border-primary/30'
+                    }`}
                   >
-                    <Switch
-                      checked={fix.enabled}
-                      onCheckedChange={() => onToggle(fix.id)}
-                      className="data-[state=checked]:bg-violet-600 scale-90"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-sm ${fix.enabled ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
-                          {fix.label}
-                        </span>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1">
                         {fix.enabled && (
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs px-1.5 py-0 ${priorityConfig[fix.priority].color}`}
-                          >
-                            <PriorityIcon className="w-2.5 h-2.5 mr-1" />
-                            {priorityConfig[fix.priority].label}
-                          </Badge>
+                          <div className={`p-2 rounded-lg bg-primary/10 ${colorClass}`}>
+                            <Icon className="w-4 h-4" />
+                          </div>
                         )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-sm ${fix.enabled ? 'font-medium' : 'text-muted-foreground'}`}>
+                              {fix.label}
+                            </span>
+                            {fix.enabled && (
+                              <Badge 
+                                variant="outline" 
+                                className={`text-xs px-1.5 py-0 ${priorityConfig[fix.priority].color}`}
+                              >
+                                <PriorityIcon className="w-2.5 h-2.5 mr-1" />
+                                {priorityConfig[fix.priority].label}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
                       </div>
+                      <Switch
+                        checked={fix.enabled}
+                        onCheckedChange={() => onToggle(fix.id)}
+                        className="data-[state=checked]:bg-violet-600"
+                      />
                     </div>
                   </motion.div>
                 );

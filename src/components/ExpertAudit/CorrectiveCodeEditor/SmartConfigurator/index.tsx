@@ -448,7 +448,7 @@ export function SmartConfigurator({
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-violet-500 data-[state=active]:bg-transparent py-3 px-4"
                 >
                   <Wrench className="w-4 h-4 mr-2" />
-                  Technique
+                  Basique
                   {technicalCount > 0 && (
                     <span className="ml-2 text-xs bg-violet-500/20 text-violet-600 dark:text-violet-400 px-1.5 py-0.5 rounded">
                       {technicalCount}
