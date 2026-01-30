@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Lock } from 'lucide-react';
@@ -118,33 +118,44 @@ export function CodeBlock({
   }, [codeToDisplay]);
 
   // Force scroll to bottom and keep it there
-  useEffect(() => {
-    const scrollToBottom = () => {
-      if (scrollRef.current) {
-        const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
-        if (scrollContainer) {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-        }
-      }
+  // (important: keep it during the 1.2s pause before the lock overlay appears)
+  useLayoutEffect(() => {
+    const viewport = scrollRef.current?.querySelector<HTMLElement>(
+      '[data-radix-scroll-area-viewport]'
+    );
+    if (!viewport) return;
+
+    const lockVisible = isLocked && animationComplete;
+    const shouldStickToBottom =
+      isAnimating || lockVisible || animationComplete || displayedCode === codeToDisplay;
+
+    if (!shouldStickToBottom) return;
+
+    const apply = () => {
+      // Using scrollHeight makes us resilient to content growth + reflows
+      viewport.scrollTop = viewport.scrollHeight;
     };
-    
-    // Scroll during animation
-    if (isAnimating) {
-      scrollToBottom();
-    }
-    
-    // Scroll when animation completes and LOCK it there
-    if (animationComplete) {
-      scrollToBottom();
-      // Re-apply scroll position after a brief delay to prevent any reflow
-      const timer = setTimeout(scrollToBottom, 50);
-      const timer2 = setTimeout(scrollToBottom, 200);
-      return () => {
-        clearTimeout(timer);
-        clearTimeout(timer2);
-      };
-    }
-  }, [displayedCode, isAnimating, animationComplete]);
+
+    let raf1 = 0;
+    let raf2 = 0;
+    let t1: number | undefined;
+    let t2: number | undefined;
+
+    apply();
+    raf1 = requestAnimationFrame(() => {
+      apply();
+      raf2 = requestAnimationFrame(apply);
+    });
+    t1 = window.setTimeout(apply, 50);
+    t2 = window.setTimeout(apply, 200);
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      if (t1) window.clearTimeout(t1);
+      if (t2) window.clearTimeout(t2);
+    };
+  }, [displayedCode, codeToDisplay, isAnimating, isLocked, animationComplete]);
 
   if (!code) {
     return (
