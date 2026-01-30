@@ -342,6 +342,15 @@ export function WorkflowCarousel({
                       pointerEvents: shouldHide ? 'none' : 'auto'
                     }}
                   >
+                    {/* Outer golden ring for step 3 (premium effect) */}
+                    {step.id === 3 && !isCompleted && (
+                      <div className={cn(
+                        "absolute -inset-[3px] rounded-[10px] pointer-events-none",
+                        "bg-gradient-to-br from-amber-400/60 via-amber-500/40 to-amber-600/60",
+                        isActive && "from-amber-400/80 via-amber-500/60 to-amber-600/80 shadow-[0_0_20px_rgba(251,191,36,0.25)]"
+                      )} />
+                    )}
+                    
                     {/* Glassmorphism Card with shadow */}
                     <Card className={cn(
                       "relative overflow-hidden transition-all duration-500 h-full",
@@ -352,9 +361,9 @@ export function WorkflowCarousel({
                       // Dark metallic grey border for step 2 (Strategic Audit) - elegant SaaS style
                       step.id === 2 && !isCompleted && "border border-slate-400/50 dark:border-slate-500/60 bg-gradient-to-br from-card via-card to-slate-50/5 dark:to-slate-900/20 shadow-[0_8px_30px_rgba(0,0,0,0.15)]",
                       step.id === 2 && isActive && !isCompleted && "border-slate-500/70 dark:border-slate-400/70 shadow-[0_12px_40px_rgba(0,0,0,0.18)]",
-                      // Violet/purple border for step 3 (Code Correctif) with subtle glow
-                      step.id === 3 && !isCompleted && "border border-violet-500/60 dark:border-violet-400/60 shadow-[0_0_15px_rgba(139,92,246,0.2)]",
-                      step.id === 3 && isActive && !isCompleted && "border-violet-500/80 shadow-[0_0_20px_rgba(139,92,246,0.3)]",
+                      // Violet/purple border for step 3 (Code Correctif) - inner border
+                      step.id === 3 && !isCompleted && "border-2 border-violet-500/70 dark:border-violet-400/70 shadow-[0_0_15px_rgba(139,92,246,0.2)]",
+                      step.id === 3 && isActive && !isCompleted && "border-violet-500/90 shadow-[0_0_20px_rgba(139,92,246,0.3)]",
                       // Hover effect for non-active cards
                       !isActive && !shouldHide && "hover:shadow-[0_12px_35px_rgba(0,0,0,0.18)]"
                     )}>
@@ -427,6 +436,8 @@ export function WorkflowCarousel({
                               <span className="text-violet-400">&lt;/</span>
                               <span className="text-cyan-500">json-ld</span>
                               <span className="text-violet-400">&gt;</span>
+                              <br />
+                              <span className="text-amber-500/90 text-xs font-sans not-italic">simple : copiez, collez.</span>
                             </>
                           ) : (
                             step.description
