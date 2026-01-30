@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Copy, Check, Code, Zap, FileCode, Wrench, Sparkles, Eye, Save
+  Copy, Check, Code, Zap, FileCode, Wrench, Sparkles, Eye, Save, Rocket
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
@@ -17,10 +17,11 @@ import { ExpertAuditResult } from '@/types/expertAudit';
 import { CodeBlock } from '../CodeBlock';
 import { TechnicalTab } from './TechnicalTab';
 import { StrategicTab } from './StrategicTab';
+import { GenerativeTab } from './GenerativeTab';
 import { AttributionCard } from './AttributionCard';
 import { VisualPreview } from './VisualPreview';
 import { SecurityZone } from './SecurityZone';
-import { FixConfig, AttributionConfig, ATTRIBUTION_ANCHORS, STRATEGIC_FIXES, ViewMode } from './types';
+import { FixConfig, AttributionConfig, ATTRIBUTION_ANCHORS, STRATEGIC_FIXES, GENERATIVE_FIXES, ViewMode } from './types';
 import { toast as sonnerToast } from 'sonner';
 
 // Hallucination data can be in legacy or new format
@@ -229,6 +230,15 @@ export function SmartConfigurator({
       });
     });
 
+    // Generative Super-Capacities (from GENERATIVE_FIXES) - Premium features
+    Object.values(GENERATIVE_FIXES).forEach(generativeFix => {
+      fixes.push({
+        ...generativeFix,
+        enabled: generativeFix.isRecommended || false,
+        data: {},
+      });
+    });
+
     return fixes;
   }, [technicalResult, strategicResult, siteName, siteUrl, hallucinationData]);
 
@@ -365,8 +375,9 @@ export function SmartConfigurator({
   }, [generatedCode, user, fixConfigs, siteName, siteUrl]);
 
   const enabledCount = fixConfigs.filter(f => f.enabled).length + (attribution.enabled ? 1 : 0);
-  const technicalCount = fixConfigs.filter(f => f.enabled && f.category !== 'strategic').length;
+  const technicalCount = fixConfigs.filter(f => f.enabled && !['strategic', 'generative'].includes(f.category)).length;
   const strategicCount = fixConfigs.filter(f => f.enabled && f.category === 'strategic').length;
+  const generativeCount = fixConfigs.filter(f => f.enabled && f.category === 'generative').length;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -400,13 +411,25 @@ export function SmartConfigurator({
                 </TabsTrigger>
                 <TabsTrigger 
                   value="strategic" 
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-3"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
+                  <Sparkles className="w-4 h-4 mr-1" />
                   Stratégie
                   {strategicCount > 0 && (
-                    <span className="ml-2 text-xs bg-blue-500/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
+                    <span className="ml-1 text-xs bg-blue-500/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
                       {strategicCount}
+                    </span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="generative" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:bg-transparent py-3 px-3"
+                >
+                  <Rocket className="w-4 h-4 mr-1" />
+                  Super
+                  {generativeCount > 0 && (
+                    <span className="ml-1 text-xs bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded">
+                      {generativeCount}
                     </span>
                   )}
                 </TabsTrigger>
@@ -419,6 +442,14 @@ export function SmartConfigurator({
 
                 <TabsContent value="strategic" className="m-0 p-4">
                   <StrategicTab 
+                    fixes={fixConfigs} 
+                    onToggle={toggleFix}
+                    onUpdateData={updateFixData}
+                  />
+                </TabsContent>
+
+                <TabsContent value="generative" className="m-0 p-4">
+                  <GenerativeTab 
                     fixes={fixConfigs} 
                     onToggle={toggleFix}
                     onUpdateData={updateFixData}

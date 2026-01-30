@@ -82,6 +82,8 @@ interface HtmlAnalysis {
   metaDescContent: string;
   h1Count: number;
   h1Contents: string[];
+  h2Count: number;       // NOUVEAU: Comptage des H2
+  h2Contents: string[];  // NOUVEAU: Contenu des H2
   wordCount: number;
   hasSchemaOrg: boolean;
   schemaTypes: string[];
@@ -363,39 +365,68 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
   const metaDescElement = doc.querySelector('meta[name="description"]');
   const metaDescContent = metaDescElement?.getAttribute('content')?.trim() || '';
   
-  // Extract H1 tags using DOM
-  // Extraction H1 - méthode DOM principale
-  const h1Elements = doc.querySelectorAll('h1');
+  // ═══════════════════════════════════════════════════════════════
+  // EXTRACTION H1 - APPROCHE HYBRIDE DOM + REGEX FALLBACK
+  // ═══════════════════════════════════════════════════════════════
+  
   const h1Contents: string[] = [];
+  
+  // Méthode 1: DOM standard
+  const h1Elements = doc.querySelectorAll('h1');
   for (let i = 0; i < h1Elements.length; i++) {
     const h1Text = (h1Elements[i] as Element).textContent?.trim() || '';
-    if (h1Text) h1Contents.push(h1Text);
+    if (h1Text && h1Text.length > 0) {
+      h1Contents.push(h1Text);
+    }
   }
   
-  // Fallback regex si le parseur DOM n'a pas trouvé de H1
-  // (certains parseurs ont des problèmes avec les H1 contenant des attributs complexes)
+  // Méthode 2: Fallback regex si DOM n'a rien trouvé
+  // (gère les H1 avec attributs complexes, style inline, etc.)
   if (h1Contents.length === 0) {
+    console.log('[H1] DOM vide, tentative regex fallback...');
     const h1Regex = /<h1[^>]*>([\s\S]*?)<\/h1>/gi;
     let h1Match;
     while ((h1Match = h1Regex.exec(html)) !== null) {
-      // Nettoyer le HTML interne pour extraire le texte brut
       const h1Html = h1Match[1];
-      const h1Text = h1Html
-        .replace(/<[^>]+>/g, '') // Supprimer les balises HTML internes
-        .replace(/&nbsp;/gi, ' ')
-        .replace(/&amp;/gi, '&')
-        .replace(/&lt;/gi, '<')
-        .replace(/&gt;/gi, '>')
-        .replace(/&quot;/gi, '"')
-        .replace(/&#39;/gi, "'")
-        .replace(/\s+/g, ' ')
-        .trim();
+      const h1Text = cleanHtmlToText(h1Html);
       if (h1Text && h1Text.length > 0) {
         h1Contents.push(h1Text);
-        console.log(`[H1-Fallback] H1 trouvé via regex: "${h1Text.substring(0, 50)}..."`);
+        console.log(`[H1-Regex] Trouvé: "${h1Text.substring(0, 60)}${h1Text.length > 60 ? '...' : ''}"`);
       }
     }
   }
+  
+  // ═══════════════════════════════════════════════════════════════
+  // EXTRACTION H2 - APPROCHE HYBRIDE DOM + REGEX FALLBACK
+  // ═══════════════════════════════════════════════════════════════
+  
+  const h2Contents: string[] = [];
+  
+  // Méthode 1: DOM standard
+  const h2Elements = doc.querySelectorAll('h2');
+  for (let i = 0; i < h2Elements.length; i++) {
+    const h2Text = (h2Elements[i] as Element).textContent?.trim() || '';
+    if (h2Text && h2Text.length > 0) {
+      h2Contents.push(h2Text);
+    }
+  }
+  
+  // Méthode 2: Fallback regex si DOM n'a rien trouvé
+  if (h2Contents.length === 0) {
+    console.log('[H2] DOM vide, tentative regex fallback...');
+    const h2Regex = /<h2[^>]*>([\s\S]*?)<\/h2>/gi;
+    let h2Match;
+    while ((h2Match = h2Regex.exec(html)) !== null) {
+      const h2Html = h2Match[1];
+      const h2Text = cleanHtmlToText(h2Html);
+      if (h2Text && h2Text.length > 0) {
+        h2Contents.push(h2Text);
+        console.log(`[H2-Regex] Trouvé: "${h2Text.substring(0, 60)}${h2Text.length > 60 ? '...' : ''}"`);
+      }
+    }
+  }
+  
+  console.log(`[Headings] H1: ${h1Contents.length}, H2: ${h2Contents.length}`);
   
   // === ÉTAPE 2 : Analyse JSON-LD AVANT suppression des scripts ===
   const jsonLdValidation = analyzeJsonLd(doc);
@@ -410,7 +441,7 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
   
   // === ÉTAPE 5 : Calcul du word count sur le texte propre ===
   const bodyText = doc.body?.textContent || '';
-  const cleanText = bodyText.replace(/\\s+/g, ' ').trim();
+  const cleanText = bodyText.replace(/\s+/g, ' ').trim();
   const wordCount = cleanText.split(' ').filter(w => w.length > 2).length;
   
   // Semantic consistency (title vs H1)
@@ -435,12 +466,30 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
     metaDescContent,
     h1Count: h1Contents.length,
     h1Contents,
+    h2Count: h2Contents.length,
+    h2Contents,
     wordCount,
     hasSchemaOrg: jsonLdValidation.valid && jsonLdValidation.count > 0,
     schemaTypes: jsonLdValidation.types,
     isHttps: url.startsWith('https://'),
     insights
   };
+}
+
+// Helper: Nettoyer le HTML interne pour extraire le texte brut
+function cleanHtmlToText(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, '') // Supprimer les balises HTML internes
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#x2F;/gi, "/")
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function createEmptyAnalysis(url: string): HtmlAnalysis {
@@ -453,6 +502,8 @@ function createEmptyAnalysis(url: string): HtmlAnalysis {
     metaDescContent: '',
     h1Count: 0,
     h1Contents: [],
+    h2Count: 0,
+    h2Contents: [],
     wordCount: 0,
     hasSchemaOrg: false,
     schemaTypes: [],
