@@ -1,23 +1,296 @@
 import { motion } from 'framer-motion';
-import { Card } from '@/components/ui/card';
-import { FileText, Quote, Navigation, MapPin, ExternalLink, Globe, Loader2 } from 'lucide-react';
+import { FileText, Quote, Navigation, MapPin, ExternalLink, Globe, Loader2, RefreshCw } from 'lucide-react';
 import { FixConfig } from './types';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
 interface VisualPreviewProps {
   fixes: FixConfig[];
   siteUrl?: string;
 }
 
+// Generate a lightweight preview script based on enabled fixes
+function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
+  const enabledFixes = fixes.filter(f => f.enabled);
+  if (enabledFixes.length === 0) return '';
+
+  const scriptParts: string[] = [];
+  
+  // Add console log for debugging
+  scriptParts.push(`console.log('[Architecte Preview] Applying ${enabledFixes.length} fixes...');`);
+
+  enabledFixes.forEach(fix => {
+    switch (fix.id) {
+      case 'fix_title':
+        scriptParts.push(`
+          if (document.title) {
+            const originalTitle = document.title;
+            if (originalTitle.length > 60) {
+              document.title = originalTitle.substring(0, 57) + '...';
+            }
+          }
+        `);
+        break;
+      
+      case 'fix_meta_desc':
+        scriptParts.push(`
+          if (!document.querySelector('meta[name="description"]')) {
+            const meta = document.createElement('meta');
+            meta.name = 'description';
+            meta.content = 'Description optimisée par Architecte Crawlers.fr';
+            document.head.appendChild(meta);
+          }
+        `);
+        break;
+
+      case 'fix_h1':
+        scriptParts.push(`
+          const h1s = document.querySelectorAll('h1');
+          if (h1s.length === 0) {
+            const h1 = document.createElement('h1');
+            h1.textContent = document.title || 'Titre principal';
+            h1.style.cssText = 'position:absolute;top:10px;left:10px;font-size:24px;color:#1a1a1a;background:rgba(255,255,255,0.9);padding:8px 16px;border-radius:4px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.1);';
+            document.body.prepend(h1);
+          }
+        `);
+        break;
+
+      case 'fix_jsonld':
+        scriptParts.push(`
+          if (!document.querySelector('script[type="application/ld+json"]')) {
+            const script = document.createElement('script');
+            script.type = 'application/ld+json';
+            script.textContent = JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "${siteName || 'Site Web'}",
+              "description": "Site optimisé par Architecte"
+            });
+            document.head.appendChild(script);
+          }
+        `);
+        break;
+
+      case 'fix_lazy_images':
+        scriptParts.push(`
+          document.querySelectorAll('img:not([loading])').forEach(img => {
+            img.loading = 'lazy';
+            img.style.outline = '2px dashed #10b981';
+            img.title = '[Architecte] Lazy loading activé';
+          });
+        `);
+        break;
+
+      case 'fix_alt_images':
+        scriptParts.push(`
+          document.querySelectorAll('img:not([alt]), img[alt=""]').forEach((img, i) => {
+            img.alt = 'Image ' + (i + 1);
+            img.style.outline = '2px dashed #3b82f6';
+            img.title = '[Architecte] Alt text ajouté';
+          });
+        `);
+        break;
+
+      case 'fix_contrast':
+        scriptParts.push(`
+          document.querySelectorAll('*').forEach(el => {
+            const style = getComputedStyle(el);
+            const color = style.color;
+            if (color === 'rgb(153, 153, 153)' || color === 'rgb(170, 170, 170)') {
+              el.style.color = '#555';
+            }
+          });
+        `);
+        break;
+
+      case 'inject_faq':
+        scriptParts.push(`
+          const faqContainer = document.createElement('section');
+          faqContainer.id = 'architecte-faq';
+          faqContainer.innerHTML = \`
+            <div style="max-width:800px;margin:40px auto;padding:20px;font-family:system-ui,-apple-system,sans-serif;">
+              <h2 style="font-size:24px;margin-bottom:20px;color:#1a1a1a;">❓ Questions Fréquentes</h2>
+              <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+                <div style="padding:16px;border-bottom:1px solid #e5e7eb;cursor:pointer;background:#f9fafb;">
+                  <strong>Quels sont vos services ?</strong>
+                </div>
+                <div style="padding:16px;border-bottom:1px solid #e5e7eb;cursor:pointer;">
+                  <strong>Comment ça fonctionne ?</strong>
+                </div>
+                <div style="padding:16px;cursor:pointer;">
+                  <strong>Quels sont les délais ?</strong>
+                </div>
+              </div>
+              <p style="text-align:center;margin-top:16px;font-size:11px;color:#6b7280;">
+                <a href="https://crawlers.fr" style="color:#10b981;" target="_blank">Powered by Crawlers.fr</a>
+              </p>
+            </div>
+          \`;
+          const footer = document.querySelector('footer');
+          if (footer) footer.before(faqContainer);
+          else document.body.appendChild(faqContainer);
+        `);
+        break;
+
+      case 'inject_blog_section':
+        scriptParts.push(`
+          const blogContainer = document.createElement('section');
+          blogContainer.id = 'architecte-blog';
+          blogContainer.innerHTML = \`
+            <div style="max-width:1000px;margin:40px auto;padding:20px;font-family:system-ui,-apple-system,sans-serif;">
+              <h2 style="font-size:24px;margin-bottom:20px;color:#1a1a1a;">📰 Actualités</h2>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;">
+                <div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;background:#fff;">
+                  <div style="background:#f3f4f6;height:120px;border-radius:4px;margin-bottom:12px;"></div>
+                  <h3 style="font-size:16px;margin-bottom:8px;">Article exemple #1</h3>
+                  <p style="font-size:13px;color:#6b7280;">Découvrez nos dernières actualités...</p>
+                </div>
+                <div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;background:#fff;">
+                  <div style="background:#f3f4f6;height:120px;border-radius:4px;margin-bottom:12px;"></div>
+                  <h3 style="font-size:16px;margin-bottom:8px;">Article exemple #2</h3>
+                  <p style="font-size:13px;color:#6b7280;">Les tendances du secteur...</p>
+                </div>
+              </div>
+            </div>
+          \`;
+          const footer = document.querySelector('footer');
+          if (footer) footer.before(blogContainer);
+          else document.body.appendChild(blogContainer);
+        `);
+        break;
+
+      case 'inject_breadcrumbs':
+        scriptParts.push(`
+          const breadcrumb = document.createElement('nav');
+          breadcrumb.id = 'architecte-breadcrumb';
+          breadcrumb.innerHTML = \`
+            <div style="max-width:1200px;margin:0 auto;padding:12px 20px;font-size:13px;font-family:system-ui,-apple-system,sans-serif;">
+              <a href="/" style="color:#3b82f6;text-decoration:none;">Accueil</a>
+              <span style="margin:0 8px;color:#9ca3af;">›</span>
+              <a href="#" style="color:#3b82f6;text-decoration:none;">Services</a>
+              <span style="margin:0 8px;color:#9ca3af;">›</span>
+              <span style="color:#6b7280;">Page actuelle</span>
+            </div>
+          \`;
+          breadcrumb.style.cssText = 'background:#f9fafb;border-bottom:1px solid #e5e7eb;';
+          const main = document.querySelector('main, header, body > div:first-child');
+          if (main) main.before(breadcrumb);
+          else document.body.prepend(breadcrumb);
+        `);
+        break;
+
+      case 'inject_local_business':
+        const businessData = fix.data || {};
+        scriptParts.push(`
+          const localBiz = document.createElement('div');
+          localBiz.id = 'architecte-localbiz';
+          localBiz.innerHTML = \`
+            <div style="position:fixed;bottom:20px;right:20px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.1);font-family:system-ui,-apple-system,sans-serif;z-index:9999;max-width:280px;">
+              <div style="display:flex;align-items:flex-start;gap:12px;">
+                <div style="width:40px;height:40px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                  📍
+                </div>
+                <div>
+                  <h4 style="font-size:14px;font-weight:600;margin:0 0 4px 0;">${businessData.name || 'Votre Entreprise'}</h4>
+                  <p style="font-size:12px;color:#6b7280;margin:0;">${businessData.address || '123 Rue de Paris'}</p>
+                  <p style="font-size:12px;color:#6b7280;margin:0;">${businessData.city || 'Paris'} ${businessData.postalCode || '75001'}</p>
+                </div>
+              </div>
+            </div>
+          \`;
+          document.body.appendChild(localBiz);
+        `);
+        break;
+
+      case 'fix_hallucination':
+        scriptParts.push(`
+          const clarification = document.createElement('meta');
+          clarification.name = 'ai-clarification';
+          clarification.content = 'Entity verified by Architecte - Crawlers.fr';
+          document.head.appendChild(clarification);
+        `);
+        break;
+    }
+  });
+
+  // Add visual indicator that fixes are applied
+  scriptParts.push(`
+    const indicator = document.createElement('div');
+    indicator.innerHTML = '✨ ${enabledFixes.length} correctif(s) appliqué(s)';
+    indicator.style.cssText = 'position:fixed;top:10px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#8b5cf6,#6366f1);color:white;padding:6px 16px;border-radius:20px;font-size:12px;font-family:system-ui,-apple-system,sans-serif;z-index:99999;box-shadow:0 2px 12px rgba(139,92,246,0.4);';
+    document.body.appendChild(indicator);
+    setTimeout(() => indicator.style.opacity = '0.7', 2000);
+  `);
+
+  return `(function(){${scriptParts.join('\n')}})();`;
+}
+
 export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
+  const [isReloading, setIsReloading] = useState(false);
   
-  const enabledFixes = fixes.filter(f => f.enabled && f.category === 'strategic');
+  // Generate a hash of enabled fixes to detect changes
+  const enabledFixesHash = useMemo(() => {
+    return fixes
+      .filter(f => f.enabled)
+      .map(f => f.id)
+      .sort()
+      .join(',');
+  }, [fixes]);
+
+  // Generate preview script based on enabled fixes
+  const previewScript = useMemo(() => {
+    return generatePreviewScript(fixes);
+  }, [fixes]);
+
+  // Force reload when fixes change
+  useEffect(() => {
+    if (siteUrl && iframeLoaded) {
+      setIsReloading(true);
+      setIframeLoaded(false);
+      // Small delay to show loading state
+      const timer = setTimeout(() => {
+        setIframeKey(prev => prev + 1);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [enabledFixesHash, siteUrl]);
+
+  // Handle iframe load and inject script
+  const handleIframeLoad = useCallback((e: React.SyntheticEvent<HTMLIFrameElement>) => {
+    setIframeLoaded(true);
+    setIsReloading(false);
+
+    // Try to inject script into iframe (will only work for same-origin)
+    try {
+      const iframe = e.currentTarget;
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      
+      if (iframeDoc && previewScript) {
+        const script = iframeDoc.createElement('script');
+        script.textContent = previewScript;
+        iframeDoc.body.appendChild(script);
+        console.log('[Architecte] Preview script injected successfully');
+      }
+    } catch (err) {
+      // Cross-origin restriction - expected for external sites
+      console.log('[Architecte] Cannot inject script (cross-origin). Visual preview only.');
+    }
+  }, [previewScript]);
+
+  // Manual reload function
+  const handleManualReload = useCallback(() => {
+    setIsReloading(true);
+    setIframeLoaded(false);
+    setIframeKey(prev => prev + 1);
+  }, []);
   
-  const hasFAQ = enabledFixes.some(f => f.id === 'inject_faq');
-  const hasSemantic = enabledFixes.some(f => f.id === 'enhance_semantic_meta');
-  const hasBreadcrumbs = enabledFixes.some(f => f.id === 'inject_breadcrumbs');
-  const hasLocalBusiness = enabledFixes.some(f => f.id === 'inject_local_business');
+  const enabledStrategicFixes = fixes.filter(f => f.enabled && f.category === 'strategic');
+  
+  const hasFAQ = enabledStrategicFixes.some(f => f.id === 'inject_faq');
+  const hasSemantic = enabledStrategicFixes.some(f => f.id === 'enhance_semantic_meta');
+  const hasBreadcrumbs = enabledStrategicFixes.some(f => f.id === 'inject_breadcrumbs');
+  const hasLocalBusiness = enabledStrategicFixes.some(f => f.id === 'inject_local_business');
 
   const semanticFix = fixes.find(f => f.id === 'enhance_semantic_meta');
   const localBusinessFix = fixes.find(f => f.id === 'inject_local_business');
@@ -28,7 +301,10 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
   // Reset iframe loaded state when siteUrl changes
   useEffect(() => {
     setIframeLoaded(false);
+    setIframeKey(prev => prev + 1);
   }, [siteUrl]);
+
+  const enabledCount = fixes.filter(f => f.enabled).length;
 
   // Si on a une URL, afficher l'iframe du site cible
   if (siteUrl) {
@@ -38,24 +314,41 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
         <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border-b text-xs">
           <Globe className="w-3 h-3 text-muted-foreground" />
           <span className="text-muted-foreground truncate flex-1">{siteUrl}</span>
+          <div className="flex items-center gap-2">
+            {enabledCount > 0 && (
+              <span className="text-violet-600 dark:text-violet-400 font-medium">
+                {enabledCount} fix{enabledCount > 1 ? 'es' : ''}
+              </span>
+            )}
+            <button
+              onClick={handleManualReload}
+              className="p-1 hover:bg-muted rounded transition-colors"
+              title="Recharger la preview"
+            >
+              <RefreshCw className={`w-3 h-3 text-muted-foreground ${isReloading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
         
         {/* Iframe Container */}
         <div className="flex-1 relative bg-white">
-          {!iframeLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted/20">
+          {(!iframeLoaded || isReloading) && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/20 z-10">
               <div className="flex flex-col items-center gap-2">
                 <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
-                <span className="text-xs text-muted-foreground">Chargement du site...</span>
+                <span className="text-xs text-muted-foreground">
+                  {isReloading ? 'Application des correctifs...' : 'Chargement du site...'}
+                </span>
               </div>
             </div>
           )}
           <iframe
+            key={iframeKey}
             src={siteUrl}
             className="w-full h-full border-0"
             title="Site Preview"
             sandbox="allow-scripts allow-same-origin"
-            onLoad={() => setIframeLoaded(true)}
+            onLoad={handleIframeLoad}
           />
         </div>
         
