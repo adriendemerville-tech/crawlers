@@ -1,4 +1,4 @@
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
 import { AlertTriangle, ChevronDown, BookOpen, Lock } from 'lucide-react';
@@ -37,16 +37,14 @@ export function SecurityZone({
         </>
       )}
 
-      {/* Security Alert */}
-      <Alert className="border-amber-500/50 bg-amber-500/5">
-        <AlertTriangle className="h-4 w-4 text-amber-500" />
-        <AlertTitle className="text-amber-600 dark:text-amber-400 text-sm font-semibold">
-          Note de sécurité
-        </AlertTitle>
-        <AlertDescription className="text-xs text-muted-foreground">
-          Ce script s'exécute côté client et ne modifie pas votre serveur. 
-          Testez toujours en environnement de staging avant la production.
-        </AlertDescription>
+      {/* Security Alert - Single line */}
+      <Alert className="border-amber-500/50 bg-amber-500/5 py-2">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
+          <AlertDescription className="text-xs text-muted-foreground">
+            Ce script s'exécute côté client et ne modifie pas votre serveur.
+          </AlertDescription>
+        </div>
       </Alert>
 
       {/* Implementation Guide */}
