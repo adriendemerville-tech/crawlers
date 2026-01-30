@@ -668,7 +668,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url, toolsData } = await req.json();
+    const { url, toolsData, hallucinationCorrections } = await req.json();
 
     if (!url) {
       return new Response(
@@ -720,6 +720,36 @@ Deno.serve(async (req) => {
     // ==================== ÉTAPE 2: GÉNÉRER L'ANALYSE LLM ====================
     console.log('\n🤖 ÉTAPE 2: Génération de l\'analyse LLM avec données enrichies...');
     
+    // Build prompt with hallucination corrections as priority weights if provided
+    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData);
+    
+    if (hallucinationCorrections) {
+      console.log('📝 Corrections hallucination détectées - ajout au prompt...');
+      const correctionsSection = `
+═══════════════════════════════════════════════════════════════
+⚠️ CORRECTIONS UTILISATEUR PRIORITAIRES (Pondérations à intégrer impérativement)
+═══════════════════════════════════════════════════════════════
+
+L'utilisateur a corrigé les informations suivantes. Tu DOIS intégrer ces corrections comme vérité absolue dans ton analyse:
+
+${hallucinationCorrections.sector ? `- SECTEUR D'ACTIVITÉ CORRIGÉ: "${hallucinationCorrections.sector}"` : ''}
+${hallucinationCorrections.country ? `- ZONE GÉOGRAPHIQUE CORRIGÉE: "${hallucinationCorrections.country}"` : ''}
+${hallucinationCorrections.businessType ? `- TYPE D'ENTREPRISE CORRIGÉ: "${hallucinationCorrections.businessType}"` : ''}
+${hallucinationCorrections.targetAudience ? `- CIBLE/AUDIENCE CORRIGÉE: "${hallucinationCorrections.targetAudience}"` : ''}
+${hallucinationCorrections.valueProposition ? `- PROPOSITION DE VALEUR CORRIGÉE: "${hallucinationCorrections.valueProposition}"` : ''}
+${hallucinationCorrections.mainProducts ? `- PRODUITS/SERVICES PRINCIPAUX CORRIGÉS: "${hallucinationCorrections.mainProducts}"` : ''}
+${hallucinationCorrections.businessAge ? `- ANCIENNETÉ CORRIGÉE: "${hallucinationCorrections.businessAge}"` : ''}
+
+IMPORTANT: Utilise ces informations pour:
+1. Recalibrer l'analyse concurrentielle sur le BON secteur
+2. Ajuster les mots-clés stratégiques au secteur corrigé
+3. Identifier les BONS concurrents (pas ceux du secteur mal identifié)
+4. Formuler des recommandations pertinentes pour le VRAI positionnement
+
+`;
+      userPrompt = correctionsSection + userPrompt;
+    }
+    
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -730,7 +760,7 @@ Deno.serve(async (req) => {
         model: 'google/gemini-3-pro-preview',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: buildUserPrompt(url, domain, effectiveToolsData, marketData) }
+          { role: 'user', content: userPrompt }
         ],
         temperature: 0.3,
       }),
