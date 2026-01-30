@@ -16,6 +16,7 @@ import { CompetitiveLandscapeCard } from './CompetitiveLandscapeCard';
 import { SocialSignalsCard } from './SocialSignalsCard';
 import { MarketIntelligenceCard } from './MarketIntelligenceCard';
 import { PremiumRoadmapCard } from './PremiumRoadmapCard';
+import { KeywordPositioningCard } from './KeywordPositioningCard';
 import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
 
 interface StrategicInsightsProps {
@@ -153,6 +154,15 @@ export function StrategicInsights({
           {/* Market Intelligence & Psychology */}
           {analysis.market_intelligence && (
             <MarketIntelligenceCard intelligence={analysis.market_intelligence} />
+          )}
+
+          {/* Keyword Positioning (DataForSEO based) */}
+          {analysis.keyword_positioning && (
+            <KeywordPositioningCard 
+              positioning={analysis.keyword_positioning}
+              marketSummary={analysis.market_data_summary}
+              competitors={analysis.competitive_landscape}
+            />
           )}
 
           {/* Premium Executive Roadmap (Narrative) */}

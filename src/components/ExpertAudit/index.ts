@@ -21,6 +21,7 @@ import { PaymentModal } from './PaymentModal';
 import { WorkflowCarousel } from './WorkflowCarousel';
 import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 import { HallucinationCorrectionModal } from './HallucinationCorrectionModal';
+import { KeywordPositioningCard } from './KeywordPositioningCard';
 
 export {
   ExpertAuditDashboard,
@@ -50,6 +51,7 @@ export {
   WorkflowCarousel,
   CorrectiveCodeEditor,
   HallucinationCorrectionModal,
+  KeywordPositioningCard,
 };
 
 export type { HallucinationAnalysis } from './HallucinationCorrectionModal';
