@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { AlertTriangle, ChevronDown, BookOpen } from 'lucide-react';
+import { AlertTriangle, ChevronDown, BookOpen, Lock } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { PaymentButton } from './PaymentButton';
@@ -22,7 +22,9 @@ export function SecurityZone({
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   return (
-    <div className="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-4">
+    <div className="relative border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 space-y-4">
+      {/* Lock icon in top-right corner */}
+      <Lock className="absolute top-3 right-3 w-4 h-4 text-muted-foreground/40" />
       {/* Payment Section - Conditional */}
       {showPayment && siteUrl && (
         <>
