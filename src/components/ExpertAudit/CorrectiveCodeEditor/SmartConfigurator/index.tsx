@@ -75,10 +75,45 @@ export function SmartConfigurator({
   const [generatedCode, setGeneratedCode] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   
   const { language } = useLanguage();
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Extract domain from siteUrl for payment check
+  const siteDomain = useMemo(() => {
+    try {
+      return new URL(siteUrl).hostname.replace('www.', '');
+    } catch {
+      return siteUrl;
+    }
+  }, [siteUrl]);
+
+  // Check if user has already paid for this site
+  const checkPaymentStatus = useCallback(async () => {
+    if (!siteUrl) return;
+    
+    setIsCheckingPayment(true);
+    try {
+      const { data, error } = await supabase
+        .from('stripe_payments')
+        .select('id, status, site_url')
+        .eq('status', 'paid')
+        .ilike('site_url', `%${siteDomain}%`)
+        .limit(1);
+      
+      if (error) throw error;
+      
+      setHasPaid(data && data.length > 0);
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+      setHasPaid(false);
+    } finally {
+      setIsCheckingPayment(false);
+    }
+  }, [siteUrl, siteDomain]);
 
   // Generate fix configurations from audit results
   const availableFixes = useMemo(() => {
@@ -237,13 +272,14 @@ export function SmartConfigurator({
     return fixes;
   }, [technicalResult, strategicResult, siteName, siteUrl, hallucinationData]);
 
-  // Initialize fix configs when modal opens
+  // Initialize fix configs when modal opens and check payment status
   useEffect(() => {
     if (isOpen) {
       setFixConfigs(availableFixes);
       setGeneratedCode('');
+      checkPaymentStatus();
     }
-  }, [isOpen, availableFixes]);
+  }, [isOpen, availableFixes, checkPaymentStatus]);
 
   // Toggle a fix
   const toggleFix = useCallback((fixId: string) => {
@@ -488,7 +524,7 @@ export function SmartConfigurator({
                 </ToggleGroupItem>
               </ToggleGroup>
 
-              {generatedCode && viewMode === 'code' && (
+              {generatedCode && viewMode === 'code' && hasPaid && (
                 <div className="flex items-center gap-2">
                   {user && (
                     <Button
@@ -509,7 +545,7 @@ export function SmartConfigurator({
                   >
                     {copied ? (
                       <>
-                        <Check className="w-3 h-3 text-green-500" />
+                        <Check className="w-3 h-3 text-success" />
                         Copié !
                       </>
                     ) : (
@@ -533,6 +569,7 @@ export function SmartConfigurator({
                     code={generatedCode} 
                     isTyping={false}
                     placeholder="Cliquez sur 'Générer le script' pour voir le code"
+                    isLocked={!hasPaid && !!generatedCode}
                   />
                 </div>
               )}

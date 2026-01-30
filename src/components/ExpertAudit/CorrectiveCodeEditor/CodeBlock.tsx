@@ -1,11 +1,14 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Lock } from 'lucide-react';
 
 interface CodeBlockProps {
   code: string;
   isTyping: boolean;
   placeholder?: string;
+  isLocked?: boolean;
+  previewLines?: number;
 }
 
 // Syntax highlighting for JavaScript
@@ -63,30 +66,41 @@ function highlightSyntax(code: string): string {
   return highlighted;
 }
 
-export function CodeBlock({ code, isTyping, placeholder }: CodeBlockProps) {
+export function CodeBlock({ 
+  code, 
+  isTyping, 
+  placeholder,
+  isLocked = false,
+  previewLines = 25
+}: CodeBlockProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [displayedCode, setDisplayedCode] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // Get the code to display (truncated if locked)
+  const codeToDisplay = isLocked 
+    ? code.split('\n').slice(0, previewLines).join('\n') + '\n\n// ... Code verrouillé - Effectuez le paiement pour accéder au script complet ...'
+    : code;
+
   // Typing animation effect
   useEffect(() => {
-    if (!code) {
+    if (!codeToDisplay) {
       setDisplayedCode('');
       return;
     }
 
     // Si le code change et qu'on a du nouveau code, animer
-    if (code !== displayedCode && code.length > 0) {
+    if (codeToDisplay !== displayedCode && codeToDisplay.length > 0) {
       setIsAnimating(true);
       let currentIndex = 0;
-      const lines = code.split('\n');
+      const lines = codeToDisplay.split('\n');
       const totalLines = lines.length;
       
       // Animation rapide: afficher ligne par ligne
       const interval = setInterval(() => {
         currentIndex += 3; // 3 lignes à la fois pour aller vite
         if (currentIndex >= totalLines) {
-          setDisplayedCode(code);
+          setDisplayedCode(codeToDisplay);
           setIsAnimating(false);
           clearInterval(interval);
         } else {
@@ -96,7 +110,7 @@ export function CodeBlock({ code, isTyping, placeholder }: CodeBlockProps) {
 
       return () => clearInterval(interval);
     }
-  }, [code]);
+  }, [codeToDisplay]);
 
   // Auto-scroll to bottom while animating
   useEffect(() => {
@@ -118,6 +132,7 @@ export function CodeBlock({ code, isTyping, placeholder }: CodeBlockProps) {
 
   const lines = displayedCode.split('\n');
   const highlightedCode = highlightSyntax(displayedCode);
+  const totalLines = code.split('\n').length;
 
   return (
     <div className="relative h-[300px] rounded-lg overflow-hidden border bg-background" ref={scrollRef}>
@@ -156,6 +171,23 @@ export function CodeBlock({ code, isTyping, placeholder }: CodeBlockProps) {
           </div>
         </div>
       </ScrollArea>
+
+      {/* Lock overlay */}
+      {isLocked && (
+        <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
+          <div className="w-full h-2/3 bg-gradient-to-t from-background via-background/95 to-transparent flex flex-col items-center justify-end pb-8">
+            <div className="pointer-events-auto flex flex-col items-center gap-2 bg-card/90 backdrop-blur-sm border border-amber-500/30 rounded-lg p-4 shadow-lg">
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                <Lock className="w-5 h-5" />
+                <span className="font-semibold text-sm">Code verrouillé</span>
+              </div>
+              <p className="text-xs text-muted-foreground text-center max-w-[200px]">
+                {totalLines} lignes • Payez pour débloquer le script complet
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
