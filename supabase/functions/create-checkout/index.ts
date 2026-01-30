@@ -15,6 +15,9 @@ const BASE_PRICE_CENTS = 1000; // 10.00€
 const FLOOR_PRICE_CENTS = 200; // 2.00€ (Min)
 const CAP_PRICE_CENTS = 1900;  // 19.00€ (Max)
 
+// Lien de paiement Stripe fixe (utilisé en mode fallback ou direct)
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/6oU4gB6KV6hMgLb9PidnW00";
+
 // Facteurs de pondération (0.2 à 1.9)
 const SECTOR_FACTORS: Record<string, number> = {
   'personal': 0.2,    // -> 2€
@@ -35,9 +38,22 @@ serve(async (req) => {
   }
 
   try {
-    const { siteUrl, sector = 'default', fixesCount = 0 } = await req.json();
+    const { siteUrl, sector = 'default', fixesCount = 0, userId = null, usePaymentLink = false } = await req.json();
 
     console.log(`📝 Checkout request for: ${siteUrl}, sector: ${sector}, fixes: ${fixesCount}`);
+
+    // 🔗 Mode Payment Link (redirection directe vers lien Stripe fixe)
+    if (usePaymentLink) {
+      console.log(`🔗 Using fixed payment link for ${siteUrl}`);
+      return new Response(
+        JSON.stringify({ 
+          url: STRIPE_PAYMENT_LINK, 
+          price: 10, // Prix fixe du payment link
+          mode: 'payment_link'
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // 1️⃣ CALCUL DU PRIX DYNAMIQUE
     // Récupération du facteur (fallback sur 'default' si inconnu)
@@ -52,7 +68,7 @@ serve(async (req) => {
 
     console.log(`💸 Pricing pour ${siteUrl}: Secteur=${sector} (x${factor}) -> ${calculatedPrice / 100}€`);
 
-    // 2️⃣ CRÉATION SESSION STRIPE
+    // 2️⃣ CRÉATION SESSION STRIPE avec métadonnées pour le webhook
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
@@ -69,6 +85,14 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
+      // Métadonnées pour le webhook
+      metadata: {
+        site_url: siteUrl,
+        sector: sector,
+        fixes_count: String(fixesCount),
+        user_id: userId || '',
+      },
+      client_reference_id: siteUrl,
       // URL de redirection après paiement
       success_url: `${req.headers.get("origin")}/audit-expert?session_id={CHECKOUT_SESSION_ID}&success=true`,
       cancel_url: `${req.headers.get("origin")}/audit-expert?canceled=true`,
@@ -77,7 +101,12 @@ serve(async (req) => {
     console.log(`✅ Checkout session created: ${session.id}`);
 
     return new Response(
-      JSON.stringify({ url: session.url, price: calculatedPrice / 100 }),
+      JSON.stringify({ 
+        url: session.url, 
+        price: calculatedPrice / 100,
+        mode: 'checkout_session',
+        session_id: session.id
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 

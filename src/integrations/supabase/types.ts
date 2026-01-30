@@ -300,6 +300,54 @@ export type Database = {
           },
         ]
       }
+      stripe_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          email: string | null
+          fixes_count: number | null
+          generated_code: string | null
+          id: string
+          site_url: string
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          email?: string | null
+          fixes_count?: number | null
+          generated_code?: string | null
+          id?: string
+          site_url: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          email?: string | null
+          fixes_count?: number | null
+          generated_code?: string | null
+          id?: string
+          site_url?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
