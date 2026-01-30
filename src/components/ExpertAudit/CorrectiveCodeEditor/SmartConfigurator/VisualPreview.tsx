@@ -1,14 +1,13 @@
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { FileText, Newspaper, Quote, Navigation, MapPin, ExternalLink, Calendar, User } from 'lucide-react';
-import { FixConfig, AttributionConfig } from './types';
+import { FixConfig } from './types';
 
 interface VisualPreviewProps {
   fixes: FixConfig[];
-  attribution: AttributionConfig;
 }
 
-export function VisualPreview({ fixes, attribution }: VisualPreviewProps) {
+export function VisualPreview({ fixes }: VisualPreviewProps) {
   const enabledFixes = fixes.filter(f => f.enabled && f.category === 'strategic');
   
   const hasBlog = enabledFixes.some(f => f.id === 'inject_blog_section');
@@ -25,17 +24,33 @@ export function VisualPreview({ fixes, attribution }: VisualPreviewProps) {
   const semanticParagraph = semanticFix?.data?.injectedParagraph || 'Votre paragraphe sémantique apparaîtra ici avec les mots-clés optimisés...';
   const businessName = localBusinessFix?.data?.name || 'Votre Entreprise';
 
-  const noPreview = !hasBlog && !hasFAQ && !hasSemantic && !hasBreadcrumbs && !hasLocalBusiness && !attribution.enabled;
+  // Toujours afficher l'attribution
+  const noPreview = !hasBlog && !hasFAQ && !hasSemantic && !hasBreadcrumbs && !hasLocalBusiness;
 
   if (noPreview) {
     return (
-      <div className="h-full flex items-center justify-center text-center p-8">
+      <div className="h-full flex flex-col items-center justify-center text-center p-8">
         <div className="text-muted-foreground">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
             <FileText className="w-8 h-8" />
           </div>
-          <p className="text-sm font-medium">Aucun aperçu disponible</p>
-          <p className="text-xs mt-1">Activez des correctifs stratégiques ou l'attribution pour voir un aperçu</p>
+          <p className="text-sm font-medium">Activez des correctifs stratégiques</p>
+          <p className="text-xs mt-1">pour voir un aperçu visuel</p>
+        </div>
+        {/* Attribution toujours visible */}
+        <div className="mt-8 border-t pt-4 w-full max-w-sm">
+          <div className="bg-muted/50 rounded-lg p-3 text-center">
+            <p className="text-[10px] text-muted-foreground mb-1">Attribution incluse automatiquement</p>
+            <a 
+              href="https://crawlers.fr" 
+              target="_blank" 
+              rel="noopener"
+              className="text-xs text-emerald-600 hover:underline inline-flex items-center gap-1"
+            >
+              Powered by Crawlers.fr
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -153,30 +168,28 @@ export function VisualPreview({ fixes, attribution }: VisualPreviewProps) {
         </motion.div>
       )}
 
-      {/* Attribution Preview */}
-      {attribution.enabled && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="border-t pt-4 mt-6"
-        >
-          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-2">Simulation du pied de page</p>
-            <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
-              <span>© 2025 Votre Entreprise •</span>
-              <a 
-                href="https://crawlers.fr" 
-                target="_blank" 
-                rel="noopener"
-                className="text-emerald-600 hover:underline inline-flex items-center gap-1"
-              >
-                {attribution.anchorText}
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
+      {/* Attribution Preview - Toujours affiché */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="border-t pt-4 mt-6"
+      >
+        <div className="bg-muted/30 rounded-lg p-4 text-center">
+          <p className="text-[10px] text-muted-foreground mb-2">Attribution incluse automatiquement</p>
+          <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+            <span>© 2025 Votre Entreprise •</span>
+            <a 
+              href="https://crawlers.fr" 
+              target="_blank" 
+              rel="noopener"
+              className="text-emerald-600 hover:underline inline-flex items-center gap-1"
+            >
+              Powered by Crawlers.fr
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
-        </motion.div>
-      )}
+        </div>
+      </motion.div>
     </div>
   );
 }
