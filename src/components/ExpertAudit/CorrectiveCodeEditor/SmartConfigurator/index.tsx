@@ -532,7 +532,7 @@ export function SmartConfigurator({
           {/* Right Column: Preview & Security */}
           <div className="col-span-7 flex flex-col bg-slate-50 dark:bg-slate-900/50 overflow-hidden">
             {/* View Mode Toggle + Generate Button */}
-            <div className="p-3 border-b flex items-center justify-between bg-background flex-shrink-0">
+            <div className="p-3 flex items-center justify-between bg-background flex-shrink-0">
               <ToggleGroup 
                 type="single" 
                 value={viewMode} 
