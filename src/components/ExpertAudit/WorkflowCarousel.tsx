@@ -363,7 +363,8 @@ export function WorkflowCarousel({
                       "relative overflow-hidden transition-all duration-500 h-full",
                       "bg-card/95 backdrop-blur-sm border border-border/40",
                       "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
-                      isActive && step.id !== 2 && step.id !== 3 && "border-primary/30 shadow-[0_12px_40px_rgba(0,0,0,0.15)]",
+                      isActive && step.id === 1 && "border-primary/30 shadow-[0_12px_40px_rgba(0,0,0,0.18),0_4px_12px_rgba(0,0,0,0.15)]",
+                      !isActive && step.id === 1 && "shadow-[0_8px_25px_rgba(0,0,0,0.12),0_4px_10px_rgba(0,0,0,0.1)]",
                       isCompleted && "border-success/30",
                       // Dark metallic grey border for step 2 (Strategic Audit) - elegant SaaS style with golden glow
                       step.id === 2 && !isCompleted && "border border-slate-400/50 dark:border-slate-500/60 bg-gradient-to-br from-card via-card to-slate-50/5 dark:to-slate-900/20 shadow-[0_8px_25px_rgba(251,191,36,0.15),0_15px_35px_rgba(251,191,36,0.1)]",
