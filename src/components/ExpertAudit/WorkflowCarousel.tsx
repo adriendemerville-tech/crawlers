@@ -434,7 +434,7 @@ export function WorkflowCarousel({
                               <span className="text-violet-400">&gt;</span>
                               <span className="text-foreground/70"> optimisé pour votre site </span>
                               <span className="text-violet-400">&lt;/</span>
-                              <span className="text-cyan-500">json-ld</span>
+                              <span className="text-cyan-500">schema</span>
                               <span className="text-violet-400">&gt;</span>
                               <br />
                               <span className="text-amber-500/90 text-xs font-sans not-italic">simple : copiez, collez.</span>
