@@ -364,7 +364,10 @@ export function SmartConfigurator({
           <div>
             <DialogTitle className="flex items-center gap-2">
               <FileCode className="w-5 h-5 text-violet-500" />
-              Architecte Génératif
+              <span className="font-mono bg-gradient-to-r from-violet-500 via-amber-400 to-violet-600 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">
+                Architecte Génératif
+              </span>
+              <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
             </DialogTitle>
             <DialogDescription>
               Configurez et prévisualisez les injections de code avant génération
@@ -523,9 +526,9 @@ export function SmartConfigurator({
             {/* Preview/Code Content */}
             <ScrollArea className="flex-1">
               {viewMode === 'visual' ? (
-                <VisualPreview fixes={fixConfigs} />
+                <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
               ) : (
-                <div className="p-4">
+                <div className="p-2">
                   <CodeBlock 
                     code={generatedCode} 
                     isTyping={false}
