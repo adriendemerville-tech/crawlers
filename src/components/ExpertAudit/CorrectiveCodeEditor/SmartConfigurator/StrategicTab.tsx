@@ -58,7 +58,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                 placeholder="« Nos Actualités »"
                 value={fix.data?.sectionTitle || ''}
                 onChange={(e) => onUpdateData(fix.id, { ...fix.data, sectionTitle: e.target.value })}
-                className="mt-1 h-9 text-sm"
+                className="mt-1 h-9 text-sm caret-auto"
               />
             </div>
           </div>
@@ -76,7 +76,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                 placeholder="« consultant SEO Paris »"
                 value={fix.data?.targetKeyword || ''}
                 onChange={(e) => onUpdateData(fix.id, { ...fix.data, targetKeyword: e.target.value })}
-                className="mt-1 h-9 text-sm"
+                className="mt-1 h-9 text-sm caret-auto"
               />
             </div>
             <div>
@@ -88,7 +88,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                 placeholder="« Décrivez votre expertise ou votre proposition de valeur... »"
                 value={fix.data?.injectedParagraph || ''}
                 onChange={(e) => onUpdateData(fix.id, { ...fix.data, injectedParagraph: e.target.value })}
-                className="mt-1 min-h-[80px] text-sm"
+                className="mt-1 min-h-[80px] text-sm caret-auto"
               />
             </div>
           </div>
@@ -107,7 +107,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                   placeholder="« Ma Société »"
                   value={fix.data?.name || ''}
                   onChange={(e) => onUpdateData(fix.id, { ...fix.data, name: e.target.value })}
-                  className="mt-1 h-9 text-sm"
+                  className="mt-1 h-9 text-sm caret-auto"
                 />
               </div>
               <div>
@@ -119,7 +119,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                   placeholder="« +33 1 23 45 67 89 »"
                   value={fix.data?.phone || ''}
                   onChange={(e) => onUpdateData(fix.id, { ...fix.data, phone: e.target.value })}
-                  className="mt-1 h-9 text-sm"
+                  className="mt-1 h-9 text-sm caret-auto"
                 />
               </div>
             </div>
@@ -132,7 +132,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                 placeholder="« 123 Rue de Paris »"
                 value={fix.data?.address || ''}
                 onChange={(e) => onUpdateData(fix.id, { ...fix.data, address: e.target.value })}
-                className="mt-1 h-9 text-sm"
+                className="mt-1 h-9 text-sm caret-auto"
               />
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -145,7 +145,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                   placeholder="« Paris »"
                   value={fix.data?.city || ''}
                   onChange={(e) => onUpdateData(fix.id, { ...fix.data, city: e.target.value })}
-                  className="mt-1 h-9 text-sm"
+                  className="mt-1 h-9 text-sm caret-auto"
                 />
               </div>
               <div>
@@ -157,7 +157,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                   placeholder="« 75001 »"
                   value={fix.data?.postalCode || ''}
                   onChange={(e) => onUpdateData(fix.id, { ...fix.data, postalCode: e.target.value })}
-                  className="mt-1 h-9 text-sm"
+                  className="mt-1 h-9 text-sm caret-auto"
                 />
               </div>
               <div>
@@ -169,7 +169,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                   placeholder="« France »"
                   value={fix.data?.country || ''}
                   onChange={(e) => onUpdateData(fix.id, { ...fix.data, country: e.target.value })}
-                  className="mt-1 h-9 text-sm"
+                  className="mt-1 h-9 text-sm caret-auto"
                 />
               </div>
             </div>
