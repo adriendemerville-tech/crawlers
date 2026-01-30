@@ -76,21 +76,14 @@ export function PaymentButton({
   };
 
   return (
-    <div className="space-y-3">
-      {/* Premium Badge */}
-      <div className="flex items-center justify-center gap-2">
-        <Badge variant="outline" className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400">
-          <Sparkles className="w-3 h-3 mr-1" />
-          Pack Premium
-        </Badge>
-      </div>
-
-      {/* Payment Button */}
+    <div className="space-y-2">
+      {/* Payment Button - Compact & Transparent */}
       <Button
         onClick={handlePayment}
         disabled={disabled || isLoading || !siteUrl}
-        className="w-full gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-        size="lg"
+        variant="outline"
+        className="w-full gap-2 border-emerald-500/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-300"
+        size="sm"
       >
         {isLoading ? (
           <>
@@ -98,27 +91,27 @@ export function PaymentButton({
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
             >
-              <CreditCard className="w-4 h-4" />
+              <CreditCard className="w-3 h-3" />
             </motion.div>
-            Préparation du paiement...
+            Préparation...
           </>
         ) : (
           <>
-            <CreditCard className="w-4 h-4" />
-            Obtenir le Pack Expert
+            <Sparkles className="w-3 h-3" />
+            Obtenir le script complet
             <ExternalLink className="w-3 h-3 ml-1 opacity-70" />
           </>
         )}
       </Button>
 
-      {/* Security & Info */}
-      <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+      {/* Security Info - Minimal */}
+      <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground">
         <div className="flex items-center gap-1">
-          <Lock className="w-3 h-3" />
-          <span>Paiement sécurisé Stripe</span>
+          <Lock className="w-2.5 h-2.5" />
+          <span>Stripe</span>
         </div>
         <span className="text-muted-foreground/50">•</span>
-        <span>À partir de 2€</span>
+        <span>Dès 2€</span>
       </div>
 
       {/* Features List */}
