@@ -313,6 +313,9 @@ export function SmartConfigurator({
       return;
     }
 
+    // Reset code and overlay before generating new code
+    setGeneratedCode('');
+    setShowLockOverlay(false);
     setIsGenerating(true);
     setViewMode('code');
 
@@ -402,29 +405,26 @@ export function SmartConfigurator({
 
   // Calculate dynamic price based on enabled fixes
   // Base: 3€ minimum, 12€ maximum
-  // Weighting: strategic and generative increase price by 0.30€ increments
+  // Price scales proportionally: 0% selected = 3€, 100% selected = 12€
   const calculatedPrice = useMemo(() => {
     const MIN_PRICE = 3;
     const MAX_PRICE = 12;
     const INCREMENT = 0.30; // Price increases in 30 cent steps
+    const PRICE_RANGE = MAX_PRICE - MIN_PRICE; // 9€ range
     
-    // Count total possible fixes by category for normalization
-    const totalStrategic = fixConfigs.filter(f => f.category === 'strategic').length;
-    const totalGenerative = fixConfigs.filter(f => f.category === 'generative').length;
+    // Total number of available fixes
+    const totalFixes = fixConfigs.length;
+    if (totalFixes === 0) return MIN_PRICE;
     
-    // Each strategic fix adds 0.30€, each generative fix adds 0.60€ (2 increments)
-    const strategicContribution = strategicCount * INCREMENT;
-    const generativeContribution = generativeCount * (INCREMENT * 2);
+    // Percentage of fixes enabled (0 to 1)
+    const enabledPercentage = enabledCount / totalFixes;
     
-    // Calculate raw price
-    let price = MIN_PRICE + strategicContribution + generativeContribution;
-    
-    // Cap at maximum
-    if (price > MAX_PRICE) price = MAX_PRICE;
+    // Price scales linearly: 0% = 3€, 100% = 12€
+    const rawPrice = MIN_PRICE + (PRICE_RANGE * enabledPercentage);
     
     // Round to nearest 0.30€ increment
-    return Math.round(price / INCREMENT) * INCREMENT;
-  }, [fixConfigs, strategicCount, generativeCount]);
+    return Math.round(rawPrice / INCREMENT) * INCREMENT;
+  }, [fixConfigs.length, enabledCount]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
