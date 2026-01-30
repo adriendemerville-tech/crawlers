@@ -13,6 +13,7 @@ const technicalSteps = [
 
 const strategicSteps = [
   { id: 'fetch', label: 'Récupération du contenu...', icon: Globe },
+  { id: 'keywords', label: 'Étude des mots-clés...', icon: Target },
   { id: 'brand', label: 'Analyse de l\'identité de marque...', icon: Target },
   { id: 'competition', label: 'Analyse de la concurrence...', icon: Users },
   { id: 'geo', label: 'Évaluation du score GEO...', icon: Brain },
