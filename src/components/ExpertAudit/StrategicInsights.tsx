@@ -19,6 +19,8 @@ import { PremiumRoadmapCard } from './PremiumRoadmapCard';
 import { KeywordModuleSection } from './KeywordModuleSection';
 import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
 
+import { CompetitorCorrections } from './CompetitorCorrectionModal';
+
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
   hideExecutiveSummary?: boolean;
@@ -26,6 +28,8 @@ interface StrategicInsightsProps {
   siteName?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onHallucinationData?: (data: any) => void;
+  onCompetitorCorrection?: (corrections: CompetitorCorrections) => void;
+  isReanalyzing?: boolean;
 }
 
 export function StrategicInsights({ 
@@ -33,7 +37,9 @@ export function StrategicInsights({
   hideExecutiveSummary = false,
   domain = '',
   siteName = '',
-  onHallucinationData
+  onHallucinationData,
+  onCompetitorCorrection,
+  isReanalyzing = false
 }: StrategicInsightsProps) {
   const [showHallucinationModal, setShowHallucinationModal] = useState(false);
   
@@ -146,7 +152,11 @@ export function StrategicInsights({
 
           {/* Competitive Landscape (4 Actors) */}
           {analysis.competitive_landscape && (
-            <CompetitiveLandscapeCard landscape={analysis.competitive_landscape} />
+            <CompetitiveLandscapeCard 
+              landscape={analysis.competitive_landscape}
+              onCorrectionSubmit={onCompetitorCorrection}
+              isReanalyzing={isReanalyzing}
+            />
           )}
 
           {/* Mots clés (doit apparaître entre Écosystème Concurrentiel et Autorité Sociale & Humaine) */}

@@ -399,7 +399,7 @@ export function ExpertAuditDashboard() {
     }
   };
 
-  const handleStrategicAudit = async (hallucinationCorrections?: any) => {
+  const handleStrategicAudit = async (hallucinationCorrections?: any, competitorCorrections?: any) => {
     if (!url.trim()) return;
     const normalizedUrl = normalizeUrl(url);
     setAuditMode('strategic');
@@ -412,7 +412,9 @@ export function ExpertAuditDashboard() {
           url: normalizedUrl, 
           toolsData: null,
           // Pass hallucination corrections as priority weights for re-analysis
-          hallucinationCorrections: hallucinationCorrections || null
+          hallucinationCorrections: hallucinationCorrections || null,
+          // Pass competitor corrections as priority weights for re-analysis
+          competitorCorrections: competitorCorrections || null
         }
       });
 
@@ -528,8 +530,19 @@ export function ExpertAuditDashboard() {
       });
       
       // Re-run strategic audit with corrections
-      handleStrategicAudit(diagnosis.correctedValues);
+      handleStrategicAudit(diagnosis.correctedValues, null);
     }
+  }, [handleStrategicAudit, toast]);
+
+  // Handle competitor correction - triggers re-analysis with competitor weights
+  const handleCompetitorCorrectionComplete = useCallback((corrections: any) => {
+    toast({
+      title: 'Re-analyse en cours...',
+      description: 'L\'écosystème concurrentiel va être réanalysé avec vos corrections.',
+    });
+    
+    // Re-run strategic audit with competitor corrections as weights
+    handleStrategicAudit(null, corrections);
   }, [handleStrategicAudit, toast]);
 
   return (
@@ -839,6 +852,8 @@ export function ExpertAuditDashboard() {
                       domain={result.domain || url}
                       siteName={result.domain || url}
                       onHallucinationData={handleHallucinationCorrectionComplete}
+                      onCompetitorCorrection={handleCompetitorCorrectionComplete}
+                      isReanalyzing={isStrategicLoading}
                     />
                   )}
                 </div>

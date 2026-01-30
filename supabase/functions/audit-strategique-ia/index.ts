@@ -812,7 +812,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url, toolsData, hallucinationCorrections } = await req.json();
+    const { url, toolsData, hallucinationCorrections, competitorCorrections } = await req.json();
 
     if (!url) {
       return new Response(
@@ -892,6 +892,31 @@ IMPORTANT: Utilise ces informations pour:
 
 `;
       userPrompt = correctionsSection + userPrompt;
+    }
+    
+    // Add competitor corrections as priority weights if provided
+    if (competitorCorrections) {
+      console.log('📝 Corrections concurrents détectées - ajout au prompt...');
+      const competitorSection = `
+═══════════════════════════════════════════════════════════════
+🏢 CONCURRENTS CORRIGÉS PAR L'UTILISATEUR (Priorité absolue)
+═══════════════════════════════════════════════════════════════
+
+L'utilisateur a corrigé l'écosystème concurrentiel. Tu DOIS utiliser ces concurrents dans ton analyse:
+
+${competitorCorrections.leader?.name ? `- LEADER (Goliath): "${competitorCorrections.leader.name}" ${competitorCorrections.leader.url ? `(${competitorCorrections.leader.url})` : ''}` : ''}
+${competitorCorrections.direct_competitor?.name ? `- CONCURRENT DIRECT: "${competitorCorrections.direct_competitor.name}" ${competitorCorrections.direct_competitor.url ? `(${competitorCorrections.direct_competitor.url})` : ''}` : ''}
+${competitorCorrections.challenger?.name ? `- CHALLENGER: "${competitorCorrections.challenger.name}" ${competitorCorrections.challenger.url ? `(${competitorCorrections.challenger.url})` : ''}` : ''}
+${competitorCorrections.inspiration_source?.name ? `- SOURCE D'INSPIRATION: "${competitorCorrections.inspiration_source.name}" ${competitorCorrections.inspiration_source.url ? `(${competitorCorrections.inspiration_source.url})` : ''}` : ''}
+
+IMPORTANT: 
+1. Utilise EXACTEMENT ces noms et domaines dans la section "competitive_landscape"
+2. Réanalyse les facteurs d'autorité et analyses pour ces nouveaux concurrents
+3. Adapte les recommandations stratégiques en fonction de ces vrais concurrents
+4. Met à jour les content_gaps et quick_wins selon ce paysage concurrentiel corrigé
+
+`;
+      userPrompt = competitorSection + userPrompt;
     }
     
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
