@@ -447,7 +447,7 @@ export function SmartConfigurator({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] xl:max-w-7xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
+      <DialogContent className="max-w-[95vw] h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
         <DialogHeader className="px-4 py-3 border-b flex flex-row items-center justify-center relative">
           {/* Title - left aligned */}
           <DialogTitle className="absolute left-4 flex items-center gap-2">
@@ -628,7 +628,7 @@ export function SmartConfigurator({
               {viewMode === 'visual' ? (
                 <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
               ) : (
-                <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 min-h-0 flex flex-col pr-4">
                   <CodeBlock 
                     code={generatedCode} 
                     isTyping={false}
