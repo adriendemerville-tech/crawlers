@@ -58,7 +58,10 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
 
   const handleUrlBlur = () => {
     if (url.trim()) {
-      setUrl(normalizeUrl(url));
+      const normalized = normalizeUrl(url);
+      setUrl(normalized);
+      // Persist URL to localStorage for expert audit pre-fill
+      localStorage.setItem('crawlers_last_url', normalized);
     }
   };
 
@@ -67,6 +70,8 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     if (url.trim()) {
       const normalizedUrl = normalizeUrl(url);
       setUrl(normalizedUrl);
+      // Persist URL to localStorage for expert audit pre-fill
+      localStorage.setItem('crawlers_last_url', normalizedUrl);
       onSubmit(normalizedUrl);
     }
   };
