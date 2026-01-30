@@ -1,13 +1,17 @@
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { FileText, Newspaper, Quote, Navigation, MapPin, ExternalLink, Calendar, User } from 'lucide-react';
+import { FileText, Newspaper, Quote, Navigation, MapPin, ExternalLink, Calendar, User, Globe, Loader2 } from 'lucide-react';
 import { FixConfig } from './types';
+import { useState, useEffect } from 'react';
 
 interface VisualPreviewProps {
   fixes: FixConfig[];
+  siteUrl?: string;
 }
 
-export function VisualPreview({ fixes }: VisualPreviewProps) {
+export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+  
   const enabledFixes = fixes.filter(f => f.enabled && f.category === 'strategic');
   
   const hasBlog = enabledFixes.some(f => f.id === 'inject_blog_section');
@@ -24,7 +28,56 @@ export function VisualPreview({ fixes }: VisualPreviewProps) {
   const semanticParagraph = semanticFix?.data?.injectedParagraph || 'Votre paragraphe sémantique apparaîtra ici avec les mots-clés optimisés...';
   const businessName = localBusinessFix?.data?.name || 'Votre Entreprise';
 
-  // Toujours afficher l'attribution
+  // Reset iframe loaded state when siteUrl changes
+  useEffect(() => {
+    setIframeLoaded(false);
+  }, [siteUrl]);
+
+  // Si on a une URL, afficher l'iframe du site cible
+  if (siteUrl) {
+    return (
+      <div className="h-full flex flex-col">
+        {/* Site Preview Header */}
+        <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 border-b text-xs">
+          <Globe className="w-3 h-3 text-muted-foreground" />
+          <span className="text-muted-foreground truncate flex-1">{siteUrl}</span>
+        </div>
+        
+        {/* Iframe Container */}
+        <div className="flex-1 relative bg-white">
+          {!iframeLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/20">
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+                <span className="text-xs text-muted-foreground">Chargement du site...</span>
+              </div>
+            </div>
+          )}
+          <iframe
+            src={siteUrl}
+            className="w-full h-full border-0"
+            title="Site Preview"
+            sandbox="allow-scripts allow-same-origin"
+            onLoad={() => setIframeLoaded(true)}
+          />
+        </div>
+        
+        {/* Attribution Footer */}
+        <div className="px-3 py-2 bg-muted/30 border-t text-center">
+          <a 
+            href="https://crawlers.fr" 
+            target="_blank" 
+            rel="noopener"
+            className="text-[10px] text-emerald-600 hover:underline inline-flex items-center gap-1"
+          >
+            Powered by Crawlers.fr
+            <ExternalLink className="w-2.5 h-2.5" />
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   const noPreview = !hasBlog && !hasFAQ && !hasSemantic && !hasBreadcrumbs && !hasLocalBusiness;
 
   if (noPreview) {
