@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Copy, Check, Code, Zap, FileCode, Wrench, Sparkles, Eye, Save, Rocket
+  Copy, Check, Code, Zap, Wrench, Sparkles, Eye, Save, Rocket
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
@@ -396,48 +396,46 @@ export function SmartConfigurator({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] xl:max-w-7xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
-        <DialogHeader className="p-3 border-b flex flex-row items-center gap-4">
-          <DialogTitle className="flex items-center gap-2 shrink-0">
-            <FileCode className="w-5 h-5 text-violet-500" />
-            <span className="font-mono bg-gradient-to-r from-violet-500 via-amber-400 to-violet-600 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">
+        <DialogHeader className="px-4 py-3 border-b flex flex-row items-center justify-center relative">
+          {/* Title - left aligned */}
+          <DialogTitle className="absolute left-4 flex items-center gap-2">
+            <span className="text-sm font-normal bg-gradient-to-r from-violet-500 to-amber-400 bg-clip-text text-transparent">
               Architecte Génératif
             </span>
-            <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
           </DialogTitle>
           
-          <DialogDescription asChild>
-            <code className="text-xs bg-muted px-2 py-1 rounded font-mono text-muted-foreground truncate max-w-md">
-              {siteUrl}
-            </code>
+          {/* Centered URL */}
+          <DialogDescription className="text-sm text-muted-foreground font-normal truncate max-w-md">
+            {siteUrl}
           </DialogDescription>
           
-          <div className="flex-1" />
-          
-          {/* Generate Button in Header - offset from close button */}
-          <Button
-            onClick={handleGenerate}
-            disabled={enabledCount === 0 || isGenerating}
-            variant="outline"
-            className="gap-2 border-violet-500 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10"
-            size="sm"
-          >
-            {isGenerating ? (
-              <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                >
-                  <Code className="w-3 h-3" />
-                </motion.div>
-                Génération...
-              </>
-            ) : (
-              <>
-                <Zap className="w-3 h-3" />
-                Générer ({enabledCount})
-              </>
-            )}
-          </Button>
+          {/* Generate Button - right aligned, offset from close button */}
+          <div className="absolute right-12">
+            <Button
+              onClick={handleGenerate}
+              disabled={enabledCount === 0 || isGenerating}
+              variant="outline"
+              className="gap-2 border-violet-500/50 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10"
+              size="sm"
+            >
+              {isGenerating ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                  >
+                    <Code className="w-3 h-3" />
+                  </motion.div>
+                  Génération...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-3 h-3" />
+                  Générer ({enabledCount})
+                </>
+              )}
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden grid grid-cols-12 h-full">
@@ -515,14 +513,14 @@ export function SmartConfigurator({
                 type="single" 
                 value={viewMode} 
                 onValueChange={(v) => v && setViewMode(v as ViewMode)}
-                className="bg-muted p-1 rounded-lg"
+                className="bg-muted p-0.5 rounded-md"
               >
-                <ToggleGroupItem value="visual" className="gap-2 text-sm data-[state=on]:bg-background">
-                  <Eye className="w-4 h-4" />
-                  Simulation Visuelle
+                <ToggleGroupItem value="visual" className="gap-1.5 text-xs px-2.5 py-1 h-7 data-[state=on]:bg-background">
+                  <Eye className="w-3 h-3" />
+                  Preview
                 </ToggleGroupItem>
-                <ToggleGroupItem value="code" className="gap-2 text-sm data-[state=on]:bg-background">
-                  <Code className="w-4 h-4" />
+                <ToggleGroupItem value="code" className="gap-1.5 text-xs px-2.5 py-1 h-7 data-[state=on]:bg-background">
+                  <Code className="w-3 h-3" />
                   Code Source
                 </ToggleGroupItem>
               </ToggleGroup>
@@ -578,12 +576,14 @@ export function SmartConfigurator({
               )}
             </ScrollArea>
 
-            {/* Security Zone with Payment */}
-            <SecurityZone 
-              siteUrl={siteUrl}
-              fixesCount={enabledCount}
-              showPayment={!!generatedCode}
-            />
+            {/* Security Zone with Payment - only visible in code view */}
+            {viewMode === 'code' && (
+              <SecurityZone 
+                siteUrl={siteUrl}
+                fixesCount={enabledCount}
+                showPayment={!!generatedCode}
+              />
+            )}
           </div>
         </div>
       </DialogContent>
