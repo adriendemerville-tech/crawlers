@@ -406,8 +406,8 @@ export function SmartConfigurator({
         <DialogHeader className="px-4 py-3 border-b flex flex-row items-center justify-center relative">
           {/* Title - left aligned */}
           <DialogTitle className="absolute left-4 flex items-center gap-2">
-            <span className="text-sm font-normal bg-gradient-to-r from-violet-500 to-amber-400 bg-clip-text text-transparent">
-              Architecte Génératif
+            <span className="text-sm font-medium bg-gradient-to-r from-violet-600 via-violet-400 to-amber-400 bg-clip-text text-transparent">
+              Architecte
             </span>
           </DialogTitle>
           
@@ -568,17 +568,19 @@ export function SmartConfigurator({
             </div>
 
             {/* Preview/Code Content - fills available space */}
-            <div className="flex-1 min-h-0 overflow-auto">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
               {viewMode === 'visual' ? (
                 <VisualPreview fixes={fixConfigs} siteUrl={siteUrl} />
               ) : (
-                <div className="p-2 h-full pt-6">
-                  <CodeBlock 
-                    code={generatedCode} 
-                    isTyping={false}
-                    placeholder="Cliquez sur 'Générer le script' pour voir le code"
-                    isLocked={!hasPaid && showLockOverlay}
-                  />
+                <div className="p-2 flex-1 pt-4 pb-0 flex flex-col min-h-0">
+                  <div className="flex-1 min-h-0">
+                    <CodeBlock 
+                      code={generatedCode} 
+                      isTyping={false}
+                      placeholder="Cliquez sur 'Générer le script' pour voir le code"
+                      isLocked={!hasPaid && showLockOverlay}
+                    />
+                  </div>
                 </div>
               )}
             </div>
