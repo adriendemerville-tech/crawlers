@@ -144,7 +144,7 @@ export function SolutionSection() {
               variant="outline"
               size="lg"
               onClick={() => navigate('/audit-expert')}
-              className="relative z-10 gap-1.5 group font-mono border-violet-500/40 hover:border-violet-500 hover:bg-violet-500/5 bg-violet-500/5 text-foreground hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] transition-all duration-300"
+              className="relative z-10 gap-1.5 group font-mono border-violet-500/40 hover:border-violet-500 hover:bg-violet-500/5 bg-violet-500/5 text-foreground transition-all duration-300"
             >
               <span className="text-violet-400">&lt;</span>
               <span className="text-pink-500">button</span>
@@ -154,15 +154,18 @@ export function SolutionSection() {
               <span className="text-violet-500 font-semibold">{t.cta}</span>
               <span className="text-amber-500">"</span>
               <span className="text-violet-400">/&gt;</span>
-              <ArrowRight className="w-4 h-4 ml-1 text-violet-500 group-hover:translate-x-1 transition-transform" />
+              {/* Arrow with circle - classic button style */}
+              <span className="ml-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-violet-500 text-white group-hover:bg-violet-600 transition-colors">
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" strokeWidth={3} />
+              </span>
             </Button>
-            {/* Golden glow shadow - wider than button, max half height */}
+            {/* Golden glow shadow - below and around button, not inside */}
             <div 
-              className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-[120%] h-3 rounded-full bg-gradient-to-r from-transparent via-amber-400/40 to-transparent blur-md pointer-events-none"
+              className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-[115%] h-4 rounded-full bg-gradient-to-r from-transparent via-amber-400/50 to-transparent blur-lg pointer-events-none"
               aria-hidden="true"
             />
             <div 
-              className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-[110%] h-2 rounded-full bg-gradient-to-r from-transparent via-amber-500/30 to-transparent blur-sm pointer-events-none"
+              className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-[105%] h-3 rounded-full bg-gradient-to-r from-transparent via-amber-500/40 to-transparent blur-md pointer-events-none"
               aria-hidden="true"
             />
           </div>
