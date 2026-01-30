@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CreditCard, Lock } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,13 +75,13 @@ export function PaymentButton({
   };
 
   return (
-    <div className="space-y-1">
-      {/* Payment Button - Compact & Elegant */}
+    <div className="space-y-2">
+      {/* Payment Button - Compact */}
       <Button
         onClick={handlePayment}
         disabled={disabled || isLoading || !siteUrl}
         variant="outline"
-        className="w-full gap-2 border-emerald-500/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-300"
+        className="gap-2 border-emerald-500/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 transition-all duration-300"
         size="sm"
       >
         {isLoading ? (
@@ -97,36 +96,16 @@ export function PaymentButton({
           </>
         ) : (
           <>
-            <Lock className="w-3 h-3 opacity-70" />
             Obtenir le script complet
           </>
         )}
       </Button>
 
-      {/* Price below button */}
-      <p className="text-center text-xs text-muted-foreground">3,00€</p>
-
-      {/* Features List */}
-      <div className="text-xs text-muted-foreground space-y-1 bg-slate-100 dark:bg-slate-800/50 rounded-lg p-3">
-        <p className="font-medium text-foreground mb-2">Inclus dans le pack :</p>
-        <ul className="space-y-1">
-          <li className="flex items-center gap-2">
-            <span className="text-emerald-500">✓</span>
-            Script correctif personnalisé
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-emerald-500">✓</span>
-            {fixesCount} améliorations activées
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-emerald-500">✓</span>
-            Guide d'implémentation
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-emerald-500">✓</span>
-            Support technique inclus
-          </li>
-        </ul>
+      {/* Price + explanation */}
+      <div className="text-xs text-muted-foreground">
+        <span className="font-medium">3,00€</span>
+        <span className="mx-1">•</span>
+        <span>Votre prix est conforme au nombre de scripts développés pour votre site</span>
       </div>
     </div>
   );
