@@ -489,11 +489,11 @@ export function SmartConfigurator({
               </TabsList>
 
               <ScrollArea className="flex-1 min-h-0">
-                <TabsContent value="technical" className="m-0 p-4">
+                <TabsContent value="technical" className="m-0 p-4 pb-6">
                   <TechnicalTab fixes={fixConfigs} onToggle={toggleFix} />
                 </TabsContent>
 
-                <TabsContent value="strategic" className="m-0 p-4">
+                <TabsContent value="strategic" className="m-0 p-4 pb-6">
                   <StrategicTab 
                     fixes={fixConfigs} 
                     onToggle={toggleFix}
@@ -501,7 +501,7 @@ export function SmartConfigurator({
                   />
                 </TabsContent>
 
-                <TabsContent value="generative" className="m-0 p-4">
+                <TabsContent value="generative" className="m-0 p-4 pb-6">
                   <GenerativeTab 
                     fixes={fixConfigs} 
                     onToggle={toggleFix}
