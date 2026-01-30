@@ -91,11 +91,12 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                     key={fix.id}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
+                    layout
                     className={`
-                      flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer
+                      flex items-center gap-3 rounded-lg border transition-all cursor-pointer
                       ${fix.enabled 
-                        ? 'bg-primary/5 border-primary/30' 
-                        : 'bg-muted/30 border-transparent hover:border-muted-foreground/20'
+                        ? 'p-2.5 bg-primary/5 border-primary/30' 
+                        : 'p-1.5 px-2.5 bg-muted/30 border-transparent hover:border-muted-foreground/20'
                       }
                     `}
                     onClick={() => onToggle(fix.id)}
@@ -103,20 +104,22 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                     <Switch
                       checked={fix.enabled}
                       onCheckedChange={() => onToggle(fix.id)}
-                      className="data-[state=checked]:bg-violet-600"
+                      className="data-[state=checked]:bg-violet-600 scale-90"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-sm font-medium ${fix.enabled ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        <span className={`text-sm ${fix.enabled ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
                           {fix.label}
                         </span>
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs px-1.5 py-0 ${priorityConfig[fix.priority].color}`}
-                        >
-                          <PriorityIcon className="w-2.5 h-2.5 mr-1" />
-                          {priorityConfig[fix.priority].label}
-                        </Badge>
+                        {fix.enabled && (
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs px-1.5 py-0 ${priorityConfig[fix.priority].color}`}
+                          >
+                            <PriorityIcon className="w-2.5 h-2.5 mr-1" />
+                            {priorityConfig[fix.priority].label}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </motion.div>
