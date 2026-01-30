@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Lock, Sparkles, UserPlus } from 'lucide-react';
+import { Lock, UserPlus, LogIn, FolderCheck, ClipboardList, Code2, PiggyBank } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -8,19 +8,34 @@ const translations = {
   fr: {
     title: 'Rapport IA Prêt',
     subtitle: 'Inscrivez-vous gratuitement pour révéler l\'analyse de sentiment et les hallucinations détectées.',
-    button: 'S\'inscrire pour voir les résultats',
+    benefit1: 'Retrouvez tous vos rapports',
+    benefit2: 'Vos plans d\'action',
+    benefit3: 'Vos codes correctifs',
+    tagline1: 'Devenez autonome sur le SEO',
+    tagline2: 'Faites des économies',
+    button: 'S\'inscrire gratuitement',
     loginLink: 'Déjà inscrit ? Se connecter',
   },
   en: {
     title: 'AI Report Ready',
     subtitle: 'Sign up for free to reveal the sentiment analysis and detected hallucinations.',
-    button: 'Sign up to see results',
+    benefit1: 'Find all your reports',
+    benefit2: 'Your action plans',
+    benefit3: 'Your corrective codes',
+    tagline1: 'Become SEO autonomous',
+    tagline2: 'Save money',
+    button: 'Sign up for free',
     loginLink: 'Already registered? Log in',
   },
   es: {
     title: 'Informe IA Listo',
     subtitle: 'Regístrate gratis para revelar el análisis de sentimiento y las alucinaciones detectadas.',
-    button: 'Registrarse para ver resultados',
+    benefit1: 'Encuentra todos tus informes',
+    benefit2: 'Tus planes de acción',
+    benefit3: 'Tus códigos correctivos',
+    tagline1: 'Sé autónomo en SEO',
+    tagline2: 'Ahorra dinero',
+    button: 'Registrarse gratis',
     loginLink: '¿Ya registrado? Iniciar sesión',
   },
 };
@@ -55,43 +70,102 @@ export function RegistrationGate({ onRegister }: RegistrationGateProps) {
       className="absolute inset-x-0 top-0 z-10 flex items-start justify-center pt-8 px-4"
     >
       <motion.div 
-        className="bg-background/95 backdrop-blur-md border border-border/60 p-6 rounded-xl shadow-2xl max-w-sm w-full text-center"
+        className="bg-background/95 backdrop-blur-md border border-border/60 p-6 rounded-xl shadow-2xl max-w-sm w-full"
         initial={{ y: 20 }}
         animate={{ y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <div className="flex items-center justify-center gap-3 mb-4">
+        {/* Header */}
+        <div className="text-center mb-4">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 500 }}
-            className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"
+            className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3"
           >
-            <Lock className="w-5 h-5 text-primary" />
+            <Lock className="w-6 h-6 text-primary" />
           </motion.div>
           <motion.h3 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-lg font-bold text-foreground"
+            className="text-lg font-bold text-foreground mb-1"
           >
             {t.title}
           </motion.h3>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-muted-foreground text-sm leading-relaxed"
+          >
+            {t.subtitle}
+          </motion.p>
         </div>
 
-        <motion.p 
+        {/* Benefits with marketing copy */}
+        <div className="space-y-2 mb-4">
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.45 }}
+            className="flex items-center gap-2.5"
+          >
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <FolderCheck className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <span className="text-sm text-foreground">{t.benefit1}</span>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-center gap-2.5"
+          >
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <ClipboardList className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <span className="text-sm text-foreground">{t.benefit2}</span>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.55 }}
+            className="flex items-center gap-2.5"
+          >
+            <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Code2 className="w-3.5 h-3.5 text-primary" />
+            </div>
+            <span className="text-sm text-foreground">
+              Vos <code className="text-xs bg-muted px-1 py-0.5 rounded font-mono">codes</code> correctifs
+            </span>
+          </motion.div>
+        </div>
+
+        {/* Taglines */}
+        <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="text-muted-foreground mb-5 text-sm leading-relaxed"
+          transition={{ delay: 0.6 }}
+          className="flex items-center justify-center gap-4 text-xs mb-4 py-2 border-t border-border/40"
         >
-          {t.subtitle}
-        </motion.p>
+          <div className="flex items-center gap-1.5 text-primary font-medium">
+            <span>✨</span>
+            <span>{t.tagline1}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-success font-medium">
+            <PiggyBank className="w-3.5 h-3.5" />
+            <span>{t.tagline2}</span>
+          </div>
+        </motion.div>
 
+        {/* Actions */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.65 }}
           className="space-y-2"
         >
           <Button 
@@ -102,30 +176,17 @@ export function RegistrationGate({ onRegister }: RegistrationGateProps) {
             {t.button}
           </Button>
 
-          <button 
+          <Button 
             onClick={handleLogin}
-            className="text-xs text-primary hover:underline transition-all"
+            variant="outline"
+            className="w-full gap-2 h-9 text-sm"
           >
+            <LogIn className="w-3.5 h-3.5" />
             {t.loginLink}
-          </button>
-        </motion.div>
-
-        {/* Decorative sparkles */}
-        <motion.div
-          animate={{ 
-            rotate: [0, 10, -10, 0],
-            scale: [1, 1.1, 1]
-          }}
-          transition={{ 
-            repeat: Infinity, 
-            duration: 3,
-            ease: "easeInOut"
-          }}
-          className="absolute -top-2 -right-2"
-        >
-          <Sparkles className="w-5 h-5 text-amber-400" />
+          </Button>
         </motion.div>
       </motion.div>
     </motion.div>
   );
 }
+
