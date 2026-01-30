@@ -43,7 +43,10 @@ const translations = {
   fr: {
     badge: 'Audit Expert SEO & IA',
     title: 'Analysez votre site en profondeur',
-    subtitle: 'Analyse 360° de votre SEO et de votre GEO en moins de 10 min. Développement du code correctif adapté à vos besoins.',
+    subtitlePart1: 'Analyse 360° de votre SEO et de votre GEO en moins de 10 min.',
+    subtitlePart2: 'Développement du',
+    subtitleCode: 'code correctif',
+    subtitlePart3: 'adapté à vos besoins.',
     technicalTitle: 'Audit Technique SEO',
     technicalDesc: 'Performance, SEO, sécurité, Core Web Vitals. Score sur 200 points.',
     strategicTitle: 'Audit Stratégique IA',
@@ -71,7 +74,10 @@ const translations = {
   en: {
     badge: 'Expert SEO & AI Audit',
     title: 'Analyze your site in depth',
-    subtitle: '360° analysis of your SEO and GEO in less than 10 min. Development of corrective code tailored to your needs.',
+    subtitlePart1: '360° analysis of your SEO and GEO in less than 10 min.',
+    subtitlePart2: 'Development of',
+    subtitleCode: 'corrective code',
+    subtitlePart3: 'tailored to your needs.',
     technicalTitle: 'Technical SEO Audit',
     technicalDesc: 'Performance, SEO, security, Core Web Vitals. Score out of 200 points.',
     strategicTitle: 'Strategic AI Audit',
@@ -99,7 +105,10 @@ const translations = {
   es: {
     badge: 'Auditoría Experta SEO e IA',
     title: 'Analiza tu sitio en profundidad',
-    subtitle: 'Análisis 360° de tu SEO y GEO en menos de 10 min. Desarrollo del código correctivo adaptado a tus necesidades.',
+    subtitlePart1: 'Análisis 360° de tu SEO y GEO en menos de 10 min.',
+    subtitlePart2: 'Desarrollo del',
+    subtitleCode: 'código correctivo',
+    subtitlePart3: 'adaptado a tus necesidades.',
     technicalTitle: 'Auditoría Técnica SEO',
     technicalDesc: 'Rendimiento, SEO, seguridad, Core Web Vitals. Puntuación sobre 200.',
     strategicTitle: 'Auditoría Estratégica IA',
@@ -482,7 +491,12 @@ export function ExpertAuditDashboard() {
           {t.title}
         </h1>
         <p className="text-muted-foreground max-w-xl mx-auto text-base">
-          {t.subtitle}
+          {t.subtitlePart1}{' '}
+          {t.subtitlePart2}{' '}
+          <code className="px-1.5 py-0.5 rounded bg-primary/10 text-primary font-mono text-sm font-medium">
+            {t.subtitleCode}
+          </code>{' '}
+          {t.subtitlePart3}
         </p>
       </motion.div>
 
