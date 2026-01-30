@@ -441,34 +441,6 @@ export function SmartConfigurator({
           <DialogDescription className="text-sm text-muted-foreground font-normal truncate max-w-md">
             {siteUrl}
           </DialogDescription>
-          
-          {/* Generate Button - right aligned, offset from close button */}
-          <div className="absolute right-12">
-            <Button
-              onClick={handleGenerate}
-              disabled={enabledCount === 0 || isGenerating}
-              variant="outline"
-              className="gap-2 border-violet-500/50 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10"
-              size="sm"
-            >
-              {isGenerating ? (
-                <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  >
-                    <Code className="w-3 h-3" />
-                  </motion.div>
-                  Génération...
-                </>
-              ) : (
-                <>
-                  <Zap className="w-3 h-3" />
-                  Générer ({enabledCount})
-                </>
-              )}
-            </Button>
-          </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden grid grid-cols-12 h-full">
@@ -540,7 +512,7 @@ export function SmartConfigurator({
 
           {/* Right Column: Preview & Security */}
           <div className="col-span-7 flex flex-col bg-slate-50 dark:bg-slate-900/50 overflow-hidden">
-            {/* View Mode Toggle */}
+            {/* View Mode Toggle + Generate Button */}
             <div className="p-3 border-b flex items-center justify-between bg-background flex-shrink-0">
               <ToggleGroup 
                 type="single" 
@@ -557,6 +529,32 @@ export function SmartConfigurator({
                   Code Source
                 </ToggleGroupItem>
               </ToggleGroup>
+
+              {/* Generate Button */}
+              <Button
+                onClick={handleGenerate}
+                disabled={enabledCount === 0 || isGenerating}
+                variant="outline"
+                className="gap-2 border-violet-500/50 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10"
+                size="sm"
+              >
+                {isGenerating ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                    >
+                      <Code className="w-3 h-3" />
+                    </motion.div>
+                    Génération...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-3 h-3" />
+                    Générer ({enabledCount})
+                  </>
+                )}
+              </Button>
 
               {generatedCode && viewMode === 'code' && hasPaid && (
                 <div className="flex items-center gap-2">
