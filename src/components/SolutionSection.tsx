@@ -90,17 +90,15 @@ export function SolutionSection() {
             {t.title}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            <span className="text-foreground">
-              Identifier un problème sans solution, c'est{' '}
-              <span className="bg-gradient-to-r from-foreground via-foreground to-destructive bg-clip-text text-transparent">frustr</span>
-              <span 
-                className="bg-gradient-to-r from-destructive/80 to-destructive bg-clip-text text-transparent"
-                style={{ textShadow: '0 2px 2px rgba(127, 29, 29, 0.6)' }}
-              >ant</span>
+            <span className="bg-gradient-to-r from-foreground via-foreground to-red-700 bg-clip-text text-transparent">
+              Identifier un problème sans solution, c'est frustrant
             </span>
             <span 
-              className="font-bold text-destructive"
-              style={{ textShadow: '0 0 8px rgba(220, 38, 38, 0.6), 0 0 12px rgba(220, 38, 38, 0.4)' }}
+              className="font-bold"
+              style={{ 
+                color: '#7f1d1d',
+                textShadow: '0 0 8px rgba(127, 29, 29, 0.7), 0 0 14px rgba(127, 29, 29, 0.5)' 
+              }}
             >.</span>
             <br />
             Après chaque <span className="text-foreground">{t.subtitleHighlight}</span>
