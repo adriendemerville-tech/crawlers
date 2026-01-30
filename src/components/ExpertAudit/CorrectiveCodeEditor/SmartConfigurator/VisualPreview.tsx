@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { FileText, Quote, Navigation, MapPin, ExternalLink, Loader2 } from 'lucide-react';
+import { FileText, Quote, Navigation, MapPin, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
 import { FixConfig } from './types';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface VisualPreviewProps {
   fixes: FixConfig[];
@@ -215,10 +216,16 @@ function generatePreviewScript(fixes: FixConfig[], siteName?: string): string {
   return `(function(){${scriptParts.join('\n')}})();`;
 }
 
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 2000;
+
 export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeKey, setIframeKey] = useState(0);
   const [isReloading, setIsReloading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Generate a hash of enabled fixes to detect changes
   const enabledFixesHash = useMemo(() => {
@@ -234,11 +241,30 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
     return generatePreviewScript(fixes);
   }, [fixes]);
 
+  // Cleanup retry timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Reset retry state when URL changes
+  useEffect(() => {
+    setRetryCount(0);
+    setLoadFailed(false);
+    setIframeLoaded(false);
+    setIframeKey(prev => prev + 1);
+  }, [siteUrl]);
+
   // Force reload when fixes change
   useEffect(() => {
     if (siteUrl && iframeLoaded) {
       setIsReloading(true);
       setIframeLoaded(false);
+      setRetryCount(0);
+      setLoadFailed(false);
       // Small delay to show loading state
       const timer = setTimeout(() => {
         setIframeKey(prev => prev + 1);
@@ -247,32 +273,64 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
     }
   }, [enabledFixesHash, siteUrl]);
 
+  // Auto-retry logic when load fails
+  const triggerRetry = useCallback(() => {
+    if (retryCount < MAX_RETRY_ATTEMPTS) {
+      console.log(`[Architecte] Retrying preview load (attempt ${retryCount + 1}/${MAX_RETRY_ATTEMPTS})...`);
+      setIsReloading(true);
+      retryTimeoutRef.current = setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        setIframeKey(prev => prev + 1);
+      }, RETRY_DELAY_MS);
+    } else {
+      console.log('[Architecte] Max retry attempts reached');
+      setLoadFailed(true);
+      setIsReloading(false);
+    }
+  }, [retryCount]);
+
   // Handle iframe load and inject script
   const handleIframeLoad = useCallback((e: React.SyntheticEvent<HTMLIFrameElement>) => {
-    setIframeLoaded(true);
-    setIsReloading(false);
-
-    // Try to inject script into iframe (will only work for same-origin)
+    // Check if the iframe actually loaded content
     try {
       const iframe = e.currentTarget;
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       
-      if (iframeDoc && previewScript) {
-        const script = iframeDoc.createElement('script');
-        script.textContent = previewScript;
-        iframeDoc.body.appendChild(script);
-        console.log('[Architecte] Preview script injected successfully');
+      // If we can access the document and it has content, consider it loaded
+      if (iframeDoc) {
+        setIframeLoaded(true);
+        setIsReloading(false);
+        setLoadFailed(false);
+        
+        if (previewScript) {
+          const script = iframeDoc.createElement('script');
+          script.textContent = previewScript;
+          iframeDoc.body.appendChild(script);
+          console.log('[Architecte] Preview script injected successfully');
+        }
       }
     } catch (err) {
-      // Cross-origin restriction - expected for external sites
+      // Cross-origin restriction - still consider as loaded (visual preview only)
+      setIframeLoaded(true);
+      setIsReloading(false);
+      setLoadFailed(false);
       console.log('[Architecte] Cannot inject script (cross-origin). Visual preview only.');
     }
   }, [previewScript]);
+
+  // Handle iframe error
+  const handleIframeError = useCallback(() => {
+    console.log('[Architecte] Iframe load error detected');
+    setIframeLoaded(false);
+    triggerRetry();
+  }, [triggerRetry]);
 
   // Manual reload function
   const handleManualReload = useCallback(() => {
     setIsReloading(true);
     setIframeLoaded(false);
+    setRetryCount(0);
+    setLoadFailed(false);
     setIframeKey(prev => prev + 1);
   }, []);
   
@@ -289,12 +347,6 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
   const semanticParagraph = semanticFix?.data?.injectedParagraph || 'Votre paragraphe sémantique apparaîtra ici avec les mots-clés optimisés...';
   const businessName = localBusinessFix?.data?.name || 'Votre Entreprise';
 
-  // Reset iframe loaded state when siteUrl changes
-  useEffect(() => {
-    setIframeLoaded(false);
-    setIframeKey(prev => prev + 1);
-  }, [siteUrl]);
-
   const enabledCount = fixes.filter(f => f.enabled).length;
 
   // Si on a une URL, afficher l'iframe du site cible
@@ -302,17 +354,41 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
     return (
       <div className="h-full flex flex-col">
         {/* Iframe Container - no header */}
-        <div className="flex-1 relative bg-white">
-          {(!iframeLoaded || isReloading) && (
+        <div className="flex-1 relative bg-background">
+          {(!iframeLoaded || isReloading) && !loadFailed && (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/20 z-10">
               <div className="flex flex-col items-center gap-2">
-                <Loader2 className="w-6 h-6 animate-spin text-violet-500" />
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 <span className="text-xs text-muted-foreground">
-                  {isReloading ? 'Application des correctifs...' : 'Chargement du site...'}
+                  {isReloading ? 'Application des correctifs...' : retryCount > 0 ? `Nouvelle tentative (${retryCount}/${MAX_RETRY_ATTEMPTS})...` : 'Chargement du site...'}
                 </span>
               </div>
             </div>
           )}
+          
+          {loadFailed && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/20 z-10">
+              <div className="flex flex-col items-center gap-3 text-center p-4">
+                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <ExternalLink className="w-6 h-6 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Impossible de charger l'aperçu</p>
+                  <p className="text-xs text-muted-foreground mt-1">Le site cible est peut-être inaccessible</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleManualReload}
+                  className="mt-2"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                  Réessayer
+                </Button>
+              </div>
+            </div>
+          )}
+          
           <iframe
             key={iframeKey}
             src={siteUrl}
@@ -320,6 +396,7 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
             title="Site Preview"
             sandbox="allow-scripts allow-same-origin"
             onLoad={handleIframeLoad}
+            onError={handleIframeError}
           />
         </div>
         
