@@ -48,6 +48,9 @@ serve(async (req) => {
 
     console.log(`📥 Received Stripe event: ${event.type}`);
 
+    // Initialize Supabase admin client
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     // Handle the checkout.session.completed event
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -56,15 +59,13 @@ serve(async (req) => {
       console.log(`   Customer email: ${session.customer_details?.email}`);
       console.log(`   Amount: ${session.amount_total} cents`);
 
-      // Initialize Supabase admin client
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-      // Extract metadata from session (if passed during checkout creation)
-      const siteUrl = session.metadata?.site_url || session.client_reference_id || "unknown";
+      // Extract metadata from session
+      const auditId = session.metadata?.audit_id || session.client_reference_id;
+      const siteUrl = session.metadata?.site_url || "unknown";
       const fixesCount = parseInt(session.metadata?.fixes_count || "0", 10);
       const userId = session.metadata?.user_id || null;
 
-      // Insert payment record
+      // 1️⃣ INSERT payment record in stripe_payments (for legacy compatibility)
       const { data: paymentRecord, error: insertError } = await supabase
         .from("stripe_payments")
         .insert({
@@ -83,16 +84,35 @@ serve(async (req) => {
 
       if (insertError) {
         console.error("❌ Error inserting payment record:", insertError);
-        // Don't fail the webhook - Stripe will retry
       } else {
         console.log(`✅ Payment record created: ${paymentRecord.id}`);
       }
 
-      // Return success
+      // 2️⃣ UPDATE the audits table: mark as PAID
+      if (auditId) {
+        const { error: updateAuditError } = await supabase
+          .from("audits")
+          .update({ 
+            payment_status: "paid",
+            stripe_payment_intent_id: session.payment_intent as string,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", auditId);
+
+        if (updateAuditError) {
+          console.error(`❌ Error updating audit ${auditId}:`, updateAuditError);
+        } else {
+          console.log(`✅ Audit ${auditId} marked as PAID`);
+        }
+      } else {
+        console.warn("⚠️ No audit_id found in session metadata");
+      }
+
       return new Response(
         JSON.stringify({ 
           received: true, 
           session_id: session.id,
+          audit_id: auditId,
           status: "completed" 
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -104,9 +124,7 @@ serve(async (req) => {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       console.log(`💰 Payment intent succeeded: ${paymentIntent.id}`);
       
-      // Update existing record if needed
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      
+      // Update stripe_payments
       const { error: updateError } = await supabase
         .from("stripe_payments")
         .update({ status: "succeeded" })
@@ -115,6 +133,16 @@ serve(async (req) => {
       if (updateError) {
         console.error("❌ Error updating payment status:", updateError);
       }
+
+      // Also update audits table
+      const { error: updateAuditError } = await supabase
+        .from("audits")
+        .update({ payment_status: "paid" })
+        .eq("stripe_payment_intent_id", paymentIntent.id);
+
+      if (updateAuditError) {
+        console.error("❌ Error updating audit payment status:", updateAuditError);
+      }
     }
 
     // Handle failed payments
@@ -122,11 +150,16 @@ serve(async (req) => {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       console.log(`❌ Payment failed: ${paymentIntent.id}`);
       
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      
+      // Update stripe_payments
       await supabase
         .from("stripe_payments")
         .update({ status: "failed" })
+        .eq("stripe_payment_intent_id", paymentIntent.id);
+
+      // Update audits table
+      await supabase
+        .from("audits")
+        .update({ payment_status: "failed" })
         .eq("stripe_payment_intent_id", paymentIntent.id);
     }
 

@@ -1,35 +1,21 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
 });
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// 💰 CONFIGURATION DU PRICING
-const BASE_PRICE_CENTS = 1000; // 10.00€
-const FLOOR_PRICE_CENTS = 200; // 2.00€ (Min)
-const CAP_PRICE_CENTS = 1900;  // 19.00€ (Max)
-
-// Lien de paiement Stripe fixe (utilisé en mode fallback ou direct)
+// Lien de paiement Stripe fixe (utilisé en mode fallback)
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/6oU4gB6KV6hMgLb9PidnW00";
-
-// Facteurs de pondération (0.2 à 1.9)
-const SECTOR_FACTORS: Record<string, number> = {
-  'personal': 0.2,    // -> 2€
-  'blog': 0.3,        // -> 3€
-  'association': 0.4, // -> 4€
-  'local_business': 0.8, // -> 8€
-  'consulting': 1.2,  // -> 12€
-  'startup': 1.5,     // -> 15€
-  'ecommerce': 1.8,   // -> 18€
-  'finance': 1.9,     // -> 19€
-  'default': 1.0      // -> 10€
-};
 
 serve(async (req) => {
   // Gestion CORS Preflight
@@ -38,37 +24,67 @@ serve(async (req) => {
   }
 
   try {
-    const { siteUrl, sector = 'default', fixesCount = 0, userId = null, usePaymentLink = false } = await req.json();
+    const { audit_id, usePaymentLink = false } = await req.json();
 
-    console.log(`📝 Checkout request for: ${siteUrl}, sector: ${sector}, fixes: ${fixesCount}`);
-
-    // 🔗 Mode Payment Link (redirection directe vers lien Stripe fixe)
+    // 🔗 Mode Payment Link (fallback - prix fixe)
     if (usePaymentLink) {
-      console.log(`🔗 Using fixed payment link for ${siteUrl}`);
+      console.log(`🔗 Using fixed payment link (fallback mode)`);
       return new Response(
         JSON.stringify({ 
           url: STRIPE_PAYMENT_LINK, 
-          price: 10, // Prix fixe du payment link
+          price: 10,
           mode: 'payment_link'
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 1️⃣ CALCUL DU PRIX DYNAMIQUE
-    // Récupération du facteur (fallback sur 'default' si inconnu)
-    const factor = SECTOR_FACTORS[sector] || SECTOR_FACTORS['default'];
-    
-    // Calcul brut
-    let calculatedPrice = Math.round(BASE_PRICE_CENTS * factor);
+    // Validation: audit_id requis pour le mode dynamique
+    if (!audit_id) {
+      return new Response(
+        JSON.stringify({ error: "audit_id is required for dynamic pricing" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Application des bornes (Clamping)
-    if (calculatedPrice < FLOOR_PRICE_CENTS) calculatedPrice = FLOOR_PRICE_CENTS;
-    if (calculatedPrice > CAP_PRICE_CENTS) calculatedPrice = CAP_PRICE_CENTS;
+    console.log(`📝 Checkout request for audit: ${audit_id}`);
 
-    console.log(`💸 Pricing pour ${siteUrl}: Secteur=${sector} (x${factor}) -> ${calculatedPrice / 100}€`);
+    // 1️⃣ RÉCUPÉRATION DU PRIX DEPUIS LA BASE DE DONNÉES
+    // Sécurité: le prix n'est PLUS calculé côté client ni ici
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 2️⃣ CRÉATION SESSION STRIPE avec métadonnées pour le webhook
+    const { data: audit, error: fetchError } = await supabase
+      .from("audits")
+      .select("id, dynamic_price, fixes_count, url, domain, user_id")
+      .eq("id", audit_id)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error("❌ Database error:", fetchError);
+      return new Response(
+        JSON.stringify({ error: "Database error" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!audit) {
+      console.log(`❌ Audit not found: ${audit_id}`);
+      return new Response(
+        JSON.stringify({ error: "Audit not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 2️⃣ CONVERSION DU PRIX EN CENTIMES
+    // dynamic_price est stocké en euros (ex: 12.50)
+    const priceInCents = Math.round(audit.dynamic_price * 100);
+
+    console.log(`💸 Pricing from DB: ${audit.dynamic_price}€ (${priceInCents} cents) for ${audit.url}`);
+
+    // Determine origin for redirect URLs
+    const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+
+    // 3️⃣ CRÉATION SESSION STRIPE avec métadonnées pour le webhook
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
@@ -77,35 +93,43 @@ serve(async (req) => {
             currency: "eur",
             product_data: {
               name: `Pack Optimisation Expert`,
-              description: `Script correctif pour ${siteUrl} (${fixesCount} améliorations)`,
+              description: `Script correctif pour ${audit.url} (${audit.fixes_count} améliorations)`,
             },
-            unit_amount: calculatedPrice, // Le prix dynamique
+            unit_amount: priceInCents,
           },
           quantity: 1,
         },
       ],
       mode: "payment",
-      // Métadonnées pour le webhook
+      // Métadonnées pour le webhook (rapprochement post-paiement)
       metadata: {
-        site_url: siteUrl,
-        sector: sector,
-        fixes_count: String(fixesCount),
-        user_id: userId || '',
+        audit_id: audit_id,
+        site_url: audit.url,
+        fixes_count: String(audit.fixes_count),
+        user_id: audit.user_id || '',
       },
-      client_reference_id: siteUrl,
+      client_reference_id: audit_id, // Lien direct avec l'audit
       // URL de redirection après paiement
-      success_url: `${req.headers.get("origin")}/audit-expert?session_id={CHECKOUT_SESSION_ID}&success=true`,
-      cancel_url: `${req.headers.get("origin")}/audit-expert?canceled=true`,
+      success_url: `${origin}/audit-expert?session_id={CHECKOUT_SESSION_ID}&audit_id=${audit_id}&success=true`,
+      cancel_url: `${origin}/audit-expert?audit_id=${audit_id}&canceled=true`,
     });
 
-    console.log(`✅ Checkout session created: ${session.id}`);
+    console.log(`✅ Checkout session created: ${session.id} for audit ${audit_id}`);
+
+    // 4️⃣ Mise à jour de l'audit avec le stripe_session_id
+    await supabase
+      .from("audits")
+      .update({ stripe_session_id: session.id })
+      .eq("id", audit_id);
 
     return new Response(
       JSON.stringify({ 
         url: session.url, 
-        price: calculatedPrice / 100,
+        price: audit.dynamic_price,
+        fixes_count: audit.fixes_count,
         mode: 'checkout_session',
-        session_id: session.id
+        session_id: session.id,
+        audit_id: audit_id
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
