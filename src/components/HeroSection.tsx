@@ -138,7 +138,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
 
   // Animated headline for crawlers tab - with SSR-safe fallback
   const renderAnimatedHeadline = () => (
-    <h1 className="mb-4 text-4xl font-extrabold tracking-tight leading-tight sm:text-5xl lg:text-6xl">
+    <h1 className="mb-4 text-2xl font-extrabold tracking-tight leading-tight sm:text-5xl lg:text-6xl">
       <span className="inline-flex items-center justify-center gap-2 sm:gap-3 flex-wrap pb-1">
         {/* Animated word container */}
         <span
@@ -189,13 +189,13 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
         {content.useAnimatedHeadline ? (
           renderAnimatedHeadline()
         ) : (
-          <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+          <h1 className="mb-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
             {content.headline}
           </h1>
         )}
 
         {/* H2 Tagline - SEO/GEO optimized */}
-        <h2 className="mb-8 text-xl font-medium text-primary sm:text-2xl">
+        <h2 className="mb-6 text-base font-medium text-primary sm:mb-8 sm:text-2xl">
           Crawlers.fr expertise le SEO et le GEO de votre site
         </h2>
 
