@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Sparkles, ChevronDown, FileText, Newspaper, Globe, Navigation, MapPin } from 'lucide-react';
+import { Sparkles, FileText, Newspaper, Globe, Navigation, MapPin } from 'lucide-react';
 import { FixConfig } from './types';
 
 interface StrategicTabProps {
@@ -201,43 +201,51 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
 
   return (
     <div className="space-y-3">
-      {strategicFixes.map((fix) => {
+      {strategicFixes.map((fix, index) => {
         const Icon = strategicIcons[fix.id] || Sparkles;
         const isOpen = fix.enabled;
 
         return (
           <motion.div
             key={fix.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             layout
-            className={`rounded-lg border transition-all ${fix.enabled ? 'border-blue-500/40 bg-blue-500/5' : 'border-muted bg-muted/20'}`}
+            transition={{ delay: index * 0.05 }}
+            className={`rounded-lg border transition-all ${
+              fix.enabled 
+                ? 'p-3 border-blue-500/40 bg-blue-500/5 shadow-sm' 
+                : 'p-2 px-3 border-border hover:border-blue-500/30'
+            }`}
           >
-            <div 
-              className={`flex items-center gap-3 cursor-pointer ${fix.enabled ? 'p-3' : 'p-2 px-3'}`}
-              onClick={() => handleCheckboxChange(fix)}
-            >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 flex-1">
+                {fix.enabled && (
+                  <div className="p-2 rounded-lg bg-blue-500/20 text-blue-600">
+                    <Icon className="w-4 h-4" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm ${fix.enabled ? 'font-medium' : 'text-muted-foreground'}`}>
+                      {fix.label}
+                    </span>
+                    {fix.isRecommended && fix.enabled && (
+                      <Badge className="bg-gradient-to-r from-blue-500 to-violet-500 text-white text-xs px-1.5 py-0 border-0">
+                        Recommandé
+                      </Badge>
+                    )}
+                  </div>
+                  {fix.enabled && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{fix.description}</p>
+                  )}
+                </div>
+              </div>
               <Checkbox
                 checked={fix.enabled}
                 onCheckedChange={() => handleCheckboxChange(fix)}
                 className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                onClick={(e) => e.stopPropagation()}
               />
-              <Icon className={`w-4 h-4 ${fix.enabled ? 'text-blue-500' : 'text-muted-foreground'}`} />
-              <span className={`text-sm flex-1 ${fix.enabled ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
-                {fix.label}
-              </span>
-              {fix.isRecommended && fix.enabled && (
-                <Badge className="bg-gradient-to-r from-blue-500 to-violet-500 text-white text-xs px-1.5 py-0 border-0">
-                  Recommandé
-                </Badge>
-              )}
-              {fix.enabled && (
-                <motion.div
-                  animate={{ rotate: isOpen ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                </motion.div>
-              )}
             </div>
             
             <AnimatePresence>
@@ -248,10 +256,7 @@ export function StrategicTab({ fixes, onToggle, onUpdateData }: StrategicTabProp
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="px-3 pb-3 ml-7">
-                    <p className="text-xs text-muted-foreground mb-2">
-                      {fix.description}
-                    </p>
+                  <div className="pt-3 ml-11">
                     {renderConfigFields(fix)}
                   </div>
                 </motion.div>
