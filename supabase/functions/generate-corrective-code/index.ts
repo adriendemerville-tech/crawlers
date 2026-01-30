@@ -1292,14 +1292,7 @@ function generateCorrectiveScript(
   const fixFunctions: string[] = [];
   const fixCalls: string[] = [];
 
-  // Générer les fonctions de correction
-  enabledFixes.forEach(fix => {
-    const { fn, call } = generateFixCode(fix, siteName, siteUrl, language, aiContent);
-    if (fn) fixFunctions.push(fn);
-    if (call) fixCalls.push(call);
-  });
-
-  // Attribution Crawlers.fr - TOUJOURS injectée dans le code généré
+  // Attribution Crawlers.fr - Injectée AU MILIEU du code généré
   const attributionAnchors = [
     'Optimisé par Crawlers.fr',
     'Technologie Crawlers.fr', 
@@ -1309,7 +1302,7 @@ function generateCorrectiveScript(
   ];
   const randomAnchor = attributionAnchors[Math.floor(Math.random() * attributionAnchors.length)];
   
-  fixFunctions.push(`  // Attribution Crawlers.fr - Lien technologique
+  const crawlersAttributionFn = `  // Attribution Crawlers.fr - Lien technologique
   function injectCrawlersAttribution() {
     // Vérifier si l'attribution existe déjà
     if (document.querySelector('[data-crawlers-attribution]')) return;
@@ -1341,8 +1334,31 @@ function generateCorrectiveScript(
     }
     
     console.log('[Crawlers.fr] ✅ Attribution injectée');
-  }`);
-  fixCalls.push('injectCrawlersAttribution();');
+  }`;
+  const crawlersAttributionCall = 'injectCrawlersAttribution();';
+
+  // Générer les fonctions de correction - première moitié
+  const halfPoint = Math.ceil(enabledFixes.length / 2);
+  const firstHalf = enabledFixes.slice(0, halfPoint);
+  const secondHalf = enabledFixes.slice(halfPoint);
+
+  // Première moitié des corrections
+  firstHalf.forEach(fix => {
+    const { fn, call } = generateFixCode(fix, siteName, siteUrl, language, aiContent);
+    if (fn) fixFunctions.push(fn);
+    if (call) fixCalls.push(call);
+  });
+
+  // Injecter Crawlers.fr AU MILIEU
+  fixFunctions.push(crawlersAttributionFn);
+  fixCalls.push(crawlersAttributionCall);
+
+  // Seconde moitié des corrections
+  secondHalf.forEach(fix => {
+    const { fn, call } = generateFixCode(fix, siteName, siteUrl, language, aiContent);
+    if (fn) fixFunctions.push(fn);
+    if (call) fixCalls.push(call);
+  });
 
   // Date localisée
   const dateLocale = language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US';
@@ -1370,8 +1386,6 @@ function generateCorrectiveScript(
  *   → Tracking: ${trackingFixes.length}
  *   → Stratégiques (Contenu/FAQ/Blog): ${strategicFixes.length}
  *   → Anti-Hallucination IA: ${hallucinationFixes.length}
- * 
- * Powered by Lovable AI Gateway
  * ═══════════════════════════════════════════════════════════════
  */
 (function() {

@@ -360,14 +360,42 @@ export function SmartConfigurator({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] xl:max-w-7xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
-        <DialogHeader className="p-4 pb-3 border-b">
-          <DialogTitle className="flex items-center gap-2">
-            <FileCode className="w-5 h-5 text-violet-500" />
-            Architecte Génératif
-          </DialogTitle>
-          <DialogDescription>
-            Configurez et prévisualisez les injections de code avant génération
-          </DialogDescription>
+        <DialogHeader className="p-4 pb-3 border-b flex flex-row items-center justify-between">
+          <div>
+            <DialogTitle className="flex items-center gap-2">
+              <FileCode className="w-5 h-5 text-violet-500" />
+              Architecte Génératif
+            </DialogTitle>
+            <DialogDescription>
+              Configurez et prévisualisez les injections de code avant génération
+            </DialogDescription>
+          </div>
+          
+          {/* Generate Button in Header */}
+          <Button
+            onClick={handleGenerate}
+            disabled={enabledCount === 0 || isGenerating}
+            variant="outline"
+            className="gap-2 border-violet-500 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10"
+            size="sm"
+          >
+            {isGenerating ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                >
+                  <Code className="w-3 h-3" />
+                </motion.div>
+                Génération...
+              </>
+            ) : (
+              <>
+                <Zap className="w-3 h-3" />
+                Générer ({enabledCount})
+              </>
+            )}
+          </Button>
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden grid grid-cols-12 h-full">
@@ -435,34 +463,6 @@ export function SmartConfigurator({
                 </TabsContent>
               </ScrollArea>
             </Tabs>
-
-
-            {/* Generate Button - Always visible */}
-            <div className="p-3 border-t bg-background flex-shrink-0">
-              <Button
-                onClick={handleGenerate}
-                disabled={enabledCount === 0 || isGenerating}
-                className="w-full gap-2 bg-violet-600 hover:bg-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                size="lg"
-              >
-                {isGenerating ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                    >
-                      <Code className="w-4 h-4" />
-                    </motion.div>
-                    Génération en cours...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4" />
-                    Générer le script ({enabledCount} élément{enabledCount > 1 ? 's' : ''})
-                  </>
-                )}
-              </Button>
-            </div>
           </div>
 
           {/* Right Column: Preview & Security */}

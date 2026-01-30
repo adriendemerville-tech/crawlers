@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -65,16 +65,48 @@ function highlightSyntax(code: string): string {
 
 export function CodeBlock({ code, isTyping, placeholder }: CodeBlockProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [displayedCode, setDisplayedCode] = useState('');
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  // Auto-scroll to bottom while typing
+  // Typing animation effect
   useEffect(() => {
-    if (isTyping && scrollRef.current) {
+    if (!code) {
+      setDisplayedCode('');
+      return;
+    }
+
+    // Si le code change et qu'on a du nouveau code, animer
+    if (code !== displayedCode && code.length > 0) {
+      setIsAnimating(true);
+      let currentIndex = 0;
+      const lines = code.split('\n');
+      const totalLines = lines.length;
+      
+      // Animation rapide: afficher ligne par ligne
+      const interval = setInterval(() => {
+        currentIndex += 3; // 3 lignes à la fois pour aller vite
+        if (currentIndex >= totalLines) {
+          setDisplayedCode(code);
+          setIsAnimating(false);
+          clearInterval(interval);
+        } else {
+          setDisplayedCode(lines.slice(0, currentIndex).join('\n'));
+        }
+      }, 25); // 25ms entre chaque batch de lignes
+
+      return () => clearInterval(interval);
+    }
+  }, [code]);
+
+  // Auto-scroll to bottom while animating
+  useEffect(() => {
+    if (isAnimating && scrollRef.current) {
       const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollContainer) {
         scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }
     }
-  }, [code, isTyping]);
+  }, [displayedCode, isAnimating]);
 
   if (!code) {
     return (
@@ -84,9 +116,8 @@ export function CodeBlock({ code, isTyping, placeholder }: CodeBlockProps) {
     );
   }
 
-  const lines = code.split('\n');
-  const highlightedCode = highlightSyntax(code);
-  const highlightedLines = highlightedCode.split('\n');
+  const lines = displayedCode.split('\n');
+  const highlightedCode = highlightSyntax(displayedCode);
 
   return (
     <div className="relative h-[300px] rounded-lg overflow-hidden border bg-background" ref={scrollRef}>
@@ -114,10 +145,10 @@ export function CodeBlock({ code, isTyping, placeholder }: CodeBlockProps) {
                 className="text-foreground"
               />
               {/* Cursor animation while typing */}
-              {isTyping && (
+              {(isTyping || isAnimating) && (
                 <motion.span
                   animate={{ opacity: [1, 0, 1] }}
-                  transition={{ repeat: Infinity, duration: 0.8 }}
+                  transition={{ repeat: Infinity, duration: 0.5 }}
                   className="inline-block w-2 h-4 bg-primary ml-0.5 align-middle"
                 />
               )}
@@ -125,7 +156,6 @@ export function CodeBlock({ code, isTyping, placeholder }: CodeBlockProps) {
           </div>
         </div>
       </ScrollArea>
-
     </div>
   );
 }
