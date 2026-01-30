@@ -396,24 +396,24 @@ export function SmartConfigurator({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] xl:max-w-7xl h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
-        <DialogHeader className="p-4 pb-3 border-b flex flex-row items-center justify-between">
-          <div className="space-y-1">
-            <DialogTitle className="flex items-center gap-2">
-              <FileCode className="w-5 h-5 text-violet-500" />
-              <span className="font-mono bg-gradient-to-r from-violet-500 via-amber-400 to-violet-600 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">
-                Architecte Génératif
-              </span>
-              <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-            </DialogTitle>
-            <DialogDescription className="flex items-center gap-2">
-              <span>Site cible :</span>
-              <code className="text-xs bg-muted px-2 py-0.5 rounded font-mono text-foreground">
-                {siteUrl}
-              </code>
-            </DialogDescription>
-          </div>
+        <DialogHeader className="p-3 border-b flex flex-row items-center gap-4">
+          <DialogTitle className="flex items-center gap-2 shrink-0">
+            <FileCode className="w-5 h-5 text-violet-500" />
+            <span className="font-mono bg-gradient-to-r from-violet-500 via-amber-400 to-violet-600 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">
+              Architecte Génératif
+            </span>
+            <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+          </DialogTitle>
           
-          {/* Generate Button in Header */}
+          <DialogDescription asChild>
+            <code className="text-xs bg-muted px-2 py-1 rounded font-mono text-muted-foreground truncate max-w-md">
+              {siteUrl}
+            </code>
+          </DialogDescription>
+          
+          <div className="flex-1" />
+          
+          {/* Generate Button in Header - offset from close button */}
           <Button
             onClick={handleGenerate}
             disabled={enabledCount === 0 || isGenerating}
