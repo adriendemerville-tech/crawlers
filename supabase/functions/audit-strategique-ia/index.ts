@@ -35,10 +35,15 @@ C. EXPERTISE STRATÉGIQUE & PSYCHOLOGIQUE
 9. Matrice de Gap Sémantique: Distance précise à combler pour détrôner le leader
 10. Psychologie de Conversion: Niveau de sophistication du marché (1-5) et leviers émotionnels dominants
 
-D. FONDATIONS TECHNIQUES & SÉMANTIQUES
-11. Accessibilité Bots IA: Facilité de lecture pour les agents autonomes
-12. Infrastructure Performance: Impact de la vitesse sur la rétention IA/Humaine
-13. Cohérence Sémantique: Alignement du message Title/H1`;
+D. POSITIONNEMENT MOTS CLÉS
+11. Mots Clés Principaux: Les 5 mots clés stratégiques pour le positionnement
+12. Opportunités de Positionnement: Niches et requêtes sous-exploitées
+13. Gaps Concurrentiels: Mots clés où les concurrents dominent
+
+E. FONDATIONS TECHNIQUES & SÉMANTIQUES
+14. Accessibilité Bots IA: Facilité de lecture pour les agents autonomes
+15. Infrastructure Performance: Impact de la vitesse sur la rétention IA/Humaine
+16. Cohérence Sémantique: Alignement du message Title/H1`;
 
 function buildUserPrompt(url: string, domain: string, toolsData: ToolsData): string {
   return `Analyse le domaine "${domain}" (${url}) avec les données techniques suivantes:
@@ -142,6 +147,23 @@ GÉNÈRE UN RAPPORT JSON PREMIUM avec cette structure exacte:
       "verdict": "Verdict sur la cohérence sémantique Title/H1"
     }
   },
+  "keyword_positioning": {
+    "main_keywords": ["Mot clé principal 1", "Mot clé 2", "Mot clé 3", "Mot clé 4", "Mot clé 5"],
+    "opportunities": [
+      "Opportunité de positionnement 1 (phrase descriptive)",
+      "Opportunité de positionnement 2",
+      "Opportunité de positionnement 3"
+    ],
+    "competitive_gaps": [
+      "Gap concurrentiel identifié 1",
+      "Gap concurrentiel 2"
+    ],
+    "recommendations": [
+      "Recommandation stratégique 1 pour améliorer le positionnement",
+      "Recommandation 2",
+      "Recommandation 3"
+    ]
+  },
   "executive_roadmap": [
     {
       "title": "Titre de l'initiative stratégique",
@@ -162,6 +184,8 @@ INSTRUCTIONS CRITIQUES:
 - L'executive_roadmap doit contenir MINIMUM 5 recommandations narratives
 - Le score GEO (citability_score) reflète la capacité à être cité par ChatGPT, Gemini, Perplexity
 - Chaque prescriptive_action doit être un paragraphe complet (4-5 phrases), pas une phrase courte
+- keyword_positioning doit contenir 5 mots clés principaux RÉELS et pertinents pour le secteur
+- Les opportunités et gaps doivent être spécifiques au marché analysé
 - Le JSON doit être pur, sans virgules traînantes, prêt pour JSON.parse()`;
 }
 

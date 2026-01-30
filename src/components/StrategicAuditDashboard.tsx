@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { 
   Target, Building2, Palette, Search, Brain, MessageSquare, 
   ChevronDown, ChevronUp, ExternalLink, CheckCircle2, AlertTriangle, 
-  XCircle, Sparkles, Zap, FileText, Copy, Check
+  XCircle, Sparkles, Zap, FileText, Copy, Check, Key
 } from 'lucide-react';
 import { StrategicAuditResult } from '@/types/audit';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -110,6 +110,7 @@ export function StrategicAuditDashboard({ result, isLoading }: StrategicAuditDas
     seo: false,
     geo: false,
     llm: false,
+    keywords: true,
     queries: false,
   });
 
@@ -118,9 +119,19 @@ export function StrategicAuditDashboard({ result, isLoading }: StrategicAuditDas
   };
 
   if (isLoading) {
+    const analysisSteps = [
+      { icon: Target, label: 'Perception de marque', delay: '0s' },
+      { icon: Palette, label: 'Identité visuelle', delay: '0.5s' },
+      { icon: Search, label: 'Architecture SEO', delay: '1s' },
+      { icon: Sparkles, label: 'Analyse GEO', delay: '1.5s' },
+      { icon: Brain, label: 'Visibilité LLM', delay: '2s' },
+      { icon: Zap, label: 'Positionnement mots clés', delay: '2.5s' },
+      { icon: MessageSquare, label: 'Requêtes de test', delay: '3s' },
+    ];
+    
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col items-center justify-center space-y-6 py-16">
+        <div className="flex flex-col items-center justify-center space-y-8 py-16">
           {/* Spinning loader */}
           <div className="relative">
             <div className="h-16 w-16 rounded-full border-4 border-muted"></div>
@@ -135,6 +146,27 @@ export function StrategicAuditDashboard({ result, isLoading }: StrategicAuditDas
               <span className="animate-[bounce_1s_ease-in-out_0.2s_infinite]">.</span>
               <span className="animate-[bounce_1s_ease-in-out_0.4s_infinite]">.</span>
             </span>
+          </div>
+          
+          {/* Analysis steps cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 max-w-3xl">
+            {analysisSteps.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <Card 
+                  key={index}
+                  className="border-border/50 bg-card/50 backdrop-blur-sm animate-fade-in"
+                  style={{ animationDelay: step.delay }}
+                >
+                  <CardContent className="p-3 flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Icon className="h-4 w-4 text-primary animate-pulse" />
+                    </div>
+                    <span className="text-xs font-medium text-foreground">{step.label}</span>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
           
           <p className="text-sm text-muted-foreground text-center max-w-md">
@@ -428,6 +460,90 @@ export function StrategicAuditDashboard({ result, isLoading }: StrategicAuditDas
           </CollapsibleContent>
         </Card>
       </Collapsible>
+
+      {/* Positionnement Mots Clés */}
+      {result.keywordPositioning && (
+        <Collapsible open={expandedSections.keywords} onOpenChange={() => toggleSection('keywords')}>
+          <Card className="mb-4 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardTitle className="text-base flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Key className="h-4 w-4 text-amber-500" />
+                    Positionnement Mots Clés
+                  </span>
+                  {expandedSections.keywords ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </CardTitle>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0 space-y-4">
+                {/* Mots clés principaux */}
+                <div>
+                  <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                    Mots clés principaux détectés
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {result.keywordPositioning.mainKeywords.map((keyword, i) => (
+                      <Badge key={i} variant="secondary" className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20">
+                        {keyword}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Opportunités */}
+                <div>
+                  <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-success"></span>
+                    Opportunités de positionnement
+                  </h4>
+                  <ul className="space-y-2">
+                    {result.keywordPositioning.opportunities.map((opp, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-success mt-0.5 shrink-0" />
+                        <span className="text-muted-foreground">{opp}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Gaps concurrentiels */}
+                {result.keywordPositioning.competitiveGaps.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-destructive"></span>
+                      Gaps concurrentiels identifiés
+                    </h4>
+                    <ul className="space-y-2">
+                      {result.keywordPositioning.competitiveGaps.map((gap, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm">
+                          <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                          <span className="text-muted-foreground">{gap}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Recommandations */}
+                <div className="pt-2 border-t border-border/50">
+                  <h4 className="text-sm font-medium mb-2">Recommandations</h4>
+                  <ul className="space-y-2">
+                    {result.keywordPositioning.recommendations.map((rec, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <Zap className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        <span>{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+      )}
 
       {/* Requêtes de Test LLM */}
       <Collapsible open={expandedSections.queries} onOpenChange={() => toggleSection('queries')}>

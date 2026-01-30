@@ -50,6 +50,13 @@ export interface LLMTestQuery {
   targetLLMs: string[];
 }
 
+export interface KeywordPositioning {
+  mainKeywords: string[];
+  opportunities: string[];
+  competitiveGaps: string[];
+  recommendations: string[];
+}
+
 export interface StrategicAuditResult {
   url: string;
   domain: string;
@@ -71,7 +78,10 @@ export interface StrategicAuditResult {
   // Étape 4: Visibilité LLM
   llmVisibility: LLMVisibilityAudit;
   
-  // Étape 5: Requêtes de test
+  // Étape 5: Positionnement mots clés
+  keywordPositioning?: KeywordPositioning;
+  
+  // Étape 6: Requêtes de test
   testQueries: LLMTestQuery[];
   
   // Rapport narratif
