@@ -166,24 +166,27 @@ export function ExpertAuditDashboard() {
   const isLoggedIn = !!user;
 
   // Restore audit state from session storage on mount / after auth
-  // Also check for URL from query params (from landing page)
+  // Also check for URL from query params (from landing page) or localStorage (from home page)
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const urlFromParams = searchParams.get('url');
     
     const savedUrl = sessionStorage.getItem('audit_url');
+    const cachedUrl = localStorage.getItem('crawlers_last_url');
     const savedTechnicalResult = sessionStorage.getItem('audit_technical_result');
     const savedStrategicResult = sessionStorage.getItem('audit_strategic_result');
     const savedAuditMode = sessionStorage.getItem('audit_mode');
     const pendingAction = sessionStorage.getItem('audit_pending_action');
 
-    // Priority: URL from query params > saved URL in session
+    // Priority: URL from query params > saved URL in session > cached URL from home page
     if (urlFromParams) {
       setUrl(urlFromParams);
       // Clear the URL param from browser history
       navigate('/audit-expert', { replace: true });
     } else if (savedUrl) {
       setUrl(savedUrl);
+    } else if (cachedUrl) {
+      setUrl(cachedUrl);
     }
     if (savedTechnicalResult) {
       const parsed = JSON.parse(savedTechnicalResult);
