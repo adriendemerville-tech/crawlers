@@ -151,7 +151,7 @@ export function SolutionSection() {
               <span className="text-cyan-500 ml-1">onClick</span>
               <span className="text-foreground/70">=</span>
               <span className="text-amber-500">"</span>
-              <span className="text-violet-500 font-semibold">{t.cta}</span>
+              <span className="text-foreground">{t.cta}</span>
               <span className="text-amber-500">"</span>
               <span className="text-violet-400">/&gt;</span>
               {/* Arrow with circle - classic button style */}
