@@ -146,7 +146,9 @@ export function CodeBlock({
   // This also survives late reflows (e.g. payment banner / animations in the modal).
   useRadixScrollStickToBottom({
     containerRef: scrollRef,
-    enabled: isAnimating || isTyping || isLocked,
+    // Important: in the Architecte modal, late reflows (overlay/blur/security footer)
+    // can still happen after the typing animation ends; keep pinning after completion.
+    enabled: isAnimating || isTyping || isLocked || animationComplete,
   });
 
   if (!code) {

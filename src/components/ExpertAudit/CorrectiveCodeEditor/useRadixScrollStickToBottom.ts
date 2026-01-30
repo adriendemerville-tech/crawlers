@@ -16,17 +16,17 @@ type Options = {
 export function useRadixScrollStickToBottom({ containerRef, enabled }: Options) {
   const rafRef = useRef<number | null>(null);
   const isSettingScrollRef = useRef(false);
+  const activeViewportRef = useRef<HTMLElement | null>(null);
 
   useLayoutEffect(() => {
     const root = containerRef.current;
     if (!root || !enabled) return;
 
-    const viewport = root.querySelector<HTMLElement>(
-      "[data-radix-scroll-area-viewport]"
-    );
-    if (!viewport) return;
+    const getViewport = () =>
+      root.querySelector<HTMLElement>("[data-radix-scroll-area-viewport]");
 
-    const apply = () => {
+    const apply = (viewport: HTMLElement | null) => {
+      if (!viewport) return;
       // Prevent feedback loops with scroll event
       isSettingScrollRef.current = true;
       viewport.scrollTop = viewport.scrollHeight;
@@ -38,43 +38,75 @@ export function useRadixScrollStickToBottom({ containerRef, enabled }: Options) 
     const schedule = () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => {
-        apply();
-        rafRef.current = requestAnimationFrame(apply);
+        const viewport = activeViewportRef.current ?? getViewport();
+        apply(viewport);
+        rafRef.current = requestAnimationFrame(() => apply(viewport));
       });
     };
 
-    schedule();
-    const t1 = window.setTimeout(apply, 50);
-    const t2 = window.setTimeout(apply, 250);
-    const t3 = window.setTimeout(apply, 700);
+    // Bind observers to the current Radix viewport.
+    // Important: Radix can recreate the viewport during reflows/animations.
+    // If that happens, previous listeners are attached to a dead element and scroll resets to 0.
+    let cleanupViewport: (() => void) | null = null;
+    const bindViewport = () => {
+      const viewport = getViewport();
+      if (!viewport) return;
+      if (activeViewportRef.current === viewport) return;
 
-    const onScroll = () => {
-      if (isSettingScrollRef.current) return;
+      cleanupViewport?.();
+      activeViewportRef.current = viewport;
+
+      const onScroll = () => {
+        if (isSettingScrollRef.current) return;
+        schedule();
+      };
+      viewport.addEventListener("scroll", onScroll, { passive: true });
+
+      // When the modal reflows (e.g. payment banner appears), keep the viewport pinned.
+      let ro: ResizeObserver | null = null;
+      if (typeof ResizeObserver !== "undefined") {
+        ro = new ResizeObserver(() => schedule());
+        ro.observe(viewport);
+        if (viewport.firstElementChild) ro.observe(viewport.firstElementChild);
+      }
+
+      // Catch late DOM mutations / style changes that may happen outside React.
+      const mo = new MutationObserver(() => schedule());
+      mo.observe(viewport, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+
+      cleanupViewport = () => {
+        viewport.removeEventListener("scroll", onScroll);
+        ro?.disconnect();
+        mo.disconnect();
+      };
+
+      // Immediately pin after (re)binding.
       schedule();
     };
-    viewport.addEventListener("scroll", onScroll, { passive: true });
 
-    // When the modal reflows (e.g. payment banner appears), keep the viewport pinned.
-    let ro: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(() => schedule());
-      ro.observe(viewport);
-      if (viewport.firstElementChild) ro.observe(viewport.firstElementChild);
-    }
+    // Initial bind + pin.
+    bindViewport();
+    schedule();
 
-    // Catch late DOM mutations / style changes that may happen outside React.
-    const mo = new MutationObserver(() => schedule());
-    mo.observe(viewport, {
-      attributes: true,
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
+    // Fallback timeouts (late paints / transitions)
+    const t1 = window.setTimeout(() => apply(activeViewportRef.current), 50);
+    const t2 = window.setTimeout(() => apply(activeViewportRef.current), 250);
+    const t3 = window.setTimeout(() => apply(activeViewportRef.current), 700);
+
+    // Watch for viewport replacement under the container.
+    const rootObserver = new MutationObserver(() => bindViewport());
+    rootObserver.observe(root, { childList: true, subtree: true });
 
     return () => {
-      viewport.removeEventListener("scroll", onScroll);
-      ro?.disconnect();
-      mo.disconnect();
+      rootObserver.disconnect();
+      cleanupViewport?.();
+      cleanupViewport = null;
+      activeViewportRef.current = null;
 
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.clearTimeout(t1);
