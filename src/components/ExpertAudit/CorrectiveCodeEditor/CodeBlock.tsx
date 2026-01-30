@@ -198,7 +198,7 @@ export function CodeBlock({
             transition={{ delay: 0.6, duration: 0.5, ease: 'easeOut' }}
             className="relative z-10"
           >
-            <Lock className="w-6 h-6 text-amber-500 fill-amber-500" strokeWidth={1.5} />
+            <Lock className="w-6 h-6 text-violet-500" strokeWidth={1.5} />
           </motion.div>
         </motion.div>
       )}
