@@ -124,7 +124,7 @@ export function CodeBlock({
 
   if (!code) {
     return (
-      <div className="h-[300px] bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30 flex items-center justify-center">
+      <div className="h-full min-h-[200px] bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30 flex items-center justify-center">
         <p className="text-muted-foreground text-sm">{placeholder}</p>
       </div>
     );
@@ -135,7 +135,7 @@ export function CodeBlock({
   const totalLines = code.split('\n').length;
 
   return (
-    <div className="relative h-[300px] rounded-lg overflow-hidden border bg-background" ref={scrollRef}>
+    <div className="relative h-full min-h-[200px] rounded-lg overflow-hidden border bg-background" ref={scrollRef}>
       {/* Line numbers gutter */}
       <ScrollArea className="h-full">
         <div className="flex">
