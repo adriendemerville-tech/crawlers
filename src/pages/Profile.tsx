@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2, Wallet } from 'lucide-react';
+import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,12 +23,11 @@ const translations = {
   fr: {
     pageTitle: 'Mon Profil - Crawlers AI',
     title: 'Mon Profil',
-    identity: 'Identité',
+    identity: 'Mes infos',
     settings: 'Paramètres',
     myReports: 'Mes Rapports',
     actionPlans: 'Plans d\'Action',
     correctiveCodes: 'Codes Correctifs',
-    wallet: 'Portefeuille',
     firstName: 'Prénom',
     lastName: 'Nom',
     email: 'Email',
@@ -52,12 +51,11 @@ const translations = {
   en: {
     pageTitle: 'My Profile - Crawlers AI',
     title: 'My Profile',
-    identity: 'Identity',
+    identity: 'My Info',
     settings: 'Settings',
     myReports: 'My Reports',
     actionPlans: 'Action Plans',
     correctiveCodes: 'Corrective Codes',
-    wallet: 'Wallet',
     firstName: 'First Name',
     lastName: 'Last Name',
     email: 'Email',
@@ -81,12 +79,11 @@ const translations = {
   es: {
     pageTitle: 'Mi Perfil - Crawlers AI',
     title: 'Mi Perfil',
-    identity: 'Identidad',
+    identity: 'Mis datos',
     settings: 'Configuración',
     myReports: 'Mis Informes',
     actionPlans: 'Planes de Acción',
     correctiveCodes: 'Códigos Correctivos',
-    wallet: 'Billetera',
     firstName: 'Nombre',
     lastName: 'Apellido',
     email: 'Correo electrónico',
@@ -210,14 +207,10 @@ export default function Profile() {
             </div>
 
             <Tabs defaultValue={initialTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="identity" className="gap-2">
                   <User className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.identity}</span>
-                </TabsTrigger>
-                <TabsTrigger value="wallet" className="gap-2">
-                  <Wallet className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.wallet}</span>
                 </TabsTrigger>
                 <TabsTrigger value="settings" className="gap-2">
                   <Settings className="h-4 w-4" />
@@ -238,57 +231,58 @@ export default function Profile() {
               </TabsList>
 
               <TabsContent value="identity">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{t.identity}</CardTitle>
-                    <CardDescription>
-                      {language === 'fr' ? 'Gérez vos informations personnelles' : 
-                       language === 'es' ? 'Administra tu información personal' :
-                       'Manage your personal information'}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">{t.firstName}</Label>
-                        <Input
-                          id="firstName"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                        />
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{t.identity}</CardTitle>
+                      <CardDescription>
+                        {language === 'fr' ? 'Gérez vos informations personnelles' : 
+                         language === 'es' ? 'Administra tu información personal' :
+                         'Manage your personal information'}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="firstName">{t.firstName}</Label>
+                          <Input
+                            id="firstName"
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName">{t.lastName}</Label>
+                          <Input
+                            id="lastName"
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                          />
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lastName">{t.lastName}</Label>
+                        <Label htmlFor="email">{t.email}</Label>
                         <Input
-                          id="lastName"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
+                          id="email"
+                          value={user.email || ''}
+                          disabled
+                          className="bg-muted"
                         />
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">{t.email}</Label>
-                      <Input
-                        id="email"
-                        value={user.email || ''}
-                        disabled
-                        className="bg-muted"
-                      />
-                    </div>
-                    <Button onClick={handleSaveProfile} disabled={isSaving} className="gap-2">
-                      {isSaving ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Save className="h-4 w-4" />
-                      )}
-                      {isSaving ? t.saving : t.saveChanges}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="wallet">
-                <MyWallet />
+                      <Button onClick={handleSaveProfile} disabled={isSaving} className="gap-2">
+                        {isSaving ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Save className="h-4 w-4" />
+                        )}
+                        {isSaving ? t.saving : t.saveChanges}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Wallet section integrated into identity tab */}
+                  <MyWallet />
+                </div>
               </TabsContent>
 
               <TabsContent value="settings">
