@@ -22,6 +22,7 @@ import { WorkflowCarousel } from './WorkflowCarousel';
 import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 import { HallucinationCorrectionModal } from './HallucinationCorrectionModal';
 import { KeywordPositioningCard } from './KeywordPositioningCard';
+import { InlineAuthForm } from './InlineAuthForm';
 
 export {
   ExpertAuditDashboard,
@@ -52,6 +53,7 @@ export {
   CorrectiveCodeEditor,
   HallucinationCorrectionModal,
   KeywordPositioningCard,
+  InlineAuthForm,
 };
 
 export type { HallucinationAnalysis } from './HallucinationCorrectionModal';

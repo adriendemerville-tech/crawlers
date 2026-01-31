@@ -377,12 +377,7 @@ export function ExpertAuditDashboard() {
     });
   }, [isAuthenticated, saveReport]);
 
-  const handleRegister = () => {
-    saveAuditState();
-    sessionStorage.setItem('audit_pending_action', 'unblur_strategic');
-    sessionStorage.setItem('audit_return_path', '/audit-expert');
-    navigate('/auth');
-  };
+  // handleRegister removed - RegistrationGate now handles auth inline
 
   const handleReportButtonClick = () => {
     if (!isLoggedIn) {
@@ -932,10 +927,25 @@ export function ExpertAuditDashboard() {
               {/* Zone de Contenu Protégée */}
               <div className="relative min-h-[400px] mt-6">
                 {/* Le contenu existant (Flouté si pas loggé) */}
-                <div className={cn(
-                  "transition-all duration-500 space-y-6",
-                  !isLoggedIn && "filter blur-md pointer-events-none select-none opacity-50"
-                )}>
+                <motion.div 
+                  initial={false}
+                  animate={{ 
+                    filter: isLoggedIn ? 'blur(0px)' : 'blur(8px)',
+                    opacity: isLoggedIn ? 1 : 0.5,
+                    scale: isLoggedIn ? 1 : 0.98,
+                  }}
+                  transition={{ 
+                    duration: 0.6, 
+                    ease: [0.22, 1, 0.36, 1],
+                    filter: { duration: 0.5 },
+                    opacity: { duration: 0.4 },
+                    scale: { duration: 0.5 }
+                  }}
+                  className={cn(
+                    "space-y-6",
+                    !isLoggedIn && "pointer-events-none select-none"
+                  )}
+                >
                   {/* Strategic Insights */}
                   {result.strategicAnalysis && (
                     <StrategicInsights 
@@ -948,12 +958,14 @@ export function ExpertAuditDashboard() {
                       isReanalyzing={isStrategicLoading}
                     />
                   )}
-                </div>
+                </motion.div>
 
                 {/* La Carte d'Inscription (Apparaît par-dessus si pas loggé) */}
-                {!isLoggedIn && (
-                  <RegistrationGate onRegister={handleRegister} />
-                )}
+                <AnimatePresence>
+                  {!isLoggedIn && (
+                    <RegistrationGate />
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           )}
