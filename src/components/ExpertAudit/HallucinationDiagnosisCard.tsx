@@ -142,10 +142,10 @@ export function HallucinationDiagnosisCard({ diagnosis }: HallucinationDiagnosis
           {/* Narrative Analysis */}
           {diagnosis.analysisNarrative && (
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden="true" />
                 {t.analysisTitle}
-              </h4>
+              </h3>
               <p className="text-sm text-muted-foreground leading-relaxed pl-6">
                 {diagnosis.analysisNarrative}
               </p>
@@ -155,10 +155,10 @@ export function HallucinationDiagnosisCard({ diagnosis }: HallucinationDiagnosis
           {/* Discrepancies Table */}
           {hasDiscrepancies ? (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <XCircle className="h-4 w-4 text-destructive" />
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <XCircle className="h-4 w-4 text-destructive" aria-hidden="true" />
                 {t.discrepanciesTitle}
-              </h4>
+              </h3>
               <div className="space-y-2">
                 {diagnosis.discrepancies.map((disc, index) => (
                   <motion.div
@@ -204,10 +204,10 @@ export function HallucinationDiagnosisCard({ diagnosis }: HallucinationDiagnosis
           {/* Confusion Sources */}
           {diagnosis.confusionSources && diagnosis.confusionSources.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden="true" />
                 {t.confusionTitle}
-              </h4>
+              </h3>
               <div className="flex flex-wrap gap-2 pl-6">
                 {diagnosis.confusionSources.map((source, i) => (
                   <Badge 
@@ -225,10 +225,10 @@ export function HallucinationDiagnosisCard({ diagnosis }: HallucinationDiagnosis
           {/* Recommendations */}
           {diagnosis.recommendations && diagnosis.recommendations.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Lightbulb className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-primary" aria-hidden="true" />
                 {t.recommendationsTitle}
-              </h4>
+              </h3>
               <div className="space-y-2 pl-6">
                 {diagnosis.recommendations.map((rec, i) => (
                   <div 

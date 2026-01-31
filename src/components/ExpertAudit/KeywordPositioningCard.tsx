@@ -105,10 +105,10 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
           {/* Main Keywords Table */}
           {positioning.main_keywords && positioning.main_keywords.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-primary" aria-hidden="true" />
                 Mots-Clés Stratégiques
-              </h4>
+              </h3>
               <div className="rounded-lg border overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50">
@@ -157,10 +157,10 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
           {/* Quick Wins */}
           {positioning.quick_wins && positioning.quick_wins.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Zap className="h-4 w-4 text-warning" />
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Zap className="h-4 w-4 text-warning" aria-hidden="true" />
                 Quick Wins (Position 11-20)
-              </h4>
+              </h3>
               <div className="grid gap-2 md:grid-cols-2">
                 {positioning.quick_wins.map((qw, idx) => (
                   <div key={idx} className="p-3 rounded-lg border border-warning/30 bg-warning/5">
@@ -183,10 +183,10 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
           {/* Content Gaps */}
           {positioning.content_gaps && positioning.content_gaps.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-destructive" />
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive" aria-hidden="true" />
                 Contenus Manquants (vs Concurrence)
-              </h4>
+              </h3>
               <div className="space-y-2">
                 {positioning.content_gaps.map((gap, idx) => (
                   <div 
@@ -218,10 +218,10 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
           {/* Competitive Gaps */}
           {positioning.competitive_gaps && positioning.competitive_gaps.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <TrendingDown className="h-4 w-4 text-warning" />
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <TrendingDown className="h-4 w-4 text-warning" aria-hidden="true" />
                 Gaps Concurrentiels
-              </h4>
+              </h3>
               <ul className="space-y-2">
                 {positioning.competitive_gaps.map((gap, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -236,10 +236,10 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
           {/* Recommendations */}
           {positioning.recommendations && positioning.recommendations.length > 0 && (
             <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-                <Lightbulb className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                <Lightbulb className="h-4 w-4 text-primary" aria-hidden="true" />
                 Recommandations Stratégiques
-              </h4>
+              </h3>
               <ul className="space-y-2">
                 {positioning.recommendations.map((rec, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-sm text-foreground">

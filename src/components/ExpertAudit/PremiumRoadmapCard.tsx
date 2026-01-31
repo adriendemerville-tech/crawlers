@@ -125,9 +125,9 @@ export function PremiumRoadmapCard({ roadmap }: PremiumRoadmapCardProps) {
                     <div className={`p-1.5 rounded ${getCategoryColor(item.category)}`}>
                       {getCategoryIcon(item.category)}
                     </div>
-                    <h4 className="font-semibold text-foreground flex-1">
+                    <h3 className="font-semibold text-foreground flex-1">
                       {item.title}
-                    </h4>
+                    </h3>
                     <div className="flex items-center gap-3">
                       <Badge 
                         variant="outline" 
