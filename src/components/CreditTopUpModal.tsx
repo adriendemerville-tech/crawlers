@@ -233,12 +233,10 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="rounded-xl border-2 border-dashed border-[#0A66C2]/30 bg-[#0A66C2]/5 p-4"
+          className="rounded-xl bg-gradient-to-r from-muted/30 via-muted/50 to-muted/30 p-4"
         >
           <div className="flex items-center gap-4">
-            <div className="p-2.5 rounded-lg bg-[#0A66C2] text-white shrink-0">
-              <Handshake className="h-5 w-5" />
-            </div>
+            <Handshake className="h-5 w-5 text-[#0A66C2] shrink-0" />
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-sm">{t.linkedinOffer}</h4>
               <p className="text-xs text-muted-foreground mt-0.5">
