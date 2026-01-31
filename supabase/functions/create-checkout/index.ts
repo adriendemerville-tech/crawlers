@@ -92,7 +92,7 @@ serve(async (req) => {
           price_data: {
             currency: "eur",
             product_data: {
-              name: `Pack Optimisation Expert`,
+              name: `Crawlers.AI`,
               description: `Script correctif pour ${audit.url} (${audit.fixes_count} améliorations)`,
             },
             unit_amount: priceInCents,
