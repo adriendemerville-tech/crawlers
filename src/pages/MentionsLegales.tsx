@@ -32,7 +32,7 @@ const MentionsLegales = () => {
               <div className="bg-muted/50 rounded-lg p-6 space-y-2 text-muted-foreground">
                 <p><strong className="text-foreground">{language === 'fr' ? 'Raison sociale :' : 'Company name:'}</strong> Adrien de Volontat (Entrepreneur individuel)</p>
                 <p><strong className="text-foreground">{language === 'fr' ? 'Nom commercial :' : 'Trade name:'}</strong> Crawlers AI</p>
-                <p><strong className="text-foreground">SIRET :</strong> [À compléter]</p>
+                <p><strong className="text-foreground">SIRET :</strong> 992 399 667 00011</p>
                 <p><strong className="text-foreground">{language === 'fr' ? 'Numéro de TVA intracommunautaire :' : 'VAT number:'}</strong> [À compléter si applicable]</p>
                 <p><strong className="text-foreground">{language === 'fr' ? 'Adresse du siège :' : 'Headquarters address:'}</strong> [À compléter]</p>
                 <p><strong className="text-foreground">{language === 'fr' ? 'Directeur de la publication :' : 'Publication Director:'}</strong> Adrien de Volontat</p>
