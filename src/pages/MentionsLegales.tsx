@@ -92,7 +92,7 @@ const MentionsLegales = () => {
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {language === 'fr' ? 'Dernière mise à jour : Janvier 2025' : 'Last updated: January 2025'}
+              {language === 'fr' ? 'Dernière mise à jour : Janvier 2026' : language === 'es' ? 'Última actualización: Enero 2026' : 'Last updated: January 2026'}
             </p>
           </article>
         </div>
