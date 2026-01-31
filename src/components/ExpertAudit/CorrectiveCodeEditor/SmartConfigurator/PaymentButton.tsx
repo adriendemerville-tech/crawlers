@@ -39,6 +39,23 @@ export function PaymentButton({
       return;
     }
 
+    let domain = '';
+    try {
+      domain = new URL(siteUrl).hostname;
+    } catch {
+      // On évite d'envoyer une valeur "inventée" côté client.
+      domain = '';
+    }
+
+    if (!domain) {
+      toast({
+        title: 'URL invalide',
+        description: "Impossible d'extraire le domaine. Vérifiez que l'URL commence par https://",
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -46,15 +63,18 @@ export function PaymentButton({
       const { data: auditData, error: saveError } = await supabase.functions.invoke('save-audit', {
         body: {
           url: siteUrl,
+          domain,
           sector,
-          fixes: fixesMetadata,
-          userId: user?.id || null,
+          fixes_count: fixesCount,
+          fixes_metadata: fixesMetadata,
+          user_id: user?.id ?? null,
         },
       });
 
       if (saveError) throw saveError;
-      
-      if (!auditData?.audit_id) {
+
+      const auditId = auditData?.data?.audit_id;
+      if (!auditId) {
         throw new Error('Échec de la création de l\'audit');
       }
 
@@ -63,7 +83,7 @@ export function PaymentButton({
       // Étape 2: Créer la session Stripe avec l'audit_id
       const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
         body: {
-          audit_id: auditData.audit_id,
+          audit_id: auditId,
           usePaymentLink: false,
         },
       });
