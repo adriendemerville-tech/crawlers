@@ -11,13 +11,15 @@ interface SecurityZoneProps {
   showPayment?: boolean;
   calculatedPrice?: number;
   fixConfigs?: FixConfig[];
+  generatedCode?: string;
 }
 
 export function SecurityZone({ 
   siteUrl = '', 
   showPayment = false,
   calculatedPrice = 3,
-  fixConfigs = []
+  fixConfigs = [],
+  generatedCode = ''
 }: SecurityZoneProps) {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
@@ -30,6 +32,7 @@ export function SecurityZone({
             siteUrl={siteUrl}
             calculatedPrice={calculatedPrice}
             fixConfigs={fixConfigs}
+            generatedCode={generatedCode}
           />
         </div>
       )}

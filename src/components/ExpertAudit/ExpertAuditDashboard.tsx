@@ -153,6 +153,9 @@ export function ExpertAuditDashboard() {
   // Hallucination diagnosis data - using any to support both legacy and new formats
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [hallucinationDiagnosis, setHallucinationDiagnosis] = useState<any>(null);
+  // Post-payment state for reopening modal with code
+  const [paidScriptCode, setPaidScriptCode] = useState<string>('');
+  const [hasVerifiedPayment, setHasVerifiedPayment] = useState(false);
   const loadingRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
@@ -167,9 +170,12 @@ export function ExpertAuditDashboard() {
 
   // Restore audit state from session storage on mount / after auth
   // Also check for URL from query params (from landing page) or localStorage (from home page)
+  // And handle Stripe payment success redirect
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const urlFromParams = searchParams.get('url');
+    const paymentSuccess = searchParams.get('success') === 'true';
+    const auditIdFromParams = searchParams.get('audit_id');
     
     const savedUrl = sessionStorage.getItem('audit_url');
     const cachedUrl = localStorage.getItem('crawlers_last_url');
@@ -177,6 +183,68 @@ export function ExpertAuditDashboard() {
     const savedStrategicResult = sessionStorage.getItem('audit_strategic_result');
     const savedAuditMode = sessionStorage.getItem('audit_mode');
     const pendingAction = sessionStorage.getItem('audit_pending_action');
+
+    // Handle Stripe payment success redirect
+    if (paymentSuccess && auditIdFromParams) {
+      console.log('🎉 Payment success detected, fetching script for audit:', auditIdFromParams);
+      
+      // Fetch the paid script from the backend
+      const fetchPaidScript = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('get-final-script', {
+            body: { audit_id: auditIdFromParams }
+          });
+          
+          if (error) throw error;
+          
+          if (data?.success && data?.data?.code) {
+            console.log('✅ Script retrieved successfully');
+            setPaidScriptCode(data.data.code);
+            setHasVerifiedPayment(true);
+            
+            // Restore session data
+            if (savedTechnicalResult) {
+              const parsed = JSON.parse(savedTechnicalResult);
+              setTechnicalResult(parsed);
+              setResult(parsed);
+              setCompletedSteps(prev => [...prev.filter(s => s !== 1), 1]);
+            }
+            if (savedStrategicResult) {
+              const parsed = JSON.parse(savedStrategicResult);
+              setStrategicResult(parsed);
+              setResult(parsed);
+              setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+            }
+            if (savedUrl) {
+              setUrl(savedUrl);
+            }
+            
+            // Open the modal with the paid script
+            setIsCodeEditorOpen(true);
+            
+            toast({
+              title: 'Paiement confirmé !',
+              description: 'Votre script correctif est maintenant disponible.',
+            });
+          } else {
+            throw new Error(data?.error || 'Erreur lors de la récupération du script');
+          }
+        } catch (err) {
+          console.error('Error fetching paid script:', err);
+          toast({
+            title: 'Erreur',
+            description: 'Impossible de récupérer le script. Veuillez réessayer.',
+            variant: 'destructive',
+          });
+        }
+      };
+      
+      fetchPaidScript();
+      
+      // Clear the URL params from browser history
+      navigate('/audit-expert', { replace: true });
+      return;
+    }
 
     // Priority: URL from query params > saved URL in session > cached URL from home page
     if (urlFromParams) {
@@ -219,7 +287,7 @@ export function ExpertAuditDashboard() {
         // because user is now logged in (isLoggedIn = true)
       }
     }
-  }, [isLoggedIn, location.search, navigate]);
+  }, [isLoggedIn, location.search, navigate, toast]);
 
   // Open report modal after auth if pending
   useEffect(() => {
@@ -917,12 +985,24 @@ export function ExpertAuditDashboard() {
       {/* Corrective Code Editor */}
       <CorrectiveCodeEditor
         isOpen={isCodeEditorOpen}
-        onClose={() => setIsCodeEditorOpen(false)}
+        onClose={() => {
+          setIsCodeEditorOpen(false);
+          // Reset payment state when closing
+          if (hasVerifiedPayment) {
+            setPaidScriptCode('');
+            setHasVerifiedPayment(false);
+          }
+        }}
         technicalResult={technicalResult}
         strategicResult={strategicResult}
         siteUrl={result?.url || url}
         siteName={result?.domain || url}
         hallucinationData={hallucinationDiagnosis}
+        initialCode={paidScriptCode}
+        initialHasPaid={hasVerifiedPayment}
+        onPaymentVerified={() => {
+          console.log('✅ Payment verified, buttons unlocked');
+        }}
       />
     </div>
   );
