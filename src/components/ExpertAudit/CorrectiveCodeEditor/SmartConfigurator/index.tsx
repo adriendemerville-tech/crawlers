@@ -641,6 +641,7 @@ export function SmartConfigurator({
                     label: f.label,
                     category: f.category
                   }))}
+                  totalAdvancedFixes={fixConfigs.filter(f => ['strategic', 'generative'].includes(f.category)).length}
                 />
               </div>
             )}

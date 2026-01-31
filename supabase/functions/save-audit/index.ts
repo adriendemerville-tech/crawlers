@@ -10,9 +10,10 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 // 💰 CONFIGURATION DU PRICING (Source of Truth)
-// Basé sur les types de fixes sélectionnés (strategic/generative augmentent le prix)
+// Identique à la logique frontend dans SmartConfigurator/index.tsx
 const MIN_PRICE = 3.00;  // 3€ (300 centimes) - Base avec fixes basiques
 const MAX_PRICE = 12.00; // 12€ (1200 centimes) - Tous les fixes avancés
+const PRICE_RANGE = MAX_PRICE - MIN_PRICE; // 9€ range
 
 interface FixMetadata {
   id: string;
@@ -22,38 +23,36 @@ interface FixMetadata {
 
 /**
  * Calcule le prix dynamique basé sur les types de fixes sélectionnés
- * Seuls les fixes 'strategic' et 'generative' augmentent le prix
+ * IDENTIQUE à la logique frontend pour garantir la cohérence du prix affiché
+ * 
+ * @param fixesMetadata - Liste des fixes activés avec leur catégorie
+ * @param totalAdvancedFixes - Nombre total de fixes avancés disponibles (strategic + generative)
  */
-function calculateDynamicPrice(fixesMetadata: FixMetadata[]): number {
-  const PRICE_RANGE = MAX_PRICE - MIN_PRICE; // 9€ range
+function calculateDynamicPrice(fixesMetadata: FixMetadata[], totalAdvancedFixes: number): number {
+  // Compter les fixes avancés ACTIVÉS (strategic + generative)
+  const enabledStrategic = fixesMetadata.filter(f => f.category === 'strategic').length;
+  const enabledGenerative = fixesMetadata.filter(f => f.category === 'generative').length;
+  const enabledAdvanced = enabledStrategic + enabledGenerative;
   
-  // Compter les fixes avancés (strategic + generative)
-  const strategicFixes = fixesMetadata.filter(f => f.category === 'strategic');
-  const generativeFixes = fixesMetadata.filter(f => f.category === 'generative');
-  
-  const enabledAdvanced = strategicFixes.length + generativeFixes.length;
-  
-  // Si aucun fix avancé, prix minimum
-  if (enabledAdvanced === 0) {
-    console.log(`💰 Aucun fix avancé, prix minimum: ${MIN_PRICE}€`);
+  // Si aucun fix avancé disponible ou activé, prix minimum
+  if (totalAdvancedFixes === 0 || enabledAdvanced === 0) {
+    console.log(`💰 Aucun fix avancé activé, prix minimum: ${MIN_PRICE}€`);
     return MIN_PRICE;
   }
   
-  // Estimation du nombre max de fixes avancés possibles (environ 8-10)
-  const maxAdvancedFixes = 10;
-  
-  // Calcul du pourcentage de fixes avancés activés
-  const advancedPercent = Math.min(enabledAdvanced / maxAdvancedFixes, 1);
+  // Calcul du pourcentage de fixes avancés activés (identique au frontend)
+  const advancedPercent = enabledAdvanced / totalAdvancedFixes;
   
   // Prix = 3€ base + jusqu'à 9€ pour les fonctionnalités avancées
   const rawPrice = MIN_PRICE + (PRICE_RANGE * advancedPercent);
   
-  // Arrondir au 0.10€ près
-  const price = Math.round(rawPrice * 10) / 10;
+  // Arrondi dynamique identique au frontend
+  const dynamicIncrement = PRICE_RANGE / totalAdvancedFixes;
+  const increment = Math.max(0.10, dynamicIncrement);
+  const price = Math.round(rawPrice / increment) * increment;
   
-  console.log(`💰 Fixes avancés: ${enabledAdvanced} (strategic: ${strategicFixes.length}, generative: ${generativeFixes.length})`);
-  console.log(`💰 Pourcentage avancé: ${(advancedPercent * 100).toFixed(0)}%`);
-  console.log(`💰 Prix calculé: ${price}€ (${Math.round(price * 100)} centimes)`);
+  console.log(`💰 Fixes avancés activés: ${enabledAdvanced}/${totalAdvancedFixes} (strategic: ${enabledStrategic}, generative: ${enabledGenerative})`);
+  console.log(`💰 Pourcentage: ${(advancedPercent * 100).toFixed(0)}% → Prix: ${price.toFixed(2)}€ (${Math.round(price * 100)} centimes)`);
   
   return price;
 }
@@ -71,6 +70,7 @@ serve(async (req) => {
       sector = 'default',
       fixes_count = 0,
       fixes_metadata = [],
+      total_advanced_fixes = 0,
       audit_data = null,
       generated_code = null,
       user_id = null
@@ -85,17 +85,19 @@ serve(async (req) => {
     }
 
     console.log(`📝 Saving audit for: ${url}`);
-    console.log(`   Domain: ${domain}, Fixes: ${fixes_count}`);
-    console.log(`   Fixes metadata: ${JSON.stringify(fixes_metadata)}`);
+    console.log(`   Domain: ${domain}, Fixes: ${fixes_count}, Total Advanced: ${total_advanced_fixes}`);
 
     // 1️⃣ CALCUL DU PRIX DYNAMIQUE basé sur les fixes sélectionnés
-    const dynamicPrice = calculateDynamicPrice(fixes_metadata as FixMetadata[]);
+    // Utilise la même logique que le frontend pour garantir la cohérence
+    const dynamicPrice = calculateDynamicPrice(
+      fixes_metadata as FixMetadata[], 
+      total_advanced_fixes
+    );
 
     // Initialize Supabase client with service role (bypasses RLS)
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 2️⃣ INSERT OR UPDATE l'audit dans la table
-    // Vérifie si un audit existe déjà pour cette URL + user
     const { data: existingAudit } = await supabase
       .from("audits")
       .select("id")
@@ -133,7 +135,7 @@ serve(async (req) => {
       }
 
       auditId = updatedAudit.id;
-      console.log(`✅ Audit updated: ${auditId} with price ${dynamicPrice}€`);
+      console.log(`✅ Audit updated: ${auditId} → ${dynamicPrice.toFixed(2)}€`);
     } else {
       // INSERT new audit
       const { data: newAudit, error: insertError } = await supabase
@@ -159,7 +161,7 @@ serve(async (req) => {
       }
 
       auditId = newAudit.id;
-      console.log(`✅ New audit created: ${auditId} with price ${dynamicPrice}€`);
+      console.log(`✅ New audit created: ${auditId} → ${dynamicPrice.toFixed(2)}€`);
     }
 
     return new Response(

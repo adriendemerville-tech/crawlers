@@ -14,6 +14,7 @@ interface PaymentButtonProps {
   onPaymentSuccess?: () => void;
   calculatedPrice?: number;
   fixesMetadata?: Array<{ id: string; label: string; category: string }>;
+  totalAdvancedFixes?: number;
 }
 
 export function PaymentButton({ 
@@ -23,7 +24,8 @@ export function PaymentButton({
   disabled = false,
   onPaymentSuccess,
   calculatedPrice = 3,
-  fixesMetadata = []
+  fixesMetadata = [],
+  totalAdvancedFixes = 0
 }: PaymentButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -67,6 +69,7 @@ export function PaymentButton({
           sector,
           fixes_count: fixesCount,
           fixes_metadata: fixesMetadata,
+          total_advanced_fixes: totalAdvancedFixes,
           user_id: user?.id ?? null,
         },
       });
