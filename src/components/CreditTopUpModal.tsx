@@ -65,9 +65,9 @@ const translations = {
     buy: 'Acheter',
     processing: 'Redirection...',
     error: 'Une erreur est survenue',
-    linkedinOffer: '50 crédits offerts !',
-    linkedinDescription: '50 crédits offerts si vous publiez une synthèse de votre rapport Crawlers.AI sur LinkedIn !',
-    linkedinCta: 'Publier sur LinkedIn',
+    linkedinOffer: 'Vous aimez Crawlers.AI ?',
+    linkedinDescription: 'Publiez votre rapport sur LinkedIn et recevez 50 crédits gratuits !',
+    linkedinCta: 'Publier',
   },
   en: {
     title: 'Top up my credits',
@@ -80,9 +80,9 @@ const translations = {
     buy: 'Buy',
     processing: 'Redirecting...',
     error: 'An error occurred',
-    linkedinOffer: '50 free credits!',
-    linkedinDescription: '50 free credits if you share a summary of your Crawlers.AI report on LinkedIn!',
-    linkedinCta: 'Post on LinkedIn',
+    linkedinOffer: 'Do you like Crawlers.AI?',
+    linkedinDescription: 'Share your report on LinkedIn and get 50 free credits!',
+    linkedinCta: 'Share',
   },
   es: {
     title: 'Recargar mis créditos',
@@ -95,9 +95,9 @@ const translations = {
     buy: 'Comprar',
     processing: 'Redirigiendo...',
     error: 'Ocurrió un error',
-    linkedinOffer: '¡50 créditos gratis!',
-    linkedinDescription: '¡50 créditos gratis si publicas un resumen de tu informe Crawlers.AI en LinkedIn!',
-    linkedinCta: 'Publicar en LinkedIn',
+    linkedinOffer: '¿Te gusta Crawlers.AI?',
+    linkedinDescription: '¡Publica tu informe en LinkedIn y recibe 50 créditos gratis!',
+    linkedinCta: 'Publicar',
   },
 };
 
@@ -250,15 +250,14 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
             </div>
             <Button
               variant="outline"
-              size="sm"
-              className="shrink-0 gap-1.5 border-[#0A66C2]/50 text-[#0A66C2] hover:bg-[#0A66C2]/10"
+              size="icon"
+              className="shrink-0 h-8 w-8 border-[#0A66C2]/50 text-[#0A66C2] hover:bg-[#0A66C2]/10"
               onClick={() => {
                 const text = encodeURIComponent("Je viens de découvrir @CrawlersAI pour analyser la visibilité SEO et GEO de mon site web. Essayez-le gratuitement ! https://crawlers.lovable.app");
                 window.open(`https://www.linkedin.com/sharing/share-offsite/?url=https://crawlers.lovable.app&text=${text}`, '_blank');
               }}
             >
-              <ExternalLink className="h-3.5 w-3.5" />
-              {t.linkedinCta}
+              <Linkedin className="h-4 w-4" />
             </Button>
           </div>
         </motion.div>
