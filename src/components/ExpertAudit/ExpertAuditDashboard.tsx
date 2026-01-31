@@ -189,63 +189,81 @@ export function ExpertAuditDashboard() {
     if (paymentSuccess && auditIdFromParams) {
       console.log('🎉 Payment success detected, fetching script for audit:', auditIdFromParams);
       
-      // Fetch the paid script from the backend
-      const fetchPaidScript = async () => {
-        try {
-          const { data, error } = await supabase.functions.invoke('get-final-script', {
-            body: { audit_id: auditIdFromParams }
-          });
-          
-          if (error) throw error;
-          
-          if (data?.success && data?.data?.code) {
-            console.log('✅ Script retrieved successfully');
-            setPaidScriptCode(data.data.code);
-            // Store the fixes metadata to restore enabled fixes in the modal
-            if (data.data.fixes_metadata) {
-              console.log('✅ Fixes metadata retrieved:', data.data.fixes_metadata);
-              setPaidFixesMetadata(data.data.fixes_metadata);
-            }
-            setHasVerifiedPayment(true);
+      // Fetch the paid script from the backend WITH RETRY
+      // The webhook may take a few seconds to update the payment_status
+      const fetchPaidScriptWithRetry = async (maxRetries = 5, delayMs = 2000) => {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            console.log(`📡 Attempt ${attempt}/${maxRetries} to fetch script...`);
             
-            // Restore session data
-            if (savedTechnicalResult) {
-              const parsed = JSON.parse(savedTechnicalResult);
-              setTechnicalResult(parsed);
-              setResult(parsed);
-              setCompletedSteps(prev => [...prev.filter(s => s !== 1), 1]);
-            }
-            if (savedStrategicResult) {
-              const parsed = JSON.parse(savedStrategicResult);
-              setStrategicResult(parsed);
-              setResult(parsed);
-              setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
-            }
-            if (savedUrl) {
-              setUrl(savedUrl);
-            }
-            
-            // Open the modal with the paid script
-            setIsCodeEditorOpen(true);
-            
-            toast({
-              title: 'Paiement confirmé !',
-              description: 'Votre script correctif est maintenant disponible.',
+            const { data, error } = await supabase.functions.invoke('get-final-script', {
+              body: { audit_id: auditIdFromParams }
             });
-          } else {
-            throw new Error(data?.error || 'Erreur lors de la récupération du script');
+            
+            // If payment not yet confirmed (402), wait and retry
+            if (error?.message?.includes('402') || data?.error === 'Payment required') {
+              console.log(`⏳ Payment not yet confirmed, waiting ${delayMs}ms before retry...`);
+              if (attempt < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+                continue;
+              }
+              throw new Error('Le paiement n\'a pas encore été confirmé. Veuillez rafraîchir la page dans quelques secondes.');
+            }
+            
+            if (error) throw error;
+            
+            if (data?.success && data?.data?.code) {
+              console.log('✅ Script retrieved successfully');
+              setPaidScriptCode(data.data.code);
+              // Store the fixes metadata to restore enabled fixes in the modal
+              if (data.data.fixes_metadata) {
+                console.log('✅ Fixes metadata retrieved:', data.data.fixes_metadata);
+                setPaidFixesMetadata(data.data.fixes_metadata);
+              }
+              setHasVerifiedPayment(true);
+              
+              // Restore session data
+              if (savedTechnicalResult) {
+                const parsed = JSON.parse(savedTechnicalResult);
+                setTechnicalResult(parsed);
+                setResult(parsed);
+                setCompletedSteps(prev => [...prev.filter(s => s !== 1), 1]);
+              }
+              if (savedStrategicResult) {
+                const parsed = JSON.parse(savedStrategicResult);
+                setStrategicResult(parsed);
+                setResult(parsed);
+                setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+              }
+              if (savedUrl) {
+                setUrl(savedUrl);
+              }
+              
+              // Open the modal with the paid script
+              setIsCodeEditorOpen(true);
+              
+              toast({
+                title: 'Paiement confirmé !',
+                description: 'Votre script correctif est maintenant disponible.',
+              });
+              return; // Success, exit the retry loop
+            } else {
+              throw new Error(data?.error || 'Erreur lors de la récupération du script');
+            }
+          } catch (err) {
+            console.error(`Attempt ${attempt} failed:`, err);
+            if (attempt === maxRetries) {
+              toast({
+                title: 'Erreur',
+                description: err instanceof Error ? err.message : 'Impossible de récupérer le script. Veuillez rafraîchir la page.',
+                variant: 'destructive',
+              });
+            }
           }
-        } catch (err) {
-          console.error('Error fetching paid script:', err);
-          toast({
-            title: 'Erreur',
-            description: 'Impossible de récupérer le script. Veuillez réessayer.',
-            variant: 'destructive',
-          });
         }
       };
       
-      fetchPaidScript();
+      fetchPaidScriptWithRetry();
       
       // Clear the URL params from browser history
       navigate('/audit-expert', { replace: true });
