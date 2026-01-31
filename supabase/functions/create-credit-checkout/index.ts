@@ -82,7 +82,7 @@ serve(async (req) => {
             currency: "eur",
             product_data: {
               name: `Crawlers.AI - Pack ${pkg.name}`,
-              description: `${pkg.credits} crédits pour débloquer vos scripts correctifs`,
+              description: `${pkg.credits} crédits pour débloquer vos rapports stratégiques et les <scripts> correctifs`,
             },
             unit_amount: pkg.price_cents,
           },

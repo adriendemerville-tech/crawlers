@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink } from 'lucide-react';
+import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -38,6 +38,11 @@ function FooterComponent() {
       label: 'FAQ', 
       href: '#faq',
       description: language === 'fr' ? 'Questions fréquentes' : 'Frequently asked questions'
+    },
+    { 
+      label: language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing',
+      href: '/tarifs',
+      description: language === 'fr' ? 'Nos offres et tarifs' : 'Our offers and pricing'
     },
     { 
       label: language === 'fr' ? 'Lexique SEO/GEO' : language === 'es' ? 'Glosario SEO/GEO' : 'SEO/GEO Glossary',
@@ -153,7 +158,6 @@ function FooterComponent() {
             </nav>
           </div>
 
-          {/* Resources */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
               {language === 'fr' ? 'Ressources' : language === 'es' ? 'Recursos' : 'Resources'}
@@ -162,14 +166,29 @@ function FooterComponent() {
               <ul className="space-y-3">
                 {resourcesLinks.map((link) => (
                   <li key={link.href}>
-                    <a 
-                      href={link.href}
-                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                      title={link.description}
-                    >
-                      <FileText className="h-4 w-4 flex-shrink-0" />
-                      <span>{link.label}</span>
-                    </a>
+                    {link.href.startsWith('/') ? (
+                      <Link
+                        to={link.href}
+                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                        title={link.description}
+                      >
+                        {link.href === '/tarifs' ? (
+                          <CreditCard className="h-4 w-4 flex-shrink-0" />
+                        ) : (
+                          <FileText className="h-4 w-4 flex-shrink-0" />
+                        )}
+                        <span>{link.label}</span>
+                      </Link>
+                    ) : (
+                      <a 
+                        href={link.href}
+                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                        title={link.description}
+                      >
+                        <FileText className="h-4 w-4 flex-shrink-0" />
+                        <span>{link.label}</span>
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
