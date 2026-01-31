@@ -677,6 +677,15 @@ export function SmartConfigurator({
                   calculatedPrice={calculatedPrice}
                   fixConfigs={fixConfigs}
                   generatedCode={generatedCode}
+                  onUnlockWithCredit={() => {
+                    // When credit is used, unlock the code
+                    setHasPaid(true);
+                    setShowLockOverlay(false);
+                    toast({
+                      title: 'Script débloqué !',
+                      description: 'Vous pouvez maintenant copier le code complet.',
+                    });
+                  }}
                 />
               </div>
             )}

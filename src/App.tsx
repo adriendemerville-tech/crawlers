@@ -6,9 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CreditsProvider } from "@/contexts/CreditsContext";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
-
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
 const ExpertAudit = lazy(() => import("./pages/ExpertAudit"));
@@ -41,9 +41,10 @@ const App = () => (
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <LanguageProvider>
           <AuthProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
+            <CreditsProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
               <BrowserRouter>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
@@ -63,7 +64,8 @@ const App = () => (
                   </Routes>
                 </Suspense>
               </BrowserRouter>
-            </TooltipProvider>
+              </TooltipProvider>
+            </CreditsProvider>
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>
