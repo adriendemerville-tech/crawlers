@@ -1,11 +1,20 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// Dynamic import for jsPDF - only loaded when user generates PDF (~140KB savings on initial load)
+import type jsPDF from 'jspdf';
 import { CrawlResult } from '@/types/crawler';
 import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
 import { PageSpeedResult } from '@/types/pagespeed';
 
 type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed';
+
+// Lazy load PDF libraries
+const loadPDFLibraries = async () => {
+  const [jspdfModule, autoTableModule] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable')
+  ]);
+  return { jsPDF: jspdfModule.default, autoTable: autoTableModule.default };
+};
 
 const translations = {
   fr: {
@@ -161,7 +170,8 @@ function addFooter(doc: jsPDF, t: typeof translations.fr) {
   }
 }
 
-function generateCrawlersPDF(result: CrawlResult, language: string) {
+async function generateCrawlersPDF(result: CrawlResult, language: string) {
+  const { jsPDF, autoTable } = await loadPDFLibraries();
   const t = translations[language as keyof typeof translations] || translations.en;
   const doc = new jsPDF();
   
@@ -212,7 +222,8 @@ function generateCrawlersPDF(result: CrawlResult, language: string) {
   doc.save(`crawlers-report-${result.url.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
 }
 
-function generateGeoPDF(result: GeoResult, language: string) {
+async function generateGeoPDF(result: GeoResult, language: string) {
+  const { jsPDF, autoTable } = await loadPDFLibraries();
   const t = translations[language as keyof typeof translations] || translations.en;
   const doc = new jsPDF();
   
@@ -250,7 +261,8 @@ function generateGeoPDF(result: GeoResult, language: string) {
   doc.save(`geo-report-${result.url.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
 }
 
-function generateLLMPDF(result: LLMAnalysisResult, language: string) {
+async function generateLLMPDF(result: LLMAnalysisResult, language: string) {
+  const { jsPDF, autoTable } = await loadPDFLibraries();
   const t = translations[language as keyof typeof translations] || translations.en;
   const doc = new jsPDF();
   
@@ -295,7 +307,8 @@ function generateLLMPDF(result: LLMAnalysisResult, language: string) {
   doc.save(`llm-report-${result.domain.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
 }
 
-function generatePageSpeedPDF(result: PageSpeedResult, language: string) {
+async function generatePageSpeedPDF(result: PageSpeedResult, language: string) {
+  const { jsPDF, autoTable } = await loadPDFLibraries();
   const t = translations[language as keyof typeof translations] || translations.en;
   const doc = new jsPDF();
   
@@ -356,16 +369,16 @@ function generatePageSpeedPDF(result: PageSpeedResult, language: string) {
 export async function generatePDF(type: ReportType, data: any, url: string, language: string): Promise<void> {
   switch (type) {
     case 'crawlers':
-      generateCrawlersPDF(data as CrawlResult, language);
+      await generateCrawlersPDF(data as CrawlResult, language);
       break;
     case 'geo':
-      generateGeoPDF(data as GeoResult, language);
+      await generateGeoPDF(data as GeoResult, language);
       break;
     case 'llm':
-      generateLLMPDF(data as LLMAnalysisResult, language);
+      await generateLLMPDF(data as LLMAnalysisResult, language);
       break;
     case 'pagespeed':
-      generatePageSpeedPDF(data as PageSpeedResult, language);
+      await generatePageSpeedPDF(data as PageSpeedResult, language);
       break;
   }
 }
