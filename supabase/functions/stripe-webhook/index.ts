@@ -58,8 +58,93 @@ serve(async (req) => {
       console.log(`💳 Checkout session completed: ${session.id}`);
       console.log(`   Customer email: ${session.customer_details?.email}`);
       console.log(`   Amount: ${session.amount_total} cents`);
+      console.log(`   Metadata:`, session.metadata);
 
-      // Extract metadata from session
+      // Check if this is a credit purchase
+      const transactionType = session.metadata?.transaction_type;
+      
+      if (transactionType === "credit_purchase") {
+        // 🪙 CREDIT PURCHASE FLOW
+        const userId = session.metadata?.user_id;
+        const creditsAmount = parseInt(session.metadata?.credits_amount || "0", 10);
+        const packageType = session.metadata?.package_type || "unknown";
+
+        if (!userId || creditsAmount <= 0) {
+          console.error("❌ Invalid credit purchase metadata:", session.metadata);
+          return new Response(
+            JSON.stringify({ error: "Invalid credit purchase metadata" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        console.log(`🪙 Processing credit purchase: ${creditsAmount} credits for user ${userId}`);
+
+        // 1️⃣ Get current balance
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("credits_balance")
+          .eq("user_id", userId)
+          .single();
+
+        if (profileError) {
+          console.error("❌ Error fetching profile:", profileError);
+          return new Response(
+            JSON.stringify({ error: "Profile not found" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const currentBalance = profile.credits_balance || 0;
+        const newBalance = currentBalance + creditsAmount;
+
+        // 2️⃣ Update credits balance
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ 
+            credits_balance: newBalance,
+            updated_at: new Date().toISOString()
+          })
+          .eq("user_id", userId);
+
+        if (updateError) {
+          console.error("❌ Error updating credits balance:", updateError);
+          return new Response(
+            JSON.stringify({ error: "Failed to update credits" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // 3️⃣ Record transaction
+        const { error: transactionError } = await supabase
+          .from("credit_transactions")
+          .insert({
+            user_id: userId,
+            amount: creditsAmount,
+            transaction_type: "purchase",
+            description: `Achat pack ${packageType} - ${creditsAmount} crédits`,
+            stripe_session_id: session.id,
+          });
+
+        if (transactionError) {
+          console.error("❌ Error recording transaction:", transactionError);
+          // Don't fail the webhook, credits are already added
+        }
+
+        console.log(`✅ Credits added: ${currentBalance} → ${newBalance} for user ${userId}`);
+
+        return new Response(
+          JSON.stringify({ 
+            received: true, 
+            type: "credit_purchase",
+            user_id: userId,
+            credits_added: creditsAmount,
+            new_balance: newBalance,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // 🛒 SCRIPT PURCHASE FLOW (existing logic)
       const auditId = session.metadata?.audit_id || session.client_reference_id;
       const siteUrl = session.metadata?.site_url || "unknown";
       const fixesCount = parseInt(session.metadata?.fixes_count || "0", 10);

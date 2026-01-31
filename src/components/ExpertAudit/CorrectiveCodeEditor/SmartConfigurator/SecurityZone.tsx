@@ -12,6 +12,7 @@ interface SecurityZoneProps {
   calculatedPrice?: number;
   fixConfigs?: FixConfig[];
   generatedCode?: string;
+  onUnlockWithCredit?: () => void;
 }
 
 export function SecurityZone({ 
@@ -19,7 +20,8 @@ export function SecurityZone({
   showPayment = false,
   calculatedPrice = 3,
   fixConfigs = [],
-  generatedCode = ''
+  generatedCode = '',
+  onUnlockWithCredit
 }: SecurityZoneProps) {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
@@ -33,6 +35,7 @@ export function SecurityZone({
             calculatedPrice={calculatedPrice}
             fixConfigs={fixConfigs}
             generatedCode={generatedCode}
+            onUnlockWithCredit={onUnlockWithCredit}
           />
         </div>
       )}

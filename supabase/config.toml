@@ -41,3 +41,9 @@ verify_jwt = false
 
 [functions.save-audit]
 verify_jwt = false
+
+[functions.ensure-profile]
+verify_jwt = false
+
+[functions.create-credit-checkout]
+verify_jwt = false

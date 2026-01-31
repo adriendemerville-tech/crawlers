@@ -200,10 +200,41 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          stripe_session_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          stripe_session_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          stripe_session_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
+          credits_balance: number
           email: string
           first_name: string
           id: string
@@ -214,6 +245,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          credits_balance?: number
           email: string
           first_name: string
           id?: string
@@ -224,6 +256,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          credits_balance?: number
           email?: string
           first_name?: string
           id?: string
@@ -407,7 +440,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      use_credit: {
+        Args: { p_description?: string; p_user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       report_type:

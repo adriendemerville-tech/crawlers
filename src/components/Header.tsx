@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2 } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditsContext';
 import { useTheme } from 'next-themes';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { CreditRechargeButton } from './CreditRechargeButton';
 
 // Flag emoji components for better accessibility and consistency
 const FlagFR = () => (
@@ -41,6 +43,8 @@ const translations = {
     myReports: 'Mes rapports',
     actionPlans: 'Plans d\'action',
     correctiveCodes: 'Codes correctifs',
+    wallet: 'Mon Portefeuille',
+    credits: 'crédits',
     logout: 'Déconnexion',
     login: 'Connexion',
     back: 'Retour',
@@ -52,6 +56,8 @@ const translations = {
     myReports: 'My reports',
     actionPlans: 'Action plans',
     correctiveCodes: 'Corrective codes',
+    wallet: 'My Wallet',
+    credits: 'credits',
     logout: 'Log out',
     login: 'Log in',
     back: 'Back',
@@ -63,6 +69,8 @@ const translations = {
     myReports: 'Mis informes',
     actionPlans: 'Planes de acción',
     correctiveCodes: 'Códigos correctivos',
+    wallet: 'Mi Billetera',
+    credits: 'créditos',
     logout: 'Cerrar sesión',
     login: 'Iniciar sesión',
     back: 'Volver',
@@ -73,6 +81,7 @@ export function Header() {
   const { language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
   const { user, profile, signOut, loading } = useAuth();
+  const { balance: creditsBalance } = useCredits();
   const navigate = useNavigate();
   const location = useLocation();
   const t = translations[language];
@@ -194,8 +203,13 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Right side: Theme, User */}
+        {/* Right side: Credits (on audit-expert), Theme, User */}
         <div className="flex items-center gap-3">
+
+          {/* Credit recharge button - only on /audit-expert when logged in */}
+          {isAuditExpertPage && user && (
+            <CreditRechargeButton />
+          )}
 
           {/* Theme toggle */}
           <Button
@@ -254,6 +268,16 @@ export function Header() {
                         <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                       </div>
                     </div>
+                    <DropdownMenuSeparator />
+                    {/* Wallet submenu */}
+                    <DropdownMenuItem className="gap-2 cursor-default hover:bg-transparent focus:bg-transparent">
+                      <Wallet className="h-4 w-4 text-amber-500" />
+                      <span>{t.wallet}</span>
+                      <span className="ml-auto flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
+                        <Zap className="h-3 w-3" />
+                        {creditsBalance} {t.credits}
+                      </span>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/profil?tab=identity" className="gap-2 cursor-pointer">

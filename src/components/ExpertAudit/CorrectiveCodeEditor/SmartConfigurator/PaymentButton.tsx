@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Loader2 } from 'lucide-react';
+import { CreditCard, Loader2, Zap, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditsContext';
+import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import type { FixConfig } from './types';
 
 interface PaymentButtonProps {
@@ -14,6 +16,7 @@ interface PaymentButtonProps {
   generatedCode?: string;
   disabled?: boolean;
   onPaymentSuccess?: () => void;
+  onUnlockWithCredit?: () => void;
 }
 
 export function PaymentButton({ 
@@ -22,11 +25,75 @@ export function PaymentButton({
   fixConfigs = [],
   generatedCode = '',
   disabled = false,
-  onPaymentSuccess
+  onPaymentSuccess,
+  onUnlockWithCredit
 }: PaymentButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { balance, useCredit, refreshBalance } = useCredits();
+
+  // Check if any advanced (strategy/super) options are enabled
+  const hasAdvancedOptions = fixConfigs.some(
+    f => f.enabled && ['strategic', 'generative'].includes(f.category)
+  );
+
+  // Determine if this should use credits (1 credit for advanced options)
+  const requiresCredit = hasAdvancedOptions;
+  const creditCost = requiresCredit ? 1 : 0;
+  const hasEnoughCredits = balance >= creditCost;
+
+  const handleCreditUnlock = async () => {
+    if (!user) {
+      toast({
+        title: 'Connexion requise',
+        description: 'Veuillez vous connecter pour utiliser vos crédits',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!hasEnoughCredits) {
+      setShowTopUpModal(true);
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const result = await useCredit('Déblocage script correctif - ' + siteUrl);
+
+      if (result.success) {
+        toast({
+          title: 'Script débloqué !',
+          description: `1 crédit utilisé. Solde restant : ${result.newBalance}`,
+        });
+        
+        // Call the unlock callback
+        onUnlockWithCredit?.();
+      } else {
+        if (result.error === 'Insufficient credits') {
+          setShowTopUpModal(true);
+        } else {
+          toast({
+            title: 'Erreur',
+            description: result.error || 'Une erreur est survenue',
+            variant: 'destructive',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Credit unlock error:', error);
+      toast({
+        title: 'Erreur',
+        description: error instanceof Error ? error.message : 'Une erreur est survenue',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handlePayment = async () => {
     if (!siteUrl) {
@@ -133,6 +200,66 @@ export function PaymentButton({
 
   const enabledCount = fixConfigs.filter(f => f.enabled).length;
 
+  // If advanced options are enabled, show credit-based button
+  if (requiresCredit && user) {
+    return (
+      <>
+        <div className="flex flex-col items-center space-y-2">
+          <Button
+            onClick={hasEnoughCredits ? handleCreditUnlock : () => setShowTopUpModal(true)}
+            disabled={disabled || isLoading || !siteUrl}
+            variant={hasEnoughCredits ? "default" : "outline"}
+            className={`gap-2 ${
+              hasEnoughCredits 
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0' 
+                : 'border-destructive/50 text-destructive hover:bg-destructive/10'
+            } transition-all duration-300`}
+            size="sm"
+          >
+            {isLoading ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                >
+                  <Loader2 className="w-3 h-3" />
+                </motion.div>
+                Déblocage...
+              </>
+            ) : hasEnoughCredits ? (
+              <>
+                <Zap className="w-3 h-3" />
+                Débloquer avec 1 crédit
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-3 h-3" />
+                Crédits insuffisants
+              </>
+            )}
+          </Button>
+
+          <div className="text-xs text-muted-foreground text-center">
+            <span className="font-medium flex items-center justify-center gap-1">
+              <Zap className="h-3 w-3 text-amber-500" />
+              Coût : 1 crédit
+            </span>
+            <span className="block mt-0.5">
+              Solde : {balance} crédit{balance > 1 ? 's' : ''}
+            </span>
+          </div>
+        </div>
+
+        <CreditTopUpModal
+          open={showTopUpModal}
+          onOpenChange={setShowTopUpModal}
+          currentBalance={balance}
+        />
+      </>
+    );
+  }
+
+  // Default: standard payment flow
   return (
     <div className="flex flex-col items-center space-y-2">
       {/* Payment Button - Centered */}
