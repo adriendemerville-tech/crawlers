@@ -138,7 +138,7 @@ export function ActionPlanCard({
                   {recommendation.strengths && recommendation.strengths.length > 0 && (
                     <div className="bg-success/5 rounded-md p-3 border border-success/20">
                       <h4 className="font-medium text-success flex items-center gap-2 mb-2 text-sm">
-                        <CheckCircle2 className="h-4 w-4" />
+                        <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                         Points forts identifiés
                       </h4>
                       <ul className="space-y-1">
@@ -156,7 +156,7 @@ export function ActionPlanCard({
                   {recommendation.weaknesses && recommendation.weaknesses.length > 0 && (
                     <div className="bg-destructive/5 rounded-md p-3 border border-destructive/20">
                       <h4 className="font-medium text-destructive flex items-center gap-2 mb-2 text-sm">
-                        <XCircle className="h-4 w-4" />
+                        <XCircle className="h-4 w-4" aria-hidden="true" />
                         Problèmes détectés
                       </h4>
                       <ul className="space-y-1">
@@ -174,7 +174,7 @@ export function ActionPlanCard({
                   {recommendation.fixes && recommendation.fixes.length > 0 && (
                     <div className="bg-primary/5 rounded-md p-3 border border-primary/20">
                       <h4 className="font-medium text-primary flex items-center gap-2 mb-2 text-sm">
-                        <Wrench className="h-4 w-4" />
+                        <Wrench className="h-4 w-4" aria-hidden="true" />
                         Actions correctives
                       </h4>
                       <ul className="space-y-1.5">

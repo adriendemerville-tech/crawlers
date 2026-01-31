@@ -139,7 +139,7 @@ export function RecommendationList({ recommendations }: RecommendationListProps)
                       {rec.strengths && rec.strengths.length > 0 && (
                         <div className="bg-success/10 rounded-lg p-3 border border-success/20">
                           <h4 className="font-semibold text-success flex items-center gap-2 mb-2">
-                            <CheckCircle2 className="h-4 w-4" />
+                            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                             Points forts identifiés
                           </h4>
                           <ul className="space-y-1">
@@ -157,7 +157,7 @@ export function RecommendationList({ recommendations }: RecommendationListProps)
                       {rec.weaknesses && rec.weaknesses.length > 0 && (
                         <div className="bg-destructive/10 rounded-lg p-3 border border-destructive/20">
                           <h4 className="font-semibold text-destructive flex items-center gap-2 mb-2">
-                            <XCircle className="h-4 w-4" />
+                            <XCircle className="h-4 w-4" aria-hidden="true" />
                             Problèmes détectés
                           </h4>
                           <ul className="space-y-1">
@@ -175,7 +175,7 @@ export function RecommendationList({ recommendations }: RecommendationListProps)
                       {rec.fixes && rec.fixes.length > 0 && (
                         <div className="bg-primary/10 rounded-lg p-3 border border-primary/20">
                           <h4 className="font-semibold text-primary flex items-center gap-2 mb-2">
-                            <Wrench className="h-4 w-4" />
+                            <Wrench className="h-4 w-4" aria-hidden="true" />
                             Actions correctives recommandées
                           </h4>
                           <ul className="space-y-2">

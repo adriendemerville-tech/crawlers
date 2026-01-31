@@ -94,10 +94,10 @@ export function IntroductionCard({
           {/* Paragraphe 1 - Présentation (Qui, Où, Quand) */}
           {introduction.presentation && (
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
-                <Globe className="h-4 w-4" />
+              <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+                <Globe className="h-4 w-4" aria-hidden="true" />
                 {t.presentation}
-              </h4>
+              </h3>
               <p className="text-sm text-muted-foreground leading-relaxed pl-6">
                 {introduction.presentation}
               </p>
@@ -107,10 +107,10 @@ export function IntroductionCard({
           {/* Paragraphe 2 - Points forts (Quoi, Pourquoi) */}
           {introduction.strengths && (
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-success flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4" />
+              <h3 className="text-sm font-semibold text-success flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                 {t.strengths}
-              </h4>
+              </h3>
               <p className="text-sm text-muted-foreground leading-relaxed pl-6">
                 {introduction.strengths}
               </p>
@@ -120,10 +120,10 @@ export function IntroductionCard({
           {/* Paragraphe 3 - Axe d'amélioration */}
           {introduction.improvement && (
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-warning flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
+              <h3 className="text-sm font-semibold text-warning flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" aria-hidden="true" />
                 {t.improvement}
-              </h4>
+              </h3>
               <p className="text-sm text-muted-foreground leading-relaxed pl-6">
                 {introduction.improvement}
               </p>
@@ -133,10 +133,10 @@ export function IntroductionCard({
           {/* Concurrents - uniquement pour l'audit stratégique */}
           {variant === 'strategic' && introduction.competitors && introduction.competitors.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-primary flex items-center gap-2">
-                <Users className="h-4 w-4" />
+              <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+                <Users className="h-4 w-4" aria-hidden="true" />
                 {t.competitors}
-              </h4>
+              </h3>
               <ul className="text-sm text-muted-foreground pl-6 flex flex-wrap gap-2">
                 {introduction.competitors.map((competitor, index) => (
                   <li key={index} className="bg-muted/50 px-3 py-1 rounded-full text-xs font-medium">

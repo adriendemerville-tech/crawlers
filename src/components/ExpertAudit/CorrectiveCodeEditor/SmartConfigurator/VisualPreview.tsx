@@ -519,7 +519,7 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
         >
           <MapPin className="w-5 h-5 text-red-500 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-sm">{businessName}</h4>
+            <h3 className="font-semibold text-sm">{businessName}</h3>
             <p className="text-xs text-muted-foreground mt-1">
               {localBusinessFix?.data?.address || '123 Rue de Paris'}, {localBusinessFix?.data?.city || 'Paris'} {localBusinessFix?.data?.postalCode || '75001'}
             </p>
