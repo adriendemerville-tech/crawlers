@@ -11,6 +11,7 @@ interface PaymentButtonProps {
   siteUrl: string;
   calculatedPrice?: number;
   fixConfigs?: FixConfig[];
+  generatedCode?: string;
   disabled?: boolean;
   onPaymentSuccess?: () => void;
 }
@@ -19,6 +20,7 @@ export function PaymentButton({
   siteUrl, 
   calculatedPrice = 3,
   fixConfigs = [],
+  generatedCode = '',
   disabled = false,
   onPaymentSuccess
 }: PaymentButtonProps) {
@@ -72,7 +74,7 @@ export function PaymentButton({
       console.log(`   - Total fixes avancés disponibles: ${totalAdvancedFixes}`);
       console.log(`   - Prix affiché: ${calculatedPrice}€`);
 
-      // Étape 1: Sauvegarder l'audit avec les valeurs figées
+      // Étape 1: Sauvegarder l'audit avec les valeurs figées ET le code généré
       const { data: auditData, error: saveError } = await supabase.functions.invoke('save-audit', {
         body: {
           url: siteUrl,
@@ -80,6 +82,7 @@ export function PaymentButton({
           fixes_count: fixesCount,
           fixes_metadata: fixesMetadata,
           total_advanced_fixes: totalAdvancedFixes,
+          generated_code: generatedCode || null,
           user_id: user?.id ?? null,
         },
       });
@@ -107,6 +110,10 @@ export function PaymentButton({
       if (checkoutError) throw checkoutError;
 
       if (checkoutData?.url) {
+        // Sauvegarder l'état avant redirection vers Stripe
+        // Permet de restaurer l'état après le retour de paiement
+        console.log('💾 Saving session state before Stripe redirect...');
+        
         // Rediriger vers Stripe Checkout
         window.location.href = checkoutData.url;
       } else {

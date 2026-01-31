@@ -58,6 +58,10 @@ interface SmartConfiguratorProps {
   siteUrl: string;
   siteName: string;
   hallucinationData?: HallucinationData | null;
+  // Props for post-payment initialization
+  initialCode?: string;
+  initialHasPaid?: boolean;
+  onPaymentVerified?: () => void;
 }
 
 export function SmartConfigurator({
@@ -68,14 +72,17 @@ export function SmartConfigurator({
   siteUrl,
   siteName,
   hallucinationData,
+  initialCode = '',
+  initialHasPaid = false,
+  onPaymentVerified,
 }: SmartConfiguratorProps) {
   const [fixConfigs, setFixConfigs] = useState<FixConfig[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>('visual');
+  const [viewMode, setViewMode] = useState<ViewMode>(initialCode ? 'code' : 'visual');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedCode, setGeneratedCode] = useState<string>('');
+  const [generatedCode, setGeneratedCode] = useState<string>(initialCode);
   const [copied, setCopied] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [hasPaid, setHasPaid] = useState(false);
+  const [hasPaid, setHasPaid] = useState(initialHasPaid);
   const [showLockOverlay, setShowLockOverlay] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   
@@ -277,11 +284,23 @@ export function SmartConfigurator({
   useEffect(() => {
     if (isOpen) {
       setFixConfigs(availableFixes);
-      setGeneratedCode('');
-      setShowLockOverlay(false);
-      checkPaymentStatus();
+      // If we have initialCode (from post-payment redirect), use it; otherwise reset
+      if (initialCode) {
+        setGeneratedCode(initialCode);
+        setViewMode('code');
+        setHasPaid(initialHasPaid);
+        setShowLockOverlay(false);
+        // Notify parent that payment was verified
+        if (initialHasPaid && onPaymentVerified) {
+          onPaymentVerified();
+        }
+      } else {
+        setGeneratedCode('');
+        setShowLockOverlay(false);
+        checkPaymentStatus();
+      }
     }
-  }, [isOpen, availableFixes, checkPaymentStatus]);
+  }, [isOpen, availableFixes, checkPaymentStatus, initialCode, initialHasPaid, onPaymentVerified]);
 
   // Toggle a fix
   const toggleFix = useCallback((fixId: string) => {
@@ -636,6 +655,7 @@ export function SmartConfigurator({
                   showPayment={showLockOverlay && !hasPaid}
                   calculatedPrice={calculatedPrice}
                   fixConfigs={fixConfigs}
+                  generatedCode={generatedCode}
                 />
               </div>
             )}
