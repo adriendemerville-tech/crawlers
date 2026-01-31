@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Check, Loader2, Sparkles, Crown, Star, Linkedin, Gift, ExternalLink } from 'lucide-react';
+import { Zap, Check, Loader2, Sparkles, Crown, Star, Linkedin, Handshake, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -237,7 +237,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
         >
           <div className="flex items-center gap-4">
             <div className="p-2.5 rounded-lg bg-[#0A66C2] text-white shrink-0">
-              <Gift className="h-5 w-5" />
+              <Handshake className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-sm">{t.linkedinOffer}</h4>
