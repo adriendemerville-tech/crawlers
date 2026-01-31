@@ -132,12 +132,129 @@ const TOXIC_ANCHORS = [
 
 // ==================== UTILITY FUNCTIONS ====================
 
+/**
+ * Normalisation robuste d'URL avec correction automatique des erreurs courantes
+ * - Ajoute https:// si absent
+ * - Corrige les doubles slashes
+ * - Supprime les espaces et caractères invisibles
+ * - Gère les URLs mal formatées
+ */
 function normalizeUrl(url: string): string {
-  let normalized = url.trim();
+  // Nettoyage basique
+  let normalized = url
+    .trim()
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width chars
+    .replace(/\s+/g, '') // Remove all whitespace
+    .toLowerCase();
+  
+  // Corriger les protocoles mal écrits
+  normalized = normalized
+    .replace(/^https?:\/+/i, 'https://') // Fix http:/// or https:/// 
+    .replace(/^htt[ps]?:(?!\/\/)/i, 'https://') // Fix http: without slashes
+    .replace(/^htpps?:\/\//i, 'https://') // Fix typos like htpps://
+    .replace(/^hhttps?:\/\//i, 'https://') // Fix hhttps://
+    .replace(/^wwww?\./i, 'www.'); // Fix wwww.
+  
+  // Ajouter https:// si aucun protocole
   if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
-    normalized = `https://${normalized}`;
+    // Si commence par www., ajouter https://
+    if (normalized.startsWith('www.')) {
+      normalized = `https://${normalized}`;
+    } else {
+      // Sinon, ajouter https://www. si ça ressemble à un domaine court
+      // Ex: google.fr → https://www.google.fr
+      // Ex: my-site.example.com → https://my-site.example.com (pas de www)
+      const parts = normalized.split('.');
+      if (parts.length === 2 && parts[0].length <= 15 && !parts[0].includes('-')) {
+        normalized = `https://www.${normalized}`;
+      } else {
+        normalized = `https://${normalized}`;
+      }
+    }
   }
-  return normalized;
+  
+  // Valider la structure URL finale
+  try {
+    const urlObj = new URL(normalized);
+    // S'assurer que le hostname est valide
+    if (!urlObj.hostname || urlObj.hostname.length < 4) {
+      throw new Error('Invalid hostname');
+    }
+    return urlObj.toString().replace(/\/$/, ''); // Remove trailing slash
+  } catch {
+    // Si toujours invalide, retourner tel quel (sera géré par l'erreur fetch)
+    return normalized;
+  }
+}
+
+/**
+ * Tente de résoudre l'URL correcte en testant plusieurs variantes
+ * Retourne l'URL qui répond, ou la première par défaut
+ */
+async function resolveWorkingUrl(baseUrl: string): Promise<{ url: string; resolved: boolean }> {
+  const normalized = normalizeUrl(baseUrl);
+  
+  // Parse pour générer des variantes
+  let urlObj: URL;
+  try {
+    urlObj = new URL(normalized);
+  } catch {
+    return { url: normalized, resolved: false };
+  }
+  
+  const hostname = urlObj.hostname;
+  const pathname = urlObj.pathname;
+  
+  // Générer des variantes à tester
+  const variants: string[] = [normalized];
+  
+  // Variante sans www si présent
+  if (hostname.startsWith('www.')) {
+    variants.push(`https://${hostname.slice(4)}${pathname}`);
+  } else {
+    // Variante avec www si absent
+    variants.push(`https://www.${hostname}${pathname}`);
+  }
+  
+  // Variante http si https échoue (rare mais possible)
+  variants.push(normalized.replace('https://', 'http://'));
+  
+  console.log(`[URL-Resolver] Testing ${variants.length} URL variants...`);
+  
+  // Tester chaque variante avec un HEAD request rapide
+  for (const variant of variants) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(variant, {
+        method: 'HEAD',
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; CrawlersAI/2.0; +https://crawlers.fr)',
+        },
+        redirect: 'follow'
+      });
+      
+      clearTimeout(timeoutId);
+      
+      // Récupérer l'URL finale après redirections
+      const finalUrl = response.url || variant;
+      
+      if (response.ok || response.status === 405) {
+        // 405 = Method Not Allowed (some sites block HEAD but allow GET)
+        console.log(`[URL-Resolver] ✅ Found working URL: ${finalUrl}`);
+        return { url: finalUrl, resolved: true };
+      }
+    } catch (e) {
+      // Continue to next variant
+      console.log(`[URL-Resolver] ❌ Failed: ${variant}`);
+    }
+  }
+  
+  // Aucune variante n'a fonctionné, retourner l'originale
+  console.log(`[URL-Resolver] ⚠️ No working variant found, using original: ${normalized}`);
+  return { url: normalized, resolved: false };
 }
 
 function extractDomain(url: string): string {
@@ -1242,14 +1359,30 @@ serve(async (req) => {
       );
     }
     
-    const normalizedUrl = normalizeUrl(url);
+    // Validation de base de l'URL
+    const trimmedUrl = url.trim();
+    if (trimmedUrl.length < 4 || !trimmedUrl.includes('.')) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `URL invalide: "${trimmedUrl}" n'est pas une adresse web valide. Veuillez entrer une URL complète (ex: example.com)`
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Étape 1: Normalisation et résolution de l'URL
+    console.log('='.repeat(60));
+    console.log('[AUDIT-EXPERT-SEO] Résolution URL pour:', trimmedUrl);
+    
+    const { url: resolvedUrl, resolved } = await resolveWorkingUrl(trimmedUrl);
+    const normalizedUrl = resolvedUrl;
     const domain = extractDomain(normalizedUrl);
     
-    console.log('='.repeat(60));
-    console.log('[AUDIT-EXPERT-SEO] Démarrage audit pour:', normalizedUrl);
+    console.log(`[AUDIT-EXPERT-SEO] URL résolue: ${normalizedUrl} (résolu automatiquement: ${resolved})`);
     console.log('='.repeat(60));
     
-    // Step 1: Smart Fetch with JS fallback
+    // Step 2: Smart Fetch with JS fallback
     let smartFetchResult: SmartFetchResult;
     try {
       smartFetchResult = await smartFetch(normalizedUrl);
@@ -1259,16 +1392,41 @@ serve(async (req) => {
       const isConnectionError = errorMessage.includes('ECONNREFUSED') || 
                                  errorMessage.includes('Connection refused') ||
                                  errorMessage.includes('timeout') ||
-                                 errorMessage.includes('abort');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: isConnectionError 
-            ? `Site inaccessible: Le serveur de ${url} ne répond pas. Vérifiez que l'URL est correcte et que le site est en ligne.`
-            : `Impossible d'accéder à l'URL: ${errorMessage}` 
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+                                 errorMessage.includes('abort') ||
+                                 errorMessage.includes('ENOTFOUND') ||
+                                 errorMessage.includes('getaddrinfo');
+      
+      // Si la résolution a échoué, essayer une dernière fois avec www
+      if (!resolved && !normalizedUrl.includes('www.')) {
+        console.log('[SmartFetch] Tentative avec www...');
+        const wwwUrl = normalizedUrl.replace('https://', 'https://www.');
+        try {
+          smartFetchResult = await smartFetch(wwwUrl);
+          // Si ça marche, on continue avec cette URL
+          console.log('[SmartFetch] ✅ Succès avec www');
+        } catch {
+          // Échec définitif
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: isConnectionError 
+                ? `Site inaccessible: Le serveur de "${domain}" ne répond pas. Vérifiez que l'URL est correcte et que le site est en ligne.`
+                : `Impossible d'accéder à "${domain}": ${errorMessage}. Vérifiez l'orthographe de l'URL.` 
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: isConnectionError 
+              ? `Site inaccessible: Le serveur de "${domain}" ne répond pas. Vérifiez que l'URL est correcte et que le site est en ligne.`
+              : `Impossible d'accéder à "${domain}": ${errorMessage}. Vérifiez l'orthographe de l'URL.` 
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
     
     // Check for blocking error
