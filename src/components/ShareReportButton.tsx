@@ -342,8 +342,13 @@ Saludos`,
                     readOnly 
                     className="flex-1 text-sm font-mono" 
                   />
-                  <Button variant="outline" size="icon" onClick={handleCopyLink}>
-                    {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={handleCopyLink}
+                    aria-label={language === 'fr' ? 'Copier le lien' : language === 'es' ? 'Copiar enlace' : 'Copy link'}
+                  >
+                    {copied ? <Check className="h-4 w-4 text-success" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">

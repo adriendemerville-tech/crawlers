@@ -112,8 +112,13 @@ export function SortableReportItem({ report, onDelete, translations: t }: Sortab
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-            <MoreVertical className="h-4 w-4" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="Plus d'options"
+          >
+            <MoreVertical className="h-4 w-4" aria-hidden="true" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

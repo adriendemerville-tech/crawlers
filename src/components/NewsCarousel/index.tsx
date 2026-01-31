@@ -271,8 +271,9 @@ export function NewsCarousel() {
             size="icon"
             onClick={scrollLeft}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity shadow-lg -translate-x-4"
+            aria-label="Défiler vers la gauche"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
           </Button>
           
           <Button
@@ -280,8 +281,9 @@ export function NewsCarousel() {
             size="icon"
             onClick={scrollRight}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex opacity-0 group-hover:opacity-100 transition-opacity shadow-lg translate-x-4"
+            aria-label="Défiler vers la droite"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-5 w-5" aria-hidden="true" />
           </Button>
 
           {/* Scrollable container */}

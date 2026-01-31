@@ -281,8 +281,9 @@ export function MyActionPlans() {
                         size="icon"
                         onClick={() => deletePlan(plan.id)}
                         className="text-muted-foreground hover:text-destructive"
+                        aria-label="Supprimer le plan d'action"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
                     </div>
 
