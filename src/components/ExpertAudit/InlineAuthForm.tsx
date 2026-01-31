@@ -155,7 +155,9 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
     setIsLoading(true);
     // For Google OAuth, we need to handle it differently since it redirects
     // We'll store the current URL so after OAuth redirect, user comes back here
-    sessionStorage.setItem('audit_return_path', '/audit-expert');
+    // Use the actual current path to support both /audit-expert and /audit-strategique
+    const currentPath = window.location.pathname;
+    sessionStorage.setItem('audit_return_path', currentPath);
     sessionStorage.setItem('audit_pending_action', 'unblur_strategic');
     const { error } = await signInWithGoogle();
     if (error) {
