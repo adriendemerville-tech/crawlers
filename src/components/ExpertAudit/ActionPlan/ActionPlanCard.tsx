@@ -67,9 +67,9 @@ export function ActionPlanCard({
                 checked={isCompleted}
                 onCheckedChange={() => onToggleComplete(recommendation.id)}
                 className={cn(
-                  'mt-1 h-5 w-5 rounded-md border-2 transition-all',
-                  'data-[state=checked]:bg-success data-[state=checked]:border-success',
-                  'hover:border-primary'
+                  'mt-1 h-3.5 w-3.5 rounded-[2px] border transition-all',
+                  'border-foreground/70 data-[state=checked]:bg-foreground data-[state=checked]:border-foreground',
+                  'hover:border-foreground'
                 )}
               />
               
@@ -101,14 +101,6 @@ export function ActionPlanCard({
                     >
                       {categoryLabels[recommendation.category] || recommendation.category}
                     </Badge>
-                    
-                    {/* Priority indicator dot */}
-                    <span className={cn(
-                      'w-2 h-2 rounded-full',
-                      recommendation.priority === 'critical' && 'bg-destructive',
-                      recommendation.priority === 'important' && 'bg-warning',
-                      recommendation.priority === 'optional' && 'bg-muted-foreground'
-                    )} />
                     
                     {hasDetails && (
                       <CollapsibleTrigger asChild>
