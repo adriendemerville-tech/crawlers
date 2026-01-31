@@ -1,28 +1,23 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { Smile, ChevronDown, BookOpen, Lock } from 'lucide-react';
+import { Smile, ChevronDown, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { PaymentButton } from './PaymentButton';
+import type { FixConfig } from './types';
 
 interface SecurityZoneProps {
   siteUrl?: string;
-  fixesCount?: number;
-  sector?: string;
   showPayment?: boolean;
   calculatedPrice?: number;
-  fixesMetadata?: Array<{ id: string; label: string; category: string }>;
-  totalAdvancedFixes?: number;
+  fixConfigs?: FixConfig[];
 }
 
 export function SecurityZone({ 
   siteUrl = '', 
-  fixesCount = 0, 
-  sector = 'default',
   showPayment = false,
   calculatedPrice = 3,
-  fixesMetadata = [],
-  totalAdvancedFixes = 0
+  fixConfigs = []
 }: SecurityZoneProps) {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
@@ -33,11 +28,8 @@ export function SecurityZone({
         <div className="w-full flex items-center justify-center">
           <PaymentButton 
             siteUrl={siteUrl}
-            fixesCount={fixesCount}
-            sector={sector}
             calculatedPrice={calculatedPrice}
-            fixesMetadata={fixesMetadata}
-            totalAdvancedFixes={totalAdvancedFixes}
+            fixConfigs={fixConfigs}
           />
         </div>
       )}

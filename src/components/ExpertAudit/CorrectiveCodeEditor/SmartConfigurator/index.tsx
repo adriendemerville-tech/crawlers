@@ -633,15 +633,9 @@ export function SmartConfigurator({
               <div className="flex-shrink-0">
                 <SecurityZone 
                   siteUrl={siteUrl}
-                  fixesCount={enabledCount}
                   showPayment={showLockOverlay && !hasPaid}
                   calculatedPrice={calculatedPrice}
-                  fixesMetadata={fixConfigs.filter(f => f.enabled).map(f => ({
-                    id: f.id,
-                    label: f.label,
-                    category: f.category
-                  }))}
-                  totalAdvancedFixes={fixConfigs.filter(f => ['strategic', 'generative'].includes(f.category)).length}
+                  fixConfigs={fixConfigs}
                 />
               </div>
             )}
