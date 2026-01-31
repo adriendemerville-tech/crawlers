@@ -60,19 +60,19 @@ export function RegistrationGate() {
           className="absolute inset-x-0 top-0 z-10 flex items-start justify-center pt-8 px-4"
         >
           <motion.div 
-            className="bg-background/95 backdrop-blur-md border border-border/60 p-6 rounded-xl shadow-2xl max-w-sm w-full"
+            className="bg-background/95 backdrop-blur-md border border-border/60 p-4 rounded-xl shadow-2xl max-w-sm w-full"
             initial={{ y: 20 }}
             animate={{ y: 0 }}
             exit={{ y: -10, opacity: 0 }}
             transition={{ delay: 0.1 }}
           >
             {/* Header */}
-            <div className="text-center mb-4">
+            <div className="text-center mb-3">
               <motion.h3
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2, type: 'spring', stiffness: 500 }}
-                className="text-lg font-bold text-foreground mb-2"
+                className="text-base font-bold text-foreground mb-1"
               >
                 {t.title}
               </motion.h3>
@@ -80,49 +80,49 @@ export function RegistrationGate() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-muted-foreground text-sm leading-relaxed"
+                className="text-muted-foreground text-xs leading-relaxed"
               >
                 {t.subtitle}
               </motion.p>
             </div>
 
             {/* Benefits with marketing copy */}
-            <div className="space-y-2 mb-4">
+            <div className="space-y-1.5 mb-3">
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.45 }}
-                className="flex items-center gap-2.5"
+                className="flex items-center gap-2"
               >
-                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <FolderCheck className="w-3.5 h-3.5 text-primary" />
+                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <FolderCheck className="w-3 h-3 text-primary" />
                 </div>
-                <span className="text-sm text-foreground">{t.benefit1}</span>
+                <span className="text-xs text-foreground">{t.benefit1}</span>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
-                className="flex items-center gap-2.5"
+                className="flex items-center gap-2"
               >
-                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <ClipboardList className="w-3.5 h-3.5 text-primary" />
+                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <ClipboardList className="w-3 h-3 text-primary" />
                 </div>
-                <span className="text-sm text-foreground">{t.benefit2}</span>
+                <span className="text-xs text-foreground">{t.benefit2}</span>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.55 }}
-                className="flex items-center gap-2.5"
+                className="flex items-center gap-2"
               >
-                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Code2 className="w-3.5 h-3.5 text-primary" />
+                <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Code2 className="w-3 h-3 text-primary" />
                 </div>
-                <span className="text-sm text-foreground">
-                  Vos <code className="text-xs bg-muted px-1 py-0.5 rounded font-mono">codes</code> correctifs
+                <span className="text-xs text-foreground">
+                  Vos <code className="text-[10px] bg-muted px-1 py-0.5 rounded font-mono">codes</code> correctifs
                 </span>
               </motion.div>
             </div>
@@ -132,14 +132,14 @@ export function RegistrationGate() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="flex items-center justify-center gap-4 text-xs mb-4 py-2 border-t border-border/40"
+              className="flex items-center justify-center gap-3 text-[10px] mb-3 py-1.5 border-t border-border/40"
             >
-              <div className="flex items-center gap-1.5 text-primary font-medium">
+              <div className="flex items-center gap-1 text-primary font-medium">
                 <span>✨</span>
                 <span>{t.tagline1}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-success font-medium">
-                <PiggyBank className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1 text-success font-medium">
+                <PiggyBank className="w-3 h-3" />
                 <span>{t.tagline2}</span>
               </div>
             </motion.div>
