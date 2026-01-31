@@ -853,19 +853,26 @@ async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
 
 // ==================== PAGESPEED & SAFE BROWSING ====================
 
-async function fetchPageSpeedData(url: string): Promise<any> {
+async function fetchPageSpeedData(url: string): Promise<any | null> {
   const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=PERFORMANCE&category=SEO&category=BEST_PRACTICES&key=${GOOGLE_API_KEY}`;
   
   console.log('[PSI] Récupération données PageSpeed...');
-  const response = await fetch(apiUrl);
   
-  if (!response.ok) {
-    const error = await response.json();
-    console.error('[PSI] Erreur:', error);
-    throw new Error(error?.error?.message || 'PageSpeed API error');
+  try {
+    const response = await fetch(apiUrl);
+    
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[PSI] Erreur (non-bloquante):', error?.error?.message || response.status);
+      // Retourne null au lieu de throw pour permettre à l'audit de continuer
+      return null;
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('[PSI] Erreur réseau (non-bloquante):', error);
+    return null;
   }
-  
-  return await response.json();
 }
 
 async function checkSafeBrowsing(url: string): Promise<{ safe: boolean; threats: string[] }> {
@@ -1295,8 +1302,9 @@ serve(async (req) => {
     // Step 3: DOM-based HTML analysis
     const htmlAnalysis = analyzeHtmlWithDOM(smartFetchResult.html, normalizedUrl);
     
-    const categories = psiData.lighthouseResult?.categories || {};
-    const audits = psiData.lighthouseResult?.audits || {};
+    // Gestion gracieuse si PageSpeed a échoué (psiData peut être null)
+    const categories = psiData?.lighthouseResult?.categories || {};
+    const audits = psiData?.lighthouseResult?.audits || {};
     
     // Calculate scores
     const psiPerformance = categories.performance?.score || 0;
