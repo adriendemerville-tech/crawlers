@@ -50,6 +50,12 @@ function extractTrueValueFromDiagnosis(data: HallucinationData): string {
   return '';
 }
 
+interface FixMetadata {
+  id: string;
+  label: string;
+  category: string;
+}
+
 interface SmartConfiguratorProps {
   isOpen: boolean;
   onClose: () => void;
@@ -61,6 +67,7 @@ interface SmartConfiguratorProps {
   // Props for post-payment initialization
   initialCode?: string;
   initialHasPaid?: boolean;
+  initialFixesMetadata?: FixMetadata[];
   onPaymentVerified?: () => void;
 }
 
@@ -74,6 +81,7 @@ export function SmartConfigurator({
   hallucinationData,
   initialCode = '',
   initialHasPaid = false,
+  initialFixesMetadata = [],
   onPaymentVerified,
 }: SmartConfiguratorProps) {
   const [fixConfigs, setFixConfigs] = useState<FixConfig[]>([]);
@@ -283,7 +291,19 @@ export function SmartConfigurator({
   // Initialize fix configs when modal opens and check payment status
   useEffect(() => {
     if (isOpen) {
-      setFixConfigs(availableFixes);
+      // If we have initialFixesMetadata (from post-payment redirect), use it to restore enabled fixes
+      if (initialFixesMetadata && initialFixesMetadata.length > 0) {
+        const enabledFixIds = new Set(initialFixesMetadata.map(f => f.id));
+        const restoredFixes = availableFixes.map(fix => ({
+          ...fix,
+          enabled: enabledFixIds.has(fix.id)
+        }));
+        setFixConfigs(restoredFixes);
+        console.log('✅ Restored fixes from payment:', enabledFixIds);
+      } else {
+        setFixConfigs(availableFixes);
+      }
+      
       // If we have initialCode (from post-payment redirect), use it; otherwise reset
       if (initialCode) {
         setGeneratedCode(initialCode);
@@ -300,7 +320,7 @@ export function SmartConfigurator({
         checkPaymentStatus();
       }
     }
-  }, [isOpen, availableFixes, checkPaymentStatus, initialCode, initialHasPaid, onPaymentVerified]);
+  }, [isOpen, availableFixes, checkPaymentStatus, initialCode, initialHasPaid, initialFixesMetadata, onPaymentVerified]);
 
   // Toggle a fix
   const toggleFix = useCallback((fixId: string) => {

@@ -155,6 +155,7 @@ export function ExpertAuditDashboard() {
   const [hallucinationDiagnosis, setHallucinationDiagnosis] = useState<any>(null);
   // Post-payment state for reopening modal with code
   const [paidScriptCode, setPaidScriptCode] = useState<string>('');
+  const [paidFixesMetadata, setPaidFixesMetadata] = useState<Array<{id: string; label: string; category: string}>>([]);
   const [hasVerifiedPayment, setHasVerifiedPayment] = useState(false);
   const loadingRef = useRef<HTMLDivElement>(null);
   
@@ -200,6 +201,11 @@ export function ExpertAuditDashboard() {
           if (data?.success && data?.data?.code) {
             console.log('✅ Script retrieved successfully');
             setPaidScriptCode(data.data.code);
+            // Store the fixes metadata to restore enabled fixes in the modal
+            if (data.data.fixes_metadata) {
+              console.log('✅ Fixes metadata retrieved:', data.data.fixes_metadata);
+              setPaidFixesMetadata(data.data.fixes_metadata);
+            }
             setHasVerifiedPayment(true);
             
             // Restore session data
@@ -990,6 +996,7 @@ export function ExpertAuditDashboard() {
           // Reset payment state when closing
           if (hasVerifiedPayment) {
             setPaidScriptCode('');
+            setPaidFixesMetadata([]);
             setHasVerifiedPayment(false);
           }
         }}
@@ -1000,6 +1007,7 @@ export function ExpertAuditDashboard() {
         hallucinationData={hallucinationDiagnosis}
         initialCode={paidScriptCode}
         initialHasPaid={hasVerifiedPayment}
+        initialFixesMetadata={paidFixesMetadata}
         onPaymentVerified={() => {
           console.log('✅ Payment verified, buttons unlocked');
         }}
