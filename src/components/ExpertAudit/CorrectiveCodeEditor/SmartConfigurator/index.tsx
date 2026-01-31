@@ -636,6 +636,11 @@ export function SmartConfigurator({
                   fixesCount={enabledCount}
                   showPayment={showLockOverlay && !hasPaid}
                   calculatedPrice={calculatedPrice}
+                  fixesMetadata={fixConfigs.filter(f => f.enabled).map(f => ({
+                    id: f.id,
+                    label: f.label,
+                    category: f.category
+                  }))}
                 />
               </div>
             )}

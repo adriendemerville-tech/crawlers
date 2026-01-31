@@ -11,6 +11,7 @@ interface SecurityZoneProps {
   sector?: string;
   showPayment?: boolean;
   calculatedPrice?: number;
+  fixesMetadata?: Array<{ id: string; label: string; category: string }>;
 }
 
 export function SecurityZone({ 
@@ -18,7 +19,8 @@ export function SecurityZone({
   fixesCount = 0, 
   sector = 'default',
   showPayment = false,
-  calculatedPrice = 3
+  calculatedPrice = 3,
+  fixesMetadata = []
 }: SecurityZoneProps) {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
@@ -32,6 +34,7 @@ export function SecurityZone({
             fixesCount={fixesCount}
             sector={sector}
             calculatedPrice={calculatedPrice}
+            fixesMetadata={fixesMetadata}
           />
         </div>
       )}

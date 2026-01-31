@@ -10,46 +10,50 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 // 💰 CONFIGURATION DU PRICING (Source of Truth)
-const BASE_PRICE = 10.00; // 10€
-const FLOOR_PRICE = 2.00; // 2€ (Min)
-const CAP_PRICE = 19.00;  // 19€ (Max)
+// Basé sur les types de fixes sélectionnés (strategic/generative augmentent le prix)
+const MIN_PRICE = 3.00;  // 3€ (300 centimes) - Base avec fixes basiques
+const MAX_PRICE = 12.00; // 12€ (1200 centimes) - Tous les fixes avancés
 
-// Facteurs de pondération par secteur (0.2 à 1.9)
-const SECTOR_FACTORS: Record<string, number> = {
-  'personal': 0.2,       // -> 2€
-  'blog': 0.3,           // -> 3€
-  'association': 0.4,    // -> 4€
-  'local_business': 0.8, // -> 8€
-  'consulting': 1.2,     // -> 12€
-  'startup': 1.5,        // -> 15€
-  'ecommerce': 1.8,      // -> 18€
-  'finance': 1.9,        // -> 19€
-  'default': 1.0         // -> 10€
-};
+interface FixMetadata {
+  id: string;
+  label: string;
+  category: string;
+}
 
 /**
- * Calcule le prix dynamique basé sur le secteur et les correctifs
+ * Calcule le prix dynamique basé sur les types de fixes sélectionnés
+ * Seuls les fixes 'strategic' et 'generative' augmentent le prix
  */
-function calculateDynamicPrice(sector: string, fixesCount: number): number {
-  const factor = SECTOR_FACTORS[sector] || SECTOR_FACTORS['default'];
+function calculateDynamicPrice(fixesMetadata: FixMetadata[]): number {
+  const PRICE_RANGE = MAX_PRICE - MIN_PRICE; // 9€ range
   
-  // Calcul brut basé sur le secteur
-  let price = BASE_PRICE * factor;
+  // Compter les fixes avancés (strategic + generative)
+  const strategicFixes = fixesMetadata.filter(f => f.category === 'strategic');
+  const generativeFixes = fixesMetadata.filter(f => f.category === 'generative');
   
-  // Bonus/malus basé sur le nombre de correctifs (optionnel)
-  // +5% par tranche de 5 correctifs au-delà de 10
-  if (fixesCount > 10) {
-    const extraFixes = fixesCount - 10;
-    const bonus = Math.floor(extraFixes / 5) * 0.05;
-    price *= (1 + bonus);
+  const enabledAdvanced = strategicFixes.length + generativeFixes.length;
+  
+  // Si aucun fix avancé, prix minimum
+  if (enabledAdvanced === 0) {
+    console.log(`💰 Aucun fix avancé, prix minimum: ${MIN_PRICE}€`);
+    return MIN_PRICE;
   }
   
-  // Arrondir à 2 décimales
-  price = Math.round(price * 100) / 100;
+  // Estimation du nombre max de fixes avancés possibles (environ 8-10)
+  const maxAdvancedFixes = 10;
   
-  // Application des bornes (Clamping)
-  if (price < FLOOR_PRICE) price = FLOOR_PRICE;
-  if (price > CAP_PRICE) price = CAP_PRICE;
+  // Calcul du pourcentage de fixes avancés activés
+  const advancedPercent = Math.min(enabledAdvanced / maxAdvancedFixes, 1);
+  
+  // Prix = 3€ base + jusqu'à 9€ pour les fonctionnalités avancées
+  const rawPrice = MIN_PRICE + (PRICE_RANGE * advancedPercent);
+  
+  // Arrondir au 0.10€ près
+  const price = Math.round(rawPrice * 10) / 10;
+  
+  console.log(`💰 Fixes avancés: ${enabledAdvanced} (strategic: ${strategicFixes.length}, generative: ${generativeFixes.length})`);
+  console.log(`💰 Pourcentage avancé: ${(advancedPercent * 100).toFixed(0)}%`);
+  console.log(`💰 Prix calculé: ${price}€ (${Math.round(price * 100)} centimes)`);
   
   return price;
 }
@@ -81,11 +85,11 @@ serve(async (req) => {
     }
 
     console.log(`📝 Saving audit for: ${url}`);
-    console.log(`   Sector: ${sector}, Fixes: ${fixes_count}`);
+    console.log(`   Domain: ${domain}, Fixes: ${fixes_count}`);
+    console.log(`   Fixes metadata: ${JSON.stringify(fixes_metadata)}`);
 
-    // 1️⃣ CALCUL DU PRIX DYNAMIQUE (côté serveur uniquement)
-    const dynamicPrice = calculateDynamicPrice(sector, fixes_count);
-    console.log(`💰 Calculated price: ${dynamicPrice}€`);
+    // 1️⃣ CALCUL DU PRIX DYNAMIQUE basé sur les fixes sélectionnés
+    const dynamicPrice = calculateDynamicPrice(fixes_metadata as FixMetadata[]);
 
     // Initialize Supabase client with service role (bypasses RLS)
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -129,7 +133,7 @@ serve(async (req) => {
       }
 
       auditId = updatedAudit.id;
-      console.log(`✅ Audit updated: ${auditId}`);
+      console.log(`✅ Audit updated: ${auditId} with price ${dynamicPrice}€`);
     } else {
       // INSERT new audit
       const { data: newAudit, error: insertError } = await supabase
@@ -155,7 +159,7 @@ serve(async (req) => {
       }
 
       auditId = newAudit.id;
-      console.log(`✅ New audit created: ${auditId}`);
+      console.log(`✅ New audit created: ${auditId} with price ${dynamicPrice}€`);
     }
 
     return new Response(
