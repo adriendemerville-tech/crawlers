@@ -161,8 +161,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    // Use environment variable for production, fallback to current origin for local dev
-    const redirectUrl = import.meta.env.VITE_AUTH_REDIRECT_URL || `${window.location.origin}/`;
+    // Check if there's a return path stored - if so, redirect to /auth to handle the routing
+    const returnPath = sessionStorage.getItem('audit_return_path');
+    
+    // Use /auth as redirect target to let Auth.tsx handle the final routing
+    // This ensures sessionStorage is read and user is redirected to the correct page
+    const baseUrl = import.meta.env.VITE_AUTH_REDIRECT_URL 
+      ? import.meta.env.VITE_AUTH_REDIRECT_URL.replace(/\/$/, '')
+      : window.location.origin;
+    
+    // If there's a return path, redirect to /auth so it can handle the routing
+    // Otherwise, redirect to home
+    const redirectUrl = returnPath ? `${baseUrl}/auth` : `${baseUrl}/`;
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
