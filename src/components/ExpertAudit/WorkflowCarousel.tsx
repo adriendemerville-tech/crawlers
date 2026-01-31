@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { BarChart3, Target, Code, Search, Check, Eye, Lock } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const translations = {
   fr: {
@@ -100,9 +101,11 @@ export function WorkflowCarousel({
 }: WorkflowCarouselProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
+  const isMobile = useIsMobile();
   const [activeStep, setActiveStep] = useState(1);
   const [isCarouselVisible, setIsCarouselVisible] = useState(false);
   const [pendingStep2Animation, setPendingStep2Animation] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   // Detect when carousel is visible in viewport
@@ -195,6 +198,46 @@ export function WorkflowCarousel({
   const GAP = 24; // gap-6 = 1.5rem = 24px
   const SLIDE_DISTANCE = CARD_WIDTH + GAP;
 
+  // Swipe threshold for mobile/tablet
+  const SWIPE_THRESHOLD = 50;
+
+  // Handle swipe gesture on mobile/tablet
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    setIsDragging(false);
+    
+    // Only process on mobile/tablet
+    if (!isMobile) return;
+
+    const { offset, velocity } = info;
+    const swipe = offset.x;
+    const swipeVelocity = velocity.x;
+
+    // Determine if swipe was significant enough
+    if (Math.abs(swipe) > SWIPE_THRESHOLD || Math.abs(swipeVelocity) > 500) {
+      if (swipe > 0 && activeStep > 1) {
+        // Swipe right -> go to previous step
+        const newStep = activeStep - 1;
+        setActiveStep(newStep);
+        // Navigate to report if available
+        if (newStep === 1 && hasTechnicalResult && onNavigateToTechnical) {
+          onNavigateToTechnical();
+        }
+      } else if (swipe < 0 && activeStep < 3) {
+        // Swipe left -> go to next step (only if step 2 is unlocked or completed)
+        const nextStep = activeStep + 1;
+        // Check if we can go to the next step
+        if (nextStep === 2 && !hasTechnicalResult) return; // Can't go to step 2 if step 1 not done
+        if (nextStep === 3 && !completedSteps.includes(2)) return; // Can't go to step 3 if step 2 not done
+        
+        setActiveStep(nextStep);
+        // Navigate to report if available
+        if (nextStep === 2 && hasStrategicResult && onNavigateToStrategic) {
+          onNavigateToStrategic();
+        }
+      }
+    }
+  };
+
   return (
     <div className="w-full" ref={carouselRef}>
       {/* Progress Bar - Minimal SaaS style */}
@@ -283,16 +326,26 @@ export function WorkflowCarousel({
         <div className="absolute right-0 top-0 bottom-0 w-40 z-10 pointer-events-none bg-gradient-to-l from-background via-background/80 to-transparent" />
 
         {/* Carousel Viewport - centered with proper padding */}
-        <div className="overflow-x-clip">
+        <div className="overflow-x-clip touch-pan-y">
           <div className="flex justify-center px-4">
             <motion.div 
-              className="flex items-stretch gap-6"
+              className={cn(
+                "flex items-stretch gap-6",
+                isMobile && "cursor-grab",
+                isDragging && "cursor-grabbing"
+              )}
+              // Enable drag only on mobile/tablet
+              drag={isMobile ? "x" : false}
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragStart={() => setIsDragging(true)}
+              onDragEnd={handleDragEnd}
               animate={{ 
                 // Center the active step: step 1 needs +SLIDE, step 2 needs 0, step 3 needs -SLIDE
                 x: (2 - activeStep) * SLIDE_DISTANCE
               }}
               transition={{ 
-                duration: 0.7, 
+                duration: isDragging ? 0 : 0.7, 
                 ease: [0.22, 1, 0.36, 1] 
               }}
             >

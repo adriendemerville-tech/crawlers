@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { CompetitiveLandscape, CompetitorActor } from '@/types/expertAudit';
 import { CompetitorCorrectionModal, CompetitorCorrections } from './CompetitorCorrectionModal';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CompetitiveLandscapeCardProps {
   landscape: CompetitiveLandscape;
@@ -75,6 +76,7 @@ export function CompetitiveLandscapeCard({
   isReanalyzing = false 
 }: CompetitiveLandscapeCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleCorrectionSubmit = (corrections: CompetitorCorrections) => {
     if (onCorrectionSubmit) {
@@ -105,9 +107,12 @@ export function CompetitiveLandscapeCard({
                   <Pencil className="h-3 w-3" />
                   Corriger
                 </Button>
-                <Badge variant="outline" className="text-xs text-amber-600 border-amber-500/50">
-                  4 Acteurs Analysés
-                </Badge>
+                {/* Hide badge on mobile */}
+                {!isMobile && (
+                  <Badge variant="outline" className="text-xs text-amber-600 border-amber-500/50">
+                    4 Acteurs Analysés
+                  </Badge>
+                )}
               </div>
             </CardTitle>
           </CardHeader>
