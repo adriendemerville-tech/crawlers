@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Zap, CreditCard, History, TrendingUp, TrendingDown, Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Zap, CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -18,11 +19,18 @@ const translations = {
     currentBalance: 'Solde actuel',
     credits: 'crédits',
     topUp: 'Recharger',
-    history: 'Historique des transactions',
+    allHistory: 'Tout',
+    purchases: 'Achats',
+    usage: 'Dépenses',
     noTransactions: 'Aucune transaction pour le moment',
+    noPurchases: 'Aucun achat pour le moment',
+    noUsage: 'Aucune dépense pour le moment',
     purchase: 'Achat',
-    usage: 'Utilisation',
+    usageLabel: 'Utilisation',
     loading: 'Chargement...',
+    creditsPurchased: 'crédits achetés',
+    creditUsed: 'crédit utilisé',
+    creditsUsed: 'crédits utilisés',
   },
   en: {
     title: 'My Wallet',
@@ -30,11 +38,18 @@ const translations = {
     currentBalance: 'Current balance',
     credits: 'credits',
     topUp: 'Top up',
-    history: 'Transaction history',
+    allHistory: 'All',
+    purchases: 'Purchases',
+    usage: 'Spending',
     noTransactions: 'No transactions yet',
+    noPurchases: 'No purchases yet',
+    noUsage: 'No spending yet',
     purchase: 'Purchase',
-    usage: 'Usage',
+    usageLabel: 'Usage',
     loading: 'Loading...',
+    creditsPurchased: 'credits purchased',
+    creditUsed: 'credit used',
+    creditsUsed: 'credits used',
   },
   es: {
     title: 'Mi Billetera',
@@ -42,11 +57,18 @@ const translations = {
     currentBalance: 'Saldo actual',
     credits: 'créditos',
     topUp: 'Recargar',
-    history: 'Historial de transacciones',
+    allHistory: 'Todo',
+    purchases: 'Compras',
+    usage: 'Gastos',
     noTransactions: 'Sin transacciones por el momento',
+    noPurchases: 'Sin compras por el momento',
+    noUsage: 'Sin gastos por el momento',
     purchase: 'Compra',
-    usage: 'Uso',
+    usageLabel: 'Uso',
     loading: 'Cargando...',
+    creditsPurchased: 'créditos comprados',
+    creditUsed: 'crédito utilizado',
+    creditsUsed: 'créditos utilizados',
   },
 };
 
@@ -74,7 +96,7 @@ export function MyWallet() {
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (error) throw error;
       return data as Transaction[];
@@ -82,10 +104,89 @@ export function MyWallet() {
     enabled: !!user,
   });
 
+  const purchases = transactions?.filter(tx => tx.amount > 0) || [];
+  const usages = transactions?.filter(tx => tx.amount < 0) || [];
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString(
       language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
       { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+    );
+  };
+
+  const TransactionList = ({ 
+    items, 
+    emptyMessage 
+  }: { 
+    items: Transaction[]; 
+    emptyMessage: string;
+  }) => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <span className="ml-2 text-muted-foreground">{t.loading}</span>
+        </div>
+      );
+    }
+
+    if (items.length === 0) {
+      return (
+        <p className="text-center text-muted-foreground py-8">
+          {emptyMessage}
+        </p>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        {items.map((tx, index) => (
+          <motion.div
+            key={tx.id}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.03 }}
+            className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-full ${
+                tx.amount > 0 
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                  : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+              }`}>
+                {tx.amount > 0 ? (
+                  <TrendingUp className="h-4 w-4" />
+                ) : (
+                  <TrendingDown className="h-4 w-4" />
+                )}
+              </div>
+              <div>
+                <p className="font-medium text-sm">
+                  {tx.amount > 0 
+                    ? `${Math.abs(tx.amount)} ${t.creditsPurchased}`
+                    : `${Math.abs(tx.amount)} ${Math.abs(tx.amount) === 1 ? t.creditUsed : t.creditsUsed}`
+                  }
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {tx.description || (tx.transaction_type === 'purchase' ? t.purchase : t.usageLabel)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(tx.created_at)}
+                </p>
+              </div>
+            </div>
+            <Badge 
+              variant="outline" 
+              className={tx.amount > 0 
+                ? 'text-emerald-600 border-emerald-500/30' 
+                : 'text-rose-600 border-rose-500/30'
+              }
+            >
+              {tx.amount > 0 ? '+' : ''}{tx.amount}
+            </Badge>
+          </motion.div>
+        ))}
+      </div>
     );
   };
 
@@ -120,72 +221,63 @@ export function MyWallet() {
         </CardContent>
       </Card>
 
-      {/* Transaction History */}
+      {/* Transaction History with Tabs */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <History className="h-5 w-5" />
-            {t.history}
+            {t.title}
           </CardTitle>
           <CardDescription>{t.description}</CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-muted-foreground">{t.loading}</span>
-            </div>
-          ) : transactions && transactions.length > 0 ? (
-            <div className="space-y-3">
-              {transactions.map((tx, index) => (
-                <motion.div
-                  key={tx.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${
-                      tx.amount > 0 
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
-                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                    }`}>
-                      {tx.amount > 0 ? (
-                        <TrendingUp className="h-4 w-4" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">
-                        {tx.transaction_type === 'purchase' ? t.purchase : t.usage}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {tx.description || (tx.transaction_type === 'purchase' ? 'Achat de crédits' : 'Utilisation')}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(tx.created_at)}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge 
-                    variant="outline" 
-                    className={tx.amount > 0 
-                      ? 'text-emerald-600 border-emerald-500/30' 
-                      : 'text-rose-600 border-rose-500/30'
-                    }
-                  >
-                    {tx.amount > 0 ? '+' : ''}{tx.amount}
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsTrigger value="all" className="gap-2">
+                <History className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.allHistory}</span>
+              </TabsTrigger>
+              <TabsTrigger value="purchases" className="gap-2">
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.purchases}</span>
+                {purchases.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                    {purchases.length}
                   </Badge>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-8">
-              {t.noTransactions}
-            </p>
-          )}
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="usage" className="gap-2">
+                <Activity className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.usage}</span>
+                {usages.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                    {usages.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all">
+              <TransactionList 
+                items={transactions || []} 
+                emptyMessage={t.noTransactions}
+              />
+            </TabsContent>
+
+            <TabsContent value="purchases">
+              <TransactionList 
+                items={purchases} 
+                emptyMessage={t.noPurchases}
+              />
+            </TabsContent>
+
+            <TabsContent value="usage">
+              <TransactionList 
+                items={usages} 
+                emptyMessage={t.noUsage}
+              />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
