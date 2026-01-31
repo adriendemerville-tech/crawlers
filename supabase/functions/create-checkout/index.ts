@@ -109,6 +109,15 @@ serve(async (req) => {
         user_id: audit.user_id || '',
       },
       client_reference_id: audit_id, // Lien direct avec l'audit
+      // Données du PaymentIntent (apparaît sur le reçu Stripe)
+      payment_intent_data: {
+        description: `Optimisation SEO/GEO pour ${audit.url}`,
+        metadata: {
+          site_url: audit.url,
+          audit_id: audit_id,
+          fixes_count: String(audit.fixes_count),
+        },
+      },
       // URL de redirection après paiement
       success_url: `${origin}/audit-expert?session_id={CHECKOUT_SESSION_ID}&audit_id=${audit_id}&success=true`,
       cancel_url: `${origin}/audit-expert?audit_id=${audit_id}&canceled=true`,
