@@ -662,6 +662,7 @@ export function SmartConfigurator({
                     isTyping={false}
                     placeholder="Cliquez sur 'Générer le script' pour voir le code"
                     isLocked={!hasPaid && showLockOverlay}
+                    allowScroll={hasPaid}
                   />
                 </div>
               )}

@@ -10,6 +10,7 @@ interface CodeBlockProps {
   placeholder?: string;
   isLocked?: boolean;
   previewLines?: number;
+  allowScroll?: boolean; // When true (after payment), user can scroll freely
 }
 
 // Syntax highlighting for JavaScript
@@ -72,7 +73,8 @@ export function CodeBlock({
   isTyping, 
   placeholder,
   isLocked = false,
-  previewLines = 25
+  previewLines = 25,
+  allowScroll = false
 }: CodeBlockProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [displayedCode, setDisplayedCode] = useState('');
@@ -144,11 +146,12 @@ export function CodeBlock({
 
   // Keep Radix viewport pinned to bottom during generation + lock overlay.
   // This also survives late reflows (e.g. payment banner / animations in the modal).
+  // IMPORTANT: Disable stick-to-bottom when allowScroll is true (after payment)
+  // so the user can freely scroll through the code.
   useRadixScrollStickToBottom({
     containerRef: scrollRef,
-    // Important: in the Architecte modal, late reflows (overlay/blur/security footer)
-    // can still happen after the typing animation ends; keep pinning after completion.
-    enabled: isAnimating || isTyping || isLocked || animationComplete,
+    // Only pin during animation or when locked. After payment (allowScroll=true), let user scroll freely.
+    enabled: !allowScroll && (isAnimating || isTyping || isLocked || animationComplete),
   });
 
   if (!code) {
