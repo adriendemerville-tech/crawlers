@@ -1,7 +1,8 @@
 import { memo } from 'react';
-import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard } from 'lucide-react';
+import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { blogArticles } from '@/data/blogArticles';
 
 function FooterComponent() {
   const { t, language } = useLanguage();
@@ -50,9 +51,9 @@ function FooterComponent() {
       description: language === 'fr' ? 'Définitions des termes SEO et GEO' : 'SEO and GEO terms definitions'
     },
     { 
-      label: language === 'fr' ? 'Actualités IA' : language === 'es' ? 'Noticias IA' : 'AI News',
-      href: '#news',
-      description: language === 'fr' ? 'Veille technologique IA' : 'AI technology watch'
+      label: language === 'fr' ? 'Blog' : 'Blog',
+      href: '/blog',
+      description: language === 'fr' ? 'Articles et guides SEO/GEO' : 'SEO/GEO articles and guides'
     },
     { 
       label: 'llms.txt', 
@@ -105,6 +106,9 @@ function FooterComponent() {
       external: true
     },
   ];
+
+  // Get first 5 blog articles for quick resources
+  const quickResources = blogArticles.slice(0, 5);
 
   return (
     <footer className="border-t border-border bg-card" role="contentinfo">
@@ -195,38 +199,72 @@ function FooterComponent() {
             </nav>
           </div>
 
-          {/* Partners & Legal */}
-          <div className="space-y-6">
-            {/* Partners */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                {language === 'fr' ? 'Découvrir aussi' : language === 'es' ? 'Descubrir también' : 'Also Discover'}
-              </h3>
-              <ul className="space-y-3">
-                {partnerLinks.map((link) => (
-                  <li key={link.href}>
-                    <a 
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                      title={link.description}
-                    >
-                      <ExternalLink className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <span className="font-medium">{link.label}</span>
-                        <p className="text-xs text-muted-foreground/80 group-hover:text-muted-foreground">
-                          {link.description}
-                        </p>
-                      </div>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Partners */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+              {language === 'fr' ? 'Découvrir aussi' : language === 'es' ? 'Descubrir también' : 'Also Discover'}
+            </h3>
+            <ul className="space-y-3">
+              {partnerLinks.map((link) => (
+                <li key={link.href}>
+                  <a 
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                    title={link.description}
+                  >
+                    <ExternalLink className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-medium">{link.label}</span>
+                      <p className="text-xs text-muted-foreground/80 group-hover:text-muted-foreground">
+                        {link.description}
+                      </p>
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
+
+      {/* Quick Resources Section */}
+      {quickResources.length > 0 && (
+        <div className="border-t border-border">
+          <div className="mx-auto max-w-7xl px-4 py-8">
+            <div className="flex items-center gap-2 mb-4">
+              <BookOpen className="h-5 w-5 text-primary" />
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                {language === 'fr' ? 'Ressources Rapides' : language === 'es' ? 'Recursos Rápidos' : 'Quick Resources'}
+              </h3>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {quickResources.map((article) => (
+                <Link
+                  key={article.slug}
+                  to={`/blog/${article.slug}`}
+                  className="group flex items-start gap-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                >
+                  <FileText className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                  <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors line-clamp-2">
+                    {article.title[language] || article.title.fr}
+                  </span>
+                </Link>
+              ))}
+            </div>
+            <div className="mt-4 text-center">
+              <Link
+                to="/blog"
+                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+              >
+                {language === 'fr' ? 'Voir tous les articles' : language === 'es' ? 'Ver todos los artículos' : 'View all articles'}
+                <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Bar */}
       <div className="border-t border-border bg-muted/30">

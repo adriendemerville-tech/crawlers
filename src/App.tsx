@@ -22,6 +22,8 @@ const Auth = lazy(() => import("./pages/Auth"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ReportViewer = lazy(() => import("./pages/ReportViewer"));
 const SharedReportRedirect = lazy(() => import("./pages/SharedReportRedirect"));
+const Blog = lazy(() => import("./pages/Blog"));
+const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
@@ -61,6 +63,8 @@ const App = () => (
                     <Route path="/profil" element={<Profile />} />
                     <Route path="/rapport/:reportId" element={<ReportViewer />} />
                     <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/blog/:slug" element={<ArticlePage />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
