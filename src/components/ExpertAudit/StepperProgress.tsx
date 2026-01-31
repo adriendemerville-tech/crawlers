@@ -95,7 +95,12 @@ export function StepperProgress({ currentStep }: StepperProgressProps) {
               <div className="flex-1 mx-3 sm:mx-6 h-1 rounded-full overflow-hidden bg-muted-foreground/10 min-w-[40px] sm:min-w-[80px]">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: isPast ? '100%' : '0%' }}
+                  animate={{ 
+                    // Fill the connector when:
+                    // - This step is past (currentStep > step.id), OR
+                    // - The NEXT step is active or past (currentStep >= step.id + 1)
+                    width: currentStep >= step.id + 1 ? '100%' : '0%' 
+                  }}
                   transition={{ duration: 0.5, delay: 0.2 }}
                   className="h-full bg-primary rounded-full"
                 />
