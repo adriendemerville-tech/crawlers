@@ -354,6 +354,30 @@ export default function Tarifs() {
               </CardContent>
             </Card>
 
+            {/* Legal Notice */}
+            <Card className="border-muted">
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground text-center">
+                  {language === 'fr' 
+                    ? 'Tous les prix sont affichés en euros TTC. Les paiements sont sécurisés par Stripe. Droit de rétractation de 14 jours sur les crédits non utilisés conformément à l\'article L.221-18 du Code de la consommation. Les contenus numériques (rapports et codes) dont l\'exécution a commencé ne sont pas remboursables (art. L.221-28).'
+                    : 'All prices are displayed in euros including VAT. Payments are secured by Stripe. 14-day withdrawal right on unused credits in accordance with article L.221-18 of the French Consumer Code. Digital content (reports and codes) whose execution has begun is non-refundable (art. L.221-28).'}
+                </p>
+                <div className="flex justify-center gap-4 mt-4 text-xs text-muted-foreground">
+                  <Link to="/conditions-utilisation" className="hover:text-primary hover:underline">
+                    {language === 'fr' ? 'CGU/CGV' : 'Terms'}
+                  </Link>
+                  <span>•</span>
+                  <Link to="/politique-confidentialite" className="hover:text-primary hover:underline">
+                    {language === 'fr' ? 'Confidentialité' : 'Privacy'}
+                  </Link>
+                  <span>•</span>
+                  <Link to="/mentions-legales" className="hover:text-primary hover:underline">
+                    {language === 'fr' ? 'Mentions légales' : 'Legal'}
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* CTA */}
             <div className="text-center">
               <Link to="/audit-expert">

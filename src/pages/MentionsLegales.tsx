@@ -30,8 +30,12 @@ const MentionsLegales = () => {
                 {language === 'fr' ? '1. Éditeur du site' : '1. Website Publisher'}
               </h2>
               <div className="bg-muted/50 rounded-lg p-6 space-y-2 text-muted-foreground">
-                <p><strong className="text-foreground">{language === 'fr' ? 'Propriétaire et Directeur de la publication :' : 'Owner and Publication Director:'}</strong> Adrien de Volontat</p>
-                <p><strong className="text-foreground">{language === 'fr' ? 'Nom du site :' : 'Website name:'}</strong> Crawlers AI</p>
+                <p><strong className="text-foreground">{language === 'fr' ? 'Raison sociale :' : 'Company name:'}</strong> Adrien de Volontat (Entrepreneur individuel)</p>
+                <p><strong className="text-foreground">{language === 'fr' ? 'Nom commercial :' : 'Trade name:'}</strong> Crawlers AI</p>
+                <p><strong className="text-foreground">SIRET :</strong> [À compléter]</p>
+                <p><strong className="text-foreground">{language === 'fr' ? 'Numéro de TVA intracommunautaire :' : 'VAT number:'}</strong> [À compléter si applicable]</p>
+                <p><strong className="text-foreground">{language === 'fr' ? 'Adresse du siège :' : 'Headquarters address:'}</strong> [À compléter]</p>
+                <p><strong className="text-foreground">{language === 'fr' ? 'Directeur de la publication :' : 'Publication Director:'}</strong> Adrien de Volontat</p>
                 <p><strong className="text-foreground">{language === 'fr' ? 'URL du site :' : 'Website URL:'}</strong> <a href="https://crawlers.fr" className="text-primary hover:underline">https://crawlers.fr</a></p>
                 <p><strong className="text-foreground">Email :</strong> <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
               </div>
@@ -39,17 +43,44 @@ const MentionsLegales = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '2. Hébergement' : '2. Hosting'}
+                {language === 'fr' ? '2. Activité commerciale' : '2. Commercial Activity'}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                {language === 'fr'
+                  ? 'Crawlers AI est une plateforme proposant des services d\'audit SEO et GEO, ainsi que des outils de génération de code correctif. L\'activité comprend la fourniture de services numériques gratuits et payants via un système de crédits prépayés.'
+                  : 'Crawlers AI is a platform offering SEO and GEO audit services, as well as corrective code generation tools. The activity includes the provision of free and paid digital services via a prepaid credit system.'}
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                {language === 'fr' ? '3. Hébergement' : '3. Hosting'}
               </h2>
               <div className="bg-muted/50 rounded-lg p-6 space-y-2 text-muted-foreground">
-                <p><strong className="text-foreground">{language === 'fr' ? 'Hébergeur :' : 'Host:'}</strong> Lovable / Supabase</p>
-                <p><strong className="text-foreground">{language === 'fr' ? 'Infrastructure :' : 'Infrastructure:'}</strong> Cloud européen</p>
+                <p><strong className="text-foreground">{language === 'fr' ? 'Hébergeur application :' : 'Application host:'}</strong> Lovable Technologies</p>
+                <p><strong className="text-foreground">{language === 'fr' ? 'Infrastructure backend :' : 'Backend infrastructure:'}</strong> Supabase Inc.</p>
+                <p><strong className="text-foreground">{language === 'fr' ? 'Localisation :' : 'Location:'}</strong> {language === 'fr' ? 'Serveurs européens' : 'European servers'}</p>
+                <p><strong className="text-foreground">{language === 'fr' ? 'Prestataire de paiement :' : 'Payment provider:'}</strong> Stripe Payments Europe Ltd., 1 Grand Canal Street Lower, Dublin 2, Ireland</p>
               </div>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '3. Propriété intellectuelle' : '3. Intellectual Property'}
+                {language === 'fr' ? '4. Tarification' : '4. Pricing'}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {language === 'fr'
+                  ? 'Les prix affichés sont en euros TTC. Le détail des tarifs est disponible sur la page dédiée :'
+                  : 'Displayed prices are in euros including VAT. Detailed pricing is available on the dedicated page:'}
+              </p>
+              <Link to="/tarifs" className="text-primary hover:underline">
+                {language === 'fr' ? 'Consulter les tarifs' : 'View pricing'}
+              </Link>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                {language === 'fr' ? '5. Propriété intellectuelle' : '5. Intellectual Property'}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {language === 'fr' 
@@ -60,7 +91,7 @@ const MentionsLegales = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '4. Limitation de responsabilité' : '4. Limitation of Liability'}
+                {language === 'fr' ? '6. Limitation de responsabilité' : '6. Limitation of Liability'}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {language === 'fr'
@@ -71,7 +102,7 @@ const MentionsLegales = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '5. Liens hypertextes' : '5. Hyperlinks'}
+                {language === 'fr' ? '7. Liens hypertextes' : '7. Hyperlinks'}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {language === 'fr'
@@ -82,7 +113,25 @@ const MentionsLegales = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '6. Droit applicable' : '6. Applicable Law'}
+                {language === 'fr' ? '8. Médiation des litiges' : '8. Dispute Mediation'}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {language === 'fr'
+                  ? 'Conformément aux dispositions du Code de la consommation concernant le règlement amiable des litiges, le consommateur peut recourir gratuitement au service de médiation CM2C :'
+                  : 'In accordance with the provisions of the Consumer Code concerning the amicable settlement of disputes, the consumer may use the CM2C mediation service free of charge:'}
+              </p>
+              <div className="bg-muted/50 rounded-lg p-6">
+                <p className="text-muted-foreground">
+                  CM2C - Centre de Médiation de la Consommation de Conciliateurs de Justice<br />
+                  14 rue Saint Jean - 75017 Paris<br />
+                  <a href="https://www.cm2c.net" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.cm2c.net</a>
+                </p>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                {language === 'fr' ? '9. Droit applicable' : '9. Applicable Law'}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {language === 'fr'
@@ -92,7 +141,7 @@ const MentionsLegales = () => {
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {language === 'fr' ? 'Dernière mise à jour : Janvier 2026' : language === 'es' ? 'Última actualización: Enero 2026' : 'Last updated: January 2026'}
+              {language === 'fr' ? 'Dernière mise à jour : 31 janvier 2026' : language === 'es' ? 'Última actualización: 31 de enero de 2026' : 'Last updated: January 31, 2026'}
             </p>
           </article>
         </div>
