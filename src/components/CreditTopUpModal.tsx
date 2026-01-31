@@ -65,8 +65,8 @@ const translations = {
     buy: 'Acheter',
     processing: 'Redirection...',
     error: 'Une erreur est survenue',
-    linkedinOffer: '50 crédits offerts si publication LinkedIn',
-    linkedinDescription: 'Publiez sur LinkedIn et recevez 50 crédits gratuits',
+    linkedinOffer: '50 crédits offerts !',
+    linkedinDescription: '50 crédits offerts si vous publiez une synthèse de votre rapport Crawlers.AI sur LinkedIn !',
     linkedinCta: 'Publier sur LinkedIn',
   },
   en: {
@@ -80,8 +80,8 @@ const translations = {
     buy: 'Buy',
     processing: 'Redirecting...',
     error: 'An error occurred',
-    linkedinOffer: '50 free credits with LinkedIn post',
-    linkedinDescription: 'Post on LinkedIn and get 50 free credits',
+    linkedinOffer: '50 free credits!',
+    linkedinDescription: '50 free credits if you share a summary of your Crawlers.AI report on LinkedIn!',
     linkedinCta: 'Post on LinkedIn',
   },
   es: {
@@ -95,8 +95,8 @@ const translations = {
     buy: 'Comprar',
     processing: 'Redirigiendo...',
     error: 'Ocurrió un error',
-    linkedinOffer: '50 créditos gratis con publicación LinkedIn',
-    linkedinDescription: 'Publica en LinkedIn y recibe 50 créditos gratis',
+    linkedinOffer: '¡50 créditos gratis!',
+    linkedinDescription: '¡50 créditos gratis si publicas un resumen de tu informe Crawlers.AI en LinkedIn!',
     linkedinCta: 'Publicar en LinkedIn',
   },
 };
