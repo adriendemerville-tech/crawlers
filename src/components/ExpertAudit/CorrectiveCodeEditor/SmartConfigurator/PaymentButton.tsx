@@ -5,27 +5,22 @@ import { CreditCard, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import type { FixConfig } from './types';
 
 interface PaymentButtonProps {
   siteUrl: string;
-  fixesCount: number;
-  sector?: string;
+  calculatedPrice?: number;
+  fixConfigs?: FixConfig[];
   disabled?: boolean;
   onPaymentSuccess?: () => void;
-  calculatedPrice?: number;
-  fixesMetadata?: Array<{ id: string; label: string; category: string }>;
-  totalAdvancedFixes?: number;
 }
 
 export function PaymentButton({ 
   siteUrl, 
-  fixesCount, 
-  sector = 'default',
-  disabled = false,
-  onPaymentSuccess,
   calculatedPrice = 3,
-  fixesMetadata = [],
-  totalAdvancedFixes = 0
+  fixConfigs = [],
+  disabled = false,
+  onPaymentSuccess
 }: PaymentButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -45,7 +40,6 @@ export function PaymentButton({
     try {
       domain = new URL(siteUrl).hostname;
     } catch {
-      // On évite d'envoyer une valeur "inventée" côté client.
       domain = '';
     }
 
@@ -61,12 +55,28 @@ export function PaymentButton({
     setIsLoading(true);
 
     try {
-      // Étape 1: Sauvegarder l'audit et obtenir l'ID + prix calculé côté serveur
+      // 🔒 Calcul des valeurs AU MOMENT DU CLIC (snapshot)
+      const enabledFixes = fixConfigs.filter(f => f.enabled);
+      const fixesMetadata = enabledFixes.map(f => ({
+        id: f.id,
+        label: f.label,
+        category: f.category
+      }));
+      const fixesCount = enabledFixes.length;
+      const totalAdvancedFixes = fixConfigs.filter(f => 
+        ['strategic', 'generative'].includes(f.category)
+      ).length;
+
+      console.log('🔒 Snapshot au moment du clic:');
+      console.log(`   - Fixes activés: ${fixesCount}`);
+      console.log(`   - Total fixes avancés disponibles: ${totalAdvancedFixes}`);
+      console.log(`   - Prix affiché: ${calculatedPrice}€`);
+
+      // Étape 1: Sauvegarder l'audit avec les valeurs figées
       const { data: auditData, error: saveError } = await supabase.functions.invoke('save-audit', {
         body: {
           url: siteUrl,
           domain,
-          sector,
           fixes_count: fixesCount,
           fixes_metadata: fixesMetadata,
           total_advanced_fixes: totalAdvancedFixes,
@@ -77,11 +87,14 @@ export function PaymentButton({
       if (saveError) throw saveError;
 
       const auditId = auditData?.data?.audit_id;
+      const serverPrice = auditData?.data?.dynamic_price;
+      
+      console.log(`✅ Audit sauvegardé: ${auditId}`);
+      console.log(`   Prix serveur: ${serverPrice}€ (attendu: ${calculatedPrice}€)`);
+
       if (!auditId) {
         throw new Error('Échec de la création de l\'audit');
       }
-
-      console.log('📝 Audit saved:', auditData);
 
       // Étape 2: Créer la session Stripe avec l'audit_id
       const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
@@ -110,6 +123,8 @@ export function PaymentButton({
       setIsLoading(false);
     }
   };
+
+  const enabledCount = fixConfigs.filter(f => f.enabled).length;
 
   return (
     <div className="flex flex-col items-center space-y-2">
@@ -143,7 +158,7 @@ export function PaymentButton({
       <div className="text-xs text-muted-foreground text-center">
         <span className="font-medium">{calculatedPrice.toFixed(2).replace('.', ',')}€</span>
         <span className="mx-1">•</span>
-        <span>Prix adapté au nombre de correctifs sélectionnés</span>
+        <span>{enabledCount} correctif{enabledCount > 1 ? 's' : ''} sélectionné{enabledCount > 1 ? 's' : ''}</span>
       </div>
     </div>
   );
