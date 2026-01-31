@@ -135,7 +135,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-[740px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Zap className="h-5 w-5 text-amber-500" />
