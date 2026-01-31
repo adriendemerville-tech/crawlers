@@ -30,8 +30,8 @@ const RGPD = () => {
 
             <p className="text-muted-foreground leading-relaxed mb-8">
               {language === 'fr'
-                ? 'Crawlers AI s\'engage à respecter le Règlement Général sur la Protection des Données (RGPD) et à garantir la protection de vos données personnelles.'
-                : 'Crawlers AI is committed to complying with the General Data Protection Regulation (GDPR) and ensuring the protection of your personal data.'}
+                ? 'Crawlers AI s\'engage à respecter le Règlement Général sur la Protection des Données (RGPD) et à garantir la protection de vos données personnelles, y compris dans le cadre des transactions commerciales.'
+                : 'Crawlers AI is committed to complying with the General Data Protection Regulation (GDPR) and ensuring the protection of your personal data, including in the context of commercial transactions.'}
             </p>
 
             {/* Compliance Summary */}
@@ -47,19 +47,23 @@ const RGPD = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
-                  <span>{language === 'fr' ? 'Pas de stockage permanent des URLs analysées' : 'No permanent storage of analyzed URLs'}</span>
+                  <span>{language === 'fr' ? 'Paiements sécurisés via Stripe (PCI-DSS niveau 1) - aucune donnée bancaire stockée' : 'Secure payments via Stripe (PCI-DSS Level 1) - no banking data stored'}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
-                  <span>{language === 'fr' ? 'Hébergement sur infrastructure européenne' : 'Hosting on European infrastructure'}</span>
+                  <span>{language === 'fr' ? 'Hébergement sur infrastructure européenne (Supabase EU)' : 'Hosting on European infrastructure (Supabase EU)'}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
-                  <span>{language === 'fr' ? 'Pas de vente ni partage de données à des tiers' : 'No selling or sharing of data with third parties'}</span>
+                  <span>{language === 'fr' ? 'Pas de vente ni partage de données à des tiers à des fins commerciales' : 'No selling or sharing of data with third parties for commercial purposes'}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
                   <span>{language === 'fr' ? 'Cookies techniques uniquement (exemptés de consentement)' : 'Technical cookies only (consent exempt)'}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
+                  <span>{language === 'fr' ? 'Droit de rétractation de 14 jours sur les crédits non utilisés' : '14-day withdrawal right on unused credits'}</span>
                 </li>
               </ul>
             </div>
@@ -70,6 +74,7 @@ const RGPD = () => {
               </h2>
               <div className="bg-muted/50 rounded-lg p-6 text-muted-foreground">
                 <p><strong className="text-foreground">{language === 'fr' ? 'Responsable :' : 'Controller:'}</strong> Adrien de Volontat</p>
+                <p><strong className="text-foreground">{language === 'fr' ? 'Qualité :' : 'Capacity:'}</strong> {language === 'fr' ? 'Entrepreneur individuel' : 'Sole proprietor'}</p>
                 <p><strong className="text-foreground">Email :</strong> <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
                 <p><strong className="text-foreground">{language === 'fr' ? 'Site :' : 'Website:'}</strong> crawlers.fr</p>
               </div>
@@ -83,14 +88,40 @@ const RGPD = () => {
                 {language === 'fr' ? 'Le traitement de vos données repose sur :' : 'The processing of your data is based on:'}
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                <li><strong>{language === 'fr' ? 'Intérêt légitime :' : 'Legitimate interest:'}</strong> {language === 'fr' ? 'pour l\'amélioration de nos services et l\'analyse statistique' : 'for improving our services and statistical analysis'}</li>
-                <li><strong>{language === 'fr' ? 'Exécution du contrat :' : 'Contract execution:'}</strong> {language === 'fr' ? 'pour fournir les résultats d\'analyse demandés' : 'to provide requested analysis results'}</li>
+                <li><strong>{language === 'fr' ? 'Exécution du contrat :' : 'Contract execution:'}</strong> {language === 'fr' ? 'pour fournir les services gratuits et payants (audits, codes correctifs)' : 'to provide free and paid services (audits, corrective codes)'}</li>
+                <li><strong>{language === 'fr' ? 'Obligation légale :' : 'Legal obligation:'}</strong> {language === 'fr' ? 'pour la conservation des données de facturation (10 ans)' : 'for retention of billing data (10 years)'}</li>
+                <li><strong>{language === 'fr' ? 'Intérêt légitime :' : 'Legitimate interest:'}</strong> {language === 'fr' ? 'pour l\'amélioration de nos services et l\'analyse statistique anonymisée' : 'for improving our services and anonymized statistical analysis'}</li>
               </ul>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '3. Vos droits RGPD' : '3. Your GDPR Rights'}
+                {language === 'fr' ? '3. Données de paiement' : '3. Payment Data'}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {language === 'fr'
+                  ? 'Les paiements sont traités exclusivement par notre prestataire Stripe, certifié PCI-DSS niveau 1 (plus haut niveau de sécurité).'
+                  : 'Payments are processed exclusively by our provider Stripe, PCI-DSS Level 1 certified (highest security level).'}
+              </p>
+              <div className="bg-muted/50 rounded-lg p-6">
+                <h3 className="font-semibold text-foreground mb-2">{language === 'fr' ? 'Ce que nous ne stockons PAS :' : 'What we do NOT store:'}</h3>
+                <ul className="text-muted-foreground space-y-1">
+                  <li>• {language === 'fr' ? 'Numéros de carte bancaire' : 'Credit card numbers'}</li>
+                  <li>• {language === 'fr' ? 'Codes de sécurité (CVV)' : 'Security codes (CVV)'}</li>
+                  <li>• {language === 'fr' ? 'Données d\'authentification bancaire' : 'Banking authentication data'}</li>
+                </ul>
+                <h3 className="font-semibold text-foreground mb-2 mt-4">{language === 'fr' ? 'Ce que nous conservons :' : 'What we retain:'}</h3>
+                <ul className="text-muted-foreground space-y-1">
+                  <li>• {language === 'fr' ? 'Identifiant de transaction Stripe' : 'Stripe transaction identifier'}</li>
+                  <li>• {language === 'fr' ? 'Montant et date de la transaction' : 'Transaction amount and date'}</li>
+                  <li>• {language === 'fr' ? 'Email associé au paiement' : 'Email associated with payment'}</li>
+                </ul>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                {language === 'fr' ? '4. Vos droits RGPD' : '4. Your GDPR Rights'}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 {language === 'fr' ? 'Conformément au RGPD, vous disposez des droits suivants :' : 'In accordance with the GDPR, you have the following rights:'}
@@ -107,7 +138,7 @@ const RGPD = () => {
                 </div>
                 <div className="bg-muted/30 rounded-lg p-4">
                   <h3 className="font-medium text-foreground mb-2">{language === 'fr' ? 'Droit à l\'effacement' : 'Right to Erasure'}</h3>
-                  <p className="text-sm text-muted-foreground">{language === 'fr' ? 'Demander la suppression de vos données' : 'Request deletion of your data'}</p>
+                  <p className="text-sm text-muted-foreground">{language === 'fr' ? 'Demander la suppression de vos données (sous réserve des obligations légales)' : 'Request deletion of your data (subject to legal obligations)'}</p>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-4">
                   <h3 className="font-medium text-foreground mb-2">{language === 'fr' ? 'Droit à la portabilité' : 'Right to Portability'}</h3>
@@ -126,7 +157,7 @@ const RGPD = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '4. Exercer vos droits' : '4. Exercise Your Rights'}
+                {language === 'fr' ? '5. Exercer vos droits' : '5. Exercise Your Rights'}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 {language === 'fr'
@@ -148,7 +179,7 @@ const RGPD = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '5. Réclamation auprès de la CNIL' : '5. Complaint to the CNIL'}
+                {language === 'fr' ? '6. Réclamation auprès de la CNIL' : '6. Complaint to the CNIL'}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {language === 'fr'
@@ -159,7 +190,7 @@ const RGPD = () => {
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {language === 'fr' ? 'Dernière mise à jour : Janvier 2026' : language === 'es' ? 'Última actualización: Enero 2026' : 'Last updated: January 2026'}
+              {language === 'fr' ? 'Dernière mise à jour : 31 janvier 2026' : language === 'es' ? 'Última actualización: 31 de enero de 2026' : 'Last updated: January 31, 2026'}
             </p>
           </article>
         </div>
