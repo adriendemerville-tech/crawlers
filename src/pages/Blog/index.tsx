@@ -1,0 +1,112 @@
+import { memo } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Calendar, ArrowRight, User } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { blogArticles } from '@/data/blogArticles';
+
+const translations = {
+  fr: {
+    title: 'Blog & Ressources',
+    subtitle: 'Guides, tutoriels et actualités sur le SEO, le GEO et l\'optimisation pour les moteurs IA.',
+    readMore: 'Lire l\'article',
+    metaTitle: 'Blog SEO & GEO | Ressources Crawlers AI',
+    metaDescription: 'Découvrez nos articles et guides sur le SEO, le GEO et l\'optimisation de visibilité pour les moteurs de recherche IA comme ChatGPT et Perplexity.',
+  },
+  en: {
+    title: 'Blog & Resources',
+    subtitle: 'Guides, tutorials and news about SEO, GEO and AI search engine optimization.',
+    readMore: 'Read article',
+    metaTitle: 'SEO & GEO Blog | Crawlers AI Resources',
+    metaDescription: 'Discover our articles and guides on SEO, GEO and visibility optimization for AI search engines like ChatGPT and Perplexity.',
+  },
+  es: {
+    title: 'Blog y Recursos',
+    subtitle: 'Guías, tutoriales y noticias sobre SEO, GEO y optimización para motores de búsqueda IA.',
+    readMore: 'Leer artículo',
+    metaTitle: 'Blog SEO y GEO | Recursos Crawlers AI',
+    metaDescription: 'Descubre nuestros artículos y guías sobre SEO, GEO y optimización de visibilidad para motores de búsqueda IA como ChatGPT y Perplexity.',
+  },
+};
+
+function BlogIndexComponent() {
+  const { language } = useLanguage();
+  const t = translations[language] || translations.fr;
+
+  return (
+    <>
+      <Helmet>
+        <title>{t.metaTitle}</title>
+        <meta name="description" content={t.metaDescription} />
+      </Helmet>
+
+      <div className="min-h-screen bg-background">
+        <Header />
+
+        <main className="py-12 sm:py-16">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            {/* Header */}
+            <div className="text-center mb-12">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+                {t.title}
+              </h1>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                {t.subtitle}
+              </p>
+            </div>
+
+            {/* Articles Grid */}
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {blogArticles.map((article) => (
+                <Link key={article.slug} to={`/blog/${article.slug}`} className="group">
+                  <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30">
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={article.heroImage}
+                        alt={article.heroAlt[language] || article.heroAlt.fr}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    </div>
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          {article.author}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(article.date).toLocaleDateString(
+                            language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
+                            { month: 'short', day: 'numeric', year: 'numeric' }
+                          )}
+                        </span>
+                      </div>
+                      <h2 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                        {article.title[language] || article.title.fr}
+                      </h2>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                        {article.description[language] || article.description.fr}
+                      </p>
+                      <div className="flex items-center gap-1 text-sm font-medium text-primary">
+                        {t.readMore}
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </main>
+
+        <Footer />
+      </div>
+    </>
+  );
+}
+
+export default memo(BlogIndexComponent);
