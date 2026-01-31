@@ -235,29 +235,26 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
           transition={{ delay: 0.3 }}
           className="rounded-xl border-2 border-dashed border-[#0A66C2]/30 bg-[#0A66C2]/5 p-4"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="p-2.5 rounded-lg bg-[#0A66C2] text-white shrink-0">
               <Gift className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h4 className="font-semibold text-sm">{t.linkedinOffer}</h4>
-                <Linkedin className="h-4 w-4 text-[#0A66C2]" />
-              </div>
+              <h4 className="font-semibold text-sm">{t.linkedinOffer}</h4>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {t.linkedinDescription}
               </p>
             </div>
             <Button
               variant="outline"
-              size="icon"
-              className="shrink-0 h-8 w-8 border-[#0A66C2]/50 text-[#0A66C2] hover:bg-[#0A66C2]/10"
+              className="shrink-0 gap-2 border-[#0A66C2]/50 text-[#0A66C2] hover:bg-[#0A66C2]/10 px-4"
               onClick={() => {
-                const text = encodeURIComponent("Je viens de découvrir @CrawlersAI pour analyser la visibilité SEO et GEO de mon site web. Essayez-le gratuitement ! https://crawlers.lovable.app");
-                window.open(`https://www.linkedin.com/sharing/share-offsite/?url=https://crawlers.lovable.app&text=${text}`, '_blank');
+                const text = encodeURIComponent("En 10 minutes, j'ai obtenu une expertise SEO et un plan d'action stratégique pour mon marketing grâce à Crawlers.AI 🚀\n\nL'outil analyse la visibilité de votre site auprès des moteurs de recherche IA (ChatGPT, Perplexity, Gemini...) et génère des recommandations concrètes.\n\nLe plus ? C'est gratuit pour commencer, et les packs de crédits sont très accessibles (à partir de 5€ pour 10 audits).\n\nJe recommande à tous les marketeurs et entrepreneurs !");
+                window.open(`https://www.linkedin.com/sharing/share-offsite/?text=${text}`, '_blank');
               }}
             >
               <Linkedin className="h-4 w-4" />
+              LinkedIn
             </Button>
           </div>
         </motion.div>
