@@ -206,8 +206,8 @@ export function Header() {
         {/* Right side: Credits (on audit-expert), Theme, User */}
         <div className="flex items-center gap-3">
 
-          {/* Credit recharge button - only on /audit-expert when logged in */}
-          {isAuditExpertPage && user && (
+          {/* Credit recharge button - on home and /audit-expert when logged in */}
+          {(isAuditExpertPage || location.pathname === '/') && user && (
             <CreditRechargeButton />
           )}
 

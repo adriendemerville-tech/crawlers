@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Check, Loader2, Sparkles, Crown, Star } from 'lucide-react';
+import { Zap, Check, Loader2, Sparkles, Crown, Star, Linkedin, Gift, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Separator } from '@/components/ui/separator';
 
 interface CreditTopUpModalProps {
   open: boolean;
@@ -64,6 +65,9 @@ const translations = {
     buy: 'Acheter',
     processing: 'Redirection...',
     error: 'Une erreur est survenue',
+    linkedinOffer: '50 crédits offerts si publication LinkedIn',
+    linkedinDescription: 'Publiez sur LinkedIn et recevez 50 crédits gratuits',
+    linkedinCta: 'Publier sur LinkedIn',
   },
   en: {
     title: 'Top up my credits',
@@ -76,6 +80,9 @@ const translations = {
     buy: 'Buy',
     processing: 'Redirecting...',
     error: 'An error occurred',
+    linkedinOffer: '50 free credits with LinkedIn post',
+    linkedinDescription: 'Post on LinkedIn and get 50 free credits',
+    linkedinCta: 'Post on LinkedIn',
   },
   es: {
     title: 'Recargar mis créditos',
@@ -88,6 +95,9 @@ const translations = {
     buy: 'Comprar',
     processing: 'Redirigiendo...',
     error: 'Ocurrió un error',
+    linkedinOffer: '50 créditos gratis con publicación LinkedIn',
+    linkedinDescription: 'Publica en LinkedIn y recibe 50 créditos gratis',
+    linkedinCta: 'Publicar en LinkedIn',
   },
 };
 
@@ -216,6 +226,42 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
             })}
           </AnimatePresence>
         </div>
+
+        {/* LinkedIn Offer Section */}
+        <Separator className="my-4" />
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="rounded-xl border-2 border-dashed border-[#0A66C2]/30 bg-[#0A66C2]/5 p-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-[#0A66C2] text-white shrink-0">
+              <Gift className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold text-sm">{t.linkedinOffer}</h4>
+                <Linkedin className="h-4 w-4 text-[#0A66C2]" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t.linkedinDescription}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5 border-[#0A66C2]/50 text-[#0A66C2] hover:bg-[#0A66C2]/10"
+              onClick={() => {
+                const text = encodeURIComponent("Je viens de découvrir @CrawlersAI pour analyser la visibilité SEO et GEO de mon site web. Essayez-le gratuitement ! https://crawlers.lovable.app");
+                window.open(`https://www.linkedin.com/sharing/share-offsite/?url=https://crawlers.lovable.app&text=${text}`, '_blank');
+              }}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              {t.linkedinCta}
+            </Button>
+          </div>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );

@@ -308,6 +308,10 @@ const translations: Record<Language, Translations> = {
       title: 'Tout savoir sur les crawlers IA et le GEO',
       items: [
         {
+          question: "Crawlers.AI est-il gratuit ou payant ?",
+          answer: "Crawlers.AI propose les deux ! Les outils d'analyse (Bots IA, Score GEO, Visibilité LLM, PageSpeed) sont 100% gratuits et accessibles sans inscription sur la page d'accueil. L'audit technique SEO complet est également gratuit mais nécessite une inscription pour sauvegarder vos rapports. Les fonctionnalités premium (audit stratégique IA et codes correctifs) sont payantes via un système de crédits, avec les 2 premiers audits stratégiques offerts."
+        },
+        {
           question: "Qu'est-ce qu'un crawler IA et pourquoi est-ce important ?",
           answer: "Un crawler IA est un robot qui parcourt le web pour collecter des données destinées à entraîner des modèles de langage (LLM) comme ChatGPT, Claude ou Gemini. Si votre site est accessible à ces crawlers, votre contenu peut être cité et référencé dans les réponses des assistants IA, générant du trafic qualifié."
         },
@@ -494,6 +498,10 @@ const translations: Record<Language, Translations> = {
       title: 'Everything about AI crawlers and GEO',
       items: [
         {
+          question: 'Is Crawlers.AI free or paid?',
+          answer: 'Crawlers.AI offers both! The analysis tools (AI Bots, GEO Score, LLM Visibility, PageSpeed) are 100% free and accessible without registration on the homepage. The complete technical SEO audit is also free but requires registration to save your reports. Premium features (AI strategic audit and corrective codes) are paid via a credit system, with the first 2 strategic audits free.'
+        },
+        {
           question: 'What is an AI crawler and why does it matter?',
           answer: 'An AI crawler is a bot that crawls the web to collect data for training language models (LLMs) like ChatGPT, Claude, or Gemini. If your site is accessible to these crawlers, your content can be cited and referenced in AI assistant responses, driving qualified traffic.'
         },
@@ -679,6 +687,10 @@ const translations: Record<Language, Translations> = {
       badge: 'Preguntas Frecuentes',
       title: 'Todo sobre los crawlers de IA y GEO',
       items: [
+        {
+          question: '¿Crawlers.AI es gratis o de pago?',
+          answer: '¡Crawlers.AI ofrece ambos! Las herramientas de análisis (Bots IA, Puntuación GEO, Visibilidad LLM, PageSpeed) son 100% gratuitas y accesibles sin registro en la página de inicio. La auditoría técnica SEO completa también es gratuita pero requiere registro para guardar tus informes. Las funcionalidades premium (auditoría estratégica IA y códigos correctivos) son de pago mediante un sistema de créditos, con las 2 primeras auditorías estratégicas gratis.'
+        },
         {
           question: '¿Qué es un crawler de IA y por qué es importante?',
           answer: 'Un crawler de IA es un bot que recorre la web para recopilar datos destinados a entrenar modelos de lenguaje (LLM) como ChatGPT, Claude o Gemini. Si tu sitio es accesible para estos crawlers, tu contenido puede ser citado y referenciado en las respuestas de los asistentes de IA, generando tráfico cualificado.'

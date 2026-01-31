@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2 } from 'lucide-react';
+import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import { Footer } from '@/components/Footer';
 import { MyReports } from '@/components/Profile/MyReports';
 import { MyActionPlans } from '@/components/Profile/MyActionPlans';
 import { MyCorrectiveCodes } from '@/components/Profile/MyCorrectiveCodes';
+import { MyWallet } from '@/components/Profile/MyWallet';
 
 const translations = {
   fr: {
@@ -27,6 +28,7 @@ const translations = {
     myReports: 'Mes Rapports',
     actionPlans: 'Plans d\'Action',
     correctiveCodes: 'Codes Correctifs',
+    wallet: 'Portefeuille',
     firstName: 'Prénom',
     lastName: 'Nom',
     email: 'Email',
@@ -55,6 +57,7 @@ const translations = {
     myReports: 'My Reports',
     actionPlans: 'Action Plans',
     correctiveCodes: 'Corrective Codes',
+    wallet: 'Wallet',
     firstName: 'First Name',
     lastName: 'Last Name',
     email: 'Email',
@@ -83,6 +86,7 @@ const translations = {
     myReports: 'Mis Informes',
     actionPlans: 'Planes de Acción',
     correctiveCodes: 'Códigos Correctivos',
+    wallet: 'Billetera',
     firstName: 'Nombre',
     lastName: 'Apellido',
     email: 'Correo electrónico',
@@ -206,10 +210,14 @@ export default function Profile() {
             </div>
 
             <Tabs defaultValue={initialTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="identity" className="gap-2">
                   <User className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.identity}</span>
+                </TabsTrigger>
+                <TabsTrigger value="wallet" className="gap-2">
+                  <Wallet className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t.wallet}</span>
                 </TabsTrigger>
                 <TabsTrigger value="settings" className="gap-2">
                   <Settings className="h-4 w-4" />
@@ -277,6 +285,10 @@ export default function Profile() {
                     </Button>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="wallet">
+                <MyWallet />
               </TabsContent>
 
               <TabsContent value="settings">
