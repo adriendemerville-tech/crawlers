@@ -8,7 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CreditsProvider } from "@/contexts/CreditsContext";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
-import { SupportChatBubble } from "@/components/Support";
+
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { createDebugLazy } from "@/components/DebugLoader";
 
@@ -61,7 +61,7 @@ const App = () => (
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
-                    <SupportChatBubble />
+                    
                   </BrowserRouter>
                 </AppErrorBoundary>
               </TooltipProvider>
