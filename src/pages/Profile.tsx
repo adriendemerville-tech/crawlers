@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2, Wallet } from 'lucide-react';
+import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2, Wallet, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Header } from '@/components/Header';
@@ -18,6 +19,8 @@ import { MyReports } from '@/components/Profile/MyReports';
 import { MyActionPlans } from '@/components/Profile/MyActionPlans';
 import { MyCorrectiveCodes } from '@/components/Profile/MyCorrectiveCodes';
 import { MyWallet } from '@/components/Profile/MyWallet';
+import { AdminDashboard } from '@/components/Admin';
+import { ReportProblemButton } from '@/components/Support';
 
 const translations = {
   fr: {
@@ -112,6 +115,7 @@ const translations = {
 export default function Profile() {
   const { user, profile, signOut, refreshProfile, loading } = useAuth();
   const { language, setLanguage } = useLanguage();
+  const { isAdmin, loading: adminLoading } = useAdmin();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const t = translations[language];
@@ -203,14 +207,17 @@ export default function Profile() {
                 <h1 className="text-3xl font-bold">{t.title}</h1>
                 <p className="text-muted-foreground">{t.memberSince} {memberSince}</p>
               </div>
-              <Button variant="outline" onClick={handleLogout} className="gap-2">
-                <LogOut className="h-4 w-4" />
-                {t.logout}
-              </Button>
+              <div className="flex items-center gap-2">
+                <ReportProblemButton />
+                <Button variant="outline" onClick={handleLogout} className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  {t.logout}
+                </Button>
+              </div>
             </div>
 
             <Tabs defaultValue={initialTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-6">
+              <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-7' : 'grid-cols-6'}`}>
                 <TabsTrigger value="identity" className="gap-2">
                   <User className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.identity}</span>
@@ -235,6 +242,12 @@ export default function Profile() {
                   <Settings className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.settings}</span>
                 </TabsTrigger>
+                {isAdmin && (
+                  <TabsTrigger value="admin" className="gap-2 text-primary">
+                    <Shield className="h-4 w-4" />
+                    <span className="hidden sm:inline">Admin</span>
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="identity">
@@ -393,6 +406,12 @@ export default function Profile() {
               <TabsContent value="corrective-codes">
                 <MyCorrectiveCodes />
               </TabsContent>
+
+              {isAdmin && (
+                <TabsContent value="admin">
+                  <AdminDashboard language={language} />
+                </TabsContent>
+              )}
             </Tabs>
           </motion.div>
         </main>
