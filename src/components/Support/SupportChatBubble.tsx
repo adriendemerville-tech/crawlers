@@ -156,8 +156,17 @@ export function SupportChatBubble() {
     setSending(false);
   };
 
+  const [isMobile, setIsMobile] = useState(true); // Default to mobile to avoid flash
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Only show on desktop and when user is logged in
-  if (!user || typeof window !== 'undefined' && window.innerWidth < 768) {
+  if (!user || isMobile) {
     return null;
   }
 
