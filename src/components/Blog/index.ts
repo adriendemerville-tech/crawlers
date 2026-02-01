@@ -8,3 +8,4 @@ export { AuthorCard } from './AuthorCard';
 export { GeoTable } from './GeoTable';
 export type { GeoTableRow } from './GeoTable';
 export { SourcesSection } from './SourcesSection';
+export { RelatedArticlesSection } from './RelatedArticlesSection';
