@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CreditsProvider } from "@/contexts/CreditsContext";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
+import { SupportChatBubble } from "@/components/Support";
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
 const ExpertAudit = lazy(() => import("./pages/ExpertAudit"));
@@ -69,6 +70,7 @@ const App = () => (
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
+                <SupportChatBubble />
               </BrowserRouter>
               </TooltipProvider>
             </CreditsProvider>
