@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,33 +10,24 @@ import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
 import { SupportChatBubble } from "@/components/Support";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
-import { lazyWithRetry } from "@/lib/lazyWithRetry";
-// Lazy load pages
-const Index = lazyWithRetry(() => import("./pages/Index"));
-const ExpertAudit = lazyWithRetry(() => import("./pages/ExpertAudit"));
-const Lexique = lazyWithRetry(() => import("./pages/Lexique"));
-const Tarifs = lazyWithRetry(() => import("./pages/Tarifs"));
-const MentionsLegales = lazyWithRetry(() => import("./pages/MentionsLegales"));
-const PolitiqueConfidentialite = lazyWithRetry(() => import("./pages/PolitiqueConfidentialite"));
-const ConditionsUtilisation = lazyWithRetry(() => import("./pages/ConditionsUtilisation"));
-const RGPD = lazyWithRetry(() => import("./pages/RGPD"));
-const Auth = lazyWithRetry(() => import("./pages/Auth"));
-const Profile = lazyWithRetry(() => import("./pages/Profile"));
-const ReportViewer = lazyWithRetry(() => import("./pages/ReportViewer"));
-const SharedReportRedirect = lazyWithRetry(() => import("./pages/SharedReportRedirect"));
-const Blog = lazyWithRetry(() => import("./pages/Blog"));
-const ArticlePage = lazyWithRetry(() => import("./pages/Blog/ArticlePage"));
-const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+import { createDebugLazy } from "@/components/DebugLoader";
 
-// Loading fallback
-const PageLoader = () => (
-  <div className="flex min-h-screen items-center justify-center bg-background">
-    <div className="flex flex-col items-center gap-4">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      <p className="text-muted-foreground">Chargement...</p>
-    </div>
-  </div>
-);
+// DEBUG: Lazy load pages with visible name
+const Index = createDebugLazy("Index (Home)", () => import("./pages/Index"));
+const ExpertAudit = createDebugLazy("ExpertAudit", () => import("./pages/ExpertAudit"));
+const Lexique = createDebugLazy("Lexique", () => import("./pages/Lexique"));
+const Tarifs = createDebugLazy("Tarifs", () => import("./pages/Tarifs"));
+const MentionsLegales = createDebugLazy("MentionsLegales", () => import("./pages/MentionsLegales"));
+const PolitiqueConfidentialite = createDebugLazy("PolitiqueConfidentialite", () => import("./pages/PolitiqueConfidentialite"));
+const ConditionsUtilisation = createDebugLazy("ConditionsUtilisation", () => import("./pages/ConditionsUtilisation"));
+const RGPD = createDebugLazy("RGPD", () => import("./pages/RGPD"));
+const Auth = createDebugLazy("Auth", () => import("./pages/Auth"));
+const Profile = createDebugLazy("Profile", () => import("./pages/Profile"));
+const ReportViewer = createDebugLazy("ReportViewer", () => import("./pages/ReportViewer"));
+const SharedReportRedirect = createDebugLazy("SharedReportRedirect", () => import("./pages/SharedReportRedirect"));
+const Blog = createDebugLazy("Blog", () => import("./pages/Blog"));
+const ArticlePage = createDebugLazy("ArticlePage", () => import("./pages/Blog/ArticlePage"));
+const NotFound = createDebugLazy("NotFound", () => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
@@ -53,26 +43,24 @@ const App = () => (
                 <Sonner />
                 <AppErrorBoundary>
                   <BrowserRouter>
-                    <Suspense fallback={<PageLoader />}>
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/audit-expert" element={<ExpertAudit />} />
-                        <Route path="/lexique" element={<Lexique />} />
-                        <Route path="/tarifs" element={<Tarifs />} />
-                        <Route path="/mentions-legales" element={<MentionsLegales />} />
-                        <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
-                        <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
-                        <Route path="/rgpd" element={<RGPD />} />
-                        <Route path="/auth" element={<Auth />} />
-                        <Route path="/profil" element={<Profile />} />
-                        <Route path="/rapport/:reportId" element={<ReportViewer />} />
-                        <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} />
-                        <Route path="/blog" element={<Blog />} />
-                        <Route path="/blog/:slug" element={<ArticlePage />} />
-                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </Suspense>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/audit-expert" element={<ExpertAudit />} />
+                      <Route path="/lexique" element={<Lexique />} />
+                      <Route path="/tarifs" element={<Tarifs />} />
+                      <Route path="/mentions-legales" element={<MentionsLegales />} />
+                      <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+                      <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
+                      <Route path="/rgpd" element={<RGPD />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/profil" element={<Profile />} />
+                      <Route path="/rapport/:reportId" element={<ReportViewer />} />
+                      <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} />
+                      <Route path="/blog" element={<Blog />} />
+                      <Route path="/blog/:slug" element={<ArticlePage />} />
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
                     <SupportChatBubble />
                   </BrowserRouter>
                 </AppErrorBoundary>
