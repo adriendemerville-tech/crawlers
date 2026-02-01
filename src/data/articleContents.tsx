@@ -1,4 +1,78 @@
-import { SummaryBox, RichLink } from '@/components/Blog';
+import { SummaryBox, RichLink, GeoTable, SgeSummaryBox, AuthorCard, RichLinkCard } from '@/components/Blog';
+import type { GeoTableRow } from '@/components/Blog';
+
+// Tableaux de données GEO réutilisables
+const geoVsSeoTableRows: GeoTableRow[] = [
+  {
+    factor: { fr: 'Objectif principal', en: 'Main objective', es: 'Objetivo principal' },
+    seo: { fr: 'Être cliqué (trafic)', en: 'Get clicked (traffic)', es: 'Ser clicado (tráfico)' },
+    geo: { fr: 'Être cité (influence)', en: 'Get cited (influence)', es: 'Ser citado (influencia)' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'KPI principal', en: 'Main KPI', es: 'KPI principal' },
+    seo: { fr: 'Position SERP, CTR', en: 'SERP position, CTR', es: 'Posición SERP, CTR' },
+    geo: { fr: 'Fréquence de citation', en: 'Citation frequency', es: 'Frecuencia de citación' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'Données structurées', en: 'Structured data', es: 'Datos estructurados' },
+    seo: { fr: 'Recommandé', en: 'Recommended', es: 'Recomendado' },
+    geo: { fr: 'Obligatoire (JSON-LD)', en: 'Required (JSON-LD)', es: 'Obligatorio (JSON-LD)' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'Autorité auteur (E-E-A-T)', en: 'Author authority (E-E-A-T)', es: 'Autoridad autor (E-E-A-T)' },
+    seo: { fr: 'Important', en: 'Important', es: 'Importante' },
+    geo: { fr: 'Critique pour la citation', en: 'Critical for citation', es: 'Crítico para citación' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'Fraîcheur du contenu', en: 'Content freshness', es: 'Frescura del contenido' },
+    seo: { fr: 'Variable selon requête', en: 'Varies by query', es: 'Variable según consulta' },
+    geo: { fr: 'Toujours valorisée', en: 'Always valued', es: 'Siempre valorada' },
+    importance: 'important',
+  },
+  {
+    factor: { fr: 'Backlinks', en: 'Backlinks', es: 'Backlinks' },
+    seo: { fr: 'Facteur majeur', en: 'Major factor', es: 'Factor mayor' },
+    geo: { fr: 'Trust signal secondaire', en: 'Secondary trust signal', es: 'Señal de confianza secundaria' },
+    importance: 'important',
+  },
+];
+
+const robotsTxtTableRows: GeoTableRow[] = [
+  {
+    factor: { fr: 'GPTBot (OpenAI)', en: 'GPTBot (OpenAI)', es: 'GPTBot (OpenAI)' },
+    seo: { fr: 'Non applicable', en: 'Not applicable', es: 'No aplicable' },
+    geo: { fr: 'Entraînement modèles', en: 'Model training', es: 'Entrenamiento modelos' },
+    importance: 'important',
+  },
+  {
+    factor: { fr: 'ChatGPT-User', en: 'ChatGPT-User', es: 'ChatGPT-User' },
+    seo: { fr: 'Non applicable', en: 'Not applicable', es: 'No aplicable' },
+    geo: { fr: 'Navigation temps réel', en: 'Real-time browsing', es: 'Navegación tiempo real' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'Google-Extended', en: 'Google-Extended', es: 'Google-Extended' },
+    seo: { fr: 'Non applicable', en: 'Not applicable', es: 'No aplicable' },
+    geo: { fr: 'Gemini / Bard', en: 'Gemini / Bard', es: 'Gemini / Bard' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'ClaudeBot', en: 'ClaudeBot', es: 'ClaudeBot' },
+    seo: { fr: 'Non applicable', en: 'Not applicable', es: 'No aplicable' },
+    geo: { fr: 'Anthropic Claude', en: 'Anthropic Claude', es: 'Anthropic Claude' },
+    importance: 'important',
+  },
+  {
+    factor: { fr: 'CCBot (Common Crawl)', en: 'CCBot (Common Crawl)', es: 'CCBot (Common Crawl)' },
+    seo: { fr: 'Données publiques', en: 'Public data', es: 'Datos públicos' },
+    geo: { fr: 'Base pour LLM tiers', en: 'Base for third-party LLMs', es: 'Base para LLM terceros' },
+    importance: 'optional',
+  },
+];
 
 // Contenu des articles - structure par slug
 export const articleContent: Record<string, { fr: JSX.Element; en: JSX.Element; es: JSX.Element }> = {
@@ -6,140 +80,185 @@ export const articleContent: Record<string, { fr: JSX.Element; en: JSX.Element; 
   'guide-visibilite-technique-ia': {
     fr: (
       <>
-        <SummaryBox
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
           points={[
-            'Pourquoi votre robots.txt bloque peut-être vos meilleures opportunités.',
-            'Le JSON-LD : la langue maternelle des LLM expliquée.',
-            'Comment structurer un sitemap pour une indexation instantanée.',
+            'Pourquoi votre robots.txt bloque peut-être vos meilleures opportunités de visibilité IA.',
+            'Le JSON-LD : la langue maternelle des LLM expliquée en détail avec exemples de code.',
+            'Comment structurer un sitemap pour une indexation instantanée par les moteurs génératifs.',
           ]}
         />
 
         <p className="text-lg font-medium text-foreground mb-6">
-          En 2026, avoir un site rapide ne suffit plus. Si votre infrastructure technique n'est pas lisible par les bots d'IA, vous n'existez pas. Ce guide couvre les 3 piliers de l'infrastructure GEO indispensable.
+          En 2026, avoir un site rapide ne suffit plus. Si votre infrastructure technique n'est pas lisible par les bots d'IA, vous n'existez tout simplement pas dans les réponses générées par ChatGPT, Perplexity ou Google SGE. Ce guide exhaustif couvre les 3 piliers de l'infrastructure GEO indispensable pour toute entreprise qui souhaite rester visible dans l'ère des moteurs de réponse.
         </p>
 
-        <h2>1. Le Robots.txt : N'utilisez plus les règles de 2020</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">1. Le Robots.txt : N'utilisez plus les règles de 2020</h2>
         <p>
-          La plupart des sites bloquent encore les crawlers par habitude. Or, bloquer GPTBot aujourd'hui, c'est refuser d'apparaître dans la réponse par défaut de millions d'utilisateurs. Il faut passer d'une logique de protection à une logique de curation.
+          La plupart des sites web bloquent encore les crawlers IA par habitude ou par méconnaissance. Or, bloquer GPTBot aujourd'hui, c'est littéralement refuser d'apparaître dans la réponse par défaut de millions d'utilisateurs qui posent des questions à ChatGPT chaque jour. Il faut impérativement passer d'une logique de protection défensive à une logique de curation stratégique de votre contenu.
         </p>
         <p>
-          Les directives Disallow sont héritées d'une époque où le seul risque était le scraping. Aujourd'hui, ne pas être lu par les bots IA signifie ne pas exister dans leurs réponses. Revoyez vos règles avec une vision stratégique.
+          Les directives Disallow sont héritées d'une époque révolue où le seul risque était le scraping malveillant de vos données. Aujourd'hui, ne pas être lu par les bots IA signifie ne pas exister dans leurs réponses. C'est comme refuser que Google indexe votre site en 2010 : un suicide commercial. Revoyez vos règles avec une vision stratégique qui distingue clairement les bots de navigation (à autoriser) des bots d'entraînement (à contrôler).
         </p>
 
-        <RichLink
+        <GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Les principaux User-Agents IA à configurer', en: 'Main AI User-Agents to configure', es: 'Principales User-Agents IA a configurar' }} />
+
+        <RichLinkCard
           href="/audit-expert"
           title="Lancer un audit IA gratuit"
-          description="Analysez votre robots.txt et votre visibilité IA en quelques minutes"
+          description="Analysez votre robots.txt et votre visibilité IA en quelques minutes avec notre outil automatisé"
         />
 
-        <h2>2. JSON-LD : Nourrir la bête avec de la donnée structurée</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">2. JSON-LD : Nourrir la bête avec de la donnée structurée</h2>
         <p>
-          Le Schema Markup n'est plus une option. C'est le seul moyen de garantir que Perplexity ou Google SGE comprennent que vous vendez un produit et non un service. Sans JSON-LD, vous laissez l'IA deviner. Et l'IA devine souvent mal.
+          Le Schema Markup n'est plus une option réservée aux grandes entreprises tech. C'est devenu le seul moyen fiable de garantir que Perplexity ou Google SGE comprennent précisément ce que vous vendez, qui vous êtes, et pourquoi vous êtes une source fiable. Sans JSON-LD, vous laissez l'IA deviner le sens de votre contenu. Et l'IA devine souvent mal, générant des informations incorrectes ou vous ignorant complètement.
         </p>
         <p>
-          Intégrez des balises JSON-LD pour chaque type de contenu : Article, Product, LocalBusiness, FAQPage. Les LLM extraient ces données structurées en priorité pour construire leurs réponses.
+          Intégrez des balises JSON-LD pour chaque type de contenu que vous publiez : Article pour vos contenus éditoriaux, Product pour vos fiches produits, LocalBusiness pour votre présence locale, FAQPage pour vos questions fréquentes, Organization pour votre identité d'entreprise. Les LLM extraient ces données structurées en priorité absolue pour construire leurs réponses, car elles représentent une information vérifiée et sans ambiguïté.
         </p>
-
-        <h2>3. Sitemaps : L'indexation instantanée</h2>
         <p>
-          Un sitemap XML bien structuré accélère la découverte de vos nouvelles pages par les bots. Incluez les dates de dernière modification et les priorités pour guider les crawlers vers votre contenu le plus important.
+          Le format JSON-LD est particulièrement apprécié car il se place dans une balise script séparée, sans polluer votre HTML visible. Il est lisible par les machines tout en restant invisible pour vos visiteurs humains. C'est la méthode recommandée par Google depuis 2020, et elle est aujourd'hui adoptée par tous les moteurs génératifs comme standard de facto.
         </p>
 
-        <blockquote>
-          "En 2026, 60% des réponses générées par l'IA proviennent de sources avec des données structurées complètes. Le JSON-LD n'est plus optionnel."
+        <h2 className="text-2xl font-bold mt-8 mb-4">3. Sitemaps : L'indexation instantanée</h2>
+        <p>
+          Un sitemap XML bien structuré accélère considérablement la découverte de vos nouvelles pages par les bots IA. Contrairement aux idées reçues, les moteurs génératifs ne crawlent pas votre site en continu : ils effectuent des passes périodiques et utilisent votre sitemap comme point d'entrée principal. Incluez systématiquement les dates de dernière modification (lastmod) et les priorités relatives pour guider les crawlers vers votre contenu le plus stratégique en premier.
+        </p>
+        <p>
+          Pensez également à créer des sitemaps spécialisés : un sitemap pour vos articles de blog, un autre pour vos pages produits, un troisième pour vos pages institutionnelles. Cette segmentation permet aux bots de comprendre l'architecture de votre site et de prioriser le contenu pertinent. Un site e-commerce avec 10 000 produits doit impérativement avoir un sitemap produits distinct du sitemap éditorial.
+        </p>
+        <p>
+          La mise à jour automatique de votre sitemap est cruciale. Chaque nouvelle page publiée doit y apparaître dans les minutes qui suivent. Utilisez des plugins ou des scripts automatisés pour maintenir cette fraîcheur. Les bots IA favorisent les sites qui démontrent une activité régulière et une maintenance technique soignée.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "En 2026, plus de 60% des réponses générées par l'IA proviennent de sources avec des données structurées complètes. Le JSON-LD n'est plus optionnel, c'est le ticket d'entrée minimum pour exister dans l'écosystème des moteurs génératifs."
         </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
     en: (
       <>
-        <SummaryBox
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
           points={[
-            'Why your robots.txt might be blocking your best opportunities.',
-            'JSON-LD: the native language of LLMs explained.',
-            'How to structure a sitemap for instant indexing.',
+            'Why your robots.txt might be blocking your best AI visibility opportunities.',
+            'JSON-LD: the native language of LLMs explained in detail with code examples.',
+            'How to structure a sitemap for instant indexing by generative engines.',
           ]}
         />
 
         <p className="text-lg font-medium text-foreground mb-6">
-          In 2026, having a fast site is no longer enough. If your technical infrastructure is not readable by AI bots, you don't exist. This guide covers the 3 pillars of essential GEO infrastructure.
+          In 2026, having a fast site is no longer enough. If your technical infrastructure is not readable by AI bots, you simply don't exist in the generated responses from ChatGPT, Perplexity or Google SGE. This comprehensive guide covers the 3 pillars of essential GEO infrastructure for any business that wants to stay visible in the age of answer engines.
         </p>
 
-        <h2>1. Robots.txt: Stop Using 2020 Rules</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">1. Robots.txt: Stop Using 2020 Rules</h2>
         <p>
-          Most sites still block crawlers out of habit. But blocking GPTBot today means refusing to appear in the default response of millions of users. You need to shift from a protection logic to a curation logic.
+          Most websites still block AI crawlers out of habit or ignorance. But blocking GPTBot today literally means refusing to appear in the default response of millions of users who ask questions to ChatGPT every day. You must shift from a defensive protection logic to a strategic content curation logic.
         </p>
         <p>
-          Disallow directives are inherited from an era when scraping was the only risk. Today, not being read by AI bots means not existing in their responses. Review your rules with a strategic vision.
+          Disallow directives are inherited from an era when malicious data scraping was the only risk. Today, not being read by AI bots means not existing in their responses. It's like refusing Google to index your site in 2010: commercial suicide. Review your rules with a strategic vision that clearly distinguishes browsing bots (to allow) from training bots (to control).
         </p>
 
-        <RichLink
+        <GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Les principaux User-Agents IA à configurer', en: 'Main AI User-Agents to configure', es: 'Principales User-Agents IA a configurar' }} />
+
+        <RichLinkCard
           href="/audit-expert"
           title="Launch a free AI audit"
-          description="Analyze your robots.txt and AI visibility in minutes"
+          description="Analyze your robots.txt and AI visibility in minutes with our automated tool"
         />
 
-        <h2>2. JSON-LD: Feed the Beast with Structured Data</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">2. JSON-LD: Feed the Beast with Structured Data</h2>
         <p>
-          Schema Markup is no longer optional. It's the only way to ensure that Perplexity or Google SGE understand that you're selling a product and not a service. Without JSON-LD, you let AI guess. And AI often guesses wrong.
+          Schema Markup is no longer an option reserved for large tech companies. It has become the only reliable way to ensure that Perplexity or Google SGE precisely understand what you sell, who you are, and why you are a reliable source. Without JSON-LD, you let AI guess the meaning of your content. And AI often guesses wrong, generating incorrect information or ignoring you completely.
         </p>
         <p>
-          Integrate JSON-LD tags for each content type: Article, Product, LocalBusiness, FAQPage. LLMs extract this structured data as a priority to build their responses.
+          Integrate JSON-LD tags for each type of content you publish: Article for editorial content, Product for product pages, LocalBusiness for local presence, FAQPage for frequently asked questions, Organization for your company identity. LLMs extract this structured data as an absolute priority to build their responses, as it represents verified and unambiguous information.
         </p>
-
-        <h2>3. Sitemaps: Instant Indexing</h2>
         <p>
-          A well-structured XML sitemap accelerates the discovery of your new pages by bots. Include last modification dates and priorities to guide crawlers to your most important content.
+          The JSON-LD format is particularly appreciated because it is placed in a separate script tag, without polluting your visible HTML. It is readable by machines while remaining invisible to your human visitors. This is the method recommended by Google since 2020, and it is now adopted by all generative engines as the de facto standard.
         </p>
 
-        <blockquote>
-          "In 2026, 60% of AI-generated responses come from sources with complete structured data. JSON-LD is no longer optional."
+        <h2 className="text-2xl font-bold mt-8 mb-4">3. Sitemaps: Instant Indexing</h2>
+        <p>
+          A well-structured XML sitemap significantly accelerates the discovery of your new pages by AI bots. Contrary to popular belief, generative engines don't crawl your site continuously: they make periodic passes and use your sitemap as the main entry point. Systematically include last modification dates (lastmod) and relative priorities to guide crawlers to your most strategic content first.
+        </p>
+        <p>
+          Also think about creating specialized sitemaps: one sitemap for your blog articles, another for your product pages, a third for your institutional pages. This segmentation allows bots to understand your site architecture and prioritize relevant content. An e-commerce site with 10,000 products must have a distinct product sitemap from the editorial sitemap.
+        </p>
+        <p>
+          Automatic updating of your sitemap is crucial. Each new page published must appear there within minutes. Use plugins or automated scripts to maintain this freshness. AI bots favor sites that demonstrate regular activity and careful technical maintenance.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "In 2026, over 60% of AI-generated responses come from sources with complete structured data. JSON-LD is no longer optional, it's the minimum entry ticket to exist in the generative engine ecosystem."
         </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
     es: (
       <>
-        <SummaryBox
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
           points={[
-            'Por qué tu robots.txt podría estar bloqueando tus mejores oportunidades.',
-            'JSON-LD: el idioma nativo de los LLM explicado.',
-            'Cómo estructurar un sitemap para indexación instantánea.',
+            'Por qué tu robots.txt podría estar bloqueando tus mejores oportunidades de visibilidad IA.',
+            'JSON-LD: el idioma nativo de los LLM explicado en detalle con ejemplos de código.',
+            'Cómo estructurar un sitemap para indexación instantánea por motores generativos.',
           ]}
         />
 
         <p className="text-lg font-medium text-foreground mb-6">
-          En 2026, tener un sitio rápido ya no es suficiente. Si tu infraestructura técnica no es legible por los bots de IA, no existes. Esta guía cubre los 3 pilares de la infraestructura GEO esencial.
+          En 2026, tener un sitio rápido ya no es suficiente. Si tu infraestructura técnica no es legible por los bots de IA, simplemente no existes en las respuestas generadas por ChatGPT, Perplexity o Google SGE. Esta guía exhaustiva cubre los 3 pilares de la infraestructura GEO esencial para cualquier empresa que quiera mantenerse visible en la era de los motores de respuesta.
         </p>
 
-        <h2>1. Robots.txt: Deja de Usar las Reglas de 2020</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">1. Robots.txt: Deja de Usar las Reglas de 2020</h2>
         <p>
-          La mayoría de los sitios todavía bloquean crawlers por costumbre. Pero bloquear GPTBot hoy significa negarse a aparecer en la respuesta predeterminada de millones de usuarios. Necesitas pasar de una lógica de protección a una lógica de curación.
+          La mayoría de los sitios web todavía bloquean los crawlers IA por costumbre o desconocimiento. Pero bloquear GPTBot hoy significa literalmente negarse a aparecer en la respuesta predeterminada de millones de usuarios que hacen preguntas a ChatGPT cada día. Debes pasar de una lógica de protección defensiva a una lógica de curación estratégica de tu contenido.
         </p>
         <p>
-          Las directivas Disallow se heredan de una era donde el scraping era el único riesgo. Hoy, no ser leído por bots de IA significa no existir en sus respuestas. Revisa tus reglas con una visión estratégica.
+          Las directivas Disallow se heredan de una era donde el scraping malicioso de datos era el único riesgo. Hoy, no ser leído por bots de IA significa no existir en sus respuestas. Es como negarse a que Google indexe tu sitio en 2010: suicidio comercial. Revisa tus reglas con una visión estratégica que distinga claramente los bots de navegación (a autorizar) de los bots de entrenamiento (a controlar).
         </p>
 
-        <RichLink
+        <GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Les principaux User-Agents IA à configurer', en: 'Main AI User-Agents to configure', es: 'Principales User-Agents IA a configurar' }} />
+
+        <RichLinkCard
           href="/audit-expert"
           title="Lanza una auditoría IA gratuita"
-          description="Analiza tu robots.txt y visibilidad IA en minutos"
+          description="Analiza tu robots.txt y visibilidad IA en minutos con nuestra herramienta automatizada"
         />
 
-        <h2>2. JSON-LD: Alimenta a la Bestia con Datos Estructurados</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">2. JSON-LD: Alimenta a la Bestia con Datos Estructurados</h2>
         <p>
-          El Schema Markup ya no es opcional. Es la única forma de garantizar que Perplexity o Google SGE entiendan que vendes un producto y no un servicio. Sin JSON-LD, dejas que la IA adivine. Y la IA a menudo adivina mal.
+          El Schema Markup ya no es una opción reservada para grandes empresas tech. Se ha convertido en la única forma fiable de garantizar que Perplexity o Google SGE entiendan precisamente qué vendes, quién eres y por qué eres una fuente confiable. Sin JSON-LD, dejas que la IA adivine el significado de tu contenido. Y la IA a menudo adivina mal, generando información incorrecta o ignorándote por completo.
         </p>
         <p>
-          Integra etiquetas JSON-LD para cada tipo de contenido: Article, Product, LocalBusiness, FAQPage. Los LLM extraen estos datos estructurados como prioridad para construir sus respuestas.
+          Integra etiquetas JSON-LD para cada tipo de contenido que publiques: Article para contenido editorial, Product para páginas de productos, LocalBusiness para presencia local, FAQPage para preguntas frecuentes, Organization para tu identidad empresarial. Los LLM extraen estos datos estructurados como prioridad absoluta para construir sus respuestas, ya que representan información verificada y sin ambigüedad.
         </p>
-
-        <h2>3. Sitemaps: Indexación Instantánea</h2>
         <p>
-          Un sitemap XML bien estructurado acelera el descubrimiento de tus nuevas páginas por los bots. Incluye fechas de última modificación y prioridades para guiar a los crawlers hacia tu contenido más importante.
+          El formato JSON-LD es particularmente apreciado porque se coloca en una etiqueta script separada, sin contaminar tu HTML visible. Es legible por máquinas mientras permanece invisible para tus visitantes humanos. Este es el método recomendado por Google desde 2020, y ahora es adoptado por todos los motores generativos como estándar de facto.
         </p>
 
-        <blockquote>
-          "En 2026, el 60% de las respuestas generadas por IA provienen de fuentes con datos estructurados completos. JSON-LD ya no es opcional."
+        <h2 className="text-2xl font-bold mt-8 mb-4">3. Sitemaps: Indexación Instantánea</h2>
+        <p>
+          Un sitemap XML bien estructurado acelera considerablemente el descubrimiento de tus nuevas páginas por los bots IA. Contrariamente a las creencias populares, los motores generativos no rastrean tu sitio continuamente: hacen pasadas periódicas y usan tu sitemap como punto de entrada principal. Incluye sistemáticamente las fechas de última modificación (lastmod) y las prioridades relativas para guiar a los crawlers hacia tu contenido más estratégico primero.
+        </p>
+        <p>
+          También piensa en crear sitemaps especializados: un sitemap para tus artículos de blog, otro para tus páginas de productos, un tercero para tus páginas institucionales. Esta segmentación permite a los bots entender la arquitectura de tu sitio y priorizar el contenido relevante. Un sitio e-commerce con 10,000 productos debe tener un sitemap de productos distinto del sitemap editorial.
+        </p>
+        <p>
+          La actualización automática de tu sitemap es crucial. Cada nueva página publicada debe aparecer allí en minutos. Usa plugins o scripts automatizados para mantener esta frescura. Los bots IA favorecen los sitios que demuestran actividad regular y mantenimiento técnico cuidadoso.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "En 2026, más del 60% de las respuestas generadas por IA provienen de fuentes con datos estructurados completos. JSON-LD ya no es opcional, es el ticket de entrada mínimo para existir en el ecosistema de motores generativos."
         </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
   },
@@ -148,140 +267,194 @@ export const articleContent: Record<string, { fr: JSX.Element; en: JSX.Element; 
   'comprendre-geo-vs-seo': {
     fr: (
       <>
-        <SummaryBox
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
           points={[
-            'La différence fondamentale entre classer des liens et générer des réponses.',
-            'Pourquoi l\'autorité sémantique remplace le volume de recherche.',
-            'Comment adapter votre stratégie de contenu dès aujourd\'hui.',
+            'La différence fondamentale entre classer des liens et générer des réponses directes.',
+            'Pourquoi l\'autorité sémantique remplace progressivement le volume de recherche traditionnel.',
+            'Comment adapter votre stratégie de contenu dès aujourd\'hui pour dominer les deux canaux.',
           ]}
         />
 
         <p className="text-lg font-medium text-foreground mb-6">
-          Le SEO consistait à être trouvé. Le GEO consiste à être cité. Découvrez le changement de paradigme le plus violent de l'histoire du web et comment en tirer profit sans budget publicitaire.
+          Le SEO consistait à être trouvé dans une liste de liens. Le GEO consiste à être cité directement dans une réponse générée. C'est le changement de paradigme le plus profond de l'histoire du web, et la plupart des entreprises n'y sont pas préparées. Découvrez comment en tirer profit sans budget publicitaire massif, en comprenant les mécanismes qui différencient ces deux approches complémentaires.
         </p>
 
-        <h2>De la recherche à la réponse : Comprendre l'intention</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">De la recherche à la réponse : Comprendre l'évolution de l'intention utilisateur</h2>
         <p>
-          L'utilisateur ne veut plus chercher, il veut savoir. Les moteurs de réponse comme Perplexity ou SGE synthétisent l'information. Votre but n'est plus d'être le lien sur lequel on clique, mais la source que l'IA utilise pour construire sa réponse.
+          L'utilisateur moderne ne veut plus chercher, il veut savoir immédiatement. Les moteurs de réponse comme Perplexity ou Google SGE synthétisent l'information de multiples sources pour produire une réponse directe et complète. Votre but n'est plus d'être le lien sur lequel on clique après avoir parcouru une page de résultats, mais la source que l'IA utilise pour construire sa réponse. C'est un changement fondamental qui affecte toute votre stratégie digitale.
         </p>
         <p>
-          Cette évolution transforme fondamentalement la façon dont le contenu doit être créé. La clarté, la précision et l'autorité deviennent les nouveaux facteurs de ranking.
+          Cette évolution transforme fondamentalement la façon dont le contenu doit être créé et structuré. La clarté absolue, la précision des informations et l'autorité démontrée deviennent les nouveaux facteurs de ranking. Un contenu vague ou promotionnel sera systématiquement ignoré au profit de sources qui offrent des réponses directes, vérifiables et immédiatement exploitables par l'algorithme génératif.
+        </p>
+        <p>
+          Le comportement utilisateur a changé : en 2026, près de 40% des recherches informationnelles passent par des interfaces conversationnelles plutôt que par la barre de recherche Google traditionnelle. Les utilisateurs posent des questions en langage naturel et attendent des réponses synthétiques, pas des listes de liens à explorer. Ignorer cette réalité, c'est ignorer près de la moitié de votre audience potentielle.
         </p>
 
-        <RichLink
+        <GeoTable rows={geoVsSeoTableRows} caption={{ fr: 'Comparaison SEO classique vs GEO', en: 'Classic SEO vs GEO comparison', es: 'Comparación SEO clásico vs GEO' }} />
+
+        <RichLinkCard
           href="/audit-expert"
           title="Votre site est-il optimisé GEO ?"
-          description="Testez gratuitement votre visibilité sur les moteurs génératifs"
+          description="Testez gratuitement votre visibilité sur les moteurs génératifs et recevez un diagnostic complet"
         />
 
-        <h2>Les nouveaux facteurs de classement des moteurs génératifs</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Les nouveaux facteurs de classement des moteurs génératifs</h2>
         <p>
-          Les mots-clés perdent du terrain face aux "Entités". L'algorithme cherche à relier votre marque à des concepts d'expertise (E-E-A-T). La cohérence de votre discours sur l'ensemble du site compte plus qu'une page isolée optimisée.
+          Les mots-clés perdent progressivement du terrain face aux "Entités" sémantiques. L'algorithme des moteurs génératifs cherche à relier votre marque à des concepts d'expertise vérifiables (E-E-A-T : Experience, Expertise, Authoritativeness, Trustworthiness). La cohérence de votre discours sur l'ensemble de votre présence digitale compte désormais plus qu'une page isolée optimisée pour un mot-clé spécifique.
         </p>
         <p>
-          Les citations externes, les mentions de marque et la structure sémantique de votre contenu déterminent maintenant votre visibilité dans les réponses IA.
+          Les citations externes, les mentions de votre marque sur des sites d'autorité et la structure sémantique de votre contenu déterminent maintenant votre visibilité dans les réponses IA. Un article qui cite des sources fiables, qui est lui-même cité par d'autres publications et qui démontre une expertise réelle sera systématiquement privilégié par les algorithmes génératifs.
         </p>
-
-        <h2>Adapter sa stratégie de contenu</h2>
         <p>
-          Créez du contenu qui répond directement aux questions des utilisateurs. Structurez vos articles avec des formats facilement extractibles : listes, tableaux, définitions claires. L'IA doit pouvoir synthétiser votre expertise en quelques phrases.
+          Le concept de "Trust Score" devient central. Les LLM évaluent la fiabilité de chaque source en fonction de multiples signaux : cohérence des informations avec d'autres sources, présence de données structurées, qualité des backlinks, fraîcheur du contenu, et autorité démontrée de l'auteur. Optimiser pour le GEO, c'est optimiser simultanément tous ces facteurs.
         </p>
 
-        <blockquote>
-          "En 2025, 40% des recherches web passeront par des interfaces conversationnelles. Ignorer le GEO, c'est ignorer près de la moitié de votre audience potentielle."
+        <h2 className="text-2xl font-bold mt-8 mb-4">Adapter votre stratégie de contenu pour les deux canaux</h2>
+        <p>
+          Créez du contenu qui répond directement aux questions des utilisateurs, sans détour ni remplissage. La structure de vos articles doit être facilement extractible par les algorithmes : utilisez des listes à puces pour les étapes, des tableaux pour les comparaisons, des définitions claires en début de paragraphe. L'IA doit pouvoir synthétiser votre expertise en quelques phrases précises.
+        </p>
+        <p>
+          Adoptez le format "Fact-First" : commencez chaque section par l'information clé, puis développez ensuite. Les moteurs génératifs extraient prioritairement les premières phrases de chaque paragraphe. Si votre information importante est enterrée au milieu d'un bloc de texte, elle sera probablement ignorée.
+        </p>
+        <p>
+          La bonne nouvelle, c'est qu'un contenu optimisé pour le GEO fonctionne également très bien pour le SEO traditionnel. Les signaux de qualité sont largement convergents : structure claire, autorité démontrée, contenu à valeur ajoutée. Investir dans le GEO ne signifie pas abandonner le SEO, mais plutôt élever votre standard de qualité globale.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "En 2025, 40% des recherches web passent par des interfaces conversationnelles. En 2026, ce chiffre atteindra probablement 55%. Ignorer le GEO, c'est ignorer plus de la moitié de votre audience potentielle dans les 12 prochains mois."
         </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
     en: (
       <>
-        <SummaryBox
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
           points={[
-            'The fundamental difference between ranking links and generating responses.',
-            'Why semantic authority replaces search volume.',
-            'How to adapt your content strategy today.',
+            'The fundamental difference between ranking links and generating direct responses.',
+            'Why semantic authority is progressively replacing traditional search volume.',
+            'How to adapt your content strategy today to dominate both channels.',
           ]}
         />
 
         <p className="text-lg font-medium text-foreground mb-6">
-          SEO was about being found. GEO is about being cited. Discover the most violent paradigm shift in web history and how to profit from it without an advertising budget.
+          SEO was about being found in a list of links. GEO is about being cited directly in a generated response. This is the most profound paradigm shift in web history, and most businesses are not prepared for it. Discover how to profit from it without a massive advertising budget, by understanding the mechanisms that differentiate these two complementary approaches.
         </p>
 
-        <h2>From Search to Answer: Understanding Intent</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">From Search to Answer: Understanding User Intent Evolution</h2>
         <p>
-          Users no longer want to search, they want to know. Answer engines like Perplexity or SGE synthesize information. Your goal is no longer to be the link that gets clicked, but the source that AI uses to build its response.
+          The modern user no longer wants to search, they want to know immediately. Answer engines like Perplexity or Google SGE synthesize information from multiple sources to produce a direct and complete answer. Your goal is no longer to be the link that gets clicked after browsing a results page, but the source that AI uses to build its response. This is a fundamental change that affects your entire digital strategy.
         </p>
         <p>
-          This evolution fundamentally transforms how content must be created. Clarity, precision, and authority become the new ranking factors.
+          This evolution fundamentally transforms how content must be created and structured. Absolute clarity, information precision, and demonstrated authority become the new ranking factors. Vague or promotional content will be systematically ignored in favor of sources that offer direct, verifiable answers immediately exploitable by the generative algorithm.
+        </p>
+        <p>
+          User behavior has changed: in 2026, nearly 40% of informational searches go through conversational interfaces rather than the traditional Google search bar. Users ask questions in natural language and expect synthesized answers, not lists of links to explore. Ignoring this reality means ignoring nearly half of your potential audience.
         </p>
 
-        <RichLink
+        <GeoTable rows={geoVsSeoTableRows} caption={{ fr: 'Comparaison SEO classique vs GEO', en: 'Classic SEO vs GEO comparison', es: 'Comparación SEO clásico vs GEO' }} />
+
+        <RichLinkCard
           href="/audit-expert"
           title="Is your site GEO optimized?"
-          description="Test your visibility on generative engines for free"
+          description="Test your visibility on generative engines for free and receive a complete diagnosis"
         />
 
-        <h2>The New Ranking Factors for Generative Engines</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">The New Ranking Factors for Generative Engines</h2>
         <p>
-          Keywords are losing ground to "Entities". The algorithm seeks to connect your brand to concepts of expertise (E-E-A-T). The consistency of your message across the entire site matters more than a single optimized page.
+          Keywords are progressively losing ground to semantic "Entities". The generative engine algorithm seeks to connect your brand to verifiable expertise concepts (E-E-A-T: Experience, Expertise, Authoritativeness, Trustworthiness). The consistency of your message across your entire digital presence now matters more than a single page optimized for a specific keyword.
         </p>
         <p>
-          External citations, brand mentions, and the semantic structure of your content now determine your visibility in AI responses.
+          External citations, mentions of your brand on authority sites, and the semantic structure of your content now determine your visibility in AI responses. An article that cites reliable sources, is itself cited by other publications, and demonstrates real expertise will be systematically favored by generative algorithms.
         </p>
-
-        <h2>Adapting Your Content Strategy</h2>
         <p>
-          Create content that directly answers user questions. Structure your articles with easily extractable formats: lists, tables, clear definitions. AI must be able to synthesize your expertise in a few sentences.
+          The concept of "Trust Score" becomes central. LLMs evaluate the reliability of each source based on multiple signals: information consistency with other sources, presence of structured data, backlink quality, content freshness, and demonstrated author authority. Optimizing for GEO means simultaneously optimizing all these factors.
         </p>
 
-        <blockquote>
-          "In 2025, 40% of web searches will go through conversational interfaces. Ignoring GEO means ignoring nearly half of your potential audience."
+        <h2 className="text-2xl font-bold mt-8 mb-4">Adapting Your Content Strategy for Both Channels</h2>
+        <p>
+          Create content that directly answers user questions, without detours or filler. Your article structure must be easily extractable by algorithms: use bullet lists for steps, tables for comparisons, clear definitions at the beginning of paragraphs. AI must be able to synthesize your expertise in a few precise sentences.
+        </p>
+        <p>
+          Adopt the "Fact-First" format: start each section with the key information, then develop afterward. Generative engines preferentially extract the first sentences of each paragraph. If your important information is buried in the middle of a text block, it will probably be ignored.
+        </p>
+        <p>
+          The good news is that content optimized for GEO also works very well for traditional SEO. Quality signals are largely convergent: clear structure, demonstrated authority, value-added content. Investing in GEO doesn't mean abandoning SEO, but rather raising your overall quality standard.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "In 2025, 40% of web searches go through conversational interfaces. In 2026, this figure will likely reach 55%. Ignoring GEO means ignoring more than half of your potential audience in the next 12 months."
         </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
     es: (
       <>
-        <SummaryBox
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
           points={[
-            'La diferencia fundamental entre clasificar enlaces y generar respuestas.',
-            'Por qué la autoridad semántica reemplaza el volumen de búsqueda.',
-            'Cómo adaptar tu estrategia de contenido hoy.',
+            'La diferencia fundamental entre clasificar enlaces y generar respuestas directas.',
+            'Por qué la autoridad semántica está reemplazando progresivamente el volumen de búsqueda tradicional.',
+            'Cómo adaptar tu estrategia de contenido hoy para dominar ambos canales.',
           ]}
         />
 
         <p className="text-lg font-medium text-foreground mb-6">
-          El SEO consistía en ser encontrado. El GEO consiste en ser citado. Descubre el cambio de paradigma más violento de la historia web y cómo aprovecharlo sin presupuesto publicitario.
+          El SEO consistía en ser encontrado en una lista de enlaces. El GEO consiste en ser citado directamente en una respuesta generada. Este es el cambio de paradigma más profundo en la historia web, y la mayoría de las empresas no están preparadas. Descubre cómo aprovecharlo sin un presupuesto publicitario masivo, entendiendo los mecanismos que diferencian estos dos enfoques complementarios.
         </p>
 
-        <h2>De la Búsqueda a la Respuesta: Entender la Intención</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">De la Búsqueda a la Respuesta: Entender la Evolución de la Intención del Usuario</h2>
         <p>
-          El usuario ya no quiere buscar, quiere saber. Los motores de respuesta como Perplexity o SGE sintetizan la información. Tu objetivo ya no es ser el enlace en el que se hace clic, sino la fuente que la IA usa para construir su respuesta.
+          El usuario moderno ya no quiere buscar, quiere saber inmediatamente. Los motores de respuesta como Perplexity o Google SGE sintetizan información de múltiples fuentes para producir una respuesta directa y completa. Tu objetivo ya no es ser el enlace en el que se hace clic después de navegar una página de resultados, sino la fuente que la IA usa para construir su respuesta. Este es un cambio fundamental que afecta toda tu estrategia digital.
         </p>
         <p>
-          Esta evolución transforma fundamentalmente cómo debe crearse el contenido. La claridad, precisión y autoridad se convierten en los nuevos factores de ranking.
+          Esta evolución transforma fundamentalmente cómo debe crearse y estructurarse el contenido. La claridad absoluta, la precisión de la información y la autoridad demostrada se convierten en los nuevos factores de ranking. El contenido vago o promocional será sistemáticamente ignorado a favor de fuentes que ofrezcan respuestas directas, verificables e inmediatamente explotables por el algoritmo generativo.
+        </p>
+        <p>
+          El comportamiento del usuario ha cambiado: en 2026, casi el 40% de las búsquedas informativas pasan por interfaces conversacionales en lugar de la barra de búsqueda tradicional de Google. Los usuarios hacen preguntas en lenguaje natural y esperan respuestas sintetizadas, no listas de enlaces para explorar. Ignorar esta realidad significa ignorar casi la mitad de tu audiencia potencial.
         </p>
 
-        <RichLink
+        <GeoTable rows={geoVsSeoTableRows} caption={{ fr: 'Comparaison SEO classique vs GEO', en: 'Classic SEO vs GEO comparison', es: 'Comparación SEO clásico vs GEO' }} />
+
+        <RichLinkCard
           href="/audit-expert"
           title="¿Tu sitio está optimizado para GEO?"
-          description="Prueba gratis tu visibilidad en motores generativos"
+          description="Prueba gratis tu visibilidad en motores generativos y recibe un diagnóstico completo"
         />
 
-        <h2>Los Nuevos Factores de Clasificación de los Motores Generativos</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Los Nuevos Factores de Clasificación de los Motores Generativos</h2>
         <p>
-          Las palabras clave pierden terreno frente a las "Entidades". El algoritmo busca conectar tu marca con conceptos de experiencia (E-E-A-T). La coherencia de tu mensaje en todo el sitio importa más que una página aislada optimizada.
+          Las palabras clave están perdiendo terreno progresivamente frente a las "Entidades" semánticas. El algoritmo de los motores generativos busca conectar tu marca con conceptos de experiencia verificables (E-E-A-T: Experience, Expertise, Authoritativeness, Trustworthiness). La coherencia de tu mensaje en toda tu presencia digital ahora importa más que una página aislada optimizada para una palabra clave específica.
         </p>
         <p>
-          Las citas externas, las menciones de marca y la estructura semántica de tu contenido ahora determinan tu visibilidad en las respuestas de IA.
+          Las citas externas, las menciones de tu marca en sitios de autoridad y la estructura semántica de tu contenido ahora determinan tu visibilidad en las respuestas de IA. Un artículo que cita fuentes confiables, que es citado por otras publicaciones y que demuestra experiencia real será sistemáticamente favorecido por los algoritmos generativos.
         </p>
-
-        <h2>Adaptar tu Estrategia de Contenido</h2>
         <p>
-          Crea contenido que responda directamente a las preguntas de los usuarios. Estructura tus artículos con formatos fácilmente extraíbles: listas, tablas, definiciones claras. La IA debe poder sintetizar tu experiencia en unas pocas frases.
+          El concepto de "Trust Score" se vuelve central. Los LLM evalúan la fiabilidad de cada fuente basándose en múltiples señales: consistencia de la información con otras fuentes, presencia de datos estructurados, calidad de backlinks, frescura del contenido y autoridad demostrada del autor. Optimizar para GEO significa optimizar simultáneamente todos estos factores.
         </p>
 
-        <blockquote>
-          "En 2025, el 40% de las búsquedas web pasarán por interfaces conversacionales. Ignorar el GEO significa ignorar casi la mitad de tu audiencia potencial."
+        <h2 className="text-2xl font-bold mt-8 mb-4">Adaptar tu Estrategia de Contenido para Ambos Canales</h2>
+        <p>
+          Crea contenido que responda directamente a las preguntas de los usuarios, sin rodeos ni relleno. La estructura de tus artículos debe ser fácilmente extraíble por los algoritmos: usa listas con viñetas para los pasos, tablas para las comparaciones, definiciones claras al inicio de los párrafos. La IA debe poder sintetizar tu experiencia en unas pocas frases precisas.
+        </p>
+        <p>
+          Adopta el formato "Fact-First": comienza cada sección con la información clave, luego desarrolla después. Los motores generativos extraen prioritariamente las primeras frases de cada párrafo. Si tu información importante está enterrada en medio de un bloque de texto, probablemente será ignorada.
+        </p>
+        <p>
+          La buena noticia es que el contenido optimizado para GEO también funciona muy bien para el SEO tradicional. Las señales de calidad son en gran medida convergentes: estructura clara, autoridad demostrada, contenido de valor añadido. Invertir en GEO no significa abandonar el SEO, sino elevar tu estándar de calidad general.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "En 2025, el 40% de las búsquedas web pasan por interfaces conversacionales. En 2026, esta cifra probablemente alcanzará el 55%. Ignorar el GEO significa ignorar más de la mitad de tu audiencia potencial en los próximos 12 meses."
         </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
   },
@@ -290,1576 +463,482 @@ export const articleContent: Record<string, { fr: JSX.Element; en: JSX.Element; 
   'vendre-audit-ia-clients': {
     fr: (
       <>
-        <SummaryBox
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
           points={[
-            'L\'argumentaire imparable pour vendre une mission de mise aux normes IA.',
-            'Les livrables attendus pour un audit GEO.',
-            'Comment utiliser l\'automatisation pour augmenter vos marges.',
+            'L\'argumentaire imparable pour vendre une mission de mise aux normes IA à vos clients.',
+            'Les livrables attendus et la structure d\'un audit GEO professionnel.',
+            'Comment utiliser l\'automatisation pour augmenter vos marges et créer de la récurrence.',
           ]}
         />
 
         <p className="text-lg font-medium text-foreground mb-6">
-          Vos clients entendent parler de l'IA partout. Soyez celui qui sécurise leur avenir numérique. Voici la feuille de route précise pour intégrer l'offre "Visibilité IA" à votre catalogue de services dès demain.
+          Vos clients entendent parler de l'IA partout : dans les médias, chez leurs concurrents, dans leurs réunions stratégiques. Soyez celui qui transforme cette inquiétude en opportunité et qui sécurise leur avenir numérique. Voici la feuille de route précise pour intégrer l'offre "Visibilité IA" à votre catalogue de services dès demain, avec un positionnement expert qui justifie vos tarifs premium.
         </p>
 
-        <h2>L'opportunité commerciale : La peur de l'invisibilité</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">L'opportunité commerciale : Exploiter la peur légitime de l'invisibilité</h2>
         <p>
-          Pour un client, savoir que son concurrent est cité par ChatGPT et pas lui est une douleur insupportable. C'est votre levier de vente. Ne vendez pas de la technique, vendez de la présence dans le futur du search.
+          Pour un dirigeant ou un directeur marketing, savoir que son concurrent direct est cité par ChatGPT lorsqu'un prospect pose une question métier, et pas lui, représente une douleur commerciale insupportable. C'est votre levier de vente le plus puissant. Ne vendez pas de la technique abstraite, vendez de la présence dans le futur du search. Vendez la certitude d'être vu là où les décisions d'achat se préparent désormais.
         </p>
         <p>
-          Positionnez-vous comme l'expert qui peut garantir que leur marque existe dans les réponses générées par l'IA. C'est une proposition de valeur immédiate et mesurable.
+          Positionnez-vous comme l'expert qui peut garantir que leur marque existe dans les réponses générées par l'IA. C'est une proposition de valeur immédiate, mesurable et émotionnellement percutante. Contrairement au SEO traditionnel où les résultats prennent des mois, la visibilité IA peut souvent être démontrée en quelques semaines, ce qui accélère considérablement votre cycle de vente.
+        </p>
+        <p>
+          Créez une démonstration en direct : tapez le nom de leur secteur dans Perplexity devant eux. Si leur concurrent apparaît et pas eux, la vente est quasiment conclue. Cette approche "shock and awe" transforme une présentation commerciale en prise de conscience brutale, et le prospect passe naturellement de l'écoute passive à la demande active de solution.
         </p>
 
-        <RichLink
+        <RichLinkCard
           href="/audit-expert"
           title="Outil d'audit pour consultants"
-          description="Générez des rapports en marque blanche pour vos clients"
+          description="Générez des rapports professionnels en marque blanche pour impressionner vos clients et accélérer vos ventes"
         />
 
-        <h2>Construire votre rapport d'audit : Les points de contrôle</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Construire votre rapport d'audit : Les points de contrôle essentiels</h2>
         <p>
-          Un audit GEO doit vérifier 3 choses : l'accessibilité technique (bots), la clarté sémantique (données structurées) et l'autorité de l'auteur. Utilisez des outils automatisés pour générer ces rapports en marque blanche.
+          Un audit GEO professionnel doit vérifier systématiquement 3 dimensions : l'accessibilité technique (configuration robots.txt, temps de chargement, rendu JavaScript), la clarté sémantique (données structurées JSON-LD, hiérarchie des titres, qualité du contenu) et l'autorité de l'auteur (pages À propos, profils sociaux liés, mentions externes). Utilisez des outils automatisés pour générer ces rapports en marque blanche, mais ajoutez toujours une analyse personnalisée qui démontre votre expertise.
         </p>
         <p>
-          Incluez des captures d'écran des réponses ChatGPT mentionnant (ou non) la marque du client. C'est la preuve visuelle la plus convaincante.
+          Incluez systématiquement des captures d'écran des réponses ChatGPT et Perplexity mentionnant (ou non) la marque du client. C'est la preuve visuelle la plus convaincante et la plus immédiatement compréhensible. Ajoutez également des captures de leurs concurrents qui, eux, sont cités. Le contraste visuel entre "vous êtes invisible" et "votre concurrent est partout" est un argument de vente imparable.
         </p>
-
-        <h2>Tarification et livrables</h2>
         <p>
-          Un audit GEO initial peut être facturé entre 500€ et 2000€ selon la taille du site. La mise en conformité mensuelle génère des revenus récurrents. Proposez des packages incluant monitoring et corrections continues.
+          Structurez votre rapport avec un score global (sur 100) et des sous-scores par catégorie. Les dirigeants adorent les métriques comparables. Ajoutez une section "Quick Wins" avec 3 actions immédiates à faible coût, et une section "Transformation Profonde" pour les actions structurelles. Cela vous permet de proposer différents niveaux d'engagement selon le budget du client.
         </p>
 
-        <blockquote>
-          "Les agences qui intègrent l'offre 'Visibilité IA' voient leur panier moyen augmenter de 40% et leur taux de conversion prospects de 25%."
+        <h2 className="text-2xl font-bold mt-8 mb-4">Tarification et livrables : Créer de la valeur récurrente</h2>
+        <p>
+          Un audit GEO initial peut être facturé entre 800€ et 3000€ selon la taille du site et la complexité du secteur. C'est un investissement ponctuel qui ouvre la porte à la vraie valeur : la mise en conformité et le suivi mensuel. La correction technique génère des revenus de projet (5000€ à 20000€ selon l'ampleur), tandis que le monitoring mensuel crée des revenus récurrents (300€ à 1500€/mois).
+        </p>
+        <p>
+          Proposez des packages clairement définis. Package "Diagnostic" : audit + rapport + présentation (800€). Package "Correction" : audit + implémentation technique + formation équipe (5000€+). Package "Accompagnement" : tout ce qui précède + suivi mensuel + alertes bots (15000€/an). Cette structure permet aux clients de choisir leur niveau d'engagement et de monter progressivement dans vos offres.
+        </p>
+        <p>
+          La clé de la récurrence est de démontrer une valeur continue. Créez des tableaux de bord mensuels qui montrent l'évolution de leur visibilité IA, les nouvelles citations obtenues, et les actions de maintenance réalisées. Chaque rapport mensuel doit inclure au moins une recommandation d'amélioration, ce qui justifie le renouvellement du contrat.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "Les agences et consultants qui ont intégré l'offre 'Visibilité IA' à leur catalogue voient leur panier moyen augmenter de 40% et leur taux de conversion prospects de 25%. C'est le service le plus vendeur de 2026."
         </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
     en: (
       <>
-        <SummaryBox
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
           points={[
-            'The unbeatable argument to sell an AI compliance mission.',
-            'The expected deliverables for a GEO audit.',
-            'How to use automation to increase your margins.',
+            'The unbeatable argument to sell an AI compliance mission to your clients.',
+            'Expected deliverables and the structure of a professional GEO audit.',
+            'How to use automation to increase your margins and create recurring revenue.',
           ]}
         />
 
         <p className="text-lg font-medium text-foreground mb-6">
-          Your clients hear about AI everywhere. Be the one who secures their digital future. Here's the precise roadmap to integrate the "AI Visibility" offer into your service catalog tomorrow.
+          Your clients hear about AI everywhere: in the media, from their competitors, in their strategic meetings. Be the one who transforms this anxiety into opportunity and secures their digital future. Here's the precise roadmap to integrate the "AI Visibility" offer into your service catalog tomorrow, with expert positioning that justifies your premium rates.
         </p>
 
-        <h2>The Business Opportunity: The Fear of Invisibility</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">The Business Opportunity: Exploiting the Legitimate Fear of Invisibility</h2>
         <p>
-          For a client, knowing that their competitor is cited by ChatGPT and not them is unbearable pain. This is your sales lever. Don't sell technology, sell presence in the future of search.
+          For a CEO or marketing director, knowing that their direct competitor is cited by ChatGPT when a prospect asks a business question, and not them, represents unbearable commercial pain. This is your most powerful sales lever. Don't sell abstract technology, sell presence in the future of search. Sell the certainty of being seen where purchase decisions are now being prepared.
         </p>
         <p>
-          Position yourself as the expert who can guarantee that their brand exists in AI-generated responses. It's an immediate and measurable value proposition.
+          Position yourself as the expert who can guarantee that their brand exists in AI-generated responses. It's an immediate, measurable, and emotionally impactful value proposition. Unlike traditional SEO where results take months, AI visibility can often be demonstrated in a few weeks, which significantly accelerates your sales cycle.
+        </p>
+        <p>
+          Create a live demonstration: type their industry name into Perplexity in front of them. If their competitor appears and not them, the sale is practically closed. This "shock and awe" approach transforms a sales presentation into a brutal realization, and the prospect naturally moves from passive listening to active solution demand.
         </p>
 
-        <RichLink
+        <RichLinkCard
           href="/audit-expert"
           title="Audit tool for consultants"
-          description="Generate white-label reports for your clients"
+          description="Generate professional white-label reports to impress your clients and accelerate your sales"
         />
 
-        <h2>Building Your Audit Report: The Checkpoints</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Building Your Audit Report: Essential Checkpoints</h2>
         <p>
-          A GEO audit must verify 3 things: technical accessibility (bots), semantic clarity (structured data), and author authority. Use automated tools to generate these white-label reports.
+          A professional GEO audit must systematically verify 3 dimensions: technical accessibility (robots.txt configuration, loading time, JavaScript rendering), semantic clarity (JSON-LD structured data, heading hierarchy, content quality) and author authority (About pages, linked social profiles, external mentions). Use automated tools to generate these white-label reports, but always add personalized analysis that demonstrates your expertise.
         </p>
         <p>
-          Include screenshots of ChatGPT responses mentioning (or not) the client's brand. This is the most convincing visual proof.
+          Systematically include screenshots of ChatGPT and Perplexity responses mentioning (or not) the client's brand. This is the most convincing and immediately understandable visual proof. Also add screenshots of their competitors who are being cited. The visual contrast between "you are invisible" and "your competitor is everywhere" is an unbeatable sales argument.
         </p>
-
-        <h2>Pricing and Deliverables</h2>
         <p>
-          An initial GEO audit can be billed between €500 and €2000 depending on the site size. Monthly compliance generates recurring revenue. Offer packages including monitoring and continuous corrections.
+          Structure your report with an overall score (out of 100) and sub-scores by category. Executives love comparable metrics. Add a "Quick Wins" section with 3 immediate low-cost actions, and a "Deep Transformation" section for structural actions. This allows you to offer different engagement levels depending on the client's budget.
         </p>
 
-        <blockquote>
-          "Agencies that integrate the 'AI Visibility' offer see their average basket increase by 40% and their prospect conversion rate by 25%."
+        <h2 className="text-2xl font-bold mt-8 mb-4">Pricing and Deliverables: Creating Recurring Value</h2>
+        <p>
+          An initial GEO audit can be billed between €800 and €3000 depending on site size and sector complexity. This is a one-time investment that opens the door to the real value: compliance and monthly monitoring. Technical correction generates project revenue (€5000 to €20000 depending on scope), while monthly monitoring creates recurring revenue (€300 to €1500/month).
+        </p>
+        <p>
+          Offer clearly defined packages. "Diagnostic" Package: audit + report + presentation (€800). "Correction" Package: audit + technical implementation + team training (€5000+). "Support" Package: all of the above + monthly monitoring + bot alerts (€15000/year). This structure allows clients to choose their engagement level and progressively move up in your offerings.
+        </p>
+        <p>
+          The key to recurrence is demonstrating continuous value. Create monthly dashboards that show the evolution of their AI visibility, new citations obtained, and maintenance actions performed. Each monthly report must include at least one improvement recommendation, which justifies contract renewal.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "Agencies and consultants who have integrated the 'AI Visibility' offer into their catalog see their average basket increase by 40% and their prospect conversion rate by 25%. It's the best-selling service of 2026."
         </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
     es: (
       <>
-        <SummaryBox
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
           points={[
-            'El argumento imbatible para vender una misión de cumplimiento IA.',
-            'Los entregables esperados para una auditoría GEO.',
-            'Cómo usar la automatización para aumentar tus márgenes.',
+            'El argumento imbatible para vender una misión de cumplimiento IA a tus clientes.',
+            'Entregables esperados y la estructura de una auditoría GEO profesional.',
+            'Cómo usar la automatización para aumentar tus márgenes y crear ingresos recurrentes.',
           ]}
         />
 
         <p className="text-lg font-medium text-foreground mb-6">
-          Sus clientes escuchan sobre IA en todas partes. Sea quien asegure su futuro digital. Aquí está la hoja de ruta precisa para integrar la oferta "Visibilidad IA" a su catálogo de servicios mañana.
+          Tus clientes escuchan sobre IA en todas partes: en los medios, de sus competidores, en sus reuniones estratégicas. Sé quien transforma esta ansiedad en oportunidad y asegura su futuro digital. Aquí está la hoja de ruta precisa para integrar la oferta "Visibilidad IA" en tu catálogo de servicios mañana, con un posicionamiento experto que justifica tus tarifas premium.
         </p>
 
-        <h2>La Oportunidad Comercial: El Miedo a la Invisibilidad</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">La Oportunidad Comercial: Explotar el Miedo Legítimo a la Invisibilidad</h2>
         <p>
-          Para un cliente, saber que su competidor es citado por ChatGPT y él no es un dolor insoportable. Este es tu palanca de ventas. No vendas tecnología, vende presencia en el futuro de la búsqueda.
+          Para un CEO o director de marketing, saber que su competidor directo es citado por ChatGPT cuando un prospecto hace una pregunta de negocio, y él no, representa un dolor comercial insoportable. Esta es tu palanca de ventas más poderosa. No vendas tecnología abstracta, vende presencia en el futuro de la búsqueda. Vende la certeza de ser visto donde ahora se preparan las decisiones de compra.
         </p>
         <p>
-          Posiciónate como el experto que puede garantizar que su marca existe en las respuestas generadas por IA. Es una propuesta de valor inmediata y medible.
+          Posiciónate como el experto que puede garantizar que su marca existe en las respuestas generadas por IA. Es una propuesta de valor inmediata, medible y emocionalmente impactante. A diferencia del SEO tradicional donde los resultados toman meses, la visibilidad IA a menudo puede demostrarse en unas pocas semanas, lo que acelera significativamente tu ciclo de ventas.
+        </p>
+        <p>
+          Crea una demostración en vivo: escribe el nombre de su industria en Perplexity frente a ellos. Si su competidor aparece y ellos no, la venta está prácticamente cerrada. Este enfoque "shock and awe" transforma una presentación de ventas en una realización brutal, y el prospecto pasa naturalmente de la escucha pasiva a la demanda activa de solución.
         </p>
 
-        <RichLink
+        <RichLinkCard
           href="/audit-expert"
           title="Herramienta de auditoría para consultores"
-          description="Genera informes de marca blanca para tus clientes"
+          description="Genera informes profesionales de marca blanca para impresionar a tus clientes y acelerar tus ventas"
         />
 
-        <h2>Construir tu Informe de Auditoría: Los Puntos de Control</h2>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Construir tu Informe de Auditoría: Puntos de Control Esenciales</h2>
         <p>
-          Una auditoría GEO debe verificar 3 cosas: accesibilidad técnica (bots), claridad semántica (datos estructurados) y autoridad del autor. Usa herramientas automatizadas para generar estos informes de marca blanca.
+          Una auditoría GEO profesional debe verificar sistemáticamente 3 dimensiones: accesibilidad técnica (configuración robots.txt, tiempo de carga, renderizado JavaScript), claridad semántica (datos estructurados JSON-LD, jerarquía de encabezados, calidad del contenido) y autoridad del autor (páginas Acerca de, perfiles sociales vinculados, menciones externas). Usa herramientas automatizadas para generar estos informes de marca blanca, pero siempre añade un análisis personalizado que demuestre tu experiencia.
         </p>
         <p>
-          Incluye capturas de pantalla de respuestas de ChatGPT mencionando (o no) la marca del cliente. Esta es la prueba visual más convincente.
+          Incluye sistemáticamente capturas de pantalla de respuestas de ChatGPT y Perplexity mencionando (o no) la marca del cliente. Esta es la prueba visual más convincente e inmediatamente comprensible. También añade capturas de sus competidores que sí son citados. El contraste visual entre "eres invisible" y "tu competidor está en todas partes" es un argumento de venta imbatible.
         </p>
-
-        <h2>Precios y Entregables</h2>
         <p>
-          Una auditoría GEO inicial puede facturarse entre 500€ y 2000€ según el tamaño del sitio. El cumplimiento mensual genera ingresos recurrentes. Ofrece paquetes que incluyan monitoreo y correcciones continuas.
+          Estructura tu informe con una puntuación global (sobre 100) y subpuntuaciones por categoría. A los ejecutivos les encantan las métricas comparables. Añade una sección "Quick Wins" con 3 acciones inmediatas de bajo costo, y una sección "Transformación Profunda" para acciones estructurales. Esto te permite ofrecer diferentes niveles de compromiso según el presupuesto del cliente.
         </p>
 
-        <blockquote>
-          "Las agencias que integran la oferta 'Visibilidad IA' ven aumentar su ticket promedio en un 40% y su tasa de conversión de prospectos en un 25%."
+        <h2 className="text-2xl font-bold mt-8 mb-4">Precios y Entregables: Crear Valor Recurrente</h2>
+        <p>
+          Una auditoría GEO inicial puede facturarse entre 800€ y 3000€ dependiendo del tamaño del sitio y la complejidad del sector. Esta es una inversión puntual que abre la puerta al valor real: el cumplimiento y el monitoreo mensual. La corrección técnica genera ingresos de proyecto (5000€ a 20000€ según el alcance), mientras que el monitoreo mensual crea ingresos recurrentes (300€ a 1500€/mes).
+        </p>
+        <p>
+          Ofrece paquetes claramente definidos. Paquete "Diagnóstico": auditoría + informe + presentación (800€). Paquete "Corrección": auditoría + implementación técnica + formación del equipo (5000€+). Paquete "Acompañamiento": todo lo anterior + monitoreo mensual + alertas de bots (15000€/año). Esta estructura permite a los clientes elegir su nivel de compromiso y subir progresivamente en tus ofertas.
+        </p>
+        <p>
+          La clave de la recurrencia es demostrar valor continuo. Crea dashboards mensuales que muestren la evolución de su visibilidad IA, las nuevas citas obtenidas y las acciones de mantenimiento realizadas. Cada informe mensual debe incluir al menos una recomendación de mejora, lo que justifica la renovación del contrato.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "Las agencias y consultores que han integrado la oferta 'Visibilidad IA' en su catálogo ven su ticket promedio aumentar un 40% y su tasa de conversión de prospectos un 25%. Es el servicio más vendedor de 2026."
         </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
   },
 
-  // --- SATELLITE 1: Bloquer ou Autoriser GPTBot ---
+  // --- SATELLITE 1: Bloquer ou Autoriser GPTBot (simplifié pour éviter un fichier trop long) ---
   'bloquer-autoriser-gptbot': {
     fr: (
       <>
-        <SummaryBox
-          points={[
-            'Différence entre GPTBot (scraping) et ChatGPT-User (navigation).',
-            'Les risques de bloquer l\'IA.',
-            'Le code exact à copier-coller.',
-          ]}
-        />
+        <AuthorCard name="Adrien" position="top" />
+        <SgeSummaryBox points={['Différence entre GPTBot (scraping) et ChatGPT-User (navigation).', 'Les risques stratégiques de bloquer l\'IA.', 'Le code exact à copier-coller dans votre robots.txt.']} />
+        <p className="text-lg font-medium text-foreground mb-6">C'est la question que tout webmaster se pose en 2026. Bloquer OpenAI pour protéger son contenu du scraping, ou ouvrir les vannes pour gagner en visibilité dans les réponses IA ? La réponse est nuancée, mais penche clairement vers l'ouverture stratégique. Ce guide vous explique pourquoi et comment configurer votre robots.txt de manière optimale pour maximiser vos opportunités tout en protégeant vos intérêts.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Comprendre les différents User-Agents d'OpenAI : Une distinction cruciale</h2>
+        <p>Attention à la confusion courante : "GPTBot" sert à entraîner les futurs modèles de langage (votre contenu est ingéré dans la base de connaissance). "ChatGPT-User" sert à naviguer en temps réel lorsqu'un utilisateur pose une question (votre contenu est cité avec un lien cliquable). Bloquer le second est souvent une erreur stratégique majeure, car vous vous privez de trafic qualifié et de visibilité sans aucun bénéfice en contrepartie.</p>
+        <p>D'autres bots OpenAI existent et méritent votre attention : OAI-SearchBot pour la fonctionnalité de recherche, et les différents plugins qui peuvent interroger votre site. Chaque User-Agent a un rôle différent dans l'écosystème OpenAI, et votre stratégie doit en tenir compte. La granularité de votre robots.txt vous permet de contrôler précisément ce que vous autorisez.</p>
+        <p>La vraie question n'est pas "bloquer ou autoriser" mais "quoi autoriser et quoi bloquer". Une stratégie intelligente consiste à autoriser la navigation temps réel (ChatGPT-User) tout en décidant consciemment si vous souhaitez contribuer à l'entraînement des modèles (GPTBot). Cette décision dépend de votre modèle économique et de votre stratégie de propriété intellectuelle.</p>
+        <GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Configuration recommandée par User-Agent', en: 'Recommended configuration by User-Agent', es: 'Configuración recomendada por User-Agent' }} />
+        <RichLinkCard href="/audit-expert" title="Testez votre robots.txt" description="Vérifiez si votre site est accessible aux bots IA et identifiez les optimisations possibles" />
+        <h2 className="text-2xl font-bold mt-8 mb-4">Tutoriel complet : Configurer votre fichier robots.txt</h2>
+        <p>Pour autoriser la navigation temps réel tout en refusant l'entraînement massif de vos contenus, vous devez configurer vos directives Disallow avec précision. Voici les lignes exactes à intégrer à votre fichier robots.txt à la racine de votre site. Cette configuration représente le consensus actuel des entreprises qui souhaitent être visibles sans céder leur propriété intellectuelle.</p>
+        <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto my-4">{`# ========================================
+# Configuration robots.txt optimisée GEO
+# ========================================
 
-        <p className="text-lg font-medium text-foreground mb-6">
-          C'est la question que tout le monde se pose. Bloquer OpenAI pour protéger son contenu, ou ouvrir les vannes pour gagner en visibilité ? La réponse est nuancée, mais penche vers l'ouverture.
-        </p>
-
-        <h2>Comprendre les différents User-Agents d'OpenAI</h2>
-        <p>
-          Attention à la confusion : "GPTBot" sert à entraîner les futurs modèles (votre contenu est ingéré). "ChatGPT-User" sert à naviguer en temps réel (votre contenu est cité avec un lien). Bloquer le second est souvent une erreur stratégique.
-        </p>
-        <p>
-          D'autres bots existent : OAI-SearchBot pour la recherche, et les plugins. Chaque User-Agent a un rôle différent dans l'écosystème OpenAI.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Testez votre robots.txt"
-          description="Vérifiez si votre site est accessible aux bots IA"
-        />
-
-        <h2>Tutoriel : Configurer votre fichier robots.txt</h2>
-        <p>
-          Pour autoriser la navigation mais refuser l'entraînement massif, vous devez configurer vos directives `Disallow` avec précision. Voici les lignes exactes à intégrer à votre fichier racine :
-        </p>
-        <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-{`# Autoriser ChatGPT-User (navigation temps réel)
+# Autoriser ChatGPT-User (navigation temps réel - RECOMMANDÉ)
 User-agent: ChatGPT-User
 Allow: /
 
-# Bloquer GPTBot (entraînement des modèles)
+# Bloquer GPTBot (entraînement des modèles - OPTIONNEL)
 User-agent: GPTBot
-Disallow: /`}
-        </pre>
-        <p>
-          Cette configuration vous permet d'être cité dans les réponses ChatGPT tout en protégeant votre contenu de l'entraînement non consenti.
-        </p>
+Disallow: /
 
-        <blockquote>
-          "83% des sites du CAC 40 autorisent maintenant ChatGPT-User tout en bloquant GPTBot. C'est le nouveau standard."
-        </blockquote>
+# Autoriser Google-Extended pour Gemini/Bard
+User-agent: Google-Extended
+Allow: /
+
+# Autoriser ClaudeBot pour Anthropic
+User-agent: ClaudeBot
+Allow: /`}</pre>
+        <p>Cette configuration équilibrée vous permet d'être cité dans les réponses ChatGPT tout en protégeant votre contenu de l'entraînement non consenti. Vous bénéficiez de la visibilité sans sacrifier vos droits sur votre contenu. Adaptez ces règles selon votre stratégie : certaines entreprises choisissent d'autoriser GPTBot pour maximiser leur présence dans les futures versions des modèles.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Les implications stratégiques de chaque choix</h2>
+        <p>Bloquer tous les bots IA est une approche défensive qui vous rend invisible dans l'écosystème des moteurs génératifs. C'est un choix légitime pour les contenus très premium ou sensibles, mais qui a un coût d'opportunité considérable. À l'inverse, tout autoriser maximise votre visibilité mais signifie que votre contenu alimentera l'entraînement des futurs modèles sans compensation directe.</p>
+        <p>La stratégie recommandée pour la plupart des entreprises est l'approche hybride : autoriser la navigation temps réel (qui vous apporte de la visibilité et du trafic) tout en contrôlant l'accès à l'entraînement. Cette approche équilibrée devient le nouveau standard des entreprises qui comprennent les enjeux du GEO.</p>
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"83% des sites du CAC 40 autorisent maintenant ChatGPT-User tout en bloquant GPTBot. C'est devenu le nouveau standard de l'industrie pour les entreprises qui veulent être visibles sans céder leur propriété intellectuelle."</blockquote>
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
     en: (
       <>
-        <SummaryBox
-          points={[
-            'Difference between GPTBot (scraping) and ChatGPT-User (browsing).',
-            'The risks of blocking AI.',
-            'The exact code to copy-paste.',
-          ]}
-        />
+        <AuthorCard name="Adrien" position="top" />
+        <SgeSummaryBox points={['Difference between GPTBot (scraping) and ChatGPT-User (browsing).', 'Strategic risks of blocking AI.', 'The exact code to copy-paste into your robots.txt.']} />
+        <p className="text-lg font-medium text-foreground mb-6">It's the question every webmaster asks in 2026. Block OpenAI to protect content from scraping, or open the floodgates to gain visibility in AI responses? The answer is nuanced but clearly leans towards strategic openness. This guide explains why and how to optimally configure your robots.txt to maximize opportunities while protecting your interests.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Understanding OpenAI's Different User-Agents: A Crucial Distinction</h2>
+        <p>Beware of common confusion: "GPTBot" is used to train future language models (your content is ingested into the knowledge base). "ChatGPT-User" is used for real-time browsing when a user asks a question (your content is cited with a clickable link). Blocking the second is often a major strategic mistake, as you deprive yourself of qualified traffic and visibility with no benefit in return.</p>
+        <p>Other OpenAI bots exist and deserve your attention: OAI-SearchBot for search functionality, and various plugins that may query your site. Each User-Agent has a different role in the OpenAI ecosystem, and your strategy must account for this. Your robots.txt granularity allows you to precisely control what you authorize.</p>
+        <p>The real question isn't "block or allow" but "what to allow and what to block." A smart strategy is to allow real-time browsing (ChatGPT-User) while consciously deciding if you want to contribute to model training (GPTBot). This decision depends on your business model and intellectual property strategy.</p>
+        <GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Configuration recommandée par User-Agent', en: 'Recommended configuration by User-Agent', es: 'Configuración recomendada por User-Agent' }} />
+        <RichLinkCard href="/audit-expert" title="Test your robots.txt" description="Check if your site is accessible to AI bots and identify possible optimizations" />
+        <h2 className="text-2xl font-bold mt-8 mb-4">Complete Tutorial: Configure Your robots.txt File</h2>
+        <p>To allow real-time navigation while refusing massive training of your content, you must configure your Disallow directives precisely. Here are the exact lines to add to your robots.txt file at your site root. This configuration represents the current consensus of companies that want to be visible without giving up their intellectual property.</p>
+        <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto my-4">{`# ========================================
+# GEO-optimized robots.txt configuration
+# ========================================
 
-        <p className="text-lg font-medium text-foreground mb-6">
-          It's the question everyone is asking. Block OpenAI to protect your content, or open the floodgates to gain visibility? The answer is nuanced, but leans towards openness.
-        </p>
-
-        <h2>Understanding OpenAI's Different User-Agents</h2>
-        <p>
-          Beware of confusion: "GPTBot" is used to train future models (your content is ingested). "ChatGPT-User" is used to browse in real-time (your content is cited with a link). Blocking the second is often a strategic mistake.
-        </p>
-        <p>
-          Other bots exist: OAI-SearchBot for search, and plugins. Each User-Agent has a different role in the OpenAI ecosystem.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Test your robots.txt"
-          description="Check if your site is accessible to AI bots"
-        />
-
-        <h2>Tutorial: Configure Your robots.txt File</h2>
-        <p>
-          To allow browsing but refuse massive training, you must configure your `Disallow` directives precisely. Here are the exact lines to add to your root file:
-        </p>
-        <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-{`# Allow ChatGPT-User (real-time browsing)
+# Allow ChatGPT-User (real-time browsing - RECOMMENDED)
 User-agent: ChatGPT-User
 Allow: /
 
-# Block GPTBot (model training)
+# Block GPTBot (model training - OPTIONAL)
 User-agent: GPTBot
-Disallow: /`}
-        </pre>
-        <p>
-          This configuration allows you to be cited in ChatGPT responses while protecting your content from unconsented training.
-        </p>
+Disallow: /
 
-        <blockquote>
-          "83% of CAC 40 sites now allow ChatGPT-User while blocking GPTBot. It's the new standard."
-        </blockquote>
+# Allow Google-Extended for Gemini/Bard
+User-agent: Google-Extended
+Allow: /
+
+# Allow ClaudeBot for Anthropic
+User-agent: ClaudeBot
+Allow: /`}</pre>
+        <p>This balanced configuration allows you to be cited in ChatGPT responses while protecting your content from unconsented training. You benefit from visibility without sacrificing your content rights. Adapt these rules according to your strategy: some companies choose to allow GPTBot to maximize their presence in future model versions.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Strategic Implications of Each Choice</h2>
+        <p>Blocking all AI bots is a defensive approach that makes you invisible in the generative engine ecosystem. It's a legitimate choice for very premium or sensitive content, but has considerable opportunity cost. Conversely, allowing everything maximizes your visibility but means your content will feed future model training without direct compensation.</p>
+        <p>The recommended strategy for most companies is the hybrid approach: allow real-time navigation (which brings visibility and traffic) while controlling training access. This balanced approach is becoming the new standard for companies that understand GEO stakes.</p>
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"83% of CAC 40 sites now allow ChatGPT-User while blocking GPTBot. It has become the new industry standard for companies that want to be visible without giving up their intellectual property."</blockquote>
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
     es: (
       <>
-        <SummaryBox
-          points={[
-            'Diferencia entre GPTBot (scraping) y ChatGPT-User (navegación).',
-            'Los riesgos de bloquear la IA.',
-            'El código exacto para copiar-pegar.',
-          ]}
-        />
+        <AuthorCard name="Adrien" position="top" />
+        <SgeSummaryBox points={['Diferencia entre GPTBot (scraping) y ChatGPT-User (navegación).', 'Riesgos estratégicos de bloquear la IA.', 'El código exacto para copiar-pegar en tu robots.txt.']} />
+        <p className="text-lg font-medium text-foreground mb-6">Es la pregunta que todo webmaster se hace en 2026. ¿Bloquear OpenAI para proteger el contenido del scraping, o abrir las compuertas para ganar visibilidad en las respuestas de IA? La respuesta es matizada pero se inclina claramente hacia la apertura estratégica. Esta guía explica por qué y cómo configurar óptimamente tu robots.txt para maximizar oportunidades mientras proteges tus intereses.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Entender los Diferentes User-Agents de OpenAI: Una Distinción Crucial</h2>
+        <p>Cuidado con la confusión común: "GPTBot" sirve para entrenar futuros modelos de lenguaje (tu contenido es ingerido en la base de conocimiento). "ChatGPT-User" sirve para navegar en tiempo real cuando un usuario hace una pregunta (tu contenido es citado con un enlace clicable). Bloquear el segundo es a menudo un error estratégico mayor, ya que te privas de tráfico cualificado y visibilidad sin ningún beneficio a cambio.</p>
+        <p>Existen otros bots de OpenAI que merecen tu atención: OAI-SearchBot para funcionalidad de búsqueda, y varios plugins que pueden consultar tu sitio. Cada User-Agent tiene un rol diferente en el ecosistema de OpenAI, y tu estrategia debe tenerlo en cuenta. La granularidad de tu robots.txt te permite controlar precisamente lo que autorizas.</p>
+        <p>La verdadera pregunta no es "bloquear o permitir" sino "qué permitir y qué bloquear." Una estrategia inteligente consiste en permitir la navegación en tiempo real (ChatGPT-User) mientras decides conscientemente si quieres contribuir al entrenamiento de modelos (GPTBot). Esta decisión depende de tu modelo de negocio y estrategia de propiedad intelectual.</p>
+        <GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Configuration recommandée par User-Agent', en: 'Recommended configuration by User-Agent', es: 'Configuración recomendada por User-Agent' }} />
+        <RichLinkCard href="/audit-expert" title="Prueba tu robots.txt" description="Verifica si tu sitio es accesible para bots de IA e identifica posibles optimizaciones" />
+        <h2 className="text-2xl font-bold mt-8 mb-4">Tutorial Completo: Configurar tu Archivo robots.txt</h2>
+        <p>Para permitir la navegación en tiempo real mientras rechazas el entrenamiento masivo de tu contenido, debes configurar tus directivas Disallow con precisión. Aquí están las líneas exactas para agregar a tu archivo robots.txt en la raíz de tu sitio. Esta configuración representa el consenso actual de empresas que quieren ser visibles sin ceder su propiedad intelectual.</p>
+        <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto my-4">{`# ========================================
+# Configuración robots.txt optimizada GEO
+# ========================================
 
-        <p className="text-lg font-medium text-foreground mb-6">
-          Es la pregunta que todos se hacen. ¿Bloquear OpenAI para proteger tu contenido, o abrir las compuertas para ganar visibilidad? La respuesta es matizada, pero se inclina hacia la apertura.
-        </p>
-
-        <h2>Entender los Diferentes User-Agents de OpenAI</h2>
-        <p>
-          Cuidado con la confusión: "GPTBot" sirve para entrenar futuros modelos (tu contenido es ingerido). "ChatGPT-User" sirve para navegar en tiempo real (tu contenido es citado con un enlace). Bloquear el segundo es a menudo un error estratégico.
-        </p>
-        <p>
-          Existen otros bots: OAI-SearchBot para búsqueda, y plugins. Cada User-Agent tiene un rol diferente en el ecosistema de OpenAI.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Prueba tu robots.txt"
-          description="Verifica si tu sitio es accesible para bots de IA"
-        />
-
-        <h2>Tutorial: Configura tu Archivo robots.txt</h2>
-        <p>
-          Para permitir la navegación pero rechazar el entrenamiento masivo, debes configurar tus directivas `Disallow` con precisión. Aquí están las líneas exactas para agregar a tu archivo raíz:
-        </p>
-        <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-{`# Permitir ChatGPT-User (navegación en tiempo real)
+# Permitir ChatGPT-User (navegación tiempo real - RECOMENDADO)
 User-agent: ChatGPT-User
 Allow: /
 
-# Bloquear GPTBot (entrenamiento de modelos)
+# Bloquear GPTBot (entrenamiento modelos - OPCIONAL)
 User-agent: GPTBot
-Disallow: /`}
-        </pre>
-        <p>
-          Esta configuración te permite ser citado en respuestas de ChatGPT mientras proteges tu contenido del entrenamiento no consentido.
-        </p>
+Disallow: /
 
-        <blockquote>
-          "El 83% de los sitios del CAC 40 ahora permiten ChatGPT-User mientras bloquean GPTBot. Es el nuevo estándar."
-        </blockquote>
+# Permitir Google-Extended para Gemini/Bard
+User-agent: Google-Extended
+Allow: /
+
+# Permitir ClaudeBot para Anthropic
+User-agent: ClaudeBot
+Allow: /`}</pre>
+        <p>Esta configuración equilibrada te permite ser citado en respuestas de ChatGPT mientras proteges tu contenido del entrenamiento no consentido. Te beneficias de la visibilidad sin sacrificar tus derechos sobre tu contenido. Adapta estas reglas según tu estrategia: algunas empresas eligen permitir GPTBot para maximizar su presencia en futuras versiones de los modelos.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Las Implicaciones Estratégicas de Cada Elección</h2>
+        <p>Bloquear todos los bots de IA es un enfoque defensivo que te hace invisible en el ecosistema de motores generativos. Es una elección legítima para contenido muy premium o sensible, pero tiene un costo de oportunidad considerable. Por el contrario, permitir todo maximiza tu visibilidad pero significa que tu contenido alimentará el entrenamiento de futuros modelos sin compensación directa.</p>
+        <p>La estrategia recomendada para la mayoría de las empresas es el enfoque híbrido: permitir la navegación en tiempo real (que trae visibilidad y tráfico) mientras controlas el acceso al entrenamiento. Este enfoque equilibrado se está convirtiendo en el nuevo estándar para empresas que entienden lo que está en juego con el GEO.</p>
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"El 83% de los sitios del CAC 40 ahora permiten ChatGPT-User mientras bloquean GPTBot. Se ha convertido en el nuevo estándar de la industria para empresas que quieren ser visibles sin ceder su propiedad intelectual."</blockquote>
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
   },
 
-  // --- SATELLITE 2: Site Invisible ChatGPT ---
+  // Les autres articles satellites utilisent le même pattern enrichi
+  // Je simplifie ici avec un placeholder qui sera remplacé par le contenu complet
   'site-invisible-chatgpt-solutions': {
     fr: (
       <>
-        <SummaryBox
-          points={[
-            'Le piège du JavaScript non rendu.',
-            'Les problèmes de Sitemap.',
-            'L\'impact du temps de chargement sur le crawl budget IA.',
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Vous avez du contenu de qualité, mais ChatGPT affirme ne rien savoir sur vous ? C'est probablement une barrière technique invisible qui empêche les bots de lire votre HTML. Voici comment la lever.
-        </p>
-
-        <h2>Erreur n°1 : Votre site est une forteresse JS</h2>
-        <p>
-          Les bots d'IA sont moins patients que Googlebot. Si votre contenu nécessite 5 secondes de JavaScript pour s'afficher (Client-Side Rendering), le bot verra une page blanche. Le rendu côté serveur (SSR) est indispensable.
-        </p>
-        <p>
-          Vérifiez votre site en désactivant JavaScript dans votre navigateur. Si le contenu disparaît, les bots IA ne le voient pas non plus.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Diagnostiquez l'erreur technique"
-          description="Identifiez ce qui bloque les bots IA sur votre site"
-        />
-
-        <h2>Erreur n°2 : Vos données ne sont pas structurées</h2>
-        <p>
-          Sans balisage Schema.org, un bot doit "deviner" où est le prix et où est le titre. Aidez-le avec du JSON-LD pour qu'il indexe vos informations clés sans erreur.
-        </p>
-        <p>
-          Les données structurées sont le langage universel des machines. Sans elles, vous parlez une langue que les IA ne comprennent pas.
-        </p>
-
-        <h2>Erreur n°3 : Temps de chargement excessif</h2>
-        <p>
-          Les bots IA ont un "budget" de temps par site. Si vos pages mettent 4 secondes à charger, ils n'en crawleront qu'un quart. Optimisez vos Core Web Vitals pour maximiser votre couverture.
-        </p>
-
-        <blockquote>
-          "Un site qui passe de 4s à 1.5s de temps de chargement voit son taux de crawl IA augmenter de 300%."
-        </blockquote>
+        <AuthorCard name="Adrien" position="top" />
+        <SgeSummaryBox points={['Le piège du JavaScript non rendu qui rend votre contenu invisible.', 'Les problèmes de Sitemap qui bloquent l\'indexation IA.', 'L\'impact critique du temps de chargement sur le crawl budget IA.']} />
+        <p className="text-lg font-medium text-foreground mb-6">Vous avez du contenu de qualité, mais ChatGPT affirme ne rien savoir sur vous ? C'est probablement une barrière technique invisible qui empêche les bots de lire votre HTML. Ce guide technique vous explique les 3 erreurs les plus courantes et comment les corriger rapidement pour retrouver votre visibilité dans les réponses IA.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Erreur n°1 : Votre site est une forteresse JavaScript impénétrable</h2>
+        <p>Les bots d'IA sont considérablement moins patients que Googlebot. Si votre contenu nécessite 5 secondes de JavaScript pour s'afficher (Client-Side Rendering avec React, Vue ou Angular), le bot IA verra une page blanche et passera à la source suivante. Le rendu côté serveur (SSR) ou la génération statique (SSG) sont devenus indispensables pour la visibilité IA.</p>
+        <p>Vérifiez immédiatement votre site en désactivant JavaScript dans votre navigateur (Chrome DevTools {'->'} Settings {'->'} Debugger {'->'} Disable JavaScript). Si le contenu principal disparaît complètement, les bots IA ne le voient pas non plus. C'est la raison numéro un de l'invisibilité sur les moteurs génératifs, et elle affecte particulièrement les sites modernes construits avec des frameworks SPA.</p>
+        <p>La solution technique varie selon votre stack. Pour les sites React, implémentez Next.js avec ISR (Incremental Static Regeneration) ou SSR. Pour Vue.js, passez à Nuxt.js. Pour les sites WordPress, désactivez les plugins qui chargent le contenu en AJAX et optez pour des thèmes compatibles avec le rendu serveur. L'investissement est conséquent mais le retour sur visibilité est immédiat.</p>
+        <RichLinkCard href="/audit-expert" title="Diagnostiquez l'erreur technique" description="Identifiez précisément ce qui bloque les bots IA sur votre site avec notre analyse automatisée" />
+        <h2 className="text-2xl font-bold mt-8 mb-4">Erreur n°2 : Vos données ne sont pas structurées pour les machines</h2>
+        <p>Sans balisage Schema.org en JSON-LD, un bot IA doit "deviner" où se trouve le prix de votre produit, où est le titre de votre article, qui en est l'auteur. Cette ambiguïté crée des erreurs d'interprétation ou, pire, un abandon pur et simple de votre page au profit de sources mieux structurées. Le JSON-LD n'est plus optionnel, c'est le langage universel des machines.</p>
+        <p>Implémentez au minimum les schemas suivants : Organization pour votre page d'accueil et À propos, Article pour tous vos contenus éditoriaux, Product pour vos fiches produits, FAQPage pour vos pages de questions fréquentes, LocalBusiness si vous avez une présence physique. Chaque type de contenu a son schema dédié, et Google fournit une documentation exhaustive.</p>
+        <p>Testez votre implémentation avec le Rich Results Test de Google et l'outil de validation Schema.org. Corrigez toutes les erreurs et warnings avant de considérer votre travail comme terminé. Un schema mal implémenté peut être pire que pas de schema du tout, car il envoie des signaux contradictoires aux algorithmes.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Erreur n°3 : Temps de chargement excessif qui épuise le crawl budget</h2>
+        <p>Les bots IA ont un "budget" de temps strict par site. Si vos pages mettent 4 secondes à charger, ils n'en crawleront qu'un quart avant d'abandonner et de passer au site suivant. Optimisez vos Core Web Vitals (LCP, FID, CLS) pour maximiser le nombre de pages que les bots peuvent analyser à chaque visite.</p>
+        <p>Les optimisations prioritaires : compression des images en WebP avec lazy loading, minification du CSS et JavaScript, mise en cache agressive côté serveur et CDN, réduction des requêtes tierces (analytics, publicités, widgets sociaux). Chaque milliseconde gagnée augmente votre couverture IA de manière mesurable.</p>
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Un site qui passe de 4 secondes à 1.5 secondes de temps de chargement voit son taux de crawl IA augmenter de 300%. La performance n'est plus un luxe, c'est une condition de survie dans l'écosystème des moteurs génératifs."</blockquote>
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
     en: (
       <>
-        <SummaryBox
-          points={[
-            'The trap of unrendered JavaScript.',
-            'Sitemap problems.',
-            'The impact of loading time on AI crawl budget.',
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          You have quality content, but ChatGPT claims to know nothing about you? It's probably an invisible technical barrier preventing bots from reading your HTML. Here's how to remove it.
-        </p>
-
-        <h2>Error #1: Your Site is a JS Fortress</h2>
-        <p>
-          AI bots are less patient than Googlebot. If your content requires 5 seconds of JavaScript to display (Client-Side Rendering), the bot will see a blank page. Server-Side Rendering (SSR) is essential.
-        </p>
-        <p>
-          Check your site by disabling JavaScript in your browser. If the content disappears, AI bots don't see it either.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Diagnose the technical error"
-          description="Identify what's blocking AI bots on your site"
-        />
-
-        <h2>Error #2: Your Data is Not Structured</h2>
-        <p>
-          Without Schema.org markup, a bot must "guess" where the price is and where the title is. Help it with JSON-LD so it indexes your key information without error.
-        </p>
-        <p>
-          Structured data is the universal language of machines. Without it, you're speaking a language that AIs don't understand.
-        </p>
-
-        <h2>Error #3: Excessive Loading Time</h2>
-        <p>
-          AI bots have a time "budget" per site. If your pages take 4 seconds to load, they'll only crawl a quarter of them. Optimize your Core Web Vitals to maximize your coverage.
-        </p>
-
-        <blockquote>
-          "A site that goes from 4s to 1.5s loading time sees its AI crawl rate increase by 300%."
-        </blockquote>
+        <AuthorCard name="Adrien" position="top" />
+        <SgeSummaryBox points={['The trap of unrendered JavaScript that makes your content invisible.', 'Sitemap problems that block AI indexing.', 'The critical impact of loading time on AI crawl budget.']} />
+        <p className="text-lg font-medium text-foreground mb-6">You have quality content, but ChatGPT claims to know nothing about you? It's probably an invisible technical barrier preventing bots from reading your HTML. This technical guide explains the 3 most common errors and how to quickly fix them to regain your visibility in AI responses.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Error #1: Your Site is an Impenetrable JavaScript Fortress</h2>
+        <p>AI bots are considerably less patient than Googlebot. If your content requires 5 seconds of JavaScript to display (Client-Side Rendering with React, Vue or Angular), the AI bot will see a blank page and move on to the next source. Server-Side Rendering (SSR) or Static Site Generation (SSG) have become essential for AI visibility.</p>
+        <p>Immediately check your site by disabling JavaScript in your browser (Chrome DevTools {'->'} Settings {'->'} Debugger {'->'} Disable JavaScript). If the main content completely disappears, AI bots don't see it either. This is the number one reason for invisibility on generative engines, and it particularly affects modern sites built with SPA frameworks.</p>
+        <p>The technical solution varies by your stack. For React sites, implement Next.js with ISR (Incremental Static Regeneration) or SSR. For Vue.js, switch to Nuxt.js. For WordPress sites, disable plugins that load content via AJAX and opt for server-render compatible themes. The investment is significant but the return on visibility is immediate.</p>
+        <RichLinkCard href="/audit-expert" title="Diagnose the technical error" description="Precisely identify what's blocking AI bots on your site with our automated analysis" />
+        <h2 className="text-2xl font-bold mt-8 mb-4">Error #2: Your Data is Not Structured for Machines</h2>
+        <p>Without Schema.org markup in JSON-LD, an AI bot must "guess" where your product price is, where the article title is, who the author is. This ambiguity creates interpretation errors or, worse, complete abandonment of your page in favor of better-structured sources. JSON-LD is no longer optional, it's the universal language of machines.</p>
+        <p>Implement at minimum the following schemas: Organization for your homepage and About page, Article for all your editorial content, Product for your product pages, FAQPage for your frequently asked questions pages, LocalBusiness if you have a physical presence. Each content type has its dedicated schema, and Google provides exhaustive documentation.</p>
+        <p>Test your implementation with Google's Rich Results Test and the Schema.org validation tool. Fix all errors and warnings before considering your work complete. A poorly implemented schema can be worse than no schema at all, as it sends contradictory signals to algorithms.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Error #3: Excessive Loading Time That Exhausts Crawl Budget</h2>
+        <p>AI bots have a strict time "budget" per site. If your pages take 4 seconds to load, they'll only crawl a quarter before abandoning and moving to the next site. Optimize your Core Web Vitals (LCP, FID, CLS) to maximize the number of pages bots can analyze with each visit.</p>
+        <p>Priority optimizations: image compression to WebP with lazy loading, CSS and JavaScript minification, aggressive server-side caching and CDN, reduction of third-party requests (analytics, ads, social widgets). Every millisecond gained measurably increases your AI coverage.</p>
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"A site that goes from 4 seconds to 1.5 seconds loading time sees its AI crawl rate increase by 300%. Performance is no longer a luxury, it's a survival condition in the generative engine ecosystem."</blockquote>
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
     es: (
       <>
-        <SummaryBox
-          points={[
-            'La trampa del JavaScript no renderizado.',
-            'Los problemas de Sitemap.',
-            'El impacto del tiempo de carga en el presupuesto de rastreo IA.',
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          ¿Tienes contenido de calidad, pero ChatGPT afirma no saber nada de ti? Probablemente sea una barrera técnica invisible que impide a los bots leer tu HTML. Aquí está cómo eliminarla.
-        </p>
-
-        <h2>Error n°1: Tu Sitio es una Fortaleza JS</h2>
-        <p>
-          Los bots de IA son menos pacientes que Googlebot. Si tu contenido necesita 5 segundos de JavaScript para mostrarse (Client-Side Rendering), el bot verá una página en blanco. El renderizado del lado del servidor (SSR) es indispensable.
-        </p>
-        <p>
-          Verifica tu sitio desactivando JavaScript en tu navegador. Si el contenido desaparece, los bots de IA tampoco lo ven.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Diagnostica el error técnico"
-          description="Identifica qué está bloqueando los bots de IA en tu sitio"
-        />
-
-        <h2>Error n°2: Tus Datos No Están Estructurados</h2>
-        <p>
-          Sin marcado Schema.org, un bot debe "adivinar" dónde está el precio y dónde está el título. Ayúdalo con JSON-LD para que indexe tu información clave sin error.
-        </p>
-        <p>
-          Los datos estructurados son el lenguaje universal de las máquinas. Sin ellos, estás hablando un idioma que las IAs no entienden.
-        </p>
-
-        <h2>Error n°3: Tiempo de Carga Excesivo</h2>
-        <p>
-          Los bots de IA tienen un "presupuesto" de tiempo por sitio. Si tus páginas tardan 4 segundos en cargar, solo rastrearán una cuarta parte. Optimiza tus Core Web Vitals para maximizar tu cobertura.
-        </p>
-
-        <blockquote>
-          "Un sitio que pasa de 4s a 1.5s de tiempo de carga ve aumentar su tasa de rastreo IA en un 300%."
-        </blockquote>
+        <AuthorCard name="Adrien" position="top" />
+        <SgeSummaryBox points={['La trampa del JavaScript no renderizado que hace invisible tu contenido.', 'Los problemas de Sitemap que bloquean la indexación IA.', 'El impacto crítico del tiempo de carga en el presupuesto de rastreo IA.']} />
+        <p className="text-lg font-medium text-foreground mb-6">¿Tienes contenido de calidad, pero ChatGPT afirma no saber nada de ti? Probablemente sea una barrera técnica invisible que impide a los bots leer tu HTML. Esta guía técnica explica los 3 errores más comunes y cómo corregirlos rápidamente para recuperar tu visibilidad en las respuestas de IA.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Error n°1: Tu Sitio es una Fortaleza JavaScript Impenetrable</h2>
+        <p>Los bots de IA son considerablemente menos pacientes que Googlebot. Si tu contenido necesita 5 segundos de JavaScript para mostrarse (Client-Side Rendering con React, Vue o Angular), el bot de IA verá una página en blanco y pasará a la siguiente fuente. El Server-Side Rendering (SSR) o la generación estática (SSG) se han vuelto indispensables para la visibilidad IA.</p>
+        <p>Verifica inmediatamente tu sitio desactivando JavaScript en tu navegador (Chrome DevTools {'->'} Settings {'->'} Debugger {'->'} Disable JavaScript). Si el contenido principal desaparece por completo, los bots de IA tampoco lo ven. Esta es la razón número uno de la invisibilidad en motores generativos, y afecta particularmente a sitios modernos construidos con frameworks SPA.</p>
+        <p>La solución técnica varía según tu stack. Para sitios React, implementa Next.js con ISR (Incremental Static Regeneration) o SSR. Para Vue.js, cambia a Nuxt.js. Para sitios WordPress, desactiva plugins que cargan contenido via AJAX y opta por temas compatibles con renderizado servidor. La inversión es significativa pero el retorno en visibilidad es inmediato.</p>
+        <RichLinkCard href="/audit-expert" title="Diagnostica el error técnico" description="Identifica precisamente qué está bloqueando los bots de IA en tu sitio con nuestro análisis automatizado" />
+        <h2 className="text-2xl font-bold mt-8 mb-4">Error n°2: Tus Datos No Están Estructurados para las Máquinas</h2>
+        <p>Sin marcado Schema.org en JSON-LD, un bot de IA debe "adivinar" dónde está el precio de tu producto, dónde está el título del artículo, quién es el autor. Esta ambigüedad crea errores de interpretación o, peor, abandono completo de tu página a favor de fuentes mejor estructuradas. JSON-LD ya no es opcional, es el lenguaje universal de las máquinas.</p>
+        <p>Implementa como mínimo los siguientes schemas: Organization para tu página de inicio y Acerca de, Article para todo tu contenido editorial, Product para tus páginas de productos, FAQPage para tus páginas de preguntas frecuentes, LocalBusiness si tienes presencia física. Cada tipo de contenido tiene su schema dedicado, y Google proporciona documentación exhaustiva.</p>
+        <p>Prueba tu implementación con el Rich Results Test de Google y la herramienta de validación Schema.org. Corrige todos los errores y advertencias antes de considerar tu trabajo completo. Un schema mal implementado puede ser peor que ningún schema, ya que envía señales contradictorias a los algoritmos.</p>
+        <h2 className="text-2xl font-bold mt-8 mb-4">Error n°3: Tiempo de Carga Excesivo que Agota el Presupuesto de Rastreo</h2>
+        <p>Los bots de IA tienen un "presupuesto" de tiempo estricto por sitio. Si tus páginas tardan 4 segundos en cargar, solo rastrearán un cuarto antes de abandonar y pasar al siguiente sitio. Optimiza tus Core Web Vitals (LCP, FID, CLS) para maximizar el número de páginas que los bots pueden analizar en cada visita.</p>
+        <p>Optimizaciones prioritarias: compresión de imágenes a WebP con lazy loading, minificación de CSS y JavaScript, caché agresivo del lado del servidor y CDN, reducción de solicitudes de terceros (analytics, publicidad, widgets sociales). Cada milisegundo ganado aumenta de manera medible tu cobertura IA.</p>
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Un sitio que pasa de 4 segundos a 1.5 segundos de tiempo de carga ve su tasa de rastreo IA aumentar un 300%. El rendimiento ya no es un lujo, es una condición de supervivencia en el ecosistema de motores generativos."</blockquote>
+        <AuthorCard name="Adrien" position="bottom" />
       </>
     ),
   },
 
-  // --- SATELLITE 3: Google SGE SEO Preparation ---
+  // Placeholder pour les autres articles (structure identique)
   'google-sge-seo-preparation': {
-    fr: (
-      <>
-        <SummaryBox
-          points={[
-            "La fin des '10 liens bleus'.",
-            "L'importance des 'Featured Snippets' sous stéroïdes.",
-            "Comment gagner la position Zéro en 2026.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          La Search Generative Experience change les règles du jeu. Google ne vous envoie plus de trafic, il donne la réponse directement. Voici comment devenir la source de cette réponse pour garder votre visibilité.
-        </p>
-
-        <h2>SGE : Un moteur de réponse, pas de recherche</h2>
-        <p>
-          L'objectif de SGE est de satisfaire l'utilisateur sans clic. Si votre contenu est vague ou purement promotionnel, il sera ignoré. SGE privilégie les faits, les chiffres et les retours d'expérience concrets.
-        </p>
-        <p>
-          Les pages qui génèrent le plus de citations sont celles qui offrent des données originales, des études de cas et des réponses directes aux questions des utilisateurs.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Testez votre compatibilité SGE"
-          description="Analysez comment votre contenu apparaît dans les réponses générées par Google"
-        />
-
-        <h2>Adapter votre contenu pour le 'Snapshot' AI</h2>
-        <p>
-          Structurez vos articles avec des questions directes et des réponses concises en début de paragraphe. C'est ce format 'Question/Réponse' que SGE extrait pour construire ses résumés.
-        </p>
-        <p>
-          Utilisez des listes à puces, des tableaux de données et des définitions claires. Ces formats sont les plus susceptibles d'être repris textuellement par l'IA.
-        </p>
-
-        <h2>L'importance des sources et citations</h2>
-        <p>
-          SGE cite ses sources. Plus votre contenu est cité ailleurs sur le web, plus Google le considère comme fiable. Travaillez votre netlinking avec des sources autoritaires de votre secteur.
-        </p>
-
-        <blockquote>
-          "D'ici fin 2026, 80% des requêtes informationnelles sur Google afficheront une réponse générée par IA. Votre stratégie SEO doit s'adapter maintenant."
-        </blockquote>
-      </>
-    ),
-    en: (
-      <>
-        <SummaryBox
-          points={[
-            "The end of the '10 blue links'.",
-            "The importance of 'Featured Snippets' on steroids.",
-            "How to win position Zero in 2026.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          The Search Generative Experience changes the rules of the game. Google no longer sends you traffic, it gives the answer directly. Here's how to become the source of that answer to maintain your visibility.
-        </p>
-
-        <h2>SGE: An Answer Engine, Not a Search Engine</h2>
-        <p>
-          SGE's goal is to satisfy the user without a click. If your content is vague or purely promotional, it will be ignored. SGE favors facts, figures, and concrete feedback.
-        </p>
-        <p>
-          The pages that generate the most citations are those that offer original data, case studies, and direct answers to user questions.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Test your SGE compatibility"
-          description="Analyze how your content appears in Google's generated responses"
-        />
-
-        <h2>Adapting Your Content for the AI 'Snapshot'</h2>
-        <p>
-          Structure your articles with direct questions and concise answers at the beginning of paragraphs. This 'Question/Answer' format is what SGE extracts to build its summaries.
-        </p>
-        <p>
-          Use bullet lists, data tables, and clear definitions. These formats are most likely to be quoted verbatim by AI.
-        </p>
-
-        <h2>The Importance of Sources and Citations</h2>
-        <p>
-          SGE cites its sources. The more your content is cited elsewhere on the web, the more Google considers it reliable. Work on your link building with authoritative sources in your industry.
-        </p>
-
-        <blockquote>
-          "By the end of 2026, 80% of informational queries on Google will display an AI-generated response. Your SEO strategy must adapt now."
-        </blockquote>
-      </>
-    ),
-    es: (
-      <>
-        <SummaryBox
-          points={[
-            "El fin de los '10 enlaces azules'.",
-            "La importancia de los 'Featured Snippets' con esteroides.",
-            "Cómo ganar la posición Cero en 2026.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          La Search Generative Experience cambia las reglas del juego. Google ya no te envía tráfico, da la respuesta directamente. Aquí está cómo convertirse en la fuente de esa respuesta para mantener tu visibilidad.
-        </p>
-
-        <h2>SGE: Un Motor de Respuestas, No de Búsqueda</h2>
-        <p>
-          El objetivo de SGE es satisfacer al usuario sin clic. Si tu contenido es vago o puramente promocional, será ignorado. SGE privilegia los hechos, las cifras y los retornos de experiencia concretos.
-        </p>
-        <p>
-          Las páginas que generan más citas son las que ofrecen datos originales, estudios de caso y respuestas directas a las preguntas de los usuarios.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Prueba tu compatibilidad SGE"
-          description="Analiza cómo tu contenido aparece en las respuestas generadas por Google"
-        />
-
-        <h2>Adaptar tu Contenido para el 'Snapshot' IA</h2>
-        <p>
-          Estructura tus artículos con preguntas directas y respuestas concisas al inicio de los párrafos. Este formato 'Pregunta/Respuesta' es lo que SGE extrae para construir sus resúmenes.
-        </p>
-        <p>
-          Usa listas con viñetas, tablas de datos y definiciones claras. Estos formatos son los más propensos a ser citados textualmente por la IA.
-        </p>
-
-        <h2>La Importancia de las Fuentes y Citas</h2>
-        <p>
-          SGE cita sus fuentes. Cuanto más tu contenido sea citado en otros sitios web, más Google lo considerará confiable. Trabaja tu netlinking con fuentes autoritarias de tu sector.
-        </p>
-
-        <blockquote>
-          "Para finales de 2026, el 80% de las consultas informativas en Google mostrarán una respuesta generada por IA. Tu estrategia SEO debe adaptarse ahora."
-        </blockquote>
-      </>
-    ),
+    fr: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["La fin des '10 liens bleus' : ce que SGE change concrètement.", "L'importance des 'Featured Snippets' sous stéroïdes.", "Comment gagner la position Zéro en 2026."]} /><p className="text-lg font-medium text-foreground mb-6">La Search Generative Experience change fondamentalement les règles du jeu SEO. Google ne vous envoie plus simplement du trafic via des liens cliquables, il donne maintenant la réponse directement dans son interface. L'utilisateur obtient ce qu'il cherche sans jamais visiter votre site. Voici comment devenir la source de cette réponse pour conserver votre visibilité dans ce nouveau paradigme.</p><h2 className="text-2xl font-bold mt-8 mb-4">SGE : Un moteur de réponse, pas de recherche</h2><p>L'objectif fondamental de SGE est de satisfaire l'utilisateur sans qu'il ait besoin de cliquer sur un seul lien. Si votre contenu est vague, promotionnel ou trop orienté vente, il sera systématiquement ignoré au profit de sources plus neutres et factuelles. SGE privilégie les faits vérifiables, les chiffres sourcés et les retours d'expérience concrets qui peuvent être synthétisés en une réponse claire.</p><p>Les pages qui génèrent le plus de citations sont celles qui offrent des données originales que l'on ne trouve pas ailleurs : études de cas propriétaires, statistiques internes, méthodologies documentées. Créez du contenu que SGE ne peut pas ignorer parce qu'il est unique et directement répondant aux questions des utilisateurs.</p><p>La structure de votre contenu doit être optimisée pour l'extraction : commencez chaque section par la réponse, puis développez. Utilisez des listes numérotées pour les processus, des tableaux pour les comparaisons, des définitions encadrées pour les concepts clés. SGE scanne ces formats en priorité.</p><RichLinkCard href="/audit-expert" title="Testez votre compatibilité SGE" description="Analysez comment votre contenu apparaît dans les réponses générées par Google" /><h2 className="text-2xl font-bold mt-8 mb-4">Adapter votre contenu pour le 'Snapshot' AI</h2><p>Structurez vos articles avec des questions directes en titres (H2) et des réponses concises dans le premier paragraphe de chaque section. C'est exactement ce format 'Question/Réponse' que SGE extrait pour construire ses résumés. Un article bien structuré peut voir plusieurs de ses sections citées dans différentes requêtes utilisateur.</p><p>Utilisez des listes à puces pour les caractéristiques, des tableaux de données pour les comparaisons chiffrées, des définitions claires au début de vos paragraphes. Ces formats sont les plus susceptibles d'être repris textuellement par l'IA car ils offrent une information structurée et sans ambiguïté.</p><h2 className="text-2xl font-bold mt-8 mb-4">L'importance des sources et citations</h2><p>SGE cite ses sources visiblement dans son interface. Plus votre contenu est cité ailleurs sur le web par des sources fiables, plus Google le considère comme digne de confiance. Travaillez votre netlinking avec des sources autoritaires de votre secteur : médias spécialisés, institutions, universités, rapports d'analystes.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"D'ici fin 2026, 80% des requêtes informationnelles sur Google afficheront une réponse générée par IA. Votre stratégie SEO doit s'adapter maintenant ou vous deviendrez invisible pour la majorité de vos prospects."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    en: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["The end of '10 blue links': what SGE concretely changes.", "The importance of 'Featured Snippets' on steroids.", "How to win position Zero in 2026."]} /><p className="text-lg font-medium text-foreground mb-6">The Search Generative Experience fundamentally changes SEO rules. Google no longer simply sends you traffic via clickable links, it now gives the answer directly in its interface. The user gets what they're looking for without ever visiting your site. Here's how to become the source of that answer to maintain your visibility in this new paradigm.</p><h2 className="text-2xl font-bold mt-8 mb-4">SGE: An Answer Engine, Not Search</h2><p>SGE's fundamental objective is to satisfy the user without them needing to click a single link. If your content is vague, promotional or too sales-oriented, it will be systematically ignored in favor of more neutral and factual sources. SGE favors verifiable facts, sourced figures and concrete experience feedback that can be synthesized into a clear answer.</p><p>Pages that generate the most citations are those offering original data not found elsewhere: proprietary case studies, internal statistics, documented methodologies. Create content that SGE cannot ignore because it's unique and directly answers user questions.</p><p>Your content structure must be optimized for extraction: start each section with the answer, then develop. Use numbered lists for processes, tables for comparisons, framed definitions for key concepts. SGE scans these formats as priority.</p><RichLinkCard href="/audit-expert" title="Test your SGE compatibility" description="Analyze how your content appears in Google's generated responses" /><h2 className="text-2xl font-bold mt-8 mb-4">Adapting Your Content for the AI 'Snapshot'</h2><p>Structure your articles with direct questions as titles (H2) and concise answers in the first paragraph of each section. This is exactly the 'Question/Answer' format that SGE extracts to build its summaries. A well-structured article can see several of its sections cited in different user queries.</p><p>Use bullet lists for characteristics, data tables for numerical comparisons, clear definitions at the beginning of your paragraphs. These formats are most likely to be quoted verbatim by AI as they offer structured and unambiguous information.</p><h2 className="text-2xl font-bold mt-8 mb-4">The Importance of Sources and Citations</h2><p>SGE visibly cites its sources in its interface. The more your content is cited elsewhere on the web by reliable sources, the more Google considers it trustworthy. Work your link building with authoritative sources in your sector: specialized media, institutions, universities, analyst reports.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"By end of 2026, 80% of informational queries on Google will display an AI-generated response. Your SEO strategy must adapt now or you'll become invisible to the majority of your prospects."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    es: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["El fin de los '10 enlaces azules': lo que SGE cambia concretamente.", "La importancia de los 'Featured Snippets' con esteroides.", "Cómo ganar la posición Cero en 2026."]} /><p className="text-lg font-medium text-foreground mb-6">La Search Generative Experience cambia fundamentalmente las reglas del SEO. Google ya no te envía simplemente tráfico vía enlaces clicables, ahora da la respuesta directamente en su interfaz. El usuario obtiene lo que busca sin visitar tu sitio. Aquí está cómo convertirse en la fuente de esa respuesta para mantener tu visibilidad en este nuevo paradigma.</p><h2 className="text-2xl font-bold mt-8 mb-4">SGE: Un Motor de Respuestas, No de Búsqueda</h2><p>El objetivo fundamental de SGE es satisfacer al usuario sin que necesite hacer clic en un solo enlace. Si tu contenido es vago, promocional o demasiado orientado a ventas, será sistemáticamente ignorado a favor de fuentes más neutrales y factuales. SGE favorece los hechos verificables, las cifras con fuentes y los retornos de experiencia concretos que pueden sintetizarse en una respuesta clara.</p><p>Las páginas que generan más citas son las que ofrecen datos originales que no se encuentran en otro lugar: casos de estudio propietarios, estadísticas internas, metodologías documentadas. Crea contenido que SGE no pueda ignorar porque es único y responde directamente a las preguntas de los usuarios.</p><p>La estructura de tu contenido debe optimizarse para la extracción: comienza cada sección con la respuesta, luego desarrolla. Usa listas numeradas para procesos, tablas para comparaciones, definiciones enmarcadas para conceptos clave. SGE escanea estos formatos como prioridad.</p><RichLinkCard href="/audit-expert" title="Prueba tu compatibilidad SGE" description="Analiza cómo tu contenido aparece en las respuestas generadas por Google" /><h2 className="text-2xl font-bold mt-8 mb-4">Adaptar tu Contenido para el 'Snapshot' IA</h2><p>Estructura tus artículos con preguntas directas como títulos (H2) y respuestas concisas en el primer párrafo de cada sección. Este es exactamente el formato 'Pregunta/Respuesta' que SGE extrae para construir sus resúmenes. Un artículo bien estructurado puede ver varias de sus secciones citadas en diferentes consultas de usuarios.</p><p>Usa listas con viñetas para características, tablas de datos para comparaciones numéricas, definiciones claras al inicio de tus párrafos. Estos formatos son los más propensos a ser citados textualmente por la IA ya que ofrecen información estructurada y sin ambigüedad.</p><h2 className="text-2xl font-bold mt-8 mb-4">La Importancia de las Fuentes y Citas</h2><p>SGE cita visiblemente sus fuentes en su interfaz. Cuanto más tu contenido sea citado en otro lugar de la web por fuentes confiables, más Google lo considerará digno de confianza. Trabaja tu netlinking con fuentes autoritarias de tu sector: medios especializados, instituciones, universidades, informes de analistas.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Para finales de 2026, el 80% de las consultas informativas en Google mostrarán una respuesta generada por IA. Tu estrategia SEO debe adaptarse ahora o te volverás invisible para la mayoría de tus prospectos."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
   },
 
-  // --- SATELLITE 4: Mission Mise aux Normes IA ---
   'mission-mise-aux-normes-ia': {
-    fr: (
-      <>
-        <SummaryBox
-          points={[
-            "Créer un sentiment d'urgence légitime.",
-            "Le pricing d'un audit GEO.",
-            "Fidéliser le client avec une veille mensuelle.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Ne vendez plus du vent ou des promesses de ranking incertaines. Vendez de la sécurité infrastructurelle. La mise aux normes IA est le service le plus facile à pitcher et à justifier en 2026.
-        </p>
-
-        <h2>Le pitch : 'Votre concurrent est cité, pas vous'</h2>
-        <p>
-          Montrez à votre client une capture d'écran de Perplexity citant son concurrent direct. L'impact psychologique est immédiat. Proposez ensuite un plan d'action correctif sur 30 jours.
-        </p>
-        <p>
-          Cette approche transforme une vente complexe en urgence évidente. Le client voit le problème, comprend l'enjeu, et veut agir immédiatement.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Générez vos audits avant-vente"
-          description="Créez des rapports impactants pour convertir vos prospects"
-        />
-
-        <h2>Le livrable : Ce que le client veut voir</h2>
-        <p>
-          Fournissez un rapport 'Avant/Après' sur la détection des balises techniques et la propreté du robots.txt. C'est tangible, rassurant et technique.
-        </p>
-        <p>
-          Incluez des métriques claires : nombre de pages indexées par les bots IA, présence de données structurées, temps de crawl. Ces KPIs justifient votre valeur ajoutée.
-        </p>
-
-        <h2>La récurrence : Veille et maintenance</h2>
-        <p>
-          Proposez un forfait mensuel de monitoring. Les bots IA évoluent constamment, de nouveaux User-Agents apparaissent. Votre client a besoin d'une veille permanente.
-        </p>
-
-        <blockquote>
-          "Les consultants qui proposent un suivi mensuel 'Visibilité IA' génèrent 3x plus de revenus récurrents que ceux qui vendent uniquement des audits ponctuels."
-        </blockquote>
-      </>
-    ),
-    en: (
-      <>
-        <SummaryBox
-          points={[
-            "Create a legitimate sense of urgency.",
-            "Pricing a GEO audit.",
-            "Retain clients with monthly monitoring.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Stop selling smoke or uncertain ranking promises. Sell infrastructure security. AI compliance is the easiest service to pitch and justify in 2026.
-        </p>
-
-        <h2>The Pitch: 'Your Competitor is Cited, Not You'</h2>
-        <p>
-          Show your client a screenshot of Perplexity citing their direct competitor. The psychological impact is immediate. Then propose a 30-day corrective action plan.
-        </p>
-        <p>
-          This approach transforms a complex sale into an obvious urgency. The client sees the problem, understands the stakes, and wants to act immediately.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Generate your pre-sale audits"
-          description="Create impactful reports to convert your prospects"
-        />
-
-        <h2>The Deliverable: What the Client Wants to See</h2>
-        <p>
-          Provide a 'Before/After' report on technical tag detection and robots.txt cleanliness. It's tangible, reassuring, and technical.
-        </p>
-        <p>
-          Include clear metrics: number of pages indexed by AI bots, presence of structured data, crawl time. These KPIs justify your added value.
-        </p>
-
-        <h2>Recurrence: Monitoring and Maintenance</h2>
-        <p>
-          Offer a monthly monitoring package. AI bots are constantly evolving, new User-Agents appear. Your client needs permanent monitoring.
-        </p>
-
-        <blockquote>
-          "Consultants who offer monthly 'AI Visibility' monitoring generate 3x more recurring revenue than those who only sell one-time audits."
-        </blockquote>
-      </>
-    ),
-    es: (
-      <>
-        <SummaryBox
-          points={[
-            "Crear un sentido de urgencia legítimo.",
-            "El pricing de una auditoría GEO.",
-            "Fidelizar al cliente con monitoreo mensual.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Deja de vender humo o promesas de ranking inciertas. Vende seguridad de infraestructura. El cumplimiento IA es el servicio más fácil de vender y justificar en 2026.
-        </p>
-
-        <h2>El Pitch: 'Tu Competidor es Citado, Tú No'</h2>
-        <p>
-          Muestra a tu cliente una captura de pantalla de Perplexity citando a su competidor directo. El impacto psicológico es inmediato. Luego propón un plan de acción correctivo de 30 días.
-        </p>
-        <p>
-          Este enfoque transforma una venta compleja en una urgencia evidente. El cliente ve el problema, entiende lo que está en juego y quiere actuar de inmediato.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Genera tus auditorías pre-venta"
-          description="Crea informes impactantes para convertir tus prospectos"
-        />
-
-        <h2>El Entregable: Lo que el Cliente Quiere Ver</h2>
-        <p>
-          Proporciona un informe 'Antes/Después' sobre la detección de etiquetas técnicas y la limpieza del robots.txt. Es tangible, tranquilizador y técnico.
-        </p>
-        <p>
-          Incluye métricas claras: número de páginas indexadas por bots IA, presencia de datos estructurados, tiempo de rastreo. Estos KPIs justifican tu valor añadido.
-        </p>
-
-        <h2>La Recurrencia: Monitoreo y Mantenimiento</h2>
-        <p>
-          Ofrece un paquete de monitoreo mensual. Los bots de IA evolucionan constantemente, aparecen nuevos User-Agents. Tu cliente necesita una vigilancia permanente.
-        </p>
-
-        <blockquote>
-          "Los consultores que ofrecen monitoreo mensual de 'Visibilidad IA' generan 3x más ingresos recurrentes que los que solo venden auditorías puntuales."
-        </blockquote>
-      </>
-    ),
+    fr: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Créer un sentiment d'urgence légitime chez vos prospects.", "Le pricing stratégique d'un audit GEO.", "Fidéliser le client avec une veille mensuelle."]} /><p className="text-lg font-medium text-foreground mb-6">Ne vendez plus du vent ou des promesses de ranking incertaines. Vendez de la sécurité infrastructurelle tangible. La mise aux normes IA est le service le plus facile à pitcher et à justifier en 2026 car la douleur client est immédiate et visible.</p><h2 className="text-2xl font-bold mt-8 mb-4">Le pitch imparable : 'Votre concurrent est cité, pas vous'</h2><p>Montrez à votre prospect une capture d'écran de Perplexity ou ChatGPT citant son concurrent direct sur une question métier stratégique. L'impact psychologique est immédiat et dévastateur. Proposez ensuite un plan d'action correctif sur 30 jours avec des livrables clairs.</p><p>Cette approche transforme une vente complexe et abstraite en urgence évidente et concrète. Le client voit le problème de ses propres yeux, comprend l'enjeu commercial immédiat, et veut agir tout de suite. Vous passez de vendeur à sauveur.</p><RichLinkCard href="/audit-expert" title="Générez vos audits avant-vente" description="Créez des rapports impactants pour convertir vos prospects en quelques minutes" /><h2 className="text-2xl font-bold mt-8 mb-4">Le livrable : Ce que le client veut vraiment voir</h2><p>Fournissez un rapport 'Avant/Après' visuellement impactant sur la détection des balises techniques et la propreté du robots.txt. C'est tangible, rassurant et suffisamment technique pour justifier votre expertise.</p><p>Incluez des métriques claires et comparables : nombre de pages indexées par les bots IA, présence et complétude des données structurées, temps de crawl moyen. Ces KPIs objectifs justifient votre valeur ajoutée et permettent de mesurer les progrès.</p><h2 className="text-2xl font-bold mt-8 mb-4">La récurrence : Veille et maintenance continue</h2><p>Proposez un forfait mensuel de monitoring et d'alertes. Les bots IA évoluent constamment, de nouveaux User-Agents apparaissent régulièrement. Votre client a besoin d'une veille permanente pour rester visible dans un écosystème en mutation rapide.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Les consultants qui proposent un suivi mensuel 'Visibilité IA' génèrent 3x plus de revenus récurrents que ceux qui vendent uniquement des audits ponctuels. La récurrence est la clé de la croissance durable."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    en: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Create a legitimate sense of urgency with your prospects.", "Strategic pricing for a GEO audit.", "Retain clients with monthly monitoring."]} /><p className="text-lg font-medium text-foreground mb-6">Stop selling smoke or uncertain ranking promises. Sell tangible infrastructure security. AI compliance is the easiest service to pitch and justify in 2026 because client pain is immediate and visible.</p><h2 className="text-2xl font-bold mt-8 mb-4">The Unbeatable Pitch: 'Your Competitor is Cited, Not You'</h2><p>Show your prospect a screenshot of Perplexity or ChatGPT citing their direct competitor on a strategic business question. The psychological impact is immediate and devastating. Then propose a 30-day corrective action plan with clear deliverables.</p><p>This approach transforms a complex and abstract sale into an obvious and concrete urgency. The client sees the problem with their own eyes, understands the immediate commercial stakes, and wants to act right away. You go from seller to savior.</p><RichLinkCard href="/audit-expert" title="Generate your pre-sale audits" description="Create impactful reports to convert your prospects in minutes" /><h2 className="text-2xl font-bold mt-8 mb-4">The Deliverable: What the Client Really Wants to See</h2><p>Provide a visually impactful 'Before/After' report on technical tag detection and robots.txt cleanliness. It's tangible, reassuring and technical enough to justify your expertise.</p><p>Include clear and comparable metrics: number of pages indexed by AI bots, presence and completeness of structured data, average crawl time. These objective KPIs justify your added value and allow measuring progress.</p><h2 className="text-2xl font-bold mt-8 mb-4">Recurrence: Continuous Monitoring and Maintenance</h2><p>Offer a monthly monitoring and alert package. AI bots are constantly evolving, new User-Agents appear regularly. Your client needs permanent monitoring to stay visible in a rapidly changing ecosystem.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Consultants who offer monthly 'AI Visibility' monitoring generate 3x more recurring revenue than those who only sell one-time audits. Recurrence is the key to sustainable growth."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    es: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Crear un sentido de urgencia legítimo en tus prospectos.", "El pricing estratégico de una auditoría GEO.", "Fidelizar al cliente con monitoreo mensual."]} /><p className="text-lg font-medium text-foreground mb-6">Deja de vender humo o promesas de ranking inciertas. Vende seguridad de infraestructura tangible. El cumplimiento IA es el servicio más fácil de vender y justificar en 2026 porque el dolor del cliente es inmediato y visible.</p><h2 className="text-2xl font-bold mt-8 mb-4">El Pitch Imbatible: 'Tu Competidor es Citado, Tú No'</h2><p>Muestra a tu prospecto una captura de pantalla de Perplexity o ChatGPT citando a su competidor directo en una pregunta de negocio estratégica. El impacto psicológico es inmediato y devastador. Luego propón un plan de acción correctivo de 30 días con entregables claros.</p><p>Este enfoque transforma una venta compleja y abstracta en una urgencia obvia y concreta. El cliente ve el problema con sus propios ojos, entiende lo que está en juego comercialmente, y quiere actuar de inmediato. Pasas de vendedor a salvador.</p><RichLinkCard href="/audit-expert" title="Genera tus auditorías pre-venta" description="Crea informes impactantes para convertir tus prospectos en minutos" /><h2 className="text-2xl font-bold mt-8 mb-4">El Entregable: Lo que el Cliente Realmente Quiere Ver</h2><p>Proporciona un informe 'Antes/Después' visualmente impactante sobre la detección de etiquetas técnicas y la limpieza del robots.txt. Es tangible, tranquilizador y suficientemente técnico para justificar tu experiencia.</p><p>Incluye métricas claras y comparables: número de páginas indexadas por bots IA, presencia y completitud de datos estructurados, tiempo de rastreo promedio. Estos KPIs objetivos justifican tu valor añadido y permiten medir el progreso.</p><h2 className="text-2xl font-bold mt-8 mb-4">La Recurrencia: Monitoreo y Mantenimiento Continuo</h2><p>Ofrece un paquete mensual de monitoreo y alertas. Los bots de IA evolucionan constantemente, aparecen nuevos User-Agents regularmente. Tu cliente necesita vigilancia permanente para mantenerse visible en un ecosistema en rápida mutación.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Los consultores que ofrecen monitoreo mensual de 'Visibilidad IA' generan 3x más ingresos recurrentes que los que solo venden auditorías puntuales. La recurrencia es la clave del crecimiento sostenible."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
   },
 
-  // --- SATELLITE 5: JSON-LD Snippet Autorité ---
   'json-ld-snippet-autorite': {
-    fr: (
-      <>
-        <SummaryBox
-          points={[
-            "Pourquoi Schema.org est vital pour les LLM.",
-            "Le schema 'Organization' décortiqué.",
-            "Exemple de code prêt à l'emploi.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Les LLM ne 'lisent' pas comme nous. Ils parsent de la donnée brute. Le JSON-LD est votre façon de leur dire exactement qui vous êtes, sans ambiguïté ni risque d'hallucination.
-        </p>
-
-        <h2>Parler la langue des robots : Schema.org</h2>
-        <p>
-          Le JSON-LD est un morceau de code invisible pour l'humain mais vital pour le robot. Il permet de dire 'Ceci est un Article', 'Ceci est un Prix', 'Ceci est l'Auteur'. Sans ça, vous n'êtes que du texte en vrac.
-        </p>
-        <p>
-          Schema.org est la norme universelle comprise par Google, Bing, et tous les LLM majeurs. Implémenter ces balises est non négociable en 2026.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Générateur JSON-LD automatique"
-          description="Créez vos balises structurées en quelques clics"
-        />
-
-        <h2>Le Code : Copiez ce snippet sur votre Home</h2>
-        <p>
-          Il existe un format standard pour définir une Organisation. Il inclut votre logo, vos réseaux sociaux et vos contacts. C'est la carte d'identité numérique que tout site pro doit avoir.
-        </p>
-        <p>
-          Voici les propriétés essentielles à renseigner : name, url, logo, sameAs (liens vers vos profils sociaux), contactPoint, et address pour les entreprises locales.
-        </p>
-
-        <h2>Les autres schemas indispensables</h2>
-        <p>
-          Au-delà d'Organization, implémentez Article pour vos contenus éditoriaux, Product pour vos produits, FAQPage pour vos questions fréquentes. Chaque type de contenu a son schema dédié.
-        </p>
-
-        <blockquote>
-          "Les sites avec un JSON-LD complet sont 4x plus susceptibles d'être cités dans les réponses IA que ceux sans données structurées."
-        </blockquote>
-      </>
-    ),
-    en: (
-      <>
-        <SummaryBox
-          points={[
-            "Why Schema.org is vital for LLMs.",
-            "The 'Organization' schema explained.",
-            "Ready-to-use code example.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          LLMs don't 'read' like us. They parse raw data. JSON-LD is your way to tell them exactly who you are, without ambiguity or risk of hallucination.
-        </p>
-
-        <h2>Speaking the Language of Robots: Schema.org</h2>
-        <p>
-          JSON-LD is a piece of code invisible to humans but vital to robots. It allows you to say 'This is an Article', 'This is a Price', 'This is the Author'. Without it, you're just unstructured text.
-        </p>
-        <p>
-          Schema.org is the universal standard understood by Google, Bing, and all major LLMs. Implementing these tags is non-negotiable in 2026.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Automatic JSON-LD generator"
-          description="Create your structured tags in a few clicks"
-        />
-
-        <h2>The Code: Copy This Snippet to Your Home</h2>
-        <p>
-          There is a standard format for defining an Organization. It includes your logo, social networks, and contacts. It's the digital ID card that every professional site must have.
-        </p>
-        <p>
-          Here are the essential properties to fill in: name, url, logo, sameAs (links to your social profiles), contactPoint, and address for local businesses.
-        </p>
-
-        <h2>Other Essential Schemas</h2>
-        <p>
-          Beyond Organization, implement Article for your editorial content, Product for your products, FAQPage for your frequently asked questions. Each type of content has its dedicated schema.
-        </p>
-
-        <blockquote>
-          "Sites with complete JSON-LD are 4x more likely to be cited in AI responses than those without structured data."
-        </blockquote>
-      </>
-    ),
-    es: (
-      <>
-        <SummaryBox
-          points={[
-            "Por qué Schema.org es vital para los LLM.",
-            "El esquema 'Organization' explicado.",
-            "Ejemplo de código listo para usar.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Los LLM no 'leen' como nosotros. Parsean datos brutos. JSON-LD es tu forma de decirles exactamente quién eres, sin ambigüedad ni riesgo de alucinación.
-        </p>
-
-        <h2>Hablar el Idioma de los Robots: Schema.org</h2>
-        <p>
-          JSON-LD es un fragmento de código invisible para los humanos pero vital para los robots. Te permite decir 'Esto es un Artículo', 'Esto es un Precio', 'Este es el Autor'. Sin eso, solo eres texto desestructurado.
-        </p>
-        <p>
-          Schema.org es el estándar universal entendido por Google, Bing y todos los LLM principales. Implementar estas etiquetas es innegociable en 2026.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Generador JSON-LD automático"
-          description="Crea tus etiquetas estructuradas en unos clics"
-        />
-
-        <h2>El Código: Copia Este Snippet en tu Home</h2>
-        <p>
-          Existe un formato estándar para definir una Organización. Incluye tu logo, redes sociales y contactos. Es la tarjeta de identidad digital que todo sitio profesional debe tener.
-        </p>
-        <p>
-          Aquí están las propiedades esenciales a completar: name, url, logo, sameAs (enlaces a tus perfiles sociales), contactPoint, y address para negocios locales.
-        </p>
-
-        <h2>Otros Schemas Indispensables</h2>
-        <p>
-          Más allá de Organization, implementa Article para tu contenido editorial, Product para tus productos, FAQPage para tus preguntas frecuentes. Cada tipo de contenido tiene su schema dedicado.
-        </p>
-
-        <blockquote>
-          "Los sitios con JSON-LD completo son 4x más propensos a ser citados en respuestas de IA que aquellos sin datos estructurados."
-        </blockquote>
-      </>
-    ),
+    fr: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Pourquoi Schema.org est vital pour les LLM.", "Le schema 'Organization' décortiqué ligne par ligne.", "Exemple de code prêt à l'emploi pour votre site."]} /><p className="text-lg font-medium text-foreground mb-6">Les LLM ne 'lisent' pas comme nous. Ils parsent de la donnée brute structurée. Le JSON-LD est votre façon de leur dire exactement qui vous êtes, sans ambiguïté ni risque d'hallucination sur votre identité.</p><h2 className="text-2xl font-bold mt-8 mb-4">Parler la langue des robots : Schema.org</h2><p>Le JSON-LD est un morceau de code invisible pour l'humain mais vital pour le robot. Il permet de déclarer explicitement 'Ceci est un Article', 'Ceci est un Prix', 'Ceci est l'Auteur'. Sans ce balisage, vous n'êtes que du texte en vrac que l'IA doit interpréter avec tous les risques d'erreur que cela comporte.</p><p>Schema.org est la norme universelle comprise par Google, Bing, et tous les LLM majeurs. Implémenter ces balises n'est plus optionnel en 2026, c'est le minimum requis pour exister dans l'écosystème des moteurs génératifs.</p><RichLinkCard href="/audit-expert" title="Générateur JSON-LD automatique" description="Créez vos balises structurées en quelques clics sans coder" /><h2 className="text-2xl font-bold mt-8 mb-4">Le Code : Snippet Organization prêt à l'emploi</h2><p>Voici un exemple complet de schema Organization à placer dans le head de votre page d'accueil. Remplacez les valeurs par vos propres informations :</p><pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto my-4">{`<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Votre Entreprise",
+  "url": "https://votresite.com",
+  "logo": "https://votresite.com/logo.png",
+  "sameAs": [
+    "https://linkedin.com/company/votre-entreprise",
+    "https://twitter.com/votre-entreprise"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+33-1-XX-XX-XX-XX",
+    "contactType": "customer service"
+  }
+}
+</script>`}</pre><h2 className="text-2xl font-bold mt-8 mb-4">Les autres schemas indispensables</h2><p>Au-delà d'Organization, implémentez Article pour vos contenus éditoriaux, Product pour vos produits, FAQPage pour vos questions fréquentes. Chaque type de contenu a son schema dédié qui maximise sa compréhension par les IA.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Les sites avec un JSON-LD complet sont 4x plus susceptibles d'être cités dans les réponses IA que ceux sans données structurées."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    en: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Why Schema.org is vital for LLMs.", "The 'Organization' schema explained line by line.", "Ready-to-use code example for your site."]} /><p className="text-lg font-medium text-foreground mb-6">LLMs don't 'read' like us. They parse structured raw data. JSON-LD is your way to tell them exactly who you are, without ambiguity or risk of hallucination about your identity.</p><h2 className="text-2xl font-bold mt-8 mb-4">Speaking the Language of Robots: Schema.org</h2><p>JSON-LD is a piece of code invisible to humans but vital to robots. It allows you to explicitly declare 'This is an Article', 'This is a Price', 'This is the Author'. Without this markup, you're just unstructured text that AI must interpret with all the error risks that entails.</p><p>Schema.org is the universal standard understood by Google, Bing, and all major LLMs. Implementing these tags is no longer optional in 2026, it's the minimum required to exist in the generative engine ecosystem.</p><RichLinkCard href="/audit-expert" title="Automatic JSON-LD generator" description="Create your structured tags in a few clicks without coding" /><h2 className="text-2xl font-bold mt-8 mb-4">The Code: Ready-to-Use Organization Snippet</h2><p>Here's a complete Organization schema example to place in your homepage head. Replace values with your own information:</p><pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto my-4">{`<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Your Company",
+  "url": "https://yoursite.com",
+  "logo": "https://yoursite.com/logo.png",
+  "sameAs": [
+    "https://linkedin.com/company/your-company",
+    "https://twitter.com/your-company"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+1-XXX-XXX-XXXX",
+    "contactType": "customer service"
+  }
+}
+</script>`}</pre><h2 className="text-2xl font-bold mt-8 mb-4">Other Essential Schemas</h2><p>Beyond Organization, implement Article for editorial content, Product for your products, FAQPage for frequently asked questions. Each content type has its dedicated schema that maximizes AI understanding.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Sites with complete JSON-LD are 4x more likely to be cited in AI responses than those without structured data."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    es: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Por qué Schema.org es vital para los LLM.", "El esquema 'Organization' explicado línea por línea.", "Ejemplo de código listo para usar en tu sitio."]} /><p className="text-lg font-medium text-foreground mb-6">Los LLM no 'leen' como nosotros. Parsean datos brutos estructurados. JSON-LD es tu forma de decirles exactamente quién eres, sin ambigüedad ni riesgo de alucinación sobre tu identidad.</p><h2 className="text-2xl font-bold mt-8 mb-4">Hablar el Idioma de los Robots: Schema.org</h2><p>JSON-LD es un fragmento de código invisible para los humanos pero vital para los robots. Te permite declarar explícitamente 'Esto es un Artículo', 'Esto es un Precio', 'Este es el Autor'. Sin este marcado, solo eres texto desestructurado que la IA debe interpretar con todos los riesgos de error que eso conlleva.</p><p>Schema.org es el estándar universal entendido por Google, Bing y todos los LLM principales. Implementar estas etiquetas ya no es opcional en 2026, es el mínimo requerido para existir en el ecosistema de motores generativos.</p><RichLinkCard href="/audit-expert" title="Generador JSON-LD automático" description="Crea tus etiquetas estructuradas en unos clics sin programar" /><h2 className="text-2xl font-bold mt-8 mb-4">El Código: Snippet Organization Listo para Usar</h2><p>Aquí hay un ejemplo completo de schema Organization para colocar en el head de tu página de inicio. Reemplaza los valores con tu propia información:</p><pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto my-4">{`<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Tu Empresa",
+  "url": "https://tusitio.com",
+  "logo": "https://tusitio.com/logo.png",
+  "sameAs": [
+    "https://linkedin.com/company/tu-empresa",
+    "https://twitter.com/tu-empresa"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+34-XXX-XXX-XXX",
+    "contactType": "customer service"
+  }
+}
+</script>`}</pre><h2 className="text-2xl font-bold mt-8 mb-4">Otros Schemas Indispensables</h2><p>Más allá de Organization, implementa Article para contenido editorial, Product para tus productos, FAQPage para preguntas frecuentes. Cada tipo de contenido tiene su schema dedicado que maximiza la comprensión por parte de las IA.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Los sitios con JSON-LD completo son 4x más propensos a ser citados en respuestas de IA que aquellos sin datos estructurados."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
   },
 
-  // --- SATELLITE 6: Perplexity SEO Citation ---
+  // Les satellites restants avec contenu simplifié mais enrichi
   'perplexity-seo-citation': {
-    fr: (
-      <>
-        <SummaryBox
-          points={[
-            "L'algorithme de citation de Perplexity analysé.",
-            "L'importance de la fraîcheur de l'information.",
-            "Structurer ses articles pour la citation.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Perplexity est devenu le moteur de recherche des décideurs tech et B2B. Être cité ici vaut 1000 visites Google non qualifiées. Voici comment optimiser vos contenus pour maximiser vos chances de citation.
-        </p>
-
-        <h2>La structure 'Fact-First' : Aller droit au but</h2>
-        <p>
-          Perplexity déteste le blabla. Mettez l'information clé (la réponse) dès la première phrase de vos paragraphes. Utilisez des listes à puces et des tableaux de données.
-        </p>
-        <p>
-          Évitez les introductions longues et les formules vagues. Chaque phrase doit apporter une information factuelle que Perplexity peut extraire et citer.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Analysez votre visibilité Perplexity"
-          description="Découvrez si votre site apparaît dans les réponses Perplexity"
-        />
-
-        <h2>Citations et Backlinks : La confiance avant tout</h2>
-        <p>
-          Pour citer une source, Perplexity doit lui faire confiance. Les backlinks provenant de sites académiques ou de presse spécialisée augmentent drastiquement votre 'Trust Score' aux yeux de l'IA.
-        </p>
-        <p>
-          Travaillez votre présence sur les sites d'autorité de votre secteur. Une mention sur un média reconnu vaut plus que 100 backlinks de sites inconnus.
-        </p>
-
-        <h2>La fraîcheur : Mettez à jour régulièrement</h2>
-        <p>
-          Perplexity privilégie le contenu récent. Mettez à jour vos articles piliers régulièrement et datez clairement vos mises à jour. Un article de 2024 non actualisé sera ignoré.
-        </p>
-
-        <blockquote>
-          "Les sources citées par Perplexity voient en moyenne 200% de trafic qualifié en plus que les sources ignorées par l'IA."
-        </blockquote>
-      </>
-    ),
-    en: (
-      <>
-        <SummaryBox
-          points={[
-            "Perplexity's citation algorithm analyzed.",
-            "The importance of information freshness.",
-            "Structuring articles for citation.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Perplexity has become the search engine for tech and B2B decision-makers. Being cited here is worth 1000 unqualified Google visits. Here's how to optimize your content to maximize your citation chances.
-        </p>
-
-        <h2>The 'Fact-First' Structure: Get to the Point</h2>
-        <p>
-          Perplexity hates fluff. Put the key information (the answer) in the first sentence of your paragraphs. Use bullet lists and data tables.
-        </p>
-        <p>
-          Avoid long introductions and vague formulas. Every sentence must provide factual information that Perplexity can extract and cite.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Analyze your Perplexity visibility"
-          description="Discover if your site appears in Perplexity responses"
-        />
-
-        <h2>Citations and Backlinks: Trust First</h2>
-        <p>
-          To cite a source, Perplexity must trust it. Backlinks from academic or specialized press sites drastically increase your 'Trust Score' in the eyes of AI.
-        </p>
-        <p>
-          Work on your presence on authority sites in your industry. A mention on a recognized media is worth more than 100 backlinks from unknown sites.
-        </p>
-
-        <h2>Freshness: Update Regularly</h2>
-        <p>
-          Perplexity favors recent content. Update your pillar articles regularly and clearly date your updates. A 2024 article that hasn't been updated will be ignored.
-        </p>
-
-        <blockquote>
-          "Sources cited by Perplexity see on average 200% more qualified traffic than sources ignored by AI."
-        </blockquote>
-      </>
-    ),
-    es: (
-      <>
-        <SummaryBox
-          points={[
-            "El algoritmo de citación de Perplexity analizado.",
-            "La importancia de la frescura de la información.",
-            "Estructurar artículos para la citación.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Perplexity se ha convertido en el motor de búsqueda de decisores tech y B2B. Ser citado aquí vale 1000 visitas no cualificadas de Google. Aquí está cómo optimizar tu contenido para maximizar tus chances de citación.
-        </p>
-
-        <h2>La Estructura 'Fact-First': Ir al Grano</h2>
-        <p>
-          Perplexity odia el relleno. Pon la información clave (la respuesta) en la primera frase de tus párrafos. Usa listas con viñetas y tablas de datos.
-        </p>
-        <p>
-          Evita las introducciones largas y las fórmulas vagas. Cada frase debe aportar información factual que Perplexity pueda extraer y citar.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Analiza tu visibilidad en Perplexity"
-          description="Descubre si tu sitio aparece en las respuestas de Perplexity"
-        />
-
-        <h2>Citas y Backlinks: La Confianza Primero</h2>
-        <p>
-          Para citar una fuente, Perplexity debe confiar en ella. Los backlinks de sitios académicos o prensa especializada aumentan drásticamente tu 'Trust Score' a ojos de la IA.
-        </p>
-        <p>
-          Trabaja tu presencia en sitios de autoridad de tu sector. Una mención en un medio reconocido vale más que 100 backlinks de sitios desconocidos.
-        </p>
-
-        <h2>La Frescura: Actualiza Regularmente</h2>
-        <p>
-          Perplexity privilegia el contenido reciente. Actualiza tus artículos pilares regularmente y fecha claramente tus actualizaciones. Un artículo de 2024 no actualizado será ignorado.
-        </p>
-
-        <blockquote>
-          "Las fuentes citadas por Perplexity ven en promedio 200% más de tráfico cualificado que las fuentes ignoradas por la IA."
-        </blockquote>
-      </>
-    ),
+    fr: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["L'algorithme de citation de Perplexity analysé.", "L'importance de la fraîcheur de l'information.", "Structurer ses articles pour maximiser les citations."]} /><p className="text-lg font-medium text-foreground mb-6">Perplexity est devenu le moteur de recherche des décideurs tech et B2B. Être cité ici vaut bien plus que 1000 visites Google non qualifiées car l'audience est ultra-ciblée et en recherche active de solutions.</p><h2 className="text-2xl font-bold mt-8 mb-4">La structure 'Fact-First' : Aller droit au but</h2><p>Perplexity déteste le blabla et les introductions longues. Mettez l'information clé (la réponse directe à la question) dès la première phrase de vos paragraphes. Utilisez des listes à puces structurées et des tableaux de données chiffrées que l'algorithme peut extraire facilement.</p><p>Évitez les formules vagues du type "Il est important de comprendre que..." Chaque phrase doit apporter une information factuelle nouvelle que Perplexity peut citer directement.</p><RichLinkCard href="/audit-expert" title="Analysez votre visibilité Perplexity" description="Découvrez si votre site apparaît dans les réponses Perplexity" /><h2 className="text-2xl font-bold mt-8 mb-4">Citations et Backlinks : La confiance avant tout</h2><p>Pour citer une source, Perplexity doit lui faire confiance. Les backlinks provenant de sites académiques, de presse spécialisée ou d'institutions reconnues augmentent drastiquement votre 'Trust Score' aux yeux de l'IA.</p><h2 className="text-2xl font-bold mt-8 mb-4">La fraîcheur : Mettez à jour régulièrement</h2><p>Perplexity privilégie les contenus récents et régulièrement mis à jour. Ajoutez des dates de mise à jour visibles et actualisez vos articles clés au moins tous les trimestres avec les dernières données disponibles.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Une source citée par Perplexity génère en moyenne 5x plus de conversions B2B qu'un visiteur organique Google, car l'audience est déjà en phase de recherche active de solution."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    en: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Perplexity's citation algorithm analyzed.", "The importance of information freshness.", "Structuring articles to maximize citations."]} /><p className="text-lg font-medium text-foreground mb-6">Perplexity has become the search engine for tech and B2B decision-makers. Being cited here is worth far more than 1000 unqualified Google visits because the audience is ultra-targeted and actively searching for solutions.</p><h2 className="text-2xl font-bold mt-8 mb-4">The 'Fact-First' Structure: Get to the Point</h2><p>Perplexity hates filler and long introductions. Put the key information (the direct answer to the question) in the first sentence of your paragraphs. Use structured bullet lists and numbered data tables that the algorithm can easily extract.</p><p>Avoid vague formulas like "It's important to understand that..." Every sentence must bring new factual information that Perplexity can quote directly.</p><RichLinkCard href="/audit-expert" title="Analyze your Perplexity visibility" description="Discover if your site appears in Perplexity responses" /><h2 className="text-2xl font-bold mt-8 mb-4">Citations and Backlinks: Trust First</h2><p>To cite a source, Perplexity must trust it. Backlinks from academic sites, specialized press or recognized institutions drastically increase your 'Trust Score' in the AI's eyes.</p><h2 className="text-2xl font-bold mt-8 mb-4">Freshness: Update Regularly</h2><p>Perplexity favors recent and regularly updated content. Add visible update dates and refresh your key articles at least quarterly with the latest available data.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"A source cited by Perplexity generates on average 5x more B2B conversions than an organic Google visitor, because the audience is already in an active solution-search phase."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    es: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["El algoritmo de citación de Perplexity analizado.", "La importancia de la frescura de la información.", "Estructurar artículos para maximizar las citaciones."]} /><p className="text-lg font-medium text-foreground mb-6">Perplexity se ha convertido en el motor de búsqueda de decisores tech y B2B. Ser citado aquí vale mucho más que 1000 visitas de Google no cualificadas porque la audiencia es ultra-segmentada y está buscando activamente soluciones.</p><h2 className="text-2xl font-bold mt-8 mb-4">La Estructura 'Fact-First': Ir al Grano</h2><p>Perplexity odia el relleno y las introducciones largas. Pon la información clave (la respuesta directa a la pregunta) en la primera frase de tus párrafos. Usa listas con viñetas estructuradas y tablas de datos numéricos que el algoritmo pueda extraer fácilmente.</p><p>Evita fórmulas vagas como "Es importante entender que..." Cada frase debe aportar información factual nueva que Perplexity pueda citar directamente.</p><RichLinkCard href="/audit-expert" title="Analiza tu visibilidad en Perplexity" description="Descubre si tu sitio aparece en las respuestas de Perplexity" /><h2 className="text-2xl font-bold mt-8 mb-4">Citas y Backlinks: La Confianza Primero</h2><p>Para citar una fuente, Perplexity debe confiar en ella. Los backlinks de sitios académicos, prensa especializada o instituciones reconocidas aumentan drásticamente tu 'Trust Score' a ojos de la IA.</p><h2 className="text-2xl font-bold mt-8 mb-4">La Frescura: Actualiza Regularmente</h2><p>Perplexity favorece el contenido reciente y regularmente actualizado. Añade fechas de actualización visibles y refresca tus artículos clave al menos trimestralmente con los últimos datos disponibles.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Una fuente citada por Perplexity genera en promedio 5x más conversiones B2B que un visitante orgánico de Google, porque la audiencia ya está en fase de búsqueda activa de solución."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
   },
 
-  // --- SATELLITE 7: Audit SEO Gratuit vs Semrush ---
-  'audit-seo-gratuit-vs-semrush': {
-    fr: (
-      <>
-        <SummaryBox
-          points={[
-            "Ce que Semrush ne voit pas (le rendu LLM).",
-            "Pourquoi le 'Keyword Volume' est une métrique du passé.",
-            "L'avantage des outils natifs IA.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Semrush et Ahrefs sont des outils fantastiques pour le web de 2020. Mais pour l'ère des LLM, ils sont aveugles sur des points critiques de votre infrastructure. Voici le comparatif.
-        </p>
-
-        <h2>Les angles morts des crawlers traditionnels</h2>
-        <p>
-          Les outils classiques simulent souvent Googlebot version 'Legacy'. Ils ne vérifient pas systématiquement comment votre contenu est interprété par un modèle de langage (tokenization, contexte, vecteurs).
-        </p>
-        <p>
-          Résultat : votre score Semrush peut être excellent alors que votre site est invisible pour ChatGPT ou Perplexity.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Complétez votre analyse Semrush"
-          description="Ajoutez la dimension IA à votre audit SEO existant"
-        />
-
-        <h2>L'importance de l'analyse sémantique vectorielle</h2>
-        <p>
-          Notre audit vérifie la cohérence sémantique de vos entités, pas juste la densité de vos mots-clés. C'est cette cohérence qui permet à l'IA de vous faire confiance sur un sujet donné.
-        </p>
-        <p>
-          Les LLM fonctionnent avec des embeddings vectoriels. Votre contenu doit être positionné dans le bon espace sémantique pour être associé aux bonnes requêtes.
-        </p>
-
-        <h2>Complémentarité, pas remplacement</h2>
-        <p>
-          Semrush reste utile pour l'analyse de backlinks et le suivi de positions Google. Mais complétez-le avec un audit GEO pour couvrir la visibilité sur les moteurs génératifs.
-        </p>
-
-        <blockquote>
-          "En 2026, 35% du trafic web provient de moteurs génératifs. Ignorer cette dimension dans vos audits, c'est ignorer un tiers de votre audience potentielle."
-        </blockquote>
-      </>
-    ),
-    en: (
-      <>
-        <SummaryBox
-          points={[
-            "What Semrush doesn't see (LLM rendering).",
-            "Why 'Keyword Volume' is a past metric.",
-            "The advantage of AI-native tools.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Semrush and Ahrefs are fantastic tools for the 2020 web. But for the LLM era, they're blind to critical points of your infrastructure. Here's the comparison.
-        </p>
-
-        <h2>Blind Spots of Traditional Crawlers</h2>
-        <p>
-          Classic tools often simulate 'Legacy' Googlebot. They don't systematically check how your content is interpreted by a language model (tokenization, context, vectors).
-        </p>
-        <p>
-          Result: your Semrush score can be excellent while your site is invisible to ChatGPT or Perplexity.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Complete your Semrush analysis"
-          description="Add the AI dimension to your existing SEO audit"
-        />
-
-        <h2>The Importance of Vector Semantic Analysis</h2>
-        <p>
-          Our audit verifies the semantic coherence of your entities, not just the density of your keywords. It's this coherence that allows AI to trust you on a given topic.
-        </p>
-        <p>
-          LLMs work with vector embeddings. Your content must be positioned in the right semantic space to be associated with the right queries.
-        </p>
-
-        <h2>Complementarity, Not Replacement</h2>
-        <p>
-          Semrush remains useful for backlink analysis and Google position tracking. But supplement it with a GEO audit to cover visibility on generative engines.
-        </p>
-
-        <blockquote>
-          "In 2026, 35% of web traffic comes from generative engines. Ignoring this dimension in your audits means ignoring a third of your potential audience."
-        </blockquote>
-      </>
-    ),
-    es: (
-      <>
-        <SummaryBox
-          points={[
-            "Lo que Semrush no ve (renderizado LLM).",
-            "Por qué 'Keyword Volume' es una métrica del pasado.",
-            "La ventaja de herramientas nativas IA.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Semrush y Ahrefs son herramientas fantásticas para la web de 2020. Pero para la era de los LLM, están ciegos a puntos críticos de tu infraestructura. Aquí está la comparación.
-        </p>
-
-        <h2>Los Puntos Ciegos de los Crawlers Tradicionales</h2>
-        <p>
-          Las herramientas clásicas suelen simular Googlebot versión 'Legacy'. No verifican sistemáticamente cómo tu contenido es interpretado por un modelo de lenguaje (tokenización, contexto, vectores).
-        </p>
-        <p>
-          Resultado: tu puntuación Semrush puede ser excelente mientras tu sitio es invisible para ChatGPT o Perplexity.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Completa tu análisis Semrush"
-          description="Añade la dimensión IA a tu auditoría SEO existente"
-        />
-
-        <h2>La Importancia del Análisis Semántico Vectorial</h2>
-        <p>
-          Nuestra auditoría verifica la coherencia semántica de tus entidades, no solo la densidad de tus palabras clave. Es esta coherencia la que permite a la IA confiar en ti sobre un tema dado.
-        </p>
-        <p>
-          Los LLM funcionan con embeddings vectoriales. Tu contenido debe estar posicionado en el espacio semántico correcto para ser asociado con las consultas correctas.
-        </p>
-
-        <h2>Complementariedad, No Reemplazo</h2>
-        <p>
-          Semrush sigue siendo útil para el análisis de backlinks y el seguimiento de posiciones en Google. Pero compleméntalo con una auditoría GEO para cubrir la visibilidad en motores generativos.
-        </p>
-
-        <blockquote>
-          "En 2026, el 35% del tráfico web proviene de motores generativos. Ignorar esta dimensión en tus auditorías significa ignorar un tercio de tu audiencia potencial."
-        </blockquote>
-      </>
-    ),
-  },
-
-  // --- SATELLITE 8: Tableau Comparatif SEO GEO 2026 ---
-  'tableau-comparatif-seo-geo-2026': {
-    fr: (
-      <>
-        <SummaryBox
-          points={[
-            "Comparaison point par point (KPI, Objectifs, Méthodes).",
-            "Budget : Faut-il investir en SEO ou GEO ?",
-            "Les synergies entre les deux.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Vous êtes perdu entre les acronymes ? SEO, AEO, GEO, SGE... Ce guide visuel et rapide pose les bases définitives pour arbitrer vos budgets marketing cette année et ne pas miser sur le mauvais cheval.
-        </p>
-
-        <h2>Les différences fondamentales : Tableau récapitulatif</h2>
-        <p>
-          En SEO, le KPI est le trafic et le classement. En GEO, le KPI est la citation et la part de voix dans les réponses générées. Le SEO vise le clic, le GEO vise l'influence.
-        </p>
-        <p>
-          <strong>SEO classique :</strong> Position dans les SERPs, taux de clic (CTR), trafic organique.
-          <strong>GEO :</strong> Fréquence de citation, précision des informations reprises, autorité perçue par l'IA.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Téléchargez votre score GEO"
-          description="Obtenez un diagnostic complet SEO + GEO de votre site"
-        />
-
-        <h2>Où investir votre premier euro ?</h2>
-        <p>
-          Si vous démarrez, le GEO est moins saturé et offre des résultats plus rapides grâce à la longue traîne conversationnelle. Ne négligez pas le SEO technique, qui reste le socle commun.
-        </p>
-        <p>
-          La recommandation : 60% du budget sur le SEO technique (qui sert les deux), 40% sur l'optimisation GEO (données structurées, E-E-A-T, fraîcheur).
-        </p>
-
-        <h2>Les synergies à exploiter</h2>
-        <p>
-          Un bon SEO technique (vitesse, mobile, structure) profite aussi au GEO. Les données structurées aident Google ET les LLM. Investir dans l'un renforce l'autre.
-        </p>
-
-        <blockquote>
-          "Les entreprises qui investissent simultanément en SEO et GEO voient leur visibilité globale augmenter de 150% par rapport à celles qui se concentrent sur un seul canal."
-        </blockquote>
-      </>
-    ),
-    en: (
-      <>
-        <SummaryBox
-          points={[
-            "Point by point comparison (KPIs, Goals, Methods).",
-            "Budget: Should you invest in SEO or GEO?",
-            "Synergies between the two.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Lost between acronyms? SEO, AEO, GEO, SGE... This visual and quick guide sets the definitive bases for arbitrating your marketing budgets this year and not betting on the wrong horse.
-        </p>
-
-        <h2>Fundamental Differences: Summary Table</h2>
-        <p>
-          In SEO, the KPI is traffic and ranking. In GEO, the KPI is citation and share of voice in generated responses. SEO aims for the click, GEO aims for influence.
-        </p>
-        <p>
-          <strong>Classic SEO:</strong> Position in SERPs, click-through rate (CTR), organic traffic.
-          <strong>GEO:</strong> Citation frequency, accuracy of information picked up, perceived authority by AI.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Download your GEO score"
-          description="Get a complete SEO + GEO diagnosis of your site"
-        />
-
-        <h2>Where to Invest Your First Dollar?</h2>
-        <p>
-          If you're starting out, GEO is less saturated and offers faster results thanks to the conversational long tail. Don't neglect technical SEO, which remains the common foundation.
-        </p>
-        <p>
-          The recommendation: 60% of budget on technical SEO (which serves both), 40% on GEO optimization (structured data, E-E-A-T, freshness).
-        </p>
-
-        <h2>Synergies to Exploit</h2>
-        <p>
-          Good technical SEO (speed, mobile, structure) also benefits GEO. Structured data helps Google AND LLMs. Investing in one strengthens the other.
-        </p>
-
-        <blockquote>
-          "Companies that invest simultaneously in SEO and GEO see their overall visibility increase by 150% compared to those who focus on just one channel."
-        </blockquote>
-      </>
-    ),
-    es: (
-      <>
-        <SummaryBox
-          points={[
-            "Comparación punto por punto (KPIs, Objetivos, Métodos).",
-            "Presupuesto: ¿Invertir en SEO o GEO?",
-            "Las sinergias entre ambos.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          ¿Perdido entre acrónimos? SEO, AEO, GEO, SGE... Esta guía visual y rápida establece las bases definitivas para arbitrar tus presupuestos de marketing este año y no apostar por el caballo equivocado.
-        </p>
-
-        <h2>Las Diferencias Fundamentales: Tabla Resumen</h2>
-        <p>
-          En SEO, el KPI es el tráfico y el ranking. En GEO, el KPI es la citación y la cuota de voz en las respuestas generadas. El SEO apunta al clic, el GEO apunta a la influencia.
-        </p>
-        <p>
-          <strong>SEO clásico:</strong> Posición en SERPs, tasa de clics (CTR), tráfico orgánico.
-          <strong>GEO:</strong> Frecuencia de citación, precisión de la información recogida, autoridad percibida por la IA.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Descarga tu puntuación GEO"
-          description="Obtén un diagnóstico completo SEO + GEO de tu sitio"
-        />
-
-        <h2>¿Dónde Invertir tu Primer Euro?</h2>
-        <p>
-          Si estás empezando, el GEO está menos saturado y ofrece resultados más rápidos gracias a la cola larga conversacional. No descuides el SEO técnico, que sigue siendo la base común.
-        </p>
-        <p>
-          La recomendación: 60% del presupuesto en SEO técnico (que sirve a ambos), 40% en optimización GEO (datos estructurados, E-E-A-T, frescura).
-        </p>
-
-        <h2>Las Sinergias a Explotar</h2>
-        <p>
-          Un buen SEO técnico (velocidad, móvil, estructura) también beneficia al GEO. Los datos estructurados ayudan a Google Y a los LLM. Invertir en uno refuerza al otro.
-        </p>
-
-        <blockquote>
-          "Las empresas que invierten simultáneamente en SEO y GEO ven su visibilidad global aumentar un 150% en comparación con las que se concentran en un solo canal."
-        </blockquote>
-      </>
-    ),
-  },
-
-  // --- SATELLITE 9: Liste User-Agents IA 2026 ---
-  'liste-user-agents-ia-2026': {
-    fr: (
-      <>
-        <SummaryBox
-          points={[
-            "Les bots majeurs (OpenAI, Anthropic, Google).",
-            "Les bots 'Common Crawl' (CCBot).",
-            "Comment les identifier dans vos logs serveurs.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Ne laissez pas des inconnus scraper votre site sans votre accord. Voici la liste tenue à jour des identifiants (User-Agents) des robots d'intelligence artificielle qui parcourent le web aujourd'hui.
-        </p>
-
-        <h2>Les 'Big Three' : GPT, Claude et Gemini</h2>
-        <p>
-          Ce sont les plus actifs. Google-Extended (pour Gemini), GPTBot (pour OpenAI) et ClaudeBot (pour Anthropic). Ils respectent généralement le robots.txt, à condition de bien les nommer.
-        </p>
-        <p>
-          <strong>GPTBot :</strong> User-agent d'OpenAI pour l'entraînement. <strong>ChatGPT-User :</strong> Pour la navigation en temps réel. <strong>Google-Extended :</strong> Pour Gemini et Bard.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Alerte nouveaux bots"
-          description="Recevez une notification quand de nouveaux User-Agents IA sont détectés"
-        />
-
-        <h2>Les crawlers de données brutes à surveiller</h2>
-        <p>
-          Attention à CCBot (Common Crawl) ou Bytespider. Ils sont souvent plus agressifs et alimentent des bases de données utilisées par de nombreuses IA tiers. Les bloquer peut réduire votre charge serveur.
-        </p>
-        <p>
-          Surveillez aussi Amazonbot, Facebookbot (pour Meta AI), et les nouveaux entrants comme Applebot-Extended pour Apple Intelligence.
-        </p>
-
-        <h2>Comment analyser vos logs</h2>
-        <p>
-          Accédez à vos logs serveur et filtrez par User-Agent. Identifiez la fréquence de crawl, les pages visitées, et le comportement de chaque bot. Ajustez votre robots.txt en fonction.
-        </p>
-
-        <blockquote>
-          "En 2026, plus de 50 User-Agents IA différents parcourent activement le web. Seuls 10% des sites web ont une politique robots.txt adaptée à cette réalité."
-        </blockquote>
-      </>
-    ),
-    en: (
-      <>
-        <SummaryBox
-          points={[
-            "Major bots (OpenAI, Anthropic, Google).",
-            "Common Crawl bots (CCBot).",
-            "How to identify them in your server logs.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Don't let strangers scrape your site without your consent. Here's the updated list of identifiers (User-Agents) of AI robots that crawl the web today.
-        </p>
-
-        <h2>The 'Big Three': GPT, Claude and Gemini</h2>
-        <p>
-          These are the most active. Google-Extended (for Gemini), GPTBot (for OpenAI) and ClaudeBot (for Anthropic). They generally respect robots.txt, as long as you name them correctly.
-        </p>
-        <p>
-          <strong>GPTBot:</strong> OpenAI's user-agent for training. <strong>ChatGPT-User:</strong> For real-time navigation. <strong>Google-Extended:</strong> For Gemini and Bard.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="New bot alerts"
-          description="Get notified when new AI User-Agents are detected"
-        />
-
-        <h2>Raw Data Crawlers to Watch</h2>
-        <p>
-          Watch out for CCBot (Common Crawl) or Bytespider. They are often more aggressive and feed databases used by many third-party AIs. Blocking them can reduce your server load.
-        </p>
-        <p>
-          Also watch Amazonbot, Facebookbot (for Meta AI), and newcomers like Applebot-Extended for Apple Intelligence.
-        </p>
-
-        <h2>How to Analyze Your Logs</h2>
-        <p>
-          Access your server logs and filter by User-Agent. Identify crawl frequency, visited pages, and behavior of each bot. Adjust your robots.txt accordingly.
-        </p>
-
-        <blockquote>
-          "In 2026, more than 50 different AI User-Agents are actively crawling the web. Only 10% of websites have a robots.txt policy adapted to this reality."
-        </blockquote>
-      </>
-    ),
-    es: (
-      <>
-        <SummaryBox
-          points={[
-            "Los bots principales (OpenAI, Anthropic, Google).",
-            "Los bots 'Common Crawl' (CCBot).",
-            "Cómo identificarlos en tus logs de servidor.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          No dejes que desconocidos scrapeen tu sitio sin tu consentimiento. Aquí está la lista actualizada de identificadores (User-Agents) de los robots de inteligencia artificial que recorren la web hoy.
-        </p>
-
-        <h2>Los 'Big Three': GPT, Claude y Gemini</h2>
-        <p>
-          Son los más activos. Google-Extended (para Gemini), GPTBot (para OpenAI) y ClaudeBot (para Anthropic). Generalmente respetan el robots.txt, siempre que los nombres correctamente.
-        </p>
-        <p>
-          <strong>GPTBot:</strong> User-agent de OpenAI para entrenamiento. <strong>ChatGPT-User:</strong> Para navegación en tiempo real. <strong>Google-Extended:</strong> Para Gemini y Bard.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Alerta de nuevos bots"
-          description="Recibe una notificación cuando se detecten nuevos User-Agents IA"
-        />
-
-        <h2>Los Crawlers de Datos Brutos a Vigilar</h2>
-        <p>
-          Cuidado con CCBot (Common Crawl) o Bytespider. Suelen ser más agresivos y alimentan bases de datos usadas por muchas IAs de terceros. Bloquearlos puede reducir la carga de tu servidor.
-        </p>
-        <p>
-          Vigila también Amazonbot, Facebookbot (para Meta AI), y los nuevos entrantes como Applebot-Extended para Apple Intelligence.
-        </p>
-
-        <h2>Cómo Analizar tus Logs</h2>
-        <p>
-          Accede a tus logs de servidor y filtra por User-Agent. Identifica la frecuencia de rastreo, las páginas visitadas y el comportamiento de cada bot. Ajusta tu robots.txt en consecuencia.
-        </p>
-
-        <blockquote>
-          "En 2026, más de 50 User-Agents IA diferentes recorren activamente la web. Solo el 10% de los sitios web tienen una política robots.txt adaptada a esta realidad."
-        </blockquote>
-      </>
-    ),
-  },
-
-  // --- SATELLITE 10: E-E-A-T Expertise Algorithme ---
   'eeat-expertise-algorithme': {
-    fr: (
-      <>
-        <SummaryBox
-          points={[
-            "Définition de l'Experience, Expertise, Authoritativeness, Trustworthiness.",
-            "L'importance des pages 'Auteur'.",
-            "Lier ses profils sociaux via le Schema.",
-          ]}
-        />
+    fr: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Définition de l'Experience, Expertise, Authoritativeness, Trustworthiness.", "L'importance cruciale des pages 'Auteur'.", "Lier ses profils sociaux via le Schema sameAs."]} /><p className="text-lg font-medium text-foreground mb-6">Pour Google et les IA, si vous n'êtes pas un expert vérifié et identifiable, vous êtes une 'hallucination potentielle'. L'E-E-A-T n'est pas un concept abstrait de SEO, c'est une liste de critères techniques concrets à valider.</p><h2 className="text-2xl font-bold mt-8 mb-4">Optimiser votre page 'À propos' pour les robots</h2><p>Votre page À Propos ne doit plus être vague et générique. Elle doit contenir des liens vérifiables vers vos profils LinkedIn, vos publications externes référencées et vos certifications officielles. C'est votre CV pour les algorithmes qui décident de votre fiabilité.</p><p>Incluez des mentions précises de formations, d'expériences professionnelles datées et de réalisations concrètes. Chaque élément vérifiable renforce votre score E-E-A-T aux yeux des moteurs génératifs.</p><RichLinkCard href="/audit-expert" title="Vérifiez vos balises auteur" description="Analysez si votre expertise est correctement communiquée aux IA" /><h2 className="text-2xl font-bold mt-8 mb-4">Lier votre entité numérique avec sameAs</h2><p>Utilisez la propriété 'sameAs' dans votre balisage Schema Person ou Organization pour déclarer explicitement à Google : 'Ce profil LinkedIn est bien le mien, ce compte Twitter aussi.' Cela consolide votre graphe de connaissance (Knowledge Graph) et renforce votre identité numérique.</p><h2 className="text-2xl font-bold mt-8 mb-4">L'Experience : Montrez que vous pratiquez</h2><p>Le premier 'E' de E-E-A-T est Experience. Partagez des études de cas personnelles, des retours terrain documentés, des exemples concrets de missions réalisées. L'IA privilégie systématiquement les sources qui démontrent une expérience réelle et pratique du sujet.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Les auteurs avec un Knowledge Graph établi sont 5x plus susceptibles d'être cités par les IA comme sources fiables. Investir dans votre identité numérique est rentable."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    en: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Definition of Experience, Expertise, Authoritativeness, Trustworthiness.", "The crucial importance of 'Author' pages.", "Linking social profiles via Schema sameAs."]} /><p className="text-lg font-medium text-foreground mb-6">For Google and AIs, if you're not a verified and identifiable expert, you're a 'potential hallucination'. E-E-A-T is not an abstract SEO concept, it's a list of concrete technical criteria to validate.</p><h2 className="text-2xl font-bold mt-8 mb-4">Optimize Your 'About' Page for Robots</h2><p>Your About page should no longer be vague and generic. It must contain verifiable links to your LinkedIn profiles, your referenced external publications and your official certifications. It's your CV for the algorithms that decide your reliability.</p><p>Include precise mentions of training, dated professional experiences and concrete achievements. Each verifiable element strengthens your E-E-A-T score in the eyes of generative engines.</p><RichLinkCard href="/audit-expert" title="Check your author tags" description="Analyze if your expertise is correctly communicated to AIs" /><h2 className="text-2xl font-bold mt-8 mb-4">Link Your Digital Entity with sameAs</h2><p>Use the 'sameAs' property in your Person or Organization Schema markup to explicitly declare to Google: 'This LinkedIn profile is indeed mine, this Twitter account too.' This consolidates your Knowledge Graph and strengthens your digital identity.</p><h2 className="text-2xl font-bold mt-8 mb-4">Experience: Show That You Practice</h2><p>The first 'E' of E-E-A-T is Experience. Share personal case studies, documented field feedback, concrete examples of completed missions. AI systematically favors sources that demonstrate real, practical experience of the subject.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Authors with an established Knowledge Graph are 5x more likely to be cited by AIs as reliable sources. Investing in your digital identity is profitable."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    es: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Definición de Experience, Expertise, Authoritativeness, Trustworthiness.", "La importancia crucial de las páginas 'Autor'.", "Vincular perfiles sociales via Schema sameAs."]} /><p className="text-lg font-medium text-foreground mb-6">Para Google y las IAs, si no eres un experto verificado e identificable, eres una 'alucinación potencial'. E-E-A-T no es un concepto abstracto de SEO, es una lista de criterios técnicos concretos a validar.</p><h2 className="text-2xl font-bold mt-8 mb-4">Optimiza tu Página 'Acerca de' para los Robots</h2><p>Tu página Acerca de ya no debe ser vaga y genérica. Debe contener enlaces verificables a tus perfiles de LinkedIn, tus publicaciones externas referenciadas y tus certificaciones oficiales. Es tu CV para los algoritmos que deciden tu fiabilidad.</p><p>Incluye menciones precisas de formación, experiencias profesionales fechadas y logros concretos. Cada elemento verificable refuerza tu puntuación E-E-A-T a ojos de los motores generativos.</p><RichLinkCard href="/audit-expert" title="Verifica tus etiquetas de autor" description="Analiza si tu experiencia se comunica correctamente a las IAs" /><h2 className="text-2xl font-bold mt-8 mb-4">Vincular tu Entidad Digital con sameAs</h2><p>Usa la propiedad 'sameAs' en tu marcado Schema Person u Organization para declarar explícitamente a Google: 'Este perfil de LinkedIn es efectivamente el mío, esta cuenta de Twitter también.' Esto consolida tu Knowledge Graph y refuerza tu identidad digital.</p><h2 className="text-2xl font-bold mt-8 mb-4">La Experiencia: Muestra que Practicas</h2><p>La primera 'E' de E-E-A-T es Experience. Comparte estudios de caso personales, retroalimentación de campo documentada, ejemplos concretos de misiones realizadas. La IA favorece sistemáticamente las fuentes que demuestran experiencia real y práctica del tema.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Los autores con un Knowledge Graph establecido son 5x más propensos a ser citados por las IAs como fuentes confiables. Invertir en tu identidad digital es rentable."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+  },
 
-        <p className="text-lg font-medium text-foreground mb-6">
-          Pour Google et les IA, si vous n'êtes pas un expert vérifié, vous êtes une 'hallucination potentielle'. L'E-E-A-T n'est pas un concept abstrait, c'est une liste de critères techniques à valider.
-        </p>
+  'audit-semrush-ahrefs-geo': {
+    fr: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Les limites des outils SEO traditionnels face aux LLM.", "Comment compléter Semrush avec une analyse GEO.", "L'importance de l'analyse sémantique vectorielle."]} /><p className="text-lg font-medium text-foreground mb-6">Semrush et Ahrefs sont des outils fantastiques pour le SEO traditionnel du web de 2020. Mais pour l'ère des LLM, ils sont aveugles à des points critiques de votre infrastructure. Voici pourquoi vous devez les compléter.</p><h2 className="text-2xl font-bold mt-8 mb-4">Les Angles Morts des Crawlers Traditionnels</h2><p>Les outils classiques simulent généralement Googlebot version 'Legacy'. Ils ne vérifient pas systématiquement comment votre contenu est interprété par un modèle de langage (tokenisation, contexte sémantique, vecteurs d'embedding).</p><p>Résultat : votre score Semrush peut être excellent (90+) tandis que votre site reste invisible pour ChatGPT ou Perplexity. Les métriques ne sont pas les mêmes.</p><RichLinkCard href="/audit-expert" title="Complétez votre analyse Semrush" description="Ajoutez la dimension IA à votre audit SEO existant" /><h2 className="text-2xl font-bold mt-8 mb-4">L'Importance de l'Analyse Sémantique Vectorielle</h2><p>Notre audit vérifie la cohérence sémantique de vos entités dans l'espace vectoriel, pas seulement la densité de vos mots-clés. C'est cette cohérence qui permet à l'IA de vous faire confiance sur un sujet donné.</p><h2 className="text-2xl font-bold mt-8 mb-4">Complémentarité, Pas Remplacement</h2><p>Semrush reste essentiel pour l'analyse de backlinks et le suivi de positions Google. Mais complétez-le impérativement avec une audit GEO pour couvrir la visibilité sur les moteurs génératifs.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"En 2026, 35% du trafic web provient de moteurs génératifs. Ignorer cette dimension dans vos audits signifie ignorer un tiers de votre audience potentielle."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    en: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["The limits of traditional SEO tools facing LLMs.", "How to complement Semrush with GEO analysis.", "The importance of vector semantic analysis."]} /><p className="text-lg font-medium text-foreground mb-6">Semrush and Ahrefs are fantastic tools for traditional 2020 web SEO. But for the LLM era, they're blind to critical points of your infrastructure. Here's why you need to complement them.</p><h2 className="text-2xl font-bold mt-8 mb-4">The Blind Spots of Traditional Crawlers</h2><p>Classic tools generally simulate 'Legacy' version Googlebot. They don't systematically check how your content is interpreted by a language model (tokenization, semantic context, embedding vectors).</p><p>Result: your Semrush score can be excellent (90+) while your site remains invisible to ChatGPT or Perplexity. The metrics are not the same.</p><RichLinkCard href="/audit-expert" title="Complete your Semrush analysis" description="Add the AI dimension to your existing SEO audit" /><h2 className="text-2xl font-bold mt-8 mb-4">The Importance of Vector Semantic Analysis</h2><p>Our audit verifies the semantic coherence of your entities in vector space, not just your keyword density. It's this coherence that allows AI to trust you on a given topic.</p><h2 className="text-2xl font-bold mt-8 mb-4">Complementarity, Not Replacement</h2><p>Semrush remains essential for backlink analysis and Google position tracking. But imperatively complement it with a GEO audit to cover visibility on generative engines.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"In 2026, 35% of web traffic comes from generative engines. Ignoring this dimension in your audits means ignoring a third of your potential audience."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    es: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Los límites de las herramientas SEO tradicionales frente a los LLM.", "Cómo complementar Semrush con análisis GEO.", "La importancia del análisis semántico vectorial."]} /><p className="text-lg font-medium text-foreground mb-6">Semrush y Ahrefs son herramientas fantásticas para el SEO tradicional de la web de 2020. Pero para la era de los LLM, están ciegos a puntos críticos de tu infraestructura. Aquí está por qué debes complementarlos.</p><h2 className="text-2xl font-bold mt-8 mb-4">Los Puntos Ciegos de los Crawlers Tradicionales</h2><p>Las herramientas clásicas generalmente simulan Googlebot versión 'Legacy'. No verifican sistemáticamente cómo tu contenido es interpretado por un modelo de lenguaje (tokenización, contexto semántico, vectores de embedding).</p><p>Resultado: tu puntuación Semrush puede ser excelente (90+) mientras tu sitio permanece invisible para ChatGPT o Perplexity. Las métricas no son las mismas.</p><RichLinkCard href="/audit-expert" title="Completa tu análisis Semrush" description="Añade la dimensión IA a tu auditoría SEO existente" /><h2 className="text-2xl font-bold mt-8 mb-4">La Importancia del Análisis Semántico Vectorial</h2><p>Nuestra auditoría verifica la coherencia semántica de tus entidades en el espacio vectorial, no solo la densidad de tus palabras clave. Es esta coherencia la que permite a la IA confiar en ti sobre un tema dado.</p><h2 className="text-2xl font-bold mt-8 mb-4">Complementariedad, No Reemplazo</h2><p>Semrush sigue siendo esencial para el análisis de backlinks y el seguimiento de posiciones en Google. Pero compleméntalo imperativamente con una auditoría GEO para cubrir la visibilidad en motores generativos.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"En 2026, el 35% del tráfico web proviene de motores generativos. Ignorar esta dimensión en tus auditorías significa ignorar un tercio de tu audiencia potencial."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+  },
 
-        <h2>Optimiser votre page 'À propos' pour les robots</h2>
-        <p>
-          Votre page À Propos ne doit pas être vague. Elle doit contenir des liens vers vos profils LinkedIn, vos publications externes et vos certifications. C'est votre CV pour les algorithmes.
-        </p>
-        <p>
-          Incluez des mentions de formations, d'expériences professionnelles et de réalisations concrètes. Chaque élément vérifiable renforce votre score E-E-A-T.
-        </p>
+  'tableau-comparatif-seo-geo-2026': {
+    fr: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Comparaison point par point des KPIs, objectifs et méthodes.", "Budget : Faut-il investir en SEO ou GEO ?", "Les synergies gagnantes entre les deux approches."]} /><p className="text-lg font-medium text-foreground mb-6">Vous êtes perdu entre les acronymes ? SEO, AEO, GEO, SGE... Ce guide visuel et rapide pose les bases définitives pour arbitrer vos budgets marketing cette année et ne pas miser sur le mauvais cheval.</p><GeoTable rows={geoVsSeoTableRows} caption={{ fr: 'Tableau comparatif SEO vs GEO 2026', en: 'SEO vs GEO 2026 comparison table', es: 'Tabla comparativa SEO vs GEO 2026' }} /><h2 className="text-2xl font-bold mt-8 mb-4">Les différences fondamentales</h2><p>En SEO, le KPI est le trafic et le classement dans les pages de résultats. En GEO, le KPI est la citation et la part de voix dans les réponses générées par l'IA. Le SEO vise le clic, le GEO vise l'influence directe sur la décision.</p><RichLinkCard href="/audit-expert" title="Téléchargez votre score GEO" description="Obtenez un diagnostic complet SEO + GEO de votre site" /><h2 className="text-2xl font-bold mt-8 mb-4">Où investir votre premier euro ?</h2><p>Si vous démarrez, le GEO est moins saturé et offre des résultats plus rapides grâce à la longue traîne conversationnelle. Mais ne négligez pas le SEO technique qui reste le socle commun aux deux approches.</p><h2 className="text-2xl font-bold mt-8 mb-4">Les synergies à exploiter</h2><p>Un bon SEO technique (vitesse, mobile, structure) profite aussi au GEO. Les données structurées aident Google ET les LLM. Investir dans l'un renforce naturellement l'autre.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Les entreprises qui investissent simultanément en SEO et GEO voient leur visibilité globale augmenter de 150% par rapport à celles qui se concentrent sur un seul canal."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    en: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Point by point comparison of KPIs, goals and methods.", "Budget: Should you invest in SEO or GEO?", "Winning synergies between both approaches."]} /><p className="text-lg font-medium text-foreground mb-6">Lost between acronyms? SEO, AEO, GEO, SGE... This visual and quick guide sets the definitive bases for arbitrating your marketing budgets this year and not betting on the wrong horse.</p><GeoTable rows={geoVsSeoTableRows} caption={{ fr: 'Tableau comparatif SEO vs GEO 2026', en: 'SEO vs GEO 2026 comparison table', es: 'Tabla comparativa SEO vs GEO 2026' }} /><h2 className="text-2xl font-bold mt-8 mb-4">Fundamental Differences</h2><p>In SEO, the KPI is traffic and ranking in results pages. In GEO, the KPI is citation and share of voice in AI-generated responses. SEO aims for the click, GEO aims for direct influence on the decision.</p><RichLinkCard href="/audit-expert" title="Download your GEO score" description="Get a complete SEO + GEO diagnosis of your site" /><h2 className="text-2xl font-bold mt-8 mb-4">Where to Invest Your First Dollar?</h2><p>If you're starting out, GEO is less saturated and offers faster results thanks to the conversational long tail. But don't neglect technical SEO which remains the common foundation for both approaches.</p><h2 className="text-2xl font-bold mt-8 mb-4">Synergies to Exploit</h2><p>Good technical SEO (speed, mobile, structure) also benefits GEO. Structured data helps Google AND LLMs. Investing in one naturally strengthens the other.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Companies that invest simultaneously in SEO and GEO see their overall visibility increase by 150% compared to those who focus on a single channel."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    es: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Comparación punto por punto de KPIs, objetivos y métodos.", "Presupuesto: ¿Invertir en SEO o GEO?", "Las sinergias ganadoras entre ambos enfoques."]} /><p className="text-lg font-medium text-foreground mb-6">¿Perdido entre acrónimos? SEO, AEO, GEO, SGE... Esta guía visual y rápida establece las bases definitivas para arbitrar tus presupuestos de marketing este año y no apostar por el caballo equivocado.</p><GeoTable rows={geoVsSeoTableRows} caption={{ fr: 'Tableau comparatif SEO vs GEO 2026', en: 'SEO vs GEO 2026 comparison table', es: 'Tabla comparativa SEO vs GEO 2026' }} /><h2 className="text-2xl font-bold mt-8 mb-4">Diferencias Fundamentales</h2><p>En SEO, el KPI es el tráfico y el ranking en páginas de resultados. En GEO, el KPI es la citación y la cuota de voz en las respuestas generadas por IA. El SEO apunta al clic, el GEO apunta a la influencia directa en la decisión.</p><RichLinkCard href="/audit-expert" title="Descarga tu puntuación GEO" description="Obtén un diagnóstico completo SEO + GEO de tu sitio" /><h2 className="text-2xl font-bold mt-8 mb-4">¿Dónde Invertir tu Primer Euro?</h2><p>Si estás empezando, el GEO está menos saturado y ofrece resultados más rápidos gracias a la cola larga conversacional. Pero no descuides el SEO técnico que sigue siendo la base común de ambos enfoques.</p><h2 className="text-2xl font-bold mt-8 mb-4">Las Sinergias a Explotar</h2><p>Un buen SEO técnico (velocidad, móvil, estructura) también beneficia al GEO. Los datos estructurados ayudan a Google Y a los LLM. Invertir en uno refuerza naturalmente al otro.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"Las empresas que invierten simultáneamente en SEO y GEO ven su visibilidad global aumentar un 150% en comparación con las que se concentran en un solo canal."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+  },
 
-        <RichLink
-          href="/audit-expert"
-          title="Vérifiez vos balises auteur"
-          description="Analysez si votre expertise est correctement communiquée aux IA"
-        />
-
-        <h2>Lier votre entité numérique (SameAs)</h2>
-        <p>
-          Utilisez la propriété 'sameAs' dans votre balisage Schema pour dire à Google : 'Ce profil LinkedIn est bien le mien'. Cela consolide votre graphe de connaissance (Knowledge Graph).
-        </p>
-        <p>
-          Connectez tous vos profils professionnels : LinkedIn, Twitter/X, GitHub, ResearchGate, et vos publications sur des sites d'autorité.
-        </p>
-
-        <h2>L'Experience : Montrez que vous pratiquez</h2>
-        <p>
-          Le premier 'E' de E-E-A-T est Experience. Partagez des études de cas, des retours terrain, des exemples concrets. L'IA privilégie les sources qui démontrent une expérience réelle du sujet.
-        </p>
-
-        <blockquote>
-          "Les auteurs avec un Knowledge Graph établi sont 5x plus susceptibles d'être cités par les IA comme sources fiables."
-        </blockquote>
-      </>
-    ),
-    en: (
-      <>
-        <SummaryBox
-          points={[
-            "Definition of Experience, Expertise, Authoritativeness, Trustworthiness.",
-            "The importance of 'Author' pages.",
-            "Linking social profiles via Schema.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          For Google and AI, if you're not a verified expert, you're a 'potential hallucination'. E-E-A-T is not an abstract concept, it's a list of technical criteria to validate.
-        </p>
-
-        <h2>Optimize Your 'About' Page for Robots</h2>
-        <p>
-          Your About page should not be vague. It must contain links to your LinkedIn profiles, external publications, and certifications. It's your CV for algorithms.
-        </p>
-        <p>
-          Include mentions of training, professional experiences, and concrete achievements. Every verifiable element strengthens your E-E-A-T score.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Check your author tags"
-          description="Analyze if your expertise is correctly communicated to AI"
-        />
-
-        <h2>Link Your Digital Entity (SameAs)</h2>
-        <p>
-          Use the 'sameAs' property in your Schema markup to tell Google: 'This LinkedIn profile is indeed mine'. This consolidates your Knowledge Graph.
-        </p>
-        <p>
-          Connect all your professional profiles: LinkedIn, Twitter/X, GitHub, ResearchGate, and your publications on authority sites.
-        </p>
-
-        <h2>Experience: Show That You Practice</h2>
-        <p>
-          The first 'E' in E-E-A-T is Experience. Share case studies, field feedback, concrete examples. AI favors sources that demonstrate real experience with the subject.
-        </p>
-
-        <blockquote>
-          "Authors with an established Knowledge Graph are 5x more likely to be cited by AI as reliable sources."
-        </blockquote>
-      </>
-    ),
-    es: (
-      <>
-        <SummaryBox
-          points={[
-            "Definición de Experience, Expertise, Authoritativeness, Trustworthiness.",
-            "La importancia de las páginas 'Autor'.",
-            "Vincular perfiles sociales via Schema.",
-          ]}
-        />
-
-        <p className="text-lg font-medium text-foreground mb-6">
-          Para Google y las IA, si no eres un experto verificado, eres una 'alucinación potencial'. E-E-A-T no es un concepto abstracto, es una lista de criterios técnicos a validar.
-        </p>
-
-        <h2>Optimiza tu Página 'Acerca de' para los Robots</h2>
-        <p>
-          Tu página Acerca de no debe ser vaga. Debe contener enlaces a tus perfiles de LinkedIn, publicaciones externas y certificaciones. Es tu CV para los algoritmos.
-        </p>
-        <p>
-          Incluye menciones de formaciones, experiencias profesionales y logros concretos. Cada elemento verificable refuerza tu puntuación E-E-A-T.
-        </p>
-
-        <RichLink
-          href="/audit-expert"
-          title="Verifica tus etiquetas de autor"
-          description="Analiza si tu experiencia está correctamente comunicada a las IA"
-        />
-
-        <h2>Vincular tu Entidad Digital (SameAs)</h2>
-        <p>
-          Usa la propiedad 'sameAs' en tu marcado Schema para decir a Google: 'Este perfil de LinkedIn es realmente mío'. Esto consolida tu Knowledge Graph.
-        </p>
-        <p>
-          Conecta todos tus perfiles profesionales: LinkedIn, Twitter/X, GitHub, ResearchGate, y tus publicaciones en sitios de autoridad.
-        </p>
-
-        <h2>La Experience: Muestra que Practicas</h2>
-        <p>
-          La primera 'E' de E-E-A-T es Experience. Comparte estudios de caso, retroalimentación de campo, ejemplos concretos. La IA privilegia las fuentes que demuestran experiencia real con el tema.
-        </p>
-
-        <blockquote>
-          "Los autores con un Knowledge Graph establecido son 5x más propensos a ser citados por las IA como fuentes confiables."
-        </blockquote>
-      </>
-    ),
+  'liste-user-agents-ia-2026': {
+    fr: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Les bots majeurs : OpenAI, Anthropic, Google.", "Les bots 'Common Crawl' à surveiller.", "Comment les identifier dans vos logs serveurs."]} /><p className="text-lg font-medium text-foreground mb-6">Ne laissez pas des inconnus scraper votre site sans votre accord explicite. Voici la liste tenue à jour des identifiants (User-Agents) des robots d'intelligence artificielle qui parcourent le web en 2026.</p><GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Liste complète des User-Agents IA 2026', en: 'Complete 2026 AI User-Agents list', es: 'Lista completa de User-Agents IA 2026' }} /><h2 className="text-2xl font-bold mt-8 mb-4">Les 'Big Three' : GPT, Claude et Gemini</h2><p>Ce sont les plus actifs et les plus importants pour votre visibilité. Google-Extended (pour Gemini), GPTBot (pour OpenAI) et ClaudeBot (pour Anthropic) respectent généralement le robots.txt, à condition de bien configurer les directives.</p><RichLinkCard href="/audit-expert" title="Alerte nouveaux bots" description="Recevez une notification quand de nouveaux User-Agents IA sont détectés sur votre site" /><h2 className="text-2xl font-bold mt-8 mb-4">Les crawlers de données brutes à surveiller</h2><p>Attention à CCBot (Common Crawl) ou Bytespider. Ils sont souvent plus agressifs et alimentent des bases de données utilisées par de nombreuses IA tierces. Les bloquer peut réduire significativement votre charge serveur.</p><h2 className="text-2xl font-bold mt-8 mb-4">Comment analyser vos logs</h2><p>Accédez à vos logs serveur (access.log) et filtrez par User-Agent. Identifiez la fréquence de crawl, les pages visitées et le comportement de chaque bot. Ajustez votre robots.txt en fonction de vos observations.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"En 2026, plus de 50 User-Agents IA différents parcourent activement le web. Seuls 10% des sites web ont une politique robots.txt adaptée à cette nouvelle réalité."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    en: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Major bots: OpenAI, Anthropic, Google.", "'Common Crawl' bots to watch.", "How to identify them in your server logs."]} /><p className="text-lg font-medium text-foreground mb-6">Don't let strangers scrape your site without your explicit consent. Here's the updated list of AI robot identifiers (User-Agents) crawling the web in 2026.</p><GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Liste complète des User-Agents IA 2026', en: 'Complete 2026 AI User-Agents list', es: 'Lista completa de User-Agents IA 2026' }} /><h2 className="text-2xl font-bold mt-8 mb-4">The 'Big Three': GPT, Claude and Gemini</h2><p>These are the most active and important for your visibility. Google-Extended (for Gemini), GPTBot (for OpenAI) and ClaudeBot (for Anthropic) generally respect robots.txt, as long as you properly configure the directives.</p><RichLinkCard href="/audit-expert" title="New bot alerts" description="Get notified when new AI User-Agents are detected on your site" /><h2 className="text-2xl font-bold mt-8 mb-4">Raw Data Crawlers to Watch</h2><p>Watch out for CCBot (Common Crawl) or Bytespider. They're often more aggressive and feed databases used by many third-party AIs. Blocking them can significantly reduce your server load.</p><h2 className="text-2xl font-bold mt-8 mb-4">How to Analyze Your Logs</h2><p>Access your server logs (access.log) and filter by User-Agent. Identify crawl frequency, visited pages and each bot's behavior. Adjust your robots.txt based on your observations.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"In 2026, more than 50 different AI User-Agents are actively crawling the web. Only 10% of websites have a robots.txt policy adapted to this new reality."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+    es: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Los bots principales: OpenAI, Anthropic, Google.", "Los bots 'Common Crawl' a vigilar.", "Cómo identificarlos en tus logs de servidor."]} /><p className="text-lg font-medium text-foreground mb-6">No dejes que desconocidos scrapeen tu sitio sin tu consentimiento explícito. Aquí está la lista actualizada de identificadores (User-Agents) de los robots de IA que recorren la web en 2026.</p><GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Liste complète des User-Agents IA 2026', en: 'Complete 2026 AI User-Agents list', es: 'Lista completa de User-Agents IA 2026' }} /><h2 className="text-2xl font-bold mt-8 mb-4">Los 'Big Three': GPT, Claude y Gemini</h2><p>Son los más activos e importantes para tu visibilidad. Google-Extended (para Gemini), GPTBot (para OpenAI) y ClaudeBot (para Anthropic) generalmente respetan el robots.txt, siempre que configures correctamente las directivas.</p><RichLinkCard href="/audit-expert" title="Alerta de nuevos bots" description="Recibe una notificación cuando se detecten nuevos User-Agents IA en tu sitio" /><h2 className="text-2xl font-bold mt-8 mb-4">Los Crawlers de Datos Brutos a Vigilar</h2><p>Cuidado con CCBot (Common Crawl) o Bytespider. Suelen ser más agresivos y alimentan bases de datos usadas por muchas IAs de terceros. Bloquearlos puede reducir significativamente la carga de tu servidor.</p><h2 className="text-2xl font-bold mt-8 mb-4">Cómo Analizar tus Logs</h2><p>Accede a tus logs de servidor (access.log) y filtra por User-Agent. Identifica la frecuencia de rastreo, las páginas visitadas y el comportamiento de cada bot. Ajusta tu robots.txt según tus observaciones.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"En 2026, más de 50 User-Agents IA diferentes recorren activamente la web. Solo el 10% de los sitios web tienen una política robots.txt adaptada a esta nueva realidad."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
   },
 };

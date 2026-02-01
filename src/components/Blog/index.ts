@@ -1,5 +1,10 @@
 export { ArticleLayout } from './ArticleLayout';
 export { SummaryBox } from './SummaryBox';
+export { SgeSummaryBox } from './SgeSummaryBox';
 export { RichLink } from './RichLink';
+export { RichLinkCard } from './RichLinkCard';
 export { AuthorBio } from './AuthorBio';
+export { AuthorCard } from './AuthorCard';
+export { GeoTable } from './GeoTable';
+export type { GeoTableRow } from './GeoTable';
 export { SourcesSection } from './SourcesSection';
