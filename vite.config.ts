@@ -75,68 +75,41 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Optimize chunking for better LCP and reduced HTTP requests
     rollupOptions: {
       output: {
-        // Add content hash to all assets for cache busting
+        // Content hash for cache busting
         assetFileNames: 'assets/[name]-[hash][extname]',
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
+        // Simplified chunking - fewer, larger chunks = more reliable loading
         manualChunks(id) {
-          // Critical path optimization - keep main bundle small
           if (id.includes('node_modules')) {
-            // Core React - smallest possible initial bundle
-            if (id.includes('react-dom') || id.includes('react/')) {
-              return 'vendor-react';
+            // Core React bundle - always needed
+            if (id.includes('react-dom') || id.includes('react/') || id.includes('react-router-dom') || id.includes('@remix-run')) {
+              return 'vendor-core';
             }
-            if (id.includes('react-router-dom') || id.includes('@remix-run')) {
-              return 'vendor-router';
-            }
-            // Supabase - defer loading
-            if (id.includes('@supabase')) {
-              return 'vendor-supabase';
-            }
-            // TanStack Query
-            if (id.includes('@tanstack')) {
-              return 'vendor-query';
-            }
-            // UI framework - Radix components bundled together
-            if (id.includes('@radix-ui')) {
+            // UI components together
+            if (id.includes('@radix-ui') || id.includes('lucide-react') || id.includes('framer-motion')) {
               return 'vendor-ui';
             }
-            // Animation library - deferred
-            if (id.includes('framer-motion')) {
-              return 'vendor-motion';
+            // Data layer
+            if (id.includes('@supabase') || id.includes('@tanstack')) {
+              return 'vendor-data';
             }
-            // PDF generation - only loaded when needed
-            if (id.includes('jspdf')) {
-              return 'vendor-pdf';
+            // Heavy optional libs (PDF, charts) - loaded on demand
+            if (id.includes('jspdf') || id.includes('recharts') || id.includes('d3-')) {
+              return 'vendor-heavy';
             }
-            // Charts - only loaded when needed
-            if (id.includes('recharts') || id.includes('d3-')) {
-              return 'vendor-charts';
-            }
-            // Lucide icons - bundled together
-            if (id.includes('lucide-react')) {
-              return 'vendor-icons';
-            }
-            // Other utilities
-            if (id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
-              return 'vendor-utils';
-            }
+            // Utils bundled together
+            return 'vendor-utils';
           }
         },
       },
     },
-    // Increase chunk size warning limit (optimized chunks are larger but fewer)
-    chunkSizeWarningLimit: 600,
-    // Enable minification optimizations
+    chunkSizeWarningLimit: 800,
     minify: 'esbuild',
-    // Target modern browsers for smaller bundles
     target: 'es2020',
-    // Enable CSS code splitting
     cssCodeSplit: true,
-    // Source maps only in dev
     sourcemap: mode === 'development',
   },
   // Optimize dependencies

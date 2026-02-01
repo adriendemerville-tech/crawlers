@@ -1,58 +1,47 @@
-# Cache-Control headers for static assets
-# Lovable/Vercel/Netlify will use this file for HTTP headers
+# Cache headers - less aggressive to prevent stale chunks
 
-# All static assets with hash in filename - immutable cache
+# Hashed assets only - safe for immutable cache
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
-  X-Content-Type-Options: nosniff
 
-# JavaScript files
+# Root JS/CSS without hash - short cache
 /*.js
-  Cache-Control: public, max-age=31536000, immutable
-  X-Content-Type-Options: nosniff
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
-# CSS files
 /*.css
-  Cache-Control: public, max-age=31536000, immutable
-  X-Content-Type-Options: nosniff
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
-# Images
+# Images - moderate cache (may not have hash)
 /*.png
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
 /*.jpg
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.jpeg
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
 /*.webp
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.avif
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
 /*.svg
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
 /*.ico
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=86400
 
-# Fonts
+# Fonts - long cache
 /*.woff2
   Cache-Control: public, max-age=31536000, immutable
 
 /*.woff
   Cache-Control: public, max-age=31536000, immutable
 
-# HTML pages - short cache for dynamic content
+# HTML - no cache
 /*.html
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: no-cache, no-store, must-revalidate
 
 /
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: no-cache, no-store, must-revalidate
 
-# SEO/Bot files - moderate cache
+# SEO files
 /robots.txt
   Cache-Control: public, max-age=86400
 
@@ -62,11 +51,11 @@
 /llms.txt
   Cache-Control: public, max-age=86400
 
-# PWA manifest
 /site.webmanifest
   Cache-Control: public, max-age=86400
 
-# Enable compression headers hint
+# Security headers
 /*
   X-XSS-Protection: 1; mode=block
+  X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 
+const RETRY_KEY = "chunk_retry_guard";
+
 interface DebugLoaderProps {
   name: string;
   children: React.ReactNode;
@@ -9,16 +11,14 @@ export function DebugLoader({ name, children }: DebugLoaderProps) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    // Mark as loaded once component mounts
     setLoaded(true);
-    // eslint-disable-next-line no-console
     console.log(`[DebugLoader] ✅ ${name} loaded`);
   }, [name]);
 
   if (!loaded) {
     return (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
-        <p className="text-xl font-bold text-black">Chargement: {name}...</p>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background">
+        <p className="text-xl font-bold text-foreground">Chargement: {name}...</p>
       </div>
     );
   }
@@ -26,22 +26,33 @@ export function DebugLoader({ name, children }: DebugLoaderProps) {
   return <>{children}</>;
 }
 
-// Debug-wrapped lazy loader
+// Robust lazy loader with retry on chunk failure
 export function createDebugLazy<T extends React.ComponentType<any>>(
   name: string,
   factory: () => Promise<{ default: T }>
 ) {
   const LazyComponent = React.lazy(async () => {
-    // eslint-disable-next-line no-console
     console.log(`[DebugLoader] ⏳ Loading ${name}...`);
     try {
       const module = await factory();
-      // eslint-disable-next-line no-console
+      // Clear retry guard on success
+      try { localStorage.removeItem(RETRY_KEY); } catch {}
       console.log(`[DebugLoader] ✅ ${name} module loaded`);
       return module;
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(`[DebugLoader] ❌ ${name} FAILED`, err);
+      
+      // Check if we already retried
+      const alreadyRetried = localStorage.getItem(RETRY_KEY) === "1";
+      
+      if (!alreadyRetried) {
+        console.log(`[DebugLoader] 🔄 Retrying with hard reload...`);
+        try { localStorage.setItem(RETRY_KEY, "1"); } catch {}
+        // Hard reload to fetch fresh assets
+        window.location.reload();
+      }
+      
+      // If already retried, rethrow for error boundary
       throw err;
     }
   });
@@ -50,8 +61,8 @@ export function createDebugLazy<T extends React.ComponentType<any>>(
     return (
       <React.Suspense
         fallback={
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
-            <p className="text-xl font-bold text-black">Chargement: {name}...</p>
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background">
+            <p className="text-xl font-bold text-foreground">Chargement: {name}...</p>
           </div>
         }
       >
