@@ -34,6 +34,7 @@ function ArticlePageComponent() {
       heroImage={article.heroImage}
       heroAlt={article.heroAlt[language] || article.heroAlt.fr}
       sources={article.sources}
+      slug={slug}
     >
       {content[language] || content.fr}
     </ArticleLayout>

@@ -16,6 +16,25 @@ interface SitemapPage {
   images?: { loc: string; title: string; caption?: string }[];
 }
 
+// Liste des articles de blog
+const blogArticles = [
+  // Piliers
+  { slug: 'guide-visibilite-technique-ia', type: 'pillar', image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&q=80', title: 'Guide Ultime Visibilité Technique IA' },
+  { slug: 'comprendre-geo-vs-seo', type: 'pillar', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&q=80', title: 'Comprendre GEO vs SEO' },
+  { slug: 'vendre-audit-ia-clients', type: 'pillar', image: 'https://images.unsplash.com/photo-1553877522-43269d4ea984?w=1200&q=80', title: 'Vendre Audit IA aux Clients' },
+  // Satellites
+  { slug: 'bloquer-autoriser-gptbot', type: 'satellite', image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80', title: 'Bloquer ou Autoriser GPTBot' },
+  { slug: 'site-invisible-chatgpt-solutions', type: 'satellite', image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80', title: 'Site Invisible sur ChatGPT' },
+  { slug: 'google-sge-seo-preparation', type: 'satellite', image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&q=80', title: 'Google SGE SEO Preparation' },
+  { slug: 'mission-mise-aux-normes-ia', type: 'satellite', image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&q=80', title: 'Mission Mise aux Normes IA' },
+  { slug: 'json-ld-snippet-autorite', type: 'satellite', image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&q=80', title: 'JSON-LD Snippet Autorité' },
+  { slug: 'perplexity-seo-citation', type: 'satellite', image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80', title: 'Perplexity SEO Citation' },
+  { slug: 'audit-seo-gratuit-vs-semrush', type: 'satellite', image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80', title: 'Audit SEO Gratuit vs Semrush' },
+  { slug: 'tableau-comparatif-seo-geo-2026', type: 'satellite', image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&q=80', title: 'Tableau Comparatif SEO GEO 2026' },
+  { slug: 'liste-user-agents-ia-2026', type: 'satellite', image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&q=80', title: 'Liste User-Agents IA 2026' },
+  { slug: 'eeat-expertise-algorithme', type: 'satellite', image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80', title: 'E-E-A-T Expertise Algorithme' },
+];
+
 function escapeXml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -76,6 +95,15 @@ ${urlEntries}
 </urlset>`;
 }
 
+function createAlternates(basePath: string, languages: string[]): { lang: string; href: string }[] {
+  const alternates = languages.map(lang => ({
+    lang: lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'es-ES',
+    href: lang === 'fr' ? `${SITE_URL}${basePath}` : `${SITE_URL}${basePath}${basePath.includes('?') ? '&' : '?'}lang=${lang}`
+  }));
+  alternates.push({ lang: 'x-default', href: `${SITE_URL}${basePath}` });
+  return alternates;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -85,159 +113,129 @@ serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     const languages = ['fr', 'en', 'es'];
     
-    // ========================================
-    // PAGE PRINCIPALE - Homepage
-    // ========================================
-    const homepageAlternates = languages.map(lang => ({
-      lang: lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'es-ES',
-      href: lang === 'fr' ? SITE_URL : `${SITE_URL}/?lang=${lang}`
-    }));
-    homepageAlternates.push({ lang: 'x-default', href: SITE_URL });
-    
-    // ========================================
-    // SCORE SEO 200 - Audit Expert
-    // ========================================
-    const auditAlternates = languages.map(lang => ({
-      lang: lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'es-ES',
-      href: lang === 'fr' ? `${SITE_URL}/audit-expert` : `${SITE_URL}/audit-expert?lang=${lang}`
-    }));
-    auditAlternates.push({ lang: 'x-default', href: `${SITE_URL}/audit-expert` });
+    const pages: SitemapPage[] = [];
 
     // ========================================
-    // LEXIQUE SEO/GEO - Glossary
+    // HOMEPAGE
     // ========================================
-    const lexiqueAlternates = languages.map(lang => ({
-      lang: lang === 'fr' ? 'fr-FR' : lang === 'en' ? 'en-US' : 'es-ES',
-      href: lang === 'fr' ? `${SITE_URL}/lexique` : `${SITE_URL}/lexique?lang=${lang}`
-    }));
-    lexiqueAlternates.push({ lang: 'x-default', href: `${SITE_URL}/lexique` });
+    pages.push({
+      loc: SITE_URL,
+      lastmod: today,
+      changefreq: 'daily',
+      priority: 1.0,
+      alternates: createAlternates('/', languages),
+      images: [{
+        loc: `${SITE_URL}/og-image.png`,
+        title: 'Crawlers.fr - AI SEO & GEO Tools',
+        caption: 'Outils d\'analyse SEO et IA gratuits'
+      }]
+    });
 
-    // Pages principales du site avec hreflang
-    const pages: SitemapPage[] = [
-      // ===== HOMEPAGE =====
-      {
-        loc: SITE_URL,
-        lastmod: today,
-        changefreq: 'daily',
-        priority: 1.0,
-        alternates: homepageAlternates,
-        images: [
-          {
-            loc: `${SITE_URL}/favicon.svg`,
-            title: 'Crawlers.fr - AI SEO & GEO Tools',
-            caption: 'Logo Crawlers.fr - Outils d\'analyse SEO et IA'
-          }
-        ]
-      },
-      
-      // ===== SCORE SEO 200 (Audit Expert) =====
-      {
-        loc: `${SITE_URL}/audit-expert`,
-        lastmod: today,
-        changefreq: 'weekly',
-        priority: 0.9,
-        alternates: auditAlternates,
-        images: [
-          {
-            loc: `${SITE_URL}/favicon.svg`,
-            title: 'Score SEO 200 - Audit Expert',
-            caption: 'Audit complet sur 200 points : Performance, Technique, Sémantique, IA/GEO, Sécurité'
-          }
-        ]
-      },
-      
-      // ===== LEXIQUE SEO/GEO (Glossary) =====
-      {
-        loc: `${SITE_URL}/lexique`,
-        lastmod: today,
-        changefreq: 'weekly',
-        priority: 0.8,
-        alternates: lexiqueAlternates,
-        images: [
-          {
-            loc: `${SITE_URL}/favicon.svg`,
-            title: 'Lexique SEO, GEO & Performance 2026',
-            caption: 'Dictionnaire complet des termes SEO, GEO et Performance web pour SGE et LLMs'
-          }
-        ]
-      },
-      
-      // ===== PAGES LÉGALES =====
-      {
-        loc: `${SITE_URL}/mentions-legales`,
-        lastmod: '2025-01-01',
-        changefreq: 'yearly',
-        priority: 0.3,
-      },
-      {
-        loc: `${SITE_URL}/politique-confidentialite`,
-        lastmod: '2025-01-01',
-        changefreq: 'yearly',
-        priority: 0.3,
-      },
-      {
-        loc: `${SITE_URL}/conditions-utilisation`,
-        lastmod: '2025-01-01',
-        changefreq: 'yearly',
-        priority: 0.3,
-      },
-      {
-        loc: `${SITE_URL}/rgpd`,
-        lastmod: '2025-01-01',
-        changefreq: 'yearly',
-        priority: 0.3,
-      },
-    ];
+    // ========================================
+    // AUDIT EXPERT
+    // ========================================
+    pages.push({
+      loc: `${SITE_URL}/audit-expert`,
+      lastmod: today,
+      changefreq: 'weekly',
+      priority: 0.95,
+      alternates: createAlternates('/audit-expert', languages),
+    });
 
-    // Ajouter les versions EN et ES des pages principales
+    // ========================================
+    // BLOG INDEX
+    // ========================================
+    pages.push({
+      loc: `${SITE_URL}/blog`,
+      lastmod: today,
+      changefreq: 'daily',
+      priority: 0.9,
+      alternates: createAlternates('/blog', languages),
+    });
+
+    // ========================================
+    // BLOG ARTICLES
+    // ========================================
+    for (const article of blogArticles) {
+      const priority = article.type === 'pillar' ? 0.9 : 0.8;
+      const changefreq = article.type === 'pillar' ? 'weekly' : 'monthly';
+      
+      pages.push({
+        loc: `${SITE_URL}/blog/${article.slug}`,
+        lastmod: today,
+        changefreq: changefreq as 'weekly' | 'monthly',
+        priority: priority,
+        alternates: createAlternates(`/blog/${article.slug}`, languages),
+        images: [{
+          loc: article.image,
+          title: article.title,
+          caption: `Article SEO/GEO: ${article.title}`
+        }]
+      });
+    }
+
+    // ========================================
+    // LEXIQUE
+    // ========================================
+    pages.push({
+      loc: `${SITE_URL}/lexique`,
+      lastmod: today,
+      changefreq: 'weekly',
+      priority: 0.8,
+      alternates: createAlternates('/lexique', languages),
+      images: [{
+        loc: `${SITE_URL}/favicon.svg`,
+        title: 'Lexique SEO, GEO & IA 2026',
+        caption: 'Dictionnaire des termes SEO, GEO, LLM et marketing IA'
+      }]
+    });
+
+    // ========================================
+    // TARIFS
+    // ========================================
+    pages.push({
+      loc: `${SITE_URL}/tarifs`,
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: 0.8,
+      alternates: createAlternates('/tarifs', languages),
+    });
+
+    // ========================================
+    // PAGES LÉGALES
+    // ========================================
+    const legalPages = ['mentions-legales', 'politique-confidentialite', 'conditions-utilisation', 'rgpd'];
+    for (const page of legalPages) {
+      pages.push({
+        loc: `${SITE_URL}/${page}`,
+        lastmod: '2025-01-01',
+        changefreq: 'yearly',
+        priority: 0.3,
+      });
+    }
+
+    // ========================================
+    // ALTERNATE LANGUAGE VERSIONS
+    // ========================================
+    // EN versions
     pages.push(
-      {
-        loc: `${SITE_URL}/?lang=en`,
-        lastmod: today,
-        changefreq: 'daily',
-        priority: 0.9,
-        alternates: homepageAlternates,
-      },
-      {
-        loc: `${SITE_URL}/?lang=es`,
-        lastmod: today,
-        changefreq: 'daily',
-        priority: 0.9,
-        alternates: homepageAlternates,
-      },
-      {
-        loc: `${SITE_URL}/audit-expert?lang=en`,
-        lastmod: today,
-        changefreq: 'weekly',
-        priority: 0.8,
-        alternates: auditAlternates,
-      },
-      {
-        loc: `${SITE_URL}/audit-expert?lang=es`,
-        lastmod: today,
-        changefreq: 'weekly',
-        priority: 0.8,
-        alternates: auditAlternates,
-      },
-      {
-        loc: `${SITE_URL}/lexique?lang=en`,
-        lastmod: today,
-        changefreq: 'weekly',
-        priority: 0.7,
-        alternates: lexiqueAlternates,
-      },
-      {
-        loc: `${SITE_URL}/lexique?lang=es`,
-        lastmod: today,
-        changefreq: 'weekly',
-        priority: 0.7,
-        alternates: lexiqueAlternates,
-      }
+      { loc: `${SITE_URL}/?lang=en`, lastmod: today, changefreq: 'daily', priority: 0.9, alternates: createAlternates('/', languages) },
+      { loc: `${SITE_URL}/audit-expert?lang=en`, lastmod: today, changefreq: 'weekly', priority: 0.85, alternates: createAlternates('/audit-expert', languages) },
+      { loc: `${SITE_URL}/lexique?lang=en`, lastmod: today, changefreq: 'weekly', priority: 0.7, alternates: createAlternates('/lexique', languages) },
+      { loc: `${SITE_URL}/blog?lang=en`, lastmod: today, changefreq: 'daily', priority: 0.8, alternates: createAlternates('/blog', languages) },
+    );
+    
+    // ES versions
+    pages.push(
+      { loc: `${SITE_URL}/?lang=es`, lastmod: today, changefreq: 'daily', priority: 0.9, alternates: createAlternates('/', languages) },
+      { loc: `${SITE_URL}/audit-expert?lang=es`, lastmod: today, changefreq: 'weekly', priority: 0.85, alternates: createAlternates('/audit-expert', languages) },
+      { loc: `${SITE_URL}/lexique?lang=es`, lastmod: today, changefreq: 'weekly', priority: 0.7, alternates: createAlternates('/lexique', languages) },
+      { loc: `${SITE_URL}/blog?lang=es`, lastmod: today, changefreq: 'daily', priority: 0.8, alternates: createAlternates('/blog', languages) },
     );
 
     const sitemap = generateSitemap(pages);
 
-    console.log(`Generated sitemap with ${pages.length} URLs, including hreflang and image tags`);
+    console.log(`Generated sitemap with ${pages.length} URLs, including ${blogArticles.length} blog articles`);
 
     return new Response(sitemap, {
       headers: {
@@ -260,6 +258,11 @@ serve(async (req) => {
   </url>
   <url>
     <loc>https://crawlers.fr/audit-expert</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://crawlers.fr/blog</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <priority>0.9</priority>
   </url>
