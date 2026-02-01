@@ -232,6 +232,350 @@ export const blogArticles: BlogArticle[] = [
       { title: 'Web.dev Performance', url: 'https://web.dev/performance/' },
     ],
   },
+  {
+    slug: 'google-sge-seo-preparation',
+    type: 'satellite',
+    title: {
+      fr: 'Google SGE arrive : Pourquoi votre SEO actuel ne suffira plus',
+      en: 'Google SGE is Coming: Why Your Current SEO Won\'t Be Enough',
+      es: 'Google SGE llega: Por qué tu SEO actual no será suficiente',
+    },
+    description: {
+      fr: 'La Search Generative Experience change les règles du jeu. Google ne vous envoie plus de trafic, il donne la réponse directement.',
+      en: 'The Search Generative Experience changes the rules. Google no longer sends you traffic, it gives the answer directly.',
+      es: 'La Search Generative Experience cambia las reglas. Google ya no te envía tráfico, da la respuesta directamente.',
+    },
+    heroImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&q=80',
+    heroAlt: {
+      fr: 'Interface futuriste Google SGE',
+      en: 'Futuristic Google SGE interface',
+      es: 'Interfaz futurista de Google SGE',
+    },
+    author: 'Adrien',
+    date: today,
+    summaryPoints: {
+      fr: [
+        'La fin des \'10 liens bleus\'.',
+        'L\'importance des \'Featured Snippets\' sous stéroïdes.',
+        'Comment gagner la position Zéro en 2026.',
+      ],
+      en: [
+        'The end of the \'10 blue links\'.',
+        'The importance of \'Featured Snippets\' on steroids.',
+        'How to win position Zero in 2026.',
+      ],
+      es: [
+        'El fin de los \'10 enlaces azules\'.',
+        'La importancia de los \'Featured Snippets\' con esteroides.',
+        'Cómo ganar la posición Cero en 2026.',
+      ],
+    },
+    sources: [
+      { title: 'Google The Keyword', url: 'https://blog.google/' },
+      { title: 'Search Engine Journal', url: 'https://www.searchenginejournal.com/' },
+    ],
+  },
+  {
+    slug: 'mission-mise-aux-normes-ia',
+    type: 'satellite',
+    title: {
+      fr: 'Consultants : Comment vendre une mission \'Mise aux normes IA\' (GEO)',
+      en: 'Consultants: How to Sell an \'AI Compliance\' (GEO) Mission',
+      es: 'Consultores: Cómo vender una misión \'Cumplimiento IA\' (GEO)',
+    },
+    description: {
+      fr: 'Ne vendez plus du vent. Vendez de la sécurité infrastructurelle. La mise aux normes IA est le service le plus facile à pitcher en 2026.',
+      en: 'Stop selling smoke. Sell infrastructure security. AI compliance is the easiest service to pitch in 2026.',
+      es: 'Deja de vender humo. Vende seguridad de infraestructura. El cumplimiento IA es el servicio más fácil de vender en 2026.',
+    },
+    heroImage: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1200&q=80',
+    heroAlt: {
+      fr: 'Poignée de main business tech',
+      en: 'Business tech handshake',
+      es: 'Apretón de manos business tech',
+    },
+    author: 'Adrien',
+    date: today,
+    summaryPoints: {
+      fr: [
+        'Créer un sentiment d\'urgence légitime.',
+        'Le pricing d\'un audit GEO.',
+        'Fidéliser le client avec une veille mensuelle.',
+      ],
+      en: [
+        'Create a legitimate sense of urgency.',
+        'Pricing a GEO audit.',
+        'Retain clients with monthly monitoring.',
+      ],
+      es: [
+        'Crear un sentido de urgencia legítimo.',
+        'El pricing de una auditoría GEO.',
+        'Fidelizar al cliente con monitoreo mensual.',
+      ],
+    },
+    sources: [
+      { title: 'Forbes Agency Council', url: 'https://www.forbes.com/' },
+      { title: 'Semrush Blog', url: 'https://www.semrush.com/blog/' },
+    ],
+  },
+  {
+    slug: 'json-ld-snippet-autorite',
+    type: 'satellite',
+    title: {
+      fr: 'JSON-LD pour l\'IA : Le snippet de code qui fait de vous une autorité',
+      en: 'JSON-LD for AI: The Code Snippet That Makes You an Authority',
+      es: 'JSON-LD para IA: El snippet de código que te convierte en autoridad',
+    },
+    description: {
+      fr: 'Les LLM ne \'lisent\' pas comme nous. Ils parsent de la donnée brute. Le JSON-LD est votre façon de leur dire qui vous êtes.',
+      en: 'LLMs don\'t \'read\' like us. They parse raw data. JSON-LD is your way to tell them who you are.',
+      es: 'Los LLM no \'leen\' como nosotros. Parsean datos brutos. JSON-LD es tu forma de decirles quién eres.',
+    },
+    heroImage: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&q=80',
+    heroAlt: {
+      fr: 'Visualisation de données JSON',
+      en: 'JSON data visualization',
+      es: 'Visualización de datos JSON',
+    },
+    author: 'Adrien',
+    date: today,
+    summaryPoints: {
+      fr: [
+        'Pourquoi Schema.org est vital pour les LLM.',
+        'Le schema \'Organization\' décortiqué.',
+        'Exemple de code prêt à l\'emploi.',
+      ],
+      en: [
+        'Why Schema.org is vital for LLMs.',
+        'The \'Organization\' schema explained.',
+        'Ready-to-use code example.',
+      ],
+      es: [
+        'Por qué Schema.org es vital para los LLM.',
+        'El esquema \'Organization\' explicado.',
+        'Ejemplo de código listo para usar.',
+      ],
+    },
+    sources: [
+      { title: 'Schema.org', url: 'https://schema.org/' },
+      { title: 'Google Search Gallery', url: 'https://developers.google.com/search/docs/appearance/structured-data/search-gallery' },
+    ],
+  },
+  {
+    slug: 'perplexity-seo-citation',
+    type: 'satellite',
+    title: {
+      fr: 'Perplexity SEO : Comment devenir la source n°1 citée ?',
+      en: 'Perplexity SEO: How to Become the #1 Cited Source?',
+      es: 'Perplexity SEO: ¿Cómo convertirse en la fuente n°1 citada?',
+    },
+    description: {
+      fr: 'Perplexity est devenu le moteur de recherche des décideurs tech et B2B. Être cité ici vaut 1000 visites Google non qualifiées.',
+      en: 'Perplexity has become the search engine for tech and B2B decision-makers. Being cited here is worth 1000 unqualified Google visits.',
+      es: 'Perplexity se ha convertido en el motor de búsqueda de decisores tech y B2B. Ser citado aquí vale 1000 visitas no cualificadas de Google.',
+    },
+    heroImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&q=80',
+    heroAlt: {
+      fr: 'Interface Perplexity avec citations',
+      en: 'Perplexity interface with citations',
+      es: 'Interfaz de Perplexity con citas',
+    },
+    author: 'Adrien',
+    date: today,
+    summaryPoints: {
+      fr: [
+        'L\'algorithme de citation de Perplexity analysé.',
+        'L\'importance de la fraîcheur de l\'information.',
+        'Structurer ses articles pour la citation.',
+      ],
+      en: [
+        'Perplexity\'s citation algorithm analyzed.',
+        'The importance of information freshness.',
+        'Structuring articles for citation.',
+      ],
+      es: [
+        'El algoritmo de citación de Perplexity analizado.',
+        'La importancia de la frescura de la información.',
+        'Estructurar artículos para la citación.',
+      ],
+    },
+    sources: [
+      { title: 'Perplexity AI FAQ', url: 'https://www.perplexity.ai/' },
+      { title: 'Aravind Srinivas Twitter', url: 'https://twitter.com/AravSrinivas' },
+    ],
+  },
+  {
+    slug: 'audit-seo-gratuit-vs-semrush',
+    type: 'satellite',
+    title: {
+      fr: 'Audit SEO Gratuit : Pourquoi les outils classiques (Semrush/Ahrefs) ratent l\'IA',
+      en: 'Free SEO Audit: Why Classic Tools (Semrush/Ahrefs) Miss AI',
+      es: 'Auditoría SEO Gratis: Por qué las herramientas clásicas (Semrush/Ahrefs) fallan con la IA',
+    },
+    description: {
+      fr: 'Semrush et Ahrefs sont des outils fantastiques pour le web de 2020. Mais pour l\'ère des LLM, ils sont aveugles sur des points critiques.',
+      en: 'Semrush and Ahrefs are fantastic tools for the 2020 web. But for the LLM era, they\'re blind to critical points.',
+      es: 'Semrush y Ahrefs son herramientas fantásticas para la web de 2020. Pero para la era de los LLM, están ciegos a puntos críticos.',
+    },
+    heroImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80',
+    heroAlt: {
+      fr: 'Graphique comparatif d\'outils',
+      en: 'Tools comparison chart',
+      es: 'Gráfico comparativo de herramientas',
+    },
+    author: 'Adrien',
+    date: today,
+    summaryPoints: {
+      fr: [
+        'Ce que Semrush ne voit pas (le rendu LLM).',
+        'Pourquoi le \'Keyword Volume\' est une métrique du passé.',
+        'L\'avantage des outils natifs IA.',
+      ],
+      en: [
+        'What Semrush doesn\'t see (LLM rendering).',
+        'Why \'Keyword Volume\' is a past metric.',
+        'The advantage of AI-native tools.',
+      ],
+      es: [
+        'Lo que Semrush no ve (renderizado LLM).',
+        'Por qué \'Keyword Volume\' es una métrica del pasado.',
+        'La ventaja de herramientas nativas IA.',
+      ],
+    },
+    sources: [
+      { title: 'Ahrefs Blog', url: 'https://ahrefs.com/blog/' },
+      { title: 'Moz Blog', url: 'https://moz.com/blog' },
+    ],
+  },
+  {
+    slug: 'tableau-comparatif-seo-geo-2026',
+    type: 'satellite',
+    title: {
+      fr: 'SEO vs GEO : Le tableau comparatif définitif pour 2026',
+      en: 'SEO vs GEO: The Definitive Comparison Table for 2026',
+      es: 'SEO vs GEO: La tabla comparativa definitiva para 2026',
+    },
+    description: {
+      fr: 'Vous êtes perdu entre les acronymes ? SEO, AEO, GEO, SGE... Ce guide visuel pose les bases définitives pour arbitrer vos budgets.',
+      en: 'Lost between acronyms? SEO, AEO, GEO, SGE... This visual guide sets the definitive bases for budget decisions.',
+      es: '¿Perdido entre acrónimos? SEO, AEO, GEO, SGE... Esta guía visual establece las bases definitivas para decidir presupuestos.',
+    },
+    heroImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&q=80',
+    heroAlt: {
+      fr: 'Tableau SEO vs GEO',
+      en: 'SEO vs GEO table',
+      es: 'Tabla SEO vs GEO',
+    },
+    author: 'Adrien',
+    date: today,
+    summaryPoints: {
+      fr: [
+        'Comparaison point par point (KPI, Objectifs, Méthodes).',
+        'Budget : Faut-il investir en SEO ou GEO ?',
+        'Les synergies entre les deux.',
+      ],
+      en: [
+        'Point by point comparison (KPIs, Goals, Methods).',
+        'Budget: Should you invest in SEO or GEO?',
+        'Synergies between the two.',
+      ],
+      es: [
+        'Comparación punto por punto (KPIs, Objetivos, Métodos).',
+        'Presupuesto: ¿Invertir en SEO o GEO?',
+        'Las sinergias entre ambos.',
+      ],
+    },
+    sources: [
+      { title: 'Gartner Predictions', url: 'https://www.gartner.com/' },
+      { title: 'Search Engine Land', url: 'https://searchengineland.com/' },
+    ],
+  },
+  {
+    slug: 'liste-user-agents-ia-2026',
+    type: 'satellite',
+    title: {
+      fr: 'La liste complète des User-Agents IA à surveiller (Mise à jour 2026)',
+      en: 'Complete List of AI User-Agents to Monitor (2026 Update)',
+      es: 'Lista completa de User-Agents IA a monitorear (Actualización 2026)',
+    },
+    description: {
+      fr: 'Ne laissez pas des inconnus scraper votre site. Voici la liste tenue à jour des identifiants des robots d\'IA.',
+      en: 'Don\'t let strangers scrape your site. Here\'s the updated list of AI robot identifiers.',
+      es: 'No dejes que desconocidos scrapeen tu sitio. Aquí está la lista actualizada de identificadores de robots IA.',
+    },
+    heroImage: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&q=80',
+    heroAlt: {
+      fr: 'Liste de bots style Matrix',
+      en: 'Matrix style bot list',
+      es: 'Lista de bots estilo Matrix',
+    },
+    author: 'Adrien',
+    date: today,
+    summaryPoints: {
+      fr: [
+        'Les bots majeurs (OpenAI, Anthropic, Google).',
+        'Les bots \'Common Crawl\' (CCBot).',
+        'Comment les identifier dans vos logs serveurs.',
+      ],
+      en: [
+        'Major bots (OpenAI, Anthropic, Google).',
+        'Common Crawl bots (CCBot).',
+        'How to identify them in your server logs.',
+      ],
+      es: [
+        'Los bots principales (OpenAI, Anthropic, Google).',
+        'Los bots \'Common Crawl\' (CCBot).',
+        'Cómo identificarlos en tus logs de servidor.',
+      ],
+    },
+    sources: [
+      { title: 'Dark Visitors', url: 'https://darkvisitors.com/' },
+      { title: 'Cloudflare Bot Management', url: 'https://www.cloudflare.com/learning/bots/what-is-bot-management/' },
+    ],
+  },
+  {
+    slug: 'eeat-expertise-algorithme',
+    type: 'satellite',
+    title: {
+      fr: 'E-E-A-T : Comment prouver votre expertise à un algorithme ?',
+      en: 'E-E-A-T: How to Prove Your Expertise to an Algorithm?',
+      es: 'E-E-A-T: ¿Cómo demostrar tu experiencia a un algoritmo?',
+    },
+    description: {
+      fr: 'Pour Google et les IA, si vous n\'êtes pas un expert vérifié, vous êtes une \'hallucination potentielle\'. L\'E-E-A-T est une liste de critères techniques.',
+      en: 'For Google and AI, if you\'re not a verified expert, you\'re a \'potential hallucination\'. E-E-A-T is a list of technical criteria.',
+      es: 'Para Google y las IA, si no eres un experto verificado, eres una \'alucinación potencial\'. E-E-A-T es una lista de criterios técnicos.',
+    },
+    heroImage: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80',
+    heroAlt: {
+      fr: 'Certificat d\'expertise digital',
+      en: 'Digital expertise certificate',
+      es: 'Certificado de experiencia digital',
+    },
+    author: 'Adrien',
+    date: today,
+    summaryPoints: {
+      fr: [
+        'Définition de l\'Experience, Expertise, Authoritativeness, Trustworthiness.',
+        'L\'importance des pages \'Auteur\'.',
+        'Lier ses profils sociaux via le Schema.',
+      ],
+      en: [
+        'Definition of Experience, Expertise, Authoritativeness, Trustworthiness.',
+        'The importance of \'Author\' pages.',
+        'Linking social profiles via Schema.',
+      ],
+      es: [
+        'Definición de Experience, Expertise, Authoritativeness, Trustworthiness.',
+        'La importancia de las páginas \'Autor\'.',
+        'Vincular perfiles sociales via Schema.',
+      ],
+    },
+    sources: [
+      { title: 'Google Quality Rater Guidelines', url: 'https://developers.google.com/search/docs/fundamentals/creating-helpful-content' },
+      { title: 'Marie Haynes Consulting', url: 'https://www.mariehaynes.com/' },
+    ],
+  },
 ];
 
 // Fonction helper pour récupérer un article par son slug
