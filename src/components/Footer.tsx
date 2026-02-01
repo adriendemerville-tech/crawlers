@@ -107,8 +107,8 @@ function FooterComponent() {
     },
   ];
 
-  // Get first 5 blog articles for quick resources
-  const quickResources = blogArticles.slice(0, 5);
+  // Get all blog articles for resources section
+  const allArticles = blogArticles;
 
   return (
     <footer className="border-t border-border bg-card" role="contentinfo">
@@ -229,18 +229,18 @@ function FooterComponent() {
         </div>
       </div>
 
-      {/* Quick Resources Section */}
-      {quickResources.length > 0 && (
+      {/* Ressources & Guides Section */}
+      {allArticles.length > 0 && (
         <div className="border-t border-border">
           <div className="mx-auto max-w-7xl px-4 py-8">
             <div className="flex items-center gap-2 mb-4">
               <BookOpen className="h-5 w-5 text-primary" />
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                {language === 'fr' ? 'Ressources Rapides' : language === 'es' ? 'Recursos Rápidos' : 'Quick Resources'}
+                {language === 'fr' ? 'Ressources & Guides' : language === 'es' ? 'Recursos y Guías' : 'Resources & Guides'}
               </h3>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {quickResources.map((article) => (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {allArticles.map((article) => (
                 <Link
                   key={article.slug}
                   to={`/blog/${article.slug}`}
