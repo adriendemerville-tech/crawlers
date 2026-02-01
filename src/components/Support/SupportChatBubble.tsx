@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -42,6 +43,7 @@ const translations = {
 export function SupportChatBubble() {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const isMobile = useIsMobile();
   const t = translations[language];
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -155,15 +157,6 @@ export function SupportChatBubble() {
     }
     setSending(false);
   };
-
-  const [isMobile, setIsMobile] = useState(true); // Default to mobile to avoid flash
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // Only show on desktop and when user is logged in
   if (!user || isMobile) {
