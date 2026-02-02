@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Users, FileText, BarChart3, MessageCircle, Shield } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
+import { AnalyticsDashboard } from './AnalyticsDashboard';
 
 export function AdminDashboard() {
   return (
@@ -46,22 +47,7 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Statistiques
-              </CardTitle>
-              <CardDescription>
-                Dashboard analytique
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Fonctionnalité à venir...
-              </p>
-            </CardContent>
-          </Card>
+          <AnalyticsDashboard />
         </TabsContent>
 
         <TabsContent value="support">
