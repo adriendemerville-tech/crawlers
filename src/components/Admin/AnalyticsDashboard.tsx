@@ -1,14 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ComponentType, Component, type ReactNode, lazy, Suspense } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, FileText, CreditCard, TrendingUp, Activity, Calendar, AlertCircle } from 'lucide-react';
-import { 
-  ChartContainer, 
-  ChartTooltip, 
-  ChartTooltipContent 
-} from '@/components/ui/chart';
-import { AreaChart, Area, XAxis, YAxis, BarChart, Bar, CartesianGrid } from 'recharts';
+import { Users, FileText, CreditCard, Activity, AlertCircle } from 'lucide-react';
+
+const AnalyticsCharts = lazy(() => import('./Analytics/AnalyticsCharts'));
 
 interface DashboardStats {
   totalUsers: number;
@@ -17,6 +13,27 @@ interface DashboardStats {
   totalTransactions: number;
   recentSignups: Array<{ date: string; count: number }>;
   reportsByType: Array<{ type: string; count: number }>;
+}
+
+class SafeRenderBoundary extends Component<
+  { fallback: ReactNode; children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    // Never let a render crash take the whole page down
+    console.error('AnalyticsDashboard render error:', error);
+  }
+
+  render() {
+    if (this.state.hasError) return this.props.fallback;
+    return this.props.children;
+  }
 }
 
 function LoadingSkeleton() {
@@ -54,6 +71,31 @@ function LoadingSkeleton() {
   );
 }
 
+function ChartsLoadingSkeleton() {
+  return (
+    <div className="grid gap-6 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-56" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[200px] w-full" />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-56" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[200px] w-full" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function ErrorFallback({ error }: { error: string }) {
   return (
     <Card className="border-destructive/50">
@@ -78,7 +120,7 @@ function KPICard({
   value, 
   description 
 }: { 
-  icon: React.ComponentType<{ className?: string }>; 
+  icon: ComponentType<{ className?: string }>; 
   label: string; 
   value: number; 
   description: string; 
@@ -141,14 +183,18 @@ export function AnalyticsDashboard() {
         if (signupsResult.status === 'fulfilled' && signupsResult.value.data) {
           const signupsByDate = new Map<string, number>();
           signupsResult.value.data.forEach((profile) => {
-            const date = new Date(profile.created_at).toLocaleDateString('fr-FR', { 
-              day: '2-digit', 
-              month: '2-digit' 
+            const createdAt = profile.created_at;
+            if (!createdAt) return;
+            const d = new Date(createdAt);
+            if (Number.isNaN(d.getTime())) return;
+            const date = d.toLocaleDateString('fr-FR', {
+              day: '2-digit',
+              month: '2-digit',
             });
             signupsByDate.set(date, (signupsByDate.get(date) || 0) + 1);
           });
           signupsByDate.forEach((count, date) => {
-            recentSignups.push({ date, count });
+            recentSignups.push({ date, count: Number(count) || 0 });
           });
         }
 
@@ -162,9 +208,13 @@ export function AnalyticsDashboard() {
           });
           typeMap.forEach((count, type) => {
             const label = getReportTypeLabel(type);
-            reportsByType.push({ type: label, count });
+            reportsByType.push({ type: label, count: Number(count) || 0 });
           });
         }
+
+        // Keep charts stable: deterministic ordering
+        recentSignups.sort((a, b) => a.date.localeCompare(b.date));
+        reportsByType.sort((a, b) => b.count - a.count);
 
         setStats({
           totalUsers,
@@ -201,146 +251,49 @@ export function AnalyticsDashboard() {
     return <LoadingSkeleton />;
   }
 
-  const chartConfig = {
-    count: {
-      label: "Inscriptions",
-      color: "hsl(var(--primary))",
-    },
-  };
-
-  const barChartConfig = {
-    count: {
-      label: "Rapports",
-      color: "hsl(var(--chart-1))",
-    },
-  };
-
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <KPICard
-          icon={Users}
-          label="Utilisateurs"
-          value={stats.totalUsers}
-          description="Total inscrits"
-        />
-        <KPICard
-          icon={FileText}
-          label="Rapports"
-          value={stats.totalReports}
-          description="Rapports sauvegardés"
-        />
-        <KPICard
-          icon={CreditCard}
-          label="Crédits achetés"
-          value={stats.totalCredits}
-          description={`${stats.totalTransactions} transactions`}
-        />
-        <KPICard
-          icon={Activity}
-          label="Activité"
-          value={stats.recentSignups.length}
-          description="Jours actifs (30j)"
-        />
-      </div>
+      <SafeRenderBoundary
+        fallback={<ErrorFallback error="Le rendu des KPIs a échoué." />}
+      >
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <KPICard
+            icon={Users}
+            label="Utilisateurs"
+            value={stats.totalUsers}
+            description="Total inscrits"
+          />
+          <KPICard
+            icon={FileText}
+            label="Rapports"
+            value={stats.totalReports}
+            description="Rapports sauvegardés"
+          />
+          <KPICard
+            icon={CreditCard}
+            label="Crédits achetés"
+            value={stats.totalCredits}
+            description={`${stats.totalTransactions} transactions`}
+          />
+          <KPICard
+            icon={Activity}
+            label="Activité"
+            value={stats.recentSignups.length}
+            description="Jours actifs (30j)"
+          />
+        </div>
+      </SafeRenderBoundary>
 
       {/* Charts */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Signups Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <TrendingUp className="h-5 w-5" />
-              Inscriptions (30 jours)
-            </CardTitle>
-            <CardDescription>
-              Nouvelles inscriptions par jour
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {stats.recentSignups.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[200px] w-full">
-                <AreaChart data={stats.recentSignups} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 12 }} 
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 12 }} 
-                    tickLine={false}
-                    axisLine={false}
-                    allowDecimals={false}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area
-                    type="monotone"
-                    dataKey="count"
-                    stroke="hsl(var(--primary))"
-                    fill="hsl(var(--primary) / 0.2)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-                Aucune inscription récente
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Reports by Type Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="h-5 w-5" />
-              Rapports par type
-            </CardTitle>
-            <CardDescription>
-              Distribution des rapports sauvegardés
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {stats.reportsByType.length > 0 ? (
-              <ChartContainer config={barChartConfig} className="h-[200px] w-full">
-                <BarChart data={stats.reportsByType} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="type" 
-                    tick={{ fontSize: 10 }} 
-                    tickLine={false}
-                    axisLine={false}
-                    interval={0}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 12 }} 
-                    tickLine={false}
-                    axisLine={false}
-                    allowDecimals={false}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar
-                    dataKey="count"
-                    fill="hsl(var(--chart-1))"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-                Aucun rapport sauvegardé
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <SafeRenderBoundary fallback={<ErrorFallback error="Le module graphiques a échoué." />}>
+        <Suspense fallback={<ChartsLoadingSkeleton />}>
+          <AnalyticsCharts
+            recentSignups={stats.recentSignups}
+            reportsByType={stats.reportsByType}
+          />
+        </Suspense>
+      </SafeRenderBoundary>
     </div>
   );
 }
