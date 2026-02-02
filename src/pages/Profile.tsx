@@ -236,7 +236,6 @@ export default function Profile() {
                 </TabsTrigger>
                 <TabsTrigger value="settings" className="gap-2">
                   <Settings className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.settings}</span>
                 </TabsTrigger>
                 {isAdmin && (
                   <TabsTrigger value="admin" className="gap-2 text-primary">
