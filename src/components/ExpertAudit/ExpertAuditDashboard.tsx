@@ -31,6 +31,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSaveReport } from '@/hooks/useSaveReport';
+import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 
 function formatMs(ms: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
@@ -221,6 +222,9 @@ export function ExpertAuditDashboard() {
                 setPaidFixesMetadata(data.data.fixes_metadata);
               }
               setHasVerifiedPayment(true);
+              
+              // Track step 3 completion (payment verified)
+              trackAnalyticsEvent('expert_audit_step_3', { targetUrl: savedUrl || '' });
               
               // Restore session data
               if (savedTechnicalResult) {
@@ -444,6 +448,10 @@ export function ExpertAuditDashboard() {
     setAuditMode('technical');
     setIsLoading(true);
     setResult(null);
+    
+    // Track audit launch
+    trackAnalyticsEvent('expert_audit_launched', { targetUrl: normalizedUrl });
+    storeAnalyzedUrl(normalizedUrl);
 
     try {
       const { data, error } = await supabase.functions.invoke('audit-expert-seo', {
@@ -465,6 +473,9 @@ export function ExpertAuditDashboard() {
       setResult(auditResult);
       setTechnicalResult(auditResult);
       setCompletedSteps(prev => [...prev.filter(s => s !== 1), 1]);
+      
+      // Track step 1 completion
+      trackAnalyticsEvent('expert_audit_step_1', { targetUrl: normalizedUrl });
 
       const reliabilityInfo = auditResult.meta?.reliabilityScore 
         ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
@@ -476,6 +487,7 @@ export function ExpertAuditDashboard() {
       });
     } catch (error) {
       console.error('Audit error:', error);
+      trackAnalyticsEvent('error', { eventData: { type: 'technical_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
       toast({
         title: t.error,
         description: error instanceof Error ? error.message : t.auditFailed,
@@ -570,6 +582,9 @@ export function ExpertAuditDashboard() {
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
       // Clear any previous hallucination diagnosis since we re-analyzed
       setHallucinationDiagnosis(null);
+      
+      // Track step 2 completion
+      trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
 
       toast({
         title: hallucinationCorrections ? 'Analyse corrigée terminée !' : t.strategicComplete,
@@ -579,6 +594,7 @@ export function ExpertAuditDashboard() {
       });
     } catch (error) {
       console.error('Strategic audit error:', error);
+      trackAnalyticsEvent('error', { eventData: { type: 'strategic_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
       toast({
         title: t.error,
         description: error instanceof Error ? error.message : t.auditFailed,

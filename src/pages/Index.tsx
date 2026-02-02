@@ -10,6 +10,7 @@ import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 
 // Lazy load heavy dashboard components
 const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then(m => ({ default: m.ResultsDashboard })));
@@ -82,6 +83,9 @@ const Index = () => {
         if (!data.success) throw new Error(data.error || 'Failed to check URL');
 
         setCrawlResult(data.data);
+        // Track free analysis
+        trackAnalyticsEvent('free_analysis_crawlers', { targetUrl: url });
+        storeAnalyzedUrl(url);
         toast({
           title: 'Scan complete!',
           description: `Checked ${data.data.bots.length} AI bots for ${url}`,
@@ -95,6 +99,9 @@ const Index = () => {
         if (!data.success) throw new Error(data.error || 'Failed to analyze GEO');
 
         setGeoResult(data.data);
+        // Track free analysis
+        trackAnalyticsEvent('free_analysis_geo', { targetUrl: url });
+        storeAnalyzedUrl(url);
         toast({
           title: 'Analysis complete!',
           description: `GEO Score: ${data.data.totalScore}/100`,
@@ -108,6 +115,9 @@ const Index = () => {
         if (!data.success) throw new Error(data.error || 'Failed to analyze LLM visibility');
 
         setLlmResult(data.data);
+        // Track free analysis
+        trackAnalyticsEvent('free_analysis_llm', { targetUrl: url });
+        storeAnalyzedUrl(url);
         toast({
           title: 'Analysis complete!',
           description: `LLM Visibility Score: ${data.data.overallScore}/100`,
@@ -142,6 +152,9 @@ const Index = () => {
           setDesktopPageSpeedResult(data.data);
         }
         setIsPageSpeedLoading(false);
+        // Track free analysis
+        trackAnalyticsEvent('free_analysis_pagespeed', { targetUrl: url });
+        storeAnalyzedUrl(url);
         toast({
           title: 'Analysis complete!',
           description: `PageSpeed score: ${data.data.scores.performance}/100`,
@@ -150,6 +163,9 @@ const Index = () => {
     } catch (error) {
       console.error('Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to check URL';
+      
+      // Track error
+      trackAnalyticsEvent('error', { eventData: { message: errorMessage, url } });
       
       if (errorMessage.includes('quota') || errorMessage.includes('429')) {
         setQuotaExceeded(true);

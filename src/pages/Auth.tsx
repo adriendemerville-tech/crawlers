@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
+import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 
 const translations = {
   fr: {
@@ -180,6 +181,8 @@ export default function Auth() {
         toast.error(t.signupError);
       }
     } else {
+      // Track signup completion
+      trackAnalyticsEvent('signup_complete');
       toast.success(t.signupSuccess);
       // Navigation handled by useEffect when user state updates
     }
@@ -396,7 +399,13 @@ export default function Auth() {
               </span>
               <button
                 type="button"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  if (isLogin) {
+                    // Track signup click when switching to signup form
+                    trackAnalyticsEvent('signup_click');
+                  }
+                  setIsLogin(!isLogin);
+                }}
                 className="text-primary hover:underline font-medium"
               >
                 {isLogin ? t.signup : t.login}
