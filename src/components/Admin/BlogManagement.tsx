@@ -588,22 +588,17 @@ export function BlogManagement() {
 
       {/* Editor Dialog */}
       <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-7xl w-[98vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-2">
             <DialogTitle>
               {editingArticle ? 'Modifier l\'article' : 'Nouvel article'}
             </DialogTitle>
-            <DialogDescription>
-              {editingArticle 
-                ? 'Modifiez les informations de l\'article' 
-                : 'Créez un nouvel article de blog'}
-            </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-6 py-4">
+          <div className="grid gap-3 py-2">
             {/* Title & Slug */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
                 <Label htmlFor="title">Titre *</Label>
                 <Input
                   id="title"
@@ -612,7 +607,7 @@ export function BlogManagement() {
                   placeholder="Le titre de votre article"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="slug">Slug *</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">/blog/</span>
@@ -628,8 +623,8 @@ export function BlogManagement() {
             </div>
 
             {/* Status & Image */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
                 <Label htmlFor="status">Statut</Label>
                 <Select 
                   value={formData.status} 
@@ -650,7 +645,7 @@ export function BlogManagement() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="image_url">URL de l'image</Label>
                 <div className="relative">
                   <Image className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -666,14 +661,14 @@ export function BlogManagement() {
             </div>
 
             {/* Excerpt */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="excerpt">Extrait / Description</Label>
               <Textarea
                 id="excerpt"
                 value={formData.excerpt}
                 onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
                 placeholder="Un court résumé de l'article pour le SEO et les aperçus..."
-                rows={3}
+                rows={2}
               />
               <p className="text-xs text-muted-foreground">
                 {formData.excerpt.length}/160 caractères recommandés
@@ -681,19 +676,40 @@ export function BlogManagement() {
             </div>
 
             {/* Content */}
-            <div className="space-y-2">
-              <Label htmlFor="content">Contenu de l'article (HTML)</Label>
-              
-              {/* Info pour les articles importés */}
-              {editingArticle && blogArticles.some(a => a.slug === editingArticle.slug) && formData.content.length > 500 && (
-                <Alert className="border-primary/50 bg-primary/5">
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>Contenu éditable</AlertTitle>
-                  <AlertDescription className="text-sm text-muted-foreground">
-                    Ce contenu a été extrait de l'article statique. Vous pouvez le modifier librement. Les changements seront affichés sur le blog une fois sauvegardés.
-                  </AlertDescription>
-                </Alert>
-              )}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="content">Contenu de l'article (HTML)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-7 text-xs"
+                  onClick={() => {
+                    const textarea = document.getElementById('content') as HTMLTextAreaElement;
+                    if (!textarea) return;
+                    
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const selectedText = formData.content.substring(start, end);
+                    
+                    if (!selectedText) {
+                      toast.info('Sélectionnez d\'abord du texte dans le contenu');
+                      return;
+                    }
+                    
+                    const url = prompt('URL du lien :', 'https://');
+                    if (!url) return;
+                    
+                    const linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer">${selectedText}</a>`;
+                    const newContent = formData.content.substring(0, start) + linkHtml + formData.content.substring(end);
+                    setFormData(prev => ({ ...prev, content: newContent }));
+                    toast.success('Lien ajouté');
+                  }}
+                >
+                  <Link className="h-3.5 w-3.5" />
+                  Ajouter un lien
+                </Button>
+              </div>
               
               <Textarea
                 id="content"
@@ -714,18 +730,18 @@ Exemple de structure :
 </ul>
 
 <blockquote>Citation importante</blockquote>"
-                className="font-mono text-sm min-h-[400px] resize-y"
+                className="font-mono text-sm min-h-[350px] resize-y"
               />
               <p className="text-xs text-muted-foreground">
-                {formData.content.length} caractères • Utilisez du HTML pour le formatage (h2, p, ul, li, blockquote, strong, etc.)
+                {formData.content.length} caractères • HTML (h2, p, ul, li, blockquote, strong, a)
               </p>
             </div>
 
             {/* Image Preview */}
             {formData.image_url && (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label>Aperçu de l'image</Label>
-                <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-muted max-h-40">
                   <img
                     src={formData.image_url}
                     alt="Aperçu"
