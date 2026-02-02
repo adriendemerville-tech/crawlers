@@ -1,15 +1,14 @@
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, FileText, CreditCard, TrendingUp, Activity, Calendar } from 'lucide-react';
-import { MetricCard } from '@/components/MetricCard';
+import { Users, FileText, CreditCard, TrendingUp, Activity, Calendar, AlertCircle } from 'lucide-react';
 import { 
   ChartContainer, 
   ChartTooltip, 
   ChartTooltipContent 
 } from '@/components/ui/chart';
-import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, BarChart, Bar, CartesianGrid } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, BarChart, Bar, CartesianGrid } from 'recharts';
 
 interface DashboardStats {
   totalUsers: number;
@@ -58,11 +57,45 @@ function LoadingSkeleton() {
 function ErrorFallback({ error }: { error: string }) {
   return (
     <Card className="border-destructive/50">
+      <CardContent className="p-6 flex items-start gap-3">
+        <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+        <div>
+          <p className="text-destructive font-medium">Erreur de chargement</p>
+          <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          <p className="text-xs text-muted-foreground mt-2">
+            Essayez de rafraîchir la page.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Simple KPI Card component - inline to avoid external dependency issues
+function KPICard({ 
+  icon: Icon, 
+  label, 
+  value, 
+  description 
+}: { 
+  icon: React.ComponentType<{ className?: string }>; 
+  label: string; 
+  value: number; 
+  description: string; 
+}) {
+  return (
+    <Card>
       <CardContent className="p-6">
-        <p className="text-destructive">Erreur de chargement: {error}</p>
-        <p className="text-sm text-muted-foreground mt-2">
-          Essayez de rafraîchir la page.
-        </p>
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <Icon className="h-5 w-5 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-muted-foreground">{label}</p>
+            <p className="text-2xl font-bold text-foreground">{value}</p>
+            <p className="text-xs text-muted-foreground/80">{description}</p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -186,46 +219,30 @@ export function AnalyticsDashboard() {
     <div className="space-y-6">
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-6">
-            <MetricCard
-              icon={Users}
-              label="Utilisateurs"
-              value={stats.totalUsers.toString()}
-              description="Total inscrits"
-            />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <MetricCard
-              icon={FileText}
-              label="Rapports"
-              value={stats.totalReports.toString()}
-              description="Rapports sauvegardés"
-            />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <MetricCard
-              icon={CreditCard}
-              label="Crédits achetés"
-              value={stats.totalCredits.toString()}
-              description={`${stats.totalTransactions} transactions`}
-            />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <MetricCard
-              icon={Activity}
-              label="Activité"
-              value={stats.recentSignups.length.toString()}
-              description="Jours actifs (30j)"
-            />
-          </CardContent>
-        </Card>
+        <KPICard
+          icon={Users}
+          label="Utilisateurs"
+          value={stats.totalUsers}
+          description="Total inscrits"
+        />
+        <KPICard
+          icon={FileText}
+          label="Rapports"
+          value={stats.totalReports}
+          description="Rapports sauvegardés"
+        />
+        <KPICard
+          icon={CreditCard}
+          label="Crédits achetés"
+          value={stats.totalCredits}
+          description={`${stats.totalTransactions} transactions`}
+        />
+        <KPICard
+          icon={Activity}
+          label="Activité"
+          value={stats.recentSignups.length}
+          description="Jours actifs (30j)"
+        />
       </div>
 
       {/* Charts */}
