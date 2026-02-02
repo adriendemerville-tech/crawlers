@@ -91,19 +91,22 @@ function FooterComponent() {
       label: 'iktracker.fr',
       href: 'https://iktracker.fr',
       description: language === 'fr' ? 'Suivi d\'indemnités kilométriques gratuit' : 'Free mileage tracking',
-      external: true
+      external: true,
+      dofollow: true
     },
     { 
       label: 'Humanizz.fr',
       href: 'https://humanizz.fr',
       description: language === 'fr' ? 'Apprenez à rédiger avec l\'IA' : 'Learn to write with AI',
-      external: true
+      external: true,
+      dofollow: false
     },
     { 
       label: 'MossAI Tools',
       href: 'https://mossai.org',
       description: language === 'fr' ? 'Outils IA pour le SEO' : 'AI tools for SEO',
-      external: true
+      external: true,
+      dofollow: false
     },
   ];
 
@@ -210,7 +213,7 @@ function FooterComponent() {
                   <a 
                     href={link.href}
                     target="_blank"
-                    rel="noopener noreferrer"
+                    rel={link.dofollow ? 'noopener' : 'noopener noreferrer nofollow'}
                     className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                     title={link.description}
                   >
