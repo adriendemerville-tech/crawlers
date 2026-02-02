@@ -33,28 +33,38 @@ interface TrackEventOptions {
   eventData?: Record<string, unknown>;
 }
 
+// Track event via edge function to capture IP
+async function trackEventViaEdge(
+  eventType: AnalyticsEventType,
+  userId: string | null,
+  options?: TrackEventOptions
+) {
+  try {
+    const sessionId = getSessionId();
+    const currentUrl = window.location.pathname;
+
+    await supabase.functions.invoke('track-analytics', {
+      body: {
+        event_type: eventType,
+        session_id: sessionId,
+        url: currentUrl,
+        user_id: userId,
+        event_data: options?.eventData || {},
+        target_url: options?.targetUrl || null,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to track event:', error);
+  }
+}
+
 export function useAnalytics() {
   const { user } = useAuth();
   const hasTrackedPageView = useRef(false);
 
   const trackEvent = useCallback(
     async (eventType: AnalyticsEventType, options?: TrackEventOptions) => {
-      try {
-        const sessionId = getSessionId();
-        const currentUrl = window.location.pathname;
-
-        // Use type assertion for the insert since target_url is a new column
-        await (supabase.from('analytics_events') as any).insert({
-          event_type: eventType,
-          session_id: sessionId,
-          url: currentUrl,
-          user_id: user?.id || null,
-          event_data: options?.eventData || {},
-          target_url: options?.targetUrl || null,
-        });
-      } catch (error) {
-        console.error('Failed to track event:', error);
-      }
+      await trackEventViaEdge(eventType, user?.id || null, options);
     },
     [user]
   );
@@ -80,24 +90,8 @@ export async function trackAnalyticsEvent(
   eventType: AnalyticsEventType,
   options?: TrackEventOptions
 ) {
-  try {
-    const sessionId = getSessionId();
-    const currentUrl = window.location.pathname;
-
-    const { data: { user } } = await supabase.auth.getUser();
-
-    // Use type assertion for the insert since target_url is a new column
-    await (supabase.from('analytics_events') as any).insert({
-      event_type: eventType,
-      session_id: sessionId,
-      url: currentUrl,
-      user_id: user?.id || null,
-      event_data: options?.eventData || {},
-      target_url: options?.targetUrl || null,
-    });
-  } catch (error) {
-    console.error('Failed to track event:', error);
-  }
+  const { data: { user } } = await supabase.auth.getUser();
+  await trackEventViaEdge(eventType, user?.id || null, options);
 }
 
 // Store analyzed URL if new
