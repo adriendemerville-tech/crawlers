@@ -670,17 +670,16 @@ export function BlogManagement() {
 
             {/* Content */}
             <div className="space-y-2">
-              <Label htmlFor="content">Contenu (Markdown/HTML)</Label>
+              <Label htmlFor="content">Contenu de l'article (Markdown/HTML)</Label>
               <Textarea
                 id="content"
                 value={formData.content}
                 onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                placeholder="Le contenu complet de votre article..."
-                rows={12}
-                className="font-mono text-sm"
+                placeholder="Rédigez le contenu complet de votre article ici..."
+                className="font-mono text-sm min-h-[300px] resize-y"
               />
               <p className="text-xs text-muted-foreground">
-                {formData.content.length} caractères
+                {formData.content.length} caractères • Vous pouvez utiliser du Markdown ou du HTML
               </p>
             </div>
 
