@@ -77,14 +77,12 @@
     <link rel="dns-prefetch" href="https://tutlimtasnjabdfhpewu.supabase.co" />
     
     <!-- Preload critical LCP resources - Break critical request chain -->
-    <link rel="preload" href="/src/main.tsx" as="script" crossorigin type="module" />
     <link rel="modulepreload" href="/src/main.tsx" />
     <!-- Note: In production, Vite generates hashed asset names. These preloads work in dev mode.
          For production optimization, the CSS is inlined above (critical CSS) and the main bundle
          is already optimized via Vite's build configuration with code splitting. -->
     
-    <!-- Optimized font loading - preload Inter woff2 for fastest LCP -->
-    <link rel="preload" href="https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Optimized font loading - async stylesheet, no preload to avoid 404 -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" /></noscript>
     
