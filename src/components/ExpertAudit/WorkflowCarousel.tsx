@@ -194,8 +194,9 @@ export function WorkflowCarousel({
   const progressPercentage = ((completedSteps.length) / steps.length) * 100;
 
   // Card dimensions for sliding calculation
-  const CARD_WIDTH = 380; // w-[380px]
-  const GAP = 24; // gap-6 = 1.5rem = 24px
+  // Mobile: 255px (340px - 25%), Desktop: 380px
+  const CARD_WIDTH = isMobile ? 255 : 380;
+  const GAP = isMobile ? 16 : 24; // gap-4 on mobile, gap-6 on desktop
   const SLIDE_DISTANCE = CARD_WIDTH + GAP;
 
   // Swipe threshold for mobile/tablet
@@ -330,7 +331,8 @@ export function WorkflowCarousel({
           <div className="flex justify-center px-4">
             <motion.div 
               className={cn(
-                "flex items-stretch gap-6",
+                "flex items-stretch",
+                isMobile ? "gap-4" : "gap-6",
                 isMobile && "cursor-grab",
                 isDragging && "cursor-grabbing"
               )}
@@ -415,7 +417,7 @@ export function WorkflowCarousel({
                     }}
                     onClick={handleCardClick}
                     className={cn(
-                      "flex-shrink-0 w-[340px] sm:w-[380px] relative z-20",
+                      "flex-shrink-0 w-[255px] sm:w-[380px] relative z-20",
                       !isActive && !shouldHide && "cursor-pointer hover:scale-[0.94] transition-transform duration-300"
                     )}
                     style={{
