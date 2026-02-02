@@ -10,25 +10,30 @@ interface ChatMessageProps {
 }
 
 export function ChatMessage({ content, isAdmin, isOwn, createdAt }: ChatMessageProps) {
+  // Messages admin (non propres) à gauche, messages utilisateur à droite
+  const isAdminMessage = isAdmin && !isOwn;
+  
   return (
-    <div className={cn('flex', isOwn ? 'justify-end' : 'justify-start')}>
+    <div className={cn('flex', isAdminMessage ? 'justify-start' : 'justify-end')}>
       <div
         className={cn(
           'max-w-[80%] rounded-lg px-3 py-2 text-sm',
-          isOwn
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-muted text-foreground'
+          isAdminMessage
+            ? 'bg-violet-100 dark:bg-violet-900/40 text-foreground'
+            : 'bg-primary text-primary-foreground'
         )}
       >
-        {isAdmin && !isOwn && (
-          <span className="text-xs font-medium text-primary block mb-1">
+        {isAdminMessage && (
+          <span className="text-xs font-medium text-violet-600 dark:text-violet-400 block mb-1">
             Support
           </span>
         )}
         <p className="whitespace-pre-wrap break-words">{content}</p>
         <span className={cn(
           'text-[10px] block mt-1',
-          isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
+          isAdminMessage 
+            ? 'text-violet-500 dark:text-violet-400' 
+            : 'text-primary-foreground/70'
         )}>
           {format(new Date(createdAt), 'HH:mm', { locale: fr })}
         </span>
