@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { 
   Zap, Settings2, FileText, Brain, Shield, 
-  ExternalLink, Sparkles, FileDown, RotateCcw
+  ExternalLink, Sparkles, FileDown, RotateCcw, Bot
 } from 'lucide-react';
 import { ScoreGauge200 } from './ScoreGauge200';
 import { CategoryCard, MetricRow } from './CategoryCard';
@@ -655,16 +655,21 @@ export function ExpertAuditDashboard() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-end mb-4"
+          className="flex items-center justify-between mb-4"
         >
-          <Button
-            variant="outline"
-            onClick={handleNewAudit}
-            className="gap-2"
-          >
-            <RotateCcw className="h-4 w-4" />
-            {t.newAudit}
-          </Button>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-violet-500/10">
+              <Bot className="h-5 w-5 text-violet-500" />
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleNewAudit}
+              className="gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              {t.newAudit}
+            </Button>
+          </div>
         </motion.div>
       )}
 
