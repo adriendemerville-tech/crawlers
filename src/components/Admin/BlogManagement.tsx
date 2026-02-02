@@ -14,10 +14,11 @@ import { toast } from 'sonner';
 import { 
   FileText, Plus, Edit, Trash2, Eye, EyeOff, Archive, 
   Send, RotateCcw, Search, Calendar, User, Image, Link,
-  CheckCircle, XCircle, Clock, AlertTriangle, Loader2, Download, Upload, ExternalLink
+  CheckCircle, XCircle, Clock, AlertTriangle, Loader2, Download, Upload, ExternalLink, Info, Code
 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { blogArticles } from '@/data/blogArticles';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type ArticleStatus = Database['public']['Enums']['article_status'];
 type BlogArticle = Database['public']['Tables']['blog_articles']['Row'];
@@ -671,15 +672,28 @@ export function BlogManagement() {
             {/* Content */}
             <div className="space-y-2">
               <Label htmlFor="content">Contenu de l'article (Markdown/HTML)</Label>
+              
+              {/* Alert for static articles */}
+              {editingArticle && blogArticles.some(a => a.slug === editingArticle.slug) && (
+                <Alert className="border-warning/50 bg-warning/10">
+                  <Code className="h-4 w-4" />
+                  <AlertTitle>Article statique</AlertTitle>
+                  <AlertDescription className="text-sm text-muted-foreground">
+                    Cet article a été importé depuis le code source. Son contenu complet (avec composants React, tableaux, etc.) est défini dans <code className="bg-muted px-1 rounded">src/data/articleContents.tsx</code>. 
+                    Le champ ci-dessous ne contient qu'un résumé. Pour modifier le contenu complet, éditez le fichier source directement.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <Textarea
                 id="content"
                 value={formData.content}
                 onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                placeholder="Rédigez le contenu complet de votre article ici..."
+                placeholder="Rédigez le contenu complet de votre article ici. Utilisez du Markdown ou du HTML pour le formatage..."
                 className="font-mono text-sm min-h-[300px] resize-y"
               />
               <p className="text-xs text-muted-foreground">
-                {formData.content.length} caractères • Vous pouvez utiliser du Markdown ou du HTML
+                {formData.content.length} caractères • Supporte Markdown et HTML
               </p>
             </div>
 
