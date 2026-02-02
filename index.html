@@ -76,11 +76,8 @@
     <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
     <link rel="dns-prefetch" href="https://tutlimtasnjabdfhpewu.supabase.co" />
     
-    <!-- Preload critical LCP resources - Break critical request chain -->
-    <link rel="modulepreload" href="/src/main.tsx" />
-    <!-- Note: In production, Vite generates hashed asset names. These preloads work in dev mode.
-         For production optimization, the CSS is inlined above (critical CSS) and the main bundle
-         is already optimized via Vite's build configuration with code splitting. -->
+    <!-- Note: In production, Vite generates hashed assets with modulepreload.
+         CSS is inlined above (critical CSS) and the main bundle is optimized via code splitting. -->
     
     <!-- Optimized font loading - async stylesheet, no preload to avoid 404 -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
