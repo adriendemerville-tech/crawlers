@@ -296,6 +296,500 @@ export const extractedArticleContents: Record<string, { fr: string; en: string; 
 <h2>Cómo funciona Google SGE</h2>
 
 <p>SGE genera una respuesta sintética en la parte superior de la página antes de mostrar los resultados tradicionales.</p>`
+  },
+
+  'vendre-audit-ia-clients': {
+    fr: `<p class="lead">Vos clients entendent parler de l'IA partout. Soyez celui qui sécurise leur avenir numérique. Voici la feuille de route précise pour intégrer l'offre "Visibilité IA" à votre catalogue de services dès demain.</p>
+
+<h2>L'argumentaire imparable pour vendre une mission de mise aux normes IA</h2>
+
+<p>Vos clients ont peur de l'IA. C'est normal : ils lisent partout que ChatGPT va remplacer leur business. Votre rôle est de transformer cette peur en opportunité. L'audit de conformité IA n'est pas une option, c'est une assurance. Présentez-le comme tel.</p>
+
+<p>L'argument qui fonctionne : "Si vos concurrents sont cités par ChatGPT et pas vous, ils captent vos prospects sans payer de publicité." C'est factuel, vérifiable, et terrifiant pour un dirigeant.</p>
+
+<h2>Les livrables attendus pour un audit GEO</h2>
+
+<ul>
+  <li><strong>Rapport d'accessibilité IA</strong> : État des lieux de votre robots.txt et de l'accès aux bots IA</li>
+  <li><strong>Audit JSON-LD</strong> : Analyse de vos données structurées et recommandations</li>
+  <li><strong>Test de citation</strong> : Vérification de votre présence dans les réponses de ChatGPT, Perplexity et Google SGE</li>
+  <li><strong>Plan d'action priorisé</strong> : Feuille de route avec quick wins et chantiers structurants</li>
+</ul>
+
+<h2>Comment utiliser l'automatisation pour augmenter vos marges</h2>
+
+<p>Utilisez des outils comme Crawlers.fr pour automatiser la phase d'audit. Ce qui prenait 2 jours de travail manuel peut maintenant être fait en 10 minutes. Gardez votre expertise pour l'analyse et les recommandations stratégiques - là où votre valeur ajoutée est maximale.</p>
+
+<blockquote>"Le consultant qui maîtrise l'audit GEO en 2026 a 3 ans d'avance sur ses concurrents. C'est maintenant qu'il faut vous positionner."</blockquote>`,
+
+    en: `<p class="lead">Your clients hear about AI everywhere. Be the one who secures their digital future. Here's the precise roadmap to integrate the "AI Visibility" offer into your service catalog tomorrow.</p>
+
+<h2>The Unbeatable Argument to Sell an AI Compliance Mission</h2>
+
+<p>Your clients are afraid of AI. That's normal: they read everywhere that ChatGPT will replace their business. Your role is to turn this fear into opportunity.</p>
+
+<h2>Expected Deliverables for a GEO Audit</h2>
+
+<ul>
+  <li><strong>AI Accessibility Report</strong>: Status of your robots.txt and AI bot access</li>
+  <li><strong>JSON-LD Audit</strong>: Analysis of your structured data and recommendations</li>
+  <li><strong>Citation Test</strong>: Verification of your presence in ChatGPT, Perplexity and Google SGE responses</li>
+</ul>`,
+
+    es: `<p class="lead">Sus clientes escuchan sobre IA en todas partes. Sea quien asegure su futuro digital.</p>
+
+<h2>El argumento imbatible para vender una misión de cumplimiento IA</h2>
+
+<p>Sus clientes tienen miedo de la IA. Es normal: leen en todas partes que ChatGPT reemplazará su negocio. Su rol es transformar este miedo en oportunidad.</p>`
+  },
+
+  'bloquer-autoriser-gptbot': {
+    fr: `<p class="lead">C'est la question que tout le monde se pose. Bloquer OpenAI pour protéger son contenu, ou ouvrir les vannes pour gagner en visibilité ? La réponse est nuancée, mais penche vers l'ouverture.</p>
+
+<h2>Différence entre GPTBot (scraping) et ChatGPT-User (navigation)</h2>
+
+<p>Il existe deux User-Agents distincts d'OpenAI qu'il faut absolument comprendre :</p>
+
+<ul>
+  <li><strong>GPTBot</strong> : Utilisé pour entraîner les modèles. Vos données alimentent le "cerveau" de ChatGPT</li>
+  <li><strong>ChatGPT-User</strong> : Utilisé pour la navigation en temps réel. Quand un utilisateur demande des infos actuelles</li>
+</ul>
+
+<p>Bloquer GPTBot ne vous rend pas invisible dans ChatGPT - il utilise les données déjà apprises. Bloquer ChatGPT-User vous rend invisible pour les requêtes en temps réel.</p>
+
+<h2>Les risques de bloquer l'IA</h2>
+
+<p>Bloquer les bots IA, c'est refuser d'être cité dans leurs réponses. En 2026, c'est comme avoir refusé Google en 2010. Vos concurrents qui autorisent l'accès captent la visibilité que vous refusez.</p>
+
+<h2>Le code exact à copier-coller</h2>
+
+<pre><code># Autoriser la navigation temps réel (RECOMMANDÉ)
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Optionnel : bloquer l'entraînement si souhaité
+User-agent: GPTBot
+Disallow: /</code></pre>
+
+<blockquote>"Bloquer l'IA pour protéger son contenu, c'est comme fermer sa boutique pour éviter les voleurs. Vous bloquez surtout les clients."</blockquote>`,
+
+    en: `<p class="lead">It's the question everyone is asking. Block OpenAI to protect your content, or open the floodgates to gain visibility? The answer is nuanced, but leans towards openness.</p>
+
+<h2>Difference Between GPTBot (Scraping) and ChatGPT-User (Browsing)</h2>
+
+<p>There are two distinct OpenAI User-Agents you must understand:</p>
+
+<ul>
+  <li><strong>GPTBot</strong>: Used to train models. Your data feeds ChatGPT's "brain"</li>
+  <li><strong>ChatGPT-User</strong>: Used for real-time browsing. When a user asks for current info</li>
+</ul>`,
+
+    es: `<p class="lead">Es la pregunta que todos se hacen. ¿Bloquear OpenAI para proteger tu contenido, o abrir las compuertas para ganar visibilidad?</p>
+
+<h2>Diferencia entre GPTBot (scraping) y ChatGPT-User (navegación)</h2>
+
+<p>Existen dos User-Agents distintos de OpenAI que debes entender.</p>`
+  },
+
+  'site-invisible-chatgpt-solutions': {
+    fr: `<p class="lead">Vous avez du contenu de qualité, mais ChatGPT affirme ne rien savoir sur vous ? C'est probablement une barrière technique invisible qui empêche les bots de lire votre HTML. Voici comment la lever.</p>
+
+<h2>Le piège du JavaScript non rendu</h2>
+
+<p>Si votre site est construit avec React, Vue ou Angular en mode client-side rendering (CSR), les bots IA ne voient qu'une page blanche. Ils ne peuvent pas exécuter JavaScript. Solution : passez au SSR (Server-Side Rendering) ou au SSG (Static Site Generation).</p>
+
+<p>Testez votre site en désactivant JavaScript dans votre navigateur. Ce que vous voyez est ce que les bots voient. Si c'est vide, vous avez un problème critique.</p>
+
+<h2>Les problèmes de Sitemap</h2>
+
+<p>Un sitemap absent, mal formaté ou non déclaré dans robots.txt empêche les bots de découvrir vos pages. Vérifiez que votre sitemap.xml est accessible et à jour. Chaque nouvelle page doit y apparaître automatiquement.</p>
+
+<h2>L'impact du temps de chargement sur le crawl budget IA</h2>
+
+<p>Les bots IA ont un "budget" de temps par site. Si vos pages mettent 5 secondes à charger, ils en crawlent 10 fois moins qu'un site rapide. Optimisez vos Core Web Vitals : LCP sous 2.5s, FID sous 100ms, CLS sous 0.1.</p>
+
+<blockquote>"Un site invisible pour l'IA n'est pas un choix stratégique. C'est une erreur technique qui vous coûte des opportunités chaque jour."</blockquote>`,
+
+    en: `<p class="lead">You have quality content, but ChatGPT claims to know nothing about you? It's probably an invisible technical barrier preventing bots from reading your HTML.</p>
+
+<h2>The JavaScript Rendering Trap</h2>
+
+<p>If your site is built with React, Vue or Angular in client-side rendering (CSR) mode, AI bots see only a blank page. They can't execute JavaScript.</p>
+
+<h2>Sitemap Problems</h2>
+
+<p>An absent, malformed or undeclared sitemap in robots.txt prevents bots from discovering your pages.</p>`,
+
+    es: `<p class="lead">¿Tienes contenido de calidad, pero ChatGPT afirma no saber nada de ti? Probablemente sea una barrera técnica invisible.</p>
+
+<h2>La trampa del JavaScript no renderizado</h2>
+
+<p>Si tu sitio está construido con React, Vue o Angular en modo CSR, los bots de IA solo ven una página en blanco.</p>`
+  },
+
+  'google-sge-seo-preparation': {
+    fr: `<p class="lead">La Search Generative Experience change les règles du jeu. Google ne vous envoie plus de trafic, il donne la réponse directement. Êtes-vous prêt pour ce nouveau paradigme ?</p>
+
+<h2>La fin des '10 liens bleus'</h2>
+
+<p>Depuis 25 ans, Google affichait 10 liens et vous laissait cliquer. Avec SGE, Google génère la réponse en haut de page. L'utilisateur n'a plus besoin de cliquer. Votre position en page 1 ne garantit plus le trafic.</p>
+
+<p>Les études montrent que 40% des requêtes avec SGE n'entraînent aucun clic. L'utilisateur obtient sa réponse directement. Seules les sources citées dans la réponse capturent l'attention.</p>
+
+<h2>L'importance des 'Featured Snippets' sous stéroïdes</h2>
+
+<p>SGE est comme un Featured Snippet géant qui répond à tout. Pour être cité, vous devez répondre directement aux questions dans votre contenu. Fini les introductions de 500 mots avant d'arriver au sujet.</p>
+
+<h2>Comment gagner la position Zéro en 2026</h2>
+
+<ul>
+  <li><strong>Répondez immédiatement</strong> : La première phrase de chaque section doit être la réponse</li>
+  <li><strong>Structurez en listes</strong> : Les listes à puces sont privilégiées par SGE</li>
+  <li><strong>Utilisez des tableaux</strong> : Les comparaisons tabulaires sont souvent reprises verbatim</li>
+  <li><strong>Ajoutez des FAQ</strong> : Les sections FAQ en JSON-LD sont des mines d'or pour SGE</li>
+</ul>
+
+<blockquote>"En 2026, la position 1 ne suffit plus. Vous devez être la source citée dans la réponse SGE, sinon vous n'existez pas."</blockquote>`,
+
+    en: `<p class="lead">The Search Generative Experience changes the rules. Google no longer sends you traffic, it gives the answer directly.</p>
+
+<h2>The End of '10 Blue Links'</h2>
+
+<p>For 25 years, Google displayed 10 links and let you click. With SGE, Google generates the answer at the top of the page. The user no longer needs to click.</p>
+
+<h2>How to Win Position Zero in 2026</h2>
+
+<ul>
+  <li><strong>Answer immediately</strong>: The first sentence should be the answer</li>
+  <li><strong>Structure in lists</strong>: Bullet lists are favored by SGE</li>
+  <li><strong>Use tables</strong>: Tabular comparisons are often reproduced verbatim</li>
+</ul>`,
+
+    es: `<p class="lead">La Search Generative Experience cambia las reglas. Google ya no te envía tráfico, da la respuesta directamente.</p>
+
+<h2>El fin de los '10 enlaces azules'</h2>
+
+<p>Durante 25 años, Google mostraba 10 enlaces y te dejaba hacer clic. Con SGE, Google genera la respuesta en la parte superior de la página.</p>`
+  },
+
+  'mission-mise-aux-normes-ia': {
+    fr: `<p class="lead">Ne vendez plus du vent. Vendez de la sécurité infrastructurelle. La mise aux normes IA est le service le plus facile à pitcher en 2026.</p>
+
+<h2>Créer un sentiment d'urgence légitime</h2>
+
+<p>Vos prospects perdent des opportunités chaque jour où leur site n'est pas optimisé pour l'IA. Montrez-leur concrètement : faites une démo live en posant une question sur leur secteur à ChatGPT. S'ils ne sont pas cités, la démonstration est faite.</p>
+
+<p>L'urgence est réelle : les concurrents qui s'adaptent maintenant prennent de l'avance. Dans 2 ans, ce sera trop tard pour rattraper le retard de citation.</p>
+
+<h2>Le pricing d'un audit GEO</h2>
+
+<ul>
+  <li><strong>Audit de base</strong> (500-1500€) : Analyse robots.txt, JSON-LD, test de citation, recommandations</li>
+  <li><strong>Audit complet</strong> (2000-5000€) : + Analyse concurrentielle, plan d'action détaillé, accompagnement</li>
+  <li><strong>Mise en conformité</strong> (5000-15000€) : Implémentation technique complète + suivi</li>
+</ul>
+
+<h2>Fidéliser le client avec une veille mensuelle</h2>
+
+<p>Proposez un abonnement de monitoring : suivi des citations, alertes sur les nouvelles opportunités, rapport mensuel. C'est du revenu récurrent et une vraie valeur ajoutée. Les algorithmes évoluent, votre client a besoin d'un partenaire pour rester à jour.</p>
+
+<blockquote>"La mise aux normes IA n'est pas un one-shot. C'est un partenariat long terme. Vendez-le comme tel."</blockquote>`,
+
+    en: `<p class="lead">Stop selling smoke. Sell infrastructure security. AI compliance is the easiest service to pitch in 2026.</p>
+
+<h2>Create a Legitimate Sense of Urgency</h2>
+
+<p>Your prospects are losing opportunities every day their site isn't optimized for AI. Show them concretely: do a live demo by asking a question about their sector to ChatGPT.</p>
+
+<h2>Pricing a GEO Audit</h2>
+
+<ul>
+  <li><strong>Basic Audit</strong> ($500-1500): robots.txt analysis, JSON-LD, citation test, recommendations</li>
+  <li><strong>Full Audit</strong> ($2000-5000): + Competitive analysis, detailed action plan, support</li>
+</ul>`,
+
+    es: `<p class="lead">Deja de vender humo. Vende seguridad de infraestructura. El cumplimiento IA es el servicio más fácil de vender en 2026.</p>
+
+<h2>Crear un sentido de urgencia legítimo</h2>
+
+<p>Tus prospectos pierden oportunidades cada día que su sitio no está optimizado para IA.</p>`
+  },
+
+  'json-ld-snippet-autorite': {
+    fr: `<p class="lead">Les LLM ne 'lisent' pas comme nous. Ils parsent de la donnée brute. Le JSON-LD est votre façon de leur dire qui vous êtes, sans ambiguïté.</p>
+
+<h2>Pourquoi Schema.org est vital pour les LLM</h2>
+
+<p>Les LLM sont entraînés à reconnaître les schémas standardisés. Quand ils rencontrent du JSON-LD conforme à Schema.org, ils savent exactement comment interpréter l'information. C'est la différence entre lire un livre et lire une fiche signalétique.</p>
+
+<p>Sans JSON-LD, l'IA doit deviner le sens de votre contenu. Elle peut se tromper, halluciner, ou simplement vous ignorer. Avec JSON-LD, vous lui donnez des certitudes.</p>
+
+<h2>Le schema 'Organization' décortiqué</h2>
+
+<p>Le schema Organization est le minimum vital. Il dit à l'IA : voici qui nous sommes, où nous sommes, comment nous contacter, et quels réseaux sociaux nous utilisons.</p>
+
+<h2>Exemple de code prêt à l'emploi</h2>
+
+<pre><code>&lt;script type="application/ld+json"&gt;
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Votre Entreprise",
+  "url": "https://www.votre-site.com",
+  "logo": "https://www.votre-site.com/logo.png",
+  "sameAs": [
+    "https://www.linkedin.com/company/votre-entreprise",
+    "https://twitter.com/votre-entreprise"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+33-1-23-45-67-89",
+    "contactType": "customer service"
+  }
+}
+&lt;/script&gt;</code></pre>
+
+<blockquote>"Le JSON-LD est votre carte d'identité numérique pour les IA. Sans elle, vous êtes un inconnu anonyme."</blockquote>`,
+
+    en: `<p class="lead">LLMs don't 'read' like us. They parse raw data. JSON-LD is your way to tell them who you are, without ambiguity.</p>
+
+<h2>Why Schema.org is Vital for LLMs</h2>
+
+<p>LLMs are trained to recognize standardized schemas. When they encounter Schema.org-compliant JSON-LD, they know exactly how to interpret the information.</p>
+
+<h2>The 'Organization' Schema Explained</h2>
+
+<p>The Organization schema is the vital minimum. It tells the AI: here's who we are, where we are, how to contact us.</p>`,
+
+    es: `<p class="lead">Los LLM no 'leen' como nosotros. Parsean datos brutos. JSON-LD es tu forma de decirles quién eres, sin ambigüedad.</p>
+
+<h2>Por qué Schema.org es vital para los LLM</h2>
+
+<p>Los LLM están entrenados para reconocer esquemas estandarizados.</p>`
+  },
+
+  'perplexity-seo-citation': {
+    fr: `<p class="lead">Perplexity est devenu le moteur de recherche des décideurs tech et B2B. Être cité ici vaut 1000 visites Google non qualifiées.</p>
+
+<h2>L'algorithme de citation de Perplexity analysé</h2>
+
+<p>Perplexity cite les sources qu'il considère comme les plus fiables et les plus pertinentes. Contrairement à Google qui rank des pages, Perplexity sélectionne des sources pour construire une réponse. La nuance est cruciale.</p>
+
+<p>Les facteurs qui comptent : fraîcheur de l'information, autorité du domaine, clarté de la réponse, présence de données structurées. Les sites qui mettent à jour régulièrement leur contenu sont favorisés.</p>
+
+<h2>L'importance de la fraîcheur de l'information</h2>
+
+<p>Perplexity privilégie les sources récentes. Un article de 2024 sera moins cité qu'un article de 2026 sur le même sujet. Maintenez vos contenus à jour : ajoutez des dates de mise à jour visibles, actualisez les chiffres, mentionnez les dernières évolutions.</p>
+
+<h2>Structurer ses articles pour la citation</h2>
+
+<ul>
+  <li><strong>Répondez directement</strong> : La première phrase doit être la réponse complète</li>
+  <li><strong>Ajoutez des listes</strong> : Perplexity adore extraire des listes à puces</li>
+  <li><strong>Incluez des chiffres</strong> : Les statistiques sourcées sont souvent citées</li>
+  <li><strong>Utilisez des tableaux</strong> : Les comparaisons structurées sont reprises facilement</li>
+</ul>
+
+<blockquote>"Sur Perplexity, vous n'êtes pas en compétition pour un clic. Vous êtes en compétition pour être LA source de vérité sur votre sujet."</blockquote>`,
+
+    en: `<p class="lead">Perplexity has become the search engine for tech and B2B decision-makers. Being cited here is worth 1000 unqualified Google visits.</p>
+
+<h2>Perplexity's Citation Algorithm Analyzed</h2>
+
+<p>Perplexity cites sources it considers most reliable and relevant. Unlike Google which ranks pages, Perplexity selects sources to build a response.</p>
+
+<h2>The Importance of Information Freshness</h2>
+
+<p>Perplexity favors recent sources. A 2024 article will be cited less than a 2026 article on the same topic.</p>`,
+
+    es: `<p class="lead">Perplexity se ha convertido en el motor de búsqueda de decisores tech y B2B. Ser citado aquí vale 1000 visitas no cualificadas de Google.</p>
+
+<h2>El algoritmo de citación de Perplexity analizado</h2>
+
+<p>Perplexity cita las fuentes que considera más fiables y relevantes.</p>`
+  },
+
+  'audit-seo-gratuit-vs-semrush': {
+    fr: `<p class="lead">Semrush et Ahrefs sont des outils fantastiques pour le web de 2020. Mais pour l'ère des LLM, ils sont aveugles sur des points critiques.</p>
+
+<h2>Ce que Semrush ne voit pas (le rendu LLM)</h2>
+
+<p>Semrush analyse votre SEO traditionnel : mots-clés, backlinks, positions Google. Mais il ne sait pas si ChatGPT peut lire votre contenu. Il ne vérifie pas si GPTBot est bloqué dans votre robots.txt. Il ne teste pas si vos données JSON-LD sont comprises par les LLM.</p>
+
+<p>C'est comme auditer un magasin en comptant les clients Google, sans réaliser que la porte vers les clients IA est verrouillée.</p>
+
+<h2>Pourquoi le 'Keyword Volume' est une métrique du passé</h2>
+
+<p>En SEO classique, on ciblait les mots-clés à fort volume. En GEO, les utilisateurs posent des questions en langage naturel. "Keyword Volume" devient moins pertinent que "Question Coverage" - combien de questions sur votre sujet pouvez-vous répondre ?</p>
+
+<h2>L'avantage des outils natifs IA</h2>
+
+<p>Les outils comme Crawlers.fr sont conçus pour l'ère des LLM. Ils vérifient l'accessibilité aux bots IA, la qualité de vos données structurées, et testent directement votre présence dans les réponses génératives. C'est la différence entre un audit SEO 2020 et un audit GEO 2026.</p>
+
+<blockquote>"Semrush vous dit comment ranker sur Google. Un outil GEO vous dit comment être cité par ChatGPT. Ce n'est pas le même objectif."</blockquote>`,
+
+    en: `<p class="lead">Semrush and Ahrefs are fantastic tools for the 2020 web. But for the LLM era, they're blind to critical points.</p>
+
+<h2>What Semrush Doesn't See (LLM Rendering)</h2>
+
+<p>Semrush analyzes your traditional SEO: keywords, backlinks, Google positions. But it doesn't know if ChatGPT can read your content.</p>
+
+<h2>Why 'Keyword Volume' is a Past Metric</h2>
+
+<p>In classic SEO, we targeted high-volume keywords. In GEO, users ask questions in natural language.</p>`,
+
+    es: `<p class="lead">Semrush y Ahrefs son herramientas fantásticas para la web de 2020. Pero para la era de los LLM, están ciegos a puntos críticos.</p>
+
+<h2>Lo que Semrush no ve (renderizado LLM)</h2>
+
+<p>Semrush analiza tu SEO tradicional: palabras clave, backlinks, posiciones en Google. Pero no sabe si ChatGPT puede leer tu contenido.</p>`
+  },
+
+  'tableau-comparatif-seo-geo-2026': {
+    fr: `<p class="lead">Vous êtes perdu entre les acronymes ? SEO, AEO, GEO, SGE... Ce guide visuel pose les bases définitives pour arbitrer vos budgets.</p>
+
+<h2>Comparaison point par point (KPI, Objectifs, Méthodes)</h2>
+
+<table>
+  <tr><th>Critère</th><th>SEO Traditionnel</th><th>GEO 2026</th></tr>
+  <tr><td>Objectif principal</td><td>Ranker en page 1</td><td>Être cité dans les réponses IA</td></tr>
+  <tr><td>KPI principal</td><td>Position, CTR, Trafic organique</td><td>Fréquence de citation, Qualité des mentions</td></tr>
+  <tr><td>Méthode de mesure</td><td>Google Search Console</td><td>Tests de citation manuels + outils GEO</td></tr>
+  <tr><td>Contenu optimal</td><td>Long-form optimisé mots-clés</td><td>Réponses directes + données structurées</td></tr>
+  <tr><td>Backlinks</td><td>Facteur majeur de ranking</td><td>Signal de confiance secondaire</td></tr>
+  <tr><td>Vitesse site</td><td>Important pour UX et ranking</td><td>Critique pour le crawl budget IA</td></tr>
+</table>
+
+<h2>Budget : Faut-il investir en SEO ou GEO ?</h2>
+
+<p>La réponse dépend de votre audience. Si vos clients sont des early adopters tech (startups, SaaS, B2B tech), le GEO est prioritaire - ils utilisent déjà massivement ChatGPT et Perplexity. Si votre audience est grand public, le SEO reste important mais le GEO doit être intégré dès maintenant.</p>
+
+<p>Recommandation 2026 : 60% budget SEO, 40% budget GEO pour la plupart des entreprises. 40/60 inversé pour les entreprises tech B2B.</p>
+
+<h2>Les synergies entre les deux</h2>
+
+<p>Bonne nouvelle : beaucoup d'optimisations servent les deux objectifs. Le JSON-LD améliore vos rich snippets Google ET votre lisibilité LLM. Le contenu structuré en réponses directes aide votre SEO ET votre GEO. Investir dans l'un renforce l'autre.</p>
+
+<blockquote>"SEO et GEO ne sont pas en opposition. C'est une évolution naturelle. Le GEO est le SEO pour les moteurs qui répondent au lieu de lister."</blockquote>`,
+
+    en: `<p class="lead">Lost between acronyms? SEO, AEO, GEO, SGE... This visual guide sets the definitive bases for budget decisions.</p>
+
+<h2>Point by Point Comparison</h2>
+
+<table>
+  <tr><th>Criteria</th><th>Traditional SEO</th><th>GEO 2026</th></tr>
+  <tr><td>Main objective</td><td>Rank on page 1</td><td>Be cited in AI responses</td></tr>
+  <tr><td>Main KPI</td><td>Position, CTR, Organic traffic</td><td>Citation frequency, Mention quality</td></tr>
+</table>
+
+<h2>Budget: Should You Invest in SEO or GEO?</h2>
+
+<p>The answer depends on your audience. If your clients are tech early adopters, GEO is priority.</p>`,
+
+    es: `<p class="lead">¿Perdido entre acrónimos? SEO, AEO, GEO, SGE... Esta guía visual establece las bases definitivas.</p>
+
+<h2>Comparación punto por punto</h2>
+
+<p>Una tabla comparativa entre SEO tradicional y GEO 2026.</p>`
+  },
+
+  'liste-user-agents-ia-2026': {
+    fr: `<p class="lead">Ne laissez pas des inconnus scraper votre site. Voici la liste tenue à jour des identifiants des robots d'IA que vous devez connaître.</p>
+
+<h2>Les bots majeurs (OpenAI, Anthropic, Google)</h2>
+
+<table>
+  <tr><th>User-Agent</th><th>Entreprise</th><th>Usage</th><th>Recommandation</th></tr>
+  <tr><td>GPTBot</td><td>OpenAI</td><td>Entraînement modèles</td><td>Bloquer ou autoriser selon stratégie</td></tr>
+  <tr><td>ChatGPT-User</td><td>OpenAI</td><td>Navigation temps réel</td><td>AUTORISER (critique)</td></tr>
+  <tr><td>Google-Extended</td><td>Google</td><td>Gemini/Bard</td><td>AUTORISER (critique)</td></tr>
+  <tr><td>ClaudeBot</td><td>Anthropic</td><td>Claude AI</td><td>Autoriser recommandé</td></tr>
+  <tr><td>PerplexityBot</td><td>Perplexity</td><td>Recherche IA</td><td>AUTORISER (critique)</td></tr>
+  <tr><td>Bytespider</td><td>ByteDance</td><td>Entraînement</td><td>Bloquer recommandé</td></tr>
+</table>
+
+<h2>Les bots 'Common Crawl' (CCBot)</h2>
+
+<p>CCBot crawle le web pour Common Crawl, une base de données utilisée par de nombreux LLM tiers. Bloquer CCBot limite votre présence dans les modèles open-source et les startups IA. Autorisez-le sauf si vous avez des raisons spécifiques de bloquer.</p>
+
+<h2>Comment les identifier dans vos logs serveurs</h2>
+
+<p>Vos logs Apache/Nginx contiennent le User-Agent de chaque visiteur. Filtrez par "GPTBot", "ClaudeBot", "Google-Extended" pour voir qui vous crawle. Utilisez des outils comme GoAccess ou analysez directement avec grep :</p>
+
+<pre><code>grep -i "gptbot\|claudebot\|google-extended" /var/log/nginx/access.log</code></pre>
+
+<blockquote>"Connaître les bots qui vous crawlent, c'est comprendre qui parle de vous aux IA. Ne restez pas dans l'ignorance."</blockquote>`,
+
+    en: `<p class="lead">Don't let strangers scrape your site. Here's the updated list of AI robot identifiers you need to know.</p>
+
+<h2>Major Bots (OpenAI, Anthropic, Google)</h2>
+
+<table>
+  <tr><th>User-Agent</th><th>Company</th><th>Usage</th><th>Recommendation</th></tr>
+  <tr><td>GPTBot</td><td>OpenAI</td><td>Model training</td><td>Block or allow based on strategy</td></tr>
+  <tr><td>ChatGPT-User</td><td>OpenAI</td><td>Real-time browsing</td><td>ALLOW (critical)</td></tr>
+</table>`,
+
+    es: `<p class="lead">No dejes que desconocidos scrapeen tu sitio. Aquí está la lista actualizada de identificadores de robots IA.</p>
+
+<h2>Los bots principales (OpenAI, Anthropic, Google)</h2>
+
+<p>Una tabla con los principales User-Agents de IA que debes conocer.</p>`
+  },
+
+  'eeat-expertise-algorithme': {
+    fr: `<p class="lead">Pour Google et les IA, si vous n'êtes pas un expert vérifié, vous êtes une 'hallucination potentielle'. L'E-E-A-T est une liste de critères techniques pour prouver votre légitimité.</p>
+
+<h2>Définition de l'Experience, Expertise, Authoritativeness, Trustworthiness</h2>
+
+<ul>
+  <li><strong>Experience (Expérience)</strong> : Avez-vous une expérience directe du sujet ? Témoignages, cas clients, vécu personnel</li>
+  <li><strong>Expertise</strong> : Avez-vous les qualifications pour parler du sujet ? Diplômes, certifications, années de pratique</li>
+  <li><strong>Authoritativeness (Autorité)</strong> : Êtes-vous reconnu par vos pairs ? Citations, interviews, publications</li>
+  <li><strong>Trustworthiness (Fiabilité)</strong> : Peut-on vous faire confiance ? Transparence, mentions légales, avis clients</li>
+</ul>
+
+<h2>L'importance des pages 'Auteur'</h2>
+
+<p>Chaque article doit être signé par un auteur identifiable avec une page dédiée. Cette page doit contenir : bio, qualifications, liens vers profils sociaux, autres publications. C'est le minimum pour être considéré comme une source fiable.</p>
+
+<p>Les LLM vérifient la cohérence : si vous prétendez être expert en SEO, avez-vous d'autres contenus SEO ? Des mentions sur d'autres sites ? Une présence LinkedIn cohérente ?</p>
+
+<h2>Lier ses profils sociaux via le Schema</h2>
+
+<p>Utilisez le schema Person pour lier vos profils sociaux à votre identité sur le site. Cela renforce votre E-E-A-T en montrant une présence cohérente sur le web.</p>
+
+<pre><code>{
+  "@type": "Person",
+  "name": "Votre Nom",
+  "jobTitle": "Expert SEO",
+  "sameAs": [
+    "https://linkedin.com/in/votre-profil",
+    "https://twitter.com/votre-compte"
+  ]
+}</code></pre>
+
+<blockquote>"L'E-E-A-T n'est pas un concept vague. C'est une checklist technique. Cochez chaque case pour maximiser votre crédibilité algorithmique."</blockquote>`,
+
+    en: `<p class="lead">For Google and AI, if you're not a verified expert, you're a 'potential hallucination'. E-E-A-T is a list of technical criteria to prove your legitimacy.</p>
+
+<h2>Definition of Experience, Expertise, Authoritativeness, Trustworthiness</h2>
+
+<ul>
+  <li><strong>Experience</strong>: Do you have direct experience of the subject?</li>
+  <li><strong>Expertise</strong>: Do you have qualifications to speak on the subject?</li>
+  <li><strong>Authoritativeness</strong>: Are you recognized by your peers?</li>
+  <li><strong>Trustworthiness</strong>: Can you be trusted?</li>
+</ul>`,
+
+    es: `<p class="lead">Para Google y las IA, si no eres un experto verificado, eres una 'alucinación potencial'. E-E-A-T es una lista de criterios técnicos.</p>
+
+<h2>Definición de Experience, Expertise, Authoritativeness, Trustworthiness</h2>
+
+<p>Los cuatro pilares de la credibilidad algorítmica.</p>`
   }
 };
 
