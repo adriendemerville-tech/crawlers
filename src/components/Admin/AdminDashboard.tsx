@@ -1,9 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, FileText, BarChart3, MessageCircle, Shield } from 'lucide-react';
-// TEST ISOLATION - Imports commentés temporairement
+// TEST ISOLATION - Import commenté temporairement
 // import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
-// import { SupportManagement } from './SupportManagement';
+import { SupportManagement } from './SupportManagement';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 
 export function AdminDashboard() {
@@ -54,9 +54,7 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="support">
-          {/* TEST ISOLATION - Composant désactivé */}
-          {/* <SupportManagement /> */}
-          <div className="p-4 text-muted-foreground border rounded-lg">Module SAV désactivé pour test d'isolation</div>
+          <SupportManagement />
         </TabsContent>
       </Tabs>
     </div>
