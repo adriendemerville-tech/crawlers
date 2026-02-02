@@ -1,17 +1,22 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Target, TrendingUp, TrendingDown, Zap, 
-  AlertTriangle, Lightbulb, Trophy, ExternalLink,
-  BarChart3, Search
+  AlertTriangle, Lightbulb, Trophy,
+  BarChart3, Search, Plus, Loader2
 } from 'lucide-react';
-import { KeywordPositioning, CompetitiveLandscape, MarketDataSummary } from '@/types/expertAudit';
+import { KeywordPositioning, CompetitiveLandscape, MarketDataSummary, KeywordItem } from '@/types/expertAudit';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface KeywordPositioningCardProps {
   positioning: KeywordPositioning;
   marketSummary?: MarketDataSummary;
   competitors?: CompetitiveLandscape;
+  domain?: string;
 }
 
 function getRankColor(rank: number | string): string {
@@ -37,12 +42,74 @@ function getPriorityColor(priority: 'high' | 'medium' | 'low'): string {
   }
 }
 
-export function KeywordPositioningCard({ positioning, marketSummary, competitors }: KeywordPositioningCardProps) {
+export function KeywordPositioningCard({ positioning, marketSummary, competitors, domain }: KeywordPositioningCardProps) {
+  const { toast } = useToast();
+  const [additionalKeywords, setAdditionalKeywords] = useState<KeywordItem[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasLoadedMore, setHasLoadedMore] = useState(false);
+
   const competitorNames = competitors ? [
     competitors.leader?.name,
     competitors.direct_competitor?.name,
     competitors.challenger?.name,
   ].filter(Boolean) : [];
+
+  const handleLoadMoreKeywords = async () => {
+    if (!domain) {
+      toast({
+        title: 'Erreur',
+        description: 'Domaine non disponible pour la recherche',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoadingMore(true);
+
+    try {
+      const existingKeywords = positioning.main_keywords || [];
+      
+      const { data, error } = await supabase.functions.invoke('generate-more-keywords', {
+        body: {
+          domain,
+          existingKeywords,
+          brandName: null, // Let the function extract it
+          locationCode: 2250, // France by default
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.keywords && data.keywords.length > 0) {
+        setAdditionalKeywords(data.keywords);
+        setHasLoadedMore(true);
+        toast({
+          title: 'Mots-clés générés',
+          description: `${data.keywords.length} nouveaux mots-clés ajoutés`,
+        });
+      } else {
+        toast({
+          title: 'Aucun nouveau mot-clé',
+          description: 'Pas de mots-clés supplémentaires trouvés',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading more keywords:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger plus de mots-clés',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  // Combine original + additional keywords for display
+  const allMainKeywords = [
+    ...(positioning.main_keywords || []),
+    ...additionalKeywords,
+  ];
 
   return (
     <motion.div
@@ -103,7 +170,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
           )}
 
           {/* Main Keywords Table */}
-          {positioning.main_keywords && positioning.main_keywords.length > 0 && (
+          {allMainKeywords.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <Trophy className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -120,9 +187,19 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                     </tr>
                   </thead>
                   <tbody>
-                    {positioning.main_keywords.slice(0, 8).map((kw, idx) => (
-                      <tr key={idx} className="border-t border-border/50 hover:bg-muted/30">
-                        <td className="px-3 py-2 font-medium text-foreground">{kw.keyword}</td>
+                    {allMainKeywords.slice(0, hasLoadedMore ? 20 : 8).map((kw, idx) => (
+                      <tr 
+                        key={idx} 
+                        className={`border-t border-border/50 hover:bg-muted/30 ${
+                          idx >= (positioning.main_keywords?.length || 0) ? 'bg-primary/5' : ''
+                        }`}
+                      >
+                        <td className="px-3 py-2 font-medium text-foreground">
+                          {kw.keyword}
+                          {idx >= (positioning.main_keywords?.length || 0) && (
+                            <Badge variant="outline" className="ml-2 text-[10px] text-primary">Nouveau</Badge>
+                          )}
+                        </td>
                         <td className="text-center px-3 py-2 text-muted-foreground">
                           {kw.volume.toLocaleString()}
                         </td>
@@ -151,6 +228,29 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                   </tbody>
                 </table>
               </div>
+              
+              {/* Load More Button */}
+              {!hasLoadedMore && domain && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleLoadMoreKeywords}
+                  disabled={isLoadingMore}
+                  className="w-full mt-3"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Génération en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-2" />
+                      + de mots-clés
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           )}
 

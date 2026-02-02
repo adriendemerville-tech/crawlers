@@ -160,7 +160,7 @@ export function StrategicInsights({
           )}
 
           {/* Mots clés (doit apparaître entre Écosystème Concurrentiel et Autorité Sociale & Humaine) */}
-          <KeywordModuleSection analysis={analysis} />
+          <KeywordModuleSection analysis={analysis} domain={domain} />
 
           {/* Social Signals & Human Authority */}
           {analysis.social_signals && (

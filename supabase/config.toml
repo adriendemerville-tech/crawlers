@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.create-credit-checkout]
 verify_jwt = false
+
+[functions.generate-more-keywords]
+verify_jwt = false
