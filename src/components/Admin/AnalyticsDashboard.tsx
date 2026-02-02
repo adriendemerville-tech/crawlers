@@ -10,7 +10,9 @@ import {
   TrendingUp,
   Eye,
   UserPlus,
-  CheckCircle
+  CheckCircle,
+  Globe,
+  ExternalLink
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -25,6 +27,12 @@ import {
 } from 'recharts';
 import { format, subDays, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+// IPs et user_ids à exclure des statistiques
+const EXCLUDED_IPS = ['5.49.156.158'];
+const ADMIN_EMAIL = 'adriendemerville@gmail.com';
 
 interface AnalyticsStats {
   totalVisits: number;
@@ -50,6 +58,15 @@ interface PageVisit {
   count: number;
 }
 
+interface AnalyzedUrl {
+  id: string;
+  url: string;
+  domain: string;
+  analysis_count: number;
+  first_analyzed_at: string;
+  last_analyzed_at: string;
+}
+
 export function AnalyticsDashboard() {
   const [isMounted, setIsMounted] = useState(false);
   const [stats, setStats] = useState<AnalyticsStats>({
@@ -67,6 +84,9 @@ export function AnalyticsDashboard() {
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [topPages, setTopPages] = useState<PageVisit[]>([]);
   const [analyzedUrlsCount, setAnalyzedUrlsCount] = useState(0);
+  const [analyzedUrls, setAnalyzedUrls] = useState<AnalyzedUrl[]>([]);
+  const [showAllUrls, setShowAllUrls] = useState(false);
+  const [excludedUserIds, setExcludedUserIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -77,30 +97,51 @@ export function AnalyticsDashboard() {
   const fetchAnalytics = async () => {
     setIsLoading(true);
     try {
+      // Récupérer les user_ids des admins à exclure
+      const { data: adminProfiles } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', ADMIN_EMAIL);
+      
+      const adminUserIds = adminProfiles?.map(p => p.user_id) || [];
+      setExcludedUserIds(adminUserIds);
+
       // Limite aux 30 derniers jours pour éviter la surcharge mémoire
       const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
       
       // Fetch events des 30 derniers jours seulement
-      const { data: events, error } = await supabase
+      const { data: allEvents, error } = await supabase
         .from('analytics_events')
-        .select('event_type, url, created_at')
+        .select('event_type, url, created_at, user_id, event_data')
         .gte('created_at', thirtyDaysAgo)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      // Filtrer les événements des admins et des IPs exclues
+      const events = allEvents?.filter(e => {
+        // Exclure les admins
+        if (e.user_id && adminUserIds.includes(e.user_id)) return false;
+        
+        // Exclure les IPs spécifiées (stockées dans event_data)
+        const eventData = e.event_data as Record<string, unknown> | null;
+        if (eventData?.ip && EXCLUDED_IPS.includes(eventData.ip as string)) return false;
+        
+        return true;
+      }) || [];
+
       // Calculate stats
       const newStats: AnalyticsStats = {
-        totalVisits: events?.filter(e => e.event_type === 'page_view').length || 0,
-        signupClicks: events?.filter(e => e.event_type === 'signup_click').length || 0,
-        signupCompleted: events?.filter(e => e.event_type === 'signup_complete').length || 0,
-        reportClicks: events?.filter(e => e.event_type === 'report_button_click').length || 0,
-        freeAnalysisCrawlers: events?.filter(e => e.event_type === 'free_analysis_crawlers').length || 0,
-        expertAuditLaunched: events?.filter(e => e.event_type === 'expert_audit_launched').length || 0,
-        expertAuditStep1: events?.filter(e => e.event_type === 'expert_audit_step_1').length || 0,
-        expertAuditStep2: events?.filter(e => e.event_type === 'expert_audit_step_2').length || 0,
-        expertAuditStep3: events?.filter(e => e.event_type === 'expert_audit_step_3').length || 0,
-        errorCount: events?.filter(e => e.event_type === 'error').length || 0,
+        totalVisits: events.filter(e => e.event_type === 'page_view').length,
+        signupClicks: events.filter(e => e.event_type === 'signup_click').length,
+        signupCompleted: events.filter(e => e.event_type === 'signup_complete').length,
+        reportClicks: events.filter(e => e.event_type === 'report_button_click').length,
+        freeAnalysisCrawlers: events.filter(e => e.event_type === 'free_analysis_crawlers').length,
+        expertAuditLaunched: events.filter(e => e.event_type === 'expert_audit_launched').length,
+        expertAuditStep1: events.filter(e => e.event_type === 'expert_audit_step_1').length,
+        expertAuditStep2: events.filter(e => e.event_type === 'expert_audit_step_2').length,
+        expertAuditStep3: events.filter(e => e.event_type === 'expert_audit_step_3').length,
+        errorCount: events.filter(e => e.event_type === 'error').length,
       };
       setStats(newStats);
 
@@ -111,9 +152,9 @@ export function AnalyticsDashboard() {
       });
 
       const dailyStats = last30Days.map(date => {
-        const dayEvents = events?.filter(e => 
+        const dayEvents = events.filter(e => 
           e.created_at && format(parseISO(e.created_at), 'yyyy-MM-dd') === date
-        ) || [];
+        );
         
         return {
           date: format(parseISO(date), 'dd MMM', { locale: fr }),
@@ -124,7 +165,7 @@ export function AnalyticsDashboard() {
       setDailyData(dailyStats);
 
       // Calculate top pages
-      const pageVisits = events?.filter(e => e.event_type === 'page_view' && e.url) || [];
+      const pageVisits = events.filter(e => e.event_type === 'page_view' && e.url);
       const pageCounts: Record<string, number> = {};
       pageVisits.forEach(e => {
         if (e.url) {
@@ -138,11 +179,15 @@ export function AnalyticsDashboard() {
         .slice(0, 10);
       setTopPages(sortedPages);
 
-      // Fetch analyzed URLs count
-      const { count: urlsCount } = await supabase
+      // Fetch analyzed URLs
+      const { data: urlsData, count: urlsCount } = await supabase
         .from('analyzed_urls')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact' })
+        .order('last_analyzed_at', { ascending: false })
+        .limit(100);
+      
       setAnalyzedUrlsCount(urlsCount || 0);
+      setAnalyzedUrls(urlsData || []);
 
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -422,6 +467,80 @@ export function AnalyticsDashboard() {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Liste des URLs analysées */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                URLs analysées ({analyzedUrlsCount.toLocaleString('fr-FR')})
+              </CardTitle>
+              <CardDescription>Sites testés par les utilisateurs</CardDescription>
+            </div>
+            {analyzedUrls.length > 10 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAllUrls(!showAllUrls)}
+              >
+                {showAllUrls ? 'Voir moins' : `Voir tout (${analyzedUrlsCount})`}
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {analyzedUrls.length === 0 ? (
+            <p className="text-muted-foreground text-sm">Aucune URL analysée</p>
+          ) : (
+            <ScrollArea className={showAllUrls ? 'h-[400px]' : 'h-auto'}>
+              <div className="space-y-2">
+                {(showAllUrls ? analyzedUrls : analyzedUrls.slice(0, 10)).map((item) => (
+                  <div 
+                    key={item.id} 
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="flex-1 min-w-0">
+                        <a 
+                          href={item.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="font-mono text-sm truncate block text-primary hover:underline flex items-center gap-1"
+                        >
+                          {item.url}
+                          <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                        </a>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Domaine: {item.domain}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-4">
+                      <span className="font-semibold text-primary">
+                        {item.analysis_count}x
+                      </span>
+                      <p className="text-xs text-muted-foreground">
+                        {format(parseISO(item.last_analyzed_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Info filtrage */}
+      <Card className="bg-muted/30">
+        <CardContent className="py-3">
+          <p className="text-xs text-muted-foreground text-center">
+            ℹ️ Les données des administrateurs et de l'IP {EXCLUDED_IPS.join(', ')} sont exclues des statistiques
+          </p>
         </CardContent>
       </Card>
     </div>
