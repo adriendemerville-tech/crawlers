@@ -76,6 +76,10 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
+    // Fix for Recharts circular dependency issue
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
     // Optimize chunking for better LCP and reduced HTTP requests
     rollupOptions: {
       output: {
