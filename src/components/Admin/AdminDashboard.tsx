@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, FileText, BarChart3, MessageCircle, Shield } from 'lucide-react';
-import { UserManagement } from './UserManagement';
-import { BlogManagement } from './BlogManagement';
-import { SupportManagement } from './SupportManagement';
+// TEST ISOLATION - Imports commentés temporairement
+// import { UserManagement } from './UserManagement';
+// import { BlogManagement } from './BlogManagement';
+// import { SupportManagement } from './SupportManagement';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 
 export function AdminDashboard() {
@@ -18,7 +19,8 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      <Tabs defaultValue="users" className="space-y-6">
+      {/* TEST ISOLATION - defaultValue changé à "analytics" */}
+      <Tabs defaultValue="analytics" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="users" className="gap-2">
             <Users className="h-4 w-4" />
@@ -39,11 +41,15 @@ export function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="users">
-          <UserManagement />
+          {/* TEST ISOLATION - Composant désactivé */}
+          {/* <UserManagement /> */}
+          <div className="p-4 text-muted-foreground border rounded-lg">Module Utilisateurs désactivé pour test d'isolation</div>
         </TabsContent>
 
         <TabsContent value="blog">
-          <BlogManagement />
+          {/* TEST ISOLATION - Composant désactivé */}
+          {/* <BlogManagement /> */}
+          <div className="p-4 text-muted-foreground border rounded-lg">Module Blog désactivé pour test d'isolation</div>
         </TabsContent>
 
         <TabsContent value="analytics">
@@ -51,7 +57,9 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="support">
-          <SupportManagement />
+          {/* TEST ISOLATION - Composant désactivé */}
+          {/* <SupportManagement /> */}
+          <div className="p-4 text-muted-foreground border rounded-lg">Module SAV désactivé pour test d'isolation</div>
         </TabsContent>
       </Tabs>
     </div>
