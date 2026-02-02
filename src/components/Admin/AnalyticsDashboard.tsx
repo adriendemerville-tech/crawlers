@@ -67,6 +67,17 @@ interface AnalyzedUrl {
   last_analyzed_at: string;
 }
 
+interface ErrorEvent {
+  id: string;
+  created_at: string;
+  url: string | null;
+  user_id: string | null;
+  user_email: string | null;
+  function_name: string | null;
+  error_message: string | null;
+  error_response: string | null;
+}
+
 export function AnalyticsDashboard() {
   const [isMounted, setIsMounted] = useState(false);
   const [stats, setStats] = useState<AnalyticsStats>({
@@ -87,6 +98,8 @@ export function AnalyticsDashboard() {
   const [analyzedUrls, setAnalyzedUrls] = useState<AnalyzedUrl[]>([]);
   const [showAllUrls, setShowAllUrls] = useState(false);
   const [excludedUserIds, setExcludedUserIds] = useState<string[]>([]);
+  const [errorEvents, setErrorEvents] = useState<ErrorEvent[]>([]);
+  const [showAllErrors, setShowAllErrors] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -188,6 +201,47 @@ export function AnalyticsDashboard() {
       
       setAnalyzedUrlsCount(urlsCount || 0);
       setAnalyzedUrls(urlsData || []);
+
+      // Fetch error events with user emails
+      const errorEventsRaw = events.filter(e => e.event_type === 'error');
+      
+      // Get unique user_ids from error events
+      const errorUserIds = [...new Set(errorEventsRaw
+        .filter(e => e.user_id)
+        .map(e => e.user_id as string))];
+      
+      // Fetch emails for these users
+      let userEmailMap: Record<string, string> = {};
+      if (errorUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, email')
+          .in('user_id', errorUserIds);
+        
+        if (profilesData) {
+          userEmailMap = profilesData.reduce((acc, p) => {
+            acc[p.user_id] = p.email;
+            return acc;
+          }, {} as Record<string, string>);
+        }
+      }
+      
+      // Build error events with enriched data
+      const enrichedErrors: ErrorEvent[] = errorEventsRaw.map(e => {
+        const eventData = e.event_data as Record<string, unknown> | null;
+        return {
+          id: crypto.randomUUID(),
+          created_at: e.created_at,
+          url: e.url,
+          user_id: e.user_id,
+          user_email: e.user_id ? userEmailMap[e.user_id] || null : null,
+          function_name: (eventData?.function_name as string) || (eventData?.source as string) || null,
+          error_message: (eventData?.error_message as string) || (eventData?.message as string) || null,
+          error_response: (eventData?.error_response as string) || (eventData?.response as string) || (eventData?.details as string) || null,
+        };
+      });
+      
+      setErrorEvents(enrichedErrors);
 
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -527,6 +581,101 @@ export function AnalyticsDashboard() {
                         {format(parseISO(item.last_analyzed_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
                       </p>
                     </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Registre des erreurs */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                Registre des erreurs ({errorEvents.length})
+              </CardTitle>
+              <CardDescription>Erreurs générées par les utilisateurs (30 derniers jours)</CardDescription>
+            </div>
+            {errorEvents.length > 10 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAllErrors(!showAllErrors)}
+              >
+                {showAllErrors ? 'Voir moins' : `Voir tout (${errorEvents.length})`}
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {errorEvents.length === 0 ? (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
+              <CheckCircle className="h-4 w-4 text-primary" />
+              Aucune erreur enregistrée sur cette période
+            </div>
+          ) : (
+            <ScrollArea className={showAllErrors ? 'h-[500px]' : 'h-auto'}>
+              <div className="space-y-3">
+                {(showAllErrors ? errorEvents : errorEvents.slice(0, 10)).map((error) => (
+                  <div 
+                    key={error.id} 
+                    className="p-4 rounded-lg bg-destructive/5 border border-destructive/20 space-y-2"
+                  >
+                    {/* Header: Date et email */}
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {format(parseISO(error.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: fr })}
+                      </span>
+                      {error.user_email ? (
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                          {error.user_email}
+                        </span>
+                      ) : (
+                        <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
+                          Utilisateur anonyme
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Page */}
+                    {error.url && (
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs font-medium text-muted-foreground min-w-[60px]">Page :</span>
+                        <span className="text-xs font-mono text-foreground break-all">{error.url}</span>
+                      </div>
+                    )}
+                    
+                    {/* Fonction */}
+                    {error.function_name && (
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs font-medium text-muted-foreground min-w-[60px]">Fonction :</span>
+                        <span className="text-xs font-mono text-accent-foreground">{error.function_name}</span>
+                      </div>
+                    )}
+                    
+                    {/* Message d'erreur */}
+                    {error.error_message && (
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs font-medium text-muted-foreground min-w-[60px]">Erreur :</span>
+                        <span className="text-xs text-destructive break-all">{error.error_message}</span>
+                      </div>
+                    )}
+                    
+                    {/* Réponse d'erreur */}
+                    {error.error_response && (
+                      <div className="flex items-start gap-2">
+                        <span className="text-xs font-medium text-muted-foreground min-w-[60px]">Réponse :</span>
+                        <pre className="text-xs text-muted-foreground bg-muted/50 p-2 rounded overflow-x-auto max-w-full flex-1">
+                          {error.error_response.length > 300 
+                            ? error.error_response.substring(0, 300) + '...' 
+                            : error.error_response}
+                        </pre>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
