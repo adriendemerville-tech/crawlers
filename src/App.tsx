@@ -9,8 +9,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CreditsProvider } from "@/contexts/CreditsContext";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
 const ExpertAudit = lazy(() => import("./pages/ExpertAudit"));
@@ -48,32 +46,30 @@ const App = () => (
           <AuthProvider>
             <CreditsProvider>
               <TooltipProvider>
-                <ErrorBoundary>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
-                    <Suspense fallback={<PageLoader />}>
-                      <Routes>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/audit-expert" element={<ExpertAudit />} />
-                        <Route path="/lexique" element={<Lexique />} />
-                        <Route path="/tarifs" element={<Tarifs />} />
-                        <Route path="/mentions-legales" element={<MentionsLegales />} />
-                        <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
-                        <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
-                        <Route path="/rgpd" element={<RGPD />} />
-                        <Route path="/auth" element={<Auth />} />
-                        <Route path="/profil" element={<Profile />} />
-                        <Route path="/rapport/:reportId" element={<ReportViewer />} />
-                        <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} />
-                        <Route path="/blog" element={<Blog />} />
-                        <Route path="/blog/:slug" element={<ArticlePage />} />
-                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </Suspense>
-                  </BrowserRouter>
-                </ErrorBoundary>
+                <Toaster />
+                <Sonner />
+              <BrowserRouter>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/audit-expert" element={<ExpertAudit />} />
+                    <Route path="/lexique" element={<Lexique />} />
+                    <Route path="/tarifs" element={<Tarifs />} />
+                    <Route path="/mentions-legales" element={<MentionsLegales />} />
+                    <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+                    <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
+                    <Route path="/rgpd" element={<RGPD />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/profil" element={<Profile />} />
+                    <Route path="/rapport/:reportId" element={<ReportViewer />} />
+                    <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/blog/:slug" element={<ArticlePage />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </BrowserRouter>
               </TooltipProvider>
             </CreditsProvider>
           </AuthProvider>
