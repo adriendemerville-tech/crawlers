@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, FileText, BarChart3, MessageCircle, Shield } from 'lucide-react';
 // TEST ISOLATION - Imports commentés temporairement
 // import { UserManagement } from './UserManagement';
-// import { BlogManagement } from './BlogManagement';
+import { BlogManagement } from './BlogManagement';
 // import { SupportManagement } from './SupportManagement';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 
@@ -19,7 +19,6 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* TEST ISOLATION - defaultValue changé à "analytics" */}
       <Tabs defaultValue="analytics" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="users" className="gap-2">
@@ -47,9 +46,7 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="blog">
-          {/* TEST ISOLATION - Composant désactivé */}
-          {/* <BlogManagement /> */}
-          <div className="p-4 text-muted-foreground border rounded-lg">Module Blog désactivé pour test d'isolation</div>
+          <BlogManagement />
         </TabsContent>
 
         <TabsContent value="analytics">
