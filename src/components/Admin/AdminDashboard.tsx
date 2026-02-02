@@ -20,20 +20,20 @@ export function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="analytics" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="users" className="gap-2">
+        <TabsList className="w-full flex">
+          <TabsTrigger value="users" className="flex-1 gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Utilisateurs</span>
           </TabsTrigger>
-          <TabsTrigger value="blog" className="gap-2">
+          <TabsTrigger value="blog" className="flex-1 gap-2">
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Blog</span>
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2">
+          <TabsTrigger value="analytics" className="flex-1 gap-2">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Statistiques</span>
           </TabsTrigger>
-          <TabsTrigger value="support" className="gap-2">
+          <TabsTrigger value="support" className="flex-1 gap-2">
             <MessageCircle className="h-4 w-4" />
             <span className="hidden sm:inline">SAV</span>
           </TabsTrigger>

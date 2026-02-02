@@ -213,32 +213,32 @@ export default function Profile() {
             </div>
 
             <Tabs defaultValue={initialTab} className="space-y-6">
-              <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-7' : 'grid-cols-6'}`}>
-                <TabsTrigger value="identity" className="gap-2">
+              <TabsList className="w-full flex">
+                <TabsTrigger value="identity" className="flex-1 gap-2">
                   <User className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.identity}</span>
                 </TabsTrigger>
-                <TabsTrigger value="wallet" className="gap-2">
+                <TabsTrigger value="wallet" className="flex-1 gap-2">
                   <Wallet className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.wallet}</span>
                 </TabsTrigger>
-                <TabsTrigger value="reports" className="gap-2">
+                <TabsTrigger value="reports" className="flex-1 gap-2">
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.myReports}</span>
                 </TabsTrigger>
-                <TabsTrigger value="action-plans" className="gap-2">
+                <TabsTrigger value="action-plans" className="flex-1 gap-2">
                   <ClipboardList className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.actionPlans}</span>
                 </TabsTrigger>
-                <TabsTrigger value="corrective-codes" className="gap-2">
+                <TabsTrigger value="corrective-codes" className="flex-1 gap-2">
                   <Code2 className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.correctiveCodes}</span>
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="gap-2">
+                <TabsTrigger value="settings" className="flex-1 gap-2">
                   <Settings className="h-4 w-4" />
                 </TabsTrigger>
                 {isAdmin && (
-                  <TabsTrigger value="admin" className="gap-2 text-primary">
+                  <TabsTrigger value="admin" className="flex-1 gap-2 text-primary">
                     <Shield className="h-4 w-4" />
                     <span className="hidden sm:inline">Admin</span>
                   </TabsTrigger>
