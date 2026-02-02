@@ -6,6 +6,7 @@ import { KeywordPositioningCard } from './KeywordPositioningCard';
 
 type Props = {
   analysis: StrategicAnalysis;
+  domain?: string;
 };
 
 function KeywordsFallbackCard({ marketSummary }: { marketSummary?: MarketDataSummary | null }) {
@@ -22,7 +23,7 @@ function KeywordsFallbackCard({ marketSummary }: { marketSummary?: MarketDataSum
       </CardHeader>
       <CardContent className="space-y-2">
         <p className="text-sm text-muted-foreground">
-          Le module “mots clés” n’a pas été renvoyé par l’analyse (source externe indisponible ou quota atteint).
+          Le module "mots clés" n'a pas été renvoyé par l'analyse (source externe indisponible ou quota atteint).
         </p>
         {marketSummary?.total_market_volume !== undefined && (
           <p className="text-sm text-foreground">
@@ -35,20 +36,25 @@ function KeywordsFallbackCard({ marketSummary }: { marketSummary?: MarketDataSum
 }
 
 /**
- * Encadré UI dédié “Mots clés” pour /audit-expert.
- * Objectif: toujours afficher un bloc “Mots clés” dès la réponse de l’audit stratégique.
+ * Encadré UI dédié "Mots clés" pour /audit-expert.
+ * Objectif: toujours afficher un bloc "Mots clés" dès la réponse de l'audit stratégique.
  */
-export function KeywordModuleSection({ analysis }: Props) {
+export function KeywordModuleSection({ analysis, domain }: Props) {
   const positioning = analysis.keyword_positioning;
   const marketSummary = analysis.market_data_summary;
   const competitors: CompetitiveLandscape | undefined = analysis.competitive_landscape;
 
-  // Show the card even if the data is missing, so the user always sees the “Mots clés” block.
+  // Show the card even if the data is missing, so the user always sees the "Mots clés" block.
   if (!positioning) {
     return <KeywordsFallbackCard marketSummary={marketSummary} />;
   }
 
   return (
-    <KeywordPositioningCard positioning={positioning} marketSummary={marketSummary} competitors={competitors} />
+    <KeywordPositioningCard 
+      positioning={positioning} 
+      marketSummary={marketSummary} 
+      competitors={competitors}
+      domain={domain}
+    />
   );
 }
