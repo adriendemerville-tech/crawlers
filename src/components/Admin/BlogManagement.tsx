@@ -14,10 +14,11 @@ import { toast } from 'sonner';
 import { 
   FileText, Plus, Edit, Trash2, Eye, EyeOff, Archive, 
   Send, RotateCcw, Search, Calendar, User, Image, Link,
-  CheckCircle, XCircle, Clock, AlertTriangle, Loader2, Download, Upload, ExternalLink, Info, Code
+  CheckCircle, XCircle, Clock, AlertTriangle, Loader2, Download, Upload, ExternalLink, Info
 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { blogArticles } from '@/data/blogArticles';
+import { getExtractedContent } from '@/data/articleContentExtractor';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type ArticleStatus = Database['public']['Enums']['article_status'];
@@ -238,11 +239,15 @@ export function BlogManagement() {
     try {
       setImporting(true);
       
+      // Récupérer le contenu HTML complet extrait
+      const extractedHtml = getExtractedContent(staticArticle.slug, 'fr');
+      const fullContent = extractedHtml || staticArticle.summaryPoints.fr.join('\n\n');
+      
       const articleData = {
         title: staticArticle.title.fr,
         slug: staticArticle.slug,
         excerpt: staticArticle.description.fr,
-        content: staticArticle.summaryPoints.fr.join('\n\n'),
+        content: fullContent,
         image_url: staticArticle.heroImage,
         status: 'published' as ArticleStatus,
         published_at: new Date().toISOString(),
@@ -254,7 +259,7 @@ export function BlogManagement() {
 
       if (error) throw error;
       
-      toast.success(`Article "${staticArticle.title.fr}" importé`);
+      toast.success(`Article "${staticArticle.title.fr}" importé avec contenu complet`);
       await fetchArticles();
     } catch (error: any) {
       console.error('Error importing article:', error);
@@ -274,15 +279,21 @@ export function BlogManagement() {
     try {
       setImporting(true);
       
-      const articlesToInsert = staticArticlesNotImported.map(article => ({
-        title: article.title.fr,
-        slug: article.slug,
-        excerpt: article.description.fr,
-        content: article.summaryPoints.fr.join('\n\n'),
-        image_url: article.heroImage,
-        status: 'published' as ArticleStatus,
-        published_at: new Date().toISOString(),
-      }));
+      const articlesToInsert = staticArticlesNotImported.map(article => {
+        // Récupérer le contenu HTML complet extrait
+        const extractedHtml = getExtractedContent(article.slug, 'fr');
+        const fullContent = extractedHtml || article.summaryPoints.fr.join('\n\n');
+        
+        return {
+          title: article.title.fr,
+          slug: article.slug,
+          excerpt: article.description.fr,
+          content: fullContent,
+          image_url: article.heroImage,
+          status: 'published' as ArticleStatus,
+          published_at: new Date().toISOString(),
+        };
+      });
 
       const { error } = await supabase
         .from('blog_articles')
@@ -671,16 +682,15 @@ export function BlogManagement() {
 
             {/* Content */}
             <div className="space-y-2">
-              <Label htmlFor="content">Contenu de l'article (Markdown/HTML)</Label>
+              <Label htmlFor="content">Contenu de l'article (HTML)</Label>
               
-              {/* Alert for static articles */}
-              {editingArticle && blogArticles.some(a => a.slug === editingArticle.slug) && (
-                <Alert className="border-warning/50 bg-warning/10">
-                  <Code className="h-4 w-4" />
-                  <AlertTitle>Article statique</AlertTitle>
+              {/* Info pour les articles importés */}
+              {editingArticle && blogArticles.some(a => a.slug === editingArticle.slug) && formData.content.length > 500 && (
+                <Alert className="border-primary/50 bg-primary/5">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Contenu éditable</AlertTitle>
                   <AlertDescription className="text-sm text-muted-foreground">
-                    Cet article a été importé depuis le code source. Son contenu complet (avec composants React, tableaux, etc.) est défini dans <code className="bg-muted px-1 rounded">src/data/articleContents.tsx</code>. 
-                    Le champ ci-dessous ne contient qu'un résumé. Pour modifier le contenu complet, éditez le fichier source directement.
+                    Ce contenu a été extrait de l'article statique. Vous pouvez le modifier librement. Les changements seront affichés sur le blog une fois sauvegardés.
                   </AlertDescription>
                 </Alert>
               )}
@@ -689,11 +699,25 @@ export function BlogManagement() {
                 id="content"
                 value={formData.content}
                 onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                placeholder="Rédigez le contenu complet de votre article ici. Utilisez du Markdown ou du HTML pour le formatage..."
-                className="font-mono text-sm min-h-[300px] resize-y"
+                placeholder="Rédigez le contenu complet de votre article ici en HTML...
+
+Exemple de structure :
+<p class='lead'>Introduction de l'article...</p>
+
+<h2>Premier chapitre</h2>
+<p>Paragraphe de contenu...</p>
+
+<h2>Deuxième chapitre</h2>
+<ul>
+  <li><strong>Point clé</strong> : Description</li>
+  <li><strong>Autre point</strong> : Description</li>
+</ul>
+
+<blockquote>Citation importante</blockquote>"
+                className="font-mono text-sm min-h-[400px] resize-y"
               />
               <p className="text-xs text-muted-foreground">
-                {formData.content.length} caractères • Supporte Markdown et HTML
+                {formData.content.length} caractères • Utilisez du HTML pour le formatage (h2, p, ul, li, blockquote, strong, etc.)
               </p>
             </div>
 
