@@ -1,8 +1,28 @@
+import { Suspense, lazy } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Users, FileText, BarChart3, MessageCircle, Shield } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
+import { AnalyticsDashboard } from './AnalyticsDashboard';
+
+function AnalyticsLoadingFallback() {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardContent className="p-6">
+              <Skeleton className="h-4 w-24 mb-2" />
+              <Skeleton className="h-8 w-16" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function AdminDashboard() {
   return (
@@ -46,22 +66,9 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Statistiques
-              </CardTitle>
-              <CardDescription>
-                Dashboard analytique
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Fonctionnalité à venir...
-              </p>
-            </CardContent>
-          </Card>
+          <Suspense fallback={<AnalyticsLoadingFallback />}>
+            <AnalyticsDashboard />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="support">
