@@ -117,9 +117,12 @@ export default defineConfig(({ mode }) => ({
             if (id.includes('jspdf')) {
               return 'vendor-pdf';
             }
-            // Charts - only loaded when needed
-            if (id.includes('recharts') || id.includes('d3-')) {
-              return 'vendor-charts';
+            // Charts - isolate recharts dependencies to avoid circular imports
+            if (id.includes('recharts')) {
+              return 'vendor-recharts';
+            }
+            if (id.includes('d3-')) {
+              return 'vendor-d3';
             }
             // Lucide icons - bundled together
             if (id.includes('lucide-react')) {
