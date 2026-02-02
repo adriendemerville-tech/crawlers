@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,9 +14,10 @@ import { toast } from 'sonner';
 import { 
   FileText, Plus, Edit, Trash2, Eye, EyeOff, Archive, 
   Send, RotateCcw, Search, Calendar, User, Image, Link,
-  CheckCircle, XCircle, Clock, AlertTriangle, Loader2
+  CheckCircle, XCircle, Clock, AlertTriangle, Loader2, Download, Upload, ExternalLink
 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { blogArticles } from '@/data/blogArticles';
 
 type ArticleStatus = Database['public']['Enums']['article_status'];
 type BlogArticle = Database['public']['Tables']['blog_articles']['Row'];
@@ -51,10 +52,12 @@ export function BlogManagement() {
   const [articles, setArticles] = useState<BlogArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ArticleStatus | 'all'>('all');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<BlogArticle | null>(null);
   const [articleToDelete, setArticleToDelete] = useState<BlogArticle | null>(null);
   const [formData, setFormData] = useState<ArticleFormData>(INITIAL_FORM);
@@ -62,6 +65,12 @@ export function BlogManagement() {
   useEffect(() => {
     fetchArticles();
   }, []);
+
+  // Calculate static articles not yet in database
+  const staticArticlesNotImported = useMemo(() => {
+    const dbSlugs = new Set(articles.map(a => a.slug));
+    return blogArticles.filter(article => !dbSlugs.has(article.slug));
+  }, [articles]);
 
   const fetchArticles = async () => {
     try {
@@ -224,6 +233,73 @@ export function BlogManagement() {
     }
   };
 
+  const handleImportStaticArticle = async (staticArticle: typeof blogArticles[0]) => {
+    try {
+      setImporting(true);
+      
+      const articleData = {
+        title: staticArticle.title.fr,
+        slug: staticArticle.slug,
+        excerpt: staticArticle.description.fr,
+        content: staticArticle.summaryPoints.fr.join('\n\n'),
+        image_url: staticArticle.heroImage,
+        status: 'published' as ArticleStatus,
+        published_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase
+        .from('blog_articles')
+        .insert(articleData);
+
+      if (error) throw error;
+      
+      toast.success(`Article "${staticArticle.title.fr}" importé`);
+      await fetchArticles();
+    } catch (error: any) {
+      console.error('Error importing article:', error);
+      if (error.code === '23505') {
+        toast.error('Cet article existe déjà');
+      } else {
+        toast.error('Erreur lors de l\'import');
+      }
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleImportAllStaticArticles = async () => {
+    if (staticArticlesNotImported.length === 0) return;
+    
+    try {
+      setImporting(true);
+      
+      const articlesToInsert = staticArticlesNotImported.map(article => ({
+        title: article.title.fr,
+        slug: article.slug,
+        excerpt: article.description.fr,
+        content: article.summaryPoints.fr.join('\n\n'),
+        image_url: article.heroImage,
+        status: 'published' as ArticleStatus,
+        published_at: new Date().toISOString(),
+      }));
+
+      const { error } = await supabase
+        .from('blog_articles')
+        .insert(articlesToInsert);
+
+      if (error) throw error;
+      
+      toast.success(`${staticArticlesNotImported.length} articles importés`);
+      setIsImportDialogOpen(false);
+      await fetchArticles();
+    } catch (error) {
+      console.error('Error importing articles:', error);
+      toast.error('Erreur lors de l\'import');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           article.slug.toLowerCase().includes(searchQuery.toLowerCase());
@@ -246,6 +322,33 @@ export function BlogManagement() {
 
   return (
     <div className="space-y-6">
+      {/* Import Banner */}
+      {staticArticlesNotImported.length > 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Download className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">
+                    {staticArticlesNotImported.length} article{staticArticlesNotImported.length > 1 ? 's' : ''} statique{staticArticlesNotImported.length > 1 ? 's' : ''} disponible{staticArticlesNotImported.length > 1 ? 's' : ''}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Importez les articles existants dans la base de données pour les gérer
+                  </p>
+                </div>
+              </div>
+              <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" className="gap-2">
+                <Upload className="h-4 w-4" />
+                Importer
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <Card>
         <CardHeader className="pb-4">
@@ -256,13 +359,15 @@ export function BlogManagement() {
                 Gestion du Blog
               </CardTitle>
               <CardDescription>
-                {articles.length} article{articles.length !== 1 ? 's' : ''} au total
+                {articles.length} article{articles.length !== 1 ? 's' : ''} en base • {blogArticles.length} articles statiques
               </CardDescription>
             </div>
-            <Button onClick={() => openEditor()} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nouvel article
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => openEditor()} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Nouvel article
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -637,6 +742,100 @@ export function BlogManagement() {
             <Button variant="destructive" onClick={handlePermanentDelete}>
               Supprimer définitivement
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Static Articles Dialog */}
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Download className="h-5 w-5" />
+              Importer les articles statiques
+            </DialogTitle>
+            <DialogDescription>
+              Ces articles existent dans le code mais pas encore dans la base de données.
+              Importez-les pour les gérer via l'interface admin.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {staticArticlesNotImported.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-success" />
+                <p>Tous les articles statiques ont été importés !</p>
+              </div>
+            ) : (
+              <>
+                <div className="rounded-lg border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Article</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {staticArticlesNotImported.map((article) => (
+                        <TableRow key={article.slug}>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <p className="font-medium line-clamp-1">{article.title.fr}</p>
+                              <p className="text-xs text-muted-foreground font-mono">/{article.slug}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={article.type === 'pillar' ? 'default' : 'secondary'}>
+                              {article.type === 'pillar' ? 'Pilier' : 'Satellite'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                asChild
+                                title="Voir l'article"
+                              >
+                                <a href={`/blog/${article.slug}`} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleImportStaticArticle(article)}
+                                disabled={importing}
+                              >
+                                {importing ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Upload className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+              Fermer
+            </Button>
+            {staticArticlesNotImported.length > 0 && (
+              <Button onClick={handleImportAllStaticArticles} disabled={importing} className="gap-2">
+                {importing && <Loader2 className="h-4 w-4 animate-spin" />}
+                Importer tous ({staticArticlesNotImported.length})
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
