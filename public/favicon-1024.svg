@@ -2,29 +2,21 @@
   <defs>
     <linearGradient id="bgGradient" x1="100%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" style="stop-color:#d4a853"/>
-      <stop offset="25%" style="stop-color:#8b5cf6"/>
-      <stop offset="75%" style="stop-color:#7c3aed"/>
+      <stop offset="30%" style="stop-color:#8b5cf6"/>
+      <stop offset="70%" style="stop-color:#7c3aed"/>
       <stop offset="100%" style="stop-color:#3b5998"/>
     </linearGradient>
   </defs>
   
-  <!-- Fond avec dégradé mauve, or en haut à droite, bleu en bas -->
   <rect x="0" y="0" width="1024" height="1024" rx="200" ry="200" fill="url(#bgGradient)"/>
   
-  <!-- Bot icon (Lucide style) centré et agrandi pour haute résolution -->
-  <g transform="translate(256, 256)" stroke="#ffffff" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <!-- Corps principal du robot -->
-    <rect x="64" y="149" width="384" height="298" rx="40" ry="40"/>
-    <!-- Yeux -->
-    <circle cx="192" cy="277" r="32" fill="#ffffff"/>
-    <circle cx="320" cy="277" r="32" fill="#ffffff"/>
-    <!-- Antenne -->
-    <line x1="256" y1="64" x2="256" y2="149"/>
-    <circle cx="256" cy="53" r="32"/>
-    <!-- Oreilles/côtés -->
-    <line x1="21" y1="256" x2="64" y2="256"/>
-    <line x1="448" y1="256" x2="491" y2="256"/>
-    <line x1="21" y1="341" x2="64" y2="341"/>
-    <line x1="448" y1="341" x2="491" y2="341"/>
+  <!-- Lucide Bot icon - scaled 21.33x for 1024px -->
+  <g transform="translate(256, 256) scale(21.33)" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M12 8V4H8"/>
+    <rect x="4" y="8" width="16" height="12" rx="2"/>
+    <path d="M2 14h2"/>
+    <path d="M20 14h2"/>
+    <path d="M9 13v2"/>
+    <path d="M15 13v2"/>
   </g>
 </svg>
