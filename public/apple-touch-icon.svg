@@ -1,12 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
   <defs>
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#8b5cf6"/>
-      <stop offset="100%" style="stop-color:#7c3aed"/>
+    <linearGradient id="bgGradient" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4a853"/>
+      <stop offset="25%" style="stop-color:#8b5cf6"/>
+      <stop offset="75%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#3b5998"/>
     </linearGradient>
   </defs>
   
-  <!-- Fond mauve arrondi pour Apple -->
+  <!-- Fond avec dégradé mauve, or en haut à droite, bleu en bas -->
   <rect x="0" y="0" width="180" height="180" rx="36" ry="36" fill="url(#bgGradient)"/>
   
   <!-- Bot icon (Lucide style) centré -->
@@ -23,6 +25,6 @@
     <line x1="4" y1="45" x2="11" y2="45"/>
     <line x1="79" y1="45" x2="86" y2="45"/>
     <line x1="4" y1="60" x2="11" y2="60"/>
-    <line x1="79" y1="60" x2="86" y2="60"/>
+    <line x1="79" y1="60" x2="86" y2="86"/>
   </g>
 </svg>
