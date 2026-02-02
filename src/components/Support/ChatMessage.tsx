@@ -19,12 +19,12 @@ export function ChatMessage({ content, isAdmin, isOwn, createdAt }: ChatMessageP
         className={cn(
           'max-w-[80%] rounded-lg px-3 py-2 text-sm',
           isAdmin
-            ? 'bg-muted text-foreground'
+            ? 'bg-violet-100 dark:bg-violet-900/40 text-foreground'
             : 'bg-primary text-primary-foreground'
         )}
       >
         {isAdmin && (
-          <span className="text-xs font-medium text-muted-foreground block mb-1">
+          <span className="text-xs font-medium text-violet-600 dark:text-violet-400 block mb-1">
             Support
           </span>
         )}
@@ -32,7 +32,7 @@ export function ChatMessage({ content, isAdmin, isOwn, createdAt }: ChatMessageP
         <span className={cn(
           'text-[10px] block mt-1',
           isAdmin 
-            ? 'text-muted-foreground' 
+            ? 'text-violet-500 dark:text-violet-400' 
             : 'text-primary-foreground/70'
         )}>
           {format(new Date(createdAt), 'HH:mm', { locale: fr })}
