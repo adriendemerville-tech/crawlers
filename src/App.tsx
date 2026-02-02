@@ -10,6 +10,7 @@ import { CreditsProvider } from "@/contexts/CreditsContext";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
 import { FloatingChatBubble } from "@/components/Support";
+import { PageViewTracker } from "@/components/Analytics/PageViewTracker";
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -51,6 +52,7 @@ const App = () => (
                 <Toaster />
                 <Sonner />
               <BrowserRouter>
+                <PageViewTracker />
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />

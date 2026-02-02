@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { DownloadAuthGate } from '@/components/DownloadAuthGate';
+import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 
 // Note: jsPDF is loaded dynamically in generateFullPDF() to reduce initial bundle size by ~140KB
 interface FloatingReportButtonProps {
@@ -65,6 +66,9 @@ export function FloatingReportButton({
   if (!hasAnyResult) return null;
 
   const handleReportButtonClick = () => {
+    // Track report button click
+    trackAnalyticsEvent('report_button_click', { targetUrl: currentUrl });
+    
     if (!user) {
       setPendingAction('menu');
       setShowAuthGate(true);

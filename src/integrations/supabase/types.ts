@@ -78,6 +78,7 @@ export type Database = {
           event_type: string
           id: string
           session_id: string | null
+          target_url: string | null
           url: string | null
           user_id: string | null
         }
@@ -87,6 +88,7 @@ export type Database = {
           event_type: string
           id?: string
           session_id?: string | null
+          target_url?: string | null
           url?: string | null
           user_id?: string | null
         }
@@ -96,8 +98,36 @@ export type Database = {
           event_type?: string
           id?: string
           session_id?: string | null
+          target_url?: string | null
           url?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      analyzed_urls: {
+        Row: {
+          analysis_count: number
+          domain: string
+          first_analyzed_at: string
+          id: string
+          last_analyzed_at: string
+          url: string
+        }
+        Insert: {
+          analysis_count?: number
+          domain: string
+          first_analyzed_at?: string
+          id?: string
+          last_analyzed_at?: string
+          url: string
+        }
+        Update: {
+          analysis_count?: number
+          domain?: string
+          first_analyzed_at?: string
+          id?: string
+          last_analyzed_at?: string
+          url?: string
         }
         Relationships: []
       }
