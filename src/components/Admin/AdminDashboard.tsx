@@ -1,8 +1,9 @@
-import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, FileText, BarChart3, MessageCircle, Shield } from 'lucide-react';
 import { UserManagement } from './UserManagement';
+import { BlogManager } from './BlogManager';
+import { AnalyticsDashboard } from './AnalyticsDashboard';
 
 export function AdminDashboard() {
   return (
@@ -42,41 +43,11 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="blog">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Gestion du Blog
-              </CardTitle>
-              <CardDescription>
-                Gérez les articles de blog
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Fonctionnalité à venir...
-              </p>
-            </CardContent>
-          </Card>
+          <BlogManager />
         </TabsContent>
 
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Statistiques
-              </CardTitle>
-              <CardDescription>
-                Dashboard analytique
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Fonctionnalité à venir...
-              </p>
-            </CardContent>
-          </Card>
+          <AnalyticsDashboard />
         </TabsContent>
 
         <TabsContent value="support">
