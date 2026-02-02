@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { supabase } from '@/integrations/supabase/client';
 import { 
   BarChart3, 
-  Users, 
   MousePointer, 
   FileText, 
   Search, 
@@ -52,6 +51,7 @@ interface PageVisit {
 }
 
 export function AnalyticsDashboard() {
+  const [isMounted, setIsMounted] = useState(false);
   const [stats, setStats] = useState<AnalyticsStats>({
     totalVisits: 0,
     signupClicks: 0,
@@ -70,16 +70,21 @@ export function AnalyticsDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    setIsMounted(true);
     fetchAnalytics();
   }, []);
 
   const fetchAnalytics = async () => {
     setIsLoading(true);
     try {
-      // Fetch all events
+      // Limite aux 30 derniers jours pour éviter la surcharge mémoire
+      const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
+      
+      // Fetch events des 30 derniers jours seulement
       const { data: events, error } = await supabase
         .from('analytics_events')
         .select('event_type, url, created_at')
+        .gte('created_at', thirtyDaysAgo)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -184,6 +189,11 @@ export function AnalyticsDashboard() {
     );
   };
 
+  // Protection contre l'hydratation SSR pour Recharts
+  if (!isMounted) {
+    return null;
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -212,7 +222,7 @@ export function AnalyticsDashboard() {
         </div>
         <div>
           <h3 className="text-lg font-semibold">Dashboard Statistiques</h3>
-          <p className="text-sm text-muted-foreground">Vue d'ensemble de l'activité</p>
+          <p className="text-sm text-muted-foreground">Activité des 30 derniers jours</p>
         </div>
       </div>
 
