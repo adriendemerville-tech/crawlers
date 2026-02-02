@@ -40,9 +40,12 @@ function ArticlePageComponent() {
 
         if (data && !error) {
           setDbArticle(data);
-          // Utiliser le contenu DB s'il est substantiel (plus de 500 caractères)
-          // Cela signifie qu'il a été édité/enrichi au-delà du simple résumé
-          if (data.content && data.content.length > 500) {
+          // Utiliser le contenu DB UNIQUEMENT si:
+          // 1. Il n'y a pas de contenu statique JSX riche disponible
+          // 2. ET le contenu DB est substantiel (plus de 500 caractères)
+          // Le contenu statique JSX est TOUJOURS prioritaire car il contient les composants riches
+          const hasStaticContent = !!articleContent[slug];
+          if (!hasStaticContent && data.content && data.content.length > 500) {
             setUseDbContent(true);
           }
         }
