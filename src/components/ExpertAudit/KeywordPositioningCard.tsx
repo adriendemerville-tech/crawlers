@@ -231,25 +231,27 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
               
               {/* Load More Button */}
               {!hasLoadedMore && domain && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleLoadMoreKeywords}
-                  disabled={isLoadingMore}
-                  className="w-full mt-3"
-                >
-                  {isLoadingMore ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Génération en cours...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      + de mots-clés
-                    </>
-                  )}
-                </Button>
+                <div className="flex justify-center mt-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleLoadMoreKeywords}
+                    disabled={isLoadingMore}
+                    className="gap-2"
+                  >
+                    {isLoadingMore ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Génération...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4" />
+                        + de mots-clés
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
             </div>
           )}

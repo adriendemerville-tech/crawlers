@@ -705,19 +705,19 @@ GÉNÈRE UN RAPPORT JSON PREMIUM avec cette structure exacte:
   },
   "competitive_landscape": {
     "leader": {
-      "name": "Nom du leader (Goliath)",
+      "name": "Nom du leader (Goliath - acteur DOMINANT du marché)",
       "url": "URL du site",
-      "authority_factor": "Facteur d'autorité principal",
-      "analysis": "Analyse de la position dominante"
+      "authority_factor": "Facteur d'autorité principal (backlinks massifs, présence internationale, notoriété historique)",
+      "analysis": "Analyse de la position dominante - DOIT être un acteur avec: présence internationale OU nationale massive, budget marketing considérable, référence historique du secteur, volume de backlinks 10x+ supérieur au site analysé"
     },
     "direct_competitor": {
-      "name": "Nom du concurrent direct",
+      "name": "Nom du concurrent direct (MÊME taille/surface que le site analysé)",
       "url": "URL du site",
-      "authority_factor": "Parité d'offre détectée",
-      "analysis": "Analyse comparative"
+      "authority_factor": "Parité d'offre et de surface commerciale détectée",
+      "analysis": "Analyse comparative - DOIT être une entreprise avec: surface commerciale SIMILAIRE au site analysé, même zone géographique cible, même positionnement prix, même typologie de clientèle, même stade de maturité business"
     },
     "challenger": {
-      "name": "Nom du challenger",
+      "name": "Nom du challenger (acteur innovant/disruptif)",
       "url": "URL du site",
       "authority_factor": "Facteur de disruption",
       "analysis": "Analyse de l'approche disruptive"
@@ -801,7 +801,13 @@ INSTRUCTIONS CRITIQUES:
 - Ne jamais inventer d'URLs de concurrents irréelles, utilise des acteurs RÉELS du marché
 - L'executive_roadmap doit contenir MINIMUM 5 recommandations narratives BASÉES SUR LES DONNÉES
 - Chaque prescriptive_action doit être un paragraphe complet (4-5 phrases), pas une phrase courte
-- Le JSON doit être pur, sans virgules traînantes, prêt pour JSON.parse()`;
+- Le JSON doit être pur, sans virgules traînantes, prêt pour JSON.parse()
+
+⚠️ DISTINCTION GOLIATH vs CONCURRENT DIRECT (CRITIQUE):
+- GOLIATH (leader): Acteur DOMINANT avec présence internationale ou nationale massive, historique de +10 ans, budget marketing x10, backlinks x10, référence du secteur que tout le monde connaît (ex: Amazon, L'Occitane, Décathlon pour leurs secteurs)
+- CONCURRENT DIRECT: Entreprise de MÊME TAILLE et MÊME STADE que le site analysé. Même zone géographique, même positionnement prix, même cible client, même surface commerciale. Si le site analysé est une PME locale, le concurrent direct est aussi une PME locale, PAS un géant international.
+- Ne JAMAIS mettre un Goliath en "direct_competitor". Le concurrent direct doit être un "frère jumeau" en termes de surface commerciale.`;
+
 }
 
 // ==================== MAIN HANDLER ====================
