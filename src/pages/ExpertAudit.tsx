@@ -84,6 +84,13 @@ const ExpertAudit = () => {
     }
     canonical.setAttribute('href', 'https://crawlers.fr/audit-expert');
 
+    // Hide the homepage FAQ schema to avoid duplicate FAQPage error
+    const homepageFaqSchema = document.getElementById('homepage-faq-schema');
+    if (homepageFaqSchema) {
+      homepageFaqSchema.setAttribute('data-hidden', 'true');
+      homepageFaqSchema.removeAttribute('type');
+    }
+
     // Create FAQ Schema.org JSON-LD
     const faqSchema = {
       "@context": "https://schema.org",
@@ -139,6 +146,12 @@ const ExpertAudit = () => {
     // Cleanup on unmount
     return () => {
       document.querySelectorAll('script[data-schema="expert-audit"]').forEach(el => el.remove());
+      // Restore homepage FAQ schema
+      const homepageFaq = document.getElementById('homepage-faq-schema');
+      if (homepageFaq) {
+        homepageFaq.removeAttribute('data-hidden');
+        homepageFaq.setAttribute('type', 'application/ld+json');
+      }
     };
   }, [language, meta, faqItems]);
 
