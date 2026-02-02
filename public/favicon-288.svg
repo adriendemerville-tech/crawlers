@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 288" width="288" height="288">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6"/>
+      <stop offset="100%" style="stop-color:#7c3aed"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Fond mauve arrondi -->
+  <rect x="0" y="0" width="288" height="288" rx="60" ry="60" fill="url(#bgGradient)"/>
+  
+  <!-- Bot icon (Lucide style) centré et agrandi -->
+  <g transform="translate(72, 72)" stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Corps principal du robot -->
+    <rect x="18" y="42" width="108" height="84" rx="12" ry="12"/>
+    <!-- Yeux -->
+    <circle cx="54" cy="78" r="9" fill="#ffffff"/>
+    <circle cx="90" cy="78" r="9" fill="#ffffff"/>
+    <!-- Antenne -->
+    <line x1="72" y1="18" x2="72" y2="42"/>
+    <circle cx="72" cy="15" r="9"/>
+    <!-- Oreilles/côtés -->
+    <line x1="6" y1="72" x2="18" y2="72"/>
+    <line x1="126" y1="72" x2="138" y2="72"/>
+    <line x1="6" y1="96" x2="18" y2="96"/>
+    <line x1="126" y1="96" x2="138" y2="96"/>
+  </g>
+</svg>
