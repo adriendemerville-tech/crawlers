@@ -91,7 +91,6 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                     key={fix.id}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    layout
                     transition={{ delay: index * 0.03 }}
                     className={`rounded-md border transition-all ${
                       fix.enabled 
