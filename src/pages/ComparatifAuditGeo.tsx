@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -9,9 +9,20 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { Building2, Bot, Clock, FileText, Code, TrendingUp, CheckCircle2, XCircle, ArrowRight, Calculator } from "lucide-react";
+import { Building2, Bot, Clock, FileText, TrendingUp, CheckCircle2, XCircle, ArrowRight, Calculator } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+
+// Lazy load framer-motion for performance
+const MotionSection = lazy(() =>
+  import("framer-motion").then((mod) => ({
+    default: ({ children, ...props }: any) => <mod.motion.section {...props}>{children}</mod.motion.section>,
+  }))
+);
+
+// Static fallback for SSR/initial render
+const StaticSection = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <section className={className}>{children}</section>
+);
 
 type PageRange = "less5" | "less20" | "less50" | "more100";
 
@@ -204,60 +215,50 @@ export default function ComparatifAuditGeo() {
       <div className="min-h-screen bg-background">
         <Header />
 
-        <main className="container mx-auto px-4 py-12 md:py-20">
+        <main className="container mx-auto px-4 py-8 md:py-16 lg:py-20">
           {/* Hero Section with H1 */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <Badge variant="outline" className="mb-4 text-primary border-primary">
-              <Calculator className="w-4 h-4 mr-2" />
+          <section className="text-center mb-10 md:mb-16">
+            <Badge variant="outline" className="mb-3 md:mb-4 text-primary border-primary text-xs md:text-sm">
+              <Calculator className="w-3 h-3 md:w-4 md:h-4 mr-1.5 md:mr-2" />
               Comparatif 2026
             </Badge>
-            <h1 className="text-3xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent leading-tight px-2">
               Comparatif : SEO Traditionnel vs GEO (IA)
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto px-2">
               Pourquoi le SEO classique ne suffit plus en 2026 pour <span className="text-primary font-semibold">ChatGPT</span>,{" "}
               <span className="text-primary font-semibold">Gemini</span> et <span className="text-primary font-semibold">Perplexity</span>
             </p>
-          </motion.section>
+          </section>
 
           {/* SEO vs GEO Comparison Table */}
-          <motion.section
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="mb-16"
-          >
+          <section className="mb-10 md:mb-16">
             <Card className="max-w-5xl mx-auto border overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 py-4">
-                <CardTitle className="text-lg md:text-xl flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  SEO Classique vs GEO Expert : les différences clés
+              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 py-3 md:py-4 px-3 md:px-6">
+                <CardTitle className="text-base md:text-lg lg:text-xl flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0" />
+                  <span className="leading-tight">SEO Classique vs GEO Expert : les différences clés</span>
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs md:text-sm">
                   Comprendre pourquoi les techniques SEO traditionnelles ne suffisent plus pour les moteurs génératifs
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm border-collapse" role="table">
+                <div className="overflow-x-auto -mx-px">
+                  <table className="w-full text-xs sm:text-sm border-collapse min-w-[500px]" role="table">
                     <thead>
                       <tr className="border-b border-border bg-muted/50">
-                        <th className="text-left p-3 font-semibold min-w-[140px] border-r border-border">Critère</th>
-                        <th className="text-center p-3 font-semibold min-w-[180px] border-r border-border bg-muted/30">
-                          <div className="flex items-center justify-center gap-2">
+                        <th className="text-left p-2 md:p-3 font-semibold min-w-[100px] md:min-w-[140px] border-r border-border">Critère</th>
+                        <th className="text-center p-2 md:p-3 font-semibold min-w-[120px] md:min-w-[180px] border-r border-border bg-muted/30">
+                          <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2">
                             <span className="text-orange-600 dark:text-orange-400">SEO Classique</span>
-                            <span className="text-xs text-muted-foreground">(Google)</span>
+                            <span className="text-[10px] md:text-xs text-muted-foreground">(Google)</span>
                           </div>
                         </th>
-                        <th className="text-center p-3 font-semibold min-w-[180px] bg-primary/5">
-                          <div className="flex items-center justify-center gap-2">
+                        <th className="text-center p-2 md:p-3 font-semibold min-w-[120px] md:min-w-[180px] bg-primary/5">
+                          <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2">
                             <span className="text-primary">GEO Expert</span>
-                            <span className="text-xs text-muted-foreground">(IA & LLM)</span>
+                            <span className="text-[10px] md:text-xs text-muted-foreground">(IA & LLM)</span>
                           </div>
                         </th>
                       </tr>
@@ -306,9 +307,9 @@ export default function ComparatifAuditGeo() {
                         }
                       ].map((row, idx) => (
                         <tr key={idx} className="border-b border-border hover:bg-muted/20 transition-colors">
-                          <td className="p-3 font-medium border-r border-border bg-card">{row.criteria}</td>
-                          <td className="p-3 text-center border-r border-border text-muted-foreground">{row.seo}</td>
-                          <td className="p-3 text-center bg-primary/5 font-medium text-foreground">{row.geo}</td>
+                          <td className="p-2 md:p-3 font-medium border-r border-border bg-card text-xs md:text-sm">{row.criteria}</td>
+                          <td className="p-2 md:p-3 text-center border-r border-border text-muted-foreground text-xs md:text-sm">{row.seo}</td>
+                          <td className="p-2 md:p-3 text-center bg-primary/5 font-medium text-foreground text-xs md:text-sm">{row.geo}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -316,23 +317,18 @@ export default function ComparatifAuditGeo() {
                 </div>
               </CardContent>
             </Card>
-          </motion.section>
+          </section>
 
           {/* Simulator Section */}
-          <motion.section
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mb-20"
-          >
+          <section className="mb-12 md:mb-20">
             <Card className="max-w-5xl mx-auto border-2">
-              <CardHeader className="text-center pb-2">
-                <CardTitle className="text-2xl">Simulateur de coût d'audit GEO</CardTitle>
-                <CardDescription>
+              <CardHeader className="text-center pb-2 px-4 md:px-6">
+                <CardTitle className="text-xl md:text-2xl">Simulateur de coût d'audit GEO</CardTitle>
+                <CardDescription className="text-sm">
                   Configurez vos besoins et comparez instantanément les tarifs
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-6 md:p-8">
+              <CardContent className="p-4 md:p-6 lg:p-8">
                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                   {/* Configuration */}
                   <div className="space-y-6">
@@ -495,15 +491,10 @@ export default function ComparatifAuditGeo() {
                 </div>
               </CardContent>
             </Card>
-          </motion.section>
+          </section>
 
           {/* SEO Content Section - Redesigned with embedded table */}
-          <motion.section
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="max-w-4xl mx-auto space-y-10"
-          >
+          <section className="max-w-4xl mx-auto space-y-8 md:space-y-10 px-2">
             {/* Intro */}
             <div className="space-y-6">
               <h2 className="text-2xl md:text-3xl font-bold">
@@ -762,7 +753,7 @@ export default function ComparatifAuditGeo() {
                 </Button>
               </CardContent>
             </Card>
-          </motion.section>
+          </section>
         </main>
 
         <Footer />
