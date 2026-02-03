@@ -736,38 +736,52 @@ export const articleContent: Record<string, { fr: JSX.Element; en: JSX.Element; 
         <AuthorCard name="Adrien" position="top" />
         <SgeSummaryBox points={['Différence entre GPTBot (scraping) et ChatGPT-User (navigation).', 'Les risques stratégiques de bloquer l\'IA.', 'Le code exact à copier-coller dans votre robots.txt.']} />
         <p className="text-lg font-medium text-foreground mb-6">C'est la question que tout webmaster se pose en 2026. Bloquer OpenAI pour protéger son contenu du scraping, ou ouvrir les vannes pour gagner en visibilité dans les réponses IA ? La réponse est nuancée, mais penche clairement vers l'ouverture stratégique. Ce guide vous explique pourquoi et comment configurer votre robots.txt de manière optimale pour maximiser vos opportunités tout en protégeant vos intérêts.</p>
+        
         <h2 className="text-2xl font-bold mt-8 mb-4">Comprendre les différents User-Agents d'OpenAI : Une distinction cruciale</h2>
         <p>Attention à la confusion courante : "GPTBot" sert à entraîner les futurs modèles de langage (votre contenu est ingéré dans la base de connaissance). "ChatGPT-User" sert à naviguer en temps réel lorsqu'un utilisateur pose une question (votre contenu est cité avec un lien cliquable). Bloquer le second est souvent une erreur stratégique majeure, car vous vous privez de trafic qualifié et de visibilité sans aucun bénéfice en contrepartie.</p>
         <p>D'autres bots OpenAI existent et méritent votre attention : OAI-SearchBot pour la fonctionnalité de recherche, et les différents plugins qui peuvent interroger votre site. Chaque User-Agent a un rôle différent dans l'écosystème OpenAI, et votre stratégie doit en tenir compte. La granularité de votre robots.txt vous permet de contrôler précisément ce que vous autorisez.</p>
         <p>La vraie question n'est pas "bloquer ou autoriser" mais "quoi autoriser et quoi bloquer". Une stratégie intelligente consiste à autoriser la navigation temps réel (ChatGPT-User) tout en décidant consciemment si vous souhaitez contribuer à l'entraînement des modèles (GPTBot). Cette décision dépend de votre modèle économique et de votre stratégie de propriété intellectuelle.</p>
+        
         <GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Configuration recommandée par User-Agent', en: 'Recommended configuration by User-Agent', es: 'Configuración recomendada por User-Agent' }} />
+        
         <RichLinkCard href="/audit-expert" title="Testez votre robots.txt" description="Vérifiez si votre site est accessible aux bots IA et identifiez les optimisations possibles" />
-        <h2 className="text-2xl font-bold mt-8 mb-4">Tutoriel complet : Configurer votre fichier robots.txt</h2>
-        <p>Pour autoriser la navigation temps réel tout en refusant l'entraînement massif de vos contenus, vous devez configurer vos directives Disallow avec précision. Voici les lignes exactes à intégrer à votre fichier robots.txt à la racine de votre site. Cette configuration représente le consensus actuel des entreprises qui souhaitent être visibles sans céder leur propriété intellectuelle.</p>
-        <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto my-4">{`# ========================================
-# Configuration robots.txt optimisée GEO
-# ========================================
+        
+        <h2 className="text-2xl font-bold mt-8 mb-4">La commande robots.txt parfaite</h2>
+        <p>Pour autoriser la navigation temps réel tout en contrôlant l'entraînement de vos contenus, voici la configuration recommandée. Cette configuration représente le consensus actuel des entreprises qui souhaitent être visibles dans les réponses IA tout en gardant le contrôle sur leur propriété intellectuelle.</p>
+        
+        {/* Bloc de code Featured Snippet Ready */}
+        <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto my-6 border border-border">
+          <code>{`User-agent: GPTBot
+Allow: /  # Recommandé pour la visibilité GEO (Citations)
+Disallow: /private/
 
-# Autoriser ChatGPT-User (navigation temps réel - RECOMMANDÉ)
 User-agent: ChatGPT-User
-Allow: /
+Allow: / # Nécessaire pour les utilisateurs de ChatGPT avec navigation
 
-# Bloquer GPTBot (entraînement des modèles - OPTIONNEL)
-User-agent: GPTBot
-Disallow: /
-
-# Autoriser Google-Extended pour Gemini/Bard
 User-agent: Google-Extended
-Allow: /
+Allow: /  # Gemini et Bard
 
-# Autoriser ClaudeBot pour Anthropic
 User-agent: ClaudeBot
-Allow: /`}</pre>
-        <p>Cette configuration équilibrée vous permet d'être cité dans les réponses ChatGPT tout en protégeant votre contenu de l'entraînement non consenti. Vous bénéficiez de la visibilité sans sacrifier vos droits sur votre contenu. Adaptez ces règles selon votre stratégie : certaines entreprises choisissent d'autoriser GPTBot pour maximiser leur présence dans les futures versions des modèles.</p>
+Allow: /  # Anthropic Claude
+
+User-agent: PerplexityBot
+Allow: /  # Perplexity AI`}</code>
+        </pre>
+        
+        <p><strong>Explication des directives :</strong></p>
+        <ul className="list-disc pl-6 space-y-2 mb-6">
+          <li><strong>GPTBot Allow: /</strong> — Autorise OpenAI à indexer votre contenu pour l'entraînement des modèles ET les citations dans les réponses.</li>
+          <li><strong>Disallow: /private/</strong> — Protège les sections sensibles (espace client, admin, données confidentielles).</li>
+          <li><strong>ChatGPT-User Allow: /</strong> — Indispensable pour apparaître quand les utilisateurs naviguent avec ChatGPT.</li>
+          <li><strong>Google-Extended, ClaudeBot, PerplexityBot</strong> — Les autres moteurs génératifs majeurs à ne pas oublier.</li>
+        </ul>
+        
         <h2 className="text-2xl font-bold mt-8 mb-4">Les implications stratégiques de chaque choix</h2>
         <p>Bloquer tous les bots IA est une approche défensive qui vous rend invisible dans l'écosystème des moteurs génératifs. C'est un choix légitime pour les contenus très premium ou sensibles, mais qui a un coût d'opportunité considérable. À l'inverse, tout autoriser maximise votre visibilité mais signifie que votre contenu alimentera l'entraînement des futurs modèles sans compensation directe.</p>
         <p>La stratégie recommandée pour la plupart des entreprises est l'approche hybride : autoriser la navigation temps réel (qui vous apporte de la visibilité et du trafic) tout en contrôlant l'accès à l'entraînement. Cette approche équilibrée devient le nouveau standard des entreprises qui comprennent les enjeux du GEO.</p>
-        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"83% des sites du CAC 40 autorisent maintenant ChatGPT-User tout en bloquant GPTBot. C'est devenu le nouveau standard de l'industrie pour les entreprises qui veulent être visibles sans céder leur propriété intellectuelle."</blockquote>
+        
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"83% des sites du CAC 40 autorisent maintenant ChatGPT-User tout en contrôlant GPTBot. C'est devenu le nouveau standard de l'industrie pour les entreprises qui veulent être visibles sans céder leur propriété intellectuelle."</blockquote>
+        
         <AuthorCard name="Adrien" position="bottom" />
       </>
     ),

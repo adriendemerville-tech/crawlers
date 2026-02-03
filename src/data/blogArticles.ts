@@ -204,14 +204,14 @@ export const blogArticles: BlogArticle[] = [
     slug: 'bloquer-autoriser-gptbot',
     type: 'satellite',
     title: {
-      fr: 'Faut-il bloquer ou autoriser GPTBot ? Le guide de survie du robots.txt',
-      en: 'Should You Block or Allow GPTBot? The robots.txt Survival Guide',
-      es: '¿Bloquear o Permitir GPTBot? La Guía de Supervivencia del robots.txt',
+      fr: 'Guide 2026 : Maîtriser GPTBot et les Crawlers IA',
+      en: 'Guide 2026: Mastering GPTBot and AI Crawlers',
+      es: 'Guía 2026: Dominar GPTBot y los Crawlers IA',
     },
     description: {
-      fr: 'C\'est la question que tout le monde se pose. Bloquer OpenAI pour protéger son contenu, ou ouvrir les vannes pour gagner en visibilité ? La réponse est nuancée, mais penche vers l\'ouverture.',
-      en: 'It\'s the question everyone is asking. Block OpenAI to protect your content, or open the floodgates to gain visibility? The answer is nuanced, but leans towards openness.',
-      es: 'Es la pregunta que todos se hacen. ¿Bloquear OpenAI para proteger tu contenido, o abrir las compuertas para ganar visibilidad? La respuesta es matizada, pero se inclina hacia la apertura.',
+      fr: 'Guide complet : Comment configurer robots.txt pour GPTBot, ClaudeBot et Google-Extended. Avantages et risques pour votre SEO et GEO.',
+      en: 'Complete guide: How to configure robots.txt for GPTBot, ClaudeBot and Google-Extended. Benefits and risks for your SEO and GEO.',
+      es: 'Guía completa: Cómo configurar robots.txt para GPTBot, ClaudeBot y Google-Extended. Ventajas y riesgos para tu SEO y GEO.',
     },
     heroImage: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80',
     heroAlt: {
