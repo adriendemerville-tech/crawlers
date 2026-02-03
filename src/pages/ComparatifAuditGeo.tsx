@@ -27,9 +27,9 @@ interface ServiceOption {
 
 const PAGE_MULTIPLIERS: Record<PageRange, number> = {
   less5: 1,
-  less20: 1.5,
-  less50: 2.2,
-  more100: 3.5,
+  less20: 2,
+  less50: 4,
+  more100: 8,
 };
 
 const PAGE_LABELS: Record<PageRange, string> = {
@@ -106,7 +106,7 @@ export default function ComparatifAuditGeo() {
       const service = SERVICES.find((s) => s.id === serviceId);
       if (service) {
         agencyTotal += service.agencyPrice * multiplier * urgencyMultiplier;
-        crawlersTotal += service.crawlersPrice;
+        crawlersTotal += service.crawlersPrice * multiplier;
         agencyDays = Math.max(agencyDays, service.agencyDays);
         crawlersDays = Math.max(crawlersDays, service.crawlersDays);
       }
