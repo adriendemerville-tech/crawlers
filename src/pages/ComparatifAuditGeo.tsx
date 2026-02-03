@@ -219,13 +219,13 @@ export default function ComparatifAuditGeo() {
           {/* Hero Section with H1 */}
           <section className="text-center mb-10 md:mb-16">
             <Badge variant="outline" className="mb-3 md:mb-4 text-primary border-primary text-xs md:text-sm">
-              <Calculator className="w-3 h-3 md:w-4 md:h-4 mr-1.5 md:mr-2" />
+              <Calculator className="w-3 h-3 md:w-4 md:h-4 mr-1.5 md:mr-2" aria-hidden="true" />
               Comparatif 2026
             </Badge>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent leading-tight px-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 text-foreground leading-tight px-2">
               Comparatif : SEO Traditionnel vs GEO (IA)
             </h1>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto px-2">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-foreground/80 max-w-3xl mx-auto px-2">
               Pourquoi le SEO classique ne suffit plus en 2026 pour <span className="text-primary font-semibold">ChatGPT</span>,{" "}
               <span className="text-primary font-semibold">Gemini</span> et <span className="text-primary font-semibold">Perplexity</span>
             </p>
@@ -235,10 +235,10 @@ export default function ComparatifAuditGeo() {
           <section className="mb-10 md:mb-16">
             <Card className="max-w-5xl mx-auto border overflow-hidden">
               <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 py-3 md:py-4 px-3 md:px-6">
-                <CardTitle className="text-base md:text-lg lg:text-xl flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0" />
+                <h2 className="text-base md:text-lg lg:text-xl flex items-center gap-2 font-semibold tracking-tight">
+                  <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0" aria-hidden="true" />
                   <span className="leading-tight">SEO Classique vs GEO Expert : les différences clés</span>
-                </CardTitle>
+                </h2>
                 <CardDescription className="text-xs md:text-sm">
                   Comprendre pourquoi les techniques SEO traditionnelles ne suffisent plus pour les moteurs génératifs
                 </CardDescription>
@@ -251,14 +251,14 @@ export default function ComparatifAuditGeo() {
                         <th className="text-left p-2 md:p-3 font-semibold min-w-[100px] md:min-w-[140px] border-r border-border">Critère</th>
                         <th className="text-center p-2 md:p-3 font-semibold min-w-[120px] md:min-w-[180px] border-r border-border bg-muted/30">
                           <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2">
-                            <span className="text-orange-600 dark:text-orange-400">SEO Classique</span>
-                            <span className="text-[10px] md:text-xs text-muted-foreground">(Google)</span>
+                            <span className="text-amber-700 dark:text-amber-400 font-semibold">SEO Classique</span>
+                            <span className="text-[10px] md:text-xs text-foreground/60">(Google)</span>
                           </div>
                         </th>
                         <th className="text-center p-2 md:p-3 font-semibold min-w-[120px] md:min-w-[180px] bg-primary/5">
                           <div className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2">
-                            <span className="text-primary">GEO Expert</span>
-                            <span className="text-[10px] md:text-xs text-muted-foreground">(IA & LLM)</span>
+                            <span className="text-primary font-semibold">GEO Expert</span>
+                            <span className="text-[10px] md:text-xs text-foreground/60">(IA & LLM)</span>
                           </div>
                         </th>
                       </tr>
@@ -333,13 +333,17 @@ export default function ComparatifAuditGeo() {
                   {/* Configuration */}
                   <div className="space-y-6">
                     <div>
-                      <Label className="text-base font-semibold mb-3 block">
-                        <FileText className="w-4 h-4 inline mr-2" />
+                      <Label htmlFor="page-range-select" className="text-base font-semibold mb-3 block">
+                        <FileText className="w-4 h-4 inline mr-2" aria-hidden="true" />
                         Nombre de pages du site
                       </Label>
                       <Select value={pageRange} onValueChange={(v) => setPageRange(v as PageRange)}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
+                        <SelectTrigger 
+                          id="page-range-select" 
+                          className="w-full"
+                          aria-label="Sélectionnez le nombre de pages du site"
+                        >
+                          <SelectValue placeholder="Sélectionnez une option" />
                         </SelectTrigger>
                         <SelectContent>
                           {Object.entries(PAGE_LABELS).map(([key, label]) => (
@@ -352,8 +356,8 @@ export default function ComparatifAuditGeo() {
                     </div>
 
                     <div>
-                      <Label className="text-base font-semibold mb-3 block">
-                        <Clock className="w-4 h-4 inline mr-2" />
+                      <Label id="urgency-label" className="text-base font-semibold mb-3 block">
+                        <Clock className="w-4 h-4 inline mr-2" aria-hidden="true" />
                         Niveau d'urgence
                       </Label>
                       <div className="px-2">
@@ -364,8 +368,11 @@ export default function ComparatifAuditGeo() {
                           max={3}
                           step={1}
                           className="w-full"
+                          aria-label="Niveau d'urgence de l'audit"
+                          aria-labelledby="urgency-label"
+                          aria-valuetext={urgency[0] === 1 ? "Standard" : urgency[0] === 2 ? "Prioritaire" : "Urgent"}
                         />
-                        <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                        <div className="flex justify-between text-xs text-foreground/70 mt-2" aria-hidden="true">
                           <span>Standard</span>
                           <span>Prioritaire</span>
                           <span>Urgent</span>
@@ -402,7 +409,7 @@ export default function ComparatifAuditGeo() {
                               >
                                 {service.label}
                               </Label>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-foreground/70 mt-1">
                                 {service.description}
                               </p>
                             </div>
@@ -415,23 +422,23 @@ export default function ComparatifAuditGeo() {
                   {/* Results */}
                   <div className="space-y-6">
                     {/* Agency pricing */}
-                    <Card className="border-orange-200 dark:border-orange-900 bg-orange-50/50 dark:bg-orange-950/20">
+                    <Card className="border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20">
                       <CardContent className="p-5">
                         <div className="flex items-center gap-3 mb-4">
-                          <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900">
-                            <Building2 className="w-5 h-5 text-orange-600" />
+                          <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900">
+                            <Building2 className="w-5 h-5 text-amber-700 dark:text-amber-400" aria-hidden="true" />
                           </div>
                           <div>
-                            <h3 className="font-semibold">Agence SEO traditionnelle</h3>
-                            <p className="text-xs text-muted-foreground">Tarif moyen constaté</p>
+                            <h3 className="font-semibold text-foreground">Agence SEO traditionnelle</h3>
+                            <p className="text-xs text-foreground/70">Tarif moyen constaté</p>
                           </div>
                         </div>
-                        <div className="text-3xl font-bold text-orange-600 mb-2">
+                        <div className="text-3xl font-bold text-amber-700 dark:text-amber-400 mb-2">
                           {pricing.agency.toLocaleString("fr-FR")} €
-                          <span className="text-sm font-normal text-muted-foreground ml-2">HT</span>
+                          <span className="text-sm font-normal text-foreground/70 ml-2">HT</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="w-4 h-4" />
+                        <div className="flex items-center gap-2 text-sm text-foreground/70">
+                          <Clock className="w-4 h-4" aria-hidden="true" />
                           Délai : {pricing.agencyDays} jours ouvrés
                         </div>
                       </CardContent>
@@ -445,11 +452,11 @@ export default function ComparatifAuditGeo() {
                       <CardContent className="p-5">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="p-2 rounded-full bg-primary/10">
-                            <Bot className="w-5 h-5 text-primary" />
+                            <Bot className="w-5 h-5 text-primary" aria-hidden="true" />
                           </div>
                           <div>
-                            <h3 className="font-semibold">Crawlers.fr (IA)</h3>
-                            <p className="text-xs text-muted-foreground">Analyse automatisée</p>
+                            <h3 className="font-semibold text-foreground">Crawlers.fr (IA)</h3>
+                            <p className="text-xs text-foreground/70">Analyse automatisée</p>
                           </div>
                         </div>
                         <div className="text-3xl font-bold text-primary mb-2">
@@ -458,14 +465,14 @@ export default function ComparatifAuditGeo() {
                           ) : (
                             <>
                               {pricing.crawlers} crédits
-                              <span className="text-sm font-normal text-muted-foreground ml-2">
+                              <span className="text-sm font-normal text-foreground/70 ml-2">
                                 ({pricing.crawlersEuros.toFixed(2)} €)
                               </span>
                             </>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Clock className="w-4 h-4" />
+                        <div className="flex items-center gap-2 text-sm text-foreground/70">
+                          <Clock className="w-4 h-4" aria-hidden="true" />
                           Délai : {pricing.crawlersDays}
                         </div>
                       </CardContent>
@@ -497,11 +504,11 @@ export default function ComparatifAuditGeo() {
           <section className="max-w-4xl mx-auto space-y-8 md:space-y-10 px-2">
             {/* Intro */}
             <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-bold">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
                 Comprendre le coût réel d'un audit de référencement GEO
               </h2>
               
-              <p className="text-lg text-muted-foreground leading-relaxed">
+              <p className="text-lg text-foreground/80 leading-relaxed">
                 En 2026, <strong className="text-foreground">le référencement ne se limite plus aux moteurs de recherche traditionnels</strong>. 
                 L'émergence du GEO (Generative Engine Optimization) bouleverse les pratiques établies. Les entreprises 
                 doivent désormais optimiser leur présence non seulement pour Google, mais aussi pour les moteurs de 
@@ -511,45 +518,44 @@ export default function ComparatifAuditGeo() {
 
             {/* Section 1 */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-2 inline-block">
+              <h3 className="text-xl font-bold text-primary border-b-2 border-primary pb-2 inline-block">
                 Pourquoi les tarifs des agences SEO restent-ils élevés ?
               </h3>
               
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 Les agences de référencement traditionnelles facturent généralement entre <strong className="text-foreground">1 500 € et 5 000 € 
                 pour un audit complet</strong>. Ces tarifs s'expliquent par plusieurs facteurs : la main-d'œuvre 
                 qualifiée nécessaire, les outils professionnels sous licence, le temps d'analyse manuelle et la 
                 rédaction de recommandations personnalisées.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 Un consultant SEO senior passe en moyenne 15 à 25 heures sur un audit approfondi.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 Cependant, cette approche présente des limites importantes : les délais peuvent s'étendre sur 
                 plusieurs semaines, les mises à jour nécessitent de nouveaux audits payants, et <strong className="text-foreground">la dimension 
                 GEO est souvent négligée</strong> car les outils traditionnels ne la mesurent pas efficacement.
               </p>
             </div>
 
-            {/* Section 2 */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-2 inline-block">
+              <h3 className="text-xl font-bold text-primary border-b-2 border-primary pb-2 inline-block">
                 L'alternative IA : rapidité et exhaustivité
               </h3>
               
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 <Link to="/" className="text-primary hover:underline font-medium">Crawlers.fr</Link> propose une approche 
                 radicalement différente. Notre plateforme utilise l'intelligence artificielle pour analyser votre 
                 site sous l'angle SEO traditionnel <strong className="text-foreground">et</strong> GEO en quelques minutes.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 L'audit technique de base est entièrement gratuit, sans inscription requise.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 Pour les analyses avancées — audit sémantique, positionnement sur les LLM, génération de code 
                 correctif JSON-LD — le système de crédits permet un contrôle total des coûts. À <strong className="text-foreground">0,50 € 
                 le crédit</strong>, un audit complet revient à moins de 5 €, soit <strong className="text-foreground">une économie de plus 
@@ -559,7 +565,7 @@ export default function ComparatifAuditGeo() {
 
             {/* Embedded Comparison Table */}
             <div className="my-12">
-              <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-2 inline-block mb-6">
+              <h3 className="text-xl font-bold text-primary border-b-2 border-primary pb-2 inline-block mb-6">
                 Comparatif des fonctionnalités
               </h3>
               
@@ -570,13 +576,13 @@ export default function ComparatifAuditGeo() {
                       <th className="text-left p-4 font-semibold">Fonctionnalité</th>
                       <th className="text-center p-4">
                         <div className="flex items-center justify-center gap-2">
-                          <Building2 className="w-5 h-5 text-orange-600" />
+                          <Building2 className="w-5 h-5 text-amber-700 dark:text-amber-400" aria-hidden="true" />
                           <span className="font-semibold">Agence</span>
                         </div>
                       </th>
                       <th className="text-center p-4">
                         <div className="flex items-center justify-center gap-2">
-                          <Bot className="w-5 h-5 text-primary" />
+                          <Bot className="w-5 h-5 text-primary" aria-hidden="true" />
                           <span className="font-semibold">Crawlers.fr</span>
                         </div>
                       </th>
@@ -617,35 +623,34 @@ export default function ComparatifAuditGeo() {
               </div>
             </div>
 
-            {/* Section 3 */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-2 inline-block">
+              <h3 className="text-xl font-bold text-primary border-b-2 border-primary pb-2 inline-block">
                 Que vérifie un audit GEO complet ?
               </h3>
               
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 Un audit GEO moderne analyse plusieurs dimensions critiques pour votre visibilité :
               </p>
               
-              <ul className="space-y-3 text-muted-foreground">
+              <ul className="space-y-3 text-foreground/80">
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span><strong className="text-foreground">Accessibilité des crawlers IA</strong> : vos pages sont-elles accessibles aux robots de ChatGPT, Anthropic et Google AI ?</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span><strong className="text-foreground">Données structurées</strong> : présence et validité du balisage JSON-LD pour les entités, produits, FAQ</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span><strong className="text-foreground">Fichiers de configuration</strong> : robots.txt, llms.txt, ai-plugin.json correctement configurés</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span><strong className="text-foreground">Qualité du contenu</strong> : structure sémantique, hiérarchie des headings, densité d'information</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" aria-hidden="true" />
                   <span><strong className="text-foreground">Citations et mentions</strong> : comment votre marque est référencée par les moteurs génératifs</span>
                 </li>
               </ul>
@@ -653,21 +658,21 @@ export default function ComparatifAuditGeo() {
 
             {/* Section 4 */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-2 inline-block">
+              <h3 className="text-xl font-bold text-primary border-b-2 border-primary pb-2 inline-block">
                 Agence ou IA : que choisir ?
               </h3>
               
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 Le choix dépend de vos besoins spécifiques. L'accompagnement humain reste pertinent 
                 pour les stratégies complexes, les refontes de site ou les formations d'équipe.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 En revanche, pour un diagnostic rapide, un suivi régulier ou des corrections techniques, 
                 l'automatisation par IA offre un rapport qualité-prix imbattable.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 Notre recommandation : commencez par un <Link to="/audit-expert" className="text-primary hover:underline font-medium">
                 audit gratuit sur Crawlers.fr</Link> pour identifier vos priorités, puis décidez si un accompagnement 
                 agence complémentaire est nécessaire pour votre stratégie globale.
@@ -676,11 +681,11 @@ export default function ComparatifAuditGeo() {
 
             {/* Section 5 - Le meilleur dispositif */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-2 inline-block">
+              <h3 className="text-xl font-bold text-primary border-b-2 border-primary pb-2 inline-block">
                 Le meilleur dispositif : bien choisir son agence, la challenger avec Crawlers.fr
               </h3>
               
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 La question n'est pas tant de choisir entre une agence SEO et une solution IA, mais plutôt 
                 de <strong className="text-foreground">construire un dispositif intelligent qui tire le meilleur des deux mondes</strong>. 
                 Les entreprises les plus performantes en référencement adoptent une approche hybride : elles s'appuient 
@@ -688,7 +693,7 @@ export default function ComparatifAuditGeo() {
                 et le suivi opérationnel.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 Le premier réflexe, avant de signer un contrat avec une agence, devrait être de 
                 <strong className="text-foreground"> réaliser un audit indépendant de votre site</strong>. 
                 Crawlers.fr vous permet d'obtenir en quelques minutes un diagnostic objectif de votre situation SEO et GEO. 
@@ -697,7 +702,7 @@ export default function ComparatifAuditGeo() {
                 Combien intègrent l'optimisation pour ChatGPT ou Perplexity dans leur offre standard ?
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 En disposant de votre propre audit, vous pouvez <strong className="text-foreground">négocier en position de force</strong>. 
                 Vous savez exactement quels problèmes techniques affectent votre site, quelles données structurées 
                 sont manquantes, comment les crawlers IA perçoivent vos pages. L'agence ne peut plus vous vendre 
@@ -705,7 +710,7 @@ export default function ComparatifAuditGeo() {
                 C'est la fin de l'asymétrie d'information qui profitait historiquement aux prestataires.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 Une fois la collaboration engagée avec une agence, Crawlers.fr devient un 
                 <strong className="text-foreground"> outil de suivi et de contrôle continu</strong>. 
                 Lancez un audit chaque mois pour vérifier que les optimisations promises ont bien été implémentées. 
@@ -714,7 +719,7 @@ export default function ComparatifAuditGeo() {
                 coûts prohibitifs, devient accessible pour quelques crédits.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 Le véritable enjeu en 2026 n'est plus seulement d'être bien référencé sur Google, mais 
                 d'<strong className="text-foreground">exister dans les réponses des IA génératives</strong>. 
                 Or, ce terrain est encore mal maîtrisé par la plupart des agences traditionnelles. Leurs outils, 
@@ -722,7 +727,7 @@ export default function ComparatifAuditGeo() {
                 de recherche classiques. Le GEO représente un changement de paradigme qu'elles n'ont pas toutes intégré.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 En combinant l'intelligence stratégique d'une agence spécialisée et la puissance analytique 
                 de Crawlers.fr, vous construisez un dispositif résilient. L'agence apporte la vision long terme, 
                 la créativité éditoriale, l'accompagnement humain. La plateforme IA garantit l'excellence technique, 
@@ -730,7 +735,7 @@ export default function ComparatifAuditGeo() {
                 qui fait la différence</strong> sur des marchés de plus en plus concurrentiels.
               </p>
 
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-foreground/80 leading-relaxed">
                 Enfin, n'oubliez pas que le référencement est un marathon, pas un sprint. Les algorithmes évoluent, 
                 les comportements utilisateurs changent, les moteurs génératifs gagnent en importance. 
                 Disposer d'un outil de diagnostic instantané et abordable comme Crawlers.fr vous permet de 
@@ -741,8 +746,8 @@ export default function ComparatifAuditGeo() {
             {/* CTA Card */}
             <Card className="bg-primary/5 border-primary mt-12">
               <CardContent className="p-8 text-center">
-                <h3 className="text-2xl font-bold mb-3">Prêt à auditer votre site ?</h3>
-                <p className="text-muted-foreground mb-6 text-lg">
+                <h3 className="text-2xl font-bold text-foreground mb-3">Prêt à auditer votre site ?</h3>
+                <p className="text-foreground/80 mb-6 text-lg">
                   Découvrez gratuitement votre score GEO et les optimisations prioritaires.
                 </p>
                 <Button asChild size="lg" className="text-base px-8">
