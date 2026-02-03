@@ -40,6 +40,31 @@ const ComparatifCrawlersSemrush = () => {
     "description": "Tableau comparatif des fonctionnalités, tarifs et cibles entre Crawlers.fr et Semrush pour le SEO et GEO en 2026"
   };
 
+  const breadcrumbStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Accueil",
+        "item": SITE_URL
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Comparatifs",
+        "item": `${SITE_URL}/comparatif-audit-geo`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Crawlers.fr vs Semrush",
+        "item": `${SITE_URL}/comparatif-crawlers-semrush`
+      }
+    ]
+  };
+
   const faqStructuredData = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -203,6 +228,7 @@ const ComparatifCrawlersSemrush = () => {
         
         <script type="application/ld+json">{JSON.stringify(articleStructuredData)}</script>
         <script type="application/ld+json">{JSON.stringify(comparisonStructuredData)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbStructuredData)}</script>
         <script type="application/ld+json">{JSON.stringify(faqStructuredData)}</script>
       </Helmet>
 

@@ -56,6 +56,11 @@ function FooterComponent() {
       description: language === 'fr' ? 'Articles et guides SEO/GEO' : 'SEO/GEO articles and guides'
     },
     { 
+      label: language === 'fr' ? 'Crawlers vs Semrush' : 'Crawlers vs Semrush',
+      href: '/comparatif-crawlers-semrush',
+      description: language === 'fr' ? 'Comparatif SEO/GEO avec Semrush' : 'SEO/GEO comparison with Semrush'
+    },
+    { 
       label: 'llms.txt', 
       href: '/llms.txt',
       description: language === 'fr' ? 'Instructions pour les IA' : 'Instructions for AI'
