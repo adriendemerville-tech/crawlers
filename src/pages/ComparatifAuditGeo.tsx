@@ -94,7 +94,7 @@ export default function ComparatifAuditGeo() {
   };
 
   const pricing = useMemo(() => {
-    const multiplier = PAGE_MULTIPLIERS[pageRange];
+    const creditsMultiplier = PAGE_MULTIPLIERS[pageRange]; // Only for credits
     const urgencyMultiplier = urgency[0] === 1 ? 1 : urgency[0] === 2 ? 1.3 : 1.5;
 
     let agencyTotal = 0;
@@ -105,8 +105,10 @@ export default function ComparatifAuditGeo() {
     selectedServices.forEach((serviceId) => {
       const service = SERVICES.find((s) => s.id === serviceId);
       if (service) {
-        agencyTotal += service.agencyPrice * multiplier * urgencyMultiplier;
-        crawlersTotal += service.crawlersPrice * multiplier;
+        // Agency price only affected by urgency, NOT by page count
+        agencyTotal += service.agencyPrice * urgencyMultiplier;
+        // Credits multiplied by page count
+        crawlersTotal += service.crawlersPrice * creditsMultiplier;
         agencyDays = Math.max(agencyDays, service.agencyDays);
         crawlersDays = Math.max(crawlersDays, service.crawlersDays);
       }
