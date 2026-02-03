@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { AuthorBio } from './AuthorBio';
 import { SourcesSection } from './SourcesSection';
 import { RelatedArticlesSection } from './RelatedArticlesSection';
+import { ResponsiveHeroImage } from './ResponsiveHeroImage';
 import { useLanguage } from '@/contexts/LanguageContext';
-
 interface ArticleLayoutProps {
   title: string;
   description: string;
@@ -190,12 +190,9 @@ function ArticleLayoutComponent({
           <article className="pb-16">
           {/* Hero Section */}
           <div className="relative w-full h-[300px] sm:h-[400px] lg:h-[500px] overflow-hidden">
-            <img
+            <ResponsiveHeroImage
               src={heroImage}
               alt={heroAlt}
-              className="w-full h-full object-cover"
-              loading="eager"
-              fetchPriority="high"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
           </div>
