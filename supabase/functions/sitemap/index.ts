@@ -202,6 +202,30 @@ serve(async (req) => {
     });
 
     // ========================================
+    // PAGES COMPARATIVES
+    // ========================================
+    pages.push({
+      loc: `${SITE_URL}/comparatif-audit-geo`,
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: 0.85,
+      alternates: createAlternates('/comparatif-audit-geo', languages),
+    });
+
+    pages.push({
+      loc: `${SITE_URL}/comparatif-crawlers-semrush`,
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: 0.85,
+      alternates: createAlternates('/comparatif-crawlers-semrush', languages),
+      images: [{
+        loc: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&q=80',
+        title: 'Comparatif Crawlers.fr vs Semrush 2026',
+        caption: 'Tableau comparatif SEO vs GEO entre Crawlers.fr et Semrush'
+      }]
+    });
+
+    // ========================================
     // PAGES LÉGALES
     // ========================================
     const legalPages = ['mentions-legales', 'politique-confidentialite', 'conditions-utilisation', 'rgpd'];
