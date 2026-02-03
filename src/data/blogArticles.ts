@@ -1,3 +1,5 @@
+import crawlerHeroImage from '@/assets/blog/crawler-hero.webp';
+
 export interface BlogArticle {
   slug: string;
   title: { fr: string; en: string; es: string };
@@ -15,6 +17,58 @@ export interface BlogArticle {
 const today = new Date().toISOString().split('T')[0];
 
 export const blogArticles: BlogArticle[] = [
+  // --- ARTICLE CRAWLER (NOUVEAU) ---
+  {
+    slug: 'crawler-definition-seo-geo',
+    type: 'pillar',
+    title: {
+      fr: 'Un crawler c\'est quoi ? Tout comprendre de ce rouage essentiel pour le SEO et le GEO',
+      en: 'What is a Crawler? Understanding This Essential Component for SEO and GEO',
+      es: '¿Qué es un Crawler? Entender este engranaje esencial para SEO y GEO',
+    },
+    description: {
+      fr: 'Découvrez ce qu\'est un crawler web : son histoire, son rôle crucial pour le SEO et le GEO, et pourquoi vous devez désormais parler aux robots avant vos clients.',
+      en: 'Discover what a web crawler is: its history, crucial role for SEO and GEO, and why you must now speak to robots before your customers.',
+      es: 'Descubre qué es un crawler web: su historia, papel crucial para SEO y GEO, y por qué debes hablar a los robots antes que a tus clientes.',
+    },
+    heroImage: crawlerHeroImage,
+    heroAlt: {
+      fr: 'Robot crawler futuriste explorant un réseau de données numériques',
+      en: 'Futuristic crawler robot exploring a digital data network',
+      es: 'Robot crawler futurista explorando una red de datos digitales',
+    },
+    author: 'Adrien',
+    date: new Date().toISOString().split('T')[0],
+    summaryPoints: {
+      fr: [
+        'Un crawler est un robot automatisé qui parcourt le web pour indexer les contenus.',
+        'Sans crawlers, aucun moteur de recherche ni IA ne peut vous trouver.',
+        'En 2026, les crawlers IA (GPTBot, ClaudeBot) sont aussi importants que Googlebot.',
+        'Les crawlers "mangent" du HTML propre, du JSON-LD et des sitemaps frais.',
+        'Parler aux robots avant vos clients est la nouvelle règle du marketing digital.',
+      ],
+      en: [
+        'A crawler is an automated robot that traverses the web to index content.',
+        'Without crawlers, no search engine or AI can find you.',
+        'In 2026, AI crawlers (GPTBot, ClaudeBot) are as important as Googlebot.',
+        'Crawlers "eat" clean HTML, JSON-LD, and fresh sitemaps.',
+        'Speaking to robots before your customers is the new digital marketing rule.',
+      ],
+      es: [
+        'Un crawler es un robot automatizado que recorre la web para indexar contenidos.',
+        'Sin crawlers, ningún motor de búsqueda ni IA puede encontrarte.',
+        'En 2026, los crawlers IA (GPTBot, ClaudeBot) son tan importantes como Googlebot.',
+        'Los crawlers "comen" HTML limpio, JSON-LD y sitemaps frescos.',
+        'Hablar a los robots antes que a tus clientes es la nueva regla del marketing digital.',
+      ],
+    },
+    sources: [
+      { title: 'Google Search Central - Googlebot', url: 'https://developers.google.com/search/docs/crawling-indexing/googlebot' },
+      { title: 'OpenAI - GPTBot Documentation', url: 'https://platform.openai.com/docs/gptbot' },
+      { title: 'W3C - Robots Exclusion Protocol', url: 'https://www.w3.org/TR/2022/WD-robots-20220606/' },
+      { title: 'Anthropic - ClaudeBot', url: 'https://www.anthropic.com/' },
+    ],
+  },
   // --- LES 3 PAGES PILIERS ---
   {
     slug: 'guide-visibilite-technique-ia',
