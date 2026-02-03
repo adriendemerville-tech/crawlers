@@ -134,53 +134,78 @@ export default function ComparatifAuditGeo() {
 
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": "Combien coûte un audit de référencement GEO ? Comparatif agence vs IA",
-    "description": "Comparez les prix d'un audit GEO entre une agence SEO traditionnelle et Crawlers.fr. Simulateur de coût gratuit.",
-    "mainEntity": {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Combien coûte un audit GEO en agence ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Un audit GEO complet en agence coûte entre 1 500 € et 5 000 € selon la taille du site et les prestations incluses."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Quelle est la différence de prix entre une agence et Crawlers.fr ?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Crawlers.fr propose des audits GEO à partir de 0,50 € le crédit, soit une économie moyenne de 95% par rapport aux tarifs agence."
-          }
-        }
-      ]
+    "@type": "Article",
+    "headline": "SEO vs GEO : Le Comparatif 2026 (Google vs ChatGPT)",
+    "description": "Tableau comparatif : SEO traditionnel vs GEO (Generative Engine Optimization). Comprendre pourquoi le SEO ne suffit plus pour ChatGPT, Gemini et Perplexity.",
+    "author": {
+      "@type": "Organization",
+      "name": "Crawlers.fr"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Crawlers.fr",
+      "url": "https://crawlers.fr"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://crawlers.fr/comparatif-audit-geo"
     }
+  };
+
+  const faqStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Quelle est la différence entre SEO et GEO ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Le SEO (Search Engine Optimization) cible les robots d'indexation pour un classement dans les résultats Google. Le GEO (Generative Engine Optimization) cible les modèles de langage (GPT-4, Claude, Gemini) pour être cité dans les réponses génératives."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Pourquoi le SEO traditionnel ne suffit plus en 2026 ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Les moteurs de recherche génératifs comme ChatGPT Search, Perplexity et Gemini utilisent des critères différents : données structurées JSON-LD, contenu factuel citable, autorité sémantique. Un bon classement Google ne garantit plus la visibilité dans les réponses IA."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Comment optimiser son site pour le GEO ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "L'optimisation GEO passe par : des données structurées JSON-LD complètes, un contenu factuel et citable, des fichiers de configuration (robots.txt, llms.txt) permissifs pour les crawlers IA, et une structure sémantique claire avec des headings hiérarchisés."
+        }
+      }
+    ]
   };
 
   return (
     <>
       <Helmet>
-        <title>Combien coûte un audit GEO ? Comparatif agence vs IA | Crawlers.fr</title>
+        <title>SEO vs GEO : Le Comparatif 2026 (Google vs ChatGPT) | Crawlers.fr</title>
         <meta
           name="description"
-          content="Découvrez le coût réel d'un audit de référencement GEO. Comparatif détaillé entre agence SEO et intelligence artificielle. Simulateur de prix gratuit."
+          content="Tableau comparatif : SEO traditionnel vs GEO (Generative Engine Optimization). Comprendre pourquoi le SEO ne suffit plus pour ChatGPT, Gemini et Perplexity."
         />
-        <meta name="keywords" content="audit GEO prix, coût audit référencement, tarif agence SEO, comparatif audit IA, Crawlers.fr" />
+        <meta name="keywords" content="SEO vs GEO, Generative Engine Optimization, ChatGPT SEO, référencement IA, comparatif SEO GEO 2026" />
         <link rel="canonical" href="https://crawlers.fr/comparatif-audit-geo" />
-        <meta property="og:title" content="Combien coûte un audit GEO ? Comparatif agence vs IA" />
-        <meta property="og:description" content="Simulateur de prix pour comparer le coût d'un audit GEO entre agence et IA." />
-        <meta property="og:type" content="website" />
+        <meta property="og:title" content="SEO vs GEO : Le Match 2026" />
+        <meta property="og:description" content="Tableau comparatif : SEO traditionnel vs GEO (Generative Engine Optimization). Comprendre pourquoi le SEO ne suffit plus pour ChatGPT, Gemini et Perplexity." />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://crawlers.fr/comparatif-audit-geo" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+        <script type="application/ld+json">{JSON.stringify(faqStructuredData)}</script>
       </Helmet>
 
       <div className="min-h-screen bg-background">
         <Header />
 
         <main className="container mx-auto px-4 py-12 md:py-20">
-          {/* Hero Section */}
+          {/* Hero Section with H1 */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -189,15 +214,108 @@ export default function ComparatifAuditGeo() {
           >
             <Badge variant="outline" className="mb-4 text-primary border-primary">
               <Calculator className="w-4 h-4 mr-2" />
-              Simulateur de prix
+              Comparatif 2026
             </Badge>
             <h1 className="text-3xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-              Combien coûte un audit de référencement GEO ?
+              Comparatif : SEO Traditionnel vs GEO (IA)
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-              Comparatif détaillé : <span className="text-primary font-semibold">agence traditionnelle</span> vs{" "}
-              <span className="text-primary font-semibold">intelligence artificielle</span>
+              Pourquoi le SEO classique ne suffit plus en 2026 pour <span className="text-primary font-semibold">ChatGPT</span>,{" "}
+              <span className="text-primary font-semibold">Gemini</span> et <span className="text-primary font-semibold">Perplexity</span>
             </p>
+          </motion.section>
+
+          {/* SEO vs GEO Comparison Table */}
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="mb-16"
+          >
+            <Card className="max-w-5xl mx-auto border overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 py-4">
+                <CardTitle className="text-lg md:text-xl flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  SEO Classique vs GEO Expert : les différences clés
+                </CardTitle>
+                <CardDescription>
+                  Comprendre pourquoi les techniques SEO traditionnelles ne suffisent plus pour les moteurs génératifs
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse" role="table">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/50">
+                        <th className="text-left p-3 font-semibold min-w-[140px] border-r border-border">Critère</th>
+                        <th className="text-center p-3 font-semibold min-w-[180px] border-r border-border bg-muted/30">
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="text-orange-600 dark:text-orange-400">SEO Classique</span>
+                            <span className="text-xs text-muted-foreground">(Google)</span>
+                          </div>
+                        </th>
+                        <th className="text-center p-3 font-semibold min-w-[180px] bg-primary/5">
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="text-primary">GEO Expert</span>
+                            <span className="text-xs text-muted-foreground">(IA & LLM)</span>
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        {
+                          criteria: "Cible",
+                          seo: "Robots d'indexation (Spiders)",
+                          geo: "Modèles de Langage (GPT-4, Claude)"
+                        },
+                        {
+                          criteria: "Objectif",
+                          seo: "Classement (Ranking #1)",
+                          geo: "Citation dans les réponses IA"
+                        },
+                        {
+                          criteria: "Signal principal",
+                          seo: "Backlinks & PageRank",
+                          geo: "Données structurées JSON-LD"
+                        },
+                        {
+                          criteria: "Format de contenu",
+                          seo: "Pages optimisées mots-clés",
+                          geo: "Contenu factuel & citable"
+                        },
+                        {
+                          criteria: "Mesure de succès",
+                          seo: "Position SERP, CTR",
+                          geo: "Taux de citation, mention de marque"
+                        },
+                        {
+                          criteria: "Horizon temporel",
+                          seo: "Long terme (3-6 mois)",
+                          geo: "Impact rapide (jours/semaines)"
+                        },
+                        {
+                          criteria: "Fichiers critiques",
+                          seo: "sitemap.xml, robots.txt",
+                          geo: "llms.txt, ai-plugin.json, JSON-LD"
+                        },
+                        {
+                          criteria: "Concurrence",
+                          seo: "10 résultats par page",
+                          geo: "1-3 sources citées maximum"
+                        }
+                      ].map((row, idx) => (
+                        <tr key={idx} className="border-b border-border hover:bg-muted/20 transition-colors">
+                          <td className="p-3 font-medium border-r border-border bg-card">{row.criteria}</td>
+                          <td className="p-3 text-center border-r border-border text-muted-foreground">{row.seo}</td>
+                          <td className="p-3 text-center bg-primary/5 font-medium text-foreground">{row.geo}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           </motion.section>
 
           {/* Simulator Section */}
