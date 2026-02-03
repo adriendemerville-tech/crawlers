@@ -30,6 +30,7 @@ const SharedReportRedirect = lazy(() => import("./pages/SharedReportRedirect"));
 const Blog = lazy(() => import("./pages/Blog"));
 const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
 const ComparatifAuditGeo = lazy(() => import("./pages/ComparatifAuditGeo"));
+const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersSemrush"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
@@ -73,6 +74,7 @@ const App = () => (
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:slug" element={<ArticlePage />} />
                     <Route path="/comparatif-audit-geo" element={<ComparatifAuditGeo />} />
+                    <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
