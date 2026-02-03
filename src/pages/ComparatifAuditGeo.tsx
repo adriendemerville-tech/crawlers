@@ -112,8 +112,8 @@ export default function ComparatifAuditGeo() {
       }
     });
 
-    // Apply 25% discount on agency prices as requested
-    agencyTotal = agencyTotal * 0.75;
+    // Apply 30% discount on agency prices as requested
+    agencyTotal = agencyTotal * 0.70;
 
     // Adjust days based on urgency
     if (urgency[0] === 2) agencyDays = Math.ceil(agencyDays * 0.7);
