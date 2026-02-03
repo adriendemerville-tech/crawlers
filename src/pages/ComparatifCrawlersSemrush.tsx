@@ -724,6 +724,21 @@ const ComparatifCrawlersSemrush = () => {
                   </p>
                 </div>
 
+                {/* Mid-article CTA */}
+                <div className="my-8 p-6 rounded-xl bg-primary/5 border border-primary/20 text-center">
+                  <p className="text-lg font-semibold text-foreground mb-2">
+                    Curieux de votre visibilité IA ?
+                  </p>
+                  <p className="text-sm text-foreground/70 mb-4">
+                    Découvrez gratuitement si votre site est cité par ChatGPT, Gemini et Perplexity.
+                  </p>
+                  <Button asChild size="lg" variant="hero">
+                    <Link to="/audit-expert">
+                      Lancer mon audit GEO gratuit
+                    </Link>
+                  </Button>
+                </div>
+
                 <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary">
                   Notre position : complémentarité, pas concurrence
                 </h3>
