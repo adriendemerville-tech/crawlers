@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -12,7 +12,8 @@ import {
   UserPlus,
   CheckCircle,
   Globe,
-  ExternalLink
+  ExternalLink,
+  RefreshCw
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -78,6 +79,9 @@ interface ErrorEvent {
   error_response: string | null;
 }
 
+// Intervalle de rafraîchissement automatique (1 heure en ms)
+const AUTO_REFRESH_INTERVAL = 60 * 60 * 1000;
+
 export function AnalyticsDashboard() {
   const [isMounted, setIsMounted] = useState(false);
   const [stats, setStats] = useState<AnalyticsStats>({
@@ -101,14 +105,31 @@ export function AnalyticsDashboard() {
   const [errorEvents, setErrorEvents] = useState<ErrorEvent[]>([]);
   const [showAllErrors, setShowAllErrors] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
+  // Initial load
   useEffect(() => {
     setIsMounted(true);
     fetchAnalytics();
   }, []);
 
-  const fetchAnalytics = async () => {
-    setIsLoading(true);
+  // Auto-refresh every hour
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchAnalytics(true);
+    }, AUTO_REFRESH_INTERVAL);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const fetchAnalytics = useCallback(async (isAutoRefresh = false) => {
+    if (isAutoRefresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+    
     try {
       // Récupérer les user_ids des admins à exclure
       const { data: adminProfiles } = await supabase
@@ -242,13 +263,15 @@ export function AnalyticsDashboard() {
       });
       
       setErrorEvents(enrichedErrors);
+      setLastUpdated(new Date());
 
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, []);
 
   const StatCard = ({ 
     title, 
@@ -314,15 +337,34 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-primary/10">
-          <BarChart3 className="h-5 w-5 text-primary" />
+      {/* Header with refresh button */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <BarChart3 className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold">Dashboard Statistiques</h3>
+            <p className="text-sm text-muted-foreground">
+              Activité des 30 derniers jours
+              {lastUpdated && (
+                <span className="ml-2 text-xs">
+                  • Mis à jour {format(lastUpdated, 'HH:mm', { locale: fr })}
+                </span>
+              )}
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-lg font-semibold">Dashboard Statistiques</h3>
-          <p className="text-sm text-muted-foreground">Activité des 30 derniers jours</p>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => fetchAnalytics(true)}
+          disabled={isRefreshing}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Actualisation...' : 'Actualiser'}
+        </Button>
       </div>
 
       {/* Stats Grid */}
