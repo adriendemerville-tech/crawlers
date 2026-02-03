@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Zap, Plus } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
-import { CreditTopUpModal } from './CreditTopUpModal';
 import { useLanguage } from '@/contexts/LanguageContext';
+
+// Lazy load the heavy modal (contains framer-motion)
+const CreditTopUpModal = lazy(() => import('./CreditTopUpModal').then(m => ({ default: m.CreditTopUpModal })));
 
 const translations = {
   fr: { recharge: 'Recharger' },
@@ -38,11 +40,15 @@ export function CreditRechargeButton() {
         </Badge>
       </Button>
 
-      <CreditTopUpModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        currentBalance={balance}
-      />
+      {modalOpen && (
+        <Suspense fallback={null}>
+          <CreditTopUpModal
+            open={modalOpen}
+            onOpenChange={setModalOpen}
+            currentBalance={balance}
+          />
+        </Suspense>
+      )}
     </>
   );
 }

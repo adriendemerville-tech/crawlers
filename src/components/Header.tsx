@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, lazy, Suspense } from 'react';
 import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -14,7 +14,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CreditRechargeButton } from './CreditRechargeButton';
+
+// Lazy load credit button (loads modal with framer-motion on demand)
+const CreditRechargeButton = lazy(() => import('./CreditRechargeButton').then(m => ({ default: m.CreditRechargeButton })));
 
 // Flag emoji components for better accessibility and consistency
 const FlagFR = () => (
@@ -208,7 +210,9 @@ export function Header() {
 
           {/* Credit recharge button - on home and /audit-expert when logged in */}
           {(isAuditExpertPage || location.pathname === '/') && user && (
-            <CreditRechargeButton />
+            <Suspense fallback={null}>
+              <CreditRechargeButton />
+            </Suspense>
           )}
 
           {/* Theme toggle */}

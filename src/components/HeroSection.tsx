@@ -1,14 +1,14 @@
-import { useState, useEffect, memo, lazy, Suspense } from 'react';
+import { useState, useEffect, memo, lazy, Suspense, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Zap } from 'lucide-react';
 import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-// Lazy load framer-motion to avoid blocking LCP
+// Lazy load framer-motion - only needed after hydration for animations
 const MotionSpan = lazy(() => 
   import('framer-motion').then(mod => ({
-    default: ({ children, ...props }: any) => <mod.motion.span {...props}>{children}</mod.motion.span>
+    default: memo(({ children, ...props }: any) => <mod.motion.span {...props}>{children}</mod.motion.span>)
   }))
 );
 

@@ -94,50 +94,76 @@ export default defineConfig(({ mode }) => ({
             if (id.includes('react-dom') || id.includes('react/')) {
               return 'vendor-react';
             }
+            // Router - needed for initial navigation
             if (id.includes('react-router-dom') || id.includes('@remix-run')) {
               return 'vendor-router';
             }
-            // Supabase - defer loading
+            // Supabase - defer loading (large ~80KB)
             if (id.includes('@supabase')) {
               return 'vendor-supabase';
             }
-            // TanStack Query
+            // TanStack Query - defer
             if (id.includes('@tanstack')) {
               return 'vendor-query';
             }
-            // UI framework - Radix components bundled together
+            // UI framework - Radix components bundled together (defer)
             if (id.includes('@radix-ui')) {
               return 'vendor-ui';
             }
-            // Animation library - deferred
+            // Animation library - only load on demand (large ~60KB)
             if (id.includes('framer-motion')) {
               return 'vendor-motion';
             }
-            // PDF generation - only loaded when needed
+            // PDF generation - only loaded when needed (large ~140KB)
             if (id.includes('jspdf')) {
               return 'vendor-pdf';
             }
-            // Charts - isolate recharts dependencies to avoid circular imports
+            // Charts - isolate recharts dependencies (large ~100KB)
             if (id.includes('recharts')) {
               return 'vendor-recharts';
             }
+            // D3 - used by recharts (large ~50KB)
             if (id.includes('d3-')) {
               return 'vendor-d3';
             }
-            // Lucide icons - bundled together
+            // Lucide icons - tree-shake and bundle used ones
             if (id.includes('lucide-react')) {
               return 'vendor-icons';
             }
-            // Other utilities
-            if (id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
+            // Helmet - SEO (small, defer)
+            if (id.includes('react-helmet-async')) {
+              return 'vendor-seo';
+            }
+            // next-themes - small but can be deferred
+            if (id.includes('next-themes')) {
+              return 'vendor-theme';
+            }
+            // Date utilities
+            if (id.includes('date-fns')) {
+              return 'vendor-date';
+            }
+            // Core utilities - keep small
+            if (id.includes('clsx') || id.includes('tailwind-merge') || id.includes('class-variance-authority')) {
               return 'vendor-utils';
+            }
+            // DnD kit - only for profile page
+            if (id.includes('@dnd-kit')) {
+              return 'vendor-dnd';
+            }
+            // Embla carousel
+            if (id.includes('embla-carousel')) {
+              return 'vendor-carousel';
+            }
+            // Form libraries
+            if (id.includes('react-hook-form') || id.includes('zod') || id.includes('@hookform')) {
+              return 'vendor-forms';
             }
           }
         },
       },
     },
     // Increase chunk size warning limit (optimized chunks are larger but fewer)
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 500,
     // Enable minification optimizations
     minify: 'esbuild',
     // Target modern browsers for smaller bundles
@@ -146,15 +172,25 @@ export default defineConfig(({ mode }) => ({
     cssCodeSplit: true,
     // Source maps only in dev
     sourcemap: mode === 'development',
+    // Reduce bundle size with tree shaking
+    treeshake: {
+      moduleSideEffects: false,
+      propertyReadSideEffects: false,
+    },
   },
-  // Optimize dependencies
+  // Optimize dependencies - only include truly critical ones
   optimizeDeps: {
     include: [
       'react',
       'react-dom',
       'react-router-dom',
+    ],
+    // Exclude heavy deps from pre-bundling to reduce initial load
+    exclude: [
       'framer-motion',
-      'lucide-react',
+      'recharts',
+      'jspdf',
+      'jspdf-autotable',
     ],
   },
 }));

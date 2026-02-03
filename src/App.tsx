@@ -9,8 +9,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CreditsProvider } from "@/contexts/CreditsContext";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
-import { FloatingChatBubble } from "@/components/Support";
 import { PageViewTracker } from "@/components/Analytics/PageViewTracker";
+
+// Lazy load the chat bubble (not needed for initial render)
+const FloatingChatBubble = lazy(() => import("@/components/Support/FloatingChatBubble").then(m => ({ default: m.FloatingChatBubble })));
 
 // Lazy load pages
 const Index = lazy(() => import("./pages/Index"));
@@ -73,7 +75,9 @@ const App = () => (
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
-                <FloatingChatBubble />
+                <Suspense fallback={null}>
+                  <FloatingChatBubble />
+                </Suspense>
               </BrowserRouter>
               </TooltipProvider>
             </CreditsProvider>
