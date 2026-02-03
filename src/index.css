@@ -118,6 +118,41 @@
   textarea {
     caret-color: auto;
   }
+
+  /* CSS Containment for performance - prevent layout thrashing */
+  /* Cards and isolated components */
+  [data-radix-popper-content-wrapper],
+  [data-radix-scroll-area-viewport],
+  .card,
+  [class*="CardContent"],
+  article {
+    contain: layout style;
+  }
+
+  /* Strict containment for modals/dialogs */
+  [data-radix-dialog-content],
+  [data-radix-alert-dialog-content],
+  [data-radix-popover-content],
+  [role="dialog"] {
+    contain: strict;
+  }
+
+  /* Paint containment for scrollable areas */
+  [data-radix-scroll-area-viewport],
+  .overflow-x-auto,
+  .overflow-y-auto,
+  .overflow-auto {
+    contain: paint;
+    will-change: scroll-position;
+  }
+
+  /* Optimize fixed/sticky elements */
+  header,
+  [class*="fixed"],
+  [class*="sticky"] {
+    contain: layout style;
+    will-change: transform;
+  }
 }
 
 @layer utilities {
@@ -143,6 +178,18 @@
     }
     50% {
       opacity: 0.7;
+    }
+  }
+
+  /* News card fade-in animation - CSS only, no JS layout thrashing */
+  @keyframes newsCardFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 

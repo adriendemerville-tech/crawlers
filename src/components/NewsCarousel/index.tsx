@@ -1,9 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { ChevronLeft, ChevronRight, RefreshCw, Search, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { NewsCard } from './NewsCard';
 import { NewsCardSkeleton } from './NewsCardSkeleton';
 import { NewsArticle, WhitelistState } from '@/types/news';
@@ -14,6 +12,18 @@ import {
   saveWhitelistToStorage,
 } from '@/data/mockNewsData';
 import { useLanguage } from '@/contexts/LanguageContext';
+
+// Lazy load framer-motion to prevent layout thrashing on initial load
+const MotionDiv = lazy(() =>
+  import('framer-motion').then(mod => ({
+    default: mod.motion.div
+  }))
+);
+const AnimatePresenceLazy = lazy(() =>
+  import('framer-motion').then(mod => ({
+    default: mod.AnimatePresence
+  }))
+);
 
 const AUTO_SCROLL_INTERVAL = 30000; // 30 seconds
 const CARD_WIDTH = 356; // 340px card + 16px gap
@@ -85,28 +95,42 @@ export function NewsCarousel() {
     setFilteredArticles(articles);
   }, [articles]);
 
-  // Auto-scroll functionality
+  // Auto-scroll functionality - deferred to prevent layout thrashing
   useEffect(() => {
+    // Use requestIdleCallback to defer scroll measurements
     const startAutoScroll = () => {
       autoScrollRef.current = setInterval(() => {
         if (scrollContainerRef.current && filteredArticles.length > 0) {
-          const container = scrollContainerRef.current;
-          const maxScroll = container.scrollWidth - container.clientWidth;
-          
-          if (container.scrollLeft >= maxScroll - 10) {
-            // Reset to beginning with smooth animation
-            container.scrollTo({ left: 0, behavior: 'smooth' });
-          } else {
-            // Scroll to next card
-            container.scrollBy({ left: CARD_WIDTH, behavior: 'smooth' });
-          }
+          // Use requestAnimationFrame to batch DOM reads/writes
+          requestAnimationFrame(() => {
+            const container = scrollContainerRef.current;
+            if (!container) return;
+            
+            // Read phase - batch all reads together
+            const scrollLeft = container.scrollLeft;
+            const scrollWidth = container.scrollWidth;
+            const clientWidth = container.clientWidth;
+            const maxScroll = scrollWidth - clientWidth;
+            
+            // Write phase - after reads complete
+            requestAnimationFrame(() => {
+              if (!container) return;
+              if (scrollLeft >= maxScroll - 10) {
+                container.scrollTo({ left: 0, behavior: 'smooth' });
+              } else {
+                container.scrollBy({ left: CARD_WIDTH, behavior: 'smooth' });
+              }
+            });
+          });
         }
       }, AUTO_SCROLL_INTERVAL);
     };
 
-    startAutoScroll();
+    // Defer auto-scroll start to after initial render
+    const timeoutId = setTimeout(startAutoScroll, 1000);
 
     return () => {
+      clearTimeout(timeoutId);
       if (autoScrollRef.current) {
         clearInterval(autoScrollRef.current);
       }
@@ -246,22 +270,25 @@ export function NewsCarousel() {
           </Button>
         </div>
 
-        {/* New source notification */}
-        <AnimatePresence>
-          {newSourceDiscovered && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-2"
-            >
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-foreground">
-                {t.news?.newSource || 'Nouvelle source découverte :'} {newSourceDiscovered}
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* New source notification - with CSS containment to prevent layout thrashing */}
+        {newSourceDiscovered && (
+          <Suspense fallback={null}>
+            <AnimatePresenceLazy>
+              <MotionDiv
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-2"
+                style={{ contain: 'layout style' }}
+              >
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-foreground">
+                  {t.news?.newSource || 'Nouvelle source découverte :'} {newSourceDiscovered}
+                </span>
+              </MotionDiv>
+            </AnimatePresenceLazy>
+          </Suspense>
+        )}
 
         {/* Carousel */}
         <div className="relative group">
@@ -290,7 +317,12 @@ export function NewsCarousel() {
           <div
             ref={scrollContainerRef}
             className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide scroll-smooth"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              contain: 'paint layout',
+              willChange: 'scroll-position'
+            }}
           >
             {isLoading ? (
               // Skeleton loading

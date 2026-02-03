@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { memo, useCallback } from 'react';
 import { Calendar, ExternalLink, Share2 } from 'lucide-react';
 import { NewsArticle } from '@/types/news';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -19,21 +19,22 @@ const categoryColors: Record<string, string> = {
   GEO: 'bg-amber-500 hover:bg-amber-600',
 };
 
-export function NewsCard({ article, index }: NewsCardProps) {
+function NewsCardComponent({ article, index }: NewsCardProps) {
   const { language } = useLanguage();
   const { toast } = useToast();
 
-  const formatDate = (dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
     });
-  };
+  }, [language]);
 
-  const handleShare = (e: React.MouseEvent) => {
+  const handleShare = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     
     const emailTemplates = {
       fr: {
@@ -98,18 +99,19 @@ Saludos`,
     toast({
       title: language === 'fr' ? 'Client email ouvert' : language === 'es' ? 'Cliente de correo abierto' : 'Email client opened',
     });
-  };
+  }, [article, language, formatDate, toast]);
 
   return (
-    <motion.a
+    <a
       href={article.url}
       target="_blank"
       rel="noopener noreferrer"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.1 }}
-      whileHover={{ y: -8, transition: { duration: 0.2 } }}
-      className="flex-shrink-0 w-[300px] md:w-[340px] block cursor-pointer"
+      className="flex-shrink-0 w-[300px] md:w-[340px] block cursor-pointer transition-transform duration-300 hover:-translate-y-2"
+      style={{ 
+        contain: 'layout style paint',
+        opacity: 0,
+        animation: `newsCardFadeIn 0.4s ease-out ${index * 0.1}s forwards`
+      }}
     >
       <Card className="h-full overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
         <div className="relative group">
@@ -119,6 +121,7 @@ Saludos`,
               alt={article.title}
               className="object-cover w-full h-full"
               loading="lazy"
+              decoding="async"
             />
           </AspectRatio>
           <Badge
@@ -160,6 +163,9 @@ Saludos`,
           </div>
         </CardContent>
       </Card>
-    </motion.a>
+    </a>
   );
 }
+
+// Memoize to prevent unnecessary re-renders
+export const NewsCard = memo(NewsCardComponent);
