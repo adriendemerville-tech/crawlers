@@ -253,6 +253,91 @@ const ComparatifCrawlersSemrush = () => {
             </div>
           </section>
 
+          {/* Fair Play Summary Table */}
+          <section className="py-10 bg-muted/30">
+            <div className="container mx-auto px-4">
+              <div className="max-w-4xl mx-auto">
+                <h2 className="text-2xl font-bold text-center mb-2 text-foreground">
+                  L'Approche "Fair Play" en 30 Secondes
+                </h2>
+                <p className="text-center text-muted-foreground mb-6">
+                  Comparaison honnête sans langue de bois
+                </p>
+                
+                <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
+                  <table className="w-full text-sm" aria-label="Comparatif synthétique Semrush vs Crawlers.fr">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/50">
+                        <th className="px-4 py-3 text-left font-semibold text-foreground">Critère</th>
+                        <th className="px-4 py-3 text-center font-semibold text-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <img src="https://www.semrush.com/favicon.ico" alt="" className="h-4 w-4" />
+                            Semrush
+                          </span>
+                        </th>
+                        <th className="px-4 py-3 text-center font-semibold text-primary">
+                          <span className="inline-flex items-center gap-1">
+                            🦎 Crawlers.fr
+                          </span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-border/50">
+                        <td className="px-4 py-3 font-medium text-foreground">Prix de départ</td>
+                        <td className="px-4 py-3 text-center text-muted-foreground">~130$/mois</td>
+                        <td className="px-4 py-3 text-center">
+                          <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600">0€ (Gratuit)</Badge>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-border/50 bg-muted/20">
+                        <td className="px-4 py-3 font-medium text-foreground">Inscription requise</td>
+                        <td className="px-4 py-3 text-center text-muted-foreground">Obligatoire + CB souvent</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Aucune (Immédiat)</span>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="px-4 py-3 font-medium text-foreground">Focus Principal</td>
+                        <td className="px-4 py-3 text-center text-muted-foreground">Mots-clés & Backlinks (Google)</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="text-primary font-medium">Technique & Visibilité IA (ChatGPT)</span>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-border/50 bg-muted/20">
+                        <td className="px-4 py-3 font-medium text-foreground">Score GEO (IA)</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="text-red-500">Non disponible</span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <Badge variant="default" className="bg-primary">Natif</Badge>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="px-4 py-3 font-medium text-foreground">Complexité</td>
+                        <td className="px-4 py-3 text-center text-muted-foreground">Usine à gaz (Expert requis)</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Simple & Rapide (30 sec)</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3 font-medium text-foreground">Public Idéal</td>
+                        <td className="px-4 py-3 text-center text-muted-foreground">Grosses Agences & E-commerce</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="text-primary font-medium">Freelances, PME & Indie Hackers</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <p className="text-center text-xs text-muted-foreground mt-4">
+                  💡 Ce tableau n'est pas un jugement de valeur — chaque outil a ses forces selon votre contexte.
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* Introduction */}
           <section className="py-12 bg-background">
             <div className="container mx-auto px-4">
