@@ -29,6 +29,7 @@ const ReportViewer = lazy(() => import("./pages/ReportViewer"));
 const SharedReportRedirect = lazy(() => import("./pages/SharedReportRedirect"));
 const Blog = lazy(() => import("./pages/Blog"));
 const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
+const ComparatifAuditGeo = lazy(() => import("./pages/ComparatifAuditGeo"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
@@ -71,6 +72,7 @@ const App = () => (
                     <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} />
                     <Route path="/blog" element={<Blog />} />
                     <Route path="/blog/:slug" element={<ArticlePage />} />
+                    <Route path="/comparatif-audit-geo" element={<ComparatifAuditGeo />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
