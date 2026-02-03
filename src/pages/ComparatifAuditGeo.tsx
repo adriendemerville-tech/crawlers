@@ -276,6 +276,8 @@ export default function ComparatifAuditGeo() {
                               id={service.id}
                               checked={selectedServices.includes(service.id)}
                               onCheckedChange={() => toggleService(service.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="mt-0.5"
                             />
                             <div className="flex-1">
                               <Label
