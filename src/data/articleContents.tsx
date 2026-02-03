@@ -41,6 +41,86 @@ const geoVsSeoTableRows: GeoTableRow[] = [
   },
 ];
 
+// Tableau des types de crawlers SEO vs GEO
+const crawlerTypesTableRows: GeoTableRow[] = [
+  {
+    factor: { fr: 'Googlebot', en: 'Googlebot', es: 'Googlebot' },
+    seo: { fr: 'Indexation SERP', en: 'SERP Indexing', es: 'Indexación SERP' },
+    geo: { fr: 'Non applicable', en: 'Not applicable', es: 'No aplicable' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'Bingbot', en: 'Bingbot', es: 'Bingbot' },
+    seo: { fr: 'Indexation Bing', en: 'Bing Indexing', es: 'Indexación Bing' },
+    geo: { fr: 'Alimente Copilot', en: 'Feeds Copilot', es: 'Alimenta Copilot' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'GPTBot', en: 'GPTBot', es: 'GPTBot' },
+    seo: { fr: 'Non applicable', en: 'Not applicable', es: 'No aplicable' },
+    geo: { fr: 'Entraînement ChatGPT', en: 'ChatGPT Training', es: 'Entrenamiento ChatGPT' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'ClaudeBot', en: 'ClaudeBot', es: 'ClaudeBot' },
+    seo: { fr: 'Non applicable', en: 'Not applicable', es: 'No aplicable' },
+    geo: { fr: 'Entraînement Claude', en: 'Claude Training', es: 'Entrenamiento Claude' },
+    importance: 'important',
+  },
+  {
+    factor: { fr: 'Google-Extended', en: 'Google-Extended', es: 'Google-Extended' },
+    seo: { fr: 'Non applicable', en: 'Not applicable', es: 'No aplicable' },
+    geo: { fr: 'Gemini / Bard', en: 'Gemini / Bard', es: 'Gemini / Bard' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'PerplexityBot', en: 'PerplexityBot', es: 'PerplexityBot' },
+    seo: { fr: 'Non applicable', en: 'Not applicable', es: 'No aplicable' },
+    geo: { fr: 'Perplexity AI', en: 'Perplexity AI', es: 'Perplexity AI' },
+    importance: 'important',
+  },
+];
+
+// Tableau de ce que les crawlers aiment manger
+const crawlerFoodTableRows: GeoTableRow[] = [
+  {
+    factor: { fr: 'HTML sémantique', en: 'Semantic HTML', es: 'HTML semántico' },
+    seo: { fr: 'Structure claire', en: 'Clear structure', es: 'Estructura clara' },
+    geo: { fr: 'Compréhension contextuelle', en: 'Contextual understanding', es: 'Comprensión contextual' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'JSON-LD / Schema.org', en: 'JSON-LD / Schema.org', es: 'JSON-LD / Schema.org' },
+    seo: { fr: 'Rich Snippets', en: 'Rich Snippets', es: 'Rich Snippets' },
+    geo: { fr: 'Données structurées pour LLM', en: 'Structured data for LLM', es: 'Datos estructurados para LLM' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'Sitemap XML', en: 'XML Sitemap', es: 'Sitemap XML' },
+    seo: { fr: 'Découverte de pages', en: 'Page discovery', es: 'Descubrimiento de páginas' },
+    geo: { fr: 'Cartographie du contenu', en: 'Content mapping', es: 'Mapeo de contenido' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'Contenu textuel riche', en: 'Rich text content', es: 'Contenido textual rico' },
+    seo: { fr: 'Densité de mots-clés', en: 'Keyword density', es: 'Densidad de palabras clave' },
+    geo: { fr: 'Contexte sémantique', en: 'Semantic context', es: 'Contexto semántico' },
+    importance: 'essential',
+  },
+  {
+    factor: { fr: 'Markdown / llms.txt', en: 'Markdown / llms.txt', es: 'Markdown / llms.txt' },
+    seo: { fr: 'Non applicable', en: 'Not applicable', es: 'No aplicable' },
+    geo: { fr: 'Format natif pour IA', en: 'Native format for AI', es: 'Formato nativo para IA' },
+    importance: 'important',
+  },
+  {
+    factor: { fr: 'Temps de réponse < 500ms', en: 'Response time < 500ms', es: 'Tiempo de respuesta < 500ms' },
+    seo: { fr: 'Core Web Vitals', en: 'Core Web Vitals', es: 'Core Web Vitals' },
+    geo: { fr: 'Crawl budget optimisé', en: 'Optimized crawl budget', es: 'Crawl budget optimizado' },
+    importance: 'important',
+  },
+];
+
 const robotsTxtTableRows: GeoTableRow[] = [
   {
     factor: { fr: 'GPTBot (OpenAI)', en: 'GPTBot (OpenAI)', es: 'GPTBot (OpenAI)' },
@@ -940,5 +1020,342 @@ Allow: /`}</pre>
     fr: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Les bots majeurs : OpenAI, Anthropic, Google.", "Les bots 'Common Crawl' à surveiller.", "Comment les identifier dans vos logs serveurs."]} /><p className="text-lg font-medium text-foreground mb-6">Ne laissez pas des inconnus scraper votre site sans votre accord explicite. Voici la liste tenue à jour des identifiants (User-Agents) des robots d'intelligence artificielle qui parcourent le web en 2026.</p><GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Liste complète des User-Agents IA 2026', en: 'Complete 2026 AI User-Agents list', es: 'Lista completa de User-Agents IA 2026' }} /><h2 className="text-2xl font-bold mt-8 mb-4">Les 'Big Three' : GPT, Claude et Gemini</h2><p>Ce sont les plus actifs et les plus importants pour votre visibilité. Google-Extended (pour Gemini), GPTBot (pour OpenAI) et ClaudeBot (pour Anthropic) respectent généralement le robots.txt, à condition de bien configurer les directives.</p><RichLinkCard href="/audit-expert" title="Alerte nouveaux bots" description="Recevez une notification quand de nouveaux User-Agents IA sont détectés sur votre site" /><h2 className="text-2xl font-bold mt-8 mb-4">Les crawlers de données brutes à surveiller</h2><p>Attention à CCBot (Common Crawl) ou Bytespider. Ils sont souvent plus agressifs et alimentent des bases de données utilisées par de nombreuses IA tierces. Les bloquer peut réduire significativement votre charge serveur.</p><h2 className="text-2xl font-bold mt-8 mb-4">Comment analyser vos logs</h2><p>Accédez à vos logs serveur (access.log) et filtrez par User-Agent. Identifiez la fréquence de crawl, les pages visitées et le comportement de chaque bot. Ajustez votre robots.txt en fonction de vos observations.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"En 2026, plus de 50 User-Agents IA différents parcourent activement le web. Seuls 10% des sites web ont une politique robots.txt adaptée à cette nouvelle réalité."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
     en: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Major bots: OpenAI, Anthropic, Google.", "'Common Crawl' bots to watch.", "How to identify them in your server logs."]} /><p className="text-lg font-medium text-foreground mb-6">Don't let strangers scrape your site without your explicit consent. Here's the updated list of AI robot identifiers (User-Agents) crawling the web in 2026.</p><GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Liste complète des User-Agents IA 2026', en: 'Complete 2026 AI User-Agents list', es: 'Lista completa de User-Agents IA 2026' }} /><h2 className="text-2xl font-bold mt-8 mb-4">The 'Big Three': GPT, Claude and Gemini</h2><p>These are the most active and important for your visibility. Google-Extended (for Gemini), GPTBot (for OpenAI) and ClaudeBot (for Anthropic) generally respect robots.txt, as long as you properly configure the directives.</p><RichLinkCard href="/audit-expert" title="New bot alerts" description="Get notified when new AI User-Agents are detected on your site" /><h2 className="text-2xl font-bold mt-8 mb-4">Raw Data Crawlers to Watch</h2><p>Watch out for CCBot (Common Crawl) or Bytespider. They're often more aggressive and feed databases used by many third-party AIs. Blocking them can significantly reduce your server load.</p><h2 className="text-2xl font-bold mt-8 mb-4">How to Analyze Your Logs</h2><p>Access your server logs (access.log) and filter by User-Agent. Identify crawl frequency, visited pages and each bot's behavior. Adjust your robots.txt based on your observations.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"In 2026, more than 50 different AI User-Agents are actively crawling the web. Only 10% of websites have a robots.txt policy adapted to this new reality."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
     es: (<><AuthorCard name="Adrien" position="top" /><SgeSummaryBox points={["Los bots principales: OpenAI, Anthropic, Google.", "Los bots 'Common Crawl' a vigilar.", "Cómo identificarlos en tus logs de servidor."]} /><p className="text-lg font-medium text-foreground mb-6">No dejes que desconocidos scrapeen tu sitio sin tu consentimiento explícito. Aquí está la lista actualizada de identificadores (User-Agents) de los robots de IA que recorren la web en 2026.</p><GeoTable rows={robotsTxtTableRows} caption={{ fr: 'Liste complète des User-Agents IA 2026', en: 'Complete 2026 AI User-Agents list', es: 'Lista completa de User-Agents IA 2026' }} /><h2 className="text-2xl font-bold mt-8 mb-4">Los 'Big Three': GPT, Claude y Gemini</h2><p>Son los más activos e importantes para tu visibilidad. Google-Extended (para Gemini), GPTBot (para OpenAI) y ClaudeBot (para Anthropic) generalmente respetan el robots.txt, siempre que configures correctamente las directivas.</p><RichLinkCard href="/audit-expert" title="Alerta de nuevos bots" description="Recibe una notificación cuando se detecten nuevos User-Agents IA en tu sitio" /><h2 className="text-2xl font-bold mt-8 mb-4">Los Crawlers de Datos Brutos a Vigilar</h2><p>Cuidado con CCBot (Common Crawl) o Bytespider. Suelen ser más agresivos y alimentan bases de datos usadas por muchas IAs de terceros. Bloquearlos puede reducir significativamente la carga de tu servidor.</p><h2 className="text-2xl font-bold mt-8 mb-4">Cómo Analizar tus Logs</h2><p>Accede a tus logs de servidor (access.log) y filtra por User-Agent. Identifica la frecuencia de rastreo, las páginas visitadas y el comportamiento de cada bot. Ajusta tu robots.txt según tus observaciones.</p><blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">"En 2026, más de 50 User-Agents IA diferentes recorren activamente la web. Solo el 10% de los sitios web tienen una política robots.txt adaptada a esta nueva realidad."</blockquote><AuthorCard name="Adrien" position="bottom" /></>),
+  },
+
+  // --- ARTICLE CRAWLER (NOUVEAU - 6000 signes) ---
+  'crawler-definition-seo-geo': {
+    fr: (
+      <>
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
+          points={[
+            'Un crawler est un robot automatisé qui parcourt le web pour indexer les contenus.',
+            'Sans crawlers, aucun moteur de recherche ni IA ne peut vous trouver.',
+            'En 2026, les crawlers IA (GPTBot, ClaudeBot) sont aussi importants que Googlebot.',
+            'Les crawlers "mangent" du HTML propre, du JSON-LD et des sitemaps frais.',
+            'Parler aux robots avant vos clients est la nouvelle règle du marketing digital.',
+          ]}
+        />
+
+        <p className="text-xl font-semibold text-foreground mb-4 italic">
+          Les crawlers sont les émissaires invisibles qui décident si votre site existe dans l'écosystème numérique. Comprendre leur fonctionnement, c'est maîtriser votre destin digital.
+        </p>
+
+        <p className="text-lg font-medium text-foreground mb-6">
+          Avant même qu'un internaute tape une requête sur Google ou pose une question à ChatGPT, des armées de robots ont déjà parcouru, analysé et catalogué votre site web. Ces robots, appelés <strong>crawlers</strong> (ou "araignées" en français), sont le premier maillon de la chaîne de visibilité numérique. Sans eux, vous n'existez tout simplement pas en ligne. Voici tout ce que vous devez savoir sur ces rouages essentiels du web moderne.
+        </p>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">L'histoire des crawlers : des origines aux IA modernes</h2>
+        <p>
+          Le concept de crawler est né avec le web lui-même. En 1993, Matthew Gray crée <strong>Wanderer</strong>, le premier robot d'indexation de l'histoire. Sa mission était simple : parcourir le web naissant en suivant les liens hypertextes pour créer une carte de l'internet. C'était l'époque héroïque où le web entier tenait sur quelques milliers de pages.
+        </p>
+        <p>
+          En 1996, Larry Page et Sergey Brin développent <strong>BackRub</strong>, qui deviendra <strong>Googlebot</strong>, le crawler le plus puissant du monde. Leur innovation majeure : utiliser les liens entrants (backlinks) pour mesurer l'importance d'une page. Cette révolution a donné naissance au PageRank et à la domination de Google sur le marché de la recherche.
+        </p>
+        <p>
+          Depuis 2022, une nouvelle génération de crawlers est apparue : les <strong>crawlers IA</strong>. GPTBot d'OpenAI, ClaudeBot d'Anthropic, Google-Extended pour Gemini... Ces robots ne cherchent plus seulement à indexer, mais à comprendre et à apprendre de vos contenus pour entraîner leurs modèles de langage. C'est un changement de paradigme fondamental.
+        </p>
+
+        <RichLinkCard
+          href="/blog/liste-user-agents-ia-2026"
+          title="Liste complète des User-Agents IA 2026"
+          description="Découvrez tous les crawlers IA qui parcourent le web et comment les gérer"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">SEO vs GEO : deux types de crawlers, deux objectifs</h2>
+        <p>
+          La distinction entre crawlers SEO et crawlers GEO est cruciale pour comprendre le web de 2026. Les crawlers SEO traditionnels (Googlebot, Bingbot, Yandexbot) parcourent le web pour alimenter les <strong>moteurs de recherche classiques</strong>. Leur objectif : créer un index de pages web consultable par les utilisateurs via des requêtes par mots-clés.
+        </p>
+        <p>
+          Les crawlers GEO (GPTBot, ClaudeBot, PerplexityBot) ont une mission différente : collecter des données pour <strong>entraîner et alimenter les modèles de langage</strong>. Ces IA ne renvoient pas vers votre site, elles synthétisent votre contenu dans leurs réponses. Être cité par ChatGPT ou Perplexity est devenu aussi stratégique qu'apparaître en première page de Google.
+        </p>
+
+        <GeoTable rows={crawlerTypesTableRows} caption={{ fr: 'Tableau comparatif : Crawlers SEO vs Crawlers GEO', en: 'Comparison: SEO Crawlers vs GEO Crawlers', es: 'Comparativa: Crawlers SEO vs Crawlers GEO' }} />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Pourquoi les crawlers sont essentiels au fonctionnement du web</h2>
+        <p>
+          Imaginez le web comme une immense bibliothèque sans catalogiste. Les crawlers jouent ce rôle : ils explorent méthodiquement chaque "rayon" (site web), analysent chaque "livre" (page), et créent un index permettant aux utilisateurs de trouver l'information. Sans crawlers, chaque internaute devrait connaître l'URL exacte de chaque page qu'il souhaite consulter.
+        </p>
+        <p>
+          Les crawlers permettent également de maintenir l'index à jour. Le web évolue constamment : des pages sont créées, modifiées, supprimées. Les bots revisitent régulièrement les sites pour détecter ces changements et mettre à jour leurs bases de données. Un site bien optimisé pour les crawlers verra ses modifications prises en compte en quelques heures, là où un site mal configuré peut attendre des semaines.
+        </p>
+        <p>
+          En 2026, avec l'avènement des <a href="https://openai.com/index/gptbot/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">moteurs de réponse IA</a>, les crawlers sont devenus encore plus stratégiques. Ils ne se contentent plus de cataloguer : ils alimentent directement les systèmes qui répondent aux questions des utilisateurs. Votre contenu peut être cité, résumé, ou intégré dans une réponse générée par l'IA.
+        </p>
+
+        <RichLinkCard
+          href="/blog/comprendre-geo-vs-seo"
+          title="Comprendre le GEO vs SEO"
+          description="La différence fondamentale entre être trouvé (SEO) et être cité (GEO)"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Parler aux robots avant vos clients : la nouvelle règle du marketing</h2>
+        <p>
+          C'est une révolution conceptuelle majeure : en 2026, vous devez d'abord convaincre les machines avant de convaincre les humains. Si Googlebot ne peut pas lire votre site, vous n'existez pas dans les résultats de recherche. Si GPTBot ne peut pas accéder à votre contenu, ChatGPT ne vous citera jamais. Les crawlers sont devenus les <strong>gardiens de la visibilité numérique</strong>.
+        </p>
+        <p>
+          Cette réalité impose une nouvelle méthodologie de création de contenu. Avant de rédiger pour vos prospects, posez-vous ces questions : mon contenu est-il accessible aux robots ? Mes données sont-elles structurées de manière compréhensible ? Mon robots.txt bloque-t-il les bons crawlers et autorise-t-il les bons ? Selon une étude de <a href="https://www.searchenginejournal.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Search Engine Journal</a>, 68% des sites web bloquent encore par erreur des crawlers essentiels à leur visibilité.
+        </p>
+        <p>
+          Le paradoxe est saisissant : plus vous investissez dans l'expérience utilisateur humaine (animations, SPA, JavaScript complexe), plus vous risquez de rendre votre site illisible pour les robots. Un équilibre technique fin est nécessaire, et c'est précisément ce que nos audits permettent de diagnostiquer et de corriger.
+        </p>
+
+        <RichLinkCard
+          href="/?tab=crawlers"
+          title="Testez gratuitement vos crawlers"
+          description="Vérifiez en 30 secondes si GPTBot, ClaudeBot et Googlebot peuvent lire votre site"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Ce que les crawlers aiment "manger" : le menu idéal</h2>
+        <p>
+          Les crawlers sont des créatures exigeantes. Pour les satisfaire, il faut leur servir un contenu qu'ils peuvent digérer facilement. Voici ce qui constitue le "régime alimentaire" idéal d'un crawler moderne :
+        </p>
+
+        <GeoTable rows={crawlerFoodTableRows} caption={{ fr: 'Ce que les crawlers aiment : le menu idéal', en: 'What crawlers love: the ideal menu', es: 'Lo que les gusta a los crawlers: el menú ideal' }} />
+
+        <p>
+          Le <strong>HTML sémantique</strong> reste la base : des balises H1-H6 hiérarchisées, des paragraphes clairs, des listes structurées. Les crawlers adorent la clarté structurelle. Évitez les "divitis" (surutilisation de divs génériques) au profit de balises sémantiques comme article, section, nav, aside.
+        </p>
+        <p>
+          Le <strong>JSON-LD</strong> est devenu le langage universel des crawlers. Ce format de <a href="https://schema.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">données structurées Schema.org</a> permet de déclarer explicitement qui vous êtes, ce que vous vendez, vos avis clients, vos événements. C'est le passeport VIP pour les résultats enrichis Google ET les citations IA.
+        </p>
+        <p>
+          Le <strong>sitemap XML</strong> est votre carte de visite pour les robots. Il liste toutes vos pages importantes avec leurs dates de modification et leur priorité relative. Un sitemap bien entretenu accélère considérablement l'indexation de vos nouveaux contenus.
+        </p>
+        <p>
+          Enfin, le nouveau venu <strong>llms.txt</strong> est un fichier spécifiquement conçu pour les crawlers IA. Il fournit un résumé structuré de votre site, de vos services, et de votre expertise. C'est l'équivalent du robots.txt, mais pour les modèles de langage.
+        </p>
+
+        <RichLinkCard
+          href="/blog/json-ld-snippet-autorite"
+          title="JSON-LD pour l'IA : devenez une autorité"
+          description="Le guide complet des données structurées pour les crawlers modernes"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Conclusion : les crawlers, vos nouveaux meilleurs alliés</h2>
+        <p>
+          Les crawlers ne sont plus de simples robots d'indexation. Ils sont devenus les arbitres de votre existence numérique. Comprendre leur fonctionnement, leurs préférences et leurs limitations est désormais une compétence stratégique pour toute entreprise qui souhaite rester visible dans l'écosystème digital de 2026.
+        </p>
+        <p>
+          La bonne nouvelle ? Optimiser votre site pour les crawlers améliore souvent l'expérience utilisateur humaine : contenu clair, structure logique, chargement rapide. C'est un cercle vertueux où robots et humains sont finalement alignés sur les mêmes exigences de qualité.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "En 2026, un site invisible pour les crawlers est un site mort. Investir dans la lisibilité machine n'est plus optionnel, c'est la condition sine qua non de toute stratégie de visibilité digitale."
+        </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
+      </>
+    ),
+    en: (
+      <>
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
+          points={[
+            'A crawler is an automated robot that traverses the web to index content.',
+            'Without crawlers, no search engine or AI can find you.',
+            'In 2026, AI crawlers (GPTBot, ClaudeBot) are as important as Googlebot.',
+            'Crawlers "eat" clean HTML, JSON-LD, and fresh sitemaps.',
+            'Speaking to robots before your customers is the new digital marketing rule.',
+          ]}
+        />
+
+        <p className="text-xl font-semibold text-foreground mb-4 italic">
+          Crawlers are the invisible emissaries that decide if your site exists in the digital ecosystem. Understanding how they work means mastering your digital destiny.
+        </p>
+
+        <p className="text-lg font-medium text-foreground mb-6">
+          Before any user types a query on Google or asks ChatGPT a question, armies of robots have already traversed, analyzed, and cataloged your website. These robots, called <strong>crawlers</strong> (or "spiders"), are the first link in the digital visibility chain. Without them, you simply don't exist online. Here's everything you need to know about these essential cogs of the modern web.
+        </p>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">The History of Crawlers: From Origins to Modern AI</h2>
+        <p>
+          The concept of crawlers was born with the web itself. In 1993, Matthew Gray created <strong>Wanderer</strong>, the first indexing robot in history. Its mission was simple: traverse the nascent web by following hyperlinks to create a map of the internet. Those were heroic times when the entire web fit on a few thousand pages.
+        </p>
+        <p>
+          In 1996, Larry Page and Sergey Brin developed <strong>BackRub</strong>, which would become <strong>Googlebot</strong>, the most powerful crawler in the world. Their major innovation: using inbound links (backlinks) to measure a page's importance. This revolution gave birth to PageRank and Google's dominance in the search market.
+        </p>
+        <p>
+          Since 2022, a new generation of crawlers has emerged: <strong>AI crawlers</strong>. OpenAI's GPTBot, Anthropic's ClaudeBot, Google-Extended for Gemini... These robots no longer just seek to index, but to understand and learn from your content to train their language models. This is a fundamental paradigm shift.
+        </p>
+
+        <RichLinkCard
+          href="/blog/liste-user-agents-ia-2026"
+          title="Complete 2026 AI User-Agents List"
+          description="Discover all AI crawlers traversing the web and how to manage them"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">SEO vs GEO: Two Types of Crawlers, Two Objectives</h2>
+        <p>
+          The distinction between SEO crawlers and GEO crawlers is crucial to understanding the 2026 web. Traditional SEO crawlers (Googlebot, Bingbot, Yandexbot) traverse the web to feed <strong>classic search engines</strong>. Their goal: create an index of web pages searchable by users via keyword queries.
+        </p>
+        <p>
+          GEO crawlers (GPTBot, ClaudeBot, PerplexityBot) have a different mission: collect data to <strong>train and feed language models</strong>. These AIs don't send traffic to your site, they synthesize your content in their responses. Being cited by ChatGPT or Perplexity has become as strategic as appearing on Google's first page.
+        </p>
+
+        <GeoTable rows={crawlerTypesTableRows} caption={{ fr: 'Tableau comparatif : Crawlers SEO vs Crawlers GEO', en: 'Comparison: SEO Crawlers vs GEO Crawlers', es: 'Comparativa: Crawlers SEO vs Crawlers GEO' }} />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Why Crawlers Are Essential to How the Web Works</h2>
+        <p>
+          Imagine the web as an immense library without a cataloger. Crawlers play this role: they methodically explore each "section" (website), analyze each "book" (page), and create an index allowing users to find information. Without crawlers, every user would need to know the exact URL of each page they want to visit.
+        </p>
+        <p>
+          Crawlers also help keep the index up to date. The web constantly evolves: pages are created, modified, deleted. Bots regularly revisit sites to detect these changes and update their databases. A well-optimized site for crawlers will see its modifications taken into account within hours, while a poorly configured site might wait weeks.
+        </p>
+
+        <RichLinkCard
+          href="/blog/comprendre-geo-vs-seo"
+          title="Understanding GEO vs SEO"
+          description="The fundamental difference between being found (SEO) and being cited (GEO)"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Speaking to Robots Before Your Customers: The New Marketing Rule</h2>
+        <p>
+          This is a major conceptual revolution: in 2026, you must first convince machines before convincing humans. If Googlebot can't read your site, you don't exist in search results. If GPTBot can't access your content, ChatGPT will never cite you. Crawlers have become the <strong>gatekeepers of digital visibility</strong>.
+        </p>
+
+        <RichLinkCard
+          href="/?tab=crawlers"
+          title="Test your crawlers for free"
+          description="Check in 30 seconds if GPTBot, ClaudeBot and Googlebot can read your site"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">What Crawlers Love to "Eat": The Ideal Menu</h2>
+        <p>
+          Crawlers are demanding creatures. To satisfy them, you need to serve content they can easily digest. Here's what constitutes the ideal "diet" of a modern crawler:
+        </p>
+
+        <GeoTable rows={crawlerFoodTableRows} caption={{ fr: 'Ce que les crawlers aiment : le menu idéal', en: 'What crawlers love: the ideal menu', es: 'Lo que les gusta a los crawlers: el menú ideal' }} />
+
+        <p>
+          <strong>Semantic HTML</strong> remains the foundation: hierarchical H1-H6 tags, clear paragraphs, structured lists. Crawlers love structural clarity. Avoid "divitis" (overuse of generic divs) in favor of semantic tags like article, section, nav, aside.
+        </p>
+        <p>
+          <strong>JSON-LD</strong> has become the universal language of crawlers. This <a href="https://schema.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Schema.org structured data</a> format allows you to explicitly declare who you are, what you sell, your customer reviews, your events. It's the VIP passport for Google rich results AND AI citations.
+        </p>
+
+        <RichLinkCard
+          href="/blog/json-ld-snippet-autorite"
+          title="JSON-LD for AI: Become an Authority"
+          description="The complete guide to structured data for modern crawlers"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Conclusion: Crawlers, Your New Best Allies</h2>
+        <p>
+          Crawlers are no longer simple indexing robots. They have become the arbiters of your digital existence. Understanding their operation, preferences, and limitations is now a strategic skill for any business that wants to stay visible in the 2026 digital ecosystem.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "In 2026, a site invisible to crawlers is a dead site. Investing in machine readability is no longer optional, it's the sine qua non condition of any digital visibility strategy."
+        </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
+      </>
+    ),
+    es: (
+      <>
+        <AuthorCard name="Adrien" position="top" />
+        
+        <SgeSummaryBox
+          points={[
+            'Un crawler es un robot automatizado que recorre la web para indexar contenidos.',
+            'Sin crawlers, ningún motor de búsqueda ni IA puede encontrarte.',
+            'En 2026, los crawlers IA (GPTBot, ClaudeBot) son tan importantes como Googlebot.',
+            'Los crawlers "comen" HTML limpio, JSON-LD y sitemaps frescos.',
+            'Hablar a los robots antes que a tus clientes es la nueva regla del marketing digital.',
+          ]}
+        />
+
+        <p className="text-xl font-semibold text-foreground mb-4 italic">
+          Los crawlers son los emisarios invisibles que deciden si tu sitio existe en el ecosistema digital. Entender cómo funcionan significa dominar tu destino digital.
+        </p>
+
+        <p className="text-lg font-medium text-foreground mb-6">
+          Antes de que un usuario escriba una consulta en Google o haga una pregunta a ChatGPT, ejércitos de robots ya han recorrido, analizado y catalogado tu sitio web. Estos robots, llamados <strong>crawlers</strong> (o "arañas"), son el primer eslabón de la cadena de visibilidad digital. Sin ellos, simplemente no existes en línea. Aquí está todo lo que necesitas saber sobre estos engranajes esenciales de la web moderna.
+        </p>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">La historia de los crawlers: desde los orígenes hasta la IA moderna</h2>
+        <p>
+          El concepto de crawler nació con la propia web. En 1993, Matthew Gray creó <strong>Wanderer</strong>, el primer robot de indexación de la historia. Su misión era simple: recorrer la web naciente siguiendo los hipervínculos para crear un mapa de internet. Eran tiempos heroicos cuando toda la web cabía en unos pocos miles de páginas.
+        </p>
+        <p>
+          En 1996, Larry Page y Sergey Brin desarrollaron <strong>BackRub</strong>, que se convertiría en <strong>Googlebot</strong>, el crawler más poderoso del mundo. Su gran innovación: usar los enlaces entrantes (backlinks) para medir la importancia de una página. Esta revolución dio origen al PageRank y a la dominación de Google en el mercado de búsqueda.
+        </p>
+        <p>
+          Desde 2022, ha surgido una nueva generación de crawlers: los <strong>crawlers IA</strong>. GPTBot de OpenAI, ClaudeBot de Anthropic, Google-Extended para Gemini... Estos robots ya no solo buscan indexar, sino comprender y aprender de tus contenidos para entrenar sus modelos de lenguaje. Es un cambio de paradigma fundamental.
+        </p>
+
+        <RichLinkCard
+          href="/blog/liste-user-agents-ia-2026"
+          title="Lista completa de User-Agents IA 2026"
+          description="Descubre todos los crawlers IA que recorren la web y cómo gestionarlos"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">SEO vs GEO: Dos tipos de crawlers, dos objetivos</h2>
+        <p>
+          La distinción entre crawlers SEO y crawlers GEO es crucial para entender la web de 2026. Los crawlers SEO tradicionales (Googlebot, Bingbot, Yandexbot) recorren la web para alimentar los <strong>motores de búsqueda clásicos</strong>. Su objetivo: crear un índice de páginas web consultable por usuarios mediante consultas de palabras clave.
+        </p>
+        <p>
+          Los crawlers GEO (GPTBot, ClaudeBot, PerplexityBot) tienen una misión diferente: recopilar datos para <strong>entrenar y alimentar modelos de lenguaje</strong>. Estas IA no envían tráfico a tu sitio, sintetizan tu contenido en sus respuestas. Ser citado por ChatGPT o Perplexity se ha vuelto tan estratégico como aparecer en la primera página de Google.
+        </p>
+
+        <GeoTable rows={crawlerTypesTableRows} caption={{ fr: 'Tableau comparatif : Crawlers SEO vs Crawlers GEO', en: 'Comparison: SEO Crawlers vs GEO Crawlers', es: 'Comparativa: Crawlers SEO vs Crawlers GEO' }} />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Por qué los crawlers son esenciales para el funcionamiento de la web</h2>
+        <p>
+          Imagina la web como una inmensa biblioteca sin catalogador. Los crawlers juegan este papel: exploran metódicamente cada "sección" (sitio web), analizan cada "libro" (página) y crean un índice que permite a los usuarios encontrar información. Sin crawlers, cada usuario necesitaría conocer la URL exacta de cada página que desea visitar.
+        </p>
+
+        <RichLinkCard
+          href="/blog/comprendre-geo-vs-seo"
+          title="Entender GEO vs SEO"
+          description="La diferencia fundamental entre ser encontrado (SEO) y ser citado (GEO)"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Hablar a los robots antes que a tus clientes: la nueva regla del marketing</h2>
+        <p>
+          Esta es una revolución conceptual mayor: en 2026, primero debes convencer a las máquinas antes de convencer a los humanos. Si Googlebot no puede leer tu sitio, no existes en los resultados de búsqueda. Si GPTBot no puede acceder a tu contenido, ChatGPT nunca te citará. Los crawlers se han convertido en los <strong>guardianes de la visibilidad digital</strong>.
+        </p>
+
+        <RichLinkCard
+          href="/?tab=crawlers"
+          title="Prueba tus crawlers gratis"
+          description="Verifica en 30 segundos si GPTBot, ClaudeBot y Googlebot pueden leer tu sitio"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Lo que los crawlers aman "comer": el menú ideal</h2>
+        <p>
+          Los crawlers son criaturas exigentes. Para satisfacerlos, debes servirles contenido que puedan digerir fácilmente. Aquí está lo que constituye la "dieta" ideal de un crawler moderno:
+        </p>
+
+        <GeoTable rows={crawlerFoodTableRows} caption={{ fr: 'Ce que les crawlers aiment : le menu idéal', en: 'What crawlers love: the ideal menu', es: 'Lo que les gusta a los crawlers: el menú ideal' }} />
+
+        <p>
+          El <strong>HTML semántico</strong> sigue siendo la base: etiquetas H1-H6 jerárquicas, párrafos claros, listas estructuradas. Los crawlers aman la claridad estructural. Evita la "divitis" (uso excesivo de divs genéricos) a favor de etiquetas semánticas como article, section, nav, aside.
+        </p>
+        <p>
+          El <strong>JSON-LD</strong> se ha convertido en el lenguaje universal de los crawlers. Este formato de <a href="https://schema.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">datos estructurados Schema.org</a> te permite declarar explícitamente quién eres, qué vendes, tus reseñas de clientes, tus eventos. Es el pasaporte VIP para los resultados enriquecidos de Google Y las citaciones de IA.
+        </p>
+
+        <RichLinkCard
+          href="/blog/json-ld-snippet-autorite"
+          title="JSON-LD para IA: Conviértete en autoridad"
+          description="La guía completa de datos estructurados para crawlers modernos"
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Conclusión: los crawlers, tus nuevos mejores aliados</h2>
+        <p>
+          Los crawlers ya no son simples robots de indexación. Se han convertido en los árbitros de tu existencia digital. Entender su funcionamiento, preferencias y limitaciones es ahora una habilidad estratégica para cualquier empresa que quiera mantenerse visible en el ecosistema digital de 2026.
+        </p>
+
+        <blockquote className="border-l-4 border-primary bg-muted/30 py-2 px-4 my-6 rounded-r-lg">
+          "En 2026, un sitio invisible para los crawlers es un sitio muerto. Invertir en legibilidad para máquinas ya no es opcional, es la condición sine qua non de cualquier estrategia de visibilidad digital."
+        </blockquote>
+        
+        <AuthorCard name="Adrien" position="bottom" />
+      </>
+    ),
   },
 };
