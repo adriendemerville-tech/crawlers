@@ -252,7 +252,7 @@ export function Header() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
-                    className="w-72 bg-popover border border-border shadow-lg" 
+                    className="w-72 bg-popover border border-border shadow-lg animate-none data-[state=open]:animate-none data-[state=closed]:animate-none" 
                     align="end" 
                     forceMount
                     onMouseEnter={handleMouseEnter}
