@@ -288,11 +288,14 @@ export function PaymentButton({
         )}
       </Button>
 
-      {/* Price + explanation - Centered */}
+      {/* Price in credits + explanation - Centered */}
       <div className="text-xs text-muted-foreground text-center">
-        <span className="font-medium">{calculatedPrice.toFixed(2).replace('.', ',')}€</span>
-        <span className="mx-1">•</span>
-        <span>{enabledCount} correctif{enabledCount > 1 ? 's' : ''} sélectionné{enabledCount > 1 ? 's' : ''}</span>
+        <span className="font-medium text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1">
+          <Zap className="h-3 w-3 text-amber-500" />
+          {(calculatedPrice / 0.5).toFixed(0)} crédit{(calculatedPrice / 0.5) > 1 ? 's' : ''}
+          <span className="text-muted-foreground font-normal">({calculatedPrice.toFixed(2).replace('.', ',')}€)</span>
+        </span>
+        <span className="block mt-0.5">{enabledCount} correctif{enabledCount > 1 ? 's' : ''} sélectionné{enabledCount > 1 ? 's' : ''}</span>
       </div>
     </div>
   );
