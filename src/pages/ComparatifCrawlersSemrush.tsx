@@ -339,9 +339,9 @@ const ComparatifCrawlersSemrush = () => {
           <section className="py-12 md:py-16 bg-gradient-to-b from-primary/5 to-background">
             <div className="container mx-auto px-4">
               <div className="max-w-4xl mx-auto text-center">
-                <Badge variant="outline" className="mb-4">Comparatif Objectif 2026</Badge>
+                <Badge variant="outline" className="mb-4">Comparatif 2026</Badge>
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-foreground">
-                  Crawlers.fr vs Semrush : Le Comparatif Honnête
+                  Crawlers.fr et Semrush, deux outils aux fonctionnalités bien différentes
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
                   Deux outils, deux philosophies. Semrush est une référence mondiale du SEO. 
