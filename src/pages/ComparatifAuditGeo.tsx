@@ -196,13 +196,12 @@ export default function ComparatifAuditGeo() {
 
   return (
     <>
-      <Helmet>
+      <Helmet prioritizeSeoTags>
         <title>SEO vs GEO : Le Comparatif 2026 (Google vs ChatGPT) | Crawlers.fr</title>
         <meta
           name="description"
           content="Tableau comparatif : SEO traditionnel vs GEO (Generative Engine Optimization). Comprendre pourquoi le SEO ne suffit plus pour ChatGPT, Gemini et Perplexity."
         />
-        <meta name="keywords" content="SEO vs GEO, Generative Engine Optimization, ChatGPT SEO, référencement IA, comparatif SEO GEO 2026" />
         <link rel="canonical" href="https://crawlers.fr/comparatif-audit-geo" />
         <meta property="og:title" content="SEO vs GEO : Le Match 2026" />
         <meta property="og:description" content="Tableau comparatif : SEO traditionnel vs GEO (Generative Engine Optimization). Comprendre pourquoi le SEO ne suffit plus pour ChatGPT, Gemini et Perplexity." />
