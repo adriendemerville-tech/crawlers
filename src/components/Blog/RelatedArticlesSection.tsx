@@ -42,9 +42,9 @@ function RelatedArticleCard({ article, lang }: { article: InternalLink; lang: 'f
           <BookOpen className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-1">
+          <p className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-1">
             {article.title[lang]}
-          </h4>
+          </p>
           <p className="text-sm text-muted-foreground line-clamp-2">
             {article.description[lang]}
           </p>
@@ -98,10 +98,10 @@ function RelatedArticlesSectionComponent({ currentSlug }: RelatedArticlesSection
       {/* Related Articles */}
       {links.relatedArticles.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-primary" aria-hidden="true" />
             {t.relatedArticles}
-          </h3>
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             {links.relatedArticles.map((article) => (
               <RelatedArticleCard key={article.slug} article={article} lang={lang} />
@@ -113,10 +113,10 @@ function RelatedArticlesSectionComponent({ currentSlug }: RelatedArticlesSection
       {/* Lexique Terms */}
       {links.lexiqueTerms.length > 0 && (
         <div>
-          <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-accent" />
+          <h2 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-accent" aria-hidden="true" />
             {t.lexiqueTerms}
-          </h3>
+          </h2>
           <div className="grid gap-2">
             {links.lexiqueTerms.map((term) => (
               <LexiqueTermCard key={term.anchor} term={term} lang={lang} />

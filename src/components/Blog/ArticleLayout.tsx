@@ -186,7 +186,8 @@ function ArticleLayoutComponent({
       <div className="min-h-screen bg-background">
         <Header />
 
-        <article className="pb-16">
+        <main>
+          <article className="pb-16">
           {/* Hero Section */}
           <div className="relative w-full h-[300px] sm:h-[400px] lg:h-[500px] overflow-hidden">
             <img
@@ -252,6 +253,7 @@ function ArticleLayoutComponent({
             <AuthorBio author={author} />
           </div>
         </article>
+        </main>
 
         <Footer />
       </div>
