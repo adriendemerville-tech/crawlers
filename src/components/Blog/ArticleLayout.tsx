@@ -1,7 +1,9 @@
 import { memo, ReactNode } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { Button } from '@/components/ui/button';
 import { AuthorBio } from './AuthorBio';
 import { SourcesSection } from './SourcesSection';
 import { RelatedArticlesSection } from './RelatedArticlesSection';
@@ -227,6 +229,21 @@ function ArticleLayoutComponent({
 
             {/* Sources */}
             {sources.length > 0 && <SourcesSection sources={sources} />}
+
+            {/* CTA Section */}
+            <div className="my-10 p-6 md:p-8 rounded-xl bg-primary/5 border border-primary/20 text-center">
+              <p className="text-xl font-semibold text-foreground mb-2">
+                Prêt à optimiser votre visibilité IA ?
+              </p>
+              <p className="text-sm text-foreground/70 mb-5 max-w-md mx-auto">
+                Découvrez gratuitement si votre site est bien référencé par ChatGPT, Gemini et Perplexity.
+              </p>
+              <Button asChild size="lg" variant="hero">
+                <Link to="/audit-expert">
+                  Lancer mon audit GEO gratuit
+                </Link>
+              </Button>
+            </div>
 
             {/* Related Articles & Lexique Links */}
             {slug && <RelatedArticlesSection currentSlug={slug} />}
