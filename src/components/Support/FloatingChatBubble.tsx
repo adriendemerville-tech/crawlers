@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ChatWindow } from './ChatWindow';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+
+// Lazy load the chat window (heavy component with forms and messages)
+const ChatWindow = lazy(() => import('./ChatWindow').then(m => ({ default: m.ChatWindow })));
 
 export function FloatingChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
@@ -101,8 +103,16 @@ export function FloatingChatBubble() {
 
   return (
     <>
-      {/* Chat Window */}
-      {isOpen && <ChatWindow onClose={() => setIsOpen(false)} />}
+      {/* Chat Window - lazy loaded */}
+      {isOpen && (
+        <Suspense fallback={
+          <div className="fixed bottom-20 right-4 z-50 w-80 h-96 rounded-lg bg-card border shadow-xl flex items-center justify-center">
+            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+          </div>
+        }>
+          <ChatWindow onClose={() => setIsOpen(false)} />
+        </Suspense>
+      )}
 
       {/* Floating Button */}
       <Button
