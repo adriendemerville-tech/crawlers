@@ -1,5 +1,5 @@
 import { useState, useRef, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Zap } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Zap, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,6 +50,7 @@ const translations = {
     logout: 'Déconnexion',
     login: 'Connexion',
     back: 'Retour',
+    comparatif: 'Comparatif',
   },
   en: {
     profile: 'My profile',
@@ -63,6 +64,7 @@ const translations = {
     logout: 'Log out',
     login: 'Log in',
     back: 'Back',
+    comparatif: 'Pricing',
   },
   es: {
     profile: 'Mi perfil',
@@ -76,6 +78,7 @@ const translations = {
     logout: 'Cerrar sesión',
     login: 'Iniciar sesión',
     back: 'Volver',
+    comparatif: 'Comparativa',
   },
 };
 
@@ -191,8 +194,8 @@ export function Header() {
           )}
         </div>
 
-        {/* Center: Lexique link - hidden on mobile */}
-        <div className="hidden sm:block absolute left-1/2 -translate-x-1/2">
+        {/* Center: Lexique + Comparatif links - hidden on mobile */}
+        <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
           <Link to="/lexique">
             <Button
               variant="ghost"
@@ -201,6 +204,16 @@ export function Header() {
             >
               <Book className="h-4 w-4" />
               <span className="text-sm">{lexiqueLabels[language]}</span>
+            </Button>
+          </Link>
+          <Link to="/comparatif-audit-geo">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <Scale className="h-4 w-4" />
+              <span className="text-sm">{t.comparatif}</span>
             </Button>
           </Link>
         </div>
