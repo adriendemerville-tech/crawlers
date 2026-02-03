@@ -10,3 +10,4 @@ export type { GeoTableRow } from './GeoTable';
 export { SourcesSection } from './SourcesSection';
 export { RelatedArticlesSection } from './RelatedArticlesSection';
 export { HtmlContentRenderer } from './HtmlContentRenderer';
+export { ResponsiveHeroImage } from './ResponsiveHeroImage';
