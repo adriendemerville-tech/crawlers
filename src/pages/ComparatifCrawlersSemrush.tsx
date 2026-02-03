@@ -376,9 +376,7 @@ const ComparatifCrawlersSemrush = () => {
                         </th>
                         <th className="px-4 py-3 text-center font-semibold text-primary">
                           <span className="inline-flex items-center gap-1.5">
-                            <span className="inline-flex items-center justify-center h-5 w-5 rounded bg-primary">
-                              <img src="/favicon.svg" alt="" className="h-3.5 w-3.5" />
-                            </span>
+                            <img src="/favicon.svg" alt="" className="h-5 w-5" />
                             Crawlers.fr
                           </span>
                         </th>
