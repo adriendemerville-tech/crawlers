@@ -10,6 +10,7 @@ import { CreditsProvider } from "@/contexts/CreditsContext";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
 import { PageViewTracker } from "@/components/Analytics/PageViewTracker";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 // Lazy load the chat bubble (not needed for initial render)
 const FloatingChatBubble = lazy(() => import("@/components/Support/FloatingChatBubble").then(m => ({ default: m.FloatingChatBubble })));
@@ -56,6 +57,7 @@ const App = () => (
                 <Toaster />
                 <Sonner />
               <BrowserRouter>
+                <ScrollToTop />
                 <PageViewTracker />
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
