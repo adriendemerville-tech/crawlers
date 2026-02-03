@@ -375,162 +375,206 @@ export default function ComparatifAuditGeo() {
             </Card>
           </motion.section>
 
-          {/* Comparison Table */}
+          {/* SEO Content Section - Redesigned with embedded table */}
           <motion.section
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="mb-20"
+            className="max-w-4xl mx-auto space-y-10"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">
-              Ce qui est inclus dans chaque formule
-            </h2>
-            <div className="max-w-4xl mx-auto overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b-2">
-                    <th className="text-left p-4">Fonctionnalité</th>
-                    <th className="text-center p-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <Building2 className="w-5 h-5 text-orange-600" />
-                        Agence
-                      </div>
-                    </th>
-                    <th className="text-center p-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <Bot className="w-5 h-5 text-primary" />
-                        Crawlers.fr
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { feature: "Audit technique instantané", agency: true, crawlers: true },
-                    { feature: "Analyse des données structurées", agency: true, crawlers: true },
-                    { feature: "Visibilité sur ChatGPT/Perplexity", agency: false, crawlers: true },
-                    { feature: "Génération de code correctif", agency: true, crawlers: true },
-                    { feature: "Résultats en moins de 5 minutes", agency: false, crawlers: true },
-                    { feature: "Mises à jour illimitées", agency: false, crawlers: true },
-                    { feature: "Accompagnement humain personnalisé", agency: true, crawlers: false },
-                    { feature: "Rapport exportable PDF", agency: true, crawlers: true },
-                  ].map((row, i) => (
-                    <tr key={i} className="border-b hover:bg-muted/30 transition-colors">
-                      <td className="p-4 font-medium">{row.feature}</td>
-                      <td className="text-center p-4">
-                        {row.agency ? (
-                          <CheckCircle2 className="w-5 h-5 text-success mx-auto" />
-                        ) : (
-                          <XCircle className="w-5 h-5 text-muted-foreground mx-auto" />
-                        )}
-                      </td>
-                      <td className="text-center p-4">
-                        {row.crawlers ? (
-                          <CheckCircle2 className="w-5 h-5 text-success mx-auto" />
-                        ) : (
-                          <XCircle className="w-5 h-5 text-muted-foreground mx-auto" />
-                        )}
-                      </td>
+            {/* Intro */}
+            <div className="space-y-6">
+              <h2 className="text-2xl md:text-3xl font-bold">
+                Comprendre le coût réel d'un audit de référencement GEO
+              </h2>
+              
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                En 2026, <strong className="text-foreground">le référencement ne se limite plus aux moteurs de recherche traditionnels</strong>. 
+                L'émergence du GEO (Generative Engine Optimization) bouleverse les pratiques établies. Les entreprises 
+                doivent désormais optimiser leur présence non seulement pour Google, mais aussi pour les moteurs de 
+                recherche génératifs comme <strong className="text-foreground">ChatGPT Search, Perplexity, Claude</strong> et les AI Overviews.
+              </p>
+            </div>
+
+            {/* Section 1 */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-2 inline-block">
+                Pourquoi les tarifs des agences SEO restent-ils élevés ?
+              </h3>
+              
+              <p className="text-muted-foreground leading-relaxed">
+                Les agences de référencement traditionnelles facturent généralement entre <strong className="text-foreground">1 500 € et 5 000 € 
+                pour un audit complet</strong>. Ces tarifs s'expliquent par plusieurs facteurs : la main-d'œuvre 
+                qualifiée nécessaire, les outils professionnels sous licence, le temps d'analyse manuelle et la 
+                rédaction de recommandations personnalisées.
+              </p>
+
+              <p className="text-muted-foreground leading-relaxed">
+                Un consultant SEO senior passe en moyenne 15 à 25 heures sur un audit approfondi.
+              </p>
+
+              <p className="text-muted-foreground leading-relaxed">
+                Cependant, cette approche présente des limites importantes : les délais peuvent s'étendre sur 
+                plusieurs semaines, les mises à jour nécessitent de nouveaux audits payants, et <strong className="text-foreground">la dimension 
+                GEO est souvent négligée</strong> car les outils traditionnels ne la mesurent pas efficacement.
+              </p>
+            </div>
+
+            {/* Section 2 */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-2 inline-block">
+                L'alternative IA : rapidité et exhaustivité
+              </h3>
+              
+              <p className="text-muted-foreground leading-relaxed">
+                <Link to="/" className="text-primary hover:underline font-medium">Crawlers.fr</Link> propose une approche 
+                radicalement différente. Notre plateforme utilise l'intelligence artificielle pour analyser votre 
+                site sous l'angle SEO traditionnel <strong className="text-foreground">et</strong> GEO en quelques minutes.
+              </p>
+
+              <p className="text-muted-foreground leading-relaxed">
+                L'audit technique de base est entièrement gratuit, sans inscription requise.
+              </p>
+
+              <p className="text-muted-foreground leading-relaxed">
+                Pour les analyses avancées — audit sémantique, positionnement sur les LLM, génération de code 
+                correctif JSON-LD — le système de crédits permet un contrôle total des coûts. À <strong className="text-foreground">0,50 € 
+                le crédit</strong>, un audit complet revient à moins de 5 €, soit <strong className="text-foreground">une économie de plus 
+                de 95%</strong> par rapport aux tarifs agence.
+              </p>
+            </div>
+
+            {/* Embedded Comparison Table */}
+            <div className="my-12">
+              <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-2 inline-block mb-6">
+                Comparatif des fonctionnalités
+              </h3>
+              
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b-2 bg-muted/30">
+                      <th className="text-left p-4 font-semibold">Fonctionnalité</th>
+                      <th className="text-center p-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <Building2 className="w-5 h-5 text-orange-600" />
+                          <span className="font-semibold">Agence</span>
+                        </div>
+                      </th>
+                      <th className="text-center p-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <Bot className="w-5 h-5 text-primary" />
+                          <span className="font-semibold">Crawlers.fr</span>
+                        </div>
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {[
+                      { feature: "Audit technique instantané", agency: true, crawlers: true },
+                      { feature: "Analyse des données structurées", agency: true, crawlers: true },
+                      { feature: "Visibilité sur ChatGPT/Perplexity", agency: false, crawlers: true },
+                      { feature: "Génération de code correctif", agency: true, crawlers: true },
+                      { feature: "Résultats en moins de 5 minutes", agency: false, crawlers: true },
+                      { feature: "Mises à jour illimitées", agency: false, crawlers: true },
+                      { feature: "Accompagnement humain personnalisé", agency: true, crawlers: false },
+                      { feature: "Rapport exportable PDF", agency: true, crawlers: true },
+                    ].map((row, i) => (
+                      <tr key={i} className="border-b hover:bg-muted/30 transition-colors">
+                        <td className="p-4 font-medium">{row.feature}</td>
+                        <td className="text-center p-4">
+                          {row.agency ? (
+                            <CheckCircle2 className="w-5 h-5 text-success mx-auto" />
+                          ) : (
+                            <XCircle className="w-5 h-5 text-destructive mx-auto" />
+                          )}
+                        </td>
+                        <td className="text-center p-4">
+                          {row.crawlers ? (
+                            <CheckCircle2 className="w-5 h-5 text-success mx-auto" />
+                          ) : (
+                            <XCircle className="w-5 h-5 text-destructive mx-auto" />
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </motion.section>
 
-          {/* SEO Content Section - 400+ words */}
-          <motion.section
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="max-w-4xl mx-auto prose prose-lg dark:prose-invert"
-          >
-            <h2>Comprendre le coût réel d'un audit de référencement GEO</h2>
-            
-            <p>
-              En 2026, <strong>le référencement ne se limite plus aux moteurs de recherche traditionnels</strong>. 
-              L'émergence du GEO (Generative Engine Optimization) bouleverse les pratiques établies. Les entreprises 
-              doivent désormais optimiser leur présence non seulement pour Google, mais aussi pour les moteurs de 
-              recherche génératifs comme <strong>ChatGPT Search, Perplexity, Claude</strong> et les AI Overviews.
-            </p>
-
-            <h3>Pourquoi les tarifs des agences SEO restent-ils élevés ?</h3>
-            
-            <p>
-              Les agences de référencement traditionnelles facturent généralement entre <strong>1 500 € et 5 000 € 
-              pour un audit complet</strong>. Ces tarifs s'expliquent par plusieurs facteurs : la main-d'œuvre 
-              qualifiée nécessaire, les outils professionnels sous licence, le temps d'analyse manuelle et la 
-              rédaction de recommandations personnalisées. Un consultant SEO senior passe en moyenne 15 à 25 heures 
-              sur un audit approfondi.
-            </p>
-
-            <p>
-              Cependant, cette approche présente des limites importantes : les délais peuvent s'étendre sur 
-              plusieurs semaines, les mises à jour nécessitent de nouveaux audits payants, et <strong>la dimension 
-              GEO est souvent négligée</strong> car les outils traditionnels ne la mesurent pas efficacement.
-            </p>
-
-            <h3>L'alternative IA : rapidité et exhaustivité</h3>
-            
-            <p>
-              <Link to="/" className="text-primary hover:underline">Crawlers.fr</Link> propose une approche 
-              radicalement différente. Notre plateforme utilise l'intelligence artificielle pour analyser votre 
-              site sous l'angle SEO traditionnel <strong>et</strong> GEO en quelques minutes. L'audit technique 
-              de base est entièrement gratuit, sans inscription requise.
-            </p>
-
-            <p>
-              Pour les analyses avancées — audit sémantique, positionnement sur les LLM, génération de code 
-              correctif JSON-LD — le système de crédits permet un contrôle total des coûts. À <strong>0,50 € 
-              le crédit</strong>, un audit complet revient à moins de 5 €, soit <strong>une économie de plus 
-              de 95%</strong> par rapport aux tarifs agence.
-            </p>
-
-            <h3>Que vérifie un audit GEO complet ?</h3>
-            
-            <p>
-              Un audit GEO moderne analyse plusieurs dimensions critiques pour votre visibilité :
-            </p>
-            
-            <ul>
-              <li><strong>Accessibilité des crawlers IA</strong> : vos pages sont-elles accessibles aux robots de ChatGPT, Anthropic et Google AI ?</li>
-              <li><strong>Données structurées</strong> : présence et validité du balisage JSON-LD pour les entités, produits, FAQ</li>
-              <li><strong>Fichiers de configuration</strong> : robots.txt, llms.txt, ai-plugin.json correctement configurés</li>
-              <li><strong>Qualité du contenu</strong> : structure sémantique, hiérarchie des headings, densité d'information</li>
-              <li><strong>Citations et mentions</strong> : comment votre marque est référencée par les moteurs génératifs</li>
-            </ul>
-
-            <h3>Agence ou IA : que choisir ?</h3>
-            
-            <p>
-              Le choix dépend de vos besoins spécifiques. L'accompagnement humain reste pertinent 
-              pour les stratégies complexes, les refontes de site ou les formations d'équipe. En revanche, pour 
-              un diagnostic rapide, un suivi régulier ou des corrections techniques, l'automatisation par IA 
-              offre un rapport qualité-prix imbattable.
-            </p>
-
-            <p>
-              Notre recommandation : commencez par un <Link to="/audit-expert" className="text-primary hover:underline">
-              audit gratuit sur Crawlers.fr</Link> pour identifier vos priorités, puis décidez si un accompagnement 
-              agence complémentaire est nécessaire pour votre stratégie globale.
-            </p>
-
-            <div className="not-prose my-8">
-              <Card className="bg-primary/5 border-primary">
-                <CardContent className="p-6 text-center">
-                  <h3 className="text-xl font-bold mb-2">Prêt à auditer votre site ?</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Découvrez gratuitement votre score GEO et les optimisations prioritaires.
-                  </p>
-                  <Button asChild size="lg">
-                    <Link to="/audit-expert">
-                      Lancer l'audit gratuit
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+            {/* Section 3 */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-2 inline-block">
+                Que vérifie un audit GEO complet ?
+              </h3>
+              
+              <p className="text-muted-foreground leading-relaxed">
+                Un audit GEO moderne analyse plusieurs dimensions critiques pour votre visibilité :
+              </p>
+              
+              <ul className="space-y-3 text-muted-foreground">
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-foreground">Accessibilité des crawlers IA</strong> : vos pages sont-elles accessibles aux robots de ChatGPT, Anthropic et Google AI ?</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-foreground">Données structurées</strong> : présence et validité du balisage JSON-LD pour les entités, produits, FAQ</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-foreground">Fichiers de configuration</strong> : robots.txt, llms.txt, ai-plugin.json correctement configurés</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-foreground">Qualité du contenu</strong> : structure sémantique, hiérarchie des headings, densité d'information</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-foreground">Citations et mentions</strong> : comment votre marque est référencée par les moteurs génératifs</span>
+                </li>
+              </ul>
             </div>
+
+            {/* Section 4 */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-2 inline-block">
+                Agence ou IA : que choisir ?
+              </h3>
+              
+              <p className="text-muted-foreground leading-relaxed">
+                Le choix dépend de vos besoins spécifiques. L'accompagnement humain reste pertinent 
+                pour les stratégies complexes, les refontes de site ou les formations d'équipe.
+              </p>
+
+              <p className="text-muted-foreground leading-relaxed">
+                En revanche, pour un diagnostic rapide, un suivi régulier ou des corrections techniques, 
+                l'automatisation par IA offre un rapport qualité-prix imbattable.
+              </p>
+
+              <p className="text-muted-foreground leading-relaxed">
+                Notre recommandation : commencez par un <Link to="/audit-expert" className="text-primary hover:underline font-medium">
+                audit gratuit sur Crawlers.fr</Link> pour identifier vos priorités, puis décidez si un accompagnement 
+                agence complémentaire est nécessaire pour votre stratégie globale.
+              </p>
+            </div>
+
+            {/* CTA Card */}
+            <Card className="bg-primary/5 border-primary mt-12">
+              <CardContent className="p-8 text-center">
+                <h3 className="text-2xl font-bold mb-3">Prêt à auditer votre site ?</h3>
+                <p className="text-muted-foreground mb-6 text-lg">
+                  Découvrez gratuitement votre score GEO et les optimisations prioritaires.
+                </p>
+                <Button asChild size="lg" className="text-base px-8">
+                  <Link to="/audit-expert">
+                    Lancer l'audit gratuit
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
           </motion.section>
         </main>
 
