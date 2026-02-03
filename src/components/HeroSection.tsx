@@ -211,7 +211,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
         />
 
         {/* Search Form */}
-        <form onSubmit={handleSubmit} className="mx-auto max-w-2xl">
+        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -221,7 +221,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
                 value={url}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 onBlur={handleUrlBlur}
-                className="h-14 pl-12 pr-4 text-base"
+                className="h-14 pl-14 pr-4 text-base"
                 required
                 aria-label="URL du site web"
               />
