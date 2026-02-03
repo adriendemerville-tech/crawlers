@@ -406,14 +406,35 @@ const ComparatifCrawlersSemrush = () => {
                       </tr>
                       <tr className="border-b border-border/50 bg-muted/20">
                         <td className="px-4 py-3 font-medium text-foreground">Score GEO (IA)</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-red-500">Non disponible</span>
-                        </td>
+                        <td className="px-4 py-3 text-center text-muted-foreground">Indisponible</td>
                         <td className="px-4 py-3 text-center">
                           <Badge variant="default" className="bg-primary">Natif</Badge>
                         </td>
                       </tr>
                       <tr className="border-b border-border/50">
+                        <td className="px-4 py-3 font-medium text-foreground">Audit stratégique</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Disponible</span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Disponible</span>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-border/50 bg-muted/20">
+                        <td className="px-4 py-3 font-medium text-foreground">Plans d'action pilotables</td>
+                        <td className="px-4 py-3 text-center text-muted-foreground">Indisponible</td>
+                        <td className="px-4 py-3 text-center">
+                          <Badge variant="default" className="bg-primary">Natif</Badge>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="px-4 py-3 font-medium text-foreground">Génération de &lt;script&gt; correctif</td>
+                        <td className="px-4 py-3 text-center text-muted-foreground">Indisponible</td>
+                        <td className="px-4 py-3 text-center">
+                          <Badge variant="default" className="bg-primary">Natif</Badge>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-border/50 bg-muted/20">
                         <td className="px-4 py-3 font-medium text-foreground">Complexité</td>
                         <td className="px-4 py-3 text-center text-muted-foreground">Usine à gaz (Expert requis)</td>
                         <td className="px-4 py-3 text-center">
