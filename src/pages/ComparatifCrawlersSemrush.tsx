@@ -336,14 +336,14 @@ const ComparatifCrawlersSemrush = () => {
         
         <main className="flex-1">
           {/* Hero Section */}
-          <section className="py-12 md:py-16 bg-gradient-to-b from-primary/5 to-background">
+          <section className="py-8 md:py-12 lg:py-16 bg-gradient-to-b from-primary/5 to-background">
             <div className="container mx-auto px-4">
               <div className="max-w-4xl mx-auto text-center">
-                <Badge variant="outline" className="mb-4">Comparatif 2026</Badge>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-foreground">
+                <Badge variant="outline" className="mb-3 md:mb-4 text-xs md:text-sm">Comparatif 2026</Badge>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 text-foreground leading-tight px-2">
                   Crawlers.fr et Semrush, deux outils aux fonctionnalités bien différentes
                 </h1>
-                <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+                <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto px-2">
                   Deux outils, deux philosophies. Semrush est une référence mondiale du SEO. 
                   Crawlers.fr est un nouvel acteur spécialisé GEO. Voici une comparaison factuelle 
                   pour vous aider à choisir selon <strong>vos vrais besoins</strong>.
@@ -353,30 +353,30 @@ const ComparatifCrawlersSemrush = () => {
           </section>
 
           {/* Fair Play Summary Table */}
-          <section className="py-10 bg-muted/30">
+          <section className="py-8 md:py-10 bg-muted/30">
             <div className="container mx-auto px-4">
               <div className="max-w-4xl mx-auto">
-                <h2 className="text-2xl font-bold text-center mb-2 text-foreground">
+                <h2 className="text-xl md:text-2xl font-bold text-center mb-2 text-foreground">
                   L'Approche "Fair Play" en 30 Secondes
                 </h2>
-                <p className="text-center text-muted-foreground mb-6">
+                <p className="text-center text-muted-foreground mb-4 md:mb-6 text-sm md:text-base">
                   Comparaison honnête sans langue de bois
                 </p>
                 
-                <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
-                  <table className="w-full text-sm" aria-label="Comparatif synthétique Semrush vs Crawlers.fr">
+                <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm -mx-2 md:mx-0">
+                  <table className="w-full text-xs sm:text-sm min-w-[480px]" aria-label="Comparatif synthétique Semrush vs Crawlers.fr">
                     <thead>
                       <tr className="border-b border-border bg-muted/50">
-                        <th className="px-4 py-3 text-left font-semibold text-foreground">Critère</th>
-                        <th className="px-4 py-3 text-center font-semibold text-foreground">
+                        <th className="px-2 md:px-4 py-2 md:py-3 text-left font-semibold text-foreground">Critère</th>
+                        <th className="px-2 md:px-4 py-2 md:py-3 text-center font-semibold text-foreground">
                           <span className="inline-flex items-center gap-1">
-                            <img src="https://www.semrush.com/favicon.ico" alt="" className="h-4 w-4" />
+                            <img src="https://www.semrush.com/favicon.ico" alt="" className="h-3 w-3 md:h-4 md:w-4" />
                             Semrush
                           </span>
                         </th>
-                        <th className="px-4 py-3 text-center font-semibold text-primary">
-                          <span className="inline-flex items-center gap-1.5">
-                            <img src="/favicon.svg" alt="" className="h-5 w-5" />
+                        <th className="px-2 md:px-4 py-2 md:py-3 text-center font-semibold text-primary">
+                          <span className="inline-flex items-center gap-1 md:gap-1.5">
+                            <img src="/favicon.svg" alt="" className="h-4 w-4 md:h-5 md:w-5" />
                             Crawlers.fr
                           </span>
                         </th>
@@ -384,75 +384,75 @@ const ComparatifCrawlersSemrush = () => {
                     </thead>
                     <tbody>
                       <tr className="border-b border-border/50">
-                        <td className="px-4 py-3 font-medium text-foreground">Prix de départ</td>
-                        <td className="px-4 py-3 text-center text-muted-foreground">~130$/mois</td>
-                        <td className="px-4 py-3 text-center">
-                          <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600">0€ (Gratuit)</Badge>
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Prix de départ</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">~130$/mois</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600 text-[10px] md:text-xs">0€ (Gratuit)</Badge>
                         </td>
                       </tr>
                       <tr className="border-b border-border/50 bg-muted/20">
-                        <td className="px-4 py-3 font-medium text-foreground">Inscription requise</td>
-                        <td className="px-4 py-3 text-center text-muted-foreground">Obligatoire + CB souvent</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Aucune (Immédiat)</span>
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Inscription requise</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Obligatoire + CB souvent</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[10px] md:text-sm">Aucune (Immédiat)</span>
                         </td>
                       </tr>
                       <tr className="border-b border-border/50">
-                        <td className="px-4 py-3 font-medium text-foreground">Focus Principal</td>
-                        <td className="px-4 py-3 text-center text-muted-foreground">Mots-clés & Backlinks (Google)</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-primary font-medium">Technique & Visibilité IA (ChatGPT)</span>
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Focus Principal</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Mots-clés & Backlinks (Google)</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <span className="text-primary font-medium text-[10px] md:text-sm">Technique & Visibilité IA (ChatGPT)</span>
                         </td>
                       </tr>
                       <tr className="border-b border-border/50 bg-muted/20">
-                        <td className="px-4 py-3 font-medium text-foreground">Score GEO (IA)</td>
-                        <td className="px-4 py-3 text-center text-muted-foreground">Indisponible</td>
-                        <td className="px-4 py-3 text-center">
-                          <Badge variant="default" className="bg-primary">Natif</Badge>
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Score GEO (IA)</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">Indisponible</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Natif</Badge>
                         </td>
                       </tr>
                       <tr className="border-b border-border/50">
-                        <td className="px-4 py-3 font-medium text-foreground">Audit stratégique</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Disponible</span>
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Audit stratégique</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[10px] md:text-sm">Disponible</span>
                         </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Disponible</span>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[10px] md:text-sm">Disponible</span>
                         </td>
                       </tr>
                       <tr className="border-b border-border/50 bg-muted/20">
-                        <td className="px-4 py-3 font-medium text-foreground">Plans d'action pilotables</td>
-                        <td className="px-4 py-3 text-center text-muted-foreground">Indisponible</td>
-                        <td className="px-4 py-3 text-center">
-                          <Badge variant="default" className="bg-primary">Natif</Badge>
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Plans d'action pilotables</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">Indisponible</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Natif</Badge>
                         </td>
                       </tr>
                       <tr className="border-b border-border/50">
-                        <td className="px-4 py-3 font-medium text-foreground">Génération de &lt;script&gt; correctif</td>
-                        <td className="px-4 py-3 text-center text-muted-foreground">Indisponible</td>
-                        <td className="px-4 py-3 text-center">
-                          <Badge variant="default" className="bg-primary">Natif</Badge>
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Génération de &lt;script&gt; correctif</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">Indisponible</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Natif</Badge>
                         </td>
                       </tr>
                       <tr className="border-b border-border/50 bg-muted/20">
-                        <td className="px-4 py-3 font-medium text-foreground">Complexité</td>
-                        <td className="px-4 py-3 text-center text-muted-foreground">Usine à gaz (Expert requis)</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Simple & Rapide (30 sec)</span>
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Complexité</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Usine à gaz (Expert requis)</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium text-[10px] md:text-sm">Simple & Rapide (30 sec)</span>
                         </td>
                       </tr>
                       <tr>
-                        <td className="px-4 py-3 font-medium text-foreground">Public Idéal</td>
-                        <td className="px-4 py-3 text-center text-muted-foreground">Grosses Agences & E-commerce</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-primary font-medium">Freelances, PME & Indie Hackers</span>
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Public Idéal</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Grosses Agences & E-commerce</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <span className="text-primary font-medium text-[10px] md:text-sm">Freelances, PME & Indie Hackers</span>
                         </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
 
-                <p className="text-center text-xs text-muted-foreground mt-4">
+                <p className="text-center text-[10px] md:text-xs text-muted-foreground mt-3 md:mt-4">
                   💡 Ce tableau n'est pas un jugement de valeur — chaque outil a ses forces selon votre contexte.
                 </p>
               </div>
@@ -460,23 +460,23 @@ const ComparatifCrawlersSemrush = () => {
           </section>
 
           {/* Introduction */}
-          <section className="py-12 bg-background">
+          <section className="py-8 md:py-12 bg-background">
             <div className="container mx-auto px-4">
-              <article className="max-w-4xl mx-auto prose prose-lg dark:prose-invert">
-                <p className="text-lg leading-relaxed">
+              <article className="max-w-4xl mx-auto prose prose-sm md:prose-lg dark:prose-invert">
+                <p className="text-base md:text-lg leading-relaxed">
                   Soyons honnêtes dès le départ : <strong>Semrush est un outil plus complet et plus puissant que Crawlers.fr</strong>. 
                   Avec plus de 10 millions d'utilisateurs, une base de données de 26 milliards de mots-clés et 43 trillions 
                   de backlinks indexés, Semrush s'est imposé comme <em>la</em> référence mondiale pour les professionnels du SEO.
                 </p>
                 
-                <p className="text-lg leading-relaxed">
+                <p className="text-base md:text-lg leading-relaxed">
                   Alors pourquoi créer ce comparatif ? Parce que <strong>tout le monde n'a pas besoin d'un outil aussi puissant</strong>. 
                   Et surtout, tout le monde n'a pas un budget de 130€ par mois à consacrer au référencement. 
                   Ce guide s'adresse à ceux qui cherchent la solution adaptée à leur situation réelle, 
                   pas forcément l'outil le plus impressionnant du marché.
                 </p>
 
-                <h3 className="text-xl font-semibold mt-8 mb-4 text-primary flex items-center gap-2">
+                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
                   <Target className="h-5 w-5" />
                   Deux visions du référencement en 2026
                 </h3>
@@ -538,8 +538,8 @@ const ComparatifCrawlersSemrush = () => {
                   génératives. Un angle mort que la plupart des outils SEO traditionnels n'adressent pas encore.
                 </p>
 
-                <h3 className="text-xl font-semibold mt-8 mb-4 text-primary flex items-center gap-2">
-                  <Users className="h-5 w-5" />
+                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
+                  <Users className="h-4 w-4 md:h-5 md:w-5" />
                   À qui s'adresse chaque outil ?
                 </h3>
 
@@ -564,8 +564,8 @@ const ComparatifCrawlersSemrush = () => {
                   <li>Un professionnel qui a besoin d'audits ponctuels, pas d'un abonnement mensuel</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold mt-8 mb-4 text-primary flex items-center gap-2">
-                  <Wallet className="h-5 w-5" />
+                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
+                  <Wallet className="h-4 w-4 md:h-5 md:w-5" />
                   La question du prix : l'éléphant dans la pièce
                 </h3>
 
@@ -617,8 +617,8 @@ const ComparatifCrawlersSemrush = () => {
                   Évidemment, la comparaison s'arrête là car les fonctionnalités ne sont pas identiques.
                 </p>
 
-                <h3 className="text-xl font-semibold mt-8 mb-4 text-primary flex items-center gap-2">
-                  <Zap className="h-5 w-5" />
+                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
+                  <Zap className="h-4 w-4 md:h-5 md:w-5" />
                   Ce que Semrush fait mieux (beaucoup mieux)
                 </h3>
 
@@ -655,8 +655,8 @@ const ComparatifCrawlersSemrush = () => {
                   Nous ne prétendons pas le remplacer sur ces points.
                 </p>
 
-                <h3 className="text-xl font-semibold mt-8 mb-4 text-primary flex items-center gap-2">
-                  <Brain className="h-5 w-5" />
+                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
+                  <Brain className="h-4 w-4 md:h-5 md:w-5" />
                   Ce que Crawlers.fr fait différemment
                 </h3>
 
@@ -688,8 +688,8 @@ const ComparatifCrawlersSemrush = () => {
                   </li>
                 </ul>
 
-                <h3 className="text-xl font-semibold mt-8 mb-4 text-primary flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
+                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
                   Cas d'usage concrets
                 </h3>
 
@@ -697,7 +697,7 @@ const ComparatifCrawlersSemrush = () => {
                   Pour mieux comprendre, voici trois profils types et l'outil qui leur correspond :
                 </p>
 
-                <div className="bg-muted/30 rounded-lg p-5 my-4 border-l-4 border-primary">
+                <div className="bg-muted/30 rounded-lg p-4 md:p-5 my-3 md:my-4 border-l-4 border-primary">
                   <p className="font-semibold">Marie, consultante en communication</p>
                   <p className="text-sm mt-2">
                     Budget marketing : 200€/mois. Elle veut s'assurer que son site personnel apparaît 
@@ -706,25 +706,25 @@ const ComparatifCrawlersSemrush = () => {
                   </p>
                 </div>
 
-                <div className="bg-muted/30 rounded-lg p-5 my-4 border-l-4 border-muted-foreground">
-                  <p className="font-semibold">Alexandre, responsable SEO d'une agence</p>
-                  <p className="text-sm mt-2">
+                <div className="bg-muted/30 rounded-lg p-4 md:p-5 my-3 md:my-4 border-l-4 border-muted-foreground">
+                  <p className="font-semibold text-sm md:text-base">Alexandre, responsable SEO d'une agence</p>
+                  <p className="text-xs md:text-sm mt-2">
                     Gère 15 clients avec des rapports mensuels. A besoin de suivre les positions, 
                     analyser les backlinks et surveiller la concurrence. 
                     <strong> → Semrush</strong> (fonctionnalités avancées indispensables)
                   </p>
                 </div>
 
-                <div className="bg-muted/30 rounded-lg p-5 my-4 border-l-4 border-primary">
-                  <p className="font-semibold">Sophie, artisan boulanger</p>
-                  <p className="text-sm mt-2">
+                <div className="bg-muted/30 rounded-lg p-4 md:p-5 my-3 md:my-4 border-l-4 border-primary">
+                  <p className="font-semibold text-sm md:text-base">Sophie, artisan boulanger</p>
+                  <p className="text-xs md:text-sm mt-2">
                     Veut que sa boulangerie apparaisse quand quelqu'un demande « meilleure boulangerie à Lyon » 
                     à Perplexity ou Google. Budget quasi nul. 
                     <strong className="text-primary"> → Crawlers.fr</strong> (audit gratuit + optimisation locale)
                   </p>
                 </div>
 
-                <h3 className="text-xl font-semibold mt-8 mb-4 text-primary">
+                <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary">
                   Notre position : complémentarité, pas concurrence
                 </h3>
 
@@ -760,33 +760,33 @@ const ComparatifCrawlersSemrush = () => {
           </section>
 
           {/* Comparison Table */}
-          <section className="py-12 bg-muted/30">
+          <section className="py-8 md:py-12 bg-muted/30">
             <div className="container mx-auto px-4">
               <div className="max-w-5xl mx-auto">
                 <Card className="overflow-hidden border">
-                  <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 py-5">
-                    <CardTitle className="text-xl md:text-2xl text-center">
+                  <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 py-3 md:py-5 px-3 md:px-6">
+                    <CardTitle className="text-lg md:text-xl lg:text-2xl text-center">
                       Tableau Comparatif Complet
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground text-center">
+                    <p className="text-xs md:text-sm text-muted-foreground text-center">
                       14 critères analysés objectivement — Données mises à jour février 2026
                     </p>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm border-collapse" role="table" aria-label="Comparaison Crawlers.fr vs Semrush">
+                    <div className="overflow-x-auto -mx-px">
+                      <table className="w-full text-xs sm:text-sm border-collapse min-w-[550px]" role="table" aria-label="Comparaison Crawlers.fr vs Semrush">
                         <thead>
                           <tr className="border-b border-border bg-muted/50">
-                            <th className="text-left p-3 font-semibold min-w-[180px] border-r border-border">
+                            <th className="text-left p-2 md:p-3 font-semibold min-w-[120px] md:min-w-[180px] border-r border-border">
                               Critère
                             </th>
-                            <th className="text-center p-3 font-semibold min-w-[200px] border-r border-border bg-primary/5">
-                              <div className="flex items-center justify-center gap-2">
+                            <th className="text-center p-2 md:p-3 font-semibold min-w-[130px] md:min-w-[200px] border-r border-border bg-primary/5">
+                              <div className="flex items-center justify-center gap-1 md:gap-2">
                                 <span className="text-primary font-bold">Crawlers.fr</span>
                               </div>
                             </th>
-                            <th className="text-center p-3 font-semibold min-w-[200px]">
-                              <div className="flex items-center justify-center gap-2">
+                            <th className="text-center p-2 md:p-3 font-semibold min-w-[130px] md:min-w-[200px]">
+                              <div className="flex items-center justify-center gap-1 md:gap-2">
                                 <span>Semrush</span>
                               </div>
                             </th>
@@ -841,17 +841,17 @@ const ComparatifCrawlersSemrush = () => {
           </section>
 
           {/* CTA Section */}
-          <section className="py-16 bg-gradient-to-b from-background to-primary/5">
+          <section className="py-10 md:py-16 bg-gradient-to-b from-background to-primary/5">
             <div className="container mx-auto px-4">
               <div className="max-w-3xl mx-auto text-center">
-                <h2 className="text-2xl md:text-3xl font-bold mb-6">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 md:mb-6 px-2">
                   Prêt à tester Crawlers.fr gratuitement ?
                 </h2>
-                <p className="text-muted-foreground mb-8">
+                <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8 px-2">
                   Lancez un audit de votre site en 30 secondes. Aucune carte bancaire requise. 
                   Découvrez si votre site est visible pour les IA génératives.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
                   <Button asChild size="lg" variant="hero">
                     <Link to="/audit-expert">
                       Lancer un Audit Gratuit
@@ -863,7 +863,7 @@ const ComparatifCrawlersSemrush = () => {
                     </Link>
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-6">
+                <p className="text-[10px] md:text-xs text-muted-foreground mt-4 md:mt-6 px-2">
                   Semrush reste un excellent choix pour le SEO avancé.{' '}
                   <a 
                     href="https://www.semrush.com/signup/" 
