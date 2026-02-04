@@ -91,7 +91,7 @@ export function ReportPreviewModal({
 
   const t = reportTranslations[language as keyof typeof reportTranslations] || reportTranslations.fr;
 
-  // For 'full' type, determine which result to use as primary
+  // For 'full' type, determine which result to use as primary for single-type operations
   const getEffectiveType = (): 'crawlers' | 'geo' | 'llm' | 'pagespeed' => {
     if (type !== 'full') return type;
     if (crawlResult) return 'crawlers';
@@ -103,7 +103,22 @@ export function ReportPreviewModal({
 
   const effectiveType = getEffectiveType();
 
-  const getData = (): CrawlResult | GeoResult | LLMAnalysisResult | PageSpeedResult | null => {
+  // For 'full' type, check if we have multiple results
+  const hasMultipleResults = [crawlResult, geoResult, llmResult, pageSpeedResult].filter(Boolean).length > 1;
+  const useFullType = type === 'full' && hasMultipleResults;
+
+  const getData = (): any => {
+    // For full type with multiple results, return all data
+    if (useFullType) {
+      return {
+        crawlResult,
+        geoResult,
+        llmResult,
+        pageSpeedResult,
+      };
+    }
+    
+    // Otherwise return single result
     switch (effectiveType) {
       case 'crawlers':
         return crawlResult || null;
@@ -137,9 +152,13 @@ export function ReportPreviewModal({
   const data = getData();
   const url = getUrl();
 
-  if (!data) return null;
+  // Check if we have any data at all
+  const hasAnyData = crawlResult || geoResult || llmResult || pageSpeedResult;
+  if (!hasAnyData) return null;
 
-  const htmlContent = generateReportHTML(effectiveType, data, url, language);
+  // Generate HTML with appropriate type
+  const reportType = useFullType ? 'full' : effectiveType;
+  const htmlContent = generateReportHTML(reportType, data, url, language);
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
