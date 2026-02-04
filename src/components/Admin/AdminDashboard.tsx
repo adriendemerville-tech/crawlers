@@ -1,7 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, FileText, BarChart3, MessageCircle, Shield } from 'lucide-react';
-// TEST ISOLATION - Import commenté temporairement
-// import { UserManagement } from './UserManagement';
+import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
@@ -40,9 +39,7 @@ export function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="users">
-          {/* TEST ISOLATION - Composant désactivé */}
-          {/* <UserManagement /> */}
-          <div className="p-4 text-muted-foreground border rounded-lg">Module Utilisateurs désactivé pour test d'isolation</div>
+          <UserManagement />
         </TabsContent>
 
         <TabsContent value="blog">
