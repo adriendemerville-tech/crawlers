@@ -152,22 +152,38 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
         >
           {isHydrated ? (
             <Suspense fallback={
-              <span className="text-violet-500 whitespace-nowrap leading-tight">
+              <span 
+                className="whitespace-nowrap leading-tight bg-gradient-to-tr from-[#1e3a5f] via-[#7c3aed] via-[#a78bfa] to-[#d4a853] bg-clip-text text-transparent"
+                style={{ 
+                  textShadow: '0 4px 12px rgba(8, 10, 12, 0.4)',
+                  filter: 'drop-shadow(0 2px 8px rgba(8, 10, 12, 0.3))'
+                }}
+              >
                 {animatedWords[wordIndex]}
               </span>
             }>
               <MotionSpan
                 key={wordIndex}
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
+                initial={{ y: 50, opacity: 0, filter: 'drop-shadow(0 0px 0px rgba(8, 10, 12, 0))' }}
+                animate={{ 
+                  y: 0, 
+                  opacity: 1,
+                  filter: 'drop-shadow(0 4px 12px rgba(8, 10, 12, 0.35))'
+                }}
                 transition={{ duration: 0.4, ease: 'easeInOut' }}
-                className="relative text-violet-500 whitespace-nowrap leading-tight"
+                className="relative whitespace-nowrap leading-tight bg-gradient-to-tr from-[#1e3a5f] via-[#7c3aed] via-[#a78bfa] to-[#d4a853] bg-clip-text text-transparent animate-carousel-shadow"
               >
                 {animatedWords[wordIndex]}
               </MotionSpan>
             </Suspense>
           ) : (
-            <span className="text-violet-500 whitespace-nowrap leading-tight">
+            <span 
+              className="whitespace-nowrap leading-tight bg-gradient-to-tr from-[#1e3a5f] via-[#7c3aed] via-[#a78bfa] to-[#d4a853] bg-clip-text text-transparent"
+              style={{ 
+                textShadow: '0 4px 12px rgba(8, 10, 12, 0.4)',
+                filter: 'drop-shadow(0 2px 8px rgba(8, 10, 12, 0.3))'
+              }}
+            >
               {animatedWords[0]}
             </span>
           )}
