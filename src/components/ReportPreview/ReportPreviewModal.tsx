@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Loader2, Check, Copy, Mail } from 'lucide-react';
+import { Download, Loader2, Check, Copy, Mail, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -251,14 +251,16 @@ export function ReportPreviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0">
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0 [&>button]:hidden">
         {/* Header with actions */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
-          <h2 className="text-lg font-semibold">{t.title}</h2>
           <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold">{t.title}</h2>
+            <div className="h-4 w-px bg-border" />
             <Button
               onClick={handleDownloadPDF}
               disabled={isGeneratingPDF}
+              size="sm"
               className="gap-2 bg-primary hover:bg-primary/90"
             >
               {isGeneratingPDF ? (
@@ -272,6 +274,7 @@ export function ReportPreviewModal({
               onClick={handleCopyLink}
               disabled={isSharing}
               variant="outline"
+              size="sm"
               className="gap-2"
             >
               {isSharing && !shareUrl ? (
@@ -287,6 +290,7 @@ export function ReportPreviewModal({
               onClick={handleShare}
               disabled={isSharing}
               variant="outline"
+              size="sm"
               className="gap-2"
             >
               {isSharing && !shareUrl ? (
@@ -297,6 +301,13 @@ export function ReportPreviewModal({
               {t.share}
             </Button>
           </div>
+          {/* Premium close button */}
+          <button
+            onClick={onClose}
+            className="group flex items-center justify-center h-8 w-8 rounded-lg bg-muted/50 hover:bg-muted border border-border/50 hover:border-border transition-all duration-200 hover:shadow-sm"
+          >
+            <X className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          </button>
         </div>
 
         {/* HTML Preview */}
