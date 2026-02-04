@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Loader2, Zap, AlertCircle } from 'lucide-react';
+import { CreditCard, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
+import { CreditCoin } from '@/components/ui/CreditCoin';
 import type { FixConfig } from './types';
 
 interface PaymentButtonProps {
@@ -228,7 +229,7 @@ export function PaymentButton({
               </>
             ) : hasEnoughCredits ? (
               <>
-                <Zap className="w-3 h-3" />
+                <CreditCoin size="sm" />
                 Débloquer avec 1 crédit
               </>
             ) : (
@@ -240,9 +241,9 @@ export function PaymentButton({
           </Button>
 
           <div className="text-xs text-muted-foreground text-center">
-            <span className="font-medium flex items-center justify-center gap-1">
-              <Zap className="h-3 w-3 text-amber-500" />
-              Coût : 1 crédit
+            <span className="font-medium flex items-center justify-center gap-1.5">
+              Coût : 1
+              <CreditCoin size="sm" />
             </span>
             <span className="block mt-0.5">
               Solde : {balance} crédit{balance > 1 ? 's' : ''}
@@ -290,9 +291,9 @@ export function PaymentButton({
 
       {/* Price in credits + explanation - Centered */}
       <div className="text-xs text-muted-foreground text-center">
-        <span className="font-medium text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1">
-          <Zap className="h-3 w-3 text-amber-500" />
-          {(calculatedPrice / 0.5).toFixed(0)} crédit{(calculatedPrice / 0.5) > 1 ? 's' : ''}
+        <span className="font-medium text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1.5">
+          {(calculatedPrice / 0.5).toFixed(0)}
+          <CreditCoin size="sm" />
           <span className="text-muted-foreground font-normal">({calculatedPrice.toFixed(2).replace('.', ',')}€)</span>
         </span>
         <span className="block mt-0.5">{enabledCount} correctif{enabledCount > 1 ? 's' : ''} sélectionné{enabledCount > 1 ? 's' : ''}</span>

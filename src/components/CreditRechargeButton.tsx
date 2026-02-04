@@ -1,9 +1,10 @@
 import { useState, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { CreditCoin } from '@/components/ui/CreditCoin';
 
 // Lazy load the heavy modal (contains framer-motion)
 const CreditTopUpModal = lazy(() => import('./CreditTopUpModal').then(m => ({ default: m.CreditTopUpModal })));
@@ -30,8 +31,8 @@ export function CreditRechargeButton() {
         onClick={() => setModalOpen(true)}
         className="gap-1.5 border-amber-500/30 hover:border-amber-500/50 hover:bg-amber-500/10"
       >
-        <Zap className="h-4 w-4 text-amber-500" />
-        <span className="font-medium">{balance}</span>
+        <span className="font-medium text-amber-600 dark:text-amber-400">{balance}</span>
+        <CreditCoin size="sm" />
         <Badge 
           variant="secondary" 
           className="h-5 w-5 p-0 flex items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/30"

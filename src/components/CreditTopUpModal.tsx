@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Check, Loader2, Sparkles, Crown, Star, Linkedin, Handshake, ExternalLink } from 'lucide-react';
+import { Check, Loader2, Sparkles, Crown, Star, Linkedin, Handshake } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Separator } from '@/components/ui/separator';
+import { CreditCoin } from '@/components/ui/CreditCoin';
 
 interface CreditTopUpModalProps {
   open: boolean;
@@ -22,7 +23,7 @@ const packages = [
     credits: 10,
     price: 5,
     pricePerCredit: 0.50,
-    icon: Zap,
+    icon: Sparkles,
     color: 'from-blue-500 to-cyan-500',
     borderColor: 'border-blue-500/30',
     popular: false,
@@ -138,14 +139,15 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
       <DialogContent className="sm:max-w-[740px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Zap className="h-5 w-5 text-amber-500" />
+            <CreditCoin size="md" />
             {t.title}
           </DialogTitle>
           <DialogDescription className="flex items-center justify-between">
             <span>{t.subtitle}</span>
-            <Badge variant="secondary" className="gap-1">
+            <Badge variant="secondary" className="gap-1.5">
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-              {t.currentBalance}: {currentBalance} {t.credits}
+              {t.currentBalance}: {currentBalance}
+              <CreditCoin size="sm" />
             </Badge>
           </DialogDescription>
         </DialogHeader>
@@ -181,11 +183,9 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
 
                     <div>
                       <h3 className="font-semibold text-base">{pkg.name}</h3>
-                      <p className="text-2xl font-bold mt-1">
+                      <p className="text-2xl font-bold mt-1 flex items-center justify-center gap-1.5">
                         {pkg.credits}
-                        <span className="text-xs font-normal text-muted-foreground ml-1">
-                          {t.credits}
-                        </span>
+                        <CreditCoin size="md" />
                       </p>
                     </div>
 
