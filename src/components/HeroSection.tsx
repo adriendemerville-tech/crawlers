@@ -152,7 +152,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
         >
           {isHydrated ? (
             <Suspense fallback={
-              <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap leading-tight">
+              <span className="text-violet-500 whitespace-nowrap leading-tight">
                 {animatedWords[wordIndex]}
               </span>
             }>
@@ -161,13 +161,13 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4, ease: 'easeInOut' }}
-                className="relative bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap leading-tight"
+                className="relative text-violet-500 whitespace-nowrap leading-tight"
               >
                 {animatedWords[wordIndex]}
               </MotionSpan>
             </Suspense>
           ) : (
-            <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent whitespace-nowrap leading-tight">
+            <span className="text-violet-500 whitespace-nowrap leading-tight">
               {animatedWords[0]}
             </span>
           )}
