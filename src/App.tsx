@@ -19,6 +19,7 @@ const FloatingChatBubble = lazy(() => import("@/components/Support/FloatingChatB
 const Index = lazy(() => import("./pages/Index"));
 const ExpertAudit = lazy(() => import("./pages/ExpertAudit"));
 const Lexique = lazy(() => import("./pages/Lexique"));
+const ExpertTermPage = lazy(() => import("./pages/Lexique/ExpertTermPage"));
 const Tarifs = lazy(() => import("./pages/Tarifs"));
 const MentionsLegales = lazy(() => import("./pages/MentionsLegales"));
 const PolitiqueConfidentialite = lazy(() => import("./pages/PolitiqueConfidentialite"));
@@ -64,6 +65,7 @@ const App = () => (
                     <Route path="/" element={<Index />} />
                     <Route path="/audit-expert" element={<ExpertAudit />} />
                     <Route path="/lexique" element={<Lexique />} />
+                    <Route path="/lexique/:slug" element={<ExpertTermPage />} />
                     <Route path="/tarifs" element={<Tarifs />} />
                     <Route path="/mentions-legales" element={<MentionsLegales />} />
                     <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />

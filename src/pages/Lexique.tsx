@@ -10,6 +10,7 @@ import { Link, useLocation } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from 'sonner';
+import { ExpertTermsGrid } from '@/components/Lexique/ExpertTermsGrid';
 
 // Local storage key for favorites
 const FAVORITES_KEY = 'lexique-favorites';
