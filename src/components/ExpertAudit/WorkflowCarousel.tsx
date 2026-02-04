@@ -8,6 +8,7 @@ import { BarChart3, Target, Code, Search, Check, Eye, Lock } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CreditCoin } from '@/components/ui/CreditCoin';
 
 const translations = {
   fr: {
@@ -23,7 +24,7 @@ const translations = {
     locked: 'Terminez l\'étape précédente',
     complete: 'Terminé',
     startCode: 'Démarrer',
-    priceRange: '< 3,00€ ... 12,00€ >',
+    priceRange: '< 6 ... 24 >',
     viewReport: 'Voir rapport',
   },
   en: {
@@ -39,7 +40,7 @@ const translations = {
     locked: 'Complete previous step',
     complete: 'Complete',
     startCode: 'Start',
-    priceRange: '< €3.00 ... €12.00 >',
+    priceRange: '< 6 ... 24 >',
     viewReport: 'View report',
   },
   es: {
@@ -55,7 +56,7 @@ const translations = {
     locked: 'Complete el paso anterior',
     complete: 'Completado',
     startCode: 'Iniciar',
-    priceRange: '< 3,00€ ... 12,00€ >',
+    priceRange: '< 6 ... 24 >',
     viewReport: 'Ver informe',
   },
 };
@@ -567,7 +568,13 @@ export function WorkflowCarousel({
                             </Button>
                             {/* Price below button for step 3 */}
                             {step.id === 3 && !isCompleted && (
-                              <p className="text-center text-sm text-muted-foreground mt-2">{t.priceRange}</p>
+                              <p className="text-center text-sm text-muted-foreground mt-2 flex items-center justify-center gap-1">
+                                <span>&lt; 6</span>
+                                <CreditCoin size="sm" />
+                                <span>... 24</span>
+                                <CreditCoin size="sm" />
+                                <span>&gt;</span>
+                              </p>
                             )}
                           </motion.div>
                         )}

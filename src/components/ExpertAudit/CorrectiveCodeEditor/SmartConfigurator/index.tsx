@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
+import { CreditCoin } from '@/components/ui/CreditCoin';
 import { 
   Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket
 } from 'lucide-react';
@@ -579,14 +580,15 @@ export function SmartConfigurator({
 
               {/* Price Display + Generate Button */}
               <div className="flex items-center gap-4">
-                {/* Dynamic Price */}
+                {/* Dynamic Price in Credits */}
                 <motion.span 
                   key={calculatedPrice}
                   initial={{ scale: 1.1, opacity: 0.7 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="text-sm font-semibold text-foreground tabular-nums"
+                  className="text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums flex items-center gap-1"
                 >
-                  {calculatedPrice.toFixed(2).replace('.', ',')}€
+                  {(calculatedPrice * 2).toFixed(0)}
+                  <CreditCoin size="sm" />
                 </motion.span>
 
                 {/* Generate Button */}
