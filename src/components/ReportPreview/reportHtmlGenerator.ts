@@ -339,82 +339,85 @@ export function generateReportHTML(type: ReportType, data: any, url: string, lan
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: #f3f4f6; min-height: 100vh; padding: 40px 20px; }
     .container { max-width: 800px; margin: 0 auto; }
-    .actions-bar { 
-      display: flex; 
-      justify-content: flex-end; 
-      gap: 12px; 
-      margin-bottom: 20px; 
-      padding: 16px; 
-      background: white; 
-      border-radius: 12px; 
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+    .header { 
+      text-align: center; 
+      margin-bottom: 40px; 
+      padding: 28px; 
+      background: linear-gradient(135deg, #3b82f6 0%, #7c3aed 50%, #a855f7 100%); 
+      border-radius: 16px; 
     }
-    .action-btn {
-      display: inline-flex;
+    .logo-wrapper {
+      display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 8px;
     }
-    .action-btn-primary {
-      background: #2563eb;
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #fbbf24, #a855f7, #3b82f6);
+      border-radius: 10px;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo-icon svg {
+      width: 24px;
+      height: 24px;
       color: white;
     }
-    .action-btn-primary:hover { background: #1d4ed8; }
-    .action-btn-secondary {
-      background: #f3f4f6;
-      color: #374151;
-      border: 1px solid #d1d5db;
-    }
-    .action-btn-secondary:hover { background: #e5e7eb; }
-    .header { text-align: center; margin-bottom: 40px; padding: 24px; background: #2563eb; border-radius: 16px; }
-    .logo { font-size: 28px; font-weight: 700; color: white; margin-bottom: 8px; }
-    .date { color: rgba(255,255,255,0.8); font-size: 14px; }
+    .logo-text { font-size: 28px; font-weight: 700; color: white; }
+    .date { color: rgba(255,255,255,0.85); font-size: 14px; }
     .content { background: white; padding: 40px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .footer { text-align: center; margin-top: 40px; padding: 24px; background: #2563eb; border-radius: 16px; }
+    .footer { 
+      text-align: center; 
+      margin-top: 40px; 
+      padding: 24px; 
+      background: linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%); 
+      border-radius: 16px; 
+    }
     .footer-brand { color: white; font-size: 16px; font-weight: 600; margin-bottom: 12px; }
     .footer-cta { color: rgba(255,255,255,0.9); font-size: 14px; margin-bottom: 8px; }
-    .footer-link { color: white; text-decoration: none; font-weight: 600; padding: 8px 16px; background: rgba(255,255,255,0.2); border-radius: 8px; display: inline-block; }
+    .footer-link { 
+      color: white; 
+      text-decoration: none; 
+      font-weight: 600; 
+      padding: 10px 20px; 
+      background: rgba(255,255,255,0.2); 
+      border-radius: 8px; 
+      display: inline-block; 
+      transition: background 0.2s;
+    }
     .footer-link:hover { background: rgba(255,255,255,0.3); }
     @media print {
       body { background: white; padding: 0; }
       .content { box-shadow: none; }
-      .actions-bar { display: none !important; }
-      .header, .footer { background: #2563eb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .header, .footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
     @media (max-width: 600px) {
       .content { padding: 20px; }
-      .actions-bar { flex-wrap: wrap; justify-content: center; }
       div[style*="grid-template-columns: repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Action Buttons Header -->
-    <div class="actions-bar">
-      <button class="action-btn action-btn-secondary" onclick="window.print()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        ${language === 'fr' ? 'Imprimer' : language === 'es' ? 'Imprimir' : 'Print'}
-      </button>
-      <button class="action-btn action-btn-secondary" onclick="shareReport()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-        ${language === 'fr' ? 'Partager' : language === 'es' ? 'Compartir' : 'Share'}
-      </button>
-      <button class="action-btn action-btn-primary" onclick="downloadReport()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        ${language === 'fr' ? 'Télécharger' : language === 'es' ? 'Descargar' : 'Download'}
-      </button>
-    </div>
-
     <div class="header">
-      <div class="logo">🤖 Crawlers AI</div>
+      <div class="logo-wrapper">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 8V4H8"/>
+            <rect width="16" height="12" x="4" y="8" rx="2"/>
+            <path d="M2 14h2"/>
+            <path d="M20 14h2"/>
+            <path d="M15 13v2"/>
+            <path d="M9 13v2"/>
+          </svg>
+        </div>
+        <span class="logo-text">Crawlers AI</span>
+      </div>
       <div class="date">${t.generatedAt} ${now}</div>
     </div>
     <div class="content">
@@ -426,34 +429,6 @@ export function generateReportHTML(type: ReportType, data: any, url: string, lan
       <a href="https://crawlers.fr/audit-expert" class="footer-link">${t.ctaLink}</a>
     </div>
   </div>
-
-  <script>
-    function downloadReport() {
-      const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'rapport-crawlers-${new Date().toISOString().split('T')[0]}.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    function shareReport() {
-      if (navigator.share) {
-        navigator.share({
-          title: document.title,
-          text: '${language === 'fr' ? 'Découvrez mon rapport d\'analyse Crawlers AI' : language === 'es' ? 'Descubre mi informe de análisis Crawlers AI' : 'Check out my Crawlers AI analysis report'}',
-          url: window.location.href
-        }).catch(console.error);
-      } else {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-          alert('${language === 'fr' ? 'Lien copié dans le presse-papier !' : language === 'es' ? '¡Enlace copiado al portapapeles!' : 'Link copied to clipboard!'}');
-        });
-      }
-    }
-  </script>
 </body>
 </html>`;
 }
