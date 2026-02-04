@@ -11,6 +11,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from 'sonner';
 import { ExpertTermsGrid } from '@/components/Lexique/ExpertTermsGrid';
+import { TrustBadge, SoftwareApplicationSchema } from '@/components/TrustBadge';
 
 // Local storage key for favorites
 const FAVORITES_KEY = 'lexique-favorites';
@@ -632,6 +633,7 @@ export default function Lexique() {
         <script type="application/ld+json">{JSON.stringify(jsonLdDefinedTermSet)}</script>
         <script type="application/ld+json">{JSON.stringify(jsonLdFAQ)}</script>
       </Helmet>
+      <SoftwareApplicationSchema />
 
       <div className="min-h-screen bg-background">
         <Header />
@@ -843,6 +845,9 @@ export default function Lexique() {
             </nav>
           )}
         </main>
+
+        {/* Trust Badge */}
+        <TrustBadge className="border-t border-border" />
 
         <Footer />
       </div>
