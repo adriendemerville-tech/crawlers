@@ -691,6 +691,9 @@ export default function Lexique() {
             </div>
           </section>
 
+          {/* Expert Wiki Grid - Advanced Terms */}
+          <ExpertTermsGrid />
+
           {/* Search and Filters */}
           <section className="mb-8 space-y-4">
             <div className="relative">
