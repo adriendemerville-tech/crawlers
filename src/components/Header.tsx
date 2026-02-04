@@ -272,20 +272,22 @@ export function Header() {
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                   >
-                    <div className="flex items-center justify-start gap-3 p-3">
-                      <Avatar className="h-10 w-10 shrink-0">
-                        <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
-                        <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
-                          {getInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col space-y-0.5 leading-none min-w-0 flex-1">
-                        {profile && (
-                          <p className="font-medium text-sm truncate">{profile.first_name} {profile.last_name}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                      </div>
-                    </div>
+                    <DropdownMenuItem asChild className="p-0">
+                      <Link to="/profil" className="flex items-center justify-start gap-3 p-3 cursor-pointer">
+                        <Avatar className="h-10 w-10 shrink-0">
+                          <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
+                          <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
+                            {getInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col space-y-0.5 leading-none min-w-0 flex-1">
+                          {profile && (
+                            <p className="font-medium text-sm truncate">{profile.first_name} {profile.last_name}</p>
+                          )}
+                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {/* Wallet submenu */}
                     <DropdownMenuItem className="gap-2 cursor-default hover:bg-transparent focus:bg-transparent">
