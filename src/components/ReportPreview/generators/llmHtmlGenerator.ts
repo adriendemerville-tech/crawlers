@@ -1,4 +1,4 @@
-import { LLMAnalysisResult, SentimentType } from '@/types/llm';
+import { LLMAnalysisResult } from '@/types/llm';
 import { TranslationKeys } from '../translations';
 import { icons } from '../reportStyles';
 
@@ -26,49 +26,28 @@ function generateScoreGauge(score: number): string {
   `;
 }
 
-function getSentimentLabel(sentiment: SentimentType, t: TranslationKeys): string {
-  const labels: Record<SentimentType, string> = {
-    positive: t.sentimentPositive,
-    mostly_positive: t.sentimentMostlyPositive,
-    neutral: t.sentimentNeutral,
-    mixed: t.sentimentMixed,
-    negative: t.sentimentNegative,
-  };
-  return labels[sentiment] || t.sentimentNeutral;
-}
-
-function getSentimentIcon(sentiment: SentimentType): string {
-  switch (sentiment) {
-    case 'positive': return icons.checkCircle;
-    case 'mostly_positive': return icons.thumbsUp;
-    case 'neutral': return icons.minus;
-    case 'mixed': return icons.scale;
-    case 'negative': return icons.xCircle;
-    default: return icons.minus;
-  }
-}
-
 export function generateLLMHTML(data: LLMAnalysisResult, t: TranslationKeys): string {
-  const citationCards = data.citations.map((citation) => `
-    <div class="card llm-card">
-      <div class="llm-header">
-        <div>
-          <div class="llm-provider">${citation.provider.name}</div>
-          <div class="llm-company">${citation.provider.company}</div>
+  // Generate compact LLM cards matching BotCard style from homepage
+  const citationCards = data.citations.map((citation) => {
+    const isCited = citation.cited;
+    const statusClass = isCited ? 'llm-card-visible' : 'llm-card-invisible';
+    const statusLabel = isCited ? t.visible : t.invisible;
+    
+    return `
+      <div class="llm-compact-card ${statusClass}">
+        <div class="llm-compact-header">
+          <div class="llm-compact-info">
+            <span class="llm-compact-name">${citation.provider.name}</span>
+            <span class="llm-compact-company">${citation.provider.company}</span>
+          </div>
+          <div class="llm-compact-status ${isCited ? 'status-visible' : 'status-invisible'}">
+            ${statusLabel}
+          </div>
         </div>
-        <div class="llm-cited">${citation.cited ? '✅' : '❌'}</div>
+        ${citation.summary ? `<p class="llm-compact-summary">${citation.summary}</p>` : ''}
       </div>
-      <div class="llm-sentiment sentiment-${citation.sentiment}">
-        ${getSentimentIcon(citation.sentiment)}
-        ${getSentimentLabel(citation.sentiment, t)}
-      </div>
-      ${citation.summary ? `<p class="llm-summary">${citation.summary}</p>` : ''}
-      <div class="llm-recommends ${citation.recommends ? 'yes' : 'no'}">
-        ${citation.recommends ? icons.thumbsUp : icons.minus}
-        ${t.recommends}: ${citation.recommends ? t.yes : t.no}
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   const coveragePercent = Math.round((data.citationRate.cited / data.citationRate.total) * 100);
   const coverageClass = coveragePercent >= 70 ? 'stat-badge-success' : coveragePercent >= 40 ? 'stat-badge-warning' : 'stat-badge-error';
@@ -127,8 +106,8 @@ export function generateLLMHTML(data: LLMAnalysisResult, t: TranslationKeys): st
       <p style="margin-top: 12px; font-size: 14px; color: var(--muted-foreground);">${t.citationRateDesc}</p>
     </div>
 
-    <!-- LLM Cards Grid -->
-    <div class="grid-2">
+    <!-- LLM Cards Grid - Compact style -->
+    <div class="llm-grid">
       ${citationCards}
     </div>
   `;

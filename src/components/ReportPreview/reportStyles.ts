@@ -490,97 +490,99 @@ export const getReportStyles = () => `
     color: var(--muted-foreground);
   }
   
-  /* LLM card styles */
-  .llm-card {
+  /* LLM compact card styles - matching BotCard style */
+  .llm-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 768px) {
+    .llm-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .llm-compact-card {
     padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s ease;
   }
   
-  .llm-header {
+  .llm-compact-card:hover {
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+  }
+  
+  .llm-card-visible {
+    background: hsla(142, 76%, 36%, 0.08);
+    border-color: hsla(142, 76%, 36%, 0.2);
+  }
+  
+  .llm-card-invisible {
+    background: hsla(0, 84%, 60%, 0.08);
+    border-color: hsla(0, 84%, 60%, 0.2);
+  }
+  
+  .llm-compact-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 12px;
+    gap: 8px;
   }
   
-  .llm-provider {
-    font-size: 16px;
+  .llm-compact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  
+  .llm-compact-name {
+    font-size: 14px;
     font-weight: 600;
     color: var(--foreground);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
-  .llm-company {
-    font-size: 13px;
+  .llm-compact-company {
+    font-size: 12px;
     color: var(--muted-foreground);
   }
   
-  .llm-cited {
-    font-size: 24px;
-  }
-  
-  .llm-sentiment {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
+  .llm-compact-status {
+    flex-shrink: 0;
+    padding: 3px 10px;
     border-radius: 20px;
-    font-size: 13px;
-    font-weight: 500;
-    border: 1px solid;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
   
-  .sentiment-positive {
-    background: hsl(142, 76%, 90%);
-    color: hsl(142, 76%, 25%);
-    border-color: hsl(142, 76%, 70%);
-  }
-  
-  .sentiment-mostly_positive {
-    background: hsl(160, 60%, 90%);
-    color: hsl(160, 60%, 30%);
-    border-color: hsl(160, 60%, 60%);
-  }
-  
-  .sentiment-neutral {
-    background: hsl(210, 10%, 92%);
-    color: hsl(210, 10%, 40%);
-    border-color: hsl(210, 10%, 80%);
-  }
-  
-  .sentiment-mixed {
-    background: hsl(30, 80%, 92%);
-    color: hsl(30, 80%, 35%);
-    border-color: hsl(30, 80%, 70%);
-  }
-  
-  .sentiment-negative {
-    background: hsl(0, 70%, 92%);
-    color: hsl(0, 70%, 35%);
-    border-color: hsl(0, 70%, 70%);
-  }
-  
-  .llm-summary {
-    font-size: 14px;
-    color: var(--muted-foreground);
-    margin-top: 8px;
-    line-height: 1.5;
-  }
-  
-  .llm-recommends {
-    margin-top: 8px;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  
-  .llm-recommends.yes {
+  .status-visible {
+    background: hsla(142, 76%, 36%, 0.15);
     color: var(--success);
   }
   
-  .llm-recommends.no {
-    color: var(--muted-foreground);
+  .status-invisible {
+    background: hsla(0, 84%, 60%, 0.15);
+    color: var(--destructive);
   }
   
+  .llm-compact-summary {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    margin-top: 8px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   /* PageSpeed styles */
   .pagespeed-scores {
     margin-bottom: 24px;
