@@ -155,8 +155,9 @@ export function Header() {
             // Logo + Language selector on other pages
             <>
               <a href="/" className="flex items-center gap-2" aria-label="Crawlers.AI - Accueil">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                  <Bot className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
+                <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-violet-600">
+                  <Bot className="h-5 w-5 text-white" aria-hidden="true" />
+                  <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-400 border-2 border-background" />
                 </div>
                 {/* Hide site name on mobile */}
                 <span className="hidden sm:inline text-lg font-semibold text-foreground">Crawlers.AI</span>
