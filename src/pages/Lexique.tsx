@@ -699,15 +699,15 @@ export default function Lexique() {
           {/* Search and Filters */}
           <section className="mb-8 space-y-4">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder={content.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-12 pl-12 pr-4 text-base"
+                className="h-12 pl-4 pr-12 text-base"
                 aria-label={content.searchPlaceholder}
               />
+              <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             </div>
             
             {/* Category Filters */}
