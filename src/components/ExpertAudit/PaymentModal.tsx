@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, CreditCard, CheckCircle2, Copy, Code, Sparkles } from 'lucide-react';
+import { Loader2, CreditCard, CheckCircle2, Copy, Code, Sparkles, Zap } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -11,7 +11,7 @@ const translations = {
   fr: {
     title: 'Générer le Code Correctif',
     subtitle: 'Obtenez le code JSON-LD optimisé pour votre site',
-    price: '5€',
+    price: '1 crédit',
     loading: 'Préparation de votre code...',
     payButton: 'Payer avec Revolut Pay',
     success: 'Code généré avec succès !',
@@ -22,7 +22,7 @@ const translations = {
   en: {
     title: 'Generate Corrective Code',
     subtitle: 'Get the optimized JSON-LD code for your site',
-    price: '€5',
+    price: '1 credit',
     loading: 'Preparing your code...',
     payButton: 'Pay with Revolut Pay',
     success: 'Code generated successfully!',
@@ -33,7 +33,7 @@ const translations = {
   es: {
     title: 'Generar Código Correctivo',
     subtitle: 'Obtén el código JSON-LD optimizado para tu sitio',
-    price: '5€',
+    price: '1 crédito',
     loading: 'Preparando tu código...',
     payButton: 'Pagar con Revolut Pay',
     success: '¡Código generado con éxito!',
@@ -177,7 +177,10 @@ export function PaymentModal({ isOpen, onClose, siteUrl, siteName }: PaymentModa
                         <p className="font-semibold text-foreground">Code JSON-LD Optimisé</p>
                         <p className="text-sm text-muted-foreground">{siteName}</p>
                       </div>
-                      <div className="text-2xl font-bold text-primary">{t.price}</div>
+                      <div className="flex items-center gap-1.5 text-xl font-bold text-amber-500">
+                        <Zap className="w-5 h-5 fill-amber-500" />
+                        <span>{t.price}</span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
