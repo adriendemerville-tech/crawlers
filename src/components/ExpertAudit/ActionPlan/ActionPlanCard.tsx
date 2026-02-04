@@ -34,13 +34,6 @@ export function ActionPlanCard({
                     (recommendation.weaknesses && recommendation.weaknesses.length > 0) || 
                     (recommendation.fixes && recommendation.fixes.length > 0);
 
-  // Left border color based on priority
-  const borderColor = recommendation.priority === 'critical' 
-    ? 'border-l-destructive' 
-    : recommendation.priority === 'important'
-    ? 'border-l-warning'
-    : 'border-l-muted-foreground';
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -55,8 +48,7 @@ export function ActionPlanCard({
         <div
           className={cn(
             'bg-card rounded-lg border border-border/50 transition-all duration-300',
-            'border-l-4 shadow-sm hover:shadow-md',
-            borderColor,
+            'shadow-sm hover:shadow-md',
             isCompleted && 'opacity-50'
           )}
         >
