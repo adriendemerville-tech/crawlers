@@ -7,6 +7,7 @@ import { getExpertTermBySlug, expertCategories } from '@/data/expertTerms';
 import { ArrowLeft, Calendar, Code2, Lightbulb, BookOpen, MessageSquare, ChevronRight, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { TrustBadge, SoftwareApplicationSchema } from '@/components/TrustBadge';
 
 export default function ExpertTermPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -68,6 +69,7 @@ export default function ExpertTermPage() {
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbLd)}</script>
       </Helmet>
+      <SoftwareApplicationSchema />
 
       <Header />
 
@@ -192,6 +194,9 @@ export default function ExpertTermPage() {
           </Link>
         </div>
       </main>
+
+      {/* Trust Badge */}
+      <TrustBadge className="border-t border-border" />
 
       <Footer />
     </div>
