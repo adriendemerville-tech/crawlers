@@ -193,6 +193,20 @@
     }
   }
 
+  /* Carousel word shadow animation */
+  @keyframes carouselShadowPulse {
+    0%, 100% {
+      filter: drop-shadow(0 4px 12px rgba(8, 10, 12, 0.35));
+    }
+    50% {
+      filter: drop-shadow(0 6px 16px rgba(8, 10, 12, 0.45));
+    }
+  }
+
+  .animate-carousel-shadow {
+    animation: carouselShadowPulse 3s ease-in-out infinite;
+  }
+
   .animate-scan {
     animation: scan 1.5s ease-in-out infinite;
   }
