@@ -33,12 +33,7 @@ export function CreditRechargeButton() {
       >
         <span className="font-medium text-amber-600 dark:text-amber-400">{balance}</span>
         <CreditCoin size="sm" />
-        <Badge 
-          variant="secondary" 
-          className="h-5 w-5 p-0 flex items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/30"
-        >
-          <Plus className="h-3 w-3" />
-        </Badge>
+        <Plus className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
       </Button>
 
       {modalOpen && (
