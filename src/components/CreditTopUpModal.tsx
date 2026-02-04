@@ -138,16 +138,14 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[740px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <CreditCoin size="md" />
+          <DialogTitle className="text-xl">
             {t.title}
           </DialogTitle>
           <DialogDescription className="flex items-center justify-between">
             <span>{t.subtitle}</span>
-            <Badge variant="secondary" className="gap-1.5">
+            <Badge variant="secondary" className="gap-1">
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-              {t.currentBalance}: {currentBalance}
-              <CreditCoin size="sm" />
+              {t.currentBalance}: {currentBalance} {t.credits}
             </Badge>
           </DialogDescription>
         </DialogHeader>
