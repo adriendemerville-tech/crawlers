@@ -26,7 +26,7 @@ function generateScoreGauge(score: number, label: string): string {
   `;
 }
 
-export function generateGeoHTML(data: GeoResult, t: TranslationKeys): string {
+export function generateGeoHTML(data: GeoResult, t: TranslationKeys, language: string): string {
   const passedFactors = data.factors.filter(f => f.status === 'good').length;
   const totalFactors = data.factors.length;
 
@@ -95,10 +95,10 @@ export function generateGeoHTML(data: GeoResult, t: TranslationKeys): string {
                 </a>
               </h2>
               <div class="url-meta">
-                <span class="url-meta-item">
-                  ${icons.clock}
-                  ${new Date(data.scannedAt).toLocaleTimeString()}
-                </span>
+              <span class="url-meta-item">
+                ${icons.clock}
+                ${new Date(data.scannedAt).toLocaleTimeString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
+              </span>
                 <span>${passedFactors}/${totalFactors} ${t.checksPassed}</span>
               </div>
             </div>

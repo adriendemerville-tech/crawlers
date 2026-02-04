@@ -49,6 +49,13 @@ export const reportTranslations = {
     invisible: 'Invisible',
     yes: 'Oui',
     no: 'Non',
+    // PageSpeed vitals
+    fcpDesc: 'Temps jusqu\'au premier élément visible',
+    lcpDesc: 'Temps jusqu\'au plus grand élément visible',
+    clsDesc: 'Stabilité visuelle pendant le chargement',
+    tbtDesc: 'Temps de blocage du fil principal',
+    speedIndexDesc: 'Vitesse d\'affichage du contenu visible',
+    ttiDesc: 'Temps jusqu\'à l\'interactivité complète',
   },
   en: {
     title: 'Analysis Report',
@@ -100,6 +107,13 @@ export const reportTranslations = {
     invisible: 'Invisible',
     yes: 'Yes',
     no: 'No',
+    // PageSpeed vitals
+    fcpDesc: 'Time to first visible element',
+    lcpDesc: 'Time to largest visible element',
+    clsDesc: 'Visual stability during loading',
+    tbtDesc: 'Main thread blocking time',
+    speedIndexDesc: 'Speed of visible content display',
+    ttiDesc: 'Time to full interactivity',
   },
   es: {
     title: 'Informe de Análisis',
@@ -151,6 +165,13 @@ export const reportTranslations = {
     invisible: 'Invisible',
     yes: 'Sí',
     no: 'No',
+    // PageSpeed vitals
+    fcpDesc: 'Tiempo hasta el primer elemento visible',
+    lcpDesc: 'Tiempo hasta el elemento más grande visible',
+    clsDesc: 'Estabilidad visual durante la carga',
+    tbtDesc: 'Tiempo de bloqueo del hilo principal',
+    speedIndexDesc: 'Velocidad de visualización del contenido visible',
+    ttiDesc: 'Tiempo hasta la interactividad completa',
   },
 };
 

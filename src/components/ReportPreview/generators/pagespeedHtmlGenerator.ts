@@ -30,12 +30,12 @@ export function generatePageSpeedHTML(data: PageSpeedResult, t: TranslationKeys)
   `).join('');
 
   const vitals = [
-    { icon: icons.zap, label: 'First Contentful Paint', value: scores.fcp, desc: 'Temps jusqu\'au premier élément visible' },
-    { icon: icons.timer, label: 'Largest Contentful Paint', value: scores.lcp, desc: 'Temps jusqu\'au plus grand élément visible' },
-    { icon: icons.move, label: 'Cumulative Layout Shift', value: scores.cls, desc: 'Stabilité visuelle pendant le chargement' },
-    { icon: icons.clock, label: 'Total Blocking Time', value: scores.tbt, desc: 'Temps de blocage du fil principal' },
-    { icon: icons.gauge, label: 'Speed Index', value: scores.speedIndex, desc: 'Vitesse d\'affichage du contenu visible' },
-    { icon: icons.mousePointer, label: 'Time to Interactive', value: scores.tti, desc: 'Temps jusqu\'à l\'interactivité complète' },
+    { icon: icons.zap, label: 'First Contentful Paint', value: scores.fcp, desc: t.fcpDesc },
+    { icon: icons.timer, label: 'Largest Contentful Paint', value: scores.lcp, desc: t.lcpDesc },
+    { icon: icons.move, label: 'Cumulative Layout Shift', value: scores.cls, desc: t.clsDesc },
+    { icon: icons.clock, label: 'Total Blocking Time', value: scores.tbt, desc: t.tbtDesc },
+    { icon: icons.gauge, label: 'Speed Index', value: scores.speedIndex, desc: t.speedIndexDesc },
+    { icon: icons.mousePointer, label: 'Time to Interactive', value: scores.tti, desc: t.ttiDesc },
   ];
 
   const vitalCards = vitals.map(v => `

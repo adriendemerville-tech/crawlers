@@ -67,17 +67,17 @@ export function generateReportHTML(
     const sections: string[] = [];
     
     if (reportData.crawlResult) {
-      sections.push(generateCrawlersHTML(reportData.crawlResult, t));
+      sections.push(generateCrawlersHTML(reportData.crawlResult, t, language));
     }
     
     if (reportData.geoResult) {
       if (sections.length > 0) sections.push(generateSeparator());
-      sections.push(generateGeoHTML(reportData.geoResult, t));
+      sections.push(generateGeoHTML(reportData.geoResult, t, language));
     }
     
     if (reportData.llmResult) {
       if (sections.length > 0) sections.push(generateSeparator());
-      sections.push(generateLLMHTML(reportData.llmResult, t));
+      sections.push(generateLLMHTML(reportData.llmResult, t, language));
     }
     
     if (reportData.pageSpeedResult) {
@@ -91,15 +91,15 @@ export function generateReportHTML(
     switch (type) {
       case 'crawlers':
         title = t.crawlers;
-        content = generateCrawlersHTML(data as CrawlResult, t);
+        content = generateCrawlersHTML(data as CrawlResult, t, language);
         break;
       case 'geo':
         title = t.geo;
-        content = generateGeoHTML(data as GeoResult, t);
+        content = generateGeoHTML(data as GeoResult, t, language);
         break;
       case 'llm':
         title = t.llm;
-        content = generateLLMHTML(data as LLMAnalysisResult, t);
+        content = generateLLMHTML(data as LLMAnalysisResult, t, language);
         break;
       case 'pagespeed':
         title = t.pagespeed;

@@ -26,7 +26,7 @@ function generateScoreGauge(score: number): string {
   `;
 }
 
-export function generateLLMHTML(data: LLMAnalysisResult, t: TranslationKeys): string {
+export function generateLLMHTML(data: LLMAnalysisResult, t: TranslationKeys, language: string): string {
   // Generate compact LLM cards matching BotCard style from homepage
   const citationCards = data.citations.map((citation) => {
     const isCited = citation.cited;
@@ -71,7 +71,7 @@ export function generateLLMHTML(data: LLMAnalysisResult, t: TranslationKeys): st
             <div class="url-meta">
               <span class="url-meta-item">
                 ${icons.clock}
-                ${new Date(data.scannedAt).toLocaleTimeString()}
+                ${new Date(data.scannedAt).toLocaleTimeString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
               </span>
               <span>${data.citationRate.cited}/${data.citationRate.total} ${t.llmsCite}</span>
             </div>
