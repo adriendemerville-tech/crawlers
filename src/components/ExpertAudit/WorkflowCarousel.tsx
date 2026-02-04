@@ -304,15 +304,15 @@ export function WorkflowCarousel({
             className="mb-8"
           >
             <div className="relative max-w-xl mx-auto px-4">
-              <Search className="absolute left-8 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="text"
                 placeholder={t.placeholder}
                 value={url}
                 onChange={(e) => onUrlChange(e.target.value)}
-                className="pl-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-sm"
+                className="pl-4 pr-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-sm"
                 disabled={isLoading || isStrategicLoading}
               />
+              <Search className="absolute right-8 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             </div>
           </motion.div>
         )}
