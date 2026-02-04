@@ -217,7 +217,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="example.com"
+                placeholder=""
                 value={url}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 onBlur={handleUrlBlur}
