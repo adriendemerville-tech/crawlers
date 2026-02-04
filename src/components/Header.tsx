@@ -222,10 +222,10 @@ export function Header() {
         {/* Right side: Credits (on audit-expert), Theme, User */}
         <div className="flex items-center gap-3">
 
-          {/* Credit recharge button - on home and /audit-expert when logged in */}
-          {(isAuditExpertPage || location.pathname === '/') && user && (
+          {/* Credit recharge button - on home and /audit-expert (show for all users) */}
+          {(isAuditExpertPage || location.pathname === '/') && (
             <Suspense fallback={null}>
-              <CreditRechargeButton />
+              <CreditRechargeButton showZeroForGuest />
             </Suspense>
           )}
 
