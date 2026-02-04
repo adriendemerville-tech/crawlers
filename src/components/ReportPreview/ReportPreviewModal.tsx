@@ -12,7 +12,7 @@ import { PageSpeedResult } from '@/types/pagespeed';
 import { generateReportHTML } from './reportHtmlGenerator';
 import { generatePDF } from './pdfGenerator';
 
-type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed';
+type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'full';
 
 interface ReportPreviewModalProps {
   isOpen: boolean;
@@ -22,6 +22,7 @@ interface ReportPreviewModalProps {
   geoResult?: GeoResult | null;
   llmResult?: LLMAnalysisResult | null;
   pageSpeedResult?: PageSpeedResult | null;
+  currentUrl?: string;
 }
 
 const reportTranslations = {
@@ -80,6 +81,7 @@ export function ReportPreviewModal({
   geoResult,
   llmResult,
   pageSpeedResult,
+  currentUrl,
 }: ReportPreviewModalProps) {
   const { language } = useLanguage();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -89,8 +91,20 @@ export function ReportPreviewModal({
 
   const t = reportTranslations[language as keyof typeof reportTranslations] || reportTranslations.fr;
 
+  // For 'full' type, determine which result to use as primary
+  const getEffectiveType = (): 'crawlers' | 'geo' | 'llm' | 'pagespeed' => {
+    if (type !== 'full') return type;
+    if (crawlResult) return 'crawlers';
+    if (geoResult) return 'geo';
+    if (llmResult) return 'llm';
+    if (pageSpeedResult) return 'pagespeed';
+    return 'crawlers';
+  };
+
+  const effectiveType = getEffectiveType();
+
   const getData = (): CrawlResult | GeoResult | LLMAnalysisResult | PageSpeedResult | null => {
-    switch (type) {
+    switch (effectiveType) {
       case 'crawlers':
         return crawlResult || null;
       case 'geo':
@@ -105,7 +119,8 @@ export function ReportPreviewModal({
   };
 
   const getUrl = (): string => {
-    switch (type) {
+    if (currentUrl) return currentUrl;
+    switch (effectiveType) {
       case 'crawlers':
         return crawlResult?.url || '';
       case 'geo':
@@ -124,12 +139,12 @@ export function ReportPreviewModal({
 
   if (!data) return null;
 
-  const htmlContent = generateReportHTML(type, data, url, language);
+  const htmlContent = generateReportHTML(effectiveType, data, url, language);
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      await generatePDF(type, data, url, language);
+      await generatePDF(effectiveType, data, url, language);
       toast.success(t.pdfSuccess);
     } catch (error) {
       console.error('PDF generation error:', error);
@@ -143,7 +158,7 @@ export function ReportPreviewModal({
     try {
       const { data: responseData, error } = await supabase.functions.invoke('share-report', {
         body: {
-          type,
+          type: effectiveType,
           url,
           data,
           language,
