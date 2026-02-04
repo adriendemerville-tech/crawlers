@@ -152,7 +152,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
         >
           {isHydrated ? (
             <Suspense fallback={
-              <span className="whitespace-nowrap leading-tight bg-gradient-to-tr from-[#0a4080] via-[#7516f0] via-55% via-[#9b5fff] via-85% to-[#e6a817] bg-clip-text text-transparent">
+              <span className="whitespace-nowrap leading-tight bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent">
                 {animatedWords[wordIndex]}
               </span>
             }>
@@ -161,13 +161,13 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.4, ease: 'easeInOut' }}
-                className="relative whitespace-nowrap leading-tight bg-gradient-to-tr from-[#0a4080] via-[#7516f0] via-55% via-[#9b5fff] via-85% to-[#e6a817] bg-clip-text text-transparent"
+                className="relative whitespace-nowrap leading-tight bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent"
               >
                 {animatedWords[wordIndex]}
               </MotionSpan>
             </Suspense>
           ) : (
-            <span className="whitespace-nowrap leading-tight bg-gradient-to-tr from-[#0a4080] via-[#7516f0] via-55% via-[#9b5fff] via-85% to-[#e6a817] bg-clip-text text-transparent">
+            <span className="whitespace-nowrap leading-tight bg-gradient-to-tr from-[#0545a8] via-[#6a00ff] via-50% via-[#8a2bff] via-65% to-[#f5a800] bg-clip-text text-transparent">
               {animatedWords[0]}
             </span>
           )}
