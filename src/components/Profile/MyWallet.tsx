@@ -4,13 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Zap, CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity } from 'lucide-react';
+import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
+import { CreditCoin } from '@/components/ui/CreditCoin';
 
 const translations = {
   fr: {
@@ -196,19 +197,17 @@ export function MyWallet() {
       <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-amber-500" />
+            <CreditCoin size="md" />
             {t.currentBalance}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-2">
               <p className="text-4xl font-bold text-amber-600 dark:text-amber-400">
                 {balance}
-                <span className="text-lg font-normal text-muted-foreground ml-2">
-                  {t.credits}
-                </span>
               </p>
+              <CreditCoin size="lg" />
             </div>
             <Button 
               onClick={() => setShowTopUpModal(true)}

@@ -1,5 +1,6 @@
 import { useState, useRef, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Zap, Scale } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale } from 'lucide-react';
+import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -290,9 +291,9 @@ export function Header() {
                     <DropdownMenuItem className="gap-2 cursor-default hover:bg-transparent focus:bg-transparent">
                       <Wallet className="h-4 w-4 text-amber-500" />
                       <span>{t.wallet}</span>
-                      <span className="ml-auto flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
-                        <Zap className="h-3 w-3" />
-                        {creditsBalance} {t.credits}
+                      <span className="ml-auto flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
+                        {creditsBalance}
+                        <CreditCoin size="sm" />
                       </span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
