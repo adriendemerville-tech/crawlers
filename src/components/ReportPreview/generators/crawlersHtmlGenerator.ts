@@ -2,7 +2,7 @@ import { CrawlResult } from '@/types/crawler';
 import { TranslationKeys } from '../translations';
 import { icons } from '../reportStyles';
 
-export function generateCrawlersHTML(data: CrawlResult, t: TranslationKeys): string {
+export function generateCrawlersHTML(data: CrawlResult, t: TranslationKeys, language: string): string {
   const allowed = data.bots.filter((b) => b.status === 'allowed').length;
   const blocked = data.bots.filter((b) => b.status === 'blocked').length;
   const unknown = data.bots.filter((b) => b.status === 'unknown').length;
@@ -74,7 +74,7 @@ export function generateCrawlersHTML(data: CrawlResult, t: TranslationKeys): str
               </span>
               <span class="url-meta-item">
                 ${icons.clock}
-                ${new Date(data.scannedAt).toLocaleTimeString()}
+                ${new Date(data.scannedAt).toLocaleTimeString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
               </span>
             </div>
           </div>
