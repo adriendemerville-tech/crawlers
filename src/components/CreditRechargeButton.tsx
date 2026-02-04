@@ -1,10 +1,11 @@
 import { useState, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Plus } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { CreditCoin } from '@/components/ui/CreditCoin';
+import { useNavigate } from 'react-router-dom';
 
 // Lazy load the heavy modal (contains framer-motion)
 const CreditTopUpModal = lazy(() => import('./CreditTopUpModal').then(m => ({ default: m.CreditTopUpModal })));
@@ -15,28 +16,46 @@ const translations = {
   es: { recharge: 'Recargar' },
 };
 
-export function CreditRechargeButton() {
+interface CreditRechargeButtonProps {
+  showZeroForGuest?: boolean;
+}
+
+export function CreditRechargeButton({ showZeroForGuest = false }: CreditRechargeButtonProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const { balance, loading } = useCredits();
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const t = translations[language];
 
-  if (loading) return null;
+  // Show loading state only for logged in users
+  if (loading && user) return null;
+
+  // For guests, show 0 balance and redirect to auth on click
+  const displayBalance = user ? balance : 0;
+
+  const handleClick = () => {
+    if (user) {
+      setModalOpen(true);
+    } else {
+      navigate('/auth');
+    }
+  };
 
   return (
     <>
       <Button
         variant="outline"
         size="sm"
-        onClick={() => setModalOpen(true)}
+        onClick={handleClick}
         className="gap-1.5 border-amber-500/30 hover:border-amber-500/50 hover:bg-amber-500/10"
       >
-        <span className="font-medium text-amber-600 dark:text-amber-400">{balance}</span>
+        <span className="font-medium text-amber-600 dark:text-amber-400">{displayBalance}</span>
         <CreditCoin size="sm" />
         <Plus className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
       </Button>
 
-      {modalOpen && (
+      {modalOpen && user && (
         <Suspense fallback={null}>
           <CreditTopUpModal
             open={modalOpen}
