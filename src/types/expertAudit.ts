@@ -364,8 +364,38 @@ export interface StrategicAnalysis {
   
   // Hallucination correction data (if user corrected)
   hallucinationCorrections?: HallucinationCorrections | null;
+ 
+   // NEW: Raw LLM visibility data from check-llm
+   llm_visibility_raw?: LLMVisibilityRaw | null;
 }
 
+ // Raw LLM visibility data from check-llm edge function
+ export interface LLMVisibilityRaw {
+   url: string;
+   domain: string;
+   scannedAt: string;
+   overallScore: number;
+   citationRate: {
+     cited: number;
+     total: number;
+   };
+   invisibleList: Array<{ id: string; name: string; company: string }>;
+   averageIterationDepth: number;
+   overallSentiment: 'positive' | 'mostly_positive' | 'neutral' | 'mixed' | 'negative';
+   overallRecommendation: boolean;
+   coreValueSummary: string;
+   citations: Array<{
+     provider: { id: string; name: string; company: string };
+     cited: boolean;
+     iterationDepth: number;
+     sentiment: 'positive' | 'mostly_positive' | 'neutral' | 'mixed' | 'negative';
+     recommends: boolean;
+     coreValueMatch: boolean;
+     summary: string;
+     hallucinations?: string[];
+   }>;
+ }
+ 
 export interface ExpertAuditResult {
   url: string;
   domain: string;
