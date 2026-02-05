@@ -183,6 +183,8 @@ export default function Tarifs() {
       <Helmet>
         <title>{t.pageTitle}</title>
         <meta name="description" content={t.subtitle} />
+        <link rel="canonical" href="https://crawlers.fr/tarifs" />
+        <meta property="og:url" content="https://crawlers.fr/tarifs" />
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
