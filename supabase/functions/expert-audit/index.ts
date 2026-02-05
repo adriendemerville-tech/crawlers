@@ -319,6 +319,95 @@ async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
   }
 }
 
+interface CrawlersResult {
+  bots: Array<{
+    name: string;
+    userAgent: string;
+    company: string;
+    status: 'allowed' | 'blocked' | 'unknown';
+    reason?: string;
+    blockSource?: 'robots.txt' | 'meta-tag' | 'http-status';
+    lineNumber?: number;
+  }>;
+  allowsAIBots: {
+    gptBot: boolean;
+    claudeBot: boolean;
+    perplexityBot: boolean;
+    googleExtended: boolean;
+    appleBotExtended: boolean;
+    ccBot: boolean;
+  };
+  allowedCount: number;
+  blockedCount: number;
+}
+
+async function checkCrawlers(url: string): Promise<CrawlersResult | null> {
+  console.log('Checking AI crawlers...');
+  
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase configuration for crawlers check');
+      return null;
+    }
+    
+    const response = await fetch(`${supabaseUrl}/functions/v1/check-crawlers`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url }),
+    });
+    
+    if (!response.ok) {
+      console.error('Crawlers check failed:', response.status);
+      return null;
+    }
+    
+    const result = await response.json();
+    
+    if (!result.success || !result.data?.bots) {
+      console.error('Invalid crawlers response:', result.error);
+      return null;
+    }
+    
+    const bots = result.data.bots;
+    
+    // Extract individual bot status
+    const getBotStatus = (name: string) => {
+      const bot = bots.find((b: { name: string }) => b.name === name);
+      return bot?.status === 'allowed';
+    };
+    
+    const allowsAIBots = {
+      gptBot: getBotStatus('GPTBot'),
+      claudeBot: getBotStatus('ClaudeBot'),
+      perplexityBot: getBotStatus('PerplexityBot'),
+      googleExtended: getBotStatus('Google-Extended'),
+      appleBotExtended: getBotStatus('Applebot-Extended'),
+      ccBot: getBotStatus('CCBot'),
+    };
+    
+    const allowedCount = bots.filter((b: { status: string }) => b.status === 'allowed').length;
+    const blockedCount = bots.filter((b: { status: string }) => b.status === 'blocked').length;
+    
+    console.log(`AI Crawlers check complete: ${allowedCount} allowed, ${blockedCount} blocked`);
+    
+    return {
+      bots,
+      allowsAIBots,
+      allowedCount,
+      blockedCount,
+    };
+  } catch (error) {
+    console.error('Error checking crawlers:', error);
+    return null;
+  }
+}
+
 interface RecommendationItem {
   id: string;
   priority: 'critical' | 'important' | 'optional';
@@ -732,11 +821,12 @@ serve(async (req) => {
     console.log('Starting Expert Audit for:', normalizedUrl);
     
     // Run all checks in parallel
-    const [psiData, safeBrowsing, htmlAnalysis, robotsAnalysis] = await Promise.all([
+    const [psiData, safeBrowsing, htmlAnalysis, robotsAnalysis, crawlersResult] = await Promise.all([
       fetchPageSpeedData(normalizedUrl),
       checkSafeBrowsing(normalizedUrl),
       analyzeHtml(normalizedUrl),
-      checkRobotsTxt(normalizedUrl)
+      checkRobotsTxt(normalizedUrl),
+      checkCrawlers(normalizedUrl)
     ]);
     
     const categories = psiData.lighthouseResult?.categories || {};
@@ -807,6 +897,7 @@ serve(async (req) => {
         schemaTypes: htmlAnalysis.schemaTypes,
         hasRobotsTxt: robotsAnalysis.exists,
         robotsPermissive: robotsAnalysis.permissive,
+        allowsAIBots: crawlersResult?.allowsAIBots,
       },
       security: {
         score: securityScore,
@@ -923,6 +1014,8 @@ Réponds avec ce JSON exact:
             psi: { categories, audits: Object.keys(audits).slice(0, 10) },
             safeBrowsing,
             htmlAnalysis,
+            robotsAnalysis,
+            crawlersData: crawlersResult,
           }
         }
       }),

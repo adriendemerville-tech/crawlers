@@ -23,6 +23,7 @@ import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 import { HallucinationCorrectionModal } from './HallucinationCorrectionModal';
 import { KeywordPositioningCard } from './KeywordPositioningCard';
 import { InlineAuthForm } from './InlineAuthForm';
+import { AIBotsCard } from './AIBotsCard';
 
 export {
   ExpertAuditDashboard,
@@ -54,6 +55,7 @@ export {
   HallucinationCorrectionModal,
   KeywordPositioningCard,
   InlineAuthForm,
+  AIBotsCard,
 };
 
 export type { HallucinationAnalysis } from './HallucinationCorrectionModal';
