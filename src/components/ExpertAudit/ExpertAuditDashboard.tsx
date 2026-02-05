@@ -574,6 +574,8 @@ export function ExpertAuditDashboard() {
           overallScore: data.data.overallScore || data.data.geo_readiness?.citability_score || data.data.geo_score?.score,
           // Store correction data for reference
           hallucinationCorrections: hallucinationCorrections || null,
+           // NEW: Raw LLM visibility data from check-llm
+           llm_visibility_raw: data.data.llm_visibility_raw || null,
         },
       };
 

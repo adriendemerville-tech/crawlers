@@ -867,6 +867,45 @@ Deno.serve(async (req) => {
       console.log('⚠️ DataForSEO non disponible, l\'audit utilisera uniquement le LLM');
     }
 
+     // ==================== ÉTAPE 1b: APPELER CHECK-LLM POUR VISIBILITÉ LLM ====================
+     console.log('\n🤖 ÉTAPE 1b: Appel de check-llm pour analyse de visibilité LLM...');
+     let llmVisibilityData = null;
+     
+     try {
+       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+       
+       if (supabaseUrl && supabaseAnonKey) {
+         const llmResponse = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
+           method: 'POST',
+           headers: {
+             'Authorization': `Bearer ${supabaseAnonKey}`,
+             'Content-Type': 'application/json',
+           },
+           body: JSON.stringify({ url, lang: 'fr' }),
+         });
+         
+         if (llmResponse.ok) {
+           const llmResult = await llmResponse.json();
+           if (llmResult.success && llmResult.data) {
+             llmVisibilityData = llmResult.data;
+             console.log(`✅ Visibilité LLM analysée: score ${llmVisibilityData.overallScore}/100, ${llmVisibilityData.citationRate?.cited}/${llmVisibilityData.citationRate?.total} citations`);
+             
+             // Enrichir effectiveToolsData avec les données LLM réelles
+             effectiveToolsData.llm = llmVisibilityData;
+           } else {
+             console.log('⚠️ Réponse check-llm invalide:', llmResult.error);
+           }
+         } else {
+           console.log('⚠️ Erreur appel check-llm:', llmResponse.status);
+         }
+       } else {
+         console.log('⚠️ Variables Supabase manquantes pour appel check-llm');
+       }
+     } catch (llmError) {
+       console.error('❌ Erreur lors de l\'appel check-llm:', llmError);
+     }
+ 
     // ==================== ÉTAPE 2: GÉNÉRER L'ANALYSE LLM ====================
     console.log('\n🤖 ÉTAPE 2: Génération de l\'analyse LLM avec données enrichies...');
     
@@ -1034,6 +1073,8 @@ IMPORTANT:
         // Ajouter les données brutes DataForSEO pour référence
         raw_market_data: marketData,
         toolsData,
+         // Ajouter les données de visibilité LLM brutes
+         llm_visibility_raw: llmVisibilityData,
       }
     };
 
