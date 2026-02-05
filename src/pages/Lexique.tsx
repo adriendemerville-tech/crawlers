@@ -527,13 +527,6 @@ export default function Lexique() {
 
   // Scroll to anchor on page load
   useEffect(() => {
-    // Masquer le schéma FAQ de la page d'accueil pour éviter les doublons
-    const homepageFaqSchema = document.getElementById('homepage-faq-schema');
-    if (homepageFaqSchema) {
-      homepageFaqSchema.setAttribute('data-hidden', 'true');
-      homepageFaqSchema.removeAttribute('type');
-    }
-    
     const hash = window.location.hash.slice(1);
     if (hash) {
       setTimeout(() => {
@@ -547,15 +540,6 @@ export default function Lexique() {
         }
       }, 100);
     }
-    
-    return () => {
-      // Restaurer le schéma FAQ de la page d'accueil au démontage
-      const homepageFaq = document.getElementById('homepage-faq-schema');
-      if (homepageFaq) {
-        homepageFaq.removeAttribute('data-hidden');
-        homepageFaq.setAttribute('type', 'application/ld+json');
-      }
-    };
   }, [location]);
 
   const copyTermLink = (term: string) => {
