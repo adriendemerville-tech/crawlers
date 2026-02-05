@@ -1,17 +1,25 @@
 import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
 import { Building2, Bot, Clock, FileText, TrendingUp, CheckCircle2, XCircle, ArrowRight, Calculator } from "lucide-react";
 import { Link } from "react-router-dom";
 
+ // Lazy load Footer (below-the-fold)
+ const Footer = lazy(() => import("@/components/Footer").then(m => ({ default: m.Footer })));
+ 
+ // Lazy load heavy form components (simulator section - below-the-fold)
+ const Select = lazy(() => import("@/components/ui/select").then(m => ({ default: m.Select })));
+ const SelectContent = lazy(() => import("@/components/ui/select").then(m => ({ default: m.SelectContent })));
+ const SelectItem = lazy(() => import("@/components/ui/select").then(m => ({ default: m.SelectItem })));
+ const SelectTrigger = lazy(() => import("@/components/ui/select").then(m => ({ default: m.SelectTrigger })));
+ const SelectValue = lazy(() => import("@/components/ui/select").then(m => ({ default: m.SelectValue })));
+ const Checkbox = lazy(() => import("@/components/ui/checkbox").then(m => ({ default: m.Checkbox })));
+ const Slider = lazy(() => import("@/components/ui/slider").then(m => ({ default: m.Slider })));
+ 
 // Lazy load framer-motion for performance
 const MotionSection = lazy(() =>
   import("framer-motion").then((mod) => ({
@@ -91,6 +99,30 @@ const SERVICES: ServiceOption[] = [
 
 const CREDIT_PRICE = 0.50;
 
+ // Static comparison table data - hoisted for performance
+ const SEO_GEO_COMPARISON_DATA = [
+   { criteria: "Cible", seo: "Robots d'indexation (Spiders)", geo: "Modèles de Langage (GPT-4, Claude)" },
+   { criteria: "Objectif", seo: "Classement (Ranking #1)", geo: "Citation dans les réponses IA" },
+   { criteria: "Signal principal", seo: "Backlinks & PageRank", geo: "Données structurées JSON-LD" },
+   { criteria: "Format de contenu", seo: "Pages optimisées mots-clés", geo: "Contenu factuel & citable" },
+   { criteria: "Mesure de succès", seo: "Position SERP, CTR", geo: "Taux de citation, mention de marque" },
+   { criteria: "Horizon temporel", seo: "Long terme (3-6 mois)", geo: "Impact rapide (jours/semaines)" },
+   { criteria: "Fichiers critiques", seo: "sitemap.xml, robots.txt", geo: "llms.txt, ai-plugin.json, JSON-LD" },
+   { criteria: "Concurrence", seo: "10 résultats par page", geo: "1-3 sources citées maximum" },
+ ] as const;
+ 
+ const FEATURE_COMPARISON_DATA = [
+   { feature: "Audit technique instantané", agency: true, crawlers: true },
+   { feature: "Analyse des données structurées", agency: true, crawlers: true },
+   { feature: "Visibilité sur ChatGPT/Perplexity", agency: false, crawlers: true },
+   { feature: "Plans d'actions pilotables", agency: false, crawlers: true },
+   { feature: "Génération de code correctif", agency: true, crawlers: true },
+   { feature: "Résultats en moins de 5 minutes", agency: false, crawlers: true },
+   { feature: "Mises à jour illimitées", agency: false, crawlers: true },
+   { feature: "Accompagnement humain personnalisé", agency: true, crawlers: false },
+   { feature: "Rapport exportable PDF", agency: true, crawlers: true },
+ ] as const;
+ 
 export default function ComparatifAuditGeo() {
   const [pageRange, setPageRange] = useState<PageRange>("less20");
   const [selectedServices, setSelectedServices] = useState<string[]>(["technical"]);
@@ -295,48 +327,7 @@ export default function ComparatifAuditGeo() {
                       </tr>
                     </thead>
                     <tbody>
-                      {[
-                        {
-                          criteria: "Cible",
-                          seo: "Robots d'indexation (Spiders)",
-                          geo: "Modèles de Langage (GPT-4, Claude)"
-                        },
-                        {
-                          criteria: "Objectif",
-                          seo: "Classement (Ranking #1)",
-                          geo: "Citation dans les réponses IA"
-                        },
-                        {
-                          criteria: "Signal principal",
-                          seo: "Backlinks & PageRank",
-                          geo: "Données structurées JSON-LD"
-                        },
-                        {
-                          criteria: "Format de contenu",
-                          seo: "Pages optimisées mots-clés",
-                          geo: "Contenu factuel & citable"
-                        },
-                        {
-                          criteria: "Mesure de succès",
-                          seo: "Position SERP, CTR",
-                          geo: "Taux de citation, mention de marque"
-                        },
-                        {
-                          criteria: "Horizon temporel",
-                          seo: "Long terme (3-6 mois)",
-                          geo: "Impact rapide (jours/semaines)"
-                        },
-                        {
-                          criteria: "Fichiers critiques",
-                          seo: "sitemap.xml, robots.txt",
-                          geo: "llms.txt, ai-plugin.json, JSON-LD"
-                        },
-                        {
-                          criteria: "Concurrence",
-                          seo: "10 résultats par page",
-                          geo: "1-3 sources citées maximum"
-                        }
-                      ].map((row, idx) => (
+                       {SEO_GEO_COMPARISON_DATA.map((row, idx) => (
                         <tr key={idx} className="border-b border-border hover:bg-muted/20 transition-colors">
                           <td className="p-2 md:p-3 font-medium border-r border-border bg-card text-xs md:text-sm">{row.criteria}</td>
                           <td className="p-2 md:p-3 text-center border-r border-border text-muted-foreground text-xs md:text-sm">{row.seo}</td>
@@ -360,7 +351,8 @@ export default function ComparatifAuditGeo() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-4 md:p-6 lg:p-8">
-                <div className="grid md:grid-cols-2 gap-8 mb-8">
+                 <Suspense fallback={<div className="animate-pulse h-96 bg-muted/30 rounded-lg" />}>
+                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                   {/* Configuration */}
                   <div className="space-y-6">
                     <div>
@@ -527,6 +519,7 @@ export default function ComparatifAuditGeo() {
                     </Button>
                   </div>
                 </div>
+                 </Suspense>
               </CardContent>
             </Card>
           </section>
@@ -620,17 +613,7 @@ export default function ComparatifAuditGeo() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      { feature: "Audit technique instantané", agency: true, crawlers: true },
-                      { feature: "Analyse des données structurées", agency: true, crawlers: true },
-                      { feature: "Visibilité sur ChatGPT/Perplexity", agency: false, crawlers: true },
-                      { feature: "Plans d'actions pilotables", agency: false, crawlers: true },
-                      { feature: "Génération de code correctif", agency: true, crawlers: true },
-                      { feature: "Résultats en moins de 5 minutes", agency: false, crawlers: true },
-                      { feature: "Mises à jour illimitées", agency: false, crawlers: true },
-                      { feature: "Accompagnement humain personnalisé", agency: true, crawlers: false },
-                      { feature: "Rapport exportable PDF", agency: true, crawlers: true },
-                    ].map((row, i) => (
+                     {FEATURE_COMPARISON_DATA.map((row, i) => (
                       <tr key={i} className="border-b hover:bg-muted/30 transition-colors">
                         <td className="p-4 font-medium">{row.feature}</td>
                         <td className="text-center p-4">
@@ -792,7 +775,9 @@ export default function ComparatifAuditGeo() {
           </section>
         </main>
 
-        <Footer />
+         <Suspense fallback={<div className="h-32 bg-muted/20" />}>
+           <Footer />
+         </Suspense>
       </div>
     </>
   );
