@@ -647,7 +647,6 @@ export default function Lexique() {
         <meta name="twitter:title" content={content.metaTitle} />
         <meta name="twitter:description" content={content.metaDescription} />
         <script type="application/ld+json">{JSON.stringify(jsonLdDefinedTermSet)}</script>
-        <script type="application/ld+json">{JSON.stringify(jsonLdFAQ)}</script>
       </Helmet>
       <SoftwareApplicationSchema />
 
