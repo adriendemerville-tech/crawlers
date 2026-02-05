@@ -231,7 +231,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
               variant="hero" 
               size="lg" 
               disabled={isLoading}
-              className="min-w-[140px]"
+              className="h-14 min-w-[122px]"
             >
               {isLoading ? (
                 <>
