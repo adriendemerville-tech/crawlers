@@ -6,21 +6,23 @@ interface ScoreGaugeProps {
   label: string;
 }
 
+// Seuils PageSpeed Insights officiels : 0-49 = rouge, 50-89 = orange, 90-100 = vert
+// Ajustement UX : 0-59 = rouge (plus strict pour alerter sur les vrais problèmes)
 function getScoreColor(score: number): string {
   if (score >= 90) return 'text-success';
-  if (score >= 50) return 'text-warning';
+  if (score >= 60) return 'text-warning';
   return 'text-destructive';
 }
 
 function getScoreBgColor(score: number): string {
   if (score >= 90) return 'bg-success/10';
-  if (score >= 50) return 'bg-warning/10';
+  if (score >= 60) return 'bg-warning/10';
   return 'bg-destructive/10';
 }
 
 function getScoreRingColor(score: number): string {
   if (score >= 90) return 'stroke-success';
-  if (score >= 50) return 'stroke-warning';
+  if (score >= 60) return 'stroke-warning';
   return 'stroke-destructive';
 }
 
