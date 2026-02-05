@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, memo } from 'react';
+import { useState, useEffect, lazy, Suspense, memo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
@@ -66,6 +66,65 @@ const Index = () => {
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   const { toast } = useToast();
   const { language } = useLanguage();
+
+  // Inject FAQ JSON-LD only on the homepage
+  useEffect(() => {
+    const faqSchema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Qu'est-ce qu'un audit technique SEO expert ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Un audit technique SEO expert analyse 200 points de votre site : performance, Core Web Vitals, données structurées, accessibilité et optimisation pour les moteurs de recherche comme Google. Notre outil gratuit fournit un rapport complet avec recommandations personnalisées."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Qu'est-ce que le score GEO et pourquoi est-il important pour ChatGPT et Gemini ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Le score GEO (Generative Engine Optimization) mesure l'optimisation de votre site pour les IA comme ChatGPT, Google Gemini et Perplexity. Un score GEO élevé signifie que votre contenu sera mieux compris et référencé par les LLM (Large Language Models) dans leurs réponses."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment améliorer mon référencement pour les moteurs de recherche IA ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Pour améliorer votre référencement IA : 1) Autorisez les crawlers IA dans robots.txt (GPTBot, ClaudeBot), 2) Utilisez des données structurées JSON-LD, 3) Lancez un audit gratuit sur Crawlers.fr pour vérifier vos fichiers llms.txt et votre sémantique."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "L'audit SEO et GEO est-il vraiment gratuit et rapide ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oui, notre audit technique SEO et GEO est 100% gratuit, sans inscription. L'analyse complète de votre site prend environ 30 secondes et inclut : score sur 200 points, Core Web Vitals, analyse des bots IA, et recommandations marketing personnalisées."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quels LLM et IA sont analysés par votre outil ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Notre outil analyse la compatibilité avec : ChatGPT (GPTBot, OAI-SearchBot), Google Gemini (Google-Extended), Claude (ClaudeBot), Perplexity (PerplexityBot), et d'autres crawlers IA. Nous vérifions également votre visibilité marketing dans ces moteurs génératifs."
+          }
+        }
+      ]
+    };
+    const scriptEl = document.createElement('script');
+    scriptEl.type = 'application/ld+json';
+    scriptEl.setAttribute('data-schema', 'homepage-faq');
+    scriptEl.textContent = JSON.stringify(faqSchema);
+    document.head.appendChild(scriptEl);
+
+    return () => {
+      document.querySelectorAll('script[data-schema="homepage-faq"]').forEach(el => el.remove());
+    };
+  }, []);
 
   const handleCheck = async (url: string) => {
     setIsLoading(true);

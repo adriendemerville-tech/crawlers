@@ -226,34 +226,19 @@ export default function ComparatifAuditGeo() {
     ]
   };
 
-  // Masquer le schéma FAQ de la page d'accueil pour éviter les doublons
+  // Masquer le canonical de la page d'accueil pour éviter les conflits
   useEffect(() => {
-   // Masquer le canonical de la page d'accueil pour éviter les conflits
-   const homepageCanonical = document.querySelector('link[rel="canonical"][href="https://crawlers.fr/"]');
-   if (homepageCanonical) {
-     homepageCanonical.setAttribute('data-hidden', 'true');
-     homepageCanonical.removeAttribute('href');
-   }
-   
-    const homepageFaqSchema = document.getElementById('homepage-faq-schema');
-    if (homepageFaqSchema) {
-      homepageFaqSchema.setAttribute('data-hidden', 'true');
-      homepageFaqSchema.removeAttribute('type');
+    const homepageCanonical = document.querySelector('link[rel="canonical"][href="https://crawlers.fr/"]');
+    if (homepageCanonical) {
+      homepageCanonical.setAttribute('data-hidden', 'true');
+      homepageCanonical.removeAttribute('href');
     }
     
     return () => {
-     // Restaurer le canonical de la page d'accueil au démontage
-     const canonical = document.querySelector('link[rel="canonical"][data-hidden="true"]');
-     if (canonical) {
-       canonical.removeAttribute('data-hidden');
-       canonical.setAttribute('href', 'https://crawlers.fr/');
-     }
-     
-      // Restaurer le schéma FAQ de la page d'accueil au démontage
-      const homepageFaq = document.getElementById('homepage-faq-schema');
-      if (homepageFaq) {
-        homepageFaq.removeAttribute('data-hidden');
-        homepageFaq.setAttribute('type', 'application/ld+json');
+      const canonical = document.querySelector('link[rel="canonical"][data-hidden="true"]');
+      if (canonical) {
+        canonical.removeAttribute('data-hidden');
+        canonical.setAttribute('href', 'https://crawlers.fr/');
       }
     };
   }, []);
