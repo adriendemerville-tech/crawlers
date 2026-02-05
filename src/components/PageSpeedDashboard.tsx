@@ -13,6 +13,67 @@ interface PageSpeedDashboardProps {
   onStrategyChange: (strategy: 'mobile' | 'desktop') => void;
 }
 
+// Parse une valeur de temps (ex: "2.5s", "250 ms") en millisecondes
+function parseTimeToMs(value: string): number {
+  const cleaned = value.toLowerCase().trim();
+  if (cleaned.includes('ms')) {
+    return parseFloat(cleaned.replace(/[^0-9.,]/g, '').replace(',', '.'));
+  }
+  // Assume seconds if 's' or no unit
+  return parseFloat(cleaned.replace(/[^0-9.,]/g, '').replace(',', '.')) * 1000;
+}
+
+// Convertit une métrique Core Web Vitals en score 0-100 selon les seuils PageSpeed officiels
+function getMetricScore(metricName: string, value: string): number {
+  const numValue = parseFloat(value.replace(/[^0-9.,]/g, '').replace(',', '.'));
+  
+  switch (metricName) {
+    case 'lcp': {
+      // LCP: < 2.5s = bon (90+), < 4s = moyen (60-89), >= 4s = mauvais (<60)
+      const ms = parseTimeToMs(value);
+      if (ms <= 2500) return 95;
+      if (ms <= 4000) return 75;
+      return 40;
+    }
+    case 'fcp': {
+      // FCP: < 1.8s = bon, < 3s = moyen, >= 3s = mauvais
+      const ms = parseTimeToMs(value);
+      if (ms <= 1800) return 95;
+      if (ms <= 3000) return 75;
+      return 40;
+    }
+    case 'cls': {
+      // CLS: < 0.1 = bon, < 0.25 = moyen, >= 0.25 = mauvais
+      if (numValue <= 0.1) return 95;
+      if (numValue <= 0.25) return 75;
+      return 40;
+    }
+    case 'tbt': {
+      // TBT: < 200ms = bon, < 600ms = moyen, >= 600ms = mauvais
+      const ms = parseTimeToMs(value);
+      if (ms <= 200) return 95;
+      if (ms <= 600) return 75;
+      return 40;
+    }
+    case 'speedIndex': {
+      // Speed Index: < 3.4s = bon, < 5.8s = moyen, >= 5.8s = mauvais
+      const ms = parseTimeToMs(value);
+      if (ms <= 3400) return 95;
+      if (ms <= 5800) return 75;
+      return 40;
+    }
+    case 'tti': {
+      // TTI: < 3.8s = bon, < 7.3s = moyen, >= 7.3s = mauvais
+      const ms = parseTimeToMs(value);
+      if (ms <= 3800) return 95;
+      if (ms <= 7300) return 75;
+      return 40;
+    }
+    default:
+      return 75; // Valeur neutre par défaut
+  }
+}
+
 // Composant d'animation de chargement
 function LoadingAnimation() {
   return (
@@ -136,36 +197,42 @@ export function PageSpeedDashboard({ result, isLoading, strategy, onStrategyChan
               label={t.pagespeed.fcp}
               value={scores.fcp}
               description={t.pagespeed.fcpDesc}
+              score={getMetricScore('fcp', scores.fcp)}
             />
             <MetricCard
               icon={Timer}
               label={t.pagespeed.lcp}
               value={scores.lcp}
               description={t.pagespeed.lcpDesc}
+              score={getMetricScore('lcp', scores.lcp)}
             />
             <MetricCard
               icon={Move}
               label={t.pagespeed.cls}
               value={scores.cls}
               description={t.pagespeed.clsDesc}
+              score={getMetricScore('cls', scores.cls)}
             />
             <MetricCard
               icon={Clock}
               label={t.pagespeed.tbt}
               value={scores.tbt}
               description={t.pagespeed.tbtDesc}
+              score={getMetricScore('tbt', scores.tbt)}
             />
             <MetricCard
               icon={Gauge}
               label={t.pagespeed.speedIndex}
               value={scores.speedIndex}
               description={t.pagespeed.speedIndexDesc}
+              score={getMetricScore('speedIndex', scores.speedIndex)}
             />
             <MetricCard
               icon={MousePointer}
               label={t.pagespeed.tti}
               value={scores.tti}
               description={t.pagespeed.ttiDesc}
+              score={getMetricScore('tti', scores.tti)}
             />
           </div>
         </div>
