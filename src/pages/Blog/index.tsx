@@ -41,6 +41,8 @@ function BlogIndexComponent() {
       <Helmet>
         <title>{t.metaTitle}</title>
         <meta name="description" content={t.metaDescription} />
+        <link rel="canonical" href="https://crawlers.fr/blog" />
+        <meta property="og:url" content="https://crawlers.fr/blog" />
       </Helmet>
 
       <div className="min-h-screen bg-background">

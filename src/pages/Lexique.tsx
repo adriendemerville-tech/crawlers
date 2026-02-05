@@ -622,11 +622,11 @@ export default function Lexique() {
         <title>{content.metaTitle}</title>
         <meta name="description" content={content.metaDescription} />
         <meta name="keywords" content="lexique SEO, glossaire GEO, définitions performance web, LCP, CLS, LLM, SGE, E-E-A-T, Core Web Vitals, 2026" />
-        <link rel="canonical" href={`https://crawlers.fr/lexique?lang=${language}`} />
+        <link rel="canonical" href="https://crawlers.fr/lexique" />
         <meta property="og:title" content={content.metaTitle} />
         <meta property="og:description" content={content.metaDescription} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`https://crawlers.fr/lexique?lang=${language}`} />
+        <meta property="og:url" content="https://crawlers.fr/lexique" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={content.metaTitle} />
         <meta name="twitter:description" content={content.metaDescription} />
