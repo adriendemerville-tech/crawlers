@@ -108,6 +108,22 @@ const ComparatifCrawlersSemrush = () => {
   // Force SEO metadata on mount to override index.html defaults
   useEffect(() => {
     forceMetaTags();
+    
+    // Masquer le schéma FAQ de la page d'accueil pour éviter les doublons
+    const homepageFaqSchema = document.getElementById('homepage-faq-schema');
+    if (homepageFaqSchema) {
+      homepageFaqSchema.setAttribute('data-hidden', 'true');
+      homepageFaqSchema.removeAttribute('type');
+    }
+    
+    return () => {
+      // Restaurer le schéma FAQ de la page d'accueil au démontage
+      const homepageFaq = document.getElementById('homepage-faq-schema');
+      if (homepageFaq) {
+        homepageFaq.removeAttribute('data-hidden');
+        homepageFaq.setAttribute('type', 'application/ld+json');
+      }
+    };
   }, []);
   const articleStructuredData = {
     "@context": "https://schema.org",
