@@ -399,9 +399,9 @@ export default function ComparatifAuditGeo() {
                           max={3}
                           step={1}
                           className="w-full"
-                          aria-label="Niveau d'urgence de l'audit"
                           aria-labelledby="urgency-label"
                           aria-valuetext={urgency[0] === 1 ? "Standard" : urgency[0] === 2 ? "Prioritaire" : "Urgent"}
+                           thumbLabel={`Niveau d'urgence: ${urgency[0] === 1 ? "Standard" : urgency[0] === 2 ? "Prioritaire" : "Urgent"}`}
                         />
                         <div className="flex justify-between text-xs text-foreground/70 mt-2" aria-hidden="true">
                           <span>Standard</span>
