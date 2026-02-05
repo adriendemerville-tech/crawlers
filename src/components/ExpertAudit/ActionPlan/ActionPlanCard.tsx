@@ -69,7 +69,6 @@ export function ActionPlanCard({
                 {/* Title Row */}
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-xl">{recommendation.icon}</span>
                     <span className={cn(
                       "font-medium text-foreground transition-all",
                       isCompleted && "line-through text-muted-foreground"
