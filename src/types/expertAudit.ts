@@ -39,6 +39,9 @@ export interface ExpertAuditScores {
       gptBot: boolean;
       claudeBot: boolean;
       perplexityBot: boolean;
+      googleExtended?: boolean;
+      appleBotExtended?: boolean;
+      ccBot?: boolean;
     };
   };
   security: {
@@ -396,6 +399,31 @@ export interface StrategicAnalysis {
    }>;
  }
  
+// AI Bots Crawlers data from check-crawlers
+export interface AIBotResult {
+  name: string;
+  userAgent: string;
+  company: string;
+  status: 'allowed' | 'blocked' | 'unknown';
+  reason?: string;
+  blockSource?: 'robots.txt' | 'meta-tag' | 'http-status';
+  lineNumber?: number;
+}
+
+export interface CrawlersData {
+  bots: AIBotResult[];
+  allowsAIBots: {
+    gptBot: boolean;
+    claudeBot: boolean;
+    perplexityBot: boolean;
+    googleExtended: boolean;
+    appleBotExtended: boolean;
+    ccBot: boolean;
+  };
+  allowedCount: number;
+  blockedCount: number;
+}
+
 export interface ExpertAuditResult {
   url: string;
   domain: string;
@@ -412,6 +440,7 @@ export interface ExpertAuditResult {
     safeBrowsing: any;
     htmlAnalysis: any;
     robotsAnalysis?: any;
+    crawlersData?: CrawlersData;
   };
   strategicAnalysis?: StrategicAnalysis;
 }

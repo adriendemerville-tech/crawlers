@@ -24,6 +24,7 @@ import { PaymentModal } from './PaymentModal';
 import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 import { WorkflowCarousel } from './WorkflowCarousel';
 import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
+import { AIBotsCard } from './AIBotsCard';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -883,6 +884,11 @@ export function ExpertAuditDashboard() {
                     </div>
                   )}
                 </CategoryCard>
+
+                {/* AI Bots */}
+                {result.rawData?.crawlersData && (
+                  <AIBotsCard data={result.rawData.crawlersData} />
+                )}
               </div>
 
               {/* Premium Report Button - Before Expert Insights */}
