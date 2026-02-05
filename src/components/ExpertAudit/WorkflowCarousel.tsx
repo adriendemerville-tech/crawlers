@@ -545,7 +545,7 @@ export function WorkflowCarousel({
                                 isCompleted
                               }
                               className={cn(
-                                "w-full h-12 text-base font-medium transition-all duration-300",
+                                "w-full h-14 text-base font-medium transition-all duration-300",
                                 "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
                                 isCompleted && "bg-success hover:bg-success/90",
                                 isLocked && "cursor-not-allowed",
