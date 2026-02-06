@@ -4,6 +4,23 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import fs from "fs";
 
+// Plugin to make CSS non-blocking since critical CSS is already inlined in index.html
+// Converts <link rel="stylesheet"> to async loading pattern
+const asyncCssPlugin = (): Plugin => ({
+  name: 'async-css',
+  enforce: 'post',
+  transformIndexHtml(html) {
+    // Replace CSS link tags with async loading pattern
+    // Pattern: media="print" onload="this.media='all'" + noscript fallback
+    return html.replace(
+      /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g,
+      (match, href) => {
+        return `<link rel="preload" as="style" href="${href}" onload="this.onload=null;this.rel='stylesheet'">\n    <noscript><link rel="stylesheet" href="${href}"></noscript>`;
+      }
+    );
+  }
+});
+
 // Plugin to ensure _headers file is in dist with correct format
 const headersPlugin = (): Plugin => ({
   name: 'generate-headers',
@@ -68,6 +85,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(), 
     mode === "development" && componentTagger(),
+    asyncCssPlugin(),
     headersPlugin(),
   ].filter(Boolean),
   resolve: {
