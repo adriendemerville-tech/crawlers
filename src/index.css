@@ -1,3 +1,6 @@
+/* Import only the latin subset for French content (critical font) */
+@import '@fontsource-variable/inter/wght.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
