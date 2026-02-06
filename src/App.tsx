@@ -1,6 +1,4 @@
 import { lazy, Suspense } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -11,6 +9,11 @@ import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
 import { PageViewTracker } from "@/components/Analytics/PageViewTracker";
 import { ScrollToTop } from "@/components/ScrollToTop";
+
+// Lazy load Radix-heavy toast/notification components to prevent layout thrashing on initial paint
+const Toaster = lazy(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
+const Sonner = lazy(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
+
 
 // Lazy load the chat bubble (not needed for initial render)
 const FloatingChatBubble = lazy(() => import("@/components/Support/FloatingChatBubble").then(m => ({ default: m.FloatingChatBubble })));
@@ -55,8 +58,10 @@ const App = () => (
           <AuthProvider>
             <CreditsProvider>
               <TooltipProvider>
-                <Toaster />
-                <Sonner />
+                <Suspense fallback={null}>
+                  <Toaster />
+                  <Sonner />
+                </Suspense>
               <BrowserRouter>
                 <ScrollToTop />
                 <PageViewTracker />
