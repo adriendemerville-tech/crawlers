@@ -8,12 +8,12 @@ import fs from "fs";
 const headersPlugin = (): Plugin => ({
   name: 'generate-headers',
   writeBundle() {
-    const headersContent = `# Cache static assets for 1 year (immutable)
+    const headersContent = `# Cache static assets for 1 year (immutable) - hashed filenames
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
   X-Content-Type-Options: nosniff
 
-# Fonts
+# Fonts - long cache with CORS
 /*.woff2
   Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
@@ -38,15 +38,15 @@ const headersPlugin = (): Plugin => ({
 /*.ico
   Cache-Control: public, max-age=31536000, immutable
 
-# HTML - no cache to always get latest
+# HTML - allow stale-while-revalidate for faster repeat LCP
 /
-  Cache-Control: no-cache, no-store, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate, stale-while-revalidate=3600
 
 /index.html
-  Cache-Control: no-cache, no-store, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate, stale-while-revalidate=3600
 
 /*.html
-  Cache-Control: no-cache, no-store, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate, stale-while-revalidate=3600
 
 # Security headers for all routes
 /*
