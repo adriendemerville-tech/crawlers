@@ -7,8 +7,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CreditsProvider } from "@/contexts/CreditsContext";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
-import { PageViewTracker } from "@/components/Analytics/PageViewTracker";
 import { ScrollToTop } from "@/components/ScrollToTop";
+
+// Lazy load analytics tracker - not needed for initial render/LCP
+const PageViewTracker = lazy(() => import("@/components/Analytics/PageViewTracker").then(m => ({ default: m.PageViewTracker })));
 
 // Lazy load Radix-heavy toast/notification components to prevent layout thrashing on initial paint
 const Toaster = lazy(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
@@ -64,7 +66,9 @@ const App = () => (
                 </Suspense>
               <BrowserRouter>
                 <ScrollToTop />
-                <PageViewTracker />
+                <Suspense fallback={null}>
+                  <PageViewTracker />
+                </Suspense>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
