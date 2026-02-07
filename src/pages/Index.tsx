@@ -11,6 +11,7 @@ import { LLMAnalysisResult } from '@/types/llm';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
+import { useStructuredData } from '@/hooks/useStructuredData';
 
 // Lazy load heavy dashboard components
 const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then(m => ({ default: m.ResultsDashboard })));
@@ -66,6 +67,9 @@ const Index = () => {
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   const { toast } = useToast();
   const { language } = useLanguage();
+
+  // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
+  useStructuredData();
 
   // Inject FAQ JSON-LD only on the homepage
   useEffect(() => {
