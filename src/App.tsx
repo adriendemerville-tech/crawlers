@@ -1,13 +1,15 @@
 import { lazy, Suspense } from "react";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { CreditsProvider } from "@/contexts/CreditsContext";
 import { ThemeProvider } from "next-themes";
-import { HelmetProvider } from "react-helmet-async";
 import { ScrollToTop } from "@/components/ScrollToTop";
+
+// Lazy load providers not needed for first paint
+const AuthProvider = lazy(() => import("@/contexts/AuthContext").then(m => ({ default: m.AuthProvider })));
+const CreditsProvider = lazy(() => import("@/contexts/CreditsContext").then(m => ({ default: m.CreditsProvider })));
+const TooltipProvider = lazy(() => import("@/components/ui/tooltip").then(m => ({ default: m.TooltipProvider })));
+const HelmetProvider = lazy(() => import("react-helmet-async").then(m => ({ default: m.HelmetProvider })));
 
 // Lazy load analytics tracker - not needed for initial render/LCP
 const PageViewTracker = lazy(() => import("@/components/Analytics/PageViewTracker").then(m => ({ default: m.PageViewTracker })));
@@ -53,56 +55,59 @@ const PageLoader = () => (
 const queryClient = new QueryClient();
 
 const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <LanguageProvider>
-          <AuthProvider>
-            <CreditsProvider>
-              <TooltipProvider>
-                <Suspense fallback={null}>
-                  <Toaster />
-                  <Sonner />
-                </Suspense>
-              <BrowserRouter>
-                <ScrollToTop />
-                <Suspense fallback={null}>
-                  <PageViewTracker />
-                </Suspense>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/audit-expert" element={<ExpertAudit />} />
-                    <Route path="/lexique" element={<Lexique />} />
-                    <Route path="/lexique/:slug" element={<ExpertTermPage />} />
-                    <Route path="/tarifs" element={<Tarifs />} />
-                    <Route path="/mentions-legales" element={<MentionsLegales />} />
-                    <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
-                    <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
-                    <Route path="/rgpd" element={<RGPD />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/profil" element={<Profile />} />
-                    <Route path="/rapport/:reportId" element={<ReportViewer />} />
-                    <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} />
-                    <Route path="/blog" element={<Blog />} />
-                    <Route path="/blog/:slug" element={<ArticlePage />} />
-                    <Route path="/comparatif-audit-geo" element={<ComparatifAuditGeo />} />
-                    <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-                <Suspense fallback={null}>
-                  <FloatingChatBubble />
-                </Suspense>
-              </BrowserRouter>
-              </TooltipProvider>
-            </CreditsProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
+  <Suspense fallback={null}>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <LanguageProvider>
+            <Suspense fallback={null}>
+              <AuthProvider>
+                <CreditsProvider>
+                  <TooltipProvider>
+                    <Suspense fallback={null}>
+                      <Toaster />
+                      <Sonner />
+                    </Suspense>
+                    <BrowserRouter>
+                      <ScrollToTop />
+                      <Suspense fallback={null}>
+                        <PageViewTracker />
+                      </Suspense>
+                      <Suspense fallback={<PageLoader />}>
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/audit-expert" element={<ExpertAudit />} />
+                          <Route path="/lexique" element={<Lexique />} />
+                          <Route path="/lexique/:slug" element={<ExpertTermPage />} />
+                          <Route path="/tarifs" element={<Tarifs />} />
+                          <Route path="/mentions-legales" element={<MentionsLegales />} />
+                          <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+                          <Route path="/conditions-utilisation" element={<ConditionsUtilisation />} />
+                          <Route path="/rgpd" element={<RGPD />} />
+                          <Route path="/auth" element={<Auth />} />
+                          <Route path="/profil" element={<Profile />} />
+                          <Route path="/rapport/:reportId" element={<ReportViewer />} />
+                          <Route path="/temporaryreport/:shareId" element={<SharedReportRedirect />} />
+                          <Route path="/blog" element={<Blog />} />
+                          <Route path="/blog/:slug" element={<ArticlePage />} />
+                          <Route path="/comparatif-audit-geo" element={<ComparatifAuditGeo />} />
+                          <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </Suspense>
+                      <Suspense fallback={null}>
+                        <FloatingChatBubble />
+                      </Suspense>
+                    </BrowserRouter>
+                  </TooltipProvider>
+                </CreditsProvider>
+              </AuthProvider>
+            </Suspense>
+          </LanguageProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
+  </Suspense>
 );
 
 export default App;
