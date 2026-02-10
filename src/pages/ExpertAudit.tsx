@@ -3,6 +3,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ExpertAuditDashboard, ExpertAuditContent, ExpertAuditFAQ } from '@/components/ExpertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 
 // Lazy load components
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
@@ -62,6 +63,9 @@ const ExpertAudit = () => {
   const meta = metaData[language] || metaData.fr;
   const faqItems = faqSchemaData[language] || faqSchemaData.fr;
 
+  // Fix canonical & hreflang for multilingual indexation
+  useCanonicalHreflang('/audit-expert');
+
   useEffect(() => {
     // Update document title
     document.title = meta.title;
@@ -75,14 +79,7 @@ const ExpertAudit = () => {
     }
     metaDesc.setAttribute('content', meta.description);
 
-    // Update or create canonical link
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonical);
-    }
-    canonical.setAttribute('href', 'https://crawlers.fr/audit-expert');
+    // Canonical is now managed by useCanonicalHreflang hook
 
     // Homepage FAQ schema is no longer in index.html - injected only on homepage via React
 

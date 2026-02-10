@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { useStructuredData } from '@/hooks/useStructuredData';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 
 // Lazy load heavy dashboard components
 const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then(m => ({ default: m.ResultsDashboard })));
@@ -70,6 +71,9 @@ const Index = () => {
 
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
   useStructuredData();
+
+  // Fix canonical & hreflang for multilingual indexation (EN/ES pages)
+  useCanonicalHreflang('/');
 
   // Inject FAQ JSON-LD only on the homepage
   useEffect(() => {

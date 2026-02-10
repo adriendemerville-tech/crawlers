@@ -33,14 +33,24 @@ function formatDate(date: Date | string): string {
 }
 
 function generateSitemap(pages: SitemapPage[]): string {
-  const urlEntries = pages.map(page => `
+  const urlEntries = pages.map(page => {
+    // For pages with hreflang support
+    const hreflangEntries = page.loc.startsWith(SITE_URL) ? `
+    <xhtml:link rel="alternate" hreflang="fr" href="${escapeXml(page.loc)}" />
+    <xhtml:link rel="alternate" hreflang="en" href="${escapeXml(page.loc + (page.loc.includes('?') ? '&' : '?') + 'lang=en')}" />
+    <xhtml:link rel="alternate" hreflang="es" href="${escapeXml(page.loc + (page.loc.includes('?') ? '&' : '?') + 'lang=es')}" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(page.loc)}" />` : '';
+
+    return `
   <url>
     <loc>${escapeXml(page.loc)}</loc>
-    <lastmod>${page.lastmod}</lastmod>
-  </url>`).join('');
+    <lastmod>${page.lastmod}</lastmod>${hreflangEntries}
+  </url>`;
+  }).join('');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
 <!-- 
   Crawlers.fr Sitemap - Generated dynamically
   Audit Technique SEO & GEO Expert Gratuit | ChatGPT, Gemini, LLM
