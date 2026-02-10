@@ -5,19 +5,41 @@ import { componentTagger } from "lovable-tagger";
 import fs from "fs";
 
 // Plugin to make CSS non-blocking since critical CSS is already inlined in index.html
-// Converts <link rel="stylesheet"> to async loading pattern
 const asyncCssPlugin = (): Plugin => ({
   name: 'async-css',
   enforce: 'post',
   transformIndexHtml(html) {
-    // Replace CSS link tags with async loading pattern
-    // Pattern: media="print" onload="this.media='all'" + noscript fallback
     return html.replace(
       /<link rel="stylesheet" crossorigin href="(\/assets\/[^"]+\.css)">/g,
       (match, href) => {
         return `<link rel="preload" as="style" href="${href}" onload="this.onload=null;this.rel='stylesheet'">\n    <noscript><link rel="stylesheet" href="${href}"></noscript>`;
       }
     );
+  }
+});
+
+// Plugin to inject modulepreload hints for critical vendor chunks
+// This parallelizes the loading of vendor-react and vendor-router with the entry JS,
+// reducing the critical request chain depth from 3 to 2.
+const modulePreloadPlugin = (): Plugin => ({
+  name: 'critical-modulepreload',
+  enforce: 'post',
+  transformIndexHtml(html, ctx) {
+    if (!ctx.bundle) return html;
+    
+    const criticalChunks = ['vendor-react', 'vendor-router', 'vendor-utils'];
+    const preloadTags: string[] = [];
+    
+    for (const [fileName] of Object.entries(ctx.bundle)) {
+      if (criticalChunks.some(name => fileName.includes(name))) {
+        preloadTags.push(`<link rel="modulepreload" href="/${fileName}">`);
+      }
+    }
+    
+    if (preloadTags.length > 0) {
+      return html.replace('</head>', `    ${preloadTags.join('\n    ')}\n  </head>`);
+    }
+    return html;
   }
 });
 
@@ -86,6 +108,7 @@ export default defineConfig(({ mode }) => ({
     react(), 
     mode === "development" && componentTagger(),
     asyncCssPlugin(),
+    modulePreloadPlugin(),
     headersPlugin(),
   ].filter(Boolean),
   resolve: {
