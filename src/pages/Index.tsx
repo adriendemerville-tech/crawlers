@@ -69,6 +69,28 @@ const Index = () => {
   const { toast } = useToast();
   const { language } = useLanguage();
 
+  // Dynamic SEO metadata per language (Option A: Fear/Urgency)
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      fr: "Votre site est-il invisible pour l'IA ? Score GEO gratuit | Crawlers.fr",
+      en: "Is your site invisible to AI? Free GEO Score | Crawlers.fr",
+      es: "¿Tu sitio es invisible para la IA? Score GEO gratis | Crawlers.fr",
+    };
+    const descriptions: Record<string, string> = {
+      fr: "ChatGPT, Gemini, SGE : votre site est-il cité ou ignoré ? Obtenez votre Score GEO en 30 secondes. Audit gratuit sur 200 points. Découvrez si les LLM vous voient.",
+      en: "ChatGPT, Gemini, SGE: is your site cited or ignored? Get your GEO Score in 30 seconds. Free 200-point audit. Find out if LLMs can see you.",
+      es: "ChatGPT, Gemini, SGE: ¿tu sitio es citado o ignorado? Obtén tu Score GEO en 30 segundos. Auditoría gratuita de 200 puntos. Descubre si los LLM te ven.",
+    };
+    document.title = titles[language] || titles.fr;
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', descriptions[language] || descriptions.fr);
+  }, [language]);
+
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
   useStructuredData();
 
