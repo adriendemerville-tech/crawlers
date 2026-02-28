@@ -29,6 +29,7 @@ export function ToolTabs({
     <nav className="flex flex-col items-center gap-4 px-4 pb-4" aria-label="Outils disponibles">
         <div className="inline-flex flex-wrap justify-center gap-1 rounded-lg border border-border bg-card p-1">
         <button
+          data-tour="tab-crawlers"
           onClick={() => onTabChange('crawlers')}
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
@@ -42,6 +43,7 @@ export function ToolTabs({
           <span>{t.tabs.crawlers}</span>
         </button>
         <button
+          data-tour="tab-geo"
           onClick={() => onTabChange('geo')}
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
@@ -55,6 +57,7 @@ export function ToolTabs({
           <span>{t.tabs.geo}</span>
         </button>
         <button
+          data-tour="tab-llm"
           onClick={() => onTabChange('llm')}
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
@@ -68,6 +71,7 @@ export function ToolTabs({
           <span>{t.tabs.llm}</span>
         </button>
         <button
+          data-tour="tab-pagespeed"
           onClick={() => onTabChange('pagespeed')}
           className={cn(
             "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
@@ -83,7 +87,7 @@ export function ToolTabs({
       </div>
 
       {/* Lien Audit Expert (anciennement Score SEO 200) */}
-      <div className="flex justify-center">
+      <div className="flex justify-center" data-tour="audit-expert">
         <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}` : '/audit-expert'}>
           <Button
             variant="outline"
