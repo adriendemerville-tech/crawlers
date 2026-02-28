@@ -1,86 +1,151 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Copy, Check } from 'lucide-react';
-import { useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Search, Copy, Check, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
+import { LLMCitation } from '@/types/llm';
 
 interface TargetQuery {
   query: string;
   intent: string;
   priority: 'high' | 'medium';
+  mentionsBrand?: boolean;
+}
+
+interface GeneratedData {
+  coreBusiness: string;
+  marketLeader: string;
+  queries: TargetQuery[];
 }
 
 interface LLMTargetQueriesCardProps {
   domain: string;
+  coreValueSummary?: string;
+  citations?: LLMCitation[];
   compact?: boolean;
 }
 
 const translations = {
   fr: {
     title: 'Requêtes à cibler',
-    subtitle: 'Les 5 requêtes les plus susceptibles de déclencher une citation LLM de votre marque',
+    subtitle: 'Requêtes stratégiques pour maximiser vos recommandations par les LLMs',
     copied: 'Copié !',
     high: 'Prioritaire',
     medium: 'Important',
+    loading: 'Analyse du marché en cours...',
+    coreBusiness: 'Activité détectée',
+    marketLeader: 'Leader identifié',
+    error: 'Impossible de générer les requêtes',
   },
   en: {
     title: 'Target Queries',
-    subtitle: 'Top 5 queries most likely to trigger an LLM citation of your brand',
+    subtitle: 'Strategic queries to maximize your LLM recommendations',
     copied: 'Copied!',
     high: 'Priority',
     medium: 'Important',
+    loading: 'Analyzing market...',
+    coreBusiness: 'Detected activity',
+    marketLeader: 'Identified leader',
+    error: 'Unable to generate queries',
   },
   es: {
     title: 'Consultas objetivo',
-    subtitle: 'Las 5 consultas más propensas a generar una citación LLM de tu marca',
+    subtitle: 'Consultas estratégicas para maximizar tus recomendaciones LLM',
     copied: '¡Copiado!',
     high: 'Prioritario',
     medium: 'Importante',
+    loading: 'Analizando mercado...',
+    coreBusiness: 'Actividad detectada',
+    marketLeader: 'Líder identificado',
+    error: 'No se pudieron generar las consultas',
   },
 };
 
-function generateTargetQueries(domain: string, lang: string): TargetQuery[] {
-  const brand = domain.replace(/\.(com|fr|net|org|io|co|app|dev).*$/i, '').replace(/^www\./, '');
-  
-  const querySets: Record<string, TargetQuery[]> = {
-    fr: [
-      { query: `Quel est le meilleur outil pour ${brand} ?`, intent: 'Requête de recommandation directe – déclenche la citation dans les réponses IA', priority: 'high' },
-      { query: `${brand} avis et alternatives`, intent: 'Requête comparative – les LLMs citent les marques connues en contexte de comparaison', priority: 'high' },
-      { query: `À quoi sert ${brand} ?`, intent: 'Requête de découverte – teste si les LLMs connaissent votre proposition de valeur', priority: 'high' },
-      { query: `${brand} vs concurrents : lequel choisir ?`, intent: 'Requête décisionnelle – les LLMs synthétisent les avantages/inconvénients', priority: 'medium' },
-      { query: `Est-ce que ${brand} est fiable ?`, intent: 'Requête de confiance – les LLMs évaluent la réputation et l\'autorité', priority: 'medium' },
-    ],
-    en: [
-      { query: `What is the best tool for ${brand}?`, intent: 'Direct recommendation query – triggers citation in AI responses', priority: 'high' },
-      { query: `${brand} reviews and alternatives`, intent: 'Comparative query – LLMs cite known brands in comparison context', priority: 'high' },
-      { query: `What does ${brand} do?`, intent: 'Discovery query – tests if LLMs know your value proposition', priority: 'high' },
-      { query: `${brand} vs competitors: which one to choose?`, intent: 'Decision query – LLMs synthesize pros/cons', priority: 'medium' },
-      { query: `Is ${brand} reliable?`, intent: 'Trust query – LLMs evaluate reputation and authority', priority: 'medium' },
-    ],
-    es: [
-      { query: `¿Cuál es la mejor herramienta para ${brand}?`, intent: 'Consulta de recomendación directa – activa la citación en respuestas IA', priority: 'high' },
-      { query: `${brand} opiniones y alternativas`, intent: 'Consulta comparativa – los LLMs citan marcas conocidas en contexto de comparación', priority: 'high' },
-      { query: `¿Para qué sirve ${brand}?`, intent: 'Consulta de descubrimiento – verifica si los LLMs conocen tu propuesta de valor', priority: 'high' },
-      { query: `${brand} vs competidores: ¿cuál elegir?`, intent: 'Consulta de decisión – los LLMs sintetizan ventajas/desventajas', priority: 'medium' },
-      { query: `¿Es ${brand} confiable?`, intent: 'Consulta de confianza – los LLMs evalúan la reputación y autoridad', priority: 'medium' },
-    ],
-  };
-
-  return querySets[lang] || querySets.fr;
-}
-
-export function LLMTargetQueriesCard({ domain, compact = false }: LLMTargetQueriesCardProps) {
+export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, compact = false }: LLMTargetQueriesCardProps) {
   const { language } = useLanguage();
   const t = translations[language as keyof typeof translations] || translations.fr;
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState<GeneratedData | null>(null);
+  const [error, setError] = useState(false);
 
-  const queries = generateTargetQueries(domain, language);
+  useEffect(() => {
+    let cancelled = false;
+
+    const generate = async () => {
+      setIsLoading(true);
+      setError(false);
+
+      try {
+        const { data: result, error: fnError } = await supabase.functions.invoke('generate-target-queries', {
+          body: {
+            domain,
+            coreValueSummary: coreValueSummary || '',
+            citations: (citations || []).map(c => ({
+              provider: c.provider,
+              cited: c.cited,
+              summary: c.summary,
+              recommends: c.recommends,
+            })),
+            lang: language,
+          },
+        });
+
+        if (cancelled) return;
+
+        if (fnError || !result?.success) {
+          console.error('Target queries error:', fnError || result?.error);
+          setError(true);
+        } else {
+          setData(result.data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Target queries fetch error:', err);
+          setError(true);
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+
+    generate();
+    return () => { cancelled = true; };
+  }, [domain, language]); // Only regenerate on domain/language change
 
   const handleCopy = (query: string, index: number) => {
     navigator.clipboard.writeText(query);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 1500);
   };
+
+  if (error) return null;
+
+  if (isLoading) {
+    return (
+      <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Search className="h-5 w-5 text-primary" />
+            {t.title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Sparkles className="h-4 w-4 animate-pulse text-primary" />
+            {t.loading}
+          </div>
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-lg" />
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data?.queries?.length) return null;
 
   return (
     <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
@@ -92,9 +157,25 @@ export function LLMTargetQueriesCard({ domain, compact = false }: LLMTargetQueri
         {!compact && (
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>
         )}
+        {/* Core business & market leader badges */}
+        {(data.coreBusiness || data.marketLeader) && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {data.coreBusiness && (
+              <Badge variant="secondary" className="text-xs gap-1">
+                <Sparkles className="h-3 w-3" />
+                {t.coreBusiness} : {data.coreBusiness}
+              </Badge>
+            )}
+            {data.marketLeader && (
+              <Badge variant="outline" className="text-xs">
+                {t.marketLeader} : {data.marketLeader}
+              </Badge>
+            )}
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-2">
-        {queries.map((q, i) => (
+        {data.queries.map((q, i) => (
           <div
             key={i}
             className="group flex items-start gap-3 rounded-lg bg-muted/50 p-3 hover:bg-muted/80 transition-colors cursor-pointer"
@@ -108,6 +189,11 @@ export function LLMTargetQueriesCard({ domain, compact = false }: LLMTargetQueri
               <p className="text-xs text-muted-foreground mt-1">{q.intent}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              {q.mentionsBrand && (
+                <Badge variant="outline" className="text-[10px] border-purple-500/30 text-purple-600 dark:text-purple-400">
+                  Marque
+                </Badge>
+              )}
               <Badge
                 variant="outline"
                 className={q.priority === 'high'
