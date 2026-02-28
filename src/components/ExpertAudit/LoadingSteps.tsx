@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Loader2, Globe, Code, Shield, Brain, CheckCircle2, Target, Link2, Users } from 'lucide-react';
+import { Loader2, Globe, Code, Shield, Brain, CheckCircle2, Target, Link2, Users, Search } from 'lucide-react';
 
 const technicalSteps = [
   { id: 'connect', label: 'Audit Speed et Performances...', icon: Globe },
@@ -17,6 +17,7 @@ const strategicSteps = [
   { id: 'brand', label: 'Analyse de l\'identité de marque...', icon: Target },
   { id: 'competition', label: 'Analyse de la concurrence...', icon: Users },
   { id: 'geo', label: 'Évaluation du score GEO...', icon: Brain },
+  { id: 'llm_queries', label: 'Requêtes LLM cibles...', icon: Search },
   { id: 'roadmap', label: 'Construction de la roadmap stratégique...', icon: Code },
   { id: 'done', label: 'Génération du rapport...', icon: CheckCircle2 },
 ];

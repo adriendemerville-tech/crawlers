@@ -39,6 +39,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { HelpButton } from './HelpButton';
+import { LLMTargetQueriesCard } from './LLMTargetQueriesCard';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -850,6 +851,9 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
             </p>
           </div>
         </div>
+
+        {/* Target Queries Card */}
+        <LLMTargetQueriesCard domain={result.domain} />
       </div>
     </section>
   );
