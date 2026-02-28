@@ -336,6 +336,32 @@ const Index = () => {
     }
   };
 
+  const handleLLMCorrection = useCallback(async (correction: string) => {
+    if (!currentUrl) return;
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-llm', {
+        body: { url: currentUrl, lang: language, correction }
+      });
+      if (error) throw new Error(error.message);
+      if (!data.success) throw new Error(data.error || 'Failed to analyze LLM visibility');
+      setLlmResult(data.data);
+      toast({
+        title: language === 'fr' ? 'Correction appliquée' : language === 'es' ? 'Corrección aplicada' : 'Correction applied',
+        description: language === 'fr' ? 'L\'analyse a été relancée avec votre correction.' : language === 'es' ? 'El análisis se relanzó con su corrección.' : 'Analysis reloaded with your correction.',
+      });
+    } catch (err) {
+      console.error('LLM correction error:', err);
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentUrl, language, toast]);
+
   const handleTabChange = (tab: ToolTab) => {
     setActiveTab(tab);
     // Ne pas effacer les résultats existants - ils restent visibles
@@ -375,7 +401,7 @@ const Index = () => {
     } else if (activeTab === 'llm') {
       dashboards.push(
         <div key="llm-current" className="border-b border-border/50 pb-8">
-          <LLMDashboard result={llmResult} isLoading={isLoading} />
+          <LLMDashboard result={llmResult} isLoading={isLoading} onCorrection={handleLLMCorrection} />
         </div>
       );
     } else if (activeTab === 'pagespeed') {
