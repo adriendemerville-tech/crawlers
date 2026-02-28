@@ -179,7 +179,11 @@ export function StrategicInsights({
            {analysis.llm_visibility_raw && (
               <>
                 <LLMVisibilityCard data={analysis.llm_visibility_raw} />
-                <LLMTargetQueriesCard domain={domain} />
+                <LLMTargetQueriesCard 
+                  domain={domain} 
+                  coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
+                  citations={analysis.llm_visibility_raw.citations as any}
+                />
                 <PriorityContentCard domain={domain} />
               </>
             )}

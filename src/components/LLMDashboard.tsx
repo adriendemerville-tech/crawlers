@@ -853,7 +853,11 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
         </div>
 
         {/* Target Queries Card */}
-        <LLMTargetQueriesCard domain={result.domain} />
+        <LLMTargetQueriesCard 
+          domain={result.domain} 
+          coreValueSummary={result.coreValueSummary}
+          citations={result.citations}
+        />
       </div>
     </section>
   );
