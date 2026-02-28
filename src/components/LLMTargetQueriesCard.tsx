@@ -35,6 +35,8 @@ interface LLMTargetQueriesCardProps {
   citations?: LLMCitation[];
   compact?: boolean;
   onCorrection?: (correction: string) => void;
+  /** If true, the card handles correction internally by re-generating queries with the correction context */
+  selfCorrect?: boolean;
 }
 
 const translations = {
@@ -91,7 +93,7 @@ const translations = {
   },
 };
 
-export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, compact = false, onCorrection }: LLMTargetQueriesCardProps) {
+export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, compact = false, onCorrection, selfCorrect = false }: LLMTargetQueriesCardProps) {
   const { language } = useLanguage();
   const t = translations[language as keyof typeof translations] || translations.fr;
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -101,6 +103,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
   const [correctionModalOpen, setCorrectionModalOpen] = useState(false);
   const [correctionText, setCorrectionText] = useState('');
   const [isCorrecting, setIsCorrecting] = useState(false);
+  const [correctionContext, setCorrectionContext] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -110,10 +113,14 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
       setError(false);
 
       try {
+        const summaryWithCorrection = correctionContext
+          ? `${coreValueSummary || ''}\n\nCORRECTION UTILISATEUR: ${correctionContext}`
+          : (coreValueSummary || '');
+
         const { data: result, error: fnError } = await supabase.functions.invoke('generate-target-queries', {
           body: {
             domain,
-            coreValueSummary: coreValueSummary || '',
+            coreValueSummary: summaryWithCorrection,
             citations: (citations || []).map(c => ({
               provider: c.provider,
               cited: c.cited,
@@ -144,7 +151,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
 
     generate();
     return () => { cancelled = true; };
-  }, [domain, language]); // Only regenerate on domain/language change
+  }, [domain, language, correctionContext]);
 
   const handleCopy = (query: string, index: number) => {
     navigator.clipboard.writeText(query);
@@ -153,13 +160,23 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
   };
 
   const handleCorrection = () => {
-    if (!correctionText.trim() || !onCorrection) return;
-    setIsCorrecting(true);
+    if (!correctionText.trim()) return;
     setCorrectionModalOpen(false);
-    onCorrection(correctionText.trim());
-    setCorrectionText('');
-    setIsCorrecting(false);
+    
+    if (selfCorrect) {
+      // Self-contained: re-generate queries with correction context
+      setCorrectionContext(correctionText.trim());
+      setCorrectionText('');
+    } else if (onCorrection) {
+      // Delegate to parent (homepage flow)
+      setIsCorrecting(true);
+      onCorrection(correctionText.trim());
+      setCorrectionText('');
+      setIsCorrecting(false);
+    }
   };
+
+  const showCorrectionButton = onCorrection || selfCorrect;
 
   if (error) return null;
 
@@ -253,7 +270,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
         ))}
 
         {/* Report hallucination button */}
-        {onCorrection && (
+        {showCorrectionButton && (
           <div className="pt-2 flex justify-end">
             <Button
               variant="ghost"
