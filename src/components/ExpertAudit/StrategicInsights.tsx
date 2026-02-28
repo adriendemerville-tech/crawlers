@@ -19,6 +19,8 @@ import { PremiumRoadmapCard } from './PremiumRoadmapCard';
 import { KeywordModuleSection } from './KeywordModuleSection';
 import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
  import { LLMVisibilityCard } from './LLMVisibilityCard';
+import { LLMTargetQueriesCard } from '@/components/LLMTargetQueriesCard';
+import { PriorityContentCard } from './PriorityContentCard';
 
 import { CompetitorCorrections } from './CompetitorCorrectionModal';
 
@@ -175,8 +177,12 @@ export function StrategicInsights({
 
            {/* LLM Visibility Raw Data (from check-llm) */}
            {analysis.llm_visibility_raw && (
-             <LLMVisibilityCard data={analysis.llm_visibility_raw} />
-           )}
+              <>
+                <LLMVisibilityCard data={analysis.llm_visibility_raw} />
+                <LLMTargetQueriesCard domain={domain} />
+                <PriorityContentCard domain={domain} />
+              </>
+            )}
  
           {/* Premium Executive Roadmap (Narrative) */}
           {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (
