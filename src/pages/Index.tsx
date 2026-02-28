@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense, memo } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense, memo } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/Header';
 import { HeroSection } from '@/components/HeroSection';
@@ -34,6 +34,7 @@ const SEOvsGEOSection = lazy(() => import('@/components/SEOvsGEOSection').then(m
 // Lazy load Footer - not needed for initial render
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 const FloatingReportButton = lazy(() => import('@/components/FloatingReportButton').then(m => ({ default: m.FloatingReportButton })));
+const OnboardingTutorial = lazy(() => import('@/components/OnboardingTutorial').then(m => ({ default: m.OnboardingTutorial })));
 
 // Lightweight skeleton for dashboards
 const DashboardSkeleton = memo(() => (
@@ -66,6 +67,8 @@ const Index = () => {
   const [isPageSpeedLoading, setIsPageSpeedLoading] = useState(false);
   const [currentUrl, setCurrentUrl] = useState<string>('');
   const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [firstAnalysisDone, setFirstAnalysisDone] = useState(false);
   const { toast } = useToast();
   const { language } = useLanguage();
 
@@ -99,6 +102,7 @@ const Index = () => {
 
   // Inject FAQ JSON-LD only on the homepage
   useEffect(() => {
+    // ... keep existing code
     const faqSchema = {
       "@context": "https://schema.org",
       "@type": "FAQPage",
@@ -156,6 +160,16 @@ const Index = () => {
     };
   }, []);
 
+  // Trigger onboarding tutorial after first successful analysis (first-time visitors only)
+  const triggerTutorialIfNeeded = useCallback(() => {
+    if (firstAnalysisDone) return;
+    const alreadyDone = localStorage.getItem('crawlers_onboarding_done');
+    if (alreadyDone) return;
+    setFirstAnalysisDone(true);
+    // Small delay so user sees their results first
+    setTimeout(() => setShowTutorial(true), 1800);
+  }, [firstAnalysisDone]);
+
   const handleCheck = async (url: string) => {
     setIsLoading(true);
     // Ne pas effacer les résultats existants - seulement mettre à jour l'outil actuel
@@ -172,9 +186,9 @@ const Index = () => {
         if (!data.success) throw new Error(data.error || 'Failed to check URL');
 
         setCrawlResult(data.data);
-        // Track free analysis
         trackAnalyticsEvent('free_analysis_crawlers', { targetUrl: url });
         storeAnalyzedUrl(url);
+        triggerTutorialIfNeeded();
         toast({
           title: 'Scan complete!',
           description: `Checked ${data.data.bots.length} AI bots for ${url}`,
@@ -188,9 +202,9 @@ const Index = () => {
         if (!data.success) throw new Error(data.error || 'Failed to analyze GEO');
 
         setGeoResult(data.data);
-        // Track free analysis
         trackAnalyticsEvent('free_analysis_geo', { targetUrl: url });
         storeAnalyzedUrl(url);
+        triggerTutorialIfNeeded();
         toast({
           title: 'Analysis complete!',
           description: `GEO Score: ${data.data.totalScore}/100`,
@@ -204,9 +218,9 @@ const Index = () => {
         if (!data.success) throw new Error(data.error || 'Failed to analyze LLM visibility');
 
         setLlmResult(data.data);
-        // Track free analysis
         trackAnalyticsEvent('free_analysis_llm', { targetUrl: url });
         storeAnalyzedUrl(url);
+        triggerTutorialIfNeeded();
         toast({
           title: 'Analysis complete!',
           description: `LLM Visibility Score: ${data.data.overallScore}/100`,
@@ -241,9 +255,9 @@ const Index = () => {
           setDesktopPageSpeedResult(data.data);
         }
         setIsPageSpeedLoading(false);
-        // Track free analysis
         trackAnalyticsEvent('free_analysis_pagespeed', { targetUrl: url });
         storeAnalyzedUrl(url);
+        triggerTutorialIfNeeded();
         toast({
           title: 'Analysis complete!',
           description: `PageSpeed score: ${data.data.scores.performance}/100`,
@@ -497,6 +511,14 @@ const Index = () => {
           llmResult={llmResult}
           pageSpeedResult={mobilePageSpeedResult || desktopPageSpeedResult}
           currentUrl={currentUrl}
+        />
+      </Suspense>
+
+      {/* Onboarding tutorial - first visit only */}
+      <Suspense fallback={null}>
+        <OnboardingTutorial
+          active={showTutorial}
+          onComplete={() => setShowTutorial(false)}
         />
       </Suspense>
     </div>
