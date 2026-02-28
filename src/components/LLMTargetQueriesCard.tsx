@@ -1,7 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Copy, Check, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Search, Copy, Check, Sparkles, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +34,7 @@ interface LLMTargetQueriesCardProps {
   coreValueSummary?: string;
   citations?: LLMCitation[];
   compact?: boolean;
+  onCorrection?: (correction: string) => void;
 }
 
 const translations = {
@@ -38,6 +48,12 @@ const translations = {
     coreBusiness: 'Activité détectée',
     marketLeader: 'Leader identifié',
     error: 'Impossible de générer les requêtes',
+    reportError: 'Signaler une erreur',
+    correctionTitle: 'Signaler une hallucination',
+    correctionDesc: 'Décrivez l\'erreur et la correction en 200 caractères max.',
+    correctionPlaceholder: 'Ex : Mon activité n\'est pas "agence web" mais "éditeur SaaS de facturation"',
+    correctionButton: 'Corriger',
+    correcting: 'Correction en cours...',
   },
   en: {
     title: 'Target Queries',
@@ -49,6 +65,12 @@ const translations = {
     coreBusiness: 'Detected activity',
     marketLeader: 'Identified leader',
     error: 'Unable to generate queries',
+    reportError: 'Report an error',
+    correctionTitle: 'Report a hallucination',
+    correctionDesc: 'Describe the error and correction in 200 characters max.',
+    correctionPlaceholder: 'E.g.: My business is not "web agency" but "SaaS billing software"',
+    correctionButton: 'Correct',
+    correcting: 'Correcting...',
   },
   es: {
     title: 'Consultas objetivo',
@@ -60,16 +82,25 @@ const translations = {
     coreBusiness: 'Actividad detectada',
     marketLeader: 'Líder identificado',
     error: 'No se pudieron generar las consultas',
+    reportError: 'Reportar un error',
+    correctionTitle: 'Reportar una alucinación',
+    correctionDesc: 'Describe el error y la corrección en 200 caracteres máx.',
+    correctionPlaceholder: 'Ej: Mi actividad no es "agencia web" sino "editor SaaS de facturación"',
+    correctionButton: 'Corregir',
+    correcting: 'Corrigiendo...',
   },
 };
 
-export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, compact = false }: LLMTargetQueriesCardProps) {
+export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, compact = false, onCorrection }: LLMTargetQueriesCardProps) {
   const { language } = useLanguage();
   const t = translations[language as keyof typeof translations] || translations.fr;
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<GeneratedData | null>(null);
   const [error, setError] = useState(false);
+  const [correctionModalOpen, setCorrectionModalOpen] = useState(false);
+  const [correctionText, setCorrectionText] = useState('');
+  const [isCorrecting, setIsCorrecting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -119,6 +150,15 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
     navigator.clipboard.writeText(query);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 1500);
+  };
+
+  const handleCorrection = () => {
+    if (!correctionText.trim() || !onCorrection) return;
+    setIsCorrecting(true);
+    setCorrectionModalOpen(false);
+    onCorrection(correctionText.trim());
+    setCorrectionText('');
+    setIsCorrecting(false);
   };
 
   if (error) return null;
@@ -211,7 +251,54 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
             </div>
           </div>
         ))}
+
+        {/* Report hallucination button */}
+        {onCorrection && (
+          <div className="pt-2 flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground hover:text-destructive gap-1.5"
+              onClick={() => setCorrectionModalOpen(true)}
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {t.reportError}
+            </Button>
+          </div>
+        )}
       </CardContent>
+
+      {/* Correction Modal */}
+      <Dialog open={correctionModalOpen} onOpenChange={setCorrectionModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-warning" />
+              {t.correctionTitle}
+            </DialogTitle>
+            <DialogDescription>{t.correctionDesc}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              value={correctionText}
+              onChange={(e) => setCorrectionText(e.target.value.slice(0, 200))}
+              placeholder={t.correctionPlaceholder}
+              maxLength={200}
+              className="min-h-[100px] resize-none"
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{correctionText.length}/200</span>
+              <Button
+                onClick={handleCorrection}
+                disabled={!correctionText.trim() || isCorrecting}
+                size="sm"
+              >
+                {isCorrecting ? t.correcting : t.correctionButton}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

@@ -126,10 +126,11 @@ async function queryLLM(
   apiKey: string,
   model: string,
   domain: string,
-  lang: Language
+  lang: Language,
+  correctionContext: string = ''
 ): Promise<LLMResponse> {
   const t = getLLMTranslations(lang);
-  const prompt = llmPrompts[lang](domain);
+  const prompt = llmPrompts[lang](domain) + correctionContext;
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -218,7 +219,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url, lang: requestLang } = await req.json();
+    const { url, lang: requestLang, correction } = await req.json();
     const lang = parseLanguage(requestLang);
     const t = getLLMTranslations(lang);
 
@@ -238,7 +239,8 @@ Deno.serve(async (req) => {
     }
 
     const domain = extractDomain(url);
-    console.log(`Analyzing LLM visibility for: ${domain}`);
+    const correctionContext = correction ? `\n\nIMPORTANT CORRECTION FROM THE SITE OWNER: "${correction}". Take this into account in your analysis.` : '';
+    console.log(`Analyzing LLM visibility for: ${domain}${correction ? ' (with user correction)' : ''}`);
 
     // Query all LLMs with staggered delays to avoid 429 rate limiting
     const citationPromises = LLM_PROVIDERS.map(async (provider, index) => {
@@ -246,7 +248,7 @@ Deno.serve(async (req) => {
       await delay(index * 250);
       console.log(`Querying ${provider.name} (${provider.model})...`);
       const startTime = Date.now();
-      const result = await queryLLM(apiKey, provider.model, domain, lang);
+      const result = await queryLLM(apiKey, provider.model, domain, lang, correctionContext);
       const iterationDepth = result.cited ? Math.ceil((Date.now() - startTime) / 1000) : 0;
 
       return {

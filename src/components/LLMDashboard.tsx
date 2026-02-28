@@ -46,6 +46,7 @@ import { toast } from '@/hooks/use-toast';
 interface LLMDashboardProps {
   result: LLMAnalysisResult | null;
   isLoading: boolean;
+  onCorrection?: (correction: string) => void;
 }
 
 function ScoreGauge({ score }: { score: number }) {
@@ -295,7 +296,7 @@ const hallucinationTranslations = {
   },
 };
 
-export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
+export function LLMDashboard({ result, isLoading, onCorrection }: LLMDashboardProps) {
   const { t, language } = useLanguage();
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [diagnosisModalOpen, setDiagnosisModalOpen] = useState(false);
@@ -857,6 +858,7 @@ export function LLMDashboard({ result, isLoading }: LLMDashboardProps) {
           domain={result.domain} 
           coreValueSummary={result.coreValueSummary}
           citations={result.citations}
+          onCorrection={onCorrection}
         />
       </div>
     </section>
