@@ -8,8 +8,9 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { 
-  Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket
+  Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, BookCheck, Library, Archive
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -94,6 +95,10 @@ export function SmartConfigurator({
   const [hasPaid, setHasPaid] = useState(initialHasPaid);
   const [showLockOverlay, setShowLockOverlay] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [codeSource, setCodeSource] = useState<'library' | 'hybrid' | 'new_generation' | null>(null);
+  const [libraryHits, setLibraryHits] = useState(0);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [isArchived, setIsArchived] = useState(false);
   
   const { language } = useLanguage();
   const { toast } = useToast();
@@ -385,6 +390,9 @@ export function SmartConfigurator({
 
       if (data?.success && data?.code) {
         setGeneratedCode(data.code);
+        setCodeSource(data.source || 'new_generation');
+        setLibraryHits(data.libraryHits || 0);
+        setIsArchived(false);
         // Delay showing the lock overlay for minimum 4 seconds after generation starts
         setTimeout(() => {
           setShowLockOverlay(true);
@@ -449,6 +457,33 @@ export function SmartConfigurator({
       setIsSaving(false);
     }
   }, [generatedCode, user, fixConfigs, siteName, siteUrl]);
+
+  // Archive validated solution to the library
+  const handleArchiveSolution = useCallback(async () => {
+    if (!generatedCode) return;
+    setIsArchiving(true);
+    try {
+      const enabledFixes = fixConfigs.filter(f => f.enabled);
+      const { data, error } = await supabase.functions.invoke('archive-solution', {
+        body: {
+          code: generatedCode,
+          fixes: enabledFixes.map(f => ({ id: f.id, label: f.label, category: f.category, priority: f.priority })),
+          siteName,
+          siteUrl,
+        },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setIsArchived(true);
+        sonnerToast.success(`✅ ${data.archived} solution(s) archivée(s) dans la bibliothèque`);
+      }
+    } catch (error) {
+      console.error('Error archiving solution:', error);
+      sonnerToast.error('Erreur lors de l\'archivage');
+    } finally {
+      setIsArchiving(false);
+    }
+  }, [generatedCode, fixConfigs, siteName, siteUrl]);
 
   const enabledCount = fixConfigs.filter(f => f.enabled).length;
   const technicalCount = fixConfigs.filter(f => f.enabled && !['strategic', 'generative'].includes(f.category)).length;
@@ -592,9 +627,55 @@ export function SmartConfigurator({
 
               {/* Right side actions */}
               <div className="flex items-center gap-3">
-                {/* Copy + Save buttons - visible after unlock */}
+                {/* Source badge */}
+                {generatedCode && codeSource && (
+                  <Badge 
+                    variant={codeSource === 'library' ? 'default' : codeSource === 'hybrid' ? 'secondary' : 'outline'}
+                    className={`text-[10px] gap-1 ${
+                      codeSource === 'library' 
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' 
+                        : codeSource === 'hybrid'
+                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                          : 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30'
+                    }`}
+                  >
+                    {codeSource === 'library' ? (
+                      <><Library className="w-3 h-3" /> Bibliothèque éprouvée</>
+                    ) : codeSource === 'hybrid' ? (
+                      <><Library className="w-3 h-3" /> Hybride ({libraryHits} réutilisés)</>
+                    ) : (
+                      <><Sparkles className="w-3 h-3" /> Nouvelle génération IA</>
+                    )}
+                  </Badge>
+                )}
+
+                {/* Copy + Save + Archive buttons - visible after unlock */}
                 {generatedCode && viewMode === 'code' && hasPaid && (
                   <>
+                    {/* Archive / Validate button */}
+                    {user && !isArchived && (
+                      <Button
+                        onClick={handleArchiveSolution}
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 text-xs border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+                        disabled={isArchiving}
+                      >
+                        {isArchiving ? (
+                          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
+                            <Archive className="w-3 h-3" />
+                          </motion.div>
+                        ) : (
+                          <BookCheck className="w-3 h-3" />
+                        )}
+                        {isArchiving ? 'Archivage...' : 'Valider & Archiver'}
+                      </Button>
+                    )}
+                    {isArchived && (
+                      <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                        <Check className="w-3 h-3" /> Archivé
+                      </Badge>
+                    )}
                     {user && (
                       <Button
                         onClick={handleSaveToProfile}

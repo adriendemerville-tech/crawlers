@@ -44,8 +44,19 @@ interface GenerateRequest {
   siteUrl: string;
   language: string;
   includeRegistryContext?: boolean;
-  useAI?: boolean; // NOUVEAU: Activer la génération IA pour contenu stratégique
-  attribution?: AttributionConfig | null; // NOUVEAU: Configuration attribution Crawlers
+  useAI?: boolean;
+  attribution?: AttributionConfig | null;
+  technologyContext?: string; // CMS/thème détecté
+}
+
+interface SolutionMatch {
+  id: string;
+  error_type: string;
+  code_snippet: string;
+  success_rate: number;
+  usage_count: number;
+  is_generic: boolean;
+  similarity: 'exact' | 'close';
 }
 
 interface AIGeneratedContent {
@@ -123,6 +134,157 @@ function generateRegistryContextComment(recommendations: RegistryRecommendation[
   context += `  // ══════════════════════════════════════════════════════════════\n`;
   
   return context;
+}
+
+// ══════════════════════════════════════════════════════════════
+// BIBLIOTHÈQUE DE SOLUTIONS - RECHERCHE CACHE-FIRST
+// ══════════════════════════════════════════════════════════════
+
+async function searchSolutionLibrary(
+  fixes: FixConfig[],
+  technologyContext: string = ''
+): Promise<Map<string, SolutionMatch>> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  if (!supabaseUrl || !serviceKey) return new Map();
+
+  try {
+    const supabase = createClient(supabaseUrl, serviceKey);
+    const enabledFixes = fixes.filter(f => f.enabled);
+    const errorTypes = enabledFixes.map(f => f.id);
+    
+    // 1. Exact match: même error_type
+    const { data: exactMatches } = await supabase
+      .from('solution_library')
+      .select('*')
+      .in('error_type', errorTypes)
+      .order('success_rate', { ascending: false });
+
+    const results = new Map<string, SolutionMatch>();
+
+    if (exactMatches) {
+      for (const match of exactMatches) {
+        // Priorité au match avec même technology_context
+        const existing = results.get(match.error_type);
+        const isBetterTechMatch = technologyContext && 
+          match.technology_context?.toLowerCase().includes(technologyContext.toLowerCase());
+        
+        if (!existing || isBetterTechMatch) {
+          results.set(match.error_type, {
+            id: match.id,
+            error_type: match.error_type,
+            code_snippet: match.code_snippet,
+            success_rate: match.success_rate || 0,
+            usage_count: match.usage_count || 0,
+            is_generic: match.is_generic || false,
+            similarity: match.technology_context?.toLowerCase() === technologyContext?.toLowerCase() 
+              ? 'exact' : 'close',
+          });
+        }
+      }
+    }
+
+    // 2. Si des fixes n'ont pas de match exact, chercher par catégorie
+    const unmatchedFixes = enabledFixes.filter(f => !results.has(f.id));
+    if (unmatchedFixes.length > 0) {
+      const categories = [...new Set(unmatchedFixes.map(f => f.category))];
+      const { data: closeMatches } = await supabase
+        .from('solution_library')
+        .select('*')
+        .in('category', categories)
+        .eq('is_generic', true)
+        .order('usage_count', { ascending: false })
+        .limit(10);
+
+      if (closeMatches) {
+        for (const match of closeMatches) {
+          if (!results.has(match.error_type)) {
+            results.set(match.error_type, {
+              id: match.id,
+              error_type: match.error_type,
+              code_snippet: match.code_snippet,
+              success_rate: match.success_rate || 0,
+              usage_count: match.usage_count || 0,
+              is_generic: true,
+              similarity: 'close',
+            });
+          }
+        }
+      }
+    }
+
+    console.log(`📚 Bibliothèque: ${results.size} solutions trouvées sur ${enabledFixes.length} fixes demandés`);
+    return results;
+  } catch (error) {
+    console.error('❌ Erreur recherche bibliothèque:', error);
+    return new Map();
+  }
+}
+
+async function adaptSolutionWithAI(
+  existingSnippet: string,
+  siteName: string,
+  siteUrl: string,
+  fixLabel: string,
+  language: string
+): Promise<string | null> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) return null;
+
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-3-flash-preview',
+        messages: [
+          { role: 'system', content: `Tu es un expert JavaScript spécialisé en correctifs SEO/web. Tu ADAPTES un snippet existant éprouvé aux spécificités d'un site cible. Ne change que les sélecteurs CSS, IDs, noms de domaine et données spécifiques. Conserve la logique intacte. Réponds UNIQUEMENT avec le code JavaScript adapté, sans markdown.` },
+          { role: 'user', content: `Adapte ce correctif "${fixLabel}" pour le site "${siteName}" (${siteUrl}):\n\n${existingSnippet}\n\nRemplace les références génériques par les spécificités du site cible. Garde la structure et la logique identiques.` }
+        ],
+        temperature: 0.3,
+      }),
+    });
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    let content = data.choices?.[0]?.message?.content || null;
+    if (content) {
+      // Nettoyer les blocs markdown
+      if (content.includes('```')) {
+        content = content.replace(/```(?:javascript|js)?\n?/g, '').replace(/```/g, '').trim();
+      }
+    }
+    return content;
+  } catch {
+    return null;
+  }
+}
+
+async function incrementSolutionUsage(solutionId: string): Promise<void> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  if (!supabaseUrl || !serviceKey) return;
+
+  try {
+    const supabase = createClient(supabaseUrl, serviceKey);
+    const { data } = await supabase
+      .from('solution_library')
+      .select('usage_count')
+      .eq('id', solutionId)
+      .single();
+    
+    if (data) {
+      await supabase
+        .from('solution_library')
+        .update({ usage_count: (data.usage_count || 0) + 1 })
+        .eq('id', solutionId);
+    }
+  } catch (error) {
+    console.error('❌ Erreur incrémentation usage:', error);
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1475,14 +1637,16 @@ Deno.serve(async (req) => {
       language = 'fr', 
       includeRegistryContext = true,
       useAI = true,
-      attribution
+      attribution,
+      technologyContext = ''
     }: GenerateRequest = await req.json();
 
     console.log('═══════════════════════════════════════════════════════════════');
-    console.log('🏗️ ARCHITECTE GÉNÉRATIF v2.0 - Génération de code correctif');
+    console.log('🏗️ ARCHITECTE GÉNÉRATIF v3.0 - Bibliothèque + Génération');
     console.log('═══════════════════════════════════════════════════════════════');
     console.log(`📍 Site: ${siteName} (${siteUrl})`);
     console.log(`📋 Fixes demandés: ${fixes?.length || 0}`);
+    console.log(`🔧 Contexte techno: ${technologyContext || 'non spécifié'}`);
 
     if (!fixes || !Array.isArray(fixes)) {
       return new Response(
@@ -1506,10 +1670,51 @@ Deno.serve(async (req) => {
           success: true, 
           code: '', 
           fixesApplied: 0,
-          message: 'No fixes enabled'
+          message: 'No fixes enabled',
+          source: 'none'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // ÉTAPE 1: Recherche dans la bibliothèque de solutions
+    // ══════════════════════════════════════════════════════════════
+    const solutionMatches = await searchSolutionLibrary(fixes, technologyContext);
+    const libraryHits: string[] = [];
+    const newGenerations: string[] = [];
+
+    // Déterminer quels fixes utilisent la bibliothèque vs génération nouvelle
+    for (const fix of enabledFixes) {
+      if (solutionMatches.has(fix.id)) {
+        libraryHits.push(fix.id);
+      } else {
+        newGenerations.push(fix.id);
+      }
+    }
+
+    console.log(`📚 Bibliothèque: ${libraryHits.length} solutions réutilisées, ${newGenerations.length} nouvelles générations`);
+
+    // ══════════════════════════════════════════════════════════════
+    // ÉTAPE 2: Adapter les solutions existantes via IA
+    // ══════════════════════════════════════════════════════════════
+    const adaptedSnippets = new Map<string, string>();
+    
+    for (const fixId of libraryHits) {
+      const match = solutionMatches.get(fixId)!;
+      if (match.similarity === 'close' || !match.is_generic) {
+        // Adapter le snippet existant aux spécificités du site
+        const adapted = await adaptSolutionWithAI(
+          match.code_snippet, siteName, siteUrl, 
+          enabledFixes.find(f => f.id === fixId)?.label || fixId,
+          language
+        );
+        if (adapted) {
+          adaptedSnippets.set(fixId, adapted);
+        }
+      }
+      // Incrémenter le compteur d'usage
+      await incrementSolutionUsage(match.id);
     }
 
     // Récupérer le contexte du registre si demandé
@@ -1531,20 +1736,16 @@ Deno.serve(async (req) => {
         }
         
         registryRecommendations = await fetchRecommendationsRegistry(
-          supabaseUrl,
-          supabaseKey,
-          authHeader,
-          domain
+          supabaseUrl, supabaseKey, authHeader, domain
         );
         
         if (registryRecommendations.length > 0) {
           registryContext = generateRegistryContextComment(registryRecommendations);
-          console.log(`📋 Contexte d'audit ajouté (${registryRecommendations.length} recommandations)`);
         }
       }
     }
 
-    // Générer le contenu stratégique via IA si demandé
+    // Générer le contenu stratégique via IA si demandé (seulement pour les nouvelles générations)
     let aiContent: AIGeneratedContent = {};
     const hasStrategicFixes = enabledFixes.some(f => f.category === 'strategic');
     
@@ -1563,12 +1764,16 @@ Deno.serve(async (req) => {
     const strategicFixes = enabledFixes.filter(f => f.category === 'strategic');
     const hallucinationFixes = enabledFixes.filter(f => f.category === 'hallucination');
 
+    // Déterminer la source principale du script
+    const source = libraryHits.length > 0 && newGenerations.length === 0 
+      ? 'library' 
+      : libraryHits.length > 0 
+        ? 'hybrid' 
+        : 'new_generation';
+
     console.log('═══════════════════════════════════════════════════════════════');
-    console.log(`✅ Script généré: ${linesCount} lignes`);
-    console.log(`   → Techniques: ${technicalFixes.length}`);
-    console.log(`   → Tracking: ${trackingFixes.length}`);
-    console.log(`   → Stratégiques: ${strategicFixes.length}`);
-    console.log(`   → Anti-Hallucination: ${hallucinationFixes.length}`);
+    console.log(`✅ Script généré: ${linesCount} lignes (source: ${source})`);
+    console.log(`   → Bibliothèque: ${libraryHits.length} | Nouveau: ${newGenerations.length}`);
     console.log('═══════════════════════════════════════════════════════════════');
 
     return new Response(
@@ -1577,13 +1782,17 @@ Deno.serve(async (req) => {
         code,
         fixesApplied: enabledFixes.length,
         linesCount,
+        source, // 'library' | 'hybrid' | 'new_generation'
+        libraryHits: libraryHits.length,
+        newGenerations: newGenerations.length,
         registryRecommendationsCount: registryRecommendations.length,
         aiContentGenerated: Object.keys(aiContent).length > 0,
         fixesSummary: enabledFixes.map(f => ({
           id: f.id,
           label: f.label,
           category: f.category,
-          priority: f.priority
+          priority: f.priority,
+          fromLibrary: libraryHits.includes(f.id)
         })),
         categorySummary: {
           technical: technicalFixes.length,
