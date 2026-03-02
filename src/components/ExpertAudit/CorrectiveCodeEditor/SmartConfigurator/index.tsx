@@ -487,6 +487,29 @@ export function SmartConfigurator({
     }
   }, [generatedCode, fixConfigs, siteName, siteUrl]);
 
+  // Auto-register site in "Mes sites" (tracked_sites) if not already tracked
+  const autoTrackSite = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data: existing } = await supabase
+        .from('tracked_sites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('domain', siteDomain)
+        .maybeSingle();
+
+      if (!existing) {
+        await supabase.from('tracked_sites').insert({
+          user_id: user.id,
+          domain: siteDomain,
+          site_name: siteName || siteDomain,
+        });
+      }
+    } catch (err) {
+      console.error('Auto-track site error:', err);
+    }
+  }, [user, siteDomain, siteName]);
+
   // Check if WordPress plugin is configured (user has tracked sites for this domain)
   const checkWordPressConfig = useCallback(async (): Promise<boolean> => {
     if (!user) return false;
@@ -832,6 +855,7 @@ export function SmartConfigurator({
                     setShowLockOverlay(false);
                     handleArchiveSolution();
                     handleSaveToProfile();
+                    autoTrackSite();
                   }}
                 />
               </div>
