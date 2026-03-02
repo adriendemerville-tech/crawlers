@@ -125,7 +125,7 @@ export default function Profile() {
   const t = translations[language];
 
   // Get initial tab from URL or default to 'identity'
-  const initialTab = searchParams.get('tab') || 'identity';
+  const initialTab = searchParams.get('tab') || 'tracking';
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
