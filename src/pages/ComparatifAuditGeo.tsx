@@ -564,6 +564,24 @@ export default function ComparatifAuditGeo() {
               </p>
 
               <p className="text-foreground/80 leading-relaxed">
+                Contrairement aux approches traditionnelles qui repartent de zéro à chaque intervention, 
+                Crawlers.fr s'appuie sur une <strong className="text-foreground">bibliothèque de correctifs dynamique</strong> alimentée 
+                en continu par les milliers d'audits réalisés sur la plateforme. Avant de générer le moindre script, 
+                notre moteur interroge cette base de solutions éprouvées pour sélectionner, adapter et assembler 
+                les correctifs les plus performants — ceux qui ont déjà fait leurs preuves sur des sites similaires. 
+                Résultat : <strong className="text-foreground">un code plus fiable, livré plus vite, à une fraction du coût</strong>.
+              </p>
+
+              <p className="text-foreground/60 text-sm leading-relaxed italic border-l-2 border-primary/30 pl-4">
+                <strong className="text-foreground/80">Comment ça marche ?</strong> À chaque génération, l'Architecte Génératif effectue 
+                une recherche par <em>error_type</em> et <em>technology_context</em> (CMS, thème, stack technique) dans 
+                la table <code className="text-primary/80 bg-primary/5 px-1 rounded text-xs">solution_library</code>. Si un correctif 
+                existant obtient un score de similarité suffisant, il est réadapté par IA aux sélecteurs CSS et identifiants 
+                spécifiques du site cible — au lieu d'être regénéré intégralement. Chaque script validé est ensuite anonymisé 
+                et réintégré dans la bibliothèque, augmentant son taux de succès et son compteur d'utilisation.
+              </p>
+
+              <p className="text-foreground/80 leading-relaxed">
                 Pour les analyses avancées — audit sémantique, positionnement sur les LLM, génération de code 
                 correctif JSON-LD — le système de crédits permet un contrôle total des coûts. À <strong className="text-foreground">0,50 € 
                 le crédit</strong>, un audit complet revient à moins de 5 €, soit <strong className="text-foreground">une économie de plus 
