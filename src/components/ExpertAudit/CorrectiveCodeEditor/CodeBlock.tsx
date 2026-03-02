@@ -188,10 +188,10 @@ export function CodeBlock({
   return (
     <div className="relative h-full min-h-[200px] rounded overflow-hidden border bg-background flex flex-col" ref={scrollRef}>
       {/* Scrollable code area */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1" type="always">
         <div className="flex">
           {/* Line numbers */}
-          <div className="flex-shrink-0 py-3 px-2 bg-muted/50 select-none border-r border-border">
+          <div className="flex-shrink-0 py-3 px-2 bg-muted/50 select-none border-r border-border sticky left-0 z-[1]">
             {lines.map((_, i) => (
               <div
                 key={i}
@@ -204,8 +204,8 @@ export function CodeBlock({
           </div>
 
           {/* Code content */}
-          <div className="flex-1 py-3 px-4 overflow-x-auto bg-card">
-            <pre className="text-xs leading-5 font-mono">
+          <div className="flex-1 py-3 px-4 bg-card">
+            <pre className="text-xs leading-5 font-mono whitespace-pre">
               <code 
                 dangerouslySetInnerHTML={{ __html: highlightedCode }}
                 className="text-foreground"
@@ -221,6 +221,7 @@ export function CodeBlock({
             </pre>
           </div>
         </div>
+        
       </ScrollArea>
 
       {/* Lock overlay - positioned fixed at bottom of visible area */}
