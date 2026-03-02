@@ -853,7 +853,7 @@ export function SmartConfigurator({
                         </>
                       ) : (
                         <>
-                          <Zap className="w-3 h-3" />
+                          <Upload className="w-3 h-3" />
                           Injecter
                         </>
                       )}
