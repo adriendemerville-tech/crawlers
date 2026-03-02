@@ -146,17 +146,40 @@ export function Header() {
         {/* Left side: Back button OR Logo + Language selector */}
         <div className="flex items-center gap-4">
           {isAuditExpertPage ? (
-            // Back button on audit-expert page
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/')}
-              className="gap-2 text-muted-foreground hover:text-foreground"
-              aria-label={t.back}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">{t.back}</span>
-            </Button>
+            // Back button + robot logo on audit-expert page
+            <div className="flex items-center gap-2">
+              <a href="/" className="flex items-center" aria-label="Crawlers.AI - Accueil">
+                <svg className="h-9 w-9" viewBox="0 0 48 48" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="headerBgGradientAudit" x1="100%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#d4a853"/>
+                      <stop offset="30%" stopColor="#8b5cf6"/>
+                      <stop offset="70%" stopColor="#7c3aed"/>
+                      <stop offset="100%" stopColor="#3b5998"/>
+                    </linearGradient>
+                  </defs>
+                  <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#headerBgGradientAudit)"/>
+                  <g transform="translate(8.4, 8.4) scale(1.3)" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
+                    <path d="M12 8V4H8"/>
+                    <rect x="4" y="8" width="16" height="12" rx="2"/>
+                    <path d="M2 14h2"/>
+                    <path d="M20 14h2"/>
+                    <path d="M9 13v2"/>
+                    <path d="M15 13v2"/>
+                  </g>
+                </svg>
+              </a>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/')}
+                className="gap-2 text-muted-foreground hover:text-foreground"
+                aria-label={t.back}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.back}</span>
+              </Button>
+            </div>
           ) : (
             // Logo + Language selector on other pages
             <>
