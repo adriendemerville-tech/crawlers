@@ -26,10 +26,11 @@ Deno.serve(async (req) => {
   try {
     const { code, fixes, siteName, siteUrl, technologyContext = '' }: ArchiveRequest = await req.json();
 
-    if (!code || !fixes || fixes.length === 0) {
+    // Seuil minimum : 3 fixes activés pour archiver
+    if (!code || !fixes || fixes.length < 3) {
       return new Response(
-        JSON.stringify({ success: false, error: 'code and fixes are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, skipped: true, error: 'Minimum 3 fixes required for archiving' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -94,11 +95,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Étape 2: Enregistrer chaque fix comme solution dans la bibliothèque
+    // Étape 2: Dédoublonnage + archivage avec is_generic = false (en attente de validation)
     let archived = 0;
+    let updated = 0;
     
     for (const fix of fixes) {
-      // Vérifier si une solution existe déjà pour ce error_type
+      // Vérifier si une solution existe déjà pour ce error_type + technology_context
       const { data: existing } = await supabase
         .from('solution_library')
         .select('id, usage_count, success_rate')
@@ -107,18 +109,17 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (existing) {
-        // Mettre à jour le compteur et le taux de succès
-        const newSuccessRate = Math.min(100, (existing.success_rate || 0) + 5);
+        // Dédoublonnage : juste incrémenter usage_count, pas de doublon
         await supabase
           .from('solution_library')
           .update({ 
             usage_count: (existing.usage_count || 0) + 1,
-            success_rate: newSuccessRate,
           })
           .eq('id', existing.id);
-        console.log(`📈 Solution existante mise à jour: ${fix.id}`);
+        updated++;
+        console.log(`📈 Solution existante mise à jour (usage_count+1): ${fix.id}`);
       } else {
-        // Créer une nouvelle entrée
+        // Nouvelle entrée avec is_generic = false (en attente de feedback utilisateur)
         await supabase
           .from('solution_library')
           .insert({
@@ -128,12 +129,12 @@ Deno.serve(async (req) => {
             description: `Correctif ${fix.label} généré pour ${technologyContext || 'site générique'}`,
             technology_context: technologyContext,
             code_snippet: genericCode,
-            success_rate: 50, // Score initial
+            success_rate: 0,
             usage_count: 1,
-            is_generic: !technologyContext,
+            is_generic: false,
           });
         archived++;
-        console.log(`📚 Nouvelle solution archivée: ${fix.id}`);
+        console.log(`📚 Nouvelle solution archivée (is_generic=false): ${fix.id}`);
       }
     }
 
@@ -141,8 +142,8 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         archived,
-        updated: fixes.length - archived,
-        message: `${archived} nouvelle(s) solution(s) archivée(s), ${fixes.length - archived} mise(s) à jour`
+        updated,
+        message: `${archived} nouvelle(s) solution(s) en attente de validation, ${updated} mise(s) à jour`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
