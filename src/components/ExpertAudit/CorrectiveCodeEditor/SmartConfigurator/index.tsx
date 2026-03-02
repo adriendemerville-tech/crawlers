@@ -8,7 +8,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { 
-  Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, BookCheck, Library, Archive
+  Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -649,33 +649,9 @@ export function SmartConfigurator({
                   </Badge>
                 )}
 
-                {/* Copy + Save + Archive buttons - visible after unlock */}
+                {/* Copy + Save buttons - visible after unlock */}
                 {generatedCode && viewMode === 'code' && hasPaid && (
                   <>
-                    {/* Archive / Validate button */}
-                    {user && !isArchived && (
-                      <Button
-                        onClick={handleArchiveSolution}
-                        variant="outline"
-                        size="sm"
-                        className="gap-1.5 text-xs border-emerald-500/30 text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
-                        disabled={isArchiving}
-                      >
-                        {isArchiving ? (
-                          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
-                            <Archive className="w-3 h-3" />
-                          </motion.div>
-                        ) : (
-                          <BookCheck className="w-3 h-3" />
-                        )}
-                        {isArchiving ? 'Archivage...' : 'Valider & Archiver'}
-                      </Button>
-                    )}
-                    {isArchived && (
-                      <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
-                        <Check className="w-3 h-3" /> Archivé
-                      </Badge>
-                    )}
                     {user && (
                       <Button
                         onClick={handleSaveToProfile}
@@ -768,9 +744,10 @@ export function SmartConfigurator({
                   fixConfigs={fixConfigs}
                   generatedCode={generatedCode}
                   onUnlockWithCredit={() => {
-                    // When credit is used, unlock the code
+                    // When credit is used, unlock the code and auto-archive
                     setHasPaid(true);
                     setShowLockOverlay(false);
+                    handleArchiveSolution();
                     toast({
                       title: 'Script débloqué !',
                       description: 'Vous pouvez maintenant copier le code complet.',
