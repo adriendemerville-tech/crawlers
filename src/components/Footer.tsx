@@ -127,9 +127,6 @@ function FooterComponent() {
           {/* Brand & Description */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <Bot className="h-5 w-5 text-primary-foreground" />
-              </div>
               <span className="text-lg font-bold text-foreground">Crawlers AI</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
