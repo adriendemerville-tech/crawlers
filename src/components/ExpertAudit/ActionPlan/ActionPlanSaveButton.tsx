@@ -88,9 +88,6 @@ export function ActionPlanSaveButton({ tasks, url, auditType = 'technical', onSa
       
       setIsSaved(true);
       onSaved?.();
-      
-      // Reset saved state after 3 seconds
-      setTimeout(() => setIsSaved(false), 3000);
     } catch (error) {
       console.error('Error saving action plan:', error);
       toast.error(t.error);
