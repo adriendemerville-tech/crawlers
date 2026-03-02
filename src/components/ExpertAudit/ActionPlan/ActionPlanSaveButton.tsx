@@ -87,7 +87,6 @@ export function ActionPlanSaveButton({ tasks, url, auditType = 'technical', onSa
       }
       
       setIsSaved(true);
-      toast.success(t.success);
       onSaved?.();
       
       // Reset saved state after 3 seconds
