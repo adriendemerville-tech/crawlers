@@ -235,15 +235,6 @@ export function CodeBlock({
           {/* Gray gradient blur overlay - from bottom to top */}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-400/98 via-slate-400/85 to-transparent dark:from-slate-600/98 dark:via-slate-600/85" />
           
-          {/* Padlock */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6, duration: 0.5, ease: 'easeOut' }}
-            className="relative z-10"
-          >
-            <Lock className="w-6 h-6 text-violet-500" strokeWidth={1.5} />
-          </motion.div>
         </motion.div>
       )}
     </div>
