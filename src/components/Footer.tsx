@@ -251,16 +251,18 @@ function FooterComponent() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {allArticles.map((article) => (
-                <Link
+                <a
                   key={article.slug}
-                  to={`/blog/${article.slug}`}
+                  href={`/blog/${article.slug}`}
+                  target="_blank"
+                  rel="noopener"
                   className="group flex items-start gap-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
                 >
                   <FileText className="h-4 w-4 mt-0.5 text-primary shrink-0" />
                   <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors line-clamp-2">
                     {article.title[language] || article.title.fr}
                   </span>
-                </Link>
+                </a>
               ))}
             </div>
             <div className="mt-4 text-center">
