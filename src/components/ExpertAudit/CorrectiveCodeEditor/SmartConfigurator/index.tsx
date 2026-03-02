@@ -218,45 +218,59 @@ export function SmartConfigurator({
       }
     }
 
-    // Accessibility fixes
+    // Accessibility fixes - only if audit detects issues
+    if (technicalResult) {
+      const missingAlt = (technicalResult.scores.semantic as any)?.imagesMissingAlt ?? 0;
+      if (missingAlt > 0) {
+        fixes.push({
+          id: 'fix_alt_images',
+          category: 'accessibility',
+          label: 'Alt text pour images',
+          description: `${missingAlt} image(s) sans attribut alt détectée(s)`,
+          enabled: true,
+          priority: 'important',
+        });
+      }
+    }
+
     fixes.push({
       id: 'fix_contrast',
       category: 'accessibility',
       label: 'Améliorer le contraste',
       description: 'Ajuste les couleurs des éléments à faible contraste',
-      enabled: true,
-      priority: 'optional',
-    });
-
-    fixes.push({
-      id: 'fix_alt_images',
-      category: 'accessibility',
-      label: 'Alt text pour images',
-      description: 'Ajoute des attributs alt manquants',
-      enabled: true,
-      priority: 'important',
-    });
-
-    // Tracking fixes - disabled by default (not part of base 6)
-    fixes.push({
-      id: 'fix_gtm',
-      category: 'tracking',
-      label: 'Intégrer Google Tag Manager',
-      description: 'Injecte le snippet GTM',
       enabled: false,
       priority: 'optional',
-      data: { gtmId: 'GTM-XXXXXXX' }
     });
 
-    fixes.push({
-      id: 'fix_ga4',
-      category: 'tracking',
-      label: 'Ajouter Google Analytics 4',
-      description: 'Injecte le pixel GA4',
-      enabled: false,
-      priority: 'optional',
-      data: { measurementId: 'G-XXXXXXXXXX' }
-    });
+    // Tracking fixes - only propose if NOT already detected on the site
+    if (technicalResult) {
+      const hasGTM = (technicalResult.scores.semantic as any)?.hasGTM ?? false;
+      const hasGA4 = (technicalResult.scores.semantic as any)?.hasGA4 ?? false;
+
+      if (!hasGTM) {
+        fixes.push({
+          id: 'fix_gtm',
+          category: 'tracking',
+          label: 'Intégrer Google Tag Manager',
+          description: 'GTM non détecté — injecte le snippet GTM',
+          enabled: false,
+          priority: 'optional',
+          data: { gtmId: 'GTM-XXXXXXX' }
+        });
+      }
+
+      if (!hasGA4) {
+        fixes.push({
+          id: 'fix_ga4',
+          category: 'tracking',
+          label: 'Ajouter Google Analytics 4',
+          description: 'GA4 non détecté — injecte le pixel GA4',
+          enabled: false,
+          priority: 'optional',
+          data: { measurementId: 'G-XXXXXXXXXX' }
+        });
+      }
+    }
 
     // Hallucination fix
     if (hasHallucinationFixes(hallucinationData)) {
