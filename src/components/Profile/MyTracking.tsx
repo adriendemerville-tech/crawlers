@@ -318,7 +318,7 @@ export function MyTracking() {
         runBackgroundAudit(site as TrackedSite);
       }
 
-      toast.success(t.addSite, { description: domain });
+      // Site added silently — no toast needed
     } catch {
       toast.error(t.invalidUrl);
     } finally {
