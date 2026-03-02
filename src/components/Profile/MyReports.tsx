@@ -273,6 +273,17 @@ export function MyReports() {
   };
 
   const handleDeleteReport = async (reportId: string) => {
+    const report = reports.find(r => r.id === reportId);
+    const domain = report?.url ? (() => { try { return new URL(report.url.startsWith('http') ? report.url : `https://${report.url}`).hostname.replace('www.', ''); } catch { return report.url; } })() : '';
+    
+    const confirmMsg = language === 'fr' 
+      ? `Supprimer ce rapport ? Ce rapport alimente aussi l'Architecte Génératif pour générer du code adapté au site "${domain}".`
+      : language === 'es'
+      ? `¿Eliminar este informe? Este informe también alimenta el Arquitecto Generativo para generar código adaptado al sitio "${domain}".`
+      : `Delete this report? This report also feeds the Generative Architect to generate code tailored to site "${domain}".`;
+    
+    if (!window.confirm(confirmMsg)) return;
+
     const { error } = await supabase
       .from('saved_reports')
       .delete()

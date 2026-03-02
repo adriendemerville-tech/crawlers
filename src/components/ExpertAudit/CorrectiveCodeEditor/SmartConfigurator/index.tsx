@@ -171,13 +171,16 @@ export function SmartConfigurator({
     }
   }, [user, siteDomain]);
 
-  // Fetch audit intelligence: recommendations registry + strategic roadmap
+  // Full audit data extracted from reports (used when opened from "Mes sites")
+  const [savedAuditData, setSavedAuditData] = useState<Record<string, any> | null>(null);
+
+  // Fetch audit intelligence: recommendations registry + strategic roadmap + saved reports/action plans
   const fetchAuditIntelligence = useCallback(async () => {
     if (!user || !siteDomain) return;
     setIsPreloading(true);
     try {
-      // Parallel fetch: registry recommendations + extract roadmap from strategicResult
-      const [registryResult] = await Promise.all([
+      // Parallel fetch: registry, saved reports for this domain, action plans for this domain
+      const [registryResult, reportsResult, actionPlansResult] = await Promise.all([
         supabase
           .from('audit_recommendations_registry')
           .select('*')
@@ -185,23 +188,90 @@ export function SmartConfigurator({
           .eq('domain', siteDomain)
           .order('created_at', { ascending: false })
           .limit(50),
+        supabase
+          .from('saved_reports')
+          .select('report_type, report_data, url, created_at')
+          .eq('user_id', user.id)
+          .ilike('url', `%${siteDomain}%`)
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase
+          .from('action_plans')
+          .select('audit_type, tasks, url, title')
+          .eq('user_id', user.id)
+          .ilike('url', `%${siteDomain}%`)
+          .order('updated_at', { ascending: false })
+          .limit(5),
       ]);
 
       if (registryResult.data) {
         setRegistryRecommendations(registryResult.data);
       }
 
-      // Extract strategic roadmap from the strategicResult
-      const roadmap = strategicResult?.strategicAnalysis?.executive_roadmap || [];
+      // Extract strategic roadmap from strategicResult prop OR from saved reports
+      let roadmap = strategicResult?.strategicAnalysis?.executive_roadmap || [];
+      let extractedAuditData: Record<string, any> = {};
+
+      // If no live audit data, reconstruct from saved reports
+      if (!technicalResult && !strategicResult && reportsResult.data && reportsResult.data.length > 0) {
+        console.log(`[Architect] No live audit — reconstructing from ${reportsResult.data.length} saved reports`);
+
+        for (const report of reportsResult.data) {
+          const rd = report.report_data as Record<string, any>;
+          if (!rd) continue;
+
+          if (report.report_type === 'seo_technical' || report.report_type === 'seo_strategic') {
+            // Extract key audit metrics
+            if (rd.scores) extractedAuditData.scores = rd.scores;
+            if (rd.totalScore) extractedAuditData.totalScore = rd.totalScore;
+            if (rd.recommendations) extractedAuditData.recommendations = rd.recommendations;
+            if (rd.rawData) extractedAuditData.rawData = rd.rawData;
+            if (rd.strategicAnalysis) {
+              extractedAuditData.strategicAnalysis = rd.strategicAnalysis;
+              if (!roadmap.length && rd.strategicAnalysis.executive_roadmap) {
+                roadmap = rd.strategicAnalysis.executive_roadmap;
+              }
+            }
+          }
+          if (report.report_type === 'geo') {
+            extractedAuditData.geoData = rd;
+          }
+          if (report.report_type === 'llm') {
+            extractedAuditData.llmData = rd;
+          }
+          if (report.report_type === 'pagespeed') {
+            extractedAuditData.pagespeedData = rd;
+          }
+        }
+
+        // Enrich from action plans (uncompleted tasks = active recommendations)
+        if (actionPlansResult.data && actionPlansResult.data.length > 0) {
+          const allTasks: any[] = [];
+          for (const plan of actionPlansResult.data) {
+            const tasks = (plan.tasks as unknown as any[]) || [];
+            const uncompletedTasks = tasks.filter((t: any) => !t.isCompleted);
+            allTasks.push(...uncompletedTasks.map((t: any) => ({
+              ...t,
+              auditType: plan.audit_type,
+              source: 'action_plan',
+            })));
+          }
+          extractedAuditData.activeActionPlanTasks = allTasks;
+          console.log(`[Architect] Found ${allTasks.length} uncompleted action plan tasks`);
+        }
+
+        setSavedAuditData(extractedAuditData);
+      }
+
       setStrategicRoadmap(roadmap);
 
-      console.log(`[Architect] Preloaded ${registryResult.data?.length || 0} registry recommendations, ${roadmap.length} roadmap items for ${siteDomain}`);
+      console.log(`[Architect] Preloaded ${registryResult.data?.length || 0} registry, ${roadmap.length} roadmap items, ${reportsResult.data?.length || 0} reports for ${siteDomain}`);
     } catch (err) {
       console.error('[Architect] Error fetching audit intelligence:', err);
     } finally {
       setIsPreloading(false);
     }
-  }, [user, siteDomain, strategicResult]);
+  }, [user, siteDomain, strategicResult, technicalResult]);
 
   useEffect(() => {
     if (isOpen) {
@@ -555,6 +625,59 @@ export function SmartConfigurator({
         ? strategicRoadmap.map((item: any) => `[${item.category || ''}] ${item.title || ''}: ${item.prescriptive_action || item.action_concrete || ''}`).join('\n')
         : undefined;
 
+      // Build audit context to pass raw audit data to the edge function
+      const auditContext: Record<string, any> = {};
+      
+      // From live audit results
+      if (technicalResult) {
+        auditContext.technicalScores = technicalResult.scores;
+        auditContext.totalScore = technicalResult.totalScore;
+        auditContext.recommendations = technicalResult.recommendations?.map(r => ({
+          id: r.id, title: r.title, priority: r.priority, category: r.category, description: r.description,
+        }));
+        if (technicalResult.rawData?.htmlAnalysis) {
+          auditContext.htmlAnalysis = {
+            title: technicalResult.rawData.htmlAnalysis.title,
+            metaDescription: technicalResult.rawData.htmlAnalysis.metaDescription,
+            h1Count: technicalResult.rawData.htmlAnalysis.h1Count,
+            brokenLinks: technicalResult.rawData.htmlAnalysis.brokenLinks,
+            imagesMissingAlt: technicalResult.rawData.htmlAnalysis.imagesMissingAlt,
+          };
+        }
+      }
+      if (strategicResult?.strategicAnalysis) {
+        const sa = strategicResult.strategicAnalysis;
+        auditContext.strategicAnalysis = {
+          brandIdentity: sa.brand_identity,
+          competitiveLandscape: sa.competitive_landscape,
+          keywordPositioning: sa.keyword_positioning,
+          executiveRoadmap: sa.executive_roadmap,
+          geoReadiness: sa.geo_readiness,
+        };
+      }
+      // From saved reports (when opened from "Mes sites")
+      if (savedAuditData) {
+        if (savedAuditData.scores && !auditContext.technicalScores) {
+          auditContext.technicalScores = savedAuditData.scores;
+        }
+        if (savedAuditData.strategicAnalysis && !auditContext.strategicAnalysis) {
+          auditContext.strategicAnalysis = savedAuditData.strategicAnalysis;
+        }
+        if (savedAuditData.recommendations && !auditContext.recommendations) {
+          auditContext.recommendations = savedAuditData.recommendations;
+        }
+        if (savedAuditData.activeActionPlanTasks) {
+          auditContext.activeActionPlanTasks = savedAuditData.activeActionPlanTasks;
+        }
+        if (savedAuditData.pagespeedData) {
+          auditContext.pagespeedSummary = {
+            performance: savedAuditData.pagespeedData.scores?.performance,
+            lcp: savedAuditData.pagespeedData.scores?.lcp,
+            cls: savedAuditData.pagespeedData.scores?.cls,
+          };
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('generate-corrective-code', {
         body: {
           fixes: fixConfigs,
@@ -562,6 +685,7 @@ export function SmartConfigurator({
           siteUrl,
           language,
           roadmapContext,
+          auditContext: Object.keys(auditContext).length > 0 ? auditContext : undefined,
         },
       });
 
