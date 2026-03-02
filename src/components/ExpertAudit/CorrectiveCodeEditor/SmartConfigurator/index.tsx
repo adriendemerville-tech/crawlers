@@ -595,8 +595,7 @@ export function SmartConfigurator({
                 <Button
                   onClick={handleGenerate}
                   disabled={enabledCount === 0 || isGenerating}
-                  variant="outline"
-                  className="gap-2 border-violet-500/50 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10"
+                  className="gap-2 bg-violet-600 hover:bg-violet-700 text-white border-0"
                   size="sm"
                 >
                   {isGenerating ? (

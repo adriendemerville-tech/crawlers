@@ -40,9 +40,9 @@ export function PaymentButton({
     f => f.enabled && ['strategic', 'generative'].includes(f.category)
   );
 
-  // Determine if this should use credits (1 credit for advanced options)
+  // Determine credit cost from calculatedPrice (1 credit = 0.50€)
   const requiresCredit = hasAdvancedOptions;
-  const creditCost = requiresCredit ? 1 : 0;
+  const creditCost = requiresCredit ? Math.max(1, Math.round(calculatedPrice / 0.5)) : 0;
   const hasEnoughCredits = balance >= creditCost;
 
   const handleCreditUnlock = async () => {
@@ -68,7 +68,7 @@ export function PaymentButton({
       if (result.success) {
         toast({
           title: 'Script débloqué !',
-          description: `1 crédit utilisé. Solde restant : ${result.newBalance}`,
+          description: `${creditCost} crédit${creditCost > 1 ? 's' : ''} utilisé${creditCost > 1 ? 's' : ''}. Solde restant : ${result.newBalance}`,
         });
         
         // Call the unlock callback
@@ -230,7 +230,7 @@ export function PaymentButton({
             ) : hasEnoughCredits ? (
               <>
                 <CreditCoin size="sm" />
-                Débloquer avec 1 crédit
+                Débloquer avec {creditCost} crédit{creditCost > 1 ? 's' : ''}
               </>
             ) : (
               <>
@@ -242,7 +242,7 @@ export function PaymentButton({
 
           <div className="text-xs text-muted-foreground text-center">
             <span className="font-medium flex items-center justify-center gap-1.5">
-              Coût : 1
+              Coût : {creditCost}
               <CreditCoin size="sm" />
             </span>
             <span className="block mt-0.5">
