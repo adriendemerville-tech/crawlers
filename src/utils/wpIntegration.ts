@@ -29,13 +29,7 @@ export async function handleWPIntegration(
   // ─── Download plugin ───
   if (action === 'download') {
     try {
-      const link = document.createElement('a');
-      link.href = PLUGIN_URL;
-      link.download = 'crawlers-geo.zip';
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      window.open(PLUGIN_URL, '_blank');
       toast.success(
         language === 'fr'
           ? 'Téléchargement du plugin lancé'
