@@ -590,8 +590,43 @@ export function SmartConfigurator({
                 </ToggleGroupItem>
               </ToggleGroup>
 
-              {/* Price Display + Generate Button */}
-              <div className="flex items-center gap-4">
+              {/* Right side actions */}
+              <div className="flex items-center gap-3">
+                {/* Copy + Save buttons - visible after unlock */}
+                {generatedCode && viewMode === 'code' && hasPaid && (
+                  <>
+                    {user && (
+                      <Button
+                        onClick={handleSaveToProfile}
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        disabled={isSaving}
+                      >
+                        <Save className="w-3 h-3" />
+                      </Button>
+                    )}
+                    <Button
+                      onClick={handleCopy}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-500" />
+                          Copié !
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          Copier
+                        </>
+                      )}
+                    </Button>
+                  </>
+                )}
+
                 {/* Dynamic Price in Credits */}
                 <motion.span 
                   key={calculatedPrice}
@@ -628,40 +663,6 @@ export function SmartConfigurator({
                   )}
                 </Button>
               </div>
-
-              {generatedCode && viewMode === 'code' && hasPaid && (
-                <div className="flex items-center gap-2">
-                  {user && (
-                    <Button
-                      onClick={handleSaveToProfile}
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                      disabled={isSaving}
-                    >
-                      <Save className="w-3 h-3" />
-                    </Button>
-                  )}
-                  <Button
-                    onClick={handleCopy}
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-3 h-3 text-success" />
-                        Copié !
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3" />
-                        Copier
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
             </div>
 
             {/* Preview/Code Content - fills available space with margins */}
