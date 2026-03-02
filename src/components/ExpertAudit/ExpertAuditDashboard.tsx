@@ -277,11 +277,26 @@ export function ExpertAuditDashboard() {
       return;
     }
 
-    // Priority: URL from query params > saved URL in session > cached URL from home page
+    // Priority: URL from query params > cached URL from home (if different → reset) > saved session
     if (urlFromParams) {
       setUrl(urlFromParams);
       // Clear the URL param from browser history
       navigate('/audit-expert', { replace: true });
+    } else if (cachedUrl && savedUrl && cachedUrl !== savedUrl) {
+      // User entered a different URL on the home page → reset audit state
+      setUrl(cachedUrl);
+      sessionStorage.removeItem('audit_url');
+      sessionStorage.removeItem('audit_technical_result');
+      sessionStorage.removeItem('audit_strategic_result');
+      sessionStorage.removeItem('audit_mode');
+      setTechnicalResult(null);
+      setStrategicResult(null);
+      setResult(null);
+      setAuditMode(null);
+      setCompletedSteps([]);
+      // Update session with new URL
+      sessionStorage.setItem('audit_url', cachedUrl);
+      return; // skip restoring old results
     } else if (savedUrl) {
       setUrl(savedUrl);
     } else if (cachedUrl) {
@@ -817,7 +832,7 @@ export function ExpertAuditDashboard() {
         currentStep={currentStep}
         completedSteps={completedSteps}
         url={url}
-        onUrlChange={setUrl}
+        onUrlChange={(v: string) => { setUrl(v); if (v.trim()) localStorage.setItem('crawlers_last_url', v.trim()); }}
         onStartTechnical={handleTechnicalAudit}
         onStartStrategic={() => handleStrategicAudit()}
         onStartPayment={() => setIsCodeEditorOpen(true)}
