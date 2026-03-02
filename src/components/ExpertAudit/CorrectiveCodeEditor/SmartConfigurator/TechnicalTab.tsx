@@ -119,6 +119,14 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                                 {priorityConfig[fix.priority].label}
                               </Badge>
                             )}
+                            {fix.isRecommended && (
+                              <Badge 
+                                variant="outline" 
+                                className="text-[9px] px-1 py-0 h-4 bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30"
+                              >
+                                Recommandé
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>

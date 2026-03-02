@@ -47,6 +47,7 @@ interface GenerateRequest {
   useAI?: boolean;
   attribution?: AttributionConfig | null;
   technologyContext?: string; // CMS/thème détecté
+  roadmapContext?: string; // Strategic roadmap context for prompt enrichment
 }
 
 interface SolutionMatch {
@@ -295,7 +296,8 @@ async function generateStrategicContent(
   fixes: FixConfig[],
   siteName: string,
   siteUrl: string,
-  language: string
+  language: string,
+  roadmapContext: string = ''
 ): Promise<AIGeneratedContent> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -323,9 +325,12 @@ async function generateStrategicContent(
 
 IMPORTANT: Réponds UNIQUEMENT en JSON valide, sans markdown ni texte avant/après.`;
 
+  // Inject roadmap context into the prompt if available
+  const roadmapBlock = roadmapContext ? `\n\nCONTEXTE STRATÉGIQUE (Roadmap de l'audit — à respecter impérativement pour la cohérence):\n${roadmapContext}\n\nLes contenus générés DOIVENT être alignés avec cette roadmap stratégique.\n` : '';
+
   let userPrompt = `Génère du contenu SEO optimisé pour le site "${siteName}" (${siteUrl}).
 Langue cible: ${langLabel}
-
+${roadmapBlock}
 Génère le JSON suivant:
 {`;
 
@@ -1638,7 +1643,8 @@ Deno.serve(async (req) => {
       includeRegistryContext = true,
       useAI = true,
       attribution,
-      technologyContext = ''
+      technologyContext = '',
+      roadmapContext = ''
     }: GenerateRequest = await req.json();
 
     console.log('═══════════════════════════════════════════════════════════════');
@@ -1751,7 +1757,7 @@ Deno.serve(async (req) => {
     
     if (useAI && hasStrategicFixes) {
       console.log('🤖 Génération de contenu stratégique via Lovable AI...');
-      aiContent = await generateStrategicContent(fixes, siteName, siteUrl, language);
+      aiContent = await generateStrategicContent(fixes, siteName, siteUrl, language, roadmapContext);
     }
 
     // Générer le script avec contexte et contenu IA
