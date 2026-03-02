@@ -201,16 +201,7 @@ export default function Profile() {
               {t.backToHome}
             </Link>
 
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h1 className="text-3xl font-bold">{t.title}</h1>
-                <p className="text-muted-foreground">{t.memberSince} {memberSince}</p>
-              </div>
-              <Button variant="outline" onClick={handleLogout} className="gap-2">
-                <LogOut className="h-4 w-4" />
-                {t.logout}
-              </Button>
-            </div>
+            <p className="text-muted-foreground mb-8">{t.memberSince} {memberSince}</p>
 
             <Tabs defaultValue={initialTab} className="space-y-6">
               <TabsList className="w-full flex">
@@ -408,6 +399,13 @@ export default function Profile() {
                 </TabsContent>
               )}
             </Tabs>
+
+            <div className="flex justify-end mt-8">
+              <Button variant="outline" onClick={handleLogout} className="gap-2">
+                <LogOut className="h-4 w-4" />
+                {t.logout}
+              </Button>
+            </div>
           </motion.div>
         </main>
         <Footer />
