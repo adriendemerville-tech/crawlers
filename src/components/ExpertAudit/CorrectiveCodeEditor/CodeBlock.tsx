@@ -86,7 +86,7 @@ export function CodeBlock({
 
   // Get the code to display (truncated if locked)
   const codeToDisplay = isLocked 
-    ? code.split('\n').slice(0, previewLines).join('\n') + '\n\n// ... Code verrouillé - Effectuez le paiement pour accéder au script complet ...'
+    ? code.split('\n').slice(0, previewLines).join('\n')
     : code;
 
   // Typing animation effect
