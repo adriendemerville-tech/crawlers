@@ -48,6 +48,23 @@ interface GenerateRequest {
   attribution?: AttributionConfig | null;
   technologyContext?: string; // CMS/thème détecté
   roadmapContext?: string; // Strategic roadmap context for prompt enrichment
+  auditContext?: AuditContext; // Full audit data for deep personalization
+}
+
+interface AuditContext {
+  technicalScores?: Record<string, any>;
+  totalScore?: number;
+  recommendations?: Array<{ id: string; title: string; priority: string; category: string; description: string }>;
+  htmlAnalysis?: { title?: string; metaDescription?: string; h1Count?: number; brokenLinks?: any[]; imagesMissingAlt?: number };
+  strategicAnalysis?: {
+    brandIdentity?: any;
+    competitiveLandscape?: any;
+    keywordPositioning?: any;
+    executiveRoadmap?: any[];
+    geoReadiness?: any;
+  };
+  activeActionPlanTasks?: Array<{ id: string; title: string; priority: string; category: string; auditType: string }>;
+  pagespeedSummary?: { performance?: number; lcp?: number; cls?: number };
 }
 
 interface SolutionMatch {
@@ -297,7 +314,8 @@ async function generateStrategicContent(
   siteName: string,
   siteUrl: string,
   language: string,
-  roadmapContext: string = ''
+  roadmapContext: string = '',
+  auditContext?: AuditContext
 ): Promise<AIGeneratedContent> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   if (!LOVABLE_API_KEY) {
@@ -328,9 +346,48 @@ IMPORTANT: Réponds UNIQUEMENT en JSON valide, sans markdown ni texte avant/apr�
   // Inject roadmap context into the prompt if available
   const roadmapBlock = roadmapContext ? `\n\nCONTEXTE STRATÉGIQUE (Roadmap de l'audit — à respecter impérativement pour la cohérence):\n${roadmapContext}\n\nLes contenus générés DOIVENT être alignés avec cette roadmap stratégique.\n` : '';
 
+  // Inject full audit context for deep personalization
+  let auditBlock = '';
+  if (auditContext) {
+    const parts: string[] = [];
+    if (auditContext.technicalScores) {
+      const s = auditContext.technicalScores;
+      parts.push(`Score SEO technique: ${s.semantic?.score || '?'}/${s.semantic?.maxScore || '?'}, Performance: ${s.performance?.score || '?'}/${s.performance?.maxScore || '?'}, Sécurité: ${s.security?.score || '?'}/${s.security?.maxScore || '?'}`);
+    }
+    if (auditContext.htmlAnalysis) {
+      const h = auditContext.htmlAnalysis;
+      parts.push(`Title actuel: "${h.title || 'absent'}", Meta desc: "${h.metaDescription || 'absente'}", H1: ${h.h1Count ?? '?'}, Images sans alt: ${h.imagesMissingAlt ?? '?'}`);
+    }
+    if (auditContext.strategicAnalysis?.brandIdentity) {
+      const bi = auditContext.strategicAnalysis.brandIdentity;
+      parts.push(`Marque: ${bi.brand_name || bi.name || siteName}, Secteur: ${bi.sector || '?'}, Proposition: ${bi.value_proposition || '?'}`);
+    }
+    if (auditContext.strategicAnalysis?.keywordPositioning?.main_keywords) {
+      const kw = auditContext.strategicAnalysis.keywordPositioning.main_keywords.slice(0, 8);
+      parts.push(`Mots-clés cibles: ${kw.map((k: any) => k.keyword || k).join(', ')}`);
+    }
+    if (auditContext.strategicAnalysis?.competitiveLandscape?.goliaths) {
+      const g = auditContext.strategicAnalysis.competitiveLandscape.goliaths;
+      parts.push(`Concurrents principaux: ${g.slice(0, 5).map((c: any) => c.name || c).join(', ')}`);
+    }
+    if (auditContext.activeActionPlanTasks && auditContext.activeActionPlanTasks.length > 0) {
+      const criticalTasks = auditContext.activeActionPlanTasks.filter(t => t.priority === 'critical').slice(0, 5);
+      if (criticalTasks.length > 0) {
+        parts.push(`Tâches critiques non résolues: ${criticalTasks.map(t => t.title).join('; ')}`);
+      }
+    }
+    if (auditContext.pagespeedSummary) {
+      const ps = auditContext.pagespeedSummary;
+      parts.push(`PageSpeed: Performance ${ps.performance ?? '?'}/100, LCP ${ps.lcp ?? '?'}ms, CLS ${ps.cls ?? '?'}`);
+    }
+    if (parts.length > 0) {
+      auditBlock = `\n\nDONNÉES D'AUDIT DU SITE (issues des audits technique et stratégique réels — personnalise le contenu en conséquence):\n${parts.join('\n')}\n`;
+    }
+  }
+
   let userPrompt = `Génère du contenu SEO optimisé pour le site "${siteName}" (${siteUrl}).
 Langue cible: ${langLabel}
-${roadmapBlock}
+${roadmapBlock}${auditBlock}
 Génère le JSON suivant:
 {`;
 
@@ -1644,15 +1701,17 @@ Deno.serve(async (req) => {
       useAI = true,
       attribution,
       technologyContext = '',
-      roadmapContext = ''
+      roadmapContext = '',
+      auditContext
     }: GenerateRequest = await req.json();
 
     console.log('═══════════════════════════════════════════════════════════════');
-    console.log('🏗️ ARCHITECTE GÉNÉRATIF v3.0 - Bibliothèque + Génération');
+    console.log('🏗️ ARCHITECTE GÉNÉRATIF v4.0 - Audit-Driven Generation');
     console.log('═══════════════════════════════════════════════════════════════');
     console.log(`📍 Site: ${siteName} (${siteUrl})`);
     console.log(`📋 Fixes demandés: ${fixes?.length || 0}`);
     console.log(`🔧 Contexte techno: ${technologyContext || 'non spécifié'}`);
+    console.log(`📊 Audit context: ${auditContext ? 'OUI' : 'NON'} (scores: ${auditContext?.technicalScores ? 'oui' : 'non'}, strategic: ${auditContext?.strategicAnalysis ? 'oui' : 'non'}, tasks: ${auditContext?.activeActionPlanTasks?.length || 0})`);
 
     if (!fixes || !Array.isArray(fixes)) {
       return new Response(
@@ -1757,7 +1816,7 @@ Deno.serve(async (req) => {
     
     if (useAI && hasStrategicFixes) {
       console.log('🤖 Génération de contenu stratégique via Lovable AI...');
-      aiContent = await generateStrategicContent(fixes, siteName, siteUrl, language, roadmapContext);
+      aiContent = await generateStrategicContent(fixes, siteName, siteUrl, language, roadmapContext, auditContext);
     }
 
     // Générer le script avec contexte et contenu IA
