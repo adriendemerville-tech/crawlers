@@ -832,10 +832,6 @@ export function SmartConfigurator({
                     setShowLockOverlay(false);
                     handleArchiveSolution();
                     handleSaveToProfile();
-                    toast({
-                      title: 'Script débloqué !',
-                      description: 'Code sauvegardé dans "Mes Codes" et prêt à copier.',
-                    });
                   }}
                 />
               </div>

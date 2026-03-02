@@ -60,10 +60,6 @@ export function PaymentButton({
       const result = await useCredit('Déblocage script correctif - ' + siteUrl, creditCost);
 
       if (result.success) {
-        toast({
-          title: 'Script débloqué !',
-          description: `${creditCost} crédit${creditCost > 1 ? 's' : ''} utilisé${creditCost > 1 ? 's' : ''}. Solde restant : ${result.newBalance}`,
-        });
         
         // Call the unlock callback
         onUnlockWithCredit?.();
