@@ -246,6 +246,7 @@ export function MyTracking() {
         geo_score: Math.round(geoScore),
         llm_citation_rate: citationRate,
         ai_sentiment: sentiment,
+        voice_share: citationRate || null,
         raw_data: { 
           geoData: geoData?.data, 
           llmData: llmData?.data, 

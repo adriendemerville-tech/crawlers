@@ -482,6 +482,8 @@ export function ExpertAuditDashboard() {
       let llmCitationRate: number | null = null;
       let aiSentiment: string | null = null;
       let performanceScore: number | null = null;
+      let semanticAuthority: number | null = null;
+      let voiceShare: number | null = null;
 
       if (mode === 'technical') {
         // Technical audit provides SEO score out of 200 → normalize to 0-100
@@ -506,6 +508,11 @@ export function ExpertAuditDashboard() {
         } else if (sa?.geo_score?.score != null) {
           geoScore = Math.round(sa.geo_score.score);
         }
+
+        // Semantic authority from brand_authority thought_leadership_score
+        semanticAuthority = sa?.brand_authority?.thought_leadership_score ?? null;
+        // Voice share = same as citation rate (brand mention frequency across LLMs)
+        voiceShare = llmCitationRate;
       }
 
       // Save stats entry with initial audit data
@@ -517,6 +524,8 @@ export function ExpertAuditDashboard() {
         geo_score: geoScore,
         llm_citation_rate: llmCitationRate,
         ai_sentiment: aiSentiment,
+        semantic_authority: semanticAuthority,
+        voice_share: voiceShare,
         raw_data: {
           performanceScore,
           source: `expert_audit_${mode}`,
