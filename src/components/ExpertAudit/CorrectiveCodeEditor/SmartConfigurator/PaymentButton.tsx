@@ -35,14 +35,8 @@ export function PaymentButton({
   const { user } = useAuth();
   const { balance, useCredit, refreshBalance } = useCredits();
 
-  // Check if any advanced (strategy/super) options are enabled
-  const hasAdvancedOptions = fixConfigs.some(
-    f => f.enabled && ['strategic', 'generative'].includes(f.category)
-  );
-
   // Determine credit cost from calculatedPrice (1 credit = 0.50€)
-  const requiresCredit = hasAdvancedOptions;
-  const creditCost = requiresCredit ? Math.max(1, Math.round(calculatedPrice / 0.5)) : 0;
+  const creditCost = Math.max(1, Math.round(calculatedPrice / 0.5));
   const hasEnoughCredits = balance >= creditCost;
 
   const handleCreditUnlock = async () => {
@@ -202,7 +196,7 @@ export function PaymentButton({
   const enabledCount = fixConfigs.filter(f => f.enabled).length;
 
   // If advanced options are enabled, show credit-based button
-  if (requiresCredit && user) {
+  if (user) {
     return (
       <>
         <div className="flex flex-col items-center space-y-2">
