@@ -560,7 +560,19 @@ export function SmartConfigurator({
       _rationale: item.strategic_rationale || item.strategic_goal || '',
     }));
 
-    const allDynamicTasks = [...actionPlanTasks, ...liveStrategicTasks];
+    // Also include LIVE technical recommendations from the audit result
+    const liveTechnicalTasks = (technicalResult?.recommendations || []).map((rec: any, i: number) => ({
+      id: `live-tech-${rec.id || i}`,
+      title: rec.title || '',
+      priority: rec.priority || 'optional',
+      category: rec.category || 'seo',
+      isCompleted: false,
+      auditType: 'technical',
+      _description: rec.description || rec.title || '',
+      _rationale: '',
+    }));
+
+    const allDynamicTasks = [...actionPlanTasks, ...liveStrategicTasks, ...liveTechnicalTasks];
 
     // Deduplicate by title similarity
     const seenTitles = new Set<string>();
