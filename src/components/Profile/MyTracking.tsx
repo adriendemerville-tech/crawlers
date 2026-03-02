@@ -467,7 +467,7 @@ export function MyTracking() {
                             )}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-56 p-2" align="end">
+                        <PopoverContent className="w-56 p-2" align="end" side="bottom" sideOffset={8} collisionPadding={16}>
                           <div className="space-y-1">
                             {!isSiteSynced(currentSite.current_config as Record<string, unknown>) && (
                               <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-orange-600 dark:text-orange-400 bg-orange-500/10 rounded-md mb-1">
