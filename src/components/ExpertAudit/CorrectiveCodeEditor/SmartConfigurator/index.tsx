@@ -629,10 +629,9 @@ export function SmartConfigurator({
     }
   }, [isOpen]);
 
-   // Initialize fix configs when modal opens and check payment status
-  // Only run the full init ONCE per open session to avoid wiping generatedCode
+  // Initialize fix configs once preloading is done (modal won't show until then)
   useEffect(() => {
-    if (!isOpen || hasInitializedRef.current) return;
+    if (!isOpen || isPreloading || hasInitializedRef.current) return;
     hasInitializedRef.current = true;
 
     // If we have initialFixesMetadata (from post-payment redirect), use it to restore enabled fixes
@@ -663,7 +662,7 @@ export function SmartConfigurator({
       checkPaymentStatus();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, isPreloading]);
 
   // Re-sync fixConfigs when availableFixes changes AFTER async data loads (action plans, registry)
   // This ensures dynamic patches from action plans appear once fetched
@@ -1059,7 +1058,7 @@ export function SmartConfigurator({
 
   return (
     <>
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen && !isPreloading} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
         <DialogHeader className="px-4 py-3 border-b flex flex-row items-center justify-center relative">
           {/* Title - left aligned */}
@@ -1075,28 +1074,7 @@ export function SmartConfigurator({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Preloading overlay */}
-        {isPreloading && (
-          <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
-            >
-              <Sparkles className="w-8 h-8 text-violet-500" />
-            </motion.div>
-            <div className="text-center space-y-2">
-              <p className="text-sm font-medium text-foreground">Préparation intelligente</p>
-              <motion.p 
-                key="step1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-xs text-muted-foreground"
-              >
-                Chargement des plans d'action pour <span className="font-medium text-foreground">{siteDomain}</span>…
-              </motion.p>
-            </div>
-          </div>
-        )}
+        {/* Preloading is now handled by delaying Dialog open — no overlay needed */}
 
         <div className="flex-1 overflow-hidden grid grid-cols-12 h-full">
           {/* Left Column: Configurator */}
