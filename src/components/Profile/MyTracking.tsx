@@ -346,13 +346,18 @@ export function MyTracking() {
   };
   const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
 
-  const chartData = currentStats.map((entry, idx) => ({
-    date: language === 'fr' ? `Jour ${idx + 1}` : language === 'es' ? `Día ${idx + 1}` : `Day ${idx + 1}`,
-    seo: entry.seo_score || 0,
-    geo: entry.geo_score || 0,
-    citation: entry.llm_citation_rate || 0,
-    performance: getPerformanceScore(entry) || 0,
-  }));
+  const chartData = currentStats.map((entry) => {
+    const d = new Date(entry.recorded_at);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return {
+      date: `${dd}/${mm}`,
+      seo: entry.seo_score || 0,
+      geo: entry.geo_score || 0,
+      citation: entry.llm_citation_rate || 0,
+      performance: getPerformanceScore(entry) || 0,
+    };
+  });
 
   if (loading) {
     return (
