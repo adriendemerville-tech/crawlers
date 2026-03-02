@@ -6,12 +6,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Download, Link2, MoreVertical, AlertCircle } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Download, Link2, MoreVertical, AlertCircle, Search } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { SmartConfigurator } from '@/components/ExpertAudit/CorrectiveCodeEditor/SmartConfigurator';
@@ -25,8 +26,8 @@ const translations = {
     addSite: 'Ajouter un site',
     addSiteDesc: 'Entrez l\'URL du site à suivre. Un audit de référence sera lancé automatiquement.',
     urlPlaceholder: 'https://exemple.com',
-    add: 'Ajouter et auditer',
-    adding: 'Audit en cours...',
+    add: 'Ajouter',
+    adding: 'Ajout...',
     remove: 'Retirer',
     removeConfirm: 'Site retiré du suivi',
     lastAudit: 'Dernier audit',
@@ -52,8 +53,8 @@ const translations = {
     addSite: 'Add a site',
     addSiteDesc: 'Enter the site URL to track. A baseline audit will run automatically.',
     urlPlaceholder: 'https://example.com',
-    add: 'Add and audit',
-    adding: 'Auditing...',
+    add: 'Add',
+    adding: 'Adding...',
     remove: 'Remove',
     removeConfirm: 'Site removed from tracking',
     lastAudit: 'Last audit',
@@ -79,8 +80,8 @@ const translations = {
     addSite: 'Agregar un sitio',
     addSiteDesc: 'Ingresa la URL del sitio a seguir. Se lanzará una auditoría de referencia.',
     urlPlaceholder: 'https://ejemplo.com',
-    add: 'Agregar y auditar',
-    adding: 'Auditando...',
+    add: 'Agregar',
+    adding: 'Agregando...',
     remove: 'Eliminar',
     removeConfirm: 'Sitio eliminado del seguimiento',
     lastAudit: 'Última auditoría',
@@ -125,6 +126,7 @@ export function MyTracking() {
   const { user } = useAuth();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
+  const navigate = useNavigate();
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [statsMap, setStatsMap] = useState<Record<string, StatsEntry[]>>({});
@@ -302,7 +304,7 @@ export function MyTracking() {
           user_id: user.id,
           domain,
           site_name: domain,
-          last_audit_at: new Date().toISOString(),
+          last_audit_at: null,
         })
         .select()
         .single();
@@ -313,12 +315,7 @@ export function MyTracking() {
       setNewUrl('');
       await fetchSites();
 
-      // Trigger background audit for initial data
-      if (site) {
-        runBackgroundAudit(site as TrackedSite);
-      }
-
-      // Site added silently — no toast needed
+      // No background audit — user will audit manually
     } catch {
       toast.error(t.invalidUrl);
     } finally {
@@ -485,32 +482,41 @@ export function MyTracking() {
                         )}
                       </Button>
 
-                      <Button 
-                        size="sm" 
-                        className="gap-1.5"
-                        onClick={() => {
-                          setArchitectSiteId(currentSite.id);
-                          setIsArchitectOpen(true);
-                        }}
-                      >
-                        <Wrench className="h-3.5 w-3.5" />
-                        {language === 'fr' ? 'Optimiser' : language === 'es' ? 'Optimizar' : 'Optimize'}
-                      </Button>
+                      {latestStats ? (
+                        <Button 
+                          size="sm" 
+                          className="gap-1.5"
+                          onClick={() => {
+                            setArchitectSiteId(currentSite.id);
+                            setIsArchitectOpen(true);
+                          }}
+                        >
+                          <Wrench className="h-3.5 w-3.5" />
+                          {language === 'fr' ? 'Optimiser' : language === 'es' ? 'Optimizar' : 'Optimize'}
+                        </Button>
+                      ) : (
+                        <Button 
+                          size="sm" 
+                          className="gap-1.5"
+                          onClick={() => navigate(`/audit-expert?url=${encodeURIComponent(`https://${currentSite.domain}`)}`)}
+                        >
+                          <Search className="h-3.5 w-3.5" />
+                          {language === 'fr' ? 'Auditer' : language === 'es' ? 'Auditar' : 'Audit'}
+                        </Button>
+                      )}
                     </div>
                   </div>
 
                   {/* KPI Cards */}
-                  {latestStats && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <KPICard label={t.seoScore} value={latestStats.seo_score ? `${latestStats.seo_score}/200` : '—'} icon={TrendingUp} />
-                      <KPICard label={t.geoScore} value={latestStats.geo_score ? `${latestStats.geo_score}%` : '—'} icon={Globe} />
-                      <KPICard label={t.performance} value={latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—'} icon={Gauge} />
-                      <KPICard label={t.citationRate} value={latestStats.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—'} icon={Brain} />
-                      <KPICard label={t.sentiment} value={sentimentLabel(latestStats.ai_sentiment)} icon={BarChart3} valueClassName={sentimentColor(latestStats.ai_sentiment)} />
-                      <KPICard label={t.semanticAuth} value={latestStats.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—'} icon={TrendingUp} />
-                      <KPICard label={t.voiceShare} value={latestStats.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—'} icon={BarChart3} />
-                    </div>
-                  )}
+                  <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${!latestStats ? 'opacity-40 pointer-events-none' : ''}`}>
+                    <KPICard label={t.seoScore} value={latestStats?.seo_score ? `${latestStats.seo_score}/200` : '—'} icon={TrendingUp} />
+                    <KPICard label={t.geoScore} value={latestStats?.geo_score ? `${latestStats.geo_score}%` : '—'} icon={Globe} />
+                    <KPICard label={t.performance} value={latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—'} icon={Gauge} />
+                    <KPICard label={t.citationRate} value={latestStats?.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—'} icon={Brain} />
+                    <KPICard label={t.sentiment} value={latestStats ? sentimentLabel(latestStats.ai_sentiment) : '—'} icon={BarChart3} valueClassName={latestStats ? sentimentColor(latestStats.ai_sentiment) : ''} />
+                    <KPICard label={t.semanticAuth} value={latestStats?.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—'} icon={TrendingUp} />
+                    <KPICard label={t.voiceShare} value={latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—'} icon={BarChart3} />
+                  </div>
 
                   {/* Evolution Chart */}
                   {chartData.length > 1 && (
