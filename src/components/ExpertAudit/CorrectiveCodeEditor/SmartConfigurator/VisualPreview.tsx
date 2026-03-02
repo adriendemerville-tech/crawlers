@@ -366,7 +366,7 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
     return (
       <div className="h-full flex flex-col">
         {/* Iframe Container - no header */}
-        <div className="flex-1 relative bg-background">
+        <div className="flex-1 relative bg-background p-3">
           {(!iframeLoaded || isReloading) && !loadFailed && (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/20 z-10">
               <div className="flex flex-col items-center gap-2">
@@ -415,7 +415,7 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
           <iframe
             key={iframeKey}
             src={siteUrl}
-            className="w-full h-full border-0"
+            className="w-full h-full border-0 rounded-lg"
             title="Site Preview"
             sandbox="allow-scripts allow-same-origin"
             onLoad={handleIframeLoad}
