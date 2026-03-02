@@ -473,6 +473,7 @@ export function SmartConfigurator({
           fixes: enabledFixes.map(f => ({ id: f.id, label: f.label, category: f.category, priority: f.priority })),
           siteName,
           siteUrl,
+          technologyContext: siteDomain || '',
         },
       });
       if (error) throw error;
