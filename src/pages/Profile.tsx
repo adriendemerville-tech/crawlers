@@ -212,14 +212,6 @@ export default function Profile() {
 
             <Tabs defaultValue={initialTab} className="space-y-6">
               <TabsList className="w-full flex">
-                <TabsTrigger value="identity" className="flex-1 gap-2">
-                  <User className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.identity}</span>
-                </TabsTrigger>
-                <TabsTrigger value="wallet" className="flex-1 gap-2">
-                  <Wallet className="h-4 w-4" />
-                  <span className="hidden sm:inline">{t.wallet}</span>
-                </TabsTrigger>
                 <TabsTrigger value="tracking" className="flex-1 gap-2">
                   <Radar className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.tracking}</span>
@@ -238,6 +230,14 @@ export default function Profile() {
                 </TabsTrigger>
                 <TabsTrigger value="settings" className="flex-1 gap-2">
                   <Settings className="h-4 w-4" />
+                </TabsTrigger>
+                <TabsTrigger value="identity" className="flex-1 gap-2">
+                  <User className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t.identity}</span>
+                </TabsTrigger>
+                <TabsTrigger value="wallet" className="flex-1 gap-2">
+                  <Wallet className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t.wallet}</span>
                 </TabsTrigger>
                 {isAdmin && (
                   <TabsTrigger value="admin" className="flex-1 gap-2 text-primary">
