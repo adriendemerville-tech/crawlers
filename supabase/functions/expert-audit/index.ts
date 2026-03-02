@@ -253,6 +253,17 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
         // Invalid JSON-LD
       }
     }
+
+    // Detect GTM / GA4 / analytics
+    const hasGTM = /googletagmanager\.com\/gtm\.js/i.test(html) || /GTM-[A-Z0-9]+/i.test(html);
+    const hasGA4 = /googletagmanager\.com\/gtag\/js\?id=G-/i.test(html) || /gtag\s*\(\s*['"]config['"]\s*,\s*['"]G-/i.test(html);
+    
+    // Detect images missing alt text
+    const allImages = html.match(/<img[^>]*>/gi) || [];
+    const imagesMissingAlt = allImages.filter(img => {
+      const hasAlt = /alt\s*=\s*["'][^"']+["']/i.test(img);
+      return !hasAlt;
+    }).length;
     
     return {
       hasTitle: titleContent.length > 0,
@@ -267,6 +278,10 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasSchemaOrg: schemaTypes.length > 0,
       schemaTypes,
       isHttps: url.startsWith('https://'),
+      hasGTM,
+      hasGA4,
+      imagesTotal: allImages.length,
+      imagesMissingAlt,
     };
   } catch (error) {
     console.error('HTML analysis failed:', error);
@@ -283,6 +298,10 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasSchemaOrg: false,
       schemaTypes: [],
       isHttps: url.startsWith('https://'),
+      hasGTM: false,
+      hasGA4: false,
+      imagesTotal: 0,
+      imagesMissingAlt: 0,
     };
   }
 }
@@ -889,6 +908,10 @@ serve(async (req) => {
         hasUniqueH1: htmlAnalysis.h1Count === 1,
         h1Count: htmlAnalysis.h1Count,
         wordCount: htmlAnalysis.wordCount,
+        imagesTotal: htmlAnalysis.imagesTotal,
+        imagesMissingAlt: htmlAnalysis.imagesMissingAlt,
+        hasGTM: htmlAnalysis.hasGTM,
+        hasGA4: htmlAnalysis.hasGA4,
       },
       aiReady: {
         score: aiReadyScore,
