@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Lock } from 'lucide-react';
 import { useRadixScrollStickToBottom } from './useRadixScrollStickToBottom';
 
@@ -221,7 +221,7 @@ export function CodeBlock({
             </pre>
           </div>
         </div>
-        
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
 
       {/* Lock overlay - positioned fixed at bottom of visible area */}
