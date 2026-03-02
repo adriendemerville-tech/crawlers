@@ -8,6 +8,7 @@ interface CodeBlockProps {
   code: string;
   isTyping: boolean;
   placeholder?: string;
+  placeholderHighlight?: string;
   isLocked?: boolean;
   previewLines?: number;
   allowScroll?: boolean; // When true (after payment), user can scroll freely
@@ -72,6 +73,7 @@ export function CodeBlock({
   code, 
   isTyping, 
   placeholder,
+  placeholderHighlight,
   isLocked = false,
   previewLines = 25,
   allowScroll = false
@@ -155,9 +157,23 @@ export function CodeBlock({
   });
 
   if (!code) {
+    // Split placeholder around the highlight word
+    const renderPlaceholder = () => {
+      if (!placeholder) return null;
+      if (!placeholderHighlight || !placeholder.includes(placeholderHighlight)) {
+        return <span>{placeholder}</span>;
+      }
+      const parts = placeholder.split(placeholderHighlight);
+      return (
+        <>
+          {parts[0]}<span className="text-violet-500 dark:text-violet-400 font-semibold">{placeholderHighlight}</span>{parts[1]}
+        </>
+      );
+    };
+
     return (
       <div className="h-full min-h-[200px] bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30 flex items-center justify-center">
-        <p className="text-muted-foreground text-sm">{placeholder}</p>
+        <p className="text-muted-foreground text-sm">{renderPlaceholder()}</p>
       </div>
     );
   }
