@@ -1,7 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const ALLOWED_ORIGIN = 'https://crawlers.fr';
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -25,7 +23,6 @@ Deno.serve(async (req) => {
 
     // ─── POST: Generate magic link (called from SaaS frontend) ───
     if (req.method === 'POST') {
-      // Restrict origin to crawlers.fr
       const origin = req.headers.get('origin') || '';
       if (!origin.includes('crawlers.fr') && !origin.includes('crawlers.lovable.app')) {
         return new Response(
@@ -34,7 +31,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Authenticate user via JWT
       const authHeader = req.headers.get('Authorization');
       if (!authHeader?.startsWith('Bearer ')) {
         return new Response(
@@ -51,7 +47,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Verify user via anon client
       const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
       const anonClient = createClient(Deno.env.get('SUPABASE_URL') || '', anonKey, {
         global: { headers: { Authorization: authHeader } }
@@ -66,7 +61,14 @@ Deno.serve(async (req) => {
 
       const userId = claimsData.claims.sub;
 
-      // Create magic link token (service role bypasses RLS)
+      // Parse optional body for site_id context
+      let siteId: string | null = null;
+      try {
+        const body = await req.json();
+        siteId = body?.site_id || null;
+      } catch { /* no body or invalid json, that's ok */ }
+
+      // Create magic link token
       const { data: magicLink, error: mlError } = await supabase
         .from('magic_links')
         .insert({ user_id: userId })
@@ -80,12 +82,25 @@ Deno.serve(async (req) => {
         );
       }
 
+      // If site_id provided, return the site api_key too
+      let siteApiKey: string | null = null;
+      if (siteId) {
+        const { data: site } = await supabase
+          .from('tracked_sites')
+          .select('api_key')
+          .eq('id', siteId)
+          .eq('user_id', userId)
+          .maybeSingle();
+        siteApiKey = site?.api_key || null;
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
           type: 'magic_link',
           token: magicLink.token,
           expires_at: magicLink.expires_at,
+          ...(siteApiKey ? { site_api_key: siteApiKey } : {}),
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -118,7 +133,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Look up the token
       const { data: link, error: linkError } = await supabase
         .from('magic_links')
         .select('id, user_id, used, expires_at')
@@ -132,9 +146,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Check expiry
       if (new Date(link.expires_at) < new Date()) {
-        // Clean up expired token
         await supabase.from('magic_links').delete().eq('id', link.id);
         return new Response(
           JSON.stringify({ error: 'Token expired', type: 'auth' }),
@@ -142,7 +154,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Check if already used
       if (link.used) {
         return new Response(
           JSON.stringify({ error: 'Token already used', type: 'auth' }),
@@ -150,33 +161,35 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Mark as used
       await supabase
         .from('magic_links')
         .update({ used: true })
         .eq('id', link.id);
 
-      // Fetch the user's permanent API key
-      const { data: profile, error: profileError } = await supabase
+      // Return all user's tracked sites with their per-site api_keys
+      const { data: trackedSites } = await supabase
+        .from('tracked_sites')
+        .select('id, domain, site_name, api_key')
+        .eq('user_id', link.user_id);
+
+      const { data: profile } = await supabase
         .from('profiles')
-        .select('api_key, credits_balance, email')
+        .select('credits_balance, email')
         .eq('user_id', link.user_id)
         .maybeSingle();
-
-      if (profileError || !profile) {
-        return new Response(
-          JSON.stringify({ error: 'User profile not found', type: 'auth' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
 
       return new Response(
         JSON.stringify({
           success: true,
           type: 'auth',
-          api_key: profile.api_key,
-          email: profile.email,
-          credits_remaining: profile.credits_balance,
+          sites: (trackedSites || []).map(s => ({
+            id: s.id,
+            domain: s.domain,
+            site_name: s.site_name,
+            api_key: s.api_key,
+          })),
+          email: profile?.email || null,
+          credits_remaining: profile?.credits_balance || 0,
         }),
         { 
           status: 200, 
@@ -185,7 +198,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ─── Standard config retrieval (existing flow) ───
+    // ─── Standard config retrieval: now uses SITE-LEVEL api_key ───
     const apiKey = url.searchParams.get('api_key');
     const domain = url.searchParams.get('domain');
 
@@ -196,30 +209,55 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!domain || typeof domain !== 'string' || domain.length < 3) {
-      return new Response(
-        JSON.stringify({ error: 'Missing or invalid domain parameter' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const cleanDomain = domain.replace(/[^a-zA-Z0-9.\-]/g, '').toLowerCase();
-
-    // Verify API key
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('user_id, credits_balance')
+    // Try site-level api_key first (new model)
+    const { data: site, error: siteError } = await supabase
+      .from('tracked_sites')
+      .select('id, user_id, domain, current_config, api_key')
       .eq('api_key', apiKey)
       .maybeSingle();
 
-    if (profileError || !profile) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid API key', authenticated: false }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Fallback to profile-level api_key (legacy)
+    let userId: string | null = null;
+    let cleanDomain: string;
+    let currentConfig: Record<string, unknown> | null = null;
+
+    if (site) {
+      userId = site.user_id;
+      cleanDomain = site.domain;
+      currentConfig = site.current_config as Record<string, unknown> | null;
+    } else {
+      // Legacy: check profile api_key
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id, credits_balance')
+        .eq('api_key', apiKey)
+        .maybeSingle();
+
+      if (profileError || !profile) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid API key', authenticated: false }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      userId = profile.user_id;
+      
+      if (!domain || typeof domain !== 'string' || domain.length < 3) {
+        return new Response(
+          JSON.stringify({ error: 'Missing or invalid domain parameter' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      cleanDomain = domain.replace(/[^a-zA-Z0-9.\-]/g, '').toLowerCase();
     }
 
-    if (profile.credits_balance <= 0) {
+    // Check credits
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('credits_balance')
+      .eq('user_id', userId!)
+      .maybeSingle();
+
+    if (!profile || profile.credits_balance <= 0) {
       return new Response(
         JSON.stringify({ 
           error: 'Insufficient credits. Please recharge your account.',
@@ -230,22 +268,43 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch corrective code
+    // If site has current_config, return it directly (new model)
+    if (currentConfig && Object.keys(currentConfig).length > 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          type: 'config',
+          domain: cleanDomain!,
+          credits_remaining: profile.credits_balance,
+          ...currentConfig,
+          generated_at: new Date().toISOString(),
+        }),
+        { 
+          status: 200, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'public, max-age=300',
+          } 
+        }
+      );
+    }
+
+    // Fallback: build config from audits + saved_corrective_codes (legacy)
     const { data: latestCode } = await supabase
       .from('saved_corrective_codes')
       .select('code, fixes_applied, created_at')
-      .eq('user_id', profile.user_id)
-      .ilike('url', `%${cleanDomain}%`)
+      .eq('user_id', userId!)
+      .ilike('url', `%${cleanDomain!}%`)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    // Fetch audit data
     const { data: latestAudit } = await supabase
       .from('audits')
       .select('audit_data, created_at')
-      .eq('user_id', profile.user_id)
-      .eq('domain', cleanDomain)
+      .eq('user_id', userId!)
+      .eq('domain', cleanDomain!)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -286,7 +345,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         type: 'config',
-        domain: cleanDomain,
+        domain: cleanDomain!,
         credits_remaining: profile.credits_balance,
         last_audit: latestAudit?.created_at || null,
         robots_rules: robotsRules,

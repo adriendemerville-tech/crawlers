@@ -71,6 +71,8 @@ interface SmartConfiguratorProps {
   initialHasPaid?: boolean;
   initialFixesMetadata?: FixMetadata[];
   onPaymentVerified?: () => void;
+  // Optional: active tracked site ID for direct config persistence
+  activeSiteId?: string | null;
 }
 
 export function SmartConfigurator({
@@ -85,6 +87,7 @@ export function SmartConfigurator({
   initialHasPaid = false,
   initialFixesMetadata = [],
   onPaymentVerified,
+  activeSiteId = null,
 }: SmartConfiguratorProps) {
   const [fixConfigs, setFixConfigs] = useState<FixConfig[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>(initialCode ? 'code' : 'visual');
@@ -511,11 +514,24 @@ export function SmartConfigurator({
     }
   }, [user, siteDomain, siteName]);
 
+  // Save current_config to the tracked site (per-site config persistence)
+  const saveConfigToSite = useCallback(async (siteId: string | null, config: Record<string, unknown>) => {
+    if (!user || !siteId) return;
+    try {
+      await supabase
+        .from('tracked_sites')
+        .update({ current_config: config } as any)
+        .eq('id', siteId)
+        .eq('user_id', user.id);
+    } catch (err) {
+      console.error('Error saving config to site:', err);
+    }
+  }, [user]);
+
   // Check if WordPress plugin is configured (user has tracked sites for this domain)
   const checkWordPressConfig = useCallback(async (): Promise<boolean> => {
     if (!user) return false;
     try {
-      // Check if user has the API key and any tracked site for this domain
       const { data, error } = await supabase
         .from('tracked_sites')
         .select('id')
@@ -523,10 +539,8 @@ export function SmartConfigurator({
         .eq('domain', siteDomain)
         .maybeSingle();
       
-      // If tracked site exists, consider WP configured
       if (!error && data) return true;
 
-      // Also check if they have any tracked site at all (flexible check)
       const { data: anyTracked } = await supabase
         .from('tracked_sites')
         .select('id')
@@ -539,11 +553,23 @@ export function SmartConfigurator({
     }
   }, [user, siteDomain]);
 
-  // Apply modifications to WordPress via update-config
+  // Resolve the active site ID (from prop or by domain lookup)
+  const resolveActiveSiteId = useCallback(async (): Promise<string | null> => {
+    if (activeSiteId) return activeSiteId;
+    if (!user) return null;
+    const { data } = await supabase
+      .from('tracked_sites')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('domain', siteDomain)
+      .maybeSingle();
+    return data?.id || null;
+  }, [activeSiteId, user, siteDomain]);
+
+  // Apply modifications to WordPress via update-config + persist to tracked_sites
   const handleApplyToWordPress = useCallback(async () => {
     if (!generatedCode || !user) return;
 
-    // Check if WordPress is configured first
     const isConfigured = await checkWordPressConfig();
     if (!isConfigured) {
       setShowWpConfigModal(true);
@@ -562,19 +588,29 @@ export function SmartConfigurator({
         try { jsonLd = JSON.parse(jsonLdMatch[1].trim()); } catch { jsonLd = jsonLdMatch[1].trim(); }
       }
 
+      const configPayload = {
+        json_ld: jsonLd,
+        meta_tags: { raw: generatedCode },
+        corrective_script: generatedCode,
+        updated_at: new Date().toISOString(),
+      };
+
+      // 1. Push to update-config edge function (for audit record)
       const { data, error } = await supabase.functions.invoke('update-config', {
-        body: {
-          domain,
-          json_ld: jsonLd,
-          meta_tags: { raw: generatedCode },
-          corrective_script: generatedCode,
-        },
+        body: { domain, ...configPayload },
       });
 
       if (error) throw error;
+
+      // 2. Persist config to tracked_sites.current_config
+      const siteId = await resolveActiveSiteId();
+      if (siteId) {
+        await saveConfigToSite(siteId, configPayload);
+      }
+
       if (data?.success) {
         setApplySuccess(true);
-        sonnerToast.success('✅ Configuration mise à jour ! Le site WordPress sera synchronisé automatiquement via le plugin.');
+        sonnerToast.success('✅ Configuration synchronisée avec succès ! Votre plugin WordPress mettra à jour le site automatiquement.');
         setTimeout(() => setApplySuccess(false), 5000);
       } else {
         throw new Error(data?.error || 'Erreur');
@@ -585,7 +621,8 @@ export function SmartConfigurator({
     } finally {
       setIsApplying(false);
     }
-  }, [generatedCode, user, siteDomain, checkWordPressConfig]);
+  }, [generatedCode, user, siteDomain, checkWordPressConfig, resolveActiveSiteId, saveConfigToSite]);
+  
 
   const enabledCount = fixConfigs.filter(f => f.enabled).length;
   const technicalCount = fixConfigs.filter(f => f.enabled && !['strategic', 'generative'].includes(f.category)).length;
