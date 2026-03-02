@@ -444,6 +444,92 @@ export function ExpertAuditDashboard() {
     return normalized;
   };
 
+  // Auto-register site in tracked_sites and save initial KPIs
+  const autoTrackSite = useCallback(async (normalizedUrl: string, auditResult: ExpertAuditResult, mode: 'technical' | 'strategic') => {
+    if (!user) return;
+    try {
+      const domain = new URL(normalizedUrl).hostname.replace('www.', '');
+
+      // Check if already tracked
+      const { data: existing } = await supabase
+        .from('tracked_sites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('domain', domain)
+        .maybeSingle();
+
+      let siteId: string;
+      if (existing) {
+        siteId = existing.id;
+      } else {
+        const { data: newSite, error: insertErr } = await supabase
+          .from('tracked_sites')
+          .insert({ user_id: user.id, domain, site_name: domain, last_audit_at: new Date().toISOString() })
+          .select('id')
+          .single();
+        if (insertErr || !newSite) return;
+        siteId = newSite.id;
+      }
+
+      // Extract KPI data from audit results
+      let seoScore: number | null = null;
+      let geoScore: number | null = null;
+      let llmCitationRate: number | null = null;
+      let aiSentiment: string | null = null;
+      let performanceScore: number | null = null;
+
+      if (mode === 'technical') {
+        // Technical audit provides SEO score out of 200 → normalize to 0-100
+        seoScore = auditResult.totalScore ? Math.round((auditResult.totalScore / 200) * 100) : null;
+        performanceScore = auditResult.scores?.performance?.psiPerformance ?? null;
+      } else if (mode === 'strategic') {
+        // Strategic audit provides overallScore and LLM visibility
+        const sa = auditResult.strategicAnalysis;
+        seoScore = sa?.overallScore ? Math.round(sa.overallScore) : null;
+        
+        // Extract LLM citation rate from raw data
+        const llmRaw = sa?.llm_visibility_raw;
+        if (llmRaw?.citationRate) {
+          llmCitationRate = (llmRaw.citationRate.cited / (llmRaw.citationRate.total || 1)) * 100;
+        }
+        aiSentiment = llmRaw?.overallSentiment || null;
+        
+        // GEO score from strategic
+        const geoReadiness = sa?.geo_readiness;
+        if (geoReadiness?.citability_score != null) {
+          geoScore = Math.round(geoReadiness.citability_score);
+        } else if (sa?.geo_score?.score != null) {
+          geoScore = Math.round(sa.geo_score.score);
+        }
+      }
+
+      // Save stats entry with initial audit data
+      await supabase.from('user_stats_history').insert({
+        user_id: user.id,
+        tracked_site_id: siteId,
+        domain,
+        seo_score: seoScore,
+        geo_score: geoScore,
+        llm_citation_rate: llmCitationRate,
+        ai_sentiment: aiSentiment,
+        raw_data: {
+          performanceScore,
+          source: `expert_audit_${mode}`,
+          auditScore: auditResult.totalScore,
+        },
+      });
+
+      // Update last_audit_at
+      await supabase
+        .from('tracked_sites')
+        .update({ last_audit_at: new Date().toISOString() })
+        .eq('id', siteId);
+
+    } catch (err) {
+      console.error('Auto-track site error:', err);
+    }
+  }, [user]);
+
   const handleTechnicalAudit = async () => {
     if (!url.trim()) return;
     const normalizedUrl = normalizeUrl(url);
@@ -478,6 +564,9 @@ export function ExpertAuditDashboard() {
       
       // Track step 1 completion
       trackAnalyticsEvent('expert_audit_step_1', { targetUrl: normalizedUrl });
+      
+      // Auto-register site for tracking with initial KPIs
+      autoTrackSite(normalizedUrl, auditResult, 'technical');
 
       const reliabilityInfo = auditResult.meta?.reliabilityScore 
         ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
@@ -589,6 +678,9 @@ export function ExpertAuditDashboard() {
       
       // Track step 2 completion
       trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
+      
+      // Auto-register site for tracking with initial KPIs
+      autoTrackSite(normalizedUrl, strategicData, 'strategic');
 
       toast({
         title: hallucinationCorrections ? 'Analyse corrigée terminée !' : t.strategicComplete,
