@@ -20,6 +20,7 @@ import { MyCorrectiveCodes } from '@/components/Profile/MyCorrectiveCodes';
 import { MyWallet } from '@/components/Profile/MyWallet';
 import { MyTracking } from '@/components/Profile/MyTracking';
 import { AdminDashboard } from '@/components/Admin';
+import { WordPressIntegrationCard } from '@/components/Profile/WordPressIntegrationCard';
 import { useAdmin } from '@/hooks/useAdmin';
 
 const translations = {
@@ -393,6 +394,9 @@ export default function Profile() {
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* WordPress Integration */}
+                  <WordPressIntegrationCard />
                 </div>
               </TabsContent>
 

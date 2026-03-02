@@ -358,6 +358,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          api_key: string
           avatar_url: string | null
           created_at: string
           credits_balance: number
@@ -369,6 +370,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          api_key?: string
           avatar_url?: string | null
           created_at?: string
           credits_balance?: number
@@ -380,6 +382,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          api_key?: string
           avatar_url?: string | null
           created_at?: string
           credits_balance?: number
