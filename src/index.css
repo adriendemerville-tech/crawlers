@@ -109,6 +109,10 @@
     caret-color: transparent;
   }
 
+  html {
+    font-size: 110%;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
