@@ -229,9 +229,6 @@ export default function Profile() {
                   <Code2 className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.correctiveCodes}</span>
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="flex-1 gap-2">
-                  <Settings className="h-4 w-4" />
-                </TabsTrigger>
                 <TabsTrigger value="identity" className="flex-1 gap-2">
                   <User className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.identity}</span>
@@ -240,8 +237,12 @@ export default function Profile() {
                   <Wallet className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.wallet}</span>
                 </TabsTrigger>
+                <div className="ml-auto" />
+                <TabsTrigger value="settings" className="gap-2">
+                  <Settings className="h-4 w-4" />
+                </TabsTrigger>
                 {isAdmin && (
-                  <TabsTrigger value="admin" className="flex-1 gap-2 text-primary">
+                  <TabsTrigger value="admin" className="gap-2 text-primary">
                     <Shield className="h-4 w-4" />
                     <span className="hidden sm:inline">Admin</span>
                   </TabsTrigger>
