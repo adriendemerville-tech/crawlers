@@ -6,12 +6,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Link2, Copy, Check, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { SmartConfigurator } from '@/components/ExpertAudit/CorrectiveCodeEditor/SmartConfigurator';
 
 const translations = {
   fr: {
@@ -103,6 +104,8 @@ interface TrackedSite {
   site_name: string;
   created_at: string;
   last_audit_at: string | null;
+  api_key?: string;
+  current_config?: Record<string, unknown>;
 }
 
 interface StatsEntry {
@@ -128,6 +131,17 @@ export function MyTracking() {
   const [adding, setAdding] = useState(false);
   const [selectedSite, setSelectedSite] = useState<string | null>(null);
   const [refreshingSites, setRefreshingSites] = useState<Set<string>>(new Set());
+  
+  // Architect modal state
+  const [architectSiteId, setArchitectSiteId] = useState<string | null>(null);
+  const [isArchitectOpen, setIsArchitectOpen] = useState(false);
+  
+  // WordPress connection state
+  const [wpConnectSiteId, setWpConnectSiteId] = useState<string | null>(null);
+  const [showWpModal, setShowWpModal] = useState(false);
+  const [wpApiKeyVisible, setWpApiKeyVisible] = useState(false);
+  const [wpApiKeyCopied, setWpApiKeyCopied] = useState(false);
+  const [generatingMagicLink, setGeneratingMagicLink] = useState(false);
 
   const fetchSites = useCallback(async () => {
     if (!user) return;
@@ -434,9 +448,36 @@ export function MyTracking() {
                         </p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => handleRemoveSite(currentSite.id)} className="text-destructive hover:text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleRemoveSite(currentSite.id)} className="text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="gap-1.5"
+                        onClick={() => {
+                          setWpConnectSiteId(currentSite.id);
+                          setShowWpModal(true);
+                          setWpApiKeyVisible(false);
+                          setWpApiKeyCopied(false);
+                        }}
+                      >
+                        <Plug className="h-3.5 w-3.5" />
+                        {language === 'fr' ? 'Connecter WordPress' : language === 'es' ? 'Conectar WordPress' : 'Connect WordPress'}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="gap-1.5"
+                        onClick={() => {
+                          setArchitectSiteId(currentSite.id);
+                          setIsArchitectOpen(true);
+                        }}
+                      >
+                        <Wrench className="h-3.5 w-3.5" />
+                        {language === 'fr' ? 'Optimiser' : language === 'es' ? 'Optimizar' : 'Optimize'}
+                      </Button>
+                    </div>
                   </div>
 
                   {/* KPI Cards */}
@@ -527,6 +568,136 @@ export function MyTracking() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* WordPress Connection Modal */}
+      <Dialog open={showWpModal} onOpenChange={setShowWpModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plug className="h-5 w-5 text-primary" />
+              {language === 'fr' ? 'Connexion WordPress' : 'WordPress Connection'}
+            </DialogTitle>
+            <DialogDescription>
+              {language === 'fr' 
+                ? 'Connectez ce site à votre plugin WordPress Crawlers.AI.'
+                : 'Connect this site to your Crawlers.AI WordPress plugin.'}
+            </DialogDescription>
+          </DialogHeader>
+          {(() => {
+            const wpSite = sites.find(s => s.id === wpConnectSiteId);
+            if (!wpSite) return null;
+            const siteApiKey = wpSite.api_key || '';
+            const maskedKey = siteApiKey ? siteApiKey.slice(0, 8) + '••••••••••••••••' : '';
+            return (
+              <div className="space-y-4 pt-2">
+                {/* Site API Key */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    {language === 'fr' ? 'Clé API du site' : 'Site API Key'}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      readOnly
+                      value={wpApiKeyVisible ? siteApiKey : maskedKey}
+                      className="font-mono text-sm bg-muted"
+                    />
+                    <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={() => setWpApiKeyVisible(!wpApiKeyVisible)}>
+                      {wpApiKeyVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={async () => {
+                      await navigator.clipboard.writeText(siteApiKey);
+                      setWpApiKeyCopied(true);
+                      toast.success(language === 'fr' ? 'Clé API copiée !' : 'API Key copied!');
+                      setTimeout(() => setWpApiKeyCopied(false), 2000);
+                    }}>
+                      {wpApiKeyCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'fr'
+                      ? 'Collez cette clé dans les paramètres du plugin WordPress Crawlers.AI.'
+                      : 'Paste this key in the Crawlers.AI WordPress plugin settings.'}
+                  </p>
+                </div>
+
+                {/* Magic Link */}
+                <Button
+                  variant="secondary"
+                  className="w-full gap-2"
+                  disabled={generatingMagicLink || !user}
+                  onClick={async () => {
+                    if (!user) return;
+                    setGeneratingMagicLink(true);
+                    try {
+                      const { data: { session } } = await supabase.auth.getSession();
+                      if (!session?.access_token) {
+                        toast.error(language === 'fr' ? 'Erreur de session' : 'Session error');
+                        return;
+                      }
+                      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+                      const res = await fetch(
+                        `https://${projectId}.supabase.co/functions/v1/wpsync`,
+                        {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`,
+                          },
+                          body: JSON.stringify({ site_id: wpConnectSiteId }),
+                        }
+                      );
+                      const json = await res.json();
+                      if (json.success && json.token) {
+                        const magicUrl = `https://${wpSite.domain}/wp-admin/admin.php?page=crawlers-config&token=${json.token}`;
+                        await navigator.clipboard.writeText(magicUrl);
+                        toast.success(
+                          language === 'fr' 
+                            ? 'Lien magique copié ! Collez-le dans votre navigateur. Il expire dans 10 minutes.'
+                            : 'Magic link copied! Paste it in your browser. It expires in 10 minutes.'
+                        );
+                      } else {
+                        toast.error(json.error || 'Error');
+                      }
+                    } catch {
+                      toast.error(language === 'fr' ? 'Erreur lors de la génération' : 'Generation error');
+                    } finally {
+                      setGeneratingMagicLink(false);
+                    }
+                  }}
+                >
+                  {generatingMagicLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+                  {language === 'fr' ? 'Générer un Lien Magique' : 'Generate Magic Link'}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  {language === 'fr'
+                    ? 'Le lien magique ouvrira directement la page de configuration de votre plugin WordPress.'
+                    : 'The magic link will open your WordPress plugin configuration page directly.'}
+                </p>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Architect Modal */}
+      {(() => {
+        const archSite = sites.find(s => s.id === architectSiteId);
+        if (!archSite) return null;
+        return (
+          <SmartConfigurator
+            isOpen={isArchitectOpen}
+            onClose={() => {
+              setIsArchitectOpen(false);
+              setArchitectSiteId(null);
+            }}
+            technicalResult={null}
+            strategicResult={null}
+            siteUrl={`https://${archSite.domain}`}
+            siteName={archSite.site_name || archSite.domain}
+            activeSiteId={archSite.id}
+          />
+        );
+      })()}
     </div>
   );
 }

@@ -111,7 +111,6 @@ Deno.serve(async (req) => {
     };
 
     if (latestAudit) {
-      // Update existing audit
       const { error: updateError } = await supabase
         .from('audits')
         .update({ 
@@ -128,7 +127,6 @@ Deno.serve(async (req) => {
         );
       }
     } else {
-      // Create a new audit record with the config
       const { error: insertError } = await supabase
         .from('audits')
         .insert({
@@ -146,6 +144,21 @@ Deno.serve(async (req) => {
         );
       }
     }
+
+    // Also persist current_config to tracked_sites for the matching domain
+    const configPayload = {
+      ...(json_ld !== undefined && { json_ld }),
+      ...(meta_tags !== undefined && { meta_tags }),
+      ...(robots_rules !== undefined && { robots_rules }),
+      ...(corrective_script ? { corrective_script } : {}),
+      updated_at: new Date().toISOString(),
+    };
+
+    await supabase
+      .from('tracked_sites')
+      .update({ current_config: configPayload })
+      .eq('user_id', userId)
+      .eq('domain', cleanDomain);
 
     return new Response(
       JSON.stringify({

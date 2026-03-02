@@ -709,7 +709,9 @@ export type Database = {
       }
       tracked_sites: {
         Row: {
+          api_key: string
           created_at: string
+          current_config: Json
           domain: string
           id: string
           last_audit_at: string | null
@@ -717,7 +719,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          api_key?: string
           created_at?: string
+          current_config?: Json
           domain: string
           id?: string
           last_audit_at?: string | null
@@ -725,7 +729,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          api_key?: string
           created_at?: string
+          current_config?: Json
           domain?: string
           id?: string
           last_audit_at?: string | null
