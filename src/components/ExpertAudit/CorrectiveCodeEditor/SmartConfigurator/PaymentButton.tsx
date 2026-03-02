@@ -235,11 +235,7 @@ export function PaymentButton({
           </Button>
 
           <div className="text-xs text-muted-foreground text-center">
-            <span className="font-medium flex items-center justify-center gap-1.5">
-              Coût : {creditCost}
-              <CreditCoin size="sm" />
-            </span>
-            <span className="block mt-0.5">
+            <span>
               Solde : {balance} crédit{balance > 1 ? 's' : ''}
             </span>
           </div>
