@@ -101,6 +101,7 @@ export function SmartConfigurator({
   const [isArchived, setIsArchived] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
+  const [showWpConfigModal, setShowWpConfigModal] = useState(false);
   
   const { language } = useLanguage();
   const { toast } = useToast();
@@ -487,9 +488,45 @@ export function SmartConfigurator({
     }
   }, [generatedCode, fixConfigs, siteName, siteUrl]);
 
+  // Check if WordPress plugin is configured (user has tracked sites for this domain)
+  const checkWordPressConfig = useCallback(async (): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      // Check if user has the API key and any tracked site for this domain
+      const { data, error } = await supabase
+        .from('tracked_sites')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('domain', siteDomain)
+        .maybeSingle();
+      
+      // If tracked site exists, consider WP configured
+      if (!error && data) return true;
+
+      // Also check if they have any tracked site at all (flexible check)
+      const { data: anyTracked } = await supabase
+        .from('tracked_sites')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+      
+      return !!(anyTracked && anyTracked.length > 0);
+    } catch {
+      return false;
+    }
+  }, [user, siteDomain]);
+
   // Apply modifications to WordPress via update-config
   const handleApplyToWordPress = useCallback(async () => {
     if (!generatedCode || !user) return;
+
+    // Check if WordPress is configured first
+    const isConfigured = await checkWordPressConfig();
+    if (!isConfigured) {
+      setShowWpConfigModal(true);
+      return;
+    }
+
     setIsApplying(true);
     setApplySuccess(false);
     try {
@@ -525,7 +562,7 @@ export function SmartConfigurator({
     } finally {
       setIsApplying(false);
     }
-  }, [generatedCode, user, siteDomain]);
+  }, [generatedCode, user, siteDomain, checkWordPressConfig]);
 
   const enabledCount = fixConfigs.filter(f => f.enabled).length;
   const technicalCount = fixConfigs.filter(f => f.enabled && !['strategic', 'generative'].includes(f.category)).length;
@@ -564,6 +601,7 @@ export function SmartConfigurator({
   }, [fixConfigs]);
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
         <DialogHeader className="px-4 py-3 border-b flex flex-row items-center justify-center relative">
@@ -790,13 +828,14 @@ export function SmartConfigurator({
                   fixConfigs={fixConfigs}
                   generatedCode={generatedCode}
                   onUnlockWithCredit={() => {
-                    // When credit is used, unlock the code and auto-archive
+                    // When credit is used, unlock the code, auto-archive AND auto-save to profile
                     setHasPaid(true);
                     setShowLockOverlay(false);
                     handleArchiveSolution();
+                    handleSaveToProfile();
                     toast({
                       title: 'Script débloqué !',
-                      description: 'Vous pouvez maintenant copier le code complet.',
+                      description: 'Code sauvegardé dans "Mes Codes" et prêt à copier.',
                     });
                   }}
                 />
@@ -806,5 +845,57 @@ export function SmartConfigurator({
         </div>
       </DialogContent>
     </Dialog>
+
+      {/* WordPress Configuration Modal */}
+      <Dialog open={showWpConfigModal} onOpenChange={setShowWpConfigModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Rocket className="h-5 w-5 text-primary" />
+              Configuration WordPress requise
+            </DialogTitle>
+            <DialogDescription>
+              Pour appliquer automatiquement les modifications sur votre site, configurez d'abord l'intégration WordPress.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <div className="flex items-start gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
+                <p>Rendez-vous dans <strong className="text-foreground">Console → WordPress</strong> pour récupérer votre clé API.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
+                <p>Installez le plugin <strong className="text-foreground">Crawlers.AI</strong> sur votre site WordPress.</p>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">3</span>
+                <p>Collez la clé API ou utilisez le <strong className="text-foreground">Lien Magique</strong> pour connecter automatiquement.</p>
+              </div>
+            </div>
+            <Separator />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowWpConfigModal(false)}
+              >
+                Plus tard
+              </Button>
+              <Button
+                className="flex-1 gap-2"
+                onClick={() => {
+                  setShowWpConfigModal(false);
+                  window.location.href = '/console?tab=wordpress';
+                }}
+              >
+                <Globe className="h-4 w-4" />
+                Configurer
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
