@@ -609,19 +609,14 @@ export function SmartConfigurator({
                     <Button
                       onClick={handleCopy}
                       variant="outline"
-                      size="sm"
-                      className="gap-2"
+                      size="icon"
+                      className="h-8 w-8"
+                      title={copied ? 'Copié !' : 'Copier le code'}
                     >
                       {copied ? (
-                        <>
-                          <Check className="w-3 h-3 text-emerald-500" />
-                          Copié !
-                        </>
+                        <Check className="w-3.5 h-3.5 text-emerald-500" />
                       ) : (
-                        <>
-                          <Copy className="w-3 h-3" />
-                          Copier
-                        </>
+                        <Copy className="w-3.5 h-3.5" />
                       )}
                     </Button>
                   </>
@@ -642,8 +637,7 @@ export function SmartConfigurator({
                 <Button
                   onClick={handleGenerate}
                   disabled={enabledCount === 0 || isGenerating}
-                  className="gap-2 bg-violet-600 hover:bg-violet-700 text-white border-0"
-                  size="sm"
+                  className="gap-1.5 bg-violet-600 hover:bg-violet-700 text-white border-0 text-xs h-8 px-3"
                 >
                   {isGenerating ? (
                     <>
