@@ -1,7 +1,8 @@
-import { useState, useEffect, memo, lazy, Suspense, useCallback } from 'react';
+import { useState, useEffect, useRef, memo, lazy, Suspense, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Zap } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -25,6 +26,18 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
   const { t, language } = useLanguage();
   const [wordIndex, setWordIndex] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [glowActive, setGlowActive] = useState(false);
+  const prevTabRef = useRef(activeTab);
+
+  // Trigger glow on tab change
+  useEffect(() => {
+    if (prevTabRef.current !== activeTab) {
+      prevTabRef.current = activeTab;
+      setGlowActive(true);
+      const timer = setTimeout(() => setGlowActive(false), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab]);
 
   // Mark as hydrated after first render for animations
   useEffect(() => {
@@ -231,7 +244,10 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
               variant="hero" 
               size="lg" 
               disabled={isLoading}
-              className="h-14 min-w-[122px]"
+              className={cn(
+                "h-14 min-w-[122px] transition-shadow duration-500",
+                glowActive && "animate-cta-glow"
+              )}
             >
               {isLoading ? (
                 <>

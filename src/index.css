@@ -232,6 +232,23 @@
     }
   }
 
+  /* CTA glow effect on tab change */
+  @keyframes ctaGlow {
+    0% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+    }
+    30% {
+      box-shadow: 0 0 20px 4px hsl(var(--primary) / 0.5), 0 0 40px 8px hsl(var(--primary) / 0.2);
+    }
+    100% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+    }
+  }
+
+  .animate-cta-glow {
+    animation: ctaGlow 1.5s ease-out forwards;
+  }
+
   /* Lexique category colors with glow effects */
   .category-seo {
     @apply bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/50;
