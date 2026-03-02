@@ -51,15 +51,15 @@ Deno.serve(async (req) => {
       const anonClient = createClient(Deno.env.get('SUPABASE_URL') || '', anonKey, {
         global: { headers: { Authorization: authHeader } }
       });
-      const { data: claimsData, error: claimsError } = await anonClient.auth.getClaims(authHeader.replace('Bearer ', ''));
-      if (claimsError || !claimsData?.claims?.sub) {
+      const { data: userData, error: userError } = await anonClient.auth.getUser();
+      if (userError || !userData?.user?.id) {
         return new Response(
           JSON.stringify({ error: 'Invalid token' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      const userId = claimsData.claims.sub;
+      const userId = userData.user.id;
 
       // Parse optional body for site_id context
       let siteId: string | null = null;
