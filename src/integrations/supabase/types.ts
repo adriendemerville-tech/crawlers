@@ -626,6 +626,33 @@ export type Database = {
           },
         ]
       }
+      tracked_sites: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          last_audit_at: string | null
+          site_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          last_audit_at?: string | null
+          site_name?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          last_audit_at?: string | null
+          site_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -646,6 +673,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_stats_history: {
+        Row: {
+          ads_budget_saved: number | null
+          ai_sentiment: string | null
+          domain: string
+          geo_score: number | null
+          id: string
+          llm_citation_rate: number | null
+          raw_data: Json | null
+          recorded_at: string
+          semantic_authority: number | null
+          seo_score: number | null
+          technical_errors_fixed: number | null
+          tracked_site_id: string
+          user_id: string
+          voice_share: number | null
+        }
+        Insert: {
+          ads_budget_saved?: number | null
+          ai_sentiment?: string | null
+          domain: string
+          geo_score?: number | null
+          id?: string
+          llm_citation_rate?: number | null
+          raw_data?: Json | null
+          recorded_at?: string
+          semantic_authority?: number | null
+          seo_score?: number | null
+          technical_errors_fixed?: number | null
+          tracked_site_id: string
+          user_id: string
+          voice_share?: number | null
+        }
+        Update: {
+          ads_budget_saved?: number | null
+          ai_sentiment?: string | null
+          domain?: string
+          geo_score?: number | null
+          id?: string
+          llm_citation_rate?: number | null
+          raw_data?: Json | null
+          recorded_at?: string
+          semantic_authority?: number | null
+          seo_score?: number | null
+          technical_errors_fixed?: number | null
+          tracked_site_id?: string
+          user_id?: string
+          voice_share?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_stats_history_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

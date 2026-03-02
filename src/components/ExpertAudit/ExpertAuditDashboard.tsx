@@ -9,6 +9,7 @@ import {
   Zap, Settings2, FileText, Brain, Shield, 
   ExternalLink, Sparkles, FileDown, RotateCcw, Bot
 } from 'lucide-react';
+import { TrackSiteButton } from './TrackSiteButton';
 import { ScoreGauge200 } from './ScoreGauge200';
 import { CategoryCard, MetricRow } from './CategoryCard';
 import { ActionPlan } from './ActionPlan';
@@ -673,6 +674,13 @@ export function ExpertAuditDashboard() {
               {t.newAudit}
             </Button>
           </div>
+          {technicalResult && (
+            <TrackSiteButton 
+              domain={technicalResult.domain} 
+              url={technicalResult.url} 
+              auditResult={technicalResult}
+            />
+          )}
         </motion.div>
       )}
 
