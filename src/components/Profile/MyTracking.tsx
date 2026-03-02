@@ -15,7 +15,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const translations = {
   fr: {
-    title: 'Mes Sites Suivis',
+    title: 'Mes sites',
     description: 'Suivez l\'évolution SEO & IA de vos sites au fil du temps.',
     noSites: 'Aucun site suivi pour le moment.',
     addSite: 'Ajouter un site',
@@ -42,7 +42,7 @@ const translations = {
     alreadyTracked: 'Ce site est déjà suivi',
   },
   en: {
-    title: 'My Tracked Sites',
+    title: 'My Sites',
     description: 'Track the SEO & AI evolution of your sites over time.',
     noSites: 'No tracked sites yet.',
     addSite: 'Add a site',
@@ -69,7 +69,7 @@ const translations = {
     alreadyTracked: 'This site is already tracked',
   },
   es: {
-    title: 'Mis Sitios Seguidos',
+    title: 'Mis sitios',
     description: 'Sigue la evolución SEO e IA de tus sitios a lo largo del tiempo.',
     noSites: 'No hay sitios seguidos aún.',
     addSite: 'Agregar un sitio',
@@ -350,10 +350,22 @@ export function MyTracking() {
   const sentimentLabel = (s: string | null) => {
     if (!s) return '—';
     const map: Record<string, string> = {
-      positive: '😊 Positif', mostly_positive: '🙂 Plutôt positif',
-      neutral: '😐 Neutre', mixed: '🤔 Mixte', negative: '😟 Négatif'
+      positive: 'Très positif', mostly_positive: 'Plutôt positif',
+      neutral: 'Neutre', mixed: 'Mitigé', negative: 'Négatif'
     };
     return map[s] || s;
+  };
+
+  const sentimentColor = (s: string | null) => {
+    if (!s) return '';
+    const map: Record<string, string> = {
+      positive: 'text-green-700 dark:text-green-300',
+      mostly_positive: 'text-teal-700 dark:text-teal-300',
+      neutral: 'text-gray-600 dark:text-gray-400',
+      mixed: 'text-orange-700 dark:text-orange-400',
+      negative: 'text-red-700 dark:text-red-400',
+    };
+    return map[s] || '';
   };
 
   return (
@@ -434,7 +446,7 @@ export function MyTracking() {
                       <KPICard label={t.geoScore} value={latestStats.geo_score ? `${latestStats.geo_score}%` : '—'} icon={Globe} />
                       <KPICard label={t.performance} value={latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—'} icon={Gauge} />
                       <KPICard label={t.citationRate} value={latestStats.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—'} icon={Brain} />
-                      <KPICard label={t.sentiment} value={sentimentLabel(latestStats.ai_sentiment)} icon={BarChart3} />
+                      <KPICard label={t.sentiment} value={sentimentLabel(latestStats.ai_sentiment)} icon={BarChart3} valueClassName={sentimentColor(latestStats.ai_sentiment)} />
                       <KPICard label={t.semanticAuth} value={latestStats.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—'} icon={TrendingUp} />
                       <KPICard label={t.voiceShare} value={latestStats.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—'} icon={BarChart3} />
                     </div>
@@ -519,14 +531,14 @@ export function MyTracking() {
   );
 }
 
-function KPICard({ label, value, icon: Icon }: { label: string; value: string; icon: React.ElementType }) {
+function KPICard({ label, value, icon: Icon, valueClassName }: { label: string; value: string; icon: React.ElementType; valueClassName?: string }) {
   return (
     <div className="rounded-lg border bg-card p-3 space-y-1">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className="h-3 w-3" />
         {label}
       </div>
-      <p className="text-lg font-semibold">{value}</p>
+      <p className={`text-lg font-semibold ${valueClassName || ''}`}>{value}</p>
     </div>
   );
 }
