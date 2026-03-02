@@ -1,7 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const PLUGIN_URL = `https://tutlimtasnjabdfhpewu.supabase.co/storage/v1/object/public/plugins/crawlers-geo.zip`;
+const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'tutlimtasnjabdfhpewu';
+const PLUGIN_URL = `https://${projectId}.supabase.co/functions/v1/download-plugin`;
 
 export type WPAction = 'download' | 'magic_link' | 'sync';
 
