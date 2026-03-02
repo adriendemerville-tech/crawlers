@@ -160,6 +160,7 @@ export function ExpertAuditDashboard() {
   const [paidScriptCode, setPaidScriptCode] = useState<string>('');
   const [paidFixesMetadata, setPaidFixesMetadata] = useState<Array<{id: string; label: string; category: string}>>([]);
   const [hasVerifiedPayment, setHasVerifiedPayment] = useState(false);
+  const [siteAutoTracked, setSiteAutoTracked] = useState(false);
   const loadingRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
@@ -461,6 +462,8 @@ export function ExpertAuditDashboard() {
       let siteId: string;
       if (existing) {
         siteId = existing.id;
+        setSiteAutoTracked(true);
+        siteId = existing.id;
       } else {
         const { data: newSite, error: insertErr } = await supabase
           .from('tracked_sites')
@@ -468,6 +471,8 @@ export function ExpertAuditDashboard() {
           .select('id')
           .single();
         if (insertErr || !newSite) return;
+        siteId = newSite.id;
+        setSiteAutoTracked(true);
         siteId = newSite.id;
       }
 
@@ -768,6 +773,7 @@ export function ExpertAuditDashboard() {
               domain={technicalResult.domain} 
               url={technicalResult.url} 
               auditResult={technicalResult}
+              forceTracked={siteAutoTracked}
             />
           )}
         </motion.div>

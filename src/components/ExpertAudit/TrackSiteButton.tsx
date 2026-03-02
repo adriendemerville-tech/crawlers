@@ -37,13 +37,18 @@ interface TrackSiteButtonProps {
   domain: string;
   url: string;
   auditResult?: any;
+  forceTracked?: boolean;
 }
 
-export function TrackSiteButton({ domain, url, auditResult }: TrackSiteButtonProps) {
+export function TrackSiteButton({ domain, url, auditResult, forceTracked }: TrackSiteButtonProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
-  const [isTracked, setIsTracked] = useState(false);
+  const [isTracked, setIsTracked] = useState(forceTracked || false);
+
+  useEffect(() => {
+    if (forceTracked) setIsTracked(true);
+  }, [forceTracked]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
