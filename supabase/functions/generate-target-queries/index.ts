@@ -3,13 +3,129 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+interface StrategicContext {
+  coreBusiness?: string;
+  marketLeader?: string;
+  sector?: string;
+  brandName?: string;
+  competitors?: string[];
+  keywordThemes?: string[];
+  brandIdentity?: string;
+  targetAudience?: string;
+}
+
+function buildStrategicContext(strategicAnalysis: any): StrategicContext {
+  const ctx: StrategicContext = {};
+
+  // Extract from brand_authority
+  if (strategicAnalysis?.brand_authority) {
+    ctx.brandIdentity = strategicAnalysis.brand_authority.dna_analysis;
+  }
+
+  // Extract from competitive_landscape
+  if (strategicAnalysis?.competitive_landscape) {
+    const cl = strategicAnalysis.competitive_landscape;
+    ctx.competitors = [
+      cl.leader?.name,
+      cl.direct_competitor?.name,
+      cl.challenger?.name,
+    ].filter(Boolean);
+    if (cl.leader?.name) ctx.marketLeader = cl.leader.name;
+  }
+
+  // Extract from market_intelligence
+  if (strategicAnalysis?.market_intelligence) {
+    ctx.sector = strategicAnalysis.market_intelligence.positioning_verdict;
+    if (strategicAnalysis.market_intelligence.semantic_gap?.priority_themes) {
+      ctx.keywordThemes = strategicAnalysis.market_intelligence.semantic_gap.priority_themes;
+    }
+  }
+
+  // Extract from keyword_positioning
+  if (strategicAnalysis?.keyword_positioning) {
+    const kp = strategicAnalysis.keyword_positioning;
+    if (kp.main_keywords?.length) {
+      ctx.keywordThemes = [
+        ...(ctx.keywordThemes || []),
+        ...kp.main_keywords.slice(0, 5).map((k: any) => k.keyword),
+      ];
+    }
+  }
+
+  // Extract from introduction
+  if (strategicAnalysis?.introduction) {
+    ctx.coreBusiness = strategicAnalysis.introduction.presentation;
+    ctx.targetAudience = strategicAnalysis.introduction.strengths;
+  }
+
+  // Extract from hallucination corrections
+  if (strategicAnalysis?.hallucinationCorrections) {
+    const hc = strategicAnalysis.hallucinationCorrections;
+    if (hc.sector) ctx.sector = hc.sector;
+    if (hc.mainProducts) ctx.coreBusiness = hc.mainProducts;
+    if (hc.targetAudience) ctx.targetAudience = hc.targetAudience;
+  }
+
+  return ctx;
+}
+
+function buildValidationPrompt(queries: any[], strategicCtx: StrategicContext, brand: string, lang: string): string {
+  const langInstructions: Record<string, string> = {
+    fr: `Réponds UNIQUEMENT en français.`,
+    en: `Respond ONLY in English.`,
+    es: `Responde ÚNICAMENTE en español.`,
+  };
+
+  return `Tu es un expert en contrôle qualité GEO. Ton rôle est de détecter les incohérences dans des requêtes cibles générées par IA.
+
+**Marque :** ${brand}
+**Core Business vérifié :** ${strategicCtx.coreBusiness || 'Non disponible'}
+**Secteur vérifié :** ${strategicCtx.sector || 'Non disponible'}
+**Leader du marché vérifié :** ${strategicCtx.marketLeader || 'Non disponible'}
+**Concurrents identifiés :** ${strategicCtx.competitors?.join(', ') || 'Non disponible'}
+**Thèmes clés du marché :** ${strategicCtx.keywordThemes?.join(', ') || 'Non disponible'}
+**Audience cible :** ${strategicCtx.targetAudience || 'Non disponible'}
+**Identité de marque :** ${strategicCtx.brandIdentity || 'Non disponible'}
+
+**Requêtes générées à vérifier :**
+${JSON.stringify(queries, null, 2)}
+
+**INSTRUCTIONS :**
+1. Compare chaque requête avec le contexte stratégique vérifié ci-dessus
+2. Détecte les incohérences : mauvais secteur, mauvais type de produit, concurrents inventés, requêtes hors sujet
+3. Si une requête est incohérente, corrige-la pour qu'elle soit alignée avec le contexte stratégique réel
+4. Le coreBusiness et marketLeader retournés doivent correspondre exactement au contexte stratégique vérifié
+5. Si tout est cohérent, retourne les requêtes telles quelles
+
+${langInstructions[lang] || langInstructions.fr}
+
+Réponds au format JSON exact suivant :
+{
+  "coreBusiness": "le core business VÉRIFIÉ (aligné avec le contexte stratégique)",
+  "marketLeader": "le leader du marché VÉRIFIÉ",
+  "queries": [
+    {
+      "query": "requête corrigée ou identique si cohérente",
+      "intent": "explication stratégique",
+      "priority": "high" ou "medium",
+      "mentionsBrand": false
+    }
+  ],
+  "coherenceCheck": {
+    "passed": true/false,
+    "corrections": ["description de chaque correction effectuée"],
+    "hallucinationSignals": ["description de chaque signal d'hallucination détecté"]
+  }
+}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { domain, coreValueSummary, citations, lang = 'fr' } = await req.json();
+    const { domain, coreValueSummary, citations, lang = 'fr', strategicAnalysis } = await req.json();
 
     if (!domain) {
       return new Response(
@@ -26,6 +142,9 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Build strategic context for validation
+    const strategicCtx = strategicAnalysis ? buildStrategicContext(strategicAnalysis) : null;
+
     // Build context from citations
     const citationContext = (citations || [])
       .filter((c: any) => c.cited && c.summary)
@@ -40,6 +159,17 @@ Deno.serve(async (req) => {
       es: `Responde ÚNICAMENTE en español. Las consultas deben formularse como las escribiría un usuario hispanohablante.`,
     };
 
+    // Inject strategic context into the generation prompt if available
+    const strategicContextBlock = strategicCtx ? `
+**CONTEXTE STRATÉGIQUE VÉRIFIÉ (prioritaire — ne pas contredire) :**
+- Core Business : ${strategicCtx.coreBusiness || 'Non disponible'}
+- Secteur : ${strategicCtx.sector || 'Non disponible'}
+- Leader du marché : ${strategicCtx.marketLeader || 'Non disponible'}
+- Concurrents : ${strategicCtx.competitors?.join(', ') || 'Non disponible'}
+- Thèmes clés : ${strategicCtx.keywordThemes?.join(', ') || 'Non disponible'}
+- Audience cible : ${strategicCtx.targetAudience || 'Non disponible'}
+` : '';
+
     const prompt = `Tu es un expert en GEO (Generative Engine Optimization). 
 
 Analyse ce site web et génère 5 requêtes stratégiques à cibler pour maximiser les recommandations par les LLMs.
@@ -49,7 +179,7 @@ Analyse ce site web et génère 5 requêtes stratégiques à cibler pour maximis
 **Synthèse des perceptions LLM :** ${coreValueSummary || 'Non disponible'}
 **Détails des citations LLM :**
 ${citationContext || 'Aucune citation disponible'}
-
+${strategicContextBlock}
 **RÈGLES CRITIQUES :**
 1. D'abord, identifie le CORE BUSINESS / produit phare / secteur de marché du site cible
 2. Identifie le LEADER DU MARCHÉ dans ce secteur (le concurrent dominant)
@@ -58,6 +188,7 @@ ${citationContext || 'Aucune citation disponible'}
    - 1 seule requête peut mentionner explicitement "${brand}"
 4. Les requêtes doivent être des questions qu'un prospect réel poserait à un LLM
 5. Chaque requête doit avoir un "intent" expliquant POURQUOI cette requête est stratégique pour la citabilité
+${strategicCtx ? '6. Les requêtes DOIVENT être cohérentes avec le CONTEXTE STRATÉGIQUE VÉRIFIÉ ci-dessus. Ne pas inventer un secteur ou des concurrents différents.' : ''}
 
 ${langInstructions[lang] || langInstructions.fr}
 
@@ -133,7 +264,83 @@ Réponds au format JSON exact suivant, sans texte avant ou après :
     // Clean trailing commas
     jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1');
 
-    const parsed = JSON.parse(jsonStr.trim());
+    let parsed = JSON.parse(jsonStr.trim());
+
+    // ===== COHERENCE VALIDATION PASS =====
+    // If we have strategic context, run a second AI call to cross-validate
+    if (strategicCtx && parsed.queries?.length > 0) {
+      const needsValidation = detectObviousInconsistencies(parsed, strategicCtx, brand);
+      
+      if (needsValidation) {
+        console.log(`[CoherenceCheck] Inconsistencies detected for ${domain}, running validation pass...`);
+        
+        const validationPrompt = buildValidationPrompt(parsed.queries, strategicCtx, brand, lang);
+        
+        const validationResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: 'You are a quality control expert for GEO queries. Always return valid JSON only. Be strict about coherence.' },
+              { role: 'user', content: validationPrompt },
+            ],
+            temperature: 0.2,
+            max_tokens: 1500,
+          }),
+        });
+
+        if (validationResponse.ok) {
+          const validationData = await validationResponse.json();
+          const validationContent = validationData.choices?.[0]?.message?.content;
+
+          if (validationContent) {
+            try {
+              let valJsonStr = validationContent;
+              const valMatch = validationContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+              if (valMatch) {
+                valJsonStr = valMatch[1];
+              } else {
+                const fb = validationContent.indexOf('{');
+                const lb = validationContent.lastIndexOf('}');
+                if (fb !== -1 && lb !== -1 && lb > fb) {
+                  valJsonStr = validationContent.substring(fb, lb + 1);
+                }
+              }
+              valJsonStr = valJsonStr.replace(/,\s*([}\]])/g, '$1');
+              const validated = JSON.parse(valJsonStr.trim());
+
+              if (validated.queries?.length > 0) {
+                const coherenceCheck = validated.coherenceCheck || { passed: true, corrections: [], hallucinationSignals: [] };
+                
+                if (!coherenceCheck.passed) {
+                  console.log(`[CoherenceCheck] Corrections applied: ${JSON.stringify(coherenceCheck.corrections)}`);
+                  console.log(`[CoherenceCheck] Hallucination signals: ${JSON.stringify(coherenceCheck.hallucinationSignals)}`);
+                }
+
+                // Use the validated/corrected version
+                parsed = {
+                  coreBusiness: validated.coreBusiness || parsed.coreBusiness,
+                  marketLeader: validated.marketLeader || parsed.marketLeader,
+                  queries: validated.queries,
+                  coherenceCheck,
+                };
+              }
+            } catch (parseErr) {
+              console.error('[CoherenceCheck] Failed to parse validation response, using original:', parseErr);
+            }
+          }
+        } else {
+          console.warn('[CoherenceCheck] Validation call failed, using original queries');
+        }
+      } else {
+        console.log(`[CoherenceCheck] No obvious inconsistencies for ${domain}, skipping validation`);
+        parsed.coherenceCheck = { passed: true, corrections: [], hallucinationSignals: [] };
+      }
+    }
 
     console.log(`Generated ${parsed.queries?.length || 0} target queries for ${domain}. Core: ${parsed.coreBusiness}`);
 
@@ -149,3 +356,61 @@ Réponds au format JSON exact suivant, sans texte avant ou après :
     );
   }
 });
+
+/**
+ * Quick heuristic check: does the generated output seem inconsistent with strategic context?
+ */
+function detectObviousInconsistencies(generated: any, ctx: StrategicContext, brand: string): boolean {
+  // If we have a verified core business and the generated one is very different
+  if (ctx.coreBusiness && generated.coreBusiness) {
+    const ctxWords = new Set(ctx.coreBusiness.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3));
+    const genWords = new Set(generated.coreBusiness.toLowerCase().split(/\s+/).filter((w: string) => w.length > 3));
+    const overlap = [...ctxWords].filter(w => genWords.has(w)).length;
+    const maxSize = Math.max(ctxWords.size, genWords.size);
+    if (maxSize > 0 && overlap / maxSize < 0.15) {
+      console.log(`[CoherenceCheck] Core business mismatch: ctx="${ctx.coreBusiness}" vs gen="${generated.coreBusiness}"`);
+      return true;
+    }
+  }
+
+  // If market leader is known and generated is completely different
+  if (ctx.marketLeader && generated.marketLeader) {
+    const ctxLeader = ctx.marketLeader.toLowerCase().trim();
+    const genLeader = generated.marketLeader.toLowerCase().trim();
+    if (ctxLeader !== genLeader && !ctxLeader.includes(genLeader) && !genLeader.includes(ctxLeader)) {
+      console.log(`[CoherenceCheck] Market leader mismatch: ctx="${ctx.marketLeader}" vs gen="${generated.marketLeader}"`);
+      return true;
+    }
+  }
+
+  // Check if queries reference competitors not in the known list
+  if (ctx.competitors?.length) {
+    const knownCompetitors = ctx.competitors.map(c => c.toLowerCase());
+    for (const q of generated.queries || []) {
+      const queryLower = q.query.toLowerCase();
+      // Check if query mentions a specific brand that isn't the brand or a known competitor
+      for (const word of queryLower.split(/\s+/)) {
+        if (word.length > 4 && word !== brand.toLowerCase() && 
+            !knownCompetitors.some(c => c.includes(word) || word.includes(c))) {
+          // This could be a hallucinated competitor — flag for review but don't auto-trigger
+        }
+      }
+    }
+  }
+
+  // If keyword themes exist, check at least some queries relate to them
+  if (ctx.keywordThemes?.length && generated.queries?.length) {
+    const themes = ctx.keywordThemes.map(t => t.toLowerCase());
+    const queriesText = generated.queries.map((q: any) => q.query.toLowerCase()).join(' ');
+    const themeMatches = themes.filter(t => {
+      const words = t.split(/\s+/).filter((w: string) => w.length > 3);
+      return words.some(w => queriesText.includes(w));
+    });
+    if (themeMatches.length === 0 && themes.length >= 3) {
+      console.log(`[CoherenceCheck] No keyword theme match found in queries`);
+      return true;
+    }
+  }
+
+  return false;
+}
