@@ -680,23 +680,22 @@ export function SmartConfigurator({
   // Base: 3€ minimum (all basic fixes included), 12€ maximum
   // ONLY Strategic and Generative fixes increase the price
   const calculatedPrice = useMemo(() => {
-    const MIN_PRICE = 2;
     const MAX_PRICE = 12;
     
+    const enabledFixes = fixConfigs.filter(f => f.enabled);
+    if (enabledFixes.length === 0) return 0;
+    
     // Technical/basic fixes: each enabled one adds 0.30€
-    const technicalFixes = fixConfigs.filter(f => !['strategic', 'generative'].includes(f.category));
-    const enabledTechnical = technicalFixes.filter(f => f.enabled).length;
+    const enabledTechnical = enabledFixes.filter(f => !['strategic', 'generative'].includes(f.category)).length;
     const technicalContrib = enabledTechnical * 0.30;
     
     // Strategic and generative fixes: each adds more
-    const strategicFixes = fixConfigs.filter(f => f.category === 'strategic');
-    const generativeFixes = fixConfigs.filter(f => f.category === 'generative');
-    const enabledStrategic = strategicFixes.filter(f => f.enabled).length;
-    const enabledGenerative = generativeFixes.filter(f => f.enabled).length;
+    const enabledStrategic = enabledFixes.filter(f => f.category === 'strategic').length;
+    const enabledGenerative = enabledFixes.filter(f => f.category === 'generative').length;
     const advancedContrib = (enabledStrategic * 0.80) + (enabledGenerative * 1.00);
     
-    const rawPrice = MIN_PRICE + technicalContrib + advancedContrib;
-    return Math.min(MAX_PRICE, Math.max(MIN_PRICE, Math.round(rawPrice * 100) / 100));
+    const rawPrice = technicalContrib + advancedContrib;
+    return Math.min(MAX_PRICE, Math.max(0, Math.round(rawPrice * 100) / 100));
   }, [fixConfigs]);
 
   return (
@@ -869,7 +868,7 @@ export function SmartConfigurator({
                   animate={{ scale: 1, opacity: 1 }}
                   className="text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums flex items-center gap-1"
                 >
-                  {Math.max(1, Math.round(calculatedPrice / 0.5))}
+                  {calculatedPrice === 0 ? 0 : Math.max(1, Math.round(calculatedPrice / 0.5))}
                   <CreditCoin size="sm" />
                 </motion.span>
 
