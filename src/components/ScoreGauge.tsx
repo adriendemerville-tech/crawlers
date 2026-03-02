@@ -34,7 +34,7 @@ export function ScoreGauge({ score, label }: ScoreGaugeProps) {
     <Card className={cn("flex flex-col items-center p-6 card-shadow animate-fade-in", getScoreBgColor(score))}>
       <div className="relative h-24 w-24">
         {/* Background circle */}
-        <svg className="h-24 w-24 -rotate-90 transform">
+        <svg className="h-24 w-24 -rotate-90 transform" viewBox="0 0 96 96">
           <circle
             cx="48"
             cy="48"
