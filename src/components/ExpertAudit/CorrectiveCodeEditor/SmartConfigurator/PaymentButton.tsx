@@ -57,7 +57,7 @@ export function PaymentButton({
     setIsLoading(true);
 
     try {
-      const result = await useCredit('Déblocage script correctif - ' + siteUrl);
+      const result = await useCredit('Déblocage script correctif - ' + siteUrl, creditCost);
 
       if (result.success) {
         toast({

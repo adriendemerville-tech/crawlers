@@ -6,7 +6,7 @@ interface CreditsContextType {
   balance: number;
   loading: boolean;
   refreshBalance: () => Promise<void>;
-  useCredit: (description?: string) => Promise<{ success: boolean; newBalance?: number; error?: string }>;
+  useCredit: (description?: string, amount?: number) => Promise<{ success: boolean; newBalance?: number; error?: string }>;
 }
 
 const CreditsContext = createContext<CreditsContextType | undefined>(undefined);
@@ -76,7 +76,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     await fetchBalance();
   }, [fetchBalance]);
 
-  const useCredit = useCallback(async (description = 'Code generation'): Promise<{ success: boolean; newBalance?: number; error?: string }> => {
+  const useCredit = useCallback(async (description = 'Code generation', amount = 1): Promise<{ success: boolean; newBalance?: number; error?: string }> => {
     if (!user) {
       return { success: false, error: 'Not authenticated' };
     }
@@ -85,6 +85,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.rpc('use_credit', {
         p_user_id: user.id,
         p_description: description,
+        p_amount: amount,
       });
 
       if (error) throw error;
