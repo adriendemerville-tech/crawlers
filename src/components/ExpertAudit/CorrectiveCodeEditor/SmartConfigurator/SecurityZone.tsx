@@ -71,6 +71,17 @@ export function SecurityZone({
 
         <CollapsibleContent>
           <div className="pl-8 pr-2 pb-2 space-y-3 text-xs text-muted-foreground">
+            {/* WordPress Plugin — top priority */}
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-2.5 space-y-1.5">
+              <p className="font-medium text-foreground flex items-center gap-1.5">⚡ WordPress — Installation zéro code</p>
+              <ol className="list-decimal list-inside space-y-1 ml-1">
+                <li>Allez dans <strong>Mon Profil → Mes Sites</strong> et ajoutez votre domaine.</li>
+                <li>Téléchargez le plugin, installez-le sur votre WordPress (<strong>Extensions → Ajouter</strong>).</li>
+                <li>Utilisez le <strong>Lien Magique</strong> pour connecter automatiquement le plugin — aucune clé à copier.</li>
+                <li>Revenez ici et cliquez sur <strong>Injecter ⚡</strong> : les correctifs sont synchronisés instantanément.</li>
+              </ol>
+            </div>
+
             <div className="space-y-2">
               <p className="font-medium text-foreground">1. Copiez le code ci-dessus</p>
               <p>Utilisez le bouton "Copier" pour copier le script dans votre presse-papiers.</p>
@@ -79,7 +90,6 @@ export function SecurityZone({
             <div className="space-y-2">
               <p className="font-medium text-foreground">2. Ouvrez votre CMS</p>
               <ul className="list-disc list-inside space-y-1 ml-2">
-                <li><strong>WordPress :</strong> Apparence → Éditeur de thème → footer.php</li>
                 <li><strong>Shopify :</strong> Thème → Modifier le code → theme.liquid</li>
                 <li><strong>Wix :</strong> Paramètres → Code personnalisé</li>
                 <li><strong>GTM :</strong> Créez une balise "HTML personnalisé"</li>
@@ -88,7 +98,7 @@ export function SecurityZone({
 
             <div className="space-y-2">
               <p className="font-medium text-foreground">3. Collez le script</p>
-              <p>Insérez le code juste avant la balise fermante <code className="bg-slate-200 dark:bg-slate-700 px-1 rounded">&lt;/body&gt;</code></p>
+              <p>Insérez le code juste avant la balise fermante <code className="bg-muted px-1 rounded">&lt;/body&gt;</code></p>
             </div>
 
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 mt-2">
