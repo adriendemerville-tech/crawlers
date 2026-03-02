@@ -34,7 +34,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     if (prevTabRef.current !== activeTab) {
       prevTabRef.current = activeTab;
       setGlowActive(true);
-      const timer = setTimeout(() => setGlowActive(false), 3000);
+      const timer = setTimeout(() => setGlowActive(false), 5000);
       return () => clearTimeout(timer);
     }
   }, [activeTab]);
