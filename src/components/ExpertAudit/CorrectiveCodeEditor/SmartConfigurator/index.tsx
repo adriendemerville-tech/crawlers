@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -289,39 +289,51 @@ export function SmartConfigurator({
     return fixes;
   }, [technicalResult, strategicResult, siteName, siteUrl, hallucinationData]);
 
-  // Initialize fix configs when modal opens and check payment status
+  // Track whether we already initialized for this "open" session
+  const hasInitializedRef = useRef(false);
+
+  // Reset the flag when modal closes
   useEffect(() => {
-    if (isOpen) {
-      // If we have initialFixesMetadata (from post-payment redirect), use it to restore enabled fixes
-      if (initialFixesMetadata && initialFixesMetadata.length > 0) {
-        const enabledFixIds = new Set(initialFixesMetadata.map(f => f.id));
-        const restoredFixes = availableFixes.map(fix => ({
-          ...fix,
-          enabled: enabledFixIds.has(fix.id)
-        }));
-        setFixConfigs(restoredFixes);
-        console.log('✅ Restored fixes from payment:', enabledFixIds);
-      } else {
-        setFixConfigs(availableFixes);
-      }
-      
-      // If we have initialCode (from post-payment redirect), use it; otherwise reset
-      if (initialCode) {
-        setGeneratedCode(initialCode);
-        setViewMode('code');
-        setHasPaid(initialHasPaid);
-        setShowLockOverlay(false);
-        // Notify parent that payment was verified
-        if (initialHasPaid && onPaymentVerified) {
-          onPaymentVerified();
-        }
-      } else {
-        setGeneratedCode('');
-        setShowLockOverlay(false);
-        checkPaymentStatus();
-      }
+    if (!isOpen) {
+      hasInitializedRef.current = false;
     }
-  }, [isOpen, availableFixes, checkPaymentStatus, initialCode, initialHasPaid, initialFixesMetadata, onPaymentVerified]);
+  }, [isOpen]);
+
+  // Initialize fix configs when modal opens and check payment status
+  // Only run the full init ONCE per open session to avoid wiping generatedCode
+  useEffect(() => {
+    if (!isOpen || hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
+    // If we have initialFixesMetadata (from post-payment redirect), use it to restore enabled fixes
+    if (initialFixesMetadata && initialFixesMetadata.length > 0) {
+      const enabledFixIds = new Set(initialFixesMetadata.map(f => f.id));
+      const restoredFixes = availableFixes.map(fix => ({
+        ...fix,
+        enabled: enabledFixIds.has(fix.id)
+      }));
+      setFixConfigs(restoredFixes);
+      console.log('✅ Restored fixes from payment:', enabledFixIds);
+    } else {
+      setFixConfigs(availableFixes);
+    }
+    
+    // If we have initialCode (from post-payment redirect), use it; otherwise reset
+    if (initialCode) {
+      setGeneratedCode(initialCode);
+      setViewMode('code');
+      setHasPaid(initialHasPaid);
+      setShowLockOverlay(false);
+      if (initialHasPaid && onPaymentVerified) {
+        onPaymentVerified();
+      }
+    } else {
+      setGeneratedCode('');
+      setShowLockOverlay(false);
+      checkPaymentStatus();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Toggle a fix
   const toggleFix = useCallback((fixId: string) => {
