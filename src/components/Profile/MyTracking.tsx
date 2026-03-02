@@ -226,19 +226,23 @@ export function MyTracking() {
       const llmData = llmRes.status === 'fulfilled' ? llmRes.value.data : null;
       const psiData = psiRes.status === 'fulfilled' ? psiRes.value.data : null;
 
-      const geoScore = geoData?.data?.overallScore || geoData?.data?.score || 0;
-      const citationRate = llmData?.data?.citations ? 
-        (llmData.data.citations / (llmData.data.totalProviders || 1)) * 100 : 0;
+      const geoScore = geoData?.data?.totalScore ?? geoData?.data?.overallScore ?? 0;
+      const llmCitationRate = llmData?.data?.citationRate;
+      const citationRate = llmCitationRate 
+        ? (llmCitationRate.cited / (llmCitationRate.total || 1)) * 100 
+        : 0;
       const sentiment = llmData?.data?.overallSentiment || 'neutral';
+      const seoScore = llmData?.data?.overallScore ?? null;
       
       // Extract PageSpeed performance score (0-100)
-      const performanceScore = psiData?.data?.performance ?? psiData?.performance ?? null;
+      const performanceScore = psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
 
       // Insert stats entry
       await supabase.from('user_stats_history').insert({
         user_id: user.id,
         tracked_site_id: site.id,
         domain: site.domain,
+        seo_score: seoScore ? Math.round(seoScore) : null,
         geo_score: Math.round(geoScore),
         llm_citation_rate: citationRate,
         ai_sentiment: sentiment,
