@@ -478,7 +478,6 @@ export function SmartConfigurator({
       if (error) throw error;
       if (data?.success) {
         setIsArchived(true);
-        sonnerToast.success(`✅ ${data.archived} solution(s) archivée(s) dans la bibliothèque`);
       }
     } catch (error) {
       console.error('Error archiving solution:', error);
