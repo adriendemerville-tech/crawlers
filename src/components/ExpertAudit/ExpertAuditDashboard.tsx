@@ -1099,6 +1099,53 @@ export function ExpertAuditDashboard() {
                       isReanalyzing={isStrategicLoading}
                     />
                   )}
+
+                  {/* Strategic Roadmap as Action Plan */}
+                  {result.strategicAnalysis && (() => {
+                    const roadmap = result.strategicAnalysis!.executive_roadmap || [];
+                    const legacyRoadmap = result.strategicAnalysis!.strategic_roadmap || [];
+                    
+                    const priorityMap: Record<string, 'critical' | 'important' | 'optional'> = {
+                      'Prioritaire': 'critical',
+                      'Important': 'important',
+                      'Opportunité': 'optional',
+                    };
+                    const categoryMap: Record<string, 'performance' | 'technique' | 'contenu' | 'ia' | 'securite'> = {
+                      'Identité': 'contenu',
+                      'Contenu': 'contenu',
+                      'Autorité': 'ia',
+                      'Social': 'contenu',
+                      'Technique': 'technique',
+                    };
+
+                    const recommendations: import('@/types/expertAudit').Recommendation[] = roadmap.length > 0
+                      ? roadmap.map((item, i) => ({
+                          id: `roadmap-${i}`,
+                          priority: priorityMap[item.priority] || 'optional',
+                          category: categoryMap[item.category] || 'contenu',
+                          icon: '🎯',
+                          title: item.title || item.prescriptive_action?.slice(0, 80) || '',
+                          description: item.prescriptive_action || '',
+                        }))
+                      : legacyRoadmap.map((item, i) => ({
+                          id: `roadmap-legacy-${i}`,
+                          priority: priorityMap[item.priority] || 'optional',
+                          category: categoryMap[item.category] || 'contenu',
+                          icon: '🎯',
+                          title: item.action_concrete || '',
+                          description: item.strategic_goal || '',
+                        }));
+
+                    if (recommendations.length === 0) return null;
+
+                    return (
+                      <ActionPlan 
+                        recommendations={recommendations} 
+                        url={result.url} 
+                        auditType="strategic" 
+                      />
+                    );
+                  })()}
                 </motion.div>
 
                 {/* La Carte d'Inscription (Apparaît par-dessus si pas loggé) */}
