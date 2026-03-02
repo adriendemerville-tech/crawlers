@@ -1,13 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { FileText, Trash2, Download, MoreVertical, GripVertical } from 'lucide-react';
+import { FileText, Trash2, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 
 interface Report {
@@ -110,32 +104,15 @@ export function SortableReportItem({ report, onDelete, translations: t }: Sortab
         </div>
       </a>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-            aria-label="Plus d'options"
-          >
-            <MoreVertical className="h-4 w-4" aria-hidden="true" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {report.pdf_url && (
-            <DropdownMenuItem asChild>
-              <a href={report.pdf_url} target="_blank" rel="noopener noreferrer" className="gap-2">
-                <Download className="h-4 w-4" />
-                {t.download}
-              </a>
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem onClick={onDelete} className="gap-2 text-destructive focus:text-destructive">
-            <Trash2 className="h-4 w-4" />
-            {t.delete}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onDelete}
+        className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
+        aria-label={t.delete}
+      >
+        <Trash2 className="h-4 w-4" aria-hidden="true" />
+      </Button>
     </div>
   );
 }
