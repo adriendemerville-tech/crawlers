@@ -208,7 +208,6 @@ export default function Profile() {
 
             <div className="mb-8">
               <h1 className="text-3xl font-bold">{t.title}</h1>
-              <p className="text-muted-foreground">{t.memberSince} {memberSince}</p>
             </div>
 
             <Tabs defaultValue={initialTab} className="space-y-6">
