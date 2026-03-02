@@ -210,9 +210,26 @@ export function SmartConfigurator({
 
       // Extract strategic roadmap from strategicResult prop OR from saved reports
       let roadmap = strategicResult?.strategicAnalysis?.executive_roadmap || [];
-      let extractedAuditData: Record<string, any> = {};
 
-      // If no live audit data, reconstruct from saved reports
+      // Extract action plan tasks (always, whether live audit or not)
+      let extractedAuditData: Record<string, any> = {};
+      
+      if (actionPlansResult.data && actionPlansResult.data.length > 0) {
+        const allTasks: any[] = [];
+        for (const plan of actionPlansResult.data) {
+          const tasks = (plan.tasks as unknown as any[]) || [];
+          const uncompletedTasks = tasks.filter((t: any) => !t.isCompleted);
+          allTasks.push(...uncompletedTasks.map((t: any) => ({
+            ...t,
+            auditType: plan.audit_type,
+            source: 'action_plan',
+          })));
+        }
+        extractedAuditData.activeActionPlanTasks = allTasks;
+        console.log(`[Architect] Found ${allTasks.length} uncompleted action plan tasks`);
+      }
+
+      // If no live audit data, also reconstruct from saved reports
       if (!technicalResult && !strategicResult && reportsResult.data && reportsResult.data.length > 0) {
         console.log(`[Architect] No live audit — reconstructing from ${reportsResult.data.length} saved reports`);
 
@@ -221,7 +238,6 @@ export function SmartConfigurator({
           if (!rd) continue;
 
           if (report.report_type === 'seo_technical' || report.report_type === 'seo_strategic') {
-            // Extract key audit metrics
             if (rd.scores) extractedAuditData.scores = rd.scores;
             if (rd.totalScore) extractedAuditData.totalScore = rd.totalScore;
             if (rd.recommendations) extractedAuditData.recommendations = rd.recommendations;
@@ -243,25 +259,9 @@ export function SmartConfigurator({
             extractedAuditData.pagespeedData = rd;
           }
         }
-
-        // Enrich from action plans (uncompleted tasks = active recommendations)
-        if (actionPlansResult.data && actionPlansResult.data.length > 0) {
-          const allTasks: any[] = [];
-          for (const plan of actionPlansResult.data) {
-            const tasks = (plan.tasks as unknown as any[]) || [];
-            const uncompletedTasks = tasks.filter((t: any) => !t.isCompleted);
-            allTasks.push(...uncompletedTasks.map((t: any) => ({
-              ...t,
-              auditType: plan.audit_type,
-              source: 'action_plan',
-            })));
-          }
-          extractedAuditData.activeActionPlanTasks = allTasks;
-          console.log(`[Architect] Found ${allTasks.length} uncompleted action plan tasks`);
-        }
-
-        setSavedAuditData(extractedAuditData);
       }
+
+      setSavedAuditData(extractedAuditData);
 
       setStrategicRoadmap(roadmap);
 
