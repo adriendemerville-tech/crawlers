@@ -36,7 +36,8 @@ export function PaymentButton({
   const { balance, useCredit, refreshBalance } = useCredits();
 
   // Determine credit cost from calculatedPrice (1 credit = 0.50€)
-  const creditCost = Math.max(1, Math.round(calculatedPrice / 0.5));
+  const enabledFixesCount = fixConfigs.filter(f => f.enabled).length;
+  const creditCost = enabledFixesCount === 0 ? 0 : Math.max(1, Math.round(calculatedPrice / 0.5));
   const hasEnoughCredits = balance >= creditCost;
 
   const handleCreditUnlock = async () => {
