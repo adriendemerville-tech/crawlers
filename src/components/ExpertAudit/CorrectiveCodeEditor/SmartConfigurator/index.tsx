@@ -92,6 +92,7 @@ export function SmartConfigurator({
   activeSiteId = null,
 }: SmartConfiguratorProps) {
   const [isPreloading, setIsPreloading] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [registryRecommendations, setRegistryRecommendations] = useState<any[]>([]);
   const [strategicRoadmap, setStrategicRoadmap] = useState<any[]>([]);
   const [fixConfigs, setFixConfigs] = useState<FixConfig[]>([]);
@@ -275,10 +276,22 @@ export function SmartConfigurator({
 
   useEffect(() => {
     if (isOpen) {
+      setIsReady(false);
       fetchWpSiteData();
       fetchAuditIntelligence();
+    } else {
+      setIsReady(false);
     }
   }, [isOpen, fetchWpSiteData, fetchAuditIntelligence]);
+
+  // Mark as ready once preloading finishes (one-way: no flicker)
+  useEffect(() => {
+    if (isOpen && !isPreloading) {
+      // Small delay to let fixConfigs settle before showing
+      const t = setTimeout(() => setIsReady(true), 50);
+      return () => clearTimeout(t);
+    }
+  }, [isOpen, isPreloading]);
 
   // Generate fix configurations from audit results
   const availableFixes = useMemo(() => {
@@ -1058,7 +1071,7 @@ export function SmartConfigurator({
 
   return (
     <>
-    <Dialog open={isOpen && !isPreloading} onOpenChange={onClose}>
+    <Dialog open={isReady} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-violet-500/30">
         <DialogHeader className="px-4 py-3 border-b flex flex-row items-center justify-center relative">
           {/* Title - left aligned */}
