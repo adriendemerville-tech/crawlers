@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Code2, Trash2, Check, ExternalLink } from 'lucide-react';
+import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +36,10 @@ const translations = {
     deleted: 'Code supprimé',
     deleteError: 'Erreur lors de la suppression',
     fixes: 'correctifs',
+    itWorks: 'Ça marche !',
+    validated: 'Validé ✓',
+    validatedToast: 'Merci ! Script validé et ajouté à la bibliothèque éprouvée.',
+    validateError: 'Erreur lors de la validation',
   },
   en: {
     title: 'My Corrective Codes',
@@ -46,6 +50,10 @@ const translations = {
     deleted: 'Code deleted',
     deleteError: 'Error deleting',
     fixes: 'fixes',
+    itWorks: 'It works!',
+    validated: 'Validated ✓',
+    validatedToast: 'Thanks! Script validated and added to the proven library.',
+    validateError: 'Error validating',
   },
   es: {
     title: 'Mis Códigos Correctivos',
@@ -56,6 +64,10 @@ const translations = {
     deleted: 'Código eliminado',
     deleteError: 'Error al eliminar',
     fixes: 'correcciones',
+    itWorks: '¡Funciona!',
+    validated: 'Validado ✓',
+    validatedToast: '¡Gracias! Script validado y añadido a la biblioteca probada.',
+    validateError: 'Error al validar',
   },
 };
 
@@ -66,6 +78,8 @@ export function MyCorrectiveCodes() {
   const [codes, setCodes] = useState<CorrectiveCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [validatedIds, setValidatedIds] = useState<Set<string>>(new Set());
+  const [validatingId, setValidatingId] = useState<string | null>(null);
 
   const dateLocale = language === 'fr' ? fr : language === 'es' ? es : enUS;
 
@@ -126,6 +140,42 @@ export function MyCorrectiveCodes() {
     }
   };
 
+  const validateCode = async (code: CorrectiveCode) => {
+    setValidatingId(code.id);
+    try {
+      // For each fix in this code, find matching solution_library entries and validate them
+      for (const fix of code.fixes_applied) {
+        // Find the matching solution in the library
+        const { data: existing } = await supabase
+          .from('solution_library')
+          .select('id, success_rate, usage_count')
+          .eq('error_type', fix.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (existing) {
+          // Mark as generic (validated) and increment success_rate
+          const newSuccessRate = Math.min(100, (existing.success_rate || 0) + 10);
+          await supabase
+            .from('solution_library')
+            .update({
+              is_generic: true,
+              success_rate: newSuccessRate,
+            })
+            .eq('id', existing.id);
+        }
+      }
+
+      setValidatedIds(prev => new Set(prev).add(code.id));
+      toast.success(t.validatedToast);
+    } catch (error) {
+      console.error('Error validating code:', error);
+      toast.error(t.validateError);
+    } finally {
+      setValidatingId(null);
+    }
+  };
+
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'seo': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
@@ -173,68 +223,91 @@ export function MyCorrectiveCodes() {
           </div>
         ) : (
           <div className="space-y-3">
-            {codes.map((code) => (
-              <div
-                key={code.id}
-                className="group flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-medium truncate">{code.title}</h4>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(code.created_at), 'dd MMM yyyy', { locale: dateLocale })}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                    <ExternalLink className="h-3 w-3" />
-                    <span className="truncate max-w-[200px]">{code.url}</span>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1">
-                    {code.fixes_applied.slice(0, 4).map((fix: any, idx: number) => (
-                      <Badge
-                        key={idx}
-                        variant="secondary"
-                        className={`text-[10px] px-1.5 py-0 ${getCategoryColor(fix.category)}`}
-                      >
-                        {fix.label}
-                      </Badge>
-                    ))}
-                    {code.fixes_applied.length > 4 && (
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                        +{code.fixes_applied.length - 4}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
+            {codes.map((code) => {
+              const isValidated = validatedIds.has(code.id);
+              const isValidating = validatingId === code.id;
 
-                <div className="flex items-center gap-1 ml-4">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                    onClick={() => deleteCode(code.id)}
-                    aria-label="Supprimer le code"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-primary"
-                    onClick={() => copyCode(code)}
-                    aria-label="Copier le code"
-                  >
-                    {copiedId === code.id ? (
-                      <Check className="h-4 w-4 text-green-500" aria-hidden="true" />
+              return (
+                <div
+                  key={code.id}
+                  className="group flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium truncate">{code.title}</h4>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(code.created_at), 'dd MMM yyyy', { locale: dateLocale })}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                      <ExternalLink className="h-3 w-3" />
+                      <span className="truncate max-w-[200px]">{code.url}</span>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-1">
+                      {code.fixes_applied.slice(0, 4).map((fix: any, idx: number) => (
+                        <Badge
+                          key={idx}
+                          variant="secondary"
+                          className={`text-[10px] px-1.5 py-0 ${getCategoryColor(fix.category)}`}
+                        >
+                          {fix.label}
+                        </Badge>
+                      ))}
+                      {code.fixes_applied.length > 4 && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          +{code.fixes_applied.length - 4}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 ml-4">
+                    {/* Feedback button: "Ça marche !" */}
+                    {isValidated ? (
+                      <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                        <Check className="w-3 h-3" /> {t.validated}
+                      </Badge>
                     ) : (
-                      <Copy className="h-4 w-4" aria-hidden="true" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+                        onClick={() => validateCode(code)}
+                        disabled={isValidating}
+                        aria-label={t.itWorks}
+                      >
+                        <ThumbsUp className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">{t.itWorks}</span>
+                      </Button>
                     )}
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteCode(code.id)}
+                      aria-label="Supprimer le code"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() => copyCode(code)}
+                      aria-label="Copier le code"
+                    >
+                      {copiedId === code.id ? (
+                        <Check className="h-4 w-4 text-green-500" aria-hidden="true" />
+                      ) : (
+                        <Copy className="h-4 w-4" aria-hidden="true" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
