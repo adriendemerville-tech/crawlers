@@ -246,7 +246,7 @@
   }
 
   .animate-cta-glow {
-    animation: ctaGlow 1.5s ease-out forwards;
+    animation: ctaGlow 2s ease-out forwards;
   }
 
   /* Lexique category colors with glow effects */
