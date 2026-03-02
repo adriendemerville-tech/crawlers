@@ -861,40 +861,53 @@ export function SmartConfigurator({
                   </>
                 )}
 
-                {/* Dynamic Price in Credits - updates based on enabled fixes */}
-                <motion.span 
-                  key={`${calculatedPrice}-${enabledCount}`}
-                  initial={{ scale: 1.1, opacity: 0.7 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums flex items-center gap-1"
-                >
-                  {calculatedPrice === 0 ? 0 : Math.max(1, Math.round(calculatedPrice / 0.5))}
-                  <CreditCoin size="sm" />
-                </motion.span>
+                {/* Dynamic Price in Credits - hidden when code is generated */}
+                {!generatedCode && (
+                  <motion.span 
+                    key={`${calculatedPrice}-${enabledCount}`}
+                    initial={{ scale: 1.1, opacity: 0.7 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums flex items-center gap-1"
+                  >
+                    {calculatedPrice === 0 ? 0 : Math.max(1, Math.round(calculatedPrice / 0.5))}
+                    <CreditCoin size="sm" />
+                  </motion.span>
+                )}
 
-                {/* Generate Button */}
-                <Button
-                  onClick={handleGenerate}
-                  disabled={enabledCount === 0 || isGenerating}
-                  className="gap-1.5 bg-violet-600 hover:bg-violet-700 text-white border-0 text-xs h-8 px-3"
-                >
-                  {isGenerating ? (
-                    <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                      >
-                        <Code className="w-3 h-3" />
-                      </motion.div>
-                      Génération...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-3 h-3" />
-                      Générer ({enabledCount})
-                    </>
-                  )}
-                </Button>
+                {/* Generate / Reset Button */}
+                {generatedCode ? (
+                  <Button
+                    onClick={() => setGeneratedCode('')}
+                    variant="outline"
+                    className="gap-1.5 text-xs h-8 px-3"
+                  >
+                    <Wrench className="w-3 h-3" />
+                    Modifier les patchs
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={enabledCount === 0 || isGenerating}
+                    className="gap-1.5 bg-violet-600 hover:bg-violet-700 text-white border-0 text-xs h-8 px-3"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                        >
+                          <Code className="w-3 h-3" />
+                        </motion.div>
+                        Génération...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-3 h-3" />
+                        Générer ({enabledCount})
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
 
