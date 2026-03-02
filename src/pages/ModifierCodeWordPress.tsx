@@ -206,7 +206,7 @@ const ModifierCodeWordPress = () => {
                   <Download className="h-5 w-5" />
                   Télécharger le Plugin (.zip)
                 </Button>
-                <Button variant="outline" size="xl" className="gap-2 border-slate-600 text-slate-200 hover:bg-slate-800" asChild>
+                <Button size="xl" className="gap-2 bg-slate-800 text-white hover:bg-slate-700 border border-slate-600" asChild>
                   <Link to="/audit-expert">
                     <Brain className="h-5 w-5" />
                     Lancer mon Audit Expert
