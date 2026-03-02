@@ -1,5 +1,5 @@
 import { useState, useRef, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -260,6 +260,16 @@ export function Header() {
             >
               <Scale className="h-4 w-4" />
               <span className="text-sm">{t.comparatif}</span>
+            </Button>
+          </Link>
+          <Link to="/modifier-code-wordpress">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <Puzzle className="h-4 w-4" />
+              <span className="text-sm">{language === 'fr' ? 'WordPress' : language === 'es' ? 'WordPress' : 'WordPress'}</span>
             </Button>
           </Link>
         </div>

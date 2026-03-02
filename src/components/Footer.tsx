@@ -51,6 +51,11 @@ function FooterComponent() {
       description: language === 'fr' ? 'Définitions des termes SEO et GEO' : 'SEO and GEO terms definitions'
     },
     { 
+      label: language === 'fr' ? 'Plugin WordPress' : 'WordPress Plugin',
+      href: '/modifier-code-wordpress',
+      description: language === 'fr' ? 'Optimisez WordPress pour l\'IA sans coder' : 'Optimize WordPress for AI without coding'
+    },
+    { 
       label: language === 'fr' ? 'Blog' : 'Blog',
       href: '/blog',
       description: language === 'fr' ? 'Articles et guides SEO/GEO' : 'SEO/GEO articles and guides'
