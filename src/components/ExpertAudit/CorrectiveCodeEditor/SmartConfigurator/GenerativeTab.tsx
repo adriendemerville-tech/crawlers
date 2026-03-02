@@ -67,6 +67,14 @@ export function GenerativeTab({ fixes, onToggle }: GenerativeTabProps) {
                       Premium
                     </Badge>
                   )}
+                  {fix.data?._source === 'action_plan' && (
+                    <Badge 
+                      variant="outline" 
+                      className="text-[9px] px-1 py-0 h-4 bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30"
+                    >
+                      Plan d'action
+                    </Badge>
+                  )}
                 </div>
                 {fix.enabled && (
                   <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{fix.description}</p>

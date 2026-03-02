@@ -528,6 +528,88 @@ export function SmartConfigurator({
       });
     });
 
+    // ═══ DYNAMIC FIXES FROM ACTION PLANS ═══
+    // Generate site-specific fix proposals from uncompleted action plan tasks
+    const existingFixIds = new Set(fixes.map(f => f.id));
+    const actionPlanTasks = (savedAuditData?.activeActionPlanTasks || []) as Array<{
+      id: string; title: string; priority: string; category: string; isCompleted: boolean; auditType: string;
+    }>;
+
+    // Also include tasks from live action plan data if available
+    const liveStrategicTasks = strategicRoadmap.map((item: any, i: number) => ({
+      id: `live-roadmap-${i}`,
+      title: item.title || item.prescriptive_action || item.action_concrete || '',
+      priority: item.priority === 'Prioritaire' ? 'critical' : item.priority === 'Important' ? 'important' : 'optional',
+      category: (item.category || 'contenu').toLowerCase(),
+      isCompleted: false,
+      auditType: 'strategic',
+      _description: item.prescriptive_action || item.action_concrete || '',
+      _rationale: item.strategic_rationale || item.strategic_goal || '',
+    }));
+
+    const allDynamicTasks = [...actionPlanTasks, ...liveStrategicTasks];
+
+    // Deduplicate by title similarity
+    const seenTitles = new Set<string>();
+    const dynamicFixes: FixConfig[] = [];
+
+    for (const task of allDynamicTasks) {
+      if (task.isCompleted) continue;
+      const titleLower = task.title.toLowerCase();
+      
+      // Skip if we already have a hardcoded fix covering this
+      const coveredByExisting = [...existingFixIds].some(fixId => {
+        const fixLabel = fixes.find(f => f.id === fixId)?.label?.toLowerCase() || '';
+        return titleLower.includes(fixLabel.split(' ').slice(0, 2).join(' ')) ||
+               fixLabel.includes(titleLower.split(' ').slice(0, 2).join(' '));
+      });
+      if (coveredByExisting) continue;
+
+      // Deduplicate
+      const titleKey = titleLower.slice(0, 40);
+      if (seenTitles.has(titleKey)) continue;
+      seenTitles.add(titleKey);
+
+      // Determine category mapping
+      const catLower = (task.category || '').toLowerCase();
+      let fixCategory: FixConfig['category'] = 'strategic';
+      if (task.auditType === 'technical') {
+        if (catLower.includes('perf')) fixCategory = 'performance';
+        else if (catLower.includes('sécu')) fixCategory = 'seo';
+        else if (catLower.includes('access')) fixCategory = 'accessibility';
+        else fixCategory = 'seo';
+      } else {
+        if (catLower.includes('identité') || catLower.includes('social')) fixCategory = 'strategic';
+        else if (catLower.includes('contenu')) fixCategory = 'generative';
+        else if (catLower.includes('autorité')) fixCategory = 'strategic';
+        else if (catLower.includes('technique')) fixCategory = 'performance';
+        else fixCategory = 'strategic';
+      }
+
+      const fixPriority: FixConfig['priority'] = 
+        task.priority === 'critical' ? 'critical' : 
+        task.priority === 'important' ? 'important' : 'optional';
+
+      const fixId = `actionplan_${task.id}`;
+
+      dynamicFixes.push({
+        id: fixId,
+        category: fixCategory,
+        label: task.title.length > 50 ? task.title.slice(0, 50) + '…' : task.title,
+        description: (task as any)._description || task.title,
+        enabled: fixPriority === 'critical',
+        priority: fixPriority,
+        isRecommended: true,
+        data: {
+          _source: 'action_plan',
+          _rationale: (task as any)._rationale || '',
+          _taskTitle: task.title,
+        },
+      });
+    }
+
+    fixes.push(...dynamicFixes);
+
     // Also pre-enable technical fixes that match unresolved registry recommendations
     return fixes.map(fix => {
       if (unresolvedRecIds.has(fix.id) && !fix.enabled) {
@@ -535,7 +617,7 @@ export function SmartConfigurator({
       }
       return fix;
     });
-  }, [technicalResult, strategicResult, siteName, siteUrl, hallucinationData, registryRecommendations, strategicRoadmap]);
+  }, [technicalResult, strategicResult, siteName, siteUrl, hallucinationData, registryRecommendations, strategicRoadmap, savedAuditData]);
 
   // Track whether we already initialized for this "open" session
   const hasInitializedRef = useRef(false);
@@ -978,9 +1060,16 @@ export function SmartConfigurator({
             >
               <Sparkles className="w-8 h-8 text-violet-500" />
             </motion.div>
-            <div className="text-center space-y-1">
+            <div className="text-center space-y-2">
               <p className="text-sm font-medium text-foreground">Préparation intelligente</p>
-              <p className="text-xs text-muted-foreground">Analyse du plan d'action et de la roadmap stratégique…</p>
+              <motion.p 
+                key="step1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-xs text-muted-foreground"
+              >
+                Chargement des plans d'action pour <span className="font-medium text-foreground">{siteDomain}</span>…
+              </motion.p>
             </div>
           </div>
         )}
