@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Check, Eye, EyeOff, Download, Plug } from 'lucide-react';
+import { Copy, Check, Eye, EyeOff, Download, Plug, Link2, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,11 @@ const translations = {
     downloadPlugin: 'Télécharger le Plugin WordPress',
     comingSoon: 'Bientôt disponible',
     instructions: 'Copiez cette clé et collez-la dans les paramètres du plugin WordPress Crawlers.AI.',
+    magicLink: 'Générer un Lien Magique',
+    magicLinkDesc: 'Générez un lien temporaire pour connecter automatiquement votre plugin WordPress sans copier la clé API.',
+    magicLinkCopied: 'Lien magique copié ! Collez-le dans votre plugin WordPress. Il expire dans 10 minutes.',
+    magicLinkError: 'Erreur lors de la génération du lien magique.',
+    generating: 'Génération...',
   },
   en: {
     title: 'WordPress Integration',
@@ -31,6 +36,11 @@ const translations = {
     downloadPlugin: 'Download WordPress Plugin',
     comingSoon: 'Coming soon',
     instructions: 'Copy this key and paste it into the Crawlers.AI WordPress plugin settings.',
+    magicLink: 'Generate Magic Link',
+    magicLinkDesc: 'Generate a temporary link to automatically connect your WordPress plugin without copying the API key.',
+    magicLinkCopied: 'Magic link copied! Paste it in your WordPress plugin. It expires in 10 minutes.',
+    magicLinkError: 'Error generating magic link.',
+    generating: 'Generating...',
   },
   es: {
     title: 'Integración WordPress',
@@ -42,6 +52,11 @@ const translations = {
     downloadPlugin: 'Descargar Plugin WordPress',
     comingSoon: 'Próximamente',
     instructions: 'Copie esta clave y péguela en la configuración del plugin WordPress Crawlers.AI.',
+    magicLink: 'Generar Enlace Mágico',
+    magicLinkDesc: 'Genere un enlace temporal para conectar automáticamente su plugin WordPress sin copiar la clave API.',
+    magicLinkCopied: '¡Enlace mágico copiado! Péguelo en su plugin WordPress. Expira en 10 minutos.',
+    magicLinkError: 'Error al generar el enlace mágico.',
+    generating: 'Generando...',
   },
 };
 
@@ -53,6 +68,7 @@ export function WordPressIntegrationCard() {
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [generatingLink, setGeneratingLink] = useState(false);
 
   useEffect(() => {
     if (user) fetchApiKey();
@@ -126,6 +142,53 @@ export function WordPressIntegrationCard() {
             </div>
           )}
           <p className="text-xs text-muted-foreground">{t.instructions}</p>
+        </div>
+
+        {/* Magic Link */}
+        <div className="space-y-2">
+          <Button
+            variant="secondary"
+            className="w-full gap-2"
+            disabled={generatingLink || !user}
+            onClick={async () => {
+              if (!user) return;
+              setGeneratingLink(true);
+              try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) {
+                  toast.error(t.magicLinkError);
+                  return;
+                }
+                const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+                const res = await fetch(
+                  `https://${projectId}.supabase.co/functions/v1/wpsync`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${session.access_token}`,
+                    },
+                  }
+                );
+                const json = await res.json();
+                if (json.success && json.token) {
+                  const magicUrl = `https://${projectId}.supabase.co/functions/v1/wpsync?temp_token=${json.token}`;
+                  await navigator.clipboard.writeText(magicUrl);
+                  toast.success(t.magicLinkCopied);
+                } else {
+                  toast.error(json.error || t.magicLinkError);
+                }
+              } catch {
+                toast.error(t.magicLinkError);
+              } finally {
+                setGeneratingLink(false);
+              }
+            }}
+          >
+            {generatingLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+            {generatingLink ? t.generating : t.magicLink}
+          </Button>
+          <p className="text-xs text-muted-foreground">{t.magicLinkDesc}</p>
         </div>
 
         {/* Download Plugin Button */}
