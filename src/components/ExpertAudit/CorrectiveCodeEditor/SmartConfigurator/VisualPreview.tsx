@@ -291,13 +291,24 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
 
   // Handle iframe load and inject script
   const handleIframeLoad = useCallback((e: React.SyntheticEvent<HTMLIFrameElement>) => {
-    // Check if the iframe actually loaded content
     try {
       const iframe = e.currentTarget;
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       
-      // If we can access the document and it has content, consider it loaded
       if (iframeDoc) {
+        // Check if the document has meaningful content (not blocked by X-Frame-Options)
+        const bodyText = iframeDoc.body?.innerText?.trim() || '';
+        const bodyHTML = iframeDoc.body?.innerHTML?.trim() || '';
+        
+        if (bodyHTML.length < 10 && !iframeDoc.title) {
+          // Empty document likely means X-Frame-Options blocked it
+          console.log('[Architecte] Site blocked by X-Frame-Options or CSP');
+          setIframeLoaded(true);
+          setIsReloading(false);
+          setLoadFailed(true);
+          return;
+        }
+        
         setIframeLoaded(true);
         setIsReloading(false);
         setLoadFailed(false);
@@ -310,11 +321,12 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
         }
       }
     } catch (err) {
-      // Cross-origin restriction - still consider as loaded (visual preview only)
+      // Cross-origin restriction — the site loaded but we can't access the DOM
+      // This is the normal case for most external sites — show visual-only preview
       setIframeLoaded(true);
       setIsReloading(false);
       setLoadFailed(false);
-      console.log('[Architecte] Cannot inject script (cross-origin). Visual preview only.');
+      console.log('[Architecte] Cross-origin site loaded. Visual preview only.');
     }
   }, [previewScript]);
 
@@ -373,18 +385,29 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
                   <ExternalLink className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">Impossible de charger l'aperçu</p>
-                  <p className="text-xs text-muted-foreground mt-1">Le site cible est peut-être inaccessible</p>
+                  <p className="text-sm font-medium text-foreground">Aperçu indisponible</p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                    Ce site bloque l'intégration dans une iframe (X-Frame-Options). C'est normal — les correctifs seront tout de même appliqués via le plugin WordPress.
+                  </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleManualReload}
-                  className="mt-2"
-                >
-                  <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-                  Réessayer
-                </Button>
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleManualReload}
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                    Réessayer
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(siteUrl, '_blank')}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                    Ouvrir le site
+                  </Button>
+                </div>
               </div>
             </div>
           )}
