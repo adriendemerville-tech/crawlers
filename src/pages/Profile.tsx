@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2, Wallet, Shield } from 'lucide-react';
+import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2, Wallet, Shield, Radar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,7 @@ import { MyReports } from '@/components/Profile/MyReports';
 import { MyActionPlans } from '@/components/Profile/MyActionPlans';
 import { MyCorrectiveCodes } from '@/components/Profile/MyCorrectiveCodes';
 import { MyWallet } from '@/components/Profile/MyWallet';
+import { MyTracking } from '@/components/Profile/MyTracking';
 import { AdminDashboard } from '@/components/Admin';
 import { useAdmin } from '@/hooks/useAdmin';
 
@@ -31,6 +32,7 @@ const translations = {
     actionPlans: 'Plans d\'Action',
     correctiveCodes: 'Codes Correctifs',
     wallet: 'Portefeuille',
+    tracking: 'Tracking',
     firstName: 'Prénom',
     lastName: 'Nom',
     email: 'Email',
@@ -60,6 +62,7 @@ const translations = {
     actionPlans: 'Action Plans',
     correctiveCodes: 'Corrective Codes',
     wallet: 'Wallet',
+    tracking: 'Tracking',
     firstName: 'First Name',
     lastName: 'Last Name',
     email: 'Email',
@@ -89,6 +92,7 @@ const translations = {
     actionPlans: 'Planes de Acción',
     correctiveCodes: 'Códigos Correctivos',
     wallet: 'Billetera',
+    tracking: 'Tracking',
     firstName: 'Nombre',
     lastName: 'Apellido',
     email: 'Correo electrónico',
@@ -213,6 +217,10 @@ export default function Profile() {
                   <Wallet className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.wallet}</span>
                 </TabsTrigger>
+                <TabsTrigger value="tracking" className="flex-1 gap-2">
+                  <Radar className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t.tracking}</span>
+                </TabsTrigger>
                 <TabsTrigger value="reports" className="flex-1 gap-2">
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.myReports}</span>
@@ -288,6 +296,10 @@ export default function Profile() {
 
               <TabsContent value="wallet">
                 <MyWallet />
+              </TabsContent>
+
+              <TabsContent value="tracking">
+                <MyTracking />
               </TabsContent>
 
               <TabsContent value="settings">
