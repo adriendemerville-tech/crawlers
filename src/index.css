@@ -237,8 +237,8 @@
     0% {
       box-shadow: 0 0 0 0 hsl(210 100% 70% / 0);
     }
-    30% {
-      box-shadow: 0 0 24px 6px hsl(210 100% 70% / 0.55), 0 0 48px 12px hsl(210 100% 80% / 0.25);
+    25% {
+      box-shadow: 0 0 35px 10px hsl(210 100% 70% / 0.7), 0 0 70px 20px hsl(210 100% 80% / 0.35);
     }
     100% {
       box-shadow: 0 0 0 0 hsl(210 100% 70% / 0);
@@ -246,7 +246,7 @@
   }
 
   .animate-cta-glow {
-    animation: ctaGlow 3s ease-out forwards;
+    animation: ctaGlow 5s ease-out forwards;
   }
 
   /* Lexique category colors with glow effects */
