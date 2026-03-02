@@ -47,7 +47,7 @@ const translations = {
     badge: 'Audit Expert SEO & IA',
     title: 'Analysez votre site en profondeur',
     subtitlePart1: 'Analyse 360° de votre SEO et de votre GEO en moins de 10 min.',
-    subtitlePart2: 'Développement du',
+    subtitlePart2: 'Développement et injection du',
     subtitleCode: 'code correctif',
     subtitlePart3: 'adapté à vos besoins.',
     technicalTitle: 'Audit Technique SEO',
