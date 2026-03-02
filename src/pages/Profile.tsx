@@ -24,8 +24,8 @@ import { useAdmin } from '@/hooks/useAdmin';
 
 const translations = {
   fr: {
-    pageTitle: 'Mon Profil - Crawlers AI',
-    title: 'Mon Profil',
+    pageTitle: 'Console - Crawlers AI',
+    title: 'Console',
     identity: 'Mes infos',
     settings: 'Paramètres',
     myReports: 'Rapports',
@@ -54,8 +54,8 @@ const translations = {
     spanish: 'Español',
   },
   en: {
-    pageTitle: 'My Profile - Crawlers AI',
-    title: 'My Profile',
+    pageTitle: 'Console - Crawlers AI',
+    title: 'Console',
     identity: 'My Info',
     settings: 'Settings',
     myReports: 'Reports',
@@ -84,8 +84,8 @@ const translations = {
     spanish: 'Español',
   },
   es: {
-    pageTitle: 'Mi Perfil - Crawlers AI',
-    title: 'Mi Perfil',
+    pageTitle: 'Consola - Crawlers AI',
+    title: 'Consola',
     identity: 'Mis datos',
     settings: 'Configuración',
     myReports: 'Informes',
@@ -205,7 +205,10 @@ export default function Profile() {
               {t.backToHome}
             </Link>
 
-            <p className="text-muted-foreground mb-8">{t.memberSince} {memberSince}</p>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold">{t.title}</h1>
+              <p className="text-muted-foreground">{t.memberSince} {memberSince}</p>
+            </div>
 
             <Tabs defaultValue={initialTab} className="space-y-6">
               <TabsList className="w-full flex">

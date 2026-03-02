@@ -1,5 +1,5 @@
 import { useState, useRef, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -40,7 +40,9 @@ const lexiqueLabels = {
 
 const translations = {
   fr: {
+    console: 'Console',
     profile: 'Mon profil',
+    dashboard: 'Dashboard',
     identity: 'Identité',
     settings: 'Paramètres',
     myReports: 'Mes rapports',
@@ -54,7 +56,9 @@ const translations = {
     comparatif: 'Comparatif',
   },
   en: {
+    console: 'Console',
     profile: 'My profile',
+    dashboard: 'Dashboard',
     identity: 'Identity',
     settings: 'Settings',
     myReports: 'My reports',
@@ -68,7 +72,9 @@ const translations = {
     comparatif: 'Pricing',
   },
   es: {
+    console: 'Consola',
     profile: 'Mi perfil',
+    dashboard: 'Dashboard',
     identity: 'Identidad',
     settings: 'Configuración',
     myReports: 'Mis informes',
@@ -98,7 +104,7 @@ export function Header() {
 
   // Check if we're on specific pages
   const isAuditExpertPage = location.pathname === '/audit-expert';
-  const isProfilePage = location.pathname === '/profil';
+  const isProfilePage = location.pathname === '/console' || location.pathname === '/profil';
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -271,7 +277,7 @@ export function Header() {
                       variant="ghost" 
                       className="relative h-9 w-9 rounded-full" 
                       aria-label={t.profile}
-                      onClick={() => navigate('/profil')}
+                      onClick={() => navigate('/console')}
                     >
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
@@ -288,8 +294,12 @@ export function Header() {
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                   >
+                    {/* Console subtitle */}
+                    <div className="px-3 py-2">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.console}</p>
+                    </div>
                     <DropdownMenuItem asChild className="p-0">
-                      <Link to="/profil" className="flex items-center justify-start gap-3 p-3 cursor-pointer">
+                      <Link to="/console" className="flex items-center justify-start gap-3 p-3 cursor-pointer">
                         <Avatar className="h-10 w-10 shrink-0">
                           <AvatarImage src={profile?.avatar_url || undefined} alt="Avatar" />
                           <AvatarFallback className="bg-primary text-primary-foreground text-sm font-medium">
@@ -305,6 +315,13 @@ export function Header() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    {/* Dashboard shortcut */}
+                    <DropdownMenuItem asChild>
+                      <Link to="/console?tab=tracking" className="gap-2 cursor-pointer">
+                        <LayoutDashboard className="h-4 w-4" />
+                        {t.dashboard}
+                      </Link>
+                    </DropdownMenuItem>
                     {/* Wallet submenu */}
                     <DropdownMenuItem className="gap-2 cursor-default hover:bg-transparent focus:bg-transparent">
                       <Wallet className="h-4 w-4 text-amber-500" />
@@ -316,32 +333,32 @@ export function Header() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/profil?tab=identity" className="gap-2 cursor-pointer">
+                      <Link to="/console?tab=identity" className="gap-2 cursor-pointer">
                         <User className="h-4 w-4" />
                         {t.identity}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/profil?tab=settings" className="gap-2 cursor-pointer">
+                      <Link to="/console?tab=settings" className="gap-2 cursor-pointer">
                         <Settings className="h-4 w-4" />
                         {t.settings}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/profil?tab=reports" className="gap-2 cursor-pointer">
+                      <Link to="/console?tab=reports" className="gap-2 cursor-pointer">
                         <FileText className="h-4 w-4" />
                         {t.myReports}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/profil?tab=action-plans" className="gap-2 cursor-pointer">
+                      <Link to="/console?tab=action-plans" className="gap-2 cursor-pointer">
                         <ClipboardList className="h-4 w-4" />
                         {t.actionPlans}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/profil?tab=corrective-codes" className="gap-2 cursor-pointer">
+                      <Link to="/console?tab=corrective-codes" className="gap-2 cursor-pointer">
                         <Code2 className="h-4 w-4" />
                         {t.correctiveCodes}
                       </Link>

@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -31,6 +31,7 @@ const translations = {
     geoScore: 'Score GEO',
     citationRate: 'Taux de citation LLM',
     sentiment: 'Sentiment IA',
+    performance: 'Performance',
     semanticAuth: 'Autorité sémantique',
     voiceShare: 'Part de voix',
     evolution: 'Évolution',
@@ -57,6 +58,7 @@ const translations = {
     geoScore: 'GEO Score',
     citationRate: 'LLM Citation Rate',
     sentiment: 'AI Sentiment',
+    performance: 'Performance',
     semanticAuth: 'Semantic Authority',
     voiceShare: 'Voice Share',
     evolution: 'Evolution',
@@ -83,6 +85,7 @@ const translations = {
     geoScore: 'Score GEO',
     citationRate: 'Tasa de citación LLM',
     sentiment: 'Sentimiento IA',
+    performance: 'Rendimiento',
     semanticAuth: 'Autoridad semántica',
     voiceShare: 'Cuota de voz',
     evolution: 'Evolución',
@@ -167,18 +170,25 @@ export function MyTracking() {
   useEffect(() => { fetchSites(); }, [fetchSites]);
   useEffect(() => { fetchStats(); }, [fetchStats]);
 
-  // Auto-refresh sites not audited in 24h
+  // Auto-refresh sites not audited in 24h — only once per login session
   useEffect(() => {
     if (!user || sites.length === 0) return;
+    
+    // Check if we already refreshed in this session
+    const sessionKey = `tracking_refreshed_${user.id}`;
+    if (sessionStorage.getItem(sessionKey)) return;
+    
     const now = Date.now();
     const staleThreshold = 24 * 60 * 60 * 1000;
-
-    sites.forEach(async (site) => {
+    const staleSites = sites.filter(site => {
       const lastAudit = site.last_audit_at ? new Date(site.last_audit_at).getTime() : 0;
-      if (now - lastAudit > staleThreshold && !refreshingSites.has(site.id)) {
-        await runBackgroundAudit(site);
-      }
+      return now - lastAudit > staleThreshold && !refreshingSites.has(site.id);
     });
+
+    if (staleSites.length > 0) {
+      sessionStorage.setItem(sessionKey, Date.now().toString());
+      staleSites.forEach(site => runBackgroundAudit(site));
+    }
   }, [sites, user]);
 
   const runBackgroundAudit = async (site: TrackedSite) => {
@@ -188,19 +198,24 @@ export function MyTracking() {
     try {
       const url = `https://${site.domain}`;
       
-      // Run check-geo and check-llm in parallel
-      const [geoRes, llmRes] = await Promise.allSettled([
+      // Run check-geo, check-llm and check-pagespeed in parallel
+      const [geoRes, llmRes, psiRes] = await Promise.allSettled([
         supabase.functions.invoke('check-geo', { body: { url, lang: language } }),
         supabase.functions.invoke('check-llm', { body: { url, lang: language } }),
+        supabase.functions.invoke('check-pagespeed', { body: { url, lang: language } }),
       ]);
 
       const geoData = geoRes.status === 'fulfilled' ? geoRes.value.data : null;
       const llmData = llmRes.status === 'fulfilled' ? llmRes.value.data : null;
+      const psiData = psiRes.status === 'fulfilled' ? psiRes.value.data : null;
 
       const geoScore = geoData?.data?.overallScore || geoData?.data?.score || 0;
       const citationRate = llmData?.data?.citations ? 
         (llmData.data.citations / (llmData.data.totalProviders || 1)) * 100 : 0;
       const sentiment = llmData?.data?.overallSentiment || 'neutral';
+      
+      // Extract PageSpeed performance score (0-100)
+      const performanceScore = psiData?.data?.performance ?? psiData?.performance ?? null;
 
       // Insert stats entry
       await supabase.from('user_stats_history').insert({
@@ -210,7 +225,12 @@ export function MyTracking() {
         geo_score: Math.round(geoScore),
         llm_citation_rate: citationRate,
         ai_sentiment: sentiment,
-        raw_data: { geoData: geoData?.data, llmData: llmData?.data },
+        raw_data: { 
+          geoData: geoData?.data, 
+          llmData: llmData?.data, 
+          psiData: psiData?.data,
+          performanceScore,
+        },
       });
 
       // Update last_audit_at
@@ -296,12 +316,20 @@ export function MyTracking() {
   const currentSite = sites.find(s => s.id === selectedSite);
   const currentStats = selectedSite ? (statsMap[selectedSite] || []) : [];
   const latestStats = currentStats.length > 0 ? currentStats[currentStats.length - 1] : null;
+  
+  // Extract performance score from raw_data
+  const getPerformanceScore = (entry: StatsEntry) => {
+    const raw = entry as any;
+    return raw?.raw_data?.performanceScore ?? null;
+  };
+  const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
 
   const chartData = currentStats.map(entry => ({
     date: new Date(entry.recorded_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' }),
     seo: entry.seo_score || 0,
     geo: entry.geo_score || 0,
     citation: entry.llm_citation_rate || 0,
+    performance: getPerformanceScore(entry) || 0,
   }));
 
   if (loading) {
@@ -401,9 +429,10 @@ export function MyTracking() {
 
                   {/* KPI Cards */}
                   {latestStats && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <KPICard label={t.seoScore} value={latestStats.seo_score ? `${latestStats.seo_score}/200` : '—'} icon={TrendingUp} />
                       <KPICard label={t.geoScore} value={latestStats.geo_score ? `${latestStats.geo_score}%` : '—'} icon={Globe} />
+                      <KPICard label={t.performance} value={latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—'} icon={Gauge} />
                       <KPICard label={t.citationRate} value={latestStats.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—'} icon={Brain} />
                       <KPICard label={t.sentiment} value={sentimentLabel(latestStats.ai_sentiment)} icon={BarChart3} />
                       <KPICard label={t.semanticAuth} value={latestStats.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—'} icon={TrendingUp} />
@@ -432,6 +461,7 @@ export function MyTracking() {
                               <Line type="monotone" dataKey="seo" name={t.seoScore} stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
                               <Line type="monotone" dataKey="geo" name={t.geoScore} stroke="hsl(142, 76%, 36%)" strokeWidth={2} dot={{ r: 3 }} />
                               <Line type="monotone" dataKey="citation" name={t.citationRate} stroke="hsl(262, 83%, 58%)" strokeWidth={2} dot={{ r: 3 }} />
+                              <Line type="monotone" dataKey="performance" name={t.performance} stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={{ r: 3 }} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
