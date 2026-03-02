@@ -513,6 +513,57 @@ export type Database = {
           },
         ]
       }
+      solution_library: {
+        Row: {
+          category: string | null
+          code_snippet: string
+          created_at: string
+          description: string | null
+          error_type: string
+          id: string
+          is_generic: boolean | null
+          label: string | null
+          priority: string | null
+          success_rate: number | null
+          target_selector_context: string | null
+          technology_context: string | null
+          updated_at: string
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          code_snippet: string
+          created_at?: string
+          description?: string | null
+          error_type: string
+          id?: string
+          is_generic?: boolean | null
+          label?: string | null
+          priority?: string | null
+          success_rate?: number | null
+          target_selector_context?: string | null
+          technology_context?: string | null
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          code_snippet?: string
+          created_at?: string
+          description?: string | null
+          error_type?: string
+          id?: string
+          is_generic?: boolean | null
+          label?: string | null
+          priority?: string | null
+          success_rate?: number | null
+          target_selector_context?: string | null
+          technology_context?: string | null
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
       stripe_payments: {
         Row: {
           amount_cents: number
