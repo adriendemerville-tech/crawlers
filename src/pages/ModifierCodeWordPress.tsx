@@ -15,7 +15,7 @@ import {
 import heroImage from '@/assets/blog/wordpress-plugin-hero.webp';
 
 const SITE_URL = 'https://crawlers.fr';
-const PLUGIN_URL = 'https://tutlimtasnjabdfhpewu.supabase.co/storage/v1/object/public/plugins/crawlers-geo.zip';
+const PLUGIN_URL = `https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/download-plugin`;
 
 const SEO_META = {
   title: 'Comment modifier le code de son site WordPress facilement ? | Crawlers.fr',
