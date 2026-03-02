@@ -54,8 +54,8 @@ const priorityConfig = {
 };
 
 export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
-  // Filter only technical fixes (non-strategic)
-  const technicalFixes = fixes.filter(f => f.category !== 'strategic');
+  // Filter only technical fixes (non-strategic, non-generative)
+  const technicalFixes = fixes.filter(f => f.category !== 'strategic' && f.category !== 'generative');
   
   // Group by category
   const groupedFixes = technicalFixes.reduce((acc, fix) => {
@@ -125,6 +125,14 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                                 className="text-[9px] px-1 py-0 h-4 bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30"
                               >
                                 Recommandé
+                              </Badge>
+                            )}
+                            {fix.data?._source === 'action_plan' && (
+                              <Badge 
+                                variant="outline" 
+                                className="text-[9px] px-1 py-0 h-4 bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30"
+                              >
+                                Plan d'action
                               </Badge>
                             )}
                           </div>
