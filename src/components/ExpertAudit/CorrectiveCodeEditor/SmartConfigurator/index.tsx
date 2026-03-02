@@ -629,7 +629,7 @@ export function SmartConfigurator({
     }
   }, [isOpen]);
 
-  // Initialize fix configs when modal opens and check payment status
+   // Initialize fix configs when modal opens and check payment status
   // Only run the full init ONCE per open session to avoid wiping generatedCode
   useEffect(() => {
     if (!isOpen || hasInitializedRef.current) return;
@@ -664,6 +664,30 @@ export function SmartConfigurator({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  // Re-sync fixConfigs when availableFixes changes AFTER async data loads (action plans, registry)
+  // This ensures dynamic patches from action plans appear once fetched
+  const prevAvailableCountRef = useRef(0);
+  useEffect(() => {
+    if (!isOpen || !hasInitializedRef.current) return;
+    // Only update if new fixes appeared (async data loaded)
+    if (availableFixes.length > prevAvailableCountRef.current && !generatedCode) {
+      console.log(`[Architect] Re-syncing fixes: ${prevAvailableCountRef.current} → ${availableFixes.length}`);
+      setFixConfigs(prev => {
+        // Merge: keep user toggles for existing fixes, add new ones
+        const existingMap = new Map(prev.map(f => [f.id, f]));
+        return availableFixes.map(fix => {
+          const existing = existingMap.get(fix.id);
+          if (existing) {
+            // Preserve user's toggle state
+            return { ...fix, enabled: existing.enabled };
+          }
+          return fix;
+        });
+      });
+    }
+    prevAvailableCountRef.current = availableFixes.length;
+  }, [availableFixes, isOpen, generatedCode]);
 
   // Toggle a fix
   const toggleFix = useCallback((fixId: string) => {
