@@ -669,27 +669,7 @@ export function SmartConfigurator({
 
               {/* Right side actions */}
               <div className="flex items-center gap-3">
-                {/* Source badge */}
-                {generatedCode && codeSource && (
-                  <Badge 
-                    variant={codeSource === 'library' ? 'default' : codeSource === 'hybrid' ? 'secondary' : 'outline'}
-                    className={`text-[10px] gap-1 ${
-                      codeSource === 'library' 
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' 
-                        : codeSource === 'hybrid'
-                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                          : 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30'
-                    }`}
-                  >
-                    {codeSource === 'library' ? (
-                      <><Library className="w-3 h-3" /> Bibliothèque éprouvée</>
-                    ) : codeSource === 'hybrid' ? (
-                      <><Library className="w-3 h-3" /> Hybride ({libraryHits} réutilisés)</>
-                    ) : (
-                      <><Sparkles className="w-3 h-3" /> Nouvelle génération IA</>
-                    )}
-                  </Badge>
-                )}
+                {/* Source badge removed */}
 
                 {/* Copy + Save buttons - visible after unlock */}
                 {generatedCode && viewMode === 'code' && hasPaid && (
