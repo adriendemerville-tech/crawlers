@@ -662,9 +662,6 @@ export function ExpertAuditDashboard() {
           className="flex items-center justify-between mb-4"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-violet-500/10">
-              <Bot className="h-5 w-5 text-violet-500" />
-            </div>
             <Button
               variant="outline"
               onClick={handleNewAudit}
