@@ -23,10 +23,17 @@ interface TargetQuery {
   mentionsBrand?: boolean;
 }
 
+interface CoherenceCheck {
+  passed: boolean;
+  corrections: string[];
+  hallucinationSignals: string[];
+}
+
 interface GeneratedData {
   coreBusiness: string;
   marketLeader: string;
   queries: TargetQuery[];
+  coherenceCheck?: CoherenceCheck;
 }
 
 interface LLMTargetQueriesCardProps {
@@ -37,6 +44,8 @@ interface LLMTargetQueriesCardProps {
   onCorrection?: (correction: string) => void;
   /** If true, the card handles correction internally by re-generating queries with the correction context */
   selfCorrect?: boolean;
+  /** Strategic analysis data for cross-validation coherence check */
+  strategicAnalysis?: any;
 }
 
 const translations = {
@@ -93,7 +102,7 @@ const translations = {
   },
 };
 
-export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, compact = false, onCorrection, selfCorrect = false }: LLMTargetQueriesCardProps) {
+export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, compact = false, onCorrection, selfCorrect = false, strategicAnalysis }: LLMTargetQueriesCardProps) {
   const { language } = useLanguage();
   const t = translations[language as keyof typeof translations] || translations.fr;
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
@@ -128,6 +137,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
               recommends: c.recommends,
             })),
             lang: language,
+            strategicAnalysis: strategicAnalysis || undefined,
           },
         });
 
@@ -197,6 +207,20 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
           {[...Array(5)].map((_, i) => (
             <Skeleton key={i} className="h-16 w-full rounded-lg" />
           ))}
+        {/* Coherence check indicator */}
+        {data.coherenceCheck && !data.coherenceCheck.passed && (
+          <div className="flex items-start gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20">
+            <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+            <div className="text-xs text-muted-foreground">
+              <span className="font-medium text-warning">
+                {language === 'en' ? 'Coherence corrected' : language === 'es' ? 'Coherencia corregida' : 'Cohérence corrigée'}
+              </span>
+              {' — '}
+              {data.coherenceCheck.corrections?.slice(0, 2).join('. ') || 
+                (language === 'en' ? 'Queries adjusted to match strategic analysis.' : language === 'es' ? 'Consultas ajustadas al análisis estratégico.' : 'Requêtes ajustées pour correspondre à l\'analyse stratégique.')}
+            </div>
+          </div>
+        )}
         </CardContent>
       </Card>
     );

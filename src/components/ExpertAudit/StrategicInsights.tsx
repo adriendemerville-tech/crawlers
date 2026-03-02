@@ -184,6 +184,7 @@ export function StrategicInsights({
                   coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
                   citations={analysis.llm_visibility_raw.citations as any}
                   selfCorrect
+                  strategicAnalysis={analysis}
                 />
                 <PriorityContentCard domain={domain} />
               </>
