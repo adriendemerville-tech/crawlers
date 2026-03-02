@@ -91,6 +91,9 @@ export function SmartConfigurator({
   onPaymentVerified,
   activeSiteId = null,
 }: SmartConfiguratorProps) {
+  const [isPreloading, setIsPreloading] = useState(false);
+  const [registryRecommendations, setRegistryRecommendations] = useState<any[]>([]);
+  const [strategicRoadmap, setStrategicRoadmap] = useState<any[]>([]);
   const [fixConfigs, setFixConfigs] = useState<FixConfig[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>(initialCode ? 'code' : 'visual');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -168,9 +171,44 @@ export function SmartConfigurator({
     }
   }, [user, siteDomain]);
 
+  // Fetch audit intelligence: recommendations registry + strategic roadmap
+  const fetchAuditIntelligence = useCallback(async () => {
+    if (!user || !siteDomain) return;
+    setIsPreloading(true);
+    try {
+      // Parallel fetch: registry recommendations + extract roadmap from strategicResult
+      const [registryResult] = await Promise.all([
+        supabase
+          .from('audit_recommendations_registry')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('domain', siteDomain)
+          .order('created_at', { ascending: false })
+          .limit(50),
+      ]);
+
+      if (registryResult.data) {
+        setRegistryRecommendations(registryResult.data);
+      }
+
+      // Extract strategic roadmap from the strategicResult
+      const roadmap = strategicResult?.strategicAnalysis?.executive_roadmap || [];
+      setStrategicRoadmap(roadmap);
+
+      console.log(`[Architect] Preloaded ${registryResult.data?.length || 0} registry recommendations, ${roadmap.length} roadmap items for ${siteDomain}`);
+    } catch (err) {
+      console.error('[Architect] Error fetching audit intelligence:', err);
+    } finally {
+      setIsPreloading(false);
+    }
+  }, [user, siteDomain, strategicResult]);
+
   useEffect(() => {
-    if (isOpen) fetchWpSiteData();
-  }, [isOpen, fetchWpSiteData]);
+    if (isOpen) {
+      fetchWpSiteData();
+      fetchAuditIntelligence();
+    }
+  }, [isOpen, fetchWpSiteData, fetchAuditIntelligence]);
 
   // Generate fix configurations from audit results
   const availableFixes = useMemo(() => {
@@ -322,26 +360,112 @@ export function SmartConfigurator({
       });
     }
 
-    // Strategic fixes (from STRATEGIC_FIXES) - disabled by default
+    // ═══ DYNAMIC PRE-SELECTION FROM AUDIT INTELLIGENCE ═══
+    // Map registry recommendation IDs to fix IDs
+    const registryFixMapping: Record<string, string[]> = {
+      'title_optimization': ['fix_title'],
+      'meta_description': ['fix_meta_desc'],
+      'h1_optimization': ['fix_h1'],
+      'json_ld': ['fix_jsonld'],
+      'schema_org': ['fix_jsonld'],
+      'lazy_loading': ['fix_lazy_images'],
+      'https_redirect': ['fix_https_redirect'],
+      'alt_images': ['fix_alt_images'],
+      'contrast': ['fix_contrast'],
+      'gtm': ['fix_gtm'],
+      'ga4': ['fix_ga4'],
+    };
+
+    // Collect unresolved registry recommendation IDs
+    const unresolvedRecIds = new Set(
+      registryRecommendations
+        .filter(r => !r.is_resolved)
+        .flatMap(r => {
+          const mapped = Object.entries(registryFixMapping)
+            .filter(([key]) => r.recommendation_id?.includes(key) || r.title?.toLowerCase().includes(key) || r.category?.toLowerCase().includes(key))
+            .flatMap(([, fixIds]) => fixIds);
+          return mapped;
+        })
+    );
+
+    // Determine which strategic fixes to pre-enable based on roadmap
+    const roadmapCategories = new Set(strategicRoadmap.map((item: any) => item.category?.toLowerCase()));
+    const roadmapActions = strategicRoadmap.map((item: any) => (item.prescriptive_action || item.action_concrete || '').toLowerCase()).join(' ');
+
+    const strategicPreEnableMap: Record<string, () => boolean> = {
+      inject_faq: () => roadmapActions.includes('faq') || roadmapActions.includes('questions fréquentes'),
+      inject_blog_section: () => roadmapActions.includes('blog') || roadmapActions.includes('éditorial') || roadmapActions.includes('contenu') || roadmapCategories.has('contenu'),
+      enhance_semantic_meta: () => roadmapActions.includes('meta') || roadmapActions.includes('sémantique') || roadmapActions.includes('open graph'),
+      inject_breadcrumbs: () => roadmapActions.includes('breadcrumb') || roadmapActions.includes('fil d\'ariane'),
+      inject_local_business: () => roadmapActions.includes('local') || roadmapActions.includes('localbusiness') || roadmapActions.includes('géolocalisation'),
+    };
+
+    const generativePreEnableMap: Record<string, () => boolean> = {
+      fix_missing_blog: () => roadmapActions.includes('blog') || roadmapActions.includes('actualités'),
+      fix_semantic_injection: () => roadmapActions.includes('sémantique') || roadmapActions.includes('autorité') || roadmapCategories.has('autorité'),
+      fix_robot_context: () => roadmapActions.includes('hallucination') || roadmapActions.includes('llm') || roadmapActions.includes('entité') || roadmapCategories.has('identité'),
+      fix_pagespeed_suite: () => roadmapActions.includes('performance') || roadmapActions.includes('pagespeed') || roadmapActions.includes('cls') || roadmapActions.includes('lcp'),
+    };
+
+    // Build strategic fix prompt data from roadmap
+    const buildStrategicFixData = (fixId: string): Record<string, any> => {
+      const data: Record<string, any> = {};
+      const relevantRoadmap = strategicRoadmap.filter((item: any) => {
+        const action = (item.prescriptive_action || item.action_concrete || '').toLowerCase();
+        if (fixId === 'inject_faq') return action.includes('faq') || action.includes('questions');
+        if (fixId === 'inject_blog_section') return action.includes('blog') || action.includes('contenu') || action.includes('éditorial');
+        if (fixId === 'enhance_semantic_meta') return action.includes('meta') || action.includes('sémantique');
+        if (fixId === 'inject_local_business') return action.includes('local');
+        return false;
+      });
+
+      if (relevantRoadmap.length > 0) {
+        data._roadmapContext = relevantRoadmap.map((item: any) => item.prescriptive_action || item.action_concrete).join('\n');
+        data._strategicRationale = relevantRoadmap.map((item: any) => item.strategic_rationale || item.strategic_goal).join('\n');
+      }
+
+      // Pre-fill from keyword positioning
+      const kp = strategicResult?.strategicAnalysis?.keyword_positioning;
+      if (kp && fixId === 'inject_blog_section') {
+        data.keywords = kp.main_keywords?.slice(0, 5).map((k: any) => k.keyword) || [];
+        if (kp.content_gaps?.length) {
+          data.topic = kp.content_gaps[0].keyword;
+        }
+      }
+
+      return data;
+    };
+
+    // Strategic fixes (from STRATEGIC_FIXES) - now dynamically enabled from roadmap
     Object.values(STRATEGIC_FIXES).forEach(strategicFix => {
+      const shouldEnable = strategicPreEnableMap[strategicFix.id]?.() || false;
       fixes.push({
         ...strategicFix,
-        enabled: false, // Strategic fixes are disabled by default
-        data: {},
+        enabled: shouldEnable,
+        isRecommended: shouldEnable,
+        data: shouldEnable ? buildStrategicFixData(strategicFix.id) : {},
       });
     });
 
-    // Generative Super-Capacities (from GENERATIVE_FIXES) - disabled by default
+    // Generative Super-Capacities (from GENERATIVE_FIXES) - dynamically enabled from roadmap
     Object.values(GENERATIVE_FIXES).forEach(generativeFix => {
+      const shouldEnable = generativePreEnableMap[generativeFix.id]?.() || false;
       fixes.push({
         ...generativeFix,
-        enabled: false, // Generative fixes are disabled by default
-        data: {},
+        enabled: shouldEnable,
+        isRecommended: shouldEnable,
+        data: shouldEnable ? buildStrategicFixData(generativeFix.id) : {},
       });
     });
 
-    return fixes;
-  }, [technicalResult, strategicResult, siteName, siteUrl, hallucinationData]);
+    // Also pre-enable technical fixes that match unresolved registry recommendations
+    return fixes.map(fix => {
+      if (unresolvedRecIds.has(fix.id) && !fix.enabled) {
+        return { ...fix, enabled: true, isRecommended: true };
+      }
+      return fix;
+    });
+  }, [technicalResult, strategicResult, siteName, siteUrl, hallucinationData, registryRecommendations, strategicRoadmap]);
 
   // Track whether we already initialized for this "open" session
   const hasInitializedRef = useRef(false);
@@ -426,12 +550,18 @@ export function SmartConfigurator({
     setViewMode('code');
 
     try {
+      // Build roadmap context for prompt enrichment
+      const roadmapContext = strategicRoadmap.length > 0
+        ? strategicRoadmap.map((item: any) => `[${item.category || ''}] ${item.title || ''}: ${item.prescriptive_action || item.action_concrete || ''}`).join('\n')
+        : undefined;
+
       const { data, error } = await supabase.functions.invoke('generate-corrective-code', {
         body: {
           fixes: fixConfigs,
           siteName,
           siteUrl,
           language,
+          roadmapContext,
         },
       });
 
@@ -714,6 +844,22 @@ export function SmartConfigurator({
             {siteUrl}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Preloading overlay */}
+        {isPreloading && (
+          <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
+            >
+              <Sparkles className="w-8 h-8 text-violet-500" />
+            </motion.div>
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium text-foreground">Préparation intelligente</p>
+              <p className="text-xs text-muted-foreground">Analyse du plan d'action et de la roadmap stratégique…</p>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-hidden grid grid-cols-12 h-full">
           {/* Left Column: Configurator */}
