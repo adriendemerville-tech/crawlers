@@ -8,7 +8,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { 
-  Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2,
+  Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2, RotateCcw,
   Download, Link2, AlertCircle, Plug
 } from 'lucide-react';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
@@ -881,8 +881,8 @@ export function SmartConfigurator({
                     variant="outline"
                     className="gap-1.5 text-xs h-8 px-3"
                   >
-                    <Wrench className="w-3 h-3" />
-                    Modifier les patchs
+                    <RotateCcw className="w-3 h-3" />
+                    Modifier
                   </Button>
                 ) : (
                   <Button
