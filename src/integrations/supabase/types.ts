@@ -826,10 +826,16 @@ export type Database = {
         }
         Returns: boolean
       }
-      use_credit: {
-        Args: { p_description?: string; p_user_id: string }
-        Returns: Json
-      }
+      use_credit:
+        | { Args: { p_description?: string; p_user_id: string }; Returns: Json }
+        | {
+            Args: {
+              p_amount?: number
+              p_description?: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
