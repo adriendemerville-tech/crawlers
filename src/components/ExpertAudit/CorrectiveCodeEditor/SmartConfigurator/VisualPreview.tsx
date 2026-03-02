@@ -3,6 +3,7 @@ import { FileText, Quote, Navigation, MapPin, ExternalLink, Loader2, RefreshCw }
 import { FixConfig } from './types';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VisualPreviewProps {
   fixes: FixConfig[];
@@ -220,12 +221,10 @@ const MAX_RETRY_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 2000;
 
 export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
-  const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [proxiedHtml, setProxiedHtml] = useState<string | null>(null);
+  const [proxyLoading, setProxyLoading] = useState(false);
+  const [proxyError, setProxyError] = useState<string | null>(null);
   const [iframeKey, setIframeKey] = useState(0);
-  const [isReloading, setIsReloading] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Generate a hash of enabled fixes to detect changes
   const enabledFixesHash = useMemo(() => {
@@ -241,144 +240,85 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
     return generatePreviewScript(fixes);
   }, [fixes]);
 
-  // Cleanup retry timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
-      }
-    };
-  }, []);
+  // Fetch site via proxy
+  const fetchViaProxy = useCallback(async (url: string) => {
+    setProxyLoading(true);
+    setProxyError(null);
+    setProxiedHtml(null);
 
-  // Reset retry state when URL changes
-  useEffect(() => {
-    setRetryCount(0);
-    setLoadFailed(false);
-    setIframeLoaded(false);
-    setIframeKey(prev => prev + 1);
-  }, [siteUrl]);
-
-  // Force reload when fixes change
-  useEffect(() => {
-    if (siteUrl && iframeLoaded) {
-      setIsReloading(true);
-      setIframeLoaded(false);
-      setRetryCount(0);
-      setLoadFailed(false);
-      // Small delay to show loading state
-      const timer = setTimeout(() => {
-        setIframeKey(prev => prev + 1);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [enabledFixesHash, siteUrl]);
-
-  // Auto-retry logic when load fails
-  const triggerRetry = useCallback(() => {
-    if (retryCount < MAX_RETRY_ATTEMPTS) {
-      console.log(`[Architecte] Retrying preview load (attempt ${retryCount + 1}/${MAX_RETRY_ATTEMPTS})...`);
-      setIsReloading(true);
-      retryTimeoutRef.current = setTimeout(() => {
-        setRetryCount(prev => prev + 1);
-        setIframeKey(prev => prev + 1);
-      }, RETRY_DELAY_MS);
-    } else {
-      console.log('[Architecte] Max retry attempts reached');
-      setLoadFailed(true);
-      setIsReloading(false);
-    }
-  }, [retryCount]);
-
-  // Handle iframe load and inject script
-  const handleIframeLoad = useCallback((e: React.SyntheticEvent<HTMLIFrameElement>) => {
     try {
-      const iframe = e.currentTarget;
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      
-      if (iframeDoc) {
-        // Check if the document has meaningful content (not blocked by X-Frame-Options)
-        const bodyText = iframeDoc.body?.innerText?.trim() || '';
-        const bodyHTML = iframeDoc.body?.innerHTML?.trim() || '';
-        
-        if (bodyHTML.length < 10 && !iframeDoc.title) {
-          // Empty document likely means X-Frame-Options blocked it
-          console.log('[Architecte] Site blocked by X-Frame-Options or CSP');
-          setIframeLoaded(true);
-          setIsReloading(false);
-          setLoadFailed(true);
-          return;
-        }
-        
-        setIframeLoaded(true);
-        setIsReloading(false);
-        setLoadFailed(false);
-        
-        if (previewScript) {
-          const script = iframeDoc.createElement('script');
-          script.textContent = previewScript;
-          iframeDoc.body.appendChild(script);
-          console.log('[Architecte] Preview script injected successfully');
+      const { data, error } = await supabase.functions.invoke('fetch-external-site', {
+        body: { url },
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Erreur du proxy');
+      }
+
+      // If the response is JSON with an error field
+      if (typeof data === 'object' && data?.error) {
+        throw new Error(data.error);
+      }
+
+      // data is the raw HTML string
+      let html = typeof data === 'string' ? data : '';
+      if (!html || html.length < 50) {
+        throw new Error('Le proxy a retourné un contenu vide.');
+      }
+
+      // Inject our preview script before </body>
+      if (previewScript) {
+        const scriptTag = `<script>${previewScript}<\/script>`;
+        if (/<\/body>/i.test(html)) {
+          html = html.replace(/<\/body>/i, `${scriptTag}\n</body>`);
+        } else {
+          html += scriptTag;
         }
       }
-    } catch (err) {
-      // Cross-origin restriction — the site loaded but we can't access the DOM
-      // This is the normal case for most external sites — show visual-only preview
-      setIframeLoaded(true);
-      setIsReloading(false);
-      setLoadFailed(false);
-      console.log('[Architecte] Cross-origin site loaded. Visual preview only.');
+
+      setProxiedHtml(html);
+    } catch (err: any) {
+      console.error('[VisualPreview] Proxy error:', err);
+      setProxyError(err.message || 'Impossible de charger le site via le proxy.');
+    } finally {
+      setProxyLoading(false);
     }
   }, [previewScript]);
 
-  // Handle iframe error
-  const handleIframeError = useCallback(() => {
-    console.log('[Architecte] Iframe load error detected');
-    setIframeLoaded(false);
-    triggerRetry();
-  }, [triggerRetry]);
+  // Fetch when URL changes
+  useEffect(() => {
+    if (siteUrl) {
+      fetchViaProxy(siteUrl);
+    } else {
+      setProxiedHtml(null);
+      setProxyError(null);
+    }
+  }, [siteUrl]);
 
-  // Manual reload function
-  const handleManualReload = useCallback(() => {
-    setIsReloading(true);
-    setIframeLoaded(false);
-    setRetryCount(0);
-    setLoadFailed(false);
-    setIframeKey(prev => prev + 1);
-  }, []);
-  
-  const enabledStrategicFixes = fixes.filter(f => f.enabled && f.category === 'strategic');
-  
-  const hasFAQ = enabledStrategicFixes.some(f => f.id === 'inject_faq');
-  const hasSemantic = enabledStrategicFixes.some(f => f.id === 'enhance_semantic_meta');
-  const hasBreadcrumbs = enabledStrategicFixes.some(f => f.id === 'inject_breadcrumbs');
-  const hasLocalBusiness = enabledStrategicFixes.some(f => f.id === 'inject_local_business');
+  // Re-fetch when fixes change (to re-inject script)
+  useEffect(() => {
+    if (siteUrl && proxiedHtml) {
+      fetchViaProxy(siteUrl);
+    }
+  }, [enabledFixesHash]);
 
-  const semanticFix = fixes.find(f => f.id === 'enhance_semantic_meta');
-  const localBusinessFix = fixes.find(f => f.id === 'inject_local_business');
-
-  const semanticParagraph = semanticFix?.data?.injectedParagraph || 'Votre paragraphe sémantique apparaîtra ici avec les mots-clés optimisés...';
-  const businessName = localBusinessFix?.data?.name || 'Votre Entreprise';
-
-  const enabledCount = fixes.filter(f => f.enabled).length;
-
-  // Si on a une URL, afficher l'iframe du site cible
+  // If we have a URL, show the proxy-based iframe
   if (siteUrl) {
     return (
       <div className="h-full flex flex-col">
-        {/* Iframe Container - no header */}
         <div className="flex-1 relative bg-background p-3">
-          {(!iframeLoaded || isReloading) && !loadFailed && (
+          {proxyLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/20 z-10">
               <div className="flex flex-col items-center gap-2">
                 <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 <span className="text-xs text-muted-foreground">
-                  {isReloading ? 'Application des correctifs...' : retryCount > 0 ? `Nouvelle tentative (${retryCount}/${MAX_RETRY_ATTEMPTS})...` : 'Chargement du site...'}
+                  Chargement du site via le proxy...
                 </span>
               </div>
             </div>
           )}
           
-          {loadFailed && (
+          {proxyError && (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/20 z-10">
               <div className="flex flex-col items-center gap-3 text-center p-4">
                 <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
@@ -387,14 +327,17 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
                 <div>
                   <p className="text-sm font-medium text-foreground">Aperçu indisponible</p>
                   <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-                    Ce site bloque l'intégration dans une iframe (X-Frame-Options). C'est normal — les correctifs seront tout de même appliqués via le plugin WordPress.
+                    {proxyError}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                    Les correctifs seront tout de même appliqués via le plugin WordPress.
                   </p>
                 </div>
                 <div className="flex gap-2 mt-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleManualReload}
+                    onClick={() => fetchViaProxy(siteUrl)}
                   >
                     <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
                     Réessayer
@@ -412,15 +355,15 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
             </div>
           )}
           
-          <iframe
-            key={iframeKey}
-            src={siteUrl}
-            className="w-full h-full border-0 rounded-lg"
-            title="Site Preview"
-            sandbox="allow-scripts allow-same-origin"
-            onLoad={handleIframeLoad}
-            onError={handleIframeError}
-          />
+          {proxiedHtml && !proxyLoading && (
+            <iframe
+              key={iframeKey}
+              srcDoc={proxiedHtml}
+              className="w-full h-full border-0 rounded-lg"
+              title="Site Preview"
+              sandbox="allow-scripts allow-same-origin"
+            />
+          )}
         </div>
         
         {/* Attribution Footer */}
@@ -438,6 +381,16 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
       </div>
     );
   }
+
+  const enabledStrategicFixes = fixes.filter(f => f.enabled && f.category === 'strategic');
+  const hasFAQ = enabledStrategicFixes.some(f => f.id === 'inject_faq');
+  const hasSemantic = enabledStrategicFixes.some(f => f.id === 'enhance_semantic_meta');
+  const hasBreadcrumbs = enabledStrategicFixes.some(f => f.id === 'inject_breadcrumbs');
+  const hasLocalBusiness = enabledStrategicFixes.some(f => f.id === 'inject_local_business');
+  const semanticFix = fixes.find(f => f.id === 'enhance_semantic_meta');
+  const localBusinessFix = fixes.find(f => f.id === 'inject_local_business');
+  const semanticParagraph = semanticFix?.data?.injectedParagraph || 'Votre paragraphe sémantique apparaîtra ici avec les mots-clés optimisés...';
+  const businessName = localBusinessFix?.data?.name || 'Votre Entreprise';
 
   const noPreview = !hasFAQ && !hasSemantic && !hasBreadcrumbs && !hasLocalBusiness;
 
