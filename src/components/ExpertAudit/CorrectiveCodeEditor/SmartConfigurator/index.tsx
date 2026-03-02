@@ -586,7 +586,11 @@ export function SmartConfigurator({
 
     const isConfigured = await checkWordPressConfig();
     if (!isConfigured) {
-      setShowWpConfigModal(true);
+      toast({
+        title: 'Connexion WordPress requise',
+        description: 'Rendez-vous dans Console → Mes sites → WordPress pour configurer l\'intégration avant d\'injecter le code.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -647,31 +651,23 @@ export function SmartConfigurator({
   // Base: 3€ minimum (all basic fixes included), 12€ maximum
   // ONLY Strategic and Generative fixes increase the price
   const calculatedPrice = useMemo(() => {
-    const MIN_PRICE = 3;
+    const MIN_PRICE = 2;
     const MAX_PRICE = 12;
-    const PRICE_RANGE = MAX_PRICE - MIN_PRICE; // 9€ range
     
-    // Only count strategic and generative fixes for pricing
+    // Technical/basic fixes: each enabled one adds 0.30€
+    const technicalFixes = fixConfigs.filter(f => !['strategic', 'generative'].includes(f.category));
+    const enabledTechnical = technicalFixes.filter(f => f.enabled).length;
+    const technicalContrib = enabledTechnical * 0.30;
+    
+    // Strategic and generative fixes: each adds more
     const strategicFixes = fixConfigs.filter(f => f.category === 'strategic');
     const generativeFixes = fixConfigs.filter(f => f.category === 'generative');
-    
     const enabledStrategic = strategicFixes.filter(f => f.enabled).length;
     const enabledGenerative = generativeFixes.filter(f => f.enabled).length;
+    const advancedContrib = (enabledStrategic * 0.80) + (enabledGenerative * 1.00);
     
-    const totalAdvanced = strategicFixes.length + generativeFixes.length;
-    if (totalAdvanced === 0) return MIN_PRICE;
-    
-    // Calculate percentage of advanced fixes enabled
-    const advancedPercent = (enabledStrategic + enabledGenerative) / totalAdvanced;
-    
-    // Price = 3€ base + up to 9€ for advanced features
-    const rawPrice = MIN_PRICE + (PRICE_RANGE * advancedPercent);
-    
-    // Dynamic increment based on total advanced fixes
-    const dynamicIncrement = PRICE_RANGE / totalAdvanced;
-    const increment = Math.max(0.10, dynamicIncrement);
-    
-    return Math.round(rawPrice / increment) * increment;
+    const rawPrice = MIN_PRICE + technicalContrib + advancedContrib;
+    return Math.min(MAX_PRICE, Math.max(MIN_PRICE, Math.round(rawPrice * 100) / 100));
   }, [fixConfigs]);
 
   return (
@@ -810,7 +806,7 @@ export function SmartConfigurator({
                         <Copy className="w-3.5 h-3.5" />
                       )}
                     </Button>
-                    {/* Apply to WordPress button */}
+                    {/* Inject to WordPress button */}
                     <Button
                       onClick={handleApplyToWordPress}
                       disabled={isApplying || applySuccess}
@@ -820,31 +816,31 @@ export function SmartConfigurator({
                       {isApplying ? (
                         <>
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          Application...
+                          Injection...
                         </>
                       ) : applySuccess ? (
                         <>
                           <Check className="w-3 h-3" />
-                          Appliqué !
+                          Injecté !
                         </>
                       ) : (
                         <>
-                          <Upload className="w-3 h-3" />
-                          Appliquer les modifications
+                          <Zap className="w-3 h-3" />
+                          Injecter
                         </>
                       )}
                     </Button>
                   </>
                 )}
 
-                {/* Dynamic Price in Credits */}
+                {/* Dynamic Price in Credits - updates based on enabled fixes */}
                 <motion.span 
-                  key={calculatedPrice}
+                  key={`${calculatedPrice}-${enabledCount}`}
                   initial={{ scale: 1.1, opacity: 0.7 }}
                   animate={{ scale: 1, opacity: 1 }}
                   className="text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums flex items-center gap-1"
                 >
-                  {(calculatedPrice * 2).toFixed(0)}
+                  {Math.max(1, Math.round(calculatedPrice / 0.5))}
                   <CreditCoin size="sm" />
                 </motion.span>
 
