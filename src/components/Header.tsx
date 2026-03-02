@@ -366,12 +366,6 @@ export function Header() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/console?tab=identity" className="gap-2 cursor-pointer">
-                        <User className="h-4 w-4" />
-                        {t.identity}
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
                       <Link to="/console?tab=settings" className="gap-2 cursor-pointer">
                         <Settings className="h-4 w-4" />
                         {t.settings}
