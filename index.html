@@ -75,9 +75,19 @@
     
     <!-- Critical CSS for above-the-fold (LCP optimization) - INLINED, minimal -->
     <style>
+      /* Font-display swap to prevent invisible text during load */
+      @font-face{font-family:'Inter Variable';font-style:normal;font-display:swap;font-weight:100 900;src:local('Inter Variable'),local('Inter')}
+
+
       *,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:hsl(214 32% 91%)}
       html{line-height:1.5;-webkit-text-size-adjust:100%;font-family:'Inter Variable',Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-      body{margin:0;line-height:inherit;background-color:hsl(210 20% 98%);color:hsl(222 47% 11%)}
+      body{margin:0;line-height:inherit;background-color:hsl(210 20% 98%);color:hsl(222 47% 11%);opacity:0}
+      body.ready{opacity:1;transition:opacity 200ms ease-out}
+
+      /* Skeleton pulse for CLS prevention */
+      .skeleton-block{background:hsl(210 40% 94%);border-radius:0.5rem;animation:skeleton-pulse 1.5s ease-in-out infinite}
+      @keyframes skeleton-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
       h1,h2,h3,h4,p{margin:0}
       a{color:inherit;text-decoration:inherit}
       button,input{font-family:inherit;font-size:100%;font-weight:inherit;line-height:inherit;margin:0;padding:0;color:inherit}
@@ -139,6 +149,14 @@
       @keyframes spin{to{transform:rotate(360deg)}}
       .animate-spin{animation:spin 1s linear infinite}
     </style>
+
+    <!-- Reveal body after React hydrates or after timeout safety net -->
+    <script>
+      // Mark body ready once React mounts (main.tsx will call this)
+      window.__markReady = function() { document.body.classList.add('ready'); };
+      // Safety net: reveal after 1.5s even if JS is slow
+      setTimeout(function() { document.body.classList.add('ready'); }, 1500);
+    </script>
     
     <!-- JSON-LD structured data is injected dynamically via useStructuredData hook to reduce HTML payload -->
     
@@ -157,15 +175,26 @@
   </head>
   <body>
     <div id="root">
-      <div style="font-family: system-ui, sans-serif; text-align: center; padding: 50px; color: #1e293b;">
-        <h1>Audit SEO & GEO en cours...</h1>
-        <p>Crawlers.fr analyse la compatibilité de votre site avec Google et les IA (ChatGPT, Gemini).</p>
-        <p>Chargement de l'interface expert...</p>
-        <noscript>
-          <p style="color: #ef4444; font-weight: bold;">Attention : JavaScript est requis pour lancer l'audit technique complet.</p>
-          <a href="/sitemap.xml">Voir le plan du site</a>
-        </noscript>
+      <!-- Static placeholder matching real layout to prevent CLS -->
+      <div style="min-height:100vh;background:hsl(210 20% 98%)">
+        <!-- Header skeleton -->
+        <div style="height:3.5rem;border-bottom:1px solid hsl(214 32% 91%);display:flex;align-items:center;padding:0 1rem">
+          <div class="skeleton-block" style="width:120px;height:24px"></div>
+        </div>
+        <!-- Hero skeleton -->
+        <div style="max-width:56rem;margin:3rem auto;padding:0 1rem;text-align:center">
+          <div class="skeleton-block" style="height:2.5rem;width:80%;margin:0 auto 1rem"></div>
+          <div class="skeleton-block" style="height:1.25rem;width:60%;margin:0 auto 2rem"></div>
+          <div class="skeleton-block" style="height:3rem;width:100%;max-width:32rem;margin:0 auto;border-radius:0.5rem"></div>
+        </div>
       </div>
+      <noscript>
+        <div style="padding:50px;text-align:center;color:#1e293b;font-family:system-ui,sans-serif">
+          <h1>Audit SEO & GEO</h1>
+          <p style="color:#ef4444;font-weight:bold">JavaScript est requis pour lancer l'audit technique complet.</p>
+          <a href="/sitemap.xml">Voir le plan du site</a>
+        </div>
+      </noscript>
     </div>
     <script type="module" src="/src/main.tsx"></script>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TDGHZZ49"
