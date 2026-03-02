@@ -8,7 +8,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { 
-  Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library
+  Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -99,6 +99,8 @@ export function SmartConfigurator({
   const [libraryHits, setLibraryHits] = useState(0);
   const [isArchiving, setIsArchiving] = useState(false);
   const [isArchived, setIsArchived] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [applySuccess, setApplySuccess] = useState(false);
   
   const { language } = useLanguage();
   const { toast } = useToast();
@@ -485,6 +487,46 @@ export function SmartConfigurator({
     }
   }, [generatedCode, fixConfigs, siteName, siteUrl]);
 
+  // Apply modifications to WordPress via update-config
+  const handleApplyToWordPress = useCallback(async () => {
+    if (!generatedCode || !user) return;
+    setIsApplying(true);
+    setApplySuccess(false);
+    try {
+      const domain = siteDomain;
+      
+      // Extract JSON-LD and meta tags from the generated code
+      const jsonLdMatch = generatedCode.match(/application\/ld\+json['"]\s*>\s*([\s\S]*?)<\/script>/i);
+      let jsonLd = null;
+      if (jsonLdMatch?.[1]) {
+        try { jsonLd = JSON.parse(jsonLdMatch[1].trim()); } catch { jsonLd = jsonLdMatch[1].trim(); }
+      }
+
+      const { data, error } = await supabase.functions.invoke('update-config', {
+        body: {
+          domain,
+          json_ld: jsonLd,
+          meta_tags: { raw: generatedCode },
+          corrective_script: generatedCode,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.success) {
+        setApplySuccess(true);
+        sonnerToast.success('✅ Configuration mise à jour ! Le site WordPress sera synchronisé automatiquement via le plugin.');
+        setTimeout(() => setApplySuccess(false), 5000);
+      } else {
+        throw new Error(data?.error || 'Erreur');
+      }
+    } catch (error) {
+      console.error('Error applying config:', error);
+      sonnerToast.error('Erreur lors de l\'application des modifications');
+    } finally {
+      setIsApplying(false);
+    }
+  }, [generatedCode, user, siteDomain]);
+
   const enabledCount = fixConfigs.filter(f => f.enabled).length;
   const technicalCount = fixConfigs.filter(f => f.enabled && !['strategic', 'generative'].includes(f.category)).length;
   const strategicCount = fixConfigs.filter(f => f.enabled && f.category === 'strategic').length;
@@ -674,6 +716,30 @@ export function SmartConfigurator({
                         <Check className="w-3.5 h-3.5 text-emerald-500" />
                       ) : (
                         <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </Button>
+                    {/* Apply to WordPress button */}
+                    <Button
+                      onClick={handleApplyToWordPress}
+                      disabled={isApplying || applySuccess}
+                      size="sm"
+                      className="gap-1.5 bg-violet-600 hover:bg-violet-700 text-white border-0 text-xs h-8"
+                    >
+                      {isApplying ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Application...
+                        </>
+                      ) : applySuccess ? (
+                        <>
+                          <Check className="w-3 h-3" />
+                          Appliqué !
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-3 h-3" />
+                          Appliquer les modifications
+                        </>
                       )}
                     </Button>
                   </>

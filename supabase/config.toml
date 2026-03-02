@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.wpsync]
 verify_jwt = false
+
+[functions.update-config]
+verify_jwt = false
