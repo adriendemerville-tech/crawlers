@@ -346,8 +346,8 @@ export function MyTracking() {
   };
   const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
 
-  const chartData = currentStats.map(entry => ({
-    date: new Date(entry.recorded_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' }),
+  const chartData = currentStats.map((entry, idx) => ({
+    date: language === 'fr' ? `Jour ${idx + 1}` : language === 'es' ? `Día ${idx + 1}` : `Day ${idx + 1}`,
     seo: entry.seo_score || 0,
     geo: entry.geo_score || 0,
     citation: entry.llm_citation_rate || 0,
@@ -567,9 +567,9 @@ export function MyTracking() {
                       <CardContent>
                         <div className="h-64">
                           <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={chartData}>
+                            <LineChart data={chartData} margin={{ left: 0, right: 30 }}>
                               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                              <XAxis dataKey="date" className="text-xs" />
+                              <XAxis dataKey="date" className="text-xs" interval={0} padding={{ left: 20, right: 20 }} />
                               <YAxis className="text-xs" />
                               <Tooltip />
                               <Legend />
