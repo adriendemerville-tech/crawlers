@@ -8,8 +8,10 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Separator } from '@/components/ui/separator';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { 
-  Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2
+  Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2,
+  Download, Link2, AlertCircle, Plug
 } from 'lucide-react';
+import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
@@ -105,6 +107,8 @@ export function SmartConfigurator({
   const [isApplying, setIsApplying] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
   const [showWpConfigModal, setShowWpConfigModal] = useState(false);
+  const [wpSiteData, setWpSiteData] = useState<{ id: string; domain: string; apiKey: string; hasConfig: boolean } | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const { language } = useLanguage();
   const { toast } = useToast();
@@ -142,6 +146,31 @@ export function SmartConfigurator({
       setIsCheckingPayment(false);
     }
   }, [siteUrl, siteDomain]);
+
+  // Fetch tracked site data for WP install section
+  const fetchWpSiteData = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('tracked_sites')
+      .select('id, domain, api_key, current_config')
+      .eq('user_id', user.id)
+      .eq('domain', siteDomain)
+      .maybeSingle();
+    if (data) {
+      setWpSiteData({
+        id: data.id,
+        domain: data.domain,
+        apiKey: data.api_key,
+        hasConfig: isSiteSynced(data.current_config as Record<string, unknown>),
+      });
+    } else {
+      setWpSiteData(null);
+    }
+  }, [user, siteDomain]);
+
+  useEffect(() => {
+    if (isOpen) fetchWpSiteData();
+  }, [isOpen, fetchWpSiteData]);
 
   // Generate fix configurations from audit results
   const availableFixes = useMemo(() => {
@@ -887,6 +916,101 @@ export function SmartConfigurator({
                 </div>
               )}
             </div>
+
+            {/* WordPress Install Section - visible after code generation */}
+            {viewMode === 'code' && generatedCode && hasPaid && (
+              <div className="flex-shrink-0 border-t px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Plug className="h-3.5 w-3.5" />
+                    <span className="font-medium">
+                      {language === 'fr' ? 'Installer sur mon site' : 'Install on my site'}
+                    </span>
+                    {wpSiteData && !wpSiteData.hasConfig && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] font-medium">
+                        <AlertCircle className="h-2.5 w-2.5" />
+                        {language === 'fr' ? 'Installation requise' : 'Setup required'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 text-xs h-7 relative"
+                      onClick={() => handleWPIntegration('download', {
+                        siteId: wpSiteData?.id || '',
+                        domain: siteDomain,
+                        apiKey: wpSiteData?.apiKey,
+                        userId: user?.id,
+                        language,
+                      })}
+                    >
+                      <Download className="h-3 w-3" />
+                      Plugin
+                      {wpSiteData && !wpSiteData.hasConfig && (
+                        <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-orange-500" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 text-xs h-7"
+                      disabled={isSyncing}
+                      onClick={async () => {
+                        if (!wpSiteData) {
+                          sonnerToast.error(
+                            language === 'fr'
+                              ? 'Site non trouvé dans "Mes sites". Ajoutez-le d\'abord.'
+                              : 'Site not found in "My Sites". Add it first.',
+                          );
+                          return;
+                        }
+                        setIsSyncing(true);
+                        await handleWPIntegration('sync', {
+                          siteId: wpSiteData.id,
+                          domain: siteDomain,
+                          userId: user?.id,
+                          language,
+                        });
+                        await fetchWpSiteData();
+                        setIsSyncing(false);
+                      }}
+                    >
+                      {isSyncing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                      {language === 'fr' ? 'Synchroniser' : 'Sync'}
+                    </Button>
+                    {!wpSiteData?.hasConfig && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1.5 text-xs h-7 text-orange-600 dark:text-orange-400"
+                        onClick={() => {
+                          if (wpSiteData) {
+                            handleWPIntegration('magic_link', {
+                              siteId: wpSiteData.id,
+                              domain: siteDomain,
+                              apiKey: wpSiteData.apiKey,
+                              userId: user?.id,
+                              language,
+                            });
+                          } else {
+                            sonnerToast.info(
+                              language === 'fr'
+                                ? 'Ajoutez d\'abord ce site dans Console → Mes sites'
+                                : 'First add this site in Console → My Sites',
+                            );
+                          }
+                        }}
+                      >
+                        <Link2 className="h-3 w-3" />
+                        {language === 'fr' ? 'Auto-configuration' : 'Auto-configure'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Security Zone - fixed at bottom, only visible in code view */}
             {viewMode === 'code' && (

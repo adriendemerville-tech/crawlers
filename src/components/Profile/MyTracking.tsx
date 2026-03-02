@@ -6,7 +6,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Download, Link2, MoreVertical, AlertCircle } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -453,20 +455,74 @@ export function MyTracking() {
                       <Button variant="ghost" size="sm" onClick={() => handleRemoveSite(currentSite.id)} className="text-destructive hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="gap-1.5"
-                        onClick={() => {
-                          setWpConnectSiteId(currentSite.id);
-                          setShowWpModal(true);
-                          setWpApiKeyVisible(false);
-                          setWpApiKeyCopied(false);
-                        }}
-                      >
-                        <Plug className="h-3.5 w-3.5" />
-                        {language === 'fr' ? 'Connecter WordPress' : language === 'es' ? 'Conectar WordPress' : 'Connect WordPress'}
-                      </Button>
+
+                      {/* WordPress Popover */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="gap-1.5 relative">
+                            <Plug className="h-3.5 w-3.5" />
+                            WordPress
+                            {!isSiteSynced(currentSite.current_config as Record<string, unknown>) && (
+                              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-orange-500 border-2 border-background" />
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-56 p-2" align="end">
+                          <div className="space-y-1">
+                            {!isSiteSynced(currentSite.current_config as Record<string, unknown>) && (
+                              <div className="flex items-center gap-2 px-2 py-1.5 text-xs text-orange-600 dark:text-orange-400 bg-orange-500/10 rounded-md mb-1">
+                                <AlertCircle className="h-3 w-3 shrink-0" />
+                                {language === 'fr' ? 'Installation requise' : language === 'es' ? 'Instalación requerida' : 'Installation required'}
+                              </div>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start gap-2 text-xs h-8"
+                              onClick={() => handleWPIntegration('download', {
+                                siteId: currentSite.id,
+                                domain: currentSite.domain,
+                                apiKey: currentSite.api_key,
+                                userId: user?.id,
+                                language,
+                              })}
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              {language === 'fr' ? 'Télécharger le Plugin' : 'Download Plugin'}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start gap-2 text-xs h-8"
+                              onClick={() => handleWPIntegration('magic_link', {
+                                siteId: currentSite.id,
+                                domain: currentSite.domain,
+                                apiKey: currentSite.api_key,
+                                userId: user?.id,
+                                language,
+                              })}
+                            >
+                              <Link2 className="h-3.5 w-3.5" />
+                              {language === 'fr' ? 'Lien de Connexion Magique' : 'Magic Connection Link'}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start gap-2 text-xs h-8"
+                              onClick={() => {
+                                setWpConnectSiteId(currentSite.id);
+                                setShowWpModal(true);
+                                setWpApiKeyVisible(false);
+                                setWpApiKeyCopied(false);
+                              }}
+                            >
+                              <Wrench className="h-3.5 w-3.5" />
+                              {language === 'fr' ? 'Configuration avancée' : 'Advanced config'}
+                            </Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+
                       <Button 
                         size="sm" 
                         className="gap-1.5"
