@@ -504,6 +504,9 @@ const Index = () => {
           <SolutionSection />
         </Suspense>
         <Suspense fallback={<SectionSkeleton />}>
+          <NewsCarousel />
+        </Suspense>
+        <Suspense fallback={<SectionSkeleton />}>
           <WhyVital2026Section />
         </Suspense>
         <Suspense fallback={<SectionSkeleton />}>
@@ -514,9 +517,6 @@ const Index = () => {
         </Suspense>
         <Suspense fallback={<SectionSkeleton />}>
           <SEOvsGEOSection />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <NewsCarousel />
         </Suspense>
         <Suspense fallback={<SectionSkeleton />}>
           <GEOFAQSection />
