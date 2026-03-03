@@ -419,6 +419,51 @@ export type Database = {
         }
         Relationships: []
       }
+      hallucination_corrections: {
+        Row: {
+          analysis_narrative: string | null
+          confusion_sources: Json | null
+          corrected_values: Json
+          created_at: string
+          discrepancies: Json
+          domain: string
+          id: string
+          original_values: Json
+          recommendations: Json
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          analysis_narrative?: string | null
+          confusion_sources?: Json | null
+          corrected_values?: Json
+          created_at?: string
+          discrepancies?: Json
+          domain: string
+          id?: string
+          original_values?: Json
+          recommendations?: Json
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          analysis_narrative?: string | null
+          confusion_sources?: Json | null
+          corrected_values?: Json
+          created_at?: string
+          discrepancies?: Json
+          domain?: string
+          id?: string
+          original_values?: Json
+          recommendations?: Json
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       magic_links: {
         Row: {
           created_at: string

@@ -25,6 +25,7 @@ import { PaymentModal } from './PaymentModal';
 import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 import { WorkflowCarousel } from './WorkflowCarousel';
 import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
+import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { AIBotsCard } from './AIBotsCard';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
@@ -161,6 +162,9 @@ export function ExpertAuditDashboard() {
   const [paidFixesMetadata, setPaidFixesMetadata] = useState<Array<{id: string; label: string; category: string}>>([]);
   const [hasVerifiedPayment, setHasVerifiedPayment] = useState(false);
   const [siteAutoTracked, setSiteAutoTracked] = useState(false);
+  // Stored hallucination corrections from DB (community knowledge)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [storedCorrections, setStoredCorrections] = useState<any[]>([]);
   const loadingRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
@@ -728,6 +732,10 @@ export function ExpertAuditDashboard() {
       // Auto-register site for tracking with initial KPIs
       autoTrackSite(normalizedUrl, strategicData, 'strategic');
 
+      // Fetch stored corrections for this domain (community knowledge)
+      const domain = new URL(normalizedUrl).hostname;
+      fetchStoredCorrections(domain);
+
       toast({
         title: hallucinationCorrections ? 'Analyse corrigée terminée !' : t.strategicComplete,
         description: hallucinationCorrections 
@@ -763,7 +771,49 @@ export function ExpertAuditDashboard() {
     }
   }, [strategicResult]);
 
-  // Handle hallucination correction - triggers re-analysis
+  // Fetch stored hallucination corrections for a domain
+  const fetchStoredCorrections = useCallback(async (domain: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('hallucination_corrections' as any)
+        .select('*')
+        .eq('domain', domain)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (!error && data && (data as any[]).length > 0) {
+        setStoredCorrections(data as any[]);
+        console.log(`📋 Found ${(data as any[]).length} stored hallucination corrections for ${domain}`);
+      } else {
+        setStoredCorrections([]);
+      }
+    } catch (err) {
+      console.error('Error fetching stored corrections:', err);
+    }
+  }, []);
+
+  // Save hallucination correction to DB for future users
+  const saveHallucinationCorrection = useCallback(async (diagnosis: any, targetDomain: string, targetUrl: string) => {
+    if (!user) return;
+    try {
+      await supabase.from('hallucination_corrections' as any).insert({
+        domain: targetDomain,
+        url: targetUrl,
+        user_id: user.id,
+        original_values: diagnosis.originalValues || {},
+        corrected_values: diagnosis.correctedValues || {},
+        discrepancies: diagnosis.discrepancies || [],
+        recommendations: diagnosis.recommendations || [],
+        analysis_narrative: diagnosis.analysisNarrative || null,
+        confusion_sources: diagnosis.confidenceSources || diagnosis.confusionSources || [],
+      } as any);
+      console.log('💾 Hallucination correction saved to DB for domain:', targetDomain);
+    } catch (err) {
+      console.error('Error saving hallucination correction:', err);
+    }
+  }, [user]);
+
+  // Handle hallucination correction - triggers re-analysis + saves to DB
   const handleHallucinationCorrectionComplete = useCallback((diagnosis: any) => {
     setHallucinationDiagnosis(diagnosis);
     
@@ -773,11 +823,16 @@ export function ExpertAuditDashboard() {
         title: 'Re-analyse en cours...',
         description: 'Le rapport stratégique va être régénéré avec vos corrections.',
       });
+
+      // Save corrections to DB for future users
+      const normalizedUrl = url.trim().startsWith('http') ? url.trim() : `https://${url.trim()}`;
+      const domain = (() => { try { return new URL(normalizedUrl).hostname; } catch { return url.trim(); } })();
+      saveHallucinationCorrection(diagnosis, domain, normalizedUrl);
       
       // Re-run strategic audit with corrections
       handleStrategicAudit(diagnosis.correctedValues, null);
     }
-  }, [handleStrategicAudit, toast]);
+  }, [handleStrategicAudit, toast, url, saveHallucinationCorrection]);
 
   // Handle competitor correction - triggers re-analysis with competitor weights
   const handleCompetitorCorrectionComplete = useCallback((corrections: any) => {
@@ -1095,6 +1150,21 @@ export function ExpertAuditDashboard() {
               {/* Hallucination Diagnosis Results - Displayed under introduction after diagnosis */}
               {hallucinationDiagnosis && hallucinationDiagnosis.discrepancies && (
                 <HallucinationDiagnosisCard diagnosis={hallucinationDiagnosis} />
+              )}
+
+              {/* LLM Confusion Detection - Show if stored corrections exist for this domain */}
+              {storedCorrections.length > 0 && !hallucinationDiagnosis && (
+                <LLMConfusionDetectionCard 
+                  corrections={storedCorrections}
+                  domain={result.domain || url}
+                  onApplyCorrections={(correctedValues) => {
+                    toast({
+                      title: 'Re-analyse en cours...',
+                      description: 'Le rapport va être régénéré avec les corrections communautaires.',
+                    });
+                    handleStrategicAudit(correctedValues, null);
+                  }}
+                />
               )}
 
               {/* Zone de Contenu Protégée */}
