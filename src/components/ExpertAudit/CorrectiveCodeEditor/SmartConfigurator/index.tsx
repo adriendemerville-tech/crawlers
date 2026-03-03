@@ -1095,6 +1095,7 @@ export function SmartConfigurator({
   }, [activeSiteId, user, siteDomain]);
 
   const [shakeInject, setShakeInject] = useState(false);
+  const [injectRejected, setInjectRejected] = useState(false);
 
   // Verify actual plugin connectivity by pinging the WP site's REST endpoint
   const verifySiteConnected = useCallback(async (): Promise<boolean> => {
@@ -1140,11 +1141,10 @@ export function SmartConfigurator({
 
     const isConnected = await verifySiteConnected();
     if (!isConnected) {
-      sonnerToast.error('Site non connecté', {
-        description: 'Installez et connectez le plugin WordPress avant d\'injecter le code.',
-      });
+      setInjectRejected(true);
       setShakeInject(true);
       setTimeout(() => setShakeInject(false), 1500);
+      setTimeout(() => setInjectRejected(false), 4000);
       return;
     }
 
@@ -1360,6 +1360,24 @@ export function SmartConfigurator({
                         <Copy className="w-3.5 h-3.5" />
                       )}
                     </Button>
+                    {/* Inject rejection inline notification */}
+                    {injectRejected && (
+                      <motion.a
+                        href="/modifier-code-wordpress"
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-1.5 text-xs font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2.5 py-1.5 cursor-pointer hover:bg-destructive/20 transition-colors whitespace-nowrap"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          window.open('/modifier-code-wordpress', '_blank');
+                        }}
+                      >
+                        <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                        <span>Plugin non connecté</span>
+                        <Plug className="w-3 h-3 flex-shrink-0 opacity-60" />
+                      </motion.a>
+                    )}
                     {/* Inject to WordPress button */}
                     <motion.div
                       animate={shakeInject ? { x: [0, -6, 6, -5, 5, -3, 3, -1, 1, 0] } : {}}
