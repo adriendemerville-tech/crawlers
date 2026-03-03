@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt } from 'lucide-react';
+import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Palette } from 'lucide-react';
 import { BrandingTab } from '@/components/Profile/BrandingTab';
+import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 
 const translations = {
   fr: {
@@ -300,7 +301,7 @@ export function MyWallet() {
 
         {/* Sub-menu tabs */}
         <Tabs defaultValue="branding" className="space-y-4">
-          <TabsList className="w-full grid grid-cols-4 bg-violet-500/5 border border-violet-500/20">
+          <TabsList className="w-full grid grid-cols-5 bg-violet-500/5 border border-violet-500/20">
             <TabsTrigger value="branding" className="gap-2 data-[state=active]:bg-violet-600 data-[state=active]:text-white">
               <Palette className="h-4 w-4" />
               <span className="hidden sm:inline">Branding</span>
@@ -316,6 +317,10 @@ export function MyWallet() {
             <TabsTrigger value="payment" className="gap-2 data-[state=active]:bg-violet-600 data-[state=active]:text-white">
               <CreditCard className="h-4 w-4" />
               <span className="hidden sm:inline">{language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment'}</span>
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-violet-600 data-[state=active]:text-white">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">{language === 'fr' ? 'Profil' : language === 'es' ? 'Perfil' : 'Profile'}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -445,6 +450,11 @@ export function MyWallet() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile">
+            <ProfileSettings />
           </TabsContent>
         </Tabs>
       </div>
