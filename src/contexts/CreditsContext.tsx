@@ -5,6 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 interface CreditsContextType {
   balance: number;
   loading: boolean;
+  planType: string;
+  subscriptionStatus: string | null;
+  isAgencyPro: boolean;
   refreshBalance: () => Promise<void>;
   useCredit: (description?: string, amount?: number) => Promise<{ success: boolean; newBalance?: number; error?: string }>;
 }
@@ -14,6 +17,8 @@ const CreditsContext = createContext<CreditsContextType | undefined>(undefined);
 export function CreditsProvider({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuth();
   const [balance, setBalance] = useState(0);
+  const [planType, setPlanType] = useState('free');
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchBalance = useCallback(async () => {
@@ -26,12 +31,14 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('credits_balance')
+        .select('credits_balance, plan_type, subscription_status')
         .eq('user_id', user.id)
         .single();
 
       if (error) throw error;
       setBalance(data?.credits_balance || 0);
+      setPlanType((data as any)?.plan_type || 'free');
+      setSubscriptionStatus((data as any)?.subscription_status || null);
     } catch (error) {
       console.error('Error fetching credits balance:', error);
       setBalance(0);
@@ -104,8 +111,10 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
+  const isAgencyPro = planType === 'agency_pro' && subscriptionStatus === 'active';
+
   return (
-    <CreditsContext.Provider value={{ balance, loading, refreshBalance, useCredit }}>
+    <CreditsContext.Provider value={{ balance, loading, planType, subscriptionStatus, isAgencyPro, refreshBalance, useCredit }}>
       {children}
     </CreditsContext.Provider>
   );

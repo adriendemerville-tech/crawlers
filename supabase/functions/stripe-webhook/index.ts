@@ -230,18 +230,64 @@ serve(async (req) => {
       }
     }
 
+    // Handle subscription events
+    if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+      const subscription = event.data.object as Stripe.Subscription;
+      const userId = subscription.metadata?.user_id;
+      const planType = subscription.metadata?.plan_type || "agency_pro";
+
+      if (userId) {
+        const status = subscription.status === "active" || subscription.status === "trialing" ? "active" : subscription.status;
+        const { error: subError } = await supabase
+          .from("profiles")
+          .update({
+            plan_type: status === "active" ? planType : "free",
+            subscription_status: status,
+            stripe_subscription_id: subscription.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", userId);
+
+        if (subError) {
+          console.error("❌ Error updating subscription status:", subError);
+        } else {
+          console.log(`✅ Subscription ${subscription.id} → ${status} for user ${userId}`);
+        }
+      }
+    }
+
+    if (event.type === "customer.subscription.deleted") {
+      const subscription = event.data.object as Stripe.Subscription;
+      const userId = subscription.metadata?.user_id;
+
+      if (userId) {
+        const { error: subError } = await supabase
+          .from("profiles")
+          .update({
+            plan_type: "free",
+            subscription_status: "canceled",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", userId);
+
+        if (subError) {
+          console.error("❌ Error canceling subscription:", subError);
+        } else {
+          console.log(`✅ Subscription canceled for user ${userId}`);
+        }
+      }
+    }
+
     // Handle failed payments
     if (event.type === "payment_intent.payment_failed") {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       console.log(`❌ Payment failed: ${paymentIntent.id}`);
       
-      // Update stripe_payments
       await supabase
         .from("stripe_payments")
         .update({ status: "failed" })
         .eq("stripe_payment_intent_id", paymentIntent.id);
 
-      // Update audits table
       await supabase
         .from("audits")
         .update({ payment_status: "failed" })

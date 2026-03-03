@@ -1,0 +1,128 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+  apiVersion: "2023-10-16",
+});
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    // Validate auth
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !userData.user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const user = userData.user;
+    console.log(`📝 Subscription checkout for user: ${user.id}`);
+
+    const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
+
+    // Check if user already has an active subscription
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("plan_type, subscription_status, stripe_subscription_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (profile?.subscription_status === "active" && profile?.plan_type === "agency_pro") {
+      return new Response(
+        JSON.stringify({ error: "Vous avez déjà un abonnement Pro Agency actif." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create or retrieve Stripe customer
+    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    let customerId: string;
+
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+    } else {
+      const customer = await stripe.customers.create({
+        email: user.email || undefined,
+        metadata: { supabase_user_id: user.id },
+      });
+      customerId = customer.id;
+    }
+
+    // Create a recurring price inline
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "eur",
+            product_data: {
+              name: "Crawlers.AI — Pro Agency",
+              description: "Rapports illimités, Correctifs illimités, Marque Blanche, Support prioritaire",
+            },
+            unit_amount: 4900,
+            recurring: { interval: "month" },
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "subscription",
+      metadata: {
+        user_id: user.id,
+        user_email: user.email || "",
+        transaction_type: "subscription",
+        plan_type: "agency_pro",
+      },
+      subscription_data: {
+        metadata: {
+          user_id: user.id,
+          plan_type: "agency_pro",
+        },
+      },
+      success_url: `${origin}/tarifs?subscription_success=true`,
+      cancel_url: `${origin}/tarifs?subscription_canceled=true`,
+    });
+
+    console.log(`✅ Subscription session created: ${session.id}`);
+
+    return new Response(
+      JSON.stringify({ url: session.url, session_id: session.id }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("❌ Error creating subscription session:", errorMessage);
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

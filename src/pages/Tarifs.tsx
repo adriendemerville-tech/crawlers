@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
@@ -7,9 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { 
   CheckCircle2, Zap, CreditCard, FileText, Code2, 
-  Bot, Globe, Gauge, Brain, ArrowRight, Gift
+  Bot, Globe, Gauge, Brain, ArrowRight, Gift,
+  Crown, Infinity, Shield, Headphones, Loader2
 } from 'lucide-react';
 
 const translations = {
@@ -65,6 +70,21 @@ const translations = {
     linkedinOffer: '50 crédits offerts si vous publiez une synthèse de votre rapport Crawlers.AI sur LinkedIn !',
     getStarted: 'Commencer gratuitement',
     perCredit: '/ crédit',
+    agencyTitle: 'Pro Agency',
+    agencySubtitle: 'Pour les professionnels et agences SEO',
+    agencyPrice: '49€',
+    agencyPeriod: '/ mois',
+    agencyFeatures: [
+      'Rapports illimités',
+      'Correctifs illimités',
+      'Marque Blanche (White Label)',
+      'Support prioritaire',
+    ],
+    agencyCta: 'S\'abonner',
+    agencyBadge: 'Illimité',
+    agencyLoading: 'Redirection...',
+    agencyLoginRequired: 'Connectez-vous pour vous abonner',
+    or: 'ou',
   },
   en: {
     pageTitle: 'Pricing - Crawlers.AI',
@@ -118,6 +138,21 @@ const translations = {
     linkedinOffer: '50 free credits if you share a summary of your Crawlers.AI report on LinkedIn!',
     getStarted: 'Get started for free',
     perCredit: '/ credit',
+    agencyTitle: 'Pro Agency',
+    agencySubtitle: 'For SEO professionals and agencies',
+    agencyPrice: '€49',
+    agencyPeriod: '/ month',
+    agencyFeatures: [
+      'Unlimited reports',
+      'Unlimited fixes',
+      'White Label option',
+      'Priority support',
+    ],
+    agencyCta: 'Subscribe',
+    agencyBadge: 'Unlimited',
+    agencyLoading: 'Redirecting...',
+    agencyLoginRequired: 'Log in to subscribe',
+    or: 'or',
   },
   es: {
     pageTitle: 'Precios - Crawlers.AI',
@@ -171,12 +206,53 @@ const translations = {
     linkedinOffer: '¡50 créditos gratis si publicas un resumen de tu informe Crawlers.AI en LinkedIn!',
     getStarted: 'Comenzar gratis',
     perCredit: '/ crédito',
+    agencyTitle: 'Pro Agency',
+    agencySubtitle: 'Para profesionales y agencias SEO',
+    agencyPrice: '49€',
+    agencyPeriod: '/ mes',
+    agencyFeatures: [
+      'Informes ilimitados',
+      'Correcciones ilimitadas',
+      'Opción Marca Blanca',
+      'Soporte prioritario',
+    ],
+    agencyCta: 'Suscribirse',
+    agencyBadge: 'Ilimitado',
+    agencyLoading: 'Redirigiendo...',
+    agencyLoginRequired: 'Inicia sesión para suscribirte',
+    or: 'o',
   },
 };
 
+const agencyIcons = [Infinity, Infinity, Shield, Headphones];
+
 export default function Tarifs() {
   const { language } = useLanguage();
+  const { user } = useAuth();
   const t = translations[language];
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
+
+  const handleSubscribe = async () => {
+    if (!user) {
+      toast.error(t.agencyLoginRequired);
+      return;
+    }
+    setSubscribeLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-subscription-session');
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else if (data?.error) {
+        toast.error(data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur lors de la création de la session');
+    } finally {
+      setSubscribeLoading(false);
+    }
+  };
 
   return (
     <>
@@ -309,52 +385,131 @@ export default function Tarifs() {
               </div>
             </div>
 
-            {/* Credits Section */}
-            <Card>
-              <CardHeader className="text-center">
-                <CardTitle className="flex items-center justify-center gap-2 text-2xl">
+            {/* Credits + Pro Agency Section */}
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold flex items-center justify-center gap-2">
                   <CreditCard className="h-6 w-6 text-primary" />
                   {t.creditsSection}
-                </CardTitle>
-                <CardDescription>{t.creditsDescription}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 sm:grid-cols-3 mb-6">
-                  {t.packs.map((pack, index) => (
-                    <div 
-                      key={index} 
-                      className={`relative p-4 rounded-xl border-2 text-center ${
-                        pack.popular ? 'border-violet-500 ring-2 ring-violet-500/30' : 'border-border'
-                      }`}
-                    >
-                      {pack.popular && (
-                        <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-violet-500 text-white border-0">
-                          Populaire
-                        </Badge>
-                      )}
-                      <p className="font-semibold text-lg">{pack.name}</p>
-                      <p className="text-3xl font-bold mt-2">{pack.credits}</p>
-                      <p className="text-xs text-muted-foreground">crédits</p>
-                      <p className="text-xl font-bold mt-3">{pack.price}€</p>
-                      <p className="text-xs text-muted-foreground">
-                        {pack.pricePerCredit.toFixed(2).replace('.', ',')}€ {t.perCredit}
-                      </p>
-                      {pack.savings && (
-                        <Badge variant="secondary" className="mt-2 text-emerald-600 dark:text-emerald-400">
-                          -{pack.savings}
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                </h2>
+                <p className="text-muted-foreground mt-1">{t.creditsDescription}</p>
+              </div>
 
-                {/* LinkedIn Offer */}
-                <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-[#0A66C2]/10 border border-[#0A66C2]/30">
-                  <Gift className="h-5 w-5 text-[#0A66C2]" />
-                  <span className="font-medium text-sm">{t.linkedinOffer}</span>
-                </div>
-              </CardContent>
-            </Card>
+              {/* Credit Packs grouped */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="grid gap-4 sm:grid-cols-3 mb-6">
+                    {t.packs.map((pack, index) => (
+                      <div 
+                        key={index} 
+                        className={`relative p-4 rounded-xl border-2 text-center ${
+                          pack.popular ? 'border-violet-500 ring-2 ring-violet-500/30' : 'border-border'
+                        }`}
+                      >
+                        {pack.popular && (
+                          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-violet-500 text-white border-0">
+                            Populaire
+                          </Badge>
+                        )}
+                        <p className="font-semibold text-lg">{pack.name}</p>
+                        <p className="text-3xl font-bold mt-2">{pack.credits}</p>
+                        <p className="text-xs text-muted-foreground">crédits</p>
+                        <p className="text-xl font-bold mt-3">{pack.price}€</p>
+                        <p className="text-xs text-muted-foreground">
+                          {pack.pricePerCredit.toFixed(2).replace('.', ',')}€ {t.perCredit}
+                        </p>
+                        {pack.savings && (
+                          <Badge variant="secondary" className="mt-2 text-emerald-600 dark:text-emerald-400">
+                            -{pack.savings}
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* LinkedIn Offer */}
+                  <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-[#0A66C2]/10 border border-[#0A66C2]/30">
+                    <Gift className="h-5 w-5 text-[#0A66C2]" />
+                    <span className="font-medium text-sm">{t.linkedinOffer}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Separator */}
+              <div className="flex items-center gap-4">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{t.or}</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+
+              {/* Pro Agency — visually detached */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Card className="relative border-2 border-primary ring-2 ring-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 overflow-hidden">
+                  {/* Floating badge */}
+                  <div className="absolute top-0 right-0">
+                    <Badge className="rounded-none rounded-bl-lg bg-primary text-primary-foreground border-0 px-4 py-1.5 text-sm font-bold gap-1.5">
+                      <Crown className="h-3.5 w-3.5" />
+                      {t.agencyBadge}
+                    </Badge>
+                  </div>
+
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-2xl flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-primary/10">
+                        <Crown className="h-6 w-6 text-primary" />
+                      </div>
+                      {t.agencyTitle}
+                    </CardTitle>
+                    <CardDescription className="text-base">{t.agencySubtitle}</CardDescription>
+                  </CardHeader>
+
+                  <CardContent className="space-y-6">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-5xl font-extrabold">{t.agencyPrice}</span>
+                      <span className="text-lg text-muted-foreground">{t.agencyPeriod}</span>
+                    </div>
+
+                    <ul className="grid gap-3 sm:grid-cols-2">
+                      {t.agencyFeatures.map((feature, index) => {
+                        const Icon = agencyIcons[index];
+                        return (
+                          <li key={index} className="flex items-center gap-3 p-2.5 rounded-lg bg-card/50 border">
+                            <div className="p-1.5 rounded-md bg-primary/10">
+                              <Icon className="h-4 w-4 text-primary" />
+                            </div>
+                            <span className="text-sm font-medium">{feature}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+
+                    <Button
+                      size="lg"
+                      className="w-full gap-2 text-base font-bold"
+                      variant="hero"
+                      onClick={handleSubscribe}
+                      disabled={subscribeLoading}
+                    >
+                      {subscribeLoading ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          {t.agencyLoading}
+                        </>
+                      ) : (
+                        <>
+                          <Crown className="h-5 w-5" />
+                          {t.agencyCta}
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
 
             {/* Legal Notice */}
             <Card className="border-muted">
