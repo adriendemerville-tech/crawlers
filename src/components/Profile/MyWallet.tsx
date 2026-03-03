@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle } from 'lucide-react';
+import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -24,9 +24,13 @@ const translations = {
     allHistory: 'Tout',
     purchases: 'Achats',
     usage: 'Dépenses',
+    invoices: 'Factures',
     noTransactions: 'Aucune transaction pour le moment',
     noPurchases: 'Aucun achat pour le moment',
     noUsage: 'Aucune dépense pour le moment',
+    noInvoices: 'Aucune facture disponible',
+    invoicesDescription: 'Accédez à vos factures depuis le portail de paiement',
+    viewInvoices: 'Voir mes factures',
     purchase: 'Achat',
     usageLabel: 'Utilisation',
     loading: 'Chargement...',
@@ -43,9 +47,13 @@ const translations = {
     allHistory: 'All',
     purchases: 'Purchases',
     usage: 'Spending',
+    invoices: 'Invoices',
     noTransactions: 'No transactions yet',
     noPurchases: 'No purchases yet',
     noUsage: 'No spending yet',
+    noInvoices: 'No invoices available',
+    invoicesDescription: 'Access your invoices from the payment portal',
+    viewInvoices: 'View my invoices',
     purchase: 'Purchase',
     usageLabel: 'Usage',
     loading: 'Loading...',
@@ -62,9 +70,13 @@ const translations = {
     allHistory: 'Todo',
     purchases: 'Compras',
     usage: 'Gastos',
+    invoices: 'Facturas',
     noTransactions: 'Sin transacciones por el momento',
     noPurchases: 'Sin compras por el momento',
     noUsage: 'Sin gastos por el momento',
+    noInvoices: 'Sin facturas disponibles',
+    invoicesDescription: 'Acceda a sus facturas desde el portal de pagos',
+    viewInvoices: 'Ver mis facturas',
     purchase: 'Compra',
     usageLabel: 'Uso',
     loading: 'Cargando...',
@@ -372,7 +384,7 @@ export function MyWallet() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsList className="grid w-full grid-cols-4 mb-4">
               <TabsTrigger value="all" className="gap-2">
                 <History className="h-4 w-4" />
                 <span className="hidden sm:inline">{t.allHistory}</span>
@@ -395,6 +407,10 @@ export function MyWallet() {
                   </Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="invoices" className="gap-2">
+                <Receipt className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.invoices}</span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="all">
@@ -416,6 +432,26 @@ export function MyWallet() {
                 items={usages} 
                 emptyMessage={t.noUsage}
               />
+            </TabsContent>
+
+            <TabsContent value="invoices">
+              <div className="flex flex-col items-center justify-center py-10 space-y-4 text-center">
+                <div className="p-3 rounded-full bg-muted">
+                  <Receipt className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  {t.invoicesDescription}
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={handleOpenPortal}
+                  disabled={portalLoading}
+                  className="gap-2"
+                >
+                  {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                  {t.viewInvoices}
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
