@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -116,6 +116,7 @@ export function ClientsTab() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sitePopoverOpen, setSitePopoverOpen] = useState<string | null>(null);
+  const [shakingClient, setShakingClient] = useState<string | null>(null);
 
   // Form state
   const [form, setForm] = useState({ first_name: '', last_name: '', company: '', role: '', email: '' });
@@ -313,7 +314,26 @@ export function ClientsTab() {
                   {/* Add site popover */}
                   <Popover open={sitePopoverOpen === client.id} onOpenChange={(open) => setSitePopoverOpen(open ? client.id : null)}>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-violet-500 hover:bg-violet-500/10">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`h-8 w-8 text-violet-500 hover:bg-violet-500/10 ${shakingClient === client.id ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}
+                        onClick={(e) => {
+                          if (trackedSites.length === 0) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShakingClient(client.id);
+                            setTimeout(() => setShakingClient(null), 500);
+                            toast.warning(
+                              language === 'fr'
+                                ? 'Vous devez d\'abord tracker une URL dans Mes Sites.'
+                                : language === 'es'
+                                  ? 'Primero debe rastrear una URL en Mis Sitios.'
+                                  : 'You must first track a URL in My Sites.'
+                            );
+                          }
+                        }}
+                      >
                         <Plus className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
