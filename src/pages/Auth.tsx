@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
@@ -112,18 +113,32 @@ export default function Auth() {
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const t = translations[language];
+  const inviteToken = searchParams.get('invite');
 
-  // Redirect if already authenticated - check for return path first
+  // Accept invitation after login
   useEffect(() => {
+    if (user && inviteToken) {
+      supabase.functions.invoke('manage-team', {
+        body: { action: 'accept_invitation', token: inviteToken },
+      }).then(({ error }) => {
+        if (error) {
+          toast.error(String(error));
+        } else {
+          toast.success(language === 'fr' ? 'Invitation acceptée !' : 'Invitation accepted!');
+        }
+        navigate('/console');
+      });
+      return;
+    }
+
     if (user) {
       const returnPath = sessionStorage.getItem('audit_return_path');
       if (returnPath) {
-        // Clear return path but keep pending action for the destination to handle
         sessionStorage.removeItem('audit_return_path');
         navigate(returnPath);
       } else {
-        // Default redirect to audit-expert if coming from audit flow
         const auditUrl = sessionStorage.getItem('audit_url');
         if (auditUrl) {
           navigate('/audit-expert');
@@ -132,7 +147,7 @@ export default function Auth() {
         }
       }
     }
-  }, [user, navigate]);
+  }, [user, navigate, inviteToken]);
 
   const loginSchema = z.object({
     email: z.string().min(1, t.emailRequired).email(t.emailInvalid),

@@ -145,30 +145,6 @@ export function ProfileSettings() {
         </CardContent>
       </Card>
 
-      {/* Language Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="h-5 w-5" />
-            {t.languageSettings}
-          </CardTitle>
-          <CardDescription>{t.languageDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button variant={language === 'fr' ? 'default' : 'outline'} onClick={() => setLanguage('fr')} className="gap-2">
-              <span>🇫🇷</span> {t.french}
-            </Button>
-            <Button variant={language === 'en' ? 'default' : 'outline'} onClick={() => setLanguage('en')} className="gap-2">
-              <span>🇬🇧</span> {t.english}
-            </Button>
-            <Button variant={language === 'es' ? 'default' : 'outline'} onClick={() => setLanguage('es')} className="gap-2">
-              <span>🇪🇸</span> {t.spanish}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Login Settings */}
       <Card>
         <CardHeader>
@@ -199,6 +175,30 @@ export function ProfileSettings() {
 
       {/* WordPress Integration */}
       <WordPressIntegrationCard />
+
+      {/* Language Settings — at the bottom */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5" />
+            {t.languageSettings}
+          </CardTitle>
+          <CardDescription>{t.languageDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            <Button variant={language === 'fr' ? 'default' : 'outline'} onClick={() => setLanguage('fr')} className="gap-2">
+              <span>🇫🇷</span> {t.french}
+            </Button>
+            <Button variant={language === 'en' ? 'default' : 'outline'} onClick={() => setLanguage('en')} className="gap-2">
+              <span>🇬🇧</span> {t.english}
+            </Button>
+            <Button variant={language === 'es' ? 'default' : 'outline'} onClick={() => setLanguage('es')} className="gap-2">
+              <span>🇪🇸</span> {t.spanish}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
