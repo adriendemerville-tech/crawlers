@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditsContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { CodeBlock } from '../CodeBlock';
@@ -117,6 +118,7 @@ export function SmartConfigurator({
   const { language } = useLanguage();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isAgencyPro } = useCredits();
 
   // Extract domain from siteUrl for payment check
   const siteDomain = useMemo(() => {
@@ -826,10 +828,18 @@ export function SmartConfigurator({
         setCodeSource(data.source || 'new_generation');
         setLibraryHits(data.libraryHits || 0);
         setIsArchived(false);
-        // Delay showing the lock overlay for minimum 4 seconds after generation starts
-        setTimeout(() => {
-          setShowLockOverlay(true);
-        }, 4000);
+        // Subscribers get instant access, others see lock after delay
+        if (isAgencyPro) {
+          setHasPaid(true);
+          setShowLockOverlay(false);
+          handleArchiveSolution();
+          handleSaveToProfile();
+          autoTrackSite();
+        } else {
+          setTimeout(() => {
+            setShowLockOverlay(true);
+          }, 4000);
+        }
       } else {
         throw new Error(data?.error || 'Erreur lors de la génération');
       }
@@ -844,7 +854,7 @@ export function SmartConfigurator({
     } finally {
       setIsGenerating(false);
     }
-  }, [fixConfigs, siteName, siteUrl, language, toast]);
+  }, [fixConfigs, siteName, siteUrl, language, toast, isAgencyPro]);
 
   // Copy to clipboard
   const handleCopy = useCallback(async () => {
@@ -1264,8 +1274,17 @@ export function SmartConfigurator({
                     animate={{ scale: 1, opacity: 1 }}
                     className="text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums flex items-center gap-1"
                   >
-                    {calculatedPrice === 0 ? 0 : Math.max(1, Math.round(calculatedPrice / 0.5))}
-                    <CreditCoin size="sm" />
+                    {isAgencyPro ? (
+                      <>
+                        <span className="text-lg">∞</span>
+                        <CreditCoin size="sm" />
+                      </>
+                    ) : (
+                      <>
+                        {calculatedPrice === 0 ? 0 : Math.max(1, Math.round(calculatedPrice / 0.5))}
+                        <CreditCoin size="sm" />
+                      </>
+                    )}
                   </motion.span>
                 )}
 
