@@ -230,13 +230,13 @@ export default function Profile() {
                   <span className="hidden sm:inline">{t.correctiveCodes}</span>
                 </TabsTrigger>
                 <TabsTrigger value="wallet" className="flex-1 gap-2">
-                  {(profile?.plan_type === 'agency_pro') ? (
+                  {(profile?.plan_type === 'agency_pro' || isAdmin) ? (
                     <Crown className="h-4 w-4 text-primary" />
                   ) : (
                     <Wallet className="h-4 w-4" />
                   )}
                   <span className="hidden sm:inline">
-                    {profile?.plan_type === 'agency_pro' ? 'Pro Agency' : t.wallet}
+                    {(profile?.plan_type === 'agency_pro' || isAdmin) ? 'Pro Agency' : t.wallet}
                   </span>
                 </TabsTrigger>
                 {(profile?.plan_type === 'agency_pro' || isAdmin) && (
