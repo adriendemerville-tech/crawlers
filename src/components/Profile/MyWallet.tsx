@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User } from 'lucide-react';
+import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User, Terminal } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -511,7 +511,7 @@ export function MyWallet() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
               <FileText className="h-4 w-4 text-violet-500 shrink-0" />
               <span className="text-sm font-medium">
@@ -522,6 +522,18 @@ export function MyWallet() {
               <Code className="h-4 w-4 text-violet-500 shrink-0" />
               <span className="text-sm font-medium">
                 {language === 'fr' ? 'Correctifs illimités' : language === 'es' ? 'Correctivos ilimitados' : 'Unlimited fixes'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+              <Terminal className="h-4 w-4 text-violet-500 shrink-0" />
+              <span className="text-sm font-medium">
+                {language === 'fr' ? '<code> correctif illimité' : language === 'es' ? '<code> correctivo ilimitado' : 'Unlimited corrective <code>'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+              <Palette className="h-4 w-4 text-violet-500 shrink-0" />
+              <span className="text-sm font-medium">
+                {language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White label'}
               </span>
             </div>
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
