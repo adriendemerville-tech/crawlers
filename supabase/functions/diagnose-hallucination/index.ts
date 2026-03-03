@@ -1,4 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
+import { trackTokenUsage } from '../_shared/tokenTracker.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -282,6 +283,7 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<string>
   }
 
   const data = await response.json();
+  trackTokenUsage('diagnose-hallucination', 'google/gemini-2.5-flash', data.usage);
   return data.choices?.[0]?.message?.content || '';
 }
 

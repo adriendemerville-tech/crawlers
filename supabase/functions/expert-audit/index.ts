@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -982,6 +983,10 @@ Réponds avec ce JSON exact:
         if (aiResponse.ok) {
           const aiData = await aiResponse.json();
           const content = aiData.choices?.[0]?.message?.content;
+
+          // Track token usage
+          trackTokenUsage('expert-audit', 'google/gemini-3-flash-preview', aiData.usage, normalizedUrl);
+
           if (content) {
             let jsonContent = content;
             if (content.includes('```json')) {

@@ -1,4 +1,5 @@
 import { getLLMTranslations, parseLanguage, type Language } from '../_shared/translations.ts';
+import { trackTokenUsage } from '../_shared/tokenTracker.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -162,6 +163,9 @@ async function queryLLM(
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
+
+    // Track token usage
+    trackTokenUsage('check-llm', model, data.usage, domain);
 
     if (!content) {
       throw new Error('No content in response');

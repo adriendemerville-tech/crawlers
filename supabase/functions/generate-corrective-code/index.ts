@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { trackTokenUsage } from '../_shared/tokenTracker.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -268,6 +269,7 @@ async function adaptSolutionWithAI(
 
     if (!response.ok) return null;
     const data = await response.json();
+    trackTokenUsage('generate-corrective-code', model, data.usage);
     let content = data.choices?.[0]?.message?.content || null;
     if (content) {
       // Nettoyer les blocs markdown
@@ -470,6 +472,7 @@ RAPPEL: JSON valide uniquement, pas de markdown.`;
     }
 
     const aiResponse = await response.json();
+    trackTokenUsage('generate-corrective-code', 'google/gemini-2.5-flash', aiResponse.usage);
     const content = aiResponse.choices?.[0]?.message?.content;
 
     if (!content) {
@@ -1765,6 +1768,7 @@ IMPORTANT:
     }
 
     const aiResponse = await response.json();
+    trackTokenUsage('generate-corrective-code', 'google/gemini-2.5-flash', aiResponse.usage);
     const content = aiResponse.choices?.[0]?.message?.content;
     if (!content) {
       console.error('❌ Empty AI response for fix generation');
