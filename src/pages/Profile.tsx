@@ -241,11 +241,7 @@ export default function Profile() {
                 </TabsTrigger>
                 <div className="ml-auto" />
                 <TabsTrigger value="settings" className="gap-2">
-                  {(profile?.plan_type === 'agency_pro' || isAdmin) ? (
-                    <Crown className="h-4 w-4 text-violet-500" style={{ filter: 'drop-shadow(0 0 2px rgba(139, 92, 246, 0.5))' }} />
-                  ) : (
-                    <Settings className="h-4 w-4" />
-                  )}
+                  <Settings className="h-4 w-4" />
                 </TabsTrigger>
                 {isAdmin && (
                   <TabsTrigger value="admin" className="gap-2 text-primary">
