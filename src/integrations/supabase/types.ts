@@ -385,6 +385,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          agency_logo_url: string | null
+          agency_primary_color: string | null
           api_key: string
           avatar_url: string | null
           created_at: string
@@ -400,6 +402,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          agency_logo_url?: string | null
+          agency_primary_color?: string | null
           api_key?: string
           avatar_url?: string | null
           created_at?: string
@@ -415,6 +419,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          agency_logo_url?: string | null
+          agency_primary_color?: string | null
           api_key?: string
           avatar_url?: string | null
           created_at?: string
