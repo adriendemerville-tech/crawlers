@@ -621,6 +621,36 @@ export function SmartConfigurator({
         else if (combined.includes('facebook')) { platform = 'Facebook'; platformUrl = 'https://facebook.com/'; }
         else { platform = 'LinkedIn'; platformUrl = 'https://linkedin.com/'; }
 
+        // Determine the best CTA type based on context
+        let ctaType = 'Profil';
+        let ctaLabel = `CTA vers ${platform}`;
+        let ctaDescription = `Injecte un bloc d'appel à l'action vers ${platform}`;
+
+        if (combined.includes('chaîne') || combined.includes('channel') || combined.includes('vidéo') || platform === 'YouTube') {
+          ctaType = 'Chaîne';
+          ctaLabel = `CTA vers la chaîne ${platform}`;
+          ctaDescription = `Injecte un bloc CTA invitant à suivre la chaîne ${platform}, renforçant la preuve sociale et l'autorité`;
+        } else if (combined.includes('article') || combined.includes('publication') || combined.includes('post') || combined.includes('thought leadership')) {
+          ctaType = 'Publications';
+          ctaLabel = `CTA vers les publications ${platform}`;
+          ctaDescription = `Injecte un bloc CTA renvoyant vers les publications ${platform}, démontrant l'expertise sectorielle`;
+        } else if (combined.includes('communauté') || combined.includes('community') || combined.includes('groupe') || combined.includes('group')) {
+          ctaType = 'Communauté';
+          ctaLabel = `CTA vers la communauté ${platform}`;
+          ctaDescription = `Injecte un bloc CTA vers le groupe/communauté ${platform}, renforçant l'engagement et la preuve sociale`;
+        } else if (combined.includes('fondateur') || combined.includes('founder') || combined.includes('ceo') || combined.includes('dirigeant')) {
+          ctaType = 'Fondateur';
+          ctaLabel = `CTA vers le profil ${platform} du fondateur`;
+          ctaDescription = `Injecte un bloc CTA vers le profil ${platform} du dirigeant, renforçant l'autorité E-E-A-T`;
+        } else if (combined.includes('autorité') || combined.includes('authority') || combined.includes('expertise') || combined.includes('crédibilité')) {
+          ctaType = 'Autorité';
+          ctaLabel = `CTA d'autorité vers ${platform}`;
+          ctaDescription = `Injecte un bloc CTA valorisant la présence ${platform} comme signal d'autorité pour les LLMs`;
+        } else {
+          ctaLabel = `CTA social vers ${platform}`;
+          ctaDescription = `Injecte un bloc d'appel à l'action vers ${platform}, renforçant la citabilité et la preuve sociale`;
+        }
+
         const fixId = `actionplan_cta_${platform.toLowerCase().replace(/[^a-z]/g, '')}_${task.id}`;
         if (seenTitles.has(fixId)) continue;
         seenTitles.add(fixId);
@@ -628,8 +658,8 @@ export function SmartConfigurator({
         dynamicFixes.push({
           id: fixId,
           category: 'generative',
-          label: `CTA vers ${platform} du fondateur`,
-          description: `Injecte un bloc d'appel à l'action visible vers le profil ${platform}, renforçant l'autorité E-E-A-T et la citabilité par les LLMs`,
+          label: ctaLabel,
+          description: ctaDescription,
           enabled: false,
           priority: 'important' as const,
           isRecommended: true,
@@ -638,6 +668,7 @@ export function SmartConfigurator({
             _originalTask: task.title,
             _platform: platform,
             _platformUrl: platformUrl,
+            _ctaType: ctaType,
             _rationale: (task as any)._rationale || '',
           },
         });
