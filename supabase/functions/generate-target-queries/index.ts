@@ -69,6 +69,87 @@ function buildStrategicContext(strategicAnalysis: any): StrategicContext {
   return ctx;
 }
 
+
+/**
+ * Humanise un slug de domaine en nom d'entreprise lisible.
+ */
+function humanizeBrandName(slug: string): string {
+  if (!slug || slug.length < 3) return slug;
+  if (slug.includes('-') || slug.includes(' ')) {
+    return slug.replace(/-/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
+  const lower = slug.toLowerCase();
+  const particles: [string, string][] = [
+    ['lextreme', "l'Extrême"], ['lexpert', "l'Expert"], ['lexpress', "l'Express"],
+    ['lentreprise', "l'Entreprise"], ['limmobilier', "l'Immobilier"], ['latelier', "l'Atelier"],
+    ['lagence', "l'Agence"], ['letoile', "l'Étoile"], ['lespace', "l'Espace"], ['lequipe', "l'Équipe"],
+    ['dessous', 'Dessous'], ['depuis', 'Depuis'], ['entre', 'Entre'], ['notre', 'Notre'],
+    ['votre', 'Votre'], ['chez', 'Chez'], ['pour', 'Pour'], ['avec', 'Avec'], ['dans', 'Dans'],
+    ['sans', 'Sans'], ['sous', 'Sous'], ['plus', 'Plus'], ['tres', 'Très'], ['tout', 'Tout'],
+    ['les', 'Les'], ['des', 'des'], ['aux', 'aux'], ['sur', 'sur'], ['par', 'par'],
+    ['mes', 'Mes'], ['nos', 'Nos'], ['une', 'une'], ['la', 'la'], ['le', 'le'],
+    ['du', 'du'], ['de', 'de'], ['et', 'et'], ['en', 'en'], ['un', 'un'], ['au', 'au'],
+  ];
+  const vowels = 'aeiouyéèêëàâäùûüôîï';
+  const words: string[] = [];
+  let pos = 0;
+  while (pos < lower.length) {
+    let matched = false;
+    if (lower[pos] === 'l' && pos + 1 < lower.length && vowels.includes(lower[pos + 1])) {
+      for (const [pat, rep] of particles) {
+        if (lower.startsWith(pat, pos) && pat.startsWith('l')) {
+          words.push(rep); pos += pat.length; matched = true; break;
+        }
+      }
+      if (!matched) {
+        let endPos = lower.length;
+        for (let i = pos + 2; i < lower.length; i++) {
+          for (const [pat] of particles) { if (lower.startsWith(pat, i)) { endPos = i; break; } }
+          if (endPos !== lower.length) break;
+        }
+        const word = lower.substring(pos + 1, endPos);
+        if (word.length > 0) { words.push("l'" + word.charAt(0).toUpperCase() + word.slice(1)); pos = endPos; matched = true; }
+      }
+    }
+    if (!matched) {
+      for (const [pat, rep] of particles) {
+        if (lower.startsWith(pat, pos)) { words.push(rep); pos += pat.length; matched = true; break; }
+      }
+    }
+    if (!matched) {
+      let endPos = lower.length;
+      for (let i = pos + 1; i < lower.length; i++) {
+        if (lower[i] === 'l' && i + 1 < lower.length && vowels.includes(lower[i + 1])) { endPos = i; break; }
+        for (const [pat] of particles) { if (lower.startsWith(pat, i)) { endPos = i; break; } }
+        if (endPos !== lower.length) break;
+      }
+      const word = lower.substring(pos, endPos);
+      if (word.length > 0) words.push(word.charAt(0).toUpperCase() + word.slice(1));
+      pos = endPos;
+    }
+  }
+  if (words.length <= 1) return slug.charAt(0).toUpperCase() + slug.slice(1);
+  let result = words.join(' ');
+  result = result.charAt(0).toUpperCase() + result.slice(1);
+  return result.replace(/\s+/g, ' ').trim();
+}
+
+function sanitizeBrandSlugInObject(obj: any, slug: string, humanName: string): any {
+  if (!obj || !slug || !humanName || slug === humanName) return obj;
+  const regex = new RegExp(slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  function walk(node: any): any {
+    if (typeof node === 'string') return node.replace(regex, humanName);
+    if (Array.isArray(node)) return node.map(walk);
+    if (node && typeof node === 'object') {
+      const out: any = {};
+      for (const [k, v] of Object.entries(node)) { out[k] = walk(v); }
+      return out;
+    }
+    return node;
+  }
+  return walk(obj);
+}
+
 function buildValidationPrompt(queries: any[], strategicCtx: StrategicContext, brand: string, lang: string): string {
   const langInstructions: Record<string, string> = {
     fr: `Réponds UNIQUEMENT en français.`,
@@ -170,12 +251,20 @@ Deno.serve(async (req) => {
 - Audience cible : ${strategicCtx.targetAudience || 'Non disponible'}
 ` : '';
 
+    const humanBrandName = humanizeBrandName(brand);
+    console.log(`🏷️ Brand humanisé: "${brand}" → "${humanBrandName}"`);
+
+    const brandNameInstruction = brand !== humanBrandName ? `
+⚠️ NOM DE L'ENTREPRISE: Le slug du domaine est "${brand}" mais le vrai nom est "${humanBrandName}".
+Utilise TOUJOURS "${humanBrandName}" dans les requêtes et textes, JAMAIS le slug "${brand}".
+` : '';
+
     const prompt = `Tu es un expert en GEO (Generative Engine Optimization). 
 
 Analyse ce site web et génère 5 requêtes stratégiques à cibler pour maximiser les recommandations par les LLMs.
-
+${brandNameInstruction}
 **Site cible :** ${domain}
-**Marque :** ${brand}
+**Marque :** ${humanBrandName}
 **Synthèse des perceptions LLM :** ${coreValueSummary || 'Non disponible'}
 **Détails des citations LLM :**
 ${citationContext || 'Aucune citation disponible'}
@@ -184,8 +273,8 @@ ${strategicContextBlock}
 1. D'abord, identifie le CORE BUSINESS / produit phare / secteur de marché du site cible
 2. Identifie le LEADER DU MARCHÉ dans ce secteur (le concurrent dominant)
 3. Génère 5 requêtes qui mesurent le paramètre "recommandation" des LLMs :
-   - 4 requêtes doivent interroger LE MARCHÉ sans mentionner la marque "${brand}" (ex: "quel est le meilleur outil pour [secteur]", "meilleure alternative à [leader du marché]", "comparatif [type de produit] [année]")
-   - 1 seule requête peut mentionner explicitement "${brand}"
+   - 4 requêtes doivent interroger LE MARCHÉ sans mentionner la marque "${humanBrandName}" (ex: "quel est le meilleur outil pour [secteur]", "meilleure alternative à [leader du marché]", "comparatif [type de produit] [année]")
+   - 1 seule requête peut mentionner explicitement "${humanBrandName}"
 4. Les requêtes doivent être des questions qu'un prospect réel poserait à un LLM
 5. Chaque requête doit avoir un "intent" expliquant POURQUOI cette requête est stratégique pour la citabilité
 ${strategicCtx ? '6. Les requêtes DOIVENT être cohérentes avec le CONTEXTE STRATÉGIQUE VÉRIFIÉ ci-dessus. Ne pas inventer un secteur ou des concurrents différents.' : ''}
@@ -265,6 +354,9 @@ Réponds au format JSON exact suivant, sans texte avant ou après :
     jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1');
 
     let parsed = JSON.parse(jsonStr.trim());
+
+    // Sanitize: replace domain slug with humanized brand name in all text fields
+    parsed = sanitizeBrandSlugInObject(parsed, brand, humanBrandName);
 
     // ===== COHERENCE VALIDATION PASS =====
     // If we have strategic context, run a second AI call to cross-validate
