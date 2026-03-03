@@ -152,18 +152,13 @@ export default function Profile() {
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 container mx-auto px-4 py-8 max-w-5xl">
+        <main className="flex-1 container mx-auto px-4 py-4 max-w-5xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-              {t.backToHome}
-            </Link>
-
-            <div className="mb-8">
+            <div className="mb-4">
               <h1 className="text-3xl font-bold">{t.title}</h1>
             </div>
 
