@@ -505,16 +505,16 @@ export function MyWallet() {
       </Card>
 
       {/* Pro Agency Upsell Card */}
-      <Card className="border-primary/40 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent relative overflow-hidden">
+      <Card className="border-violet-500/30 bg-gradient-to-br from-violet-500/5 to-transparent relative overflow-hidden">
         <div className="absolute top-3 right-3">
-          <Badge className="bg-primary/90 text-primary-foreground gap-1 text-xs">
+          <Badge className="bg-violet-600 text-white gap-1 text-xs">
             <Infinity className="h-3 w-3" />
             {language === 'fr' ? 'Illimité' : language === 'es' ? 'Ilimitado' : 'Unlimited'}
           </Badge>
         </div>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Crown className="h-5 w-5 text-primary" />
+            <Crown className="h-5 w-5 text-yellow-500" />
             {language === 'fr' ? 'Passer au plan Pro Agency' : language === 'es' ? 'Cambiar al plan Pro Agency' : 'Upgrade to Pro Agency'}
           </CardTitle>
           <CardDescription>
@@ -528,19 +528,19 @@ export function MyWallet() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-              <FileText className="h-4 w-4 text-primary shrink-0" />
+              <FileText className="h-4 w-4 text-violet-500 shrink-0" />
               <span className="text-sm font-medium">
                 {language === 'fr' ? 'Rapports illimités' : language === 'es' ? 'Informes ilimitados' : 'Unlimited reports'}
               </span>
             </div>
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-              <Code className="h-4 w-4 text-primary shrink-0" />
+              <Code className="h-4 w-4 text-violet-500 shrink-0" />
               <span className="text-sm font-medium">
                 {language === 'fr' ? 'Correctifs illimités' : language === 'es' ? 'Correctivos ilimitados' : 'Unlimited fixes'}
               </span>
             </div>
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-              <Headphones className="h-4 w-4 text-primary shrink-0" />
+              <Headphones className="h-4 w-4 text-violet-500 shrink-0" />
               <span className="text-sm font-medium">
                 {language === 'fr' ? 'Support prioritaire' : language === 'es' ? 'Soporte prioritario' : 'Priority support'}
               </span>
@@ -566,9 +566,9 @@ export function MyWallet() {
                 }
               }}
               disabled={subscribeLoading}
-              className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground"
+              className="gap-2 bg-gradient-to-r from-violet-600 via-purple-500 to-amber-400 hover:from-violet-700 hover:via-purple-600 hover:to-amber-500 text-white border-0"
             >
-              {subscribeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
+              {subscribeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4 text-yellow-300" />}
               {language === 'fr' ? "S'abonner" : language === 'es' ? 'Suscribirse' : 'Subscribe'}
             </Button>
           </div>
