@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Loader2, AlertCircle } from 'lucide-react';
+import { CreditCard, Loader2, AlertCircle, Linkedin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -197,39 +197,73 @@ export function PaymentButton({
     return (
       <>
         <div className="flex flex-col items-center space-y-2">
-          <Button
-            onClick={hasEnoughCredits ? handleCreditUnlock : () => setShowTopUpModal(true)}
-            disabled={disabled || isLoading || !siteUrl}
-            variant={hasEnoughCredits ? "default" : "outline"}
-            className={`gap-2 ${
-              hasEnoughCredits 
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0' 
-                : 'border-destructive/50 text-destructive hover:bg-destructive/10'
-            } transition-all duration-300`}
-            size="sm"
-          >
-            {isLoading ? (
-              <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                >
-                  <Loader2 className="w-3 h-3" />
-                </motion.div>
-                Déblocage...
-              </>
-            ) : hasEnoughCredits ? (
-              <>
-                <CreditCoin size="sm" />
-                Débloquer avec {creditCost} crédit{creditCost > 1 ? 's' : ''}
-              </>
-            ) : (
-              <>
-                <AlertCircle className="w-3 h-3" />
-                Crédits insuffisants
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={hasEnoughCredits ? handleCreditUnlock : () => setShowTopUpModal(true)}
+              disabled={disabled || isLoading || !siteUrl}
+              variant={hasEnoughCredits ? "default" : "outline"}
+              className={`gap-2 ${
+                hasEnoughCredits 
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0' 
+                  : 'border-destructive/50 text-destructive hover:bg-destructive/10'
+              } transition-all duration-300`}
+              size="sm"
+            >
+              {isLoading ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                  >
+                    <Loader2 className="w-3 h-3" />
+                  </motion.div>
+                  Déblocage...
+                </>
+              ) : hasEnoughCredits ? (
+                <>
+                  <CreditCoin size="sm" />
+                  Débloquer avec {creditCost} crédit{creditCost > 1 ? 's' : ''}
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-3 h-3" />
+                  Crédits insuffisants
+                </>
+              )}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 border-[#0A66C2]/50 text-[#0A66C2] hover:bg-[#0A66C2]/10 text-xs"
+              onClick={() => {
+                const shareUrl = user ? `https://crawlers.fr/temporaryreport/demo?ref=${user.id}` : 'https://crawlers.fr';
+                const text = encodeURIComponent(`En moins de 5 minutes et sans expert, j'ai audité le référencement GEO de mon site. 🚀
+
+Je ne suis ni développeur, ni un pro du marketing, mais j'ai vite compris que les règles du jeu ont changé.
+
+Aujourd'hui, nos futurs clients ne "googlisent" plus seulement : ils interrogent ChatGPT, Perplexity ou Gemini. Si notre entreprise n'y est pas citée comme une référence, on devient tout simplement invisible pour une part croissante du marché. 📉
+
+J'ai testé Crawlers.AI (crawlers.fr) pour voir où j'en étais. Ce qui a vraiment fait la différence pour moi ? La clarté du plan d'action.
+
+D'habitude, les outils de diagnostic vous assomment avec des termes techniques comme "balises H1", "fichiers JSON" ou "backlinks". En tant que dirigeant, on veut des solutions, pas des devinettes.
+
+Ici, j'ai obtenu une analyse en langage clair. L'outil m'a dit précisément : « Voici ce que l'IA comprend de votre activité, et voici le contenu spécifique à ajouter pour qu'elle vous recommande naturellement à vos prospects. » 💡
+
+C'est concret, actionnable immédiatement et surtout : on n'a pas besoin de savoir coder pour améliorer sa visibilité.
+
+Pour quelqu'un qui doit gérer 10 priorités à la fois, c'est un gain de sérénité précieux. ✅
+
+${shareUrl}
+
+#Entrepreneuriat #GEO #IA #DigitalMarketing #Strategie #TPE #PME`);
+                window.open(`https://www.linkedin.com/sharing/share-offsite/?text=${text}`, '_blank');
+              }}
+            >
+              <Linkedin className="h-3.5 w-3.5" />
+              Gagner des crédits gratuits
+            </Button>
+          </div>
 
           <div className="text-xs text-muted-foreground text-center">
             <span>
