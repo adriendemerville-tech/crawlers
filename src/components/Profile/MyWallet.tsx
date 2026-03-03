@@ -318,6 +318,50 @@ export function MyWallet() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Payment Method */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              {language === 'fr' ? 'Moyen de paiement' : language === 'es' ? 'Método de pago' : 'Payment method'}
+            </CardTitle>
+            <CardDescription>
+              {language === 'fr' 
+                ? 'Gérez votre carte bancaire et vos informations de facturation' 
+                : language === 'es' 
+                  ? 'Gestione su tarjeta y datos de facturación'
+                  : 'Manage your card and billing information'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">
+                    {language === 'fr' ? 'Carte enregistrée' : language === 'es' ? 'Tarjeta registrada' : 'Card on file'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'fr' ? 'Modifier via le portail de paiement' : language === 'es' ? 'Modificar a través del portal de pagos' : 'Update via the billing portal'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenPortal}
+                disabled={portalLoading}
+                className="gap-2"
+              >
+                {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                {language === 'fr' ? 'Modifier' : language === 'es' ? 'Modificar' : 'Update'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
