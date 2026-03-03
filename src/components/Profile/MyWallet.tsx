@@ -14,6 +14,8 @@ import { useQuery } from '@tanstack/react-query';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { useToast } from '@/hooks/use-toast';
 import { useAdmin } from '@/hooks/useAdmin';
+import { Palette } from 'lucide-react';
+import { BrandingTab } from '@/components/Profile/BrandingTab';
 
 const translations = {
   fr: {
@@ -360,6 +362,26 @@ export function MyWallet() {
                 {language === 'fr' ? 'Modifier' : language === 'es' ? 'Modificar' : 'Update'}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Branding / White Label */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5" />
+              {language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White Label'}
+            </CardTitle>
+            <CardDescription>
+              {language === 'fr' 
+                ? 'Personnalisez vos rapports avec votre identité visuelle' 
+                : language === 'es' 
+                  ? 'Personalice sus informes con su identidad visual'
+                  : 'Customize your reports with your brand identity'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BrandingTab />
           </CardContent>
         </Card>
       </div>
