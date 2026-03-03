@@ -570,27 +570,58 @@ function generateFixCode(
 
     case 'fix_h1':
       return {
-        fn: `  // Correction de la balise H1
+        fn: `  // Correction de la balise H1 — Remplacement dynamique White Hat
   function fixH1() {
-    var h1s = document.querySelectorAll('h1');
-    
-    if (h1s.length === 0) {
-      var mainTitle = document.querySelector('header h2, .hero h2, main h2');
-      if (mainTitle) {
-        var newH1 = document.createElement('h1');
-        newH1.className = mainTitle.className;
-        newH1.textContent = mainTitle.textContent;
-        mainTitle.parentNode.replaceChild(newH1, mainTitle);
-        console.log('[Crawlers.fr] H1 créé depuis H2 existant');
+    try {
+      var h1s = document.querySelectorAll('h1');
+      
+      if (h1s.length === 0) {
+        // Cibler le titre visuel principal : H2 avec classe courante ou premier H2 du main
+        var candidates = [
+          '.article-title', '.hero-title', '.page-title', '.entry-title',
+          '.post-title', '.main-title', '.section-title'
+        ];
+        var mainTitle = null;
+        for (var i = 0; i < candidates.length; i++) {
+          mainTitle = document.querySelector('h2' + candidates[i]);
+          if (mainTitle) break;
+        }
+        if (!mainTitle) {
+          mainTitle = document.querySelector('main h2, article h2, .hero h2, header h2');
+        }
+        
+        if (mainTitle && mainTitle.parentNode) {
+          var newH1 = document.createElement('h1');
+          // Copier innerHTML, classes et attributs du H2 source
+          newH1.innerHTML = mainTitle.innerHTML;
+          newH1.className = mainTitle.className;
+          for (var a = 0; a < mainTitle.attributes.length; a++) {
+            var attr = mainTitle.attributes[a];
+            if (attr.name !== 'class') {
+              newH1.setAttribute(attr.name, attr.value);
+            }
+          }
+          mainTitle.parentNode.replaceChild(newH1, mainTitle);
+          console.log('[Crawlers.fr] ✅ H1 créé par remplacement du H2 visible:', newH1.textContent.substring(0, 60));
+        } else {
+          console.log('[Crawlers.fr] ⚠️ Aucun H2 candidat trouvé pour conversion en H1');
+        }
+      } else if (h1s.length > 1) {
+        // Garder le premier H1, convertir les autres en H2
+        for (var j = 1; j < h1s.length; j++) {
+          var h2 = document.createElement('h2');
+          h2.className = h1s[j].className;
+          h2.innerHTML = h1s[j].innerHTML;
+          if (h1s[j].parentNode) {
+            h1s[j].parentNode.replaceChild(h2, h1s[j]);
+          }
+        }
+        console.log('[Crawlers.fr] ✅ H1 multiples corrigés: ' + (h1s.length - 1) + ' converti(s) en H2');
+      } else {
+        console.log('[Crawlers.fr] H1 déjà présent et unique');
       }
-    } else if (h1s.length > 1) {
-      for (var i = 1; i < h1s.length; i++) {
-        var h2 = document.createElement('h2');
-        h2.className = h1s[i].className;
-        h2.innerHTML = h1s[i].innerHTML;
-        h1s[i].parentNode.replaceChild(h2, h1s[i]);
-      }
-      console.log('[Crawlers.fr] H1 multiples corrigés en H2');
+    } catch (e) {
+      console.error('[Crawlers.fr] Erreur correction H1:', e);
     }
   }`,
         call: 'fixH1();'
@@ -1280,51 +1311,79 @@ function generateFixCode(
       };
 
     case 'fix_semantic_injection':
-      // Super-capacité: Info Box Expert riche en mots-clés
+      // Super-capacité: Info Box Expert visible et White Hat — section sémantique stylisée
       const semanticConfig = fix.data || {};
       const targetKeyword = semanticConfig.keyword || siteName;
       const expertContent = semanticConfig.content || `${siteName} est reconnu pour son expertise et son engagement qualité.`;
       
       return {
-        fn: `  // 🚀 SUPER-CAPACITÉ: Info Box Expert (Semantic Injection)
+        fn: `  // 🚀 SUPER-CAPACITÉ: Enrichissement Sémantique Visible (White Hat)
   function injectSemanticInfoBox() {
-    if (document.querySelector('.crawlers-info-box')) {
-      console.log('[Crawlers.fr] Info Box déjà présente');
-      return;
+    try {
+      if (document.querySelector('.crawlers-info-box')) {
+        console.log('[Crawlers.fr] Info Box déjà présente');
+        return;
+      }
+      
+      // Section visible et stylisée — 100% lisible par Google, 0 risque de pénalité
+      var infoSection = document.createElement('section');
+      infoSection.className = 'crawlers-info-box';
+      infoSection.setAttribute('role', 'complementary');
+      infoSection.setAttribute('aria-label', 'En savoir plus sur ${targetKeyword}');
+      infoSection.innerHTML = \`
+        <style>
+          .crawlers-info-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin: 2rem auto;
+            max-width: 900px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          }
+          .crawlers-info-box-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+          }
+          .crawlers-info-box-icon { font-size: 1.5rem; }
+          .crawlers-info-box-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+          }
+          .crawlers-info-box-content {
+            color: #334155;
+            line-height: 1.7;
+            font-size: 0.95rem;
+          }
+          .crawlers-info-box-content strong { color: #0f172a; }
+        </style>
+        <div class="crawlers-info-box-header">
+          <span class="crawlers-info-box-icon">ℹ️</span>
+          <h4 class="crawlers-info-box-title">À propos de ${targetKeyword}</h4>
+        </div>
+        <div class="crawlers-info-box-content">
+          <p><strong>${targetKeyword}</strong> — ${expertContent} Notre équipe d'experts vous accompagne avec des solutions innovantes et personnalisées.</p>
+        </div>
+      \`;
+      
+      // Injecter avant le footer pour une intégration naturelle
+      var footer = document.querySelector('footer');
+      if (footer && footer.parentNode) {
+        footer.parentNode.insertBefore(infoSection, footer);
+      } else {
+        var main = document.querySelector('main, article');
+        if (main) main.appendChild(infoSection);
+        else document.body.appendChild(infoSection);
+      }
+      
+      console.log('[Crawlers.fr] 🚀 Enrichissement sémantique visible injecté (${targetKeyword})');
+    } catch(e) {
+      console.error('[Crawlers.fr] Erreur injection sémantique:', e);
     }
-    
-    var infoBox = document.createElement('aside');
-    infoBox.className = 'crawlers-info-box';
-    infoBox.setAttribute('role', 'complementary');
-    infoBox.setAttribute('aria-label', 'Information importante');
-    infoBox.innerHTML = \`
-      <style>
-        .crawlers-info-box { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 4px solid #3b82f6; border-radius: 0 12px 12px 0; padding: 1.5rem 2rem; margin: 2rem 0; }
-        .crawlers-info-box-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
-        .crawlers-info-box-icon { font-size: 1.5rem; }
-        .crawlers-info-box-title { font-size: 1.1rem; font-weight: 700; color: #1e40af; margin: 0; }
-        .crawlers-info-box-content { color: #1e3a5f; line-height: 1.7; font-size: 0.95rem; }
-        .crawlers-info-box-content strong { color: #1e40af; }
-      </style>
-      <div class="crawlers-info-box-header">
-        <span class="crawlers-info-box-icon">ℹ️</span>
-        <h4 class="crawlers-info-box-title">À propos de ${targetKeyword}</h4>
-      </div>
-      <div class="crawlers-info-box-content">
-        <p><strong>${targetKeyword}</strong> ${expertContent} Notre équipe d'experts vous accompagne avec des solutions innovantes et personnalisées.</p>
-      </div>
-    \`;
-    
-    // Injecter après le premier H2 ou dans le main
-    var firstH2 = document.querySelector('main h2, article h2, section h2');
-    if (firstH2 && firstH2.parentNode) {
-      firstH2.parentNode.insertBefore(infoBox, firstH2.nextSibling);
-    } else {
-      var main = document.querySelector('main, article');
-      if (main) main.appendChild(infoBox);
-    }
-    
-    console.log('[Crawlers.fr] 🚀 Info Box Expert injectée (${targetKeyword})');
   }`,
         call: 'injectSemanticInfoBox();'
       };
@@ -1405,89 +1464,130 @@ function generateFixCode(
       };
 
     case 'fix_pagespeed_suite':
-      // Super-capacité: Suite complète PageSpeed (CLS, LCP, Fonts)
+      // Super-capacité: Suite complète PageSpeed (CLS, LCP via MutationObserver, Fonts)
       return {
-        fn: `  // 🚀 SUPER-CAPACITÉ: Suite PageSpeed Complète (CLS + LCP + Fonts)
+        fn: `  // 🚀 SUPER-CAPACITÉ: Suite PageSpeed Complète (CLS + LCP MutationObserver + Fonts)
   function applyPageSpeedSuite() {
-    var fixedCount = 0;
-    
-    // 1. FIX CLS: Ajouter width/height aux images sans dimensions
-    var images = document.querySelectorAll('img:not([width]):not([height])');
-    images.forEach(function(img) {
-      if (img.naturalWidth && img.naturalHeight) {
-        img.width = img.naturalWidth;
-        img.height = img.naturalHeight;
-        img.style.aspectRatio = img.naturalWidth + ' / ' + img.naturalHeight;
-        fixedCount++;
-      } else {
-        // Fallback: placeholder aspect ratio
-        img.style.aspectRatio = '16 / 9';
-        img.style.width = '100%';
-        img.style.height = 'auto';
-      }
-    });
-    console.log('[Crawlers.fr] 🔧 CLS: ' + images.length + ' images corrigées (dimensions explicites)');
-    
-    // 2. FIX LCP: Fetch priority sur l'image la plus grande (LCP candidate)
-    var largestImage = null;
-    var largestArea = 0;
-    document.querySelectorAll('img').forEach(function(img) {
-      var rect = img.getBoundingClientRect();
-      var area = rect.width * rect.height;
-      if (area > largestArea && rect.top < window.innerHeight) {
-        largestArea = area;
-        largestImage = img;
-      }
-    });
-    
-    if (largestImage) {
-      largestImage.fetchPriority = 'high';
-      largestImage.loading = 'eager';
-      largestImage.decoding = 'async';
-      console.log('[Crawlers.fr] 🔧 LCP: fetchPriority=high appliqué à l\\'image principale');
-      fixedCount++;
-    }
-    
-    // 3. FIX FONTS: Injecter font-display: swap dans les @font-face existantes
-    var styleSheets = document.styleSheets;
-    var fontRulesFixed = 0;
     try {
-      for (var i = 0; i < styleSheets.length; i++) {
-        try {
-          var rules = styleSheets[i].cssRules || styleSheets[i].rules;
-          for (var j = 0; j < rules.length; j++) {
-            if (rules[j].type === CSSRule.FONT_FACE_RULE) {
-              var fontRule = rules[j];
-              if (!fontRule.style.fontDisplay) {
-                fontRule.style.fontDisplay = 'swap';
-                fontRulesFixed++;
+      var fixedCount = 0;
+      
+      // 1. FIX CLS: Ajouter width/height aux images sans dimensions
+      var images = document.querySelectorAll('img:not([width]):not([height])');
+      images.forEach(function(img) {
+        if (img.naturalWidth && img.naturalHeight) {
+          img.width = img.naturalWidth;
+          img.height = img.naturalHeight;
+          img.style.aspectRatio = img.naturalWidth + ' / ' + img.naturalHeight;
+          fixedCount++;
+        } else {
+          img.style.aspectRatio = '16 / 9';
+          img.style.width = '100%';
+          img.style.height = 'auto';
+        }
+      });
+      console.log('[Crawlers.fr] 🔧 CLS: ' + images.length + ' images corrigées (dimensions explicites)');
+      
+      // 2. FIX LCP: MutationObserver temps réel — détecte l'image hero/bannière dès son insertion dans le DOM
+      (function() {
+        var lcpSelectors = '.hero-banner img, .hero img, .featured-article img, [class*="hero"] img, [class*="banner"] img, header img, #main-content img, main > section:first-child img';
+        var lcpFixed = false;
+        
+        function optimizeLCPImage(img) {
+          if (lcpFixed) return;
+          img.setAttribute('fetchpriority', 'high');
+          img.setAttribute('loading', 'eager');
+          img.setAttribute('decoding', 'sync');
+          
+          // Preload hint
+          var link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.href = img.src || img.getAttribute('data-src') || '';
+          if (link.href) document.head.appendChild(link);
+          
+          lcpFixed = true;
+          console.log('[Crawlers.fr] 🔧 LCP: MutationObserver — fetchpriority=high appliqué à:', img.src ? img.src.substring(0, 80) : '(image)');
+        }
+        
+        // Vérifier les images déjà présentes dans le DOM
+        var existing = document.querySelector(lcpSelectors);
+        if (existing) {
+          optimizeLCPImage(existing);
+        } else {
+          // Observer le DOM en construction pour capter l'image dès son insertion
+          var observer = new MutationObserver(function(mutations) {
+            if (lcpFixed) { observer.disconnect(); return; }
+            for (var m = 0; m < mutations.length; m++) {
+              var nodes = mutations[m].addedNodes;
+              for (var n = 0; n < nodes.length; n++) {
+                var node = nodes[n];
+                if (node.nodeType !== 1) continue;
+                // Le nœud ajouté est-il lui-même une image LCP ?
+                if (node.matches && node.matches(lcpSelectors)) {
+                  optimizeLCPImage(node);
+                  observer.disconnect();
+                  return;
+                }
+                // Ou contient-il une image LCP ?
+                if (node.querySelector) {
+                  var found = node.querySelector(lcpSelectors);
+                  if (found) {
+                    optimizeLCPImage(found);
+                    observer.disconnect();
+                    return;
+                  }
+                }
               }
             }
-          }
-        } catch(e) { /* Cross-origin stylesheet, ignore */ }
-      }
-    } catch(e) { console.log('[Crawlers.fr] ⚠️ Impossible d\\'accéder aux feuilles de style'); }
-    
-    // Fallback: Injecter une règle globale pour les polices Google
-    var fontSwapStyle = document.createElement('style');
-    fontSwapStyle.textContent = '@font-face { font-display: swap !important; }';
-    document.head.appendChild(fontSwapStyle);
-    console.log('[Crawlers.fr] 🔧 FONTS: font-display:swap appliqué (' + fontRulesFixed + ' règles + fallback global)');
-    
-    // 4. BONUS: Preconnect aux domaines de polices courants
-    var preconnects = ['https://fonts.googleapis.com', 'https://fonts.gstatic.com'];
-    preconnects.forEach(function(href) {
-      if (!document.querySelector('link[rel="preconnect"][href="' + href + '"]')) {
-        var link = document.createElement('link');
-        link.rel = 'preconnect';
-        link.href = href;
-        link.crossOrigin = 'anonymous';
-        document.head.appendChild(link);
-      }
-    });
-    console.log('[Crawlers.fr] 🔧 PRECONNECT: Liens vers fonts.googleapis.com ajoutés');
-    
-    console.log('[Crawlers.fr] 🚀 Suite PageSpeed appliquée: ' + (images.length + (largestImage ? 1 : 0) + fontRulesFixed) + ' optimisations');
+          });
+          observer.observe(document.documentElement, { childList: true, subtree: true });
+          // Sécurité: déconnecter après 10s max
+          setTimeout(function() { observer.disconnect(); }, 10000);
+        }
+      })();
+      
+      // 3. FIX FONTS: Injecter font-display: swap dans les @font-face existantes
+      var styleSheets = document.styleSheets;
+      var fontRulesFixed = 0;
+      try {
+        for (var i = 0; i < styleSheets.length; i++) {
+          try {
+            var rules = styleSheets[i].cssRules || styleSheets[i].rules;
+            for (var j = 0; j < rules.length; j++) {
+              if (rules[j].type === CSSRule.FONT_FACE_RULE) {
+                var fontRule = rules[j];
+                if (!fontRule.style.fontDisplay) {
+                  fontRule.style.fontDisplay = 'swap';
+                  fontRulesFixed++;
+                }
+              }
+            }
+          } catch(e) { /* Cross-origin stylesheet, ignore */ }
+        }
+      } catch(e) { console.log('[Crawlers.fr] ⚠️ Impossible d\\'accéder aux feuilles de style'); }
+      
+      var fontSwapStyle = document.createElement('style');
+      fontSwapStyle.textContent = '@font-face { font-display: swap !important; }';
+      document.head.appendChild(fontSwapStyle);
+      console.log('[Crawlers.fr] 🔧 FONTS: font-display:swap appliqué (' + fontRulesFixed + ' règles + fallback global)');
+      
+      // 4. BONUS: Preconnect aux domaines de polices courants
+      var preconnects = ['https://fonts.googleapis.com', 'https://fonts.gstatic.com'];
+      preconnects.forEach(function(href) {
+        if (!document.querySelector('link[rel="preconnect"][href="' + href + '"]')) {
+          var link = document.createElement('link');
+          link.rel = 'preconnect';
+          link.href = href;
+          link.crossOrigin = 'anonymous';
+          document.head.appendChild(link);
+        }
+      });
+      console.log('[Crawlers.fr] 🔧 PRECONNECT: Liens vers fonts.googleapis.com ajoutés');
+      
+      console.log('[Crawlers.fr] 🚀 Suite PageSpeed appliquée: ' + (images.length + fontRulesFixed) + ' optimisations + LCP MutationObserver');
+    } catch(e) {
+      console.error('[Crawlers.fr] Erreur Suite PageSpeed:', e);
+    }
   }`,
         call: 'applyPageSpeedSuite();'
       };

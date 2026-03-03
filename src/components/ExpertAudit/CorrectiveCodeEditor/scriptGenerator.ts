@@ -204,28 +204,39 @@ function generateFixCode(
 
     case 'fix_h1':
       return {
-        fn: `  // Correction de la balise H1
+        fn: `  // Correction de la balise H1 — Remplacement dynamique White Hat
   function fixH1() {
-    var h1s = document.querySelectorAll('h1');
-    
-    if (h1s.length === 0) {
-      var mainTitle = document.querySelector('header h2, .hero h2, main h2');
-      if (mainTitle) {
-        var newH1 = document.createElement('h1');
-        newH1.className = mainTitle.className;
-        newH1.textContent = mainTitle.textContent;
-        mainTitle.parentNode.replaceChild(newH1, mainTitle);
-        console.log('[Crawlers.fr] H1 créé depuis H2 existant');
+    try {
+      var h1s = document.querySelectorAll('h1');
+      if (h1s.length === 0) {
+        var candidates = ['.article-title','.hero-title','.page-title','.entry-title','.post-title','.main-title','.section-title'];
+        var mainTitle = null;
+        for (var i = 0; i < candidates.length; i++) {
+          mainTitle = document.querySelector('h2' + candidates[i]);
+          if (mainTitle) break;
+        }
+        if (!mainTitle) mainTitle = document.querySelector('main h2, article h2, .hero h2, header h2');
+        if (mainTitle && mainTitle.parentNode) {
+          var newH1 = document.createElement('h1');
+          newH1.innerHTML = mainTitle.innerHTML;
+          newH1.className = mainTitle.className;
+          for (var a = 0; a < mainTitle.attributes.length; a++) {
+            var attr = mainTitle.attributes[a];
+            if (attr.name !== 'class') newH1.setAttribute(attr.name, attr.value);
+          }
+          mainTitle.parentNode.replaceChild(newH1, mainTitle);
+          console.log('[Crawlers.fr] ✅ H1 créé par remplacement du H2 visible');
+        }
+      } else if (h1s.length > 1) {
+        for (var j = 1; j < h1s.length; j++) {
+          var h2 = document.createElement('h2');
+          h2.className = h1s[j].className;
+          h2.innerHTML = h1s[j].innerHTML;
+          if (h1s[j].parentNode) h1s[j].parentNode.replaceChild(h2, h1s[j]);
+        }
+        console.log('[Crawlers.fr] ✅ H1 multiples corrigés en H2');
       }
-    } else if (h1s.length > 1) {
-      for (var i = 1; i < h1s.length; i++) {
-        var h2 = document.createElement('h2');
-        h2.className = h1s[i].className;
-        h2.innerHTML = h1s[i].innerHTML;
-        h1s[i].parentNode.replaceChild(h2, h1s[i]);
-      }
-      console.log('[Crawlers.fr] H1 multiples corrigés en H2');
-    }
+    } catch(e) { console.error('[Crawlers.fr] Erreur correction H1:', e); }
   }`,
         call: 'fixH1();'
       };
