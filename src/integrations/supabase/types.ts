@@ -511,6 +511,8 @@ export type Database = {
           id: string
           last_name: string
           plan_type: string
+          referral_code: string | null
+          referred_by: string | null
           stripe_subscription_id: string | null
           subscription_status: string | null
           updated_at: string
@@ -535,6 +537,8 @@ export type Database = {
           id?: string
           last_name: string
           plan_type?: string
+          referral_code?: string | null
+          referred_by?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
           updated_at?: string
@@ -559,10 +563,39 @@ export type Database = {
           id?: string
           last_name?: string
           plan_type?: string
+          referral_code?: string | null
+          referred_by?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      referral_rewards: {
+        Row: {
+          created_at: string
+          id: string
+          referee_id: string
+          referrer_id: string
+          reward_amount: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referee_id: string
+          referrer_id: string
+          reward_amount?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referee_id?: string
+          referrer_id?: string
+          reward_amount?: number
+          status?: string
         }
         Relationships: []
       }

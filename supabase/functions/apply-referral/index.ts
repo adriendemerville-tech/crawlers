@@ -1,0 +1,147 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+    // Auth client to get user
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: userError } = await authClient.auth.getUser(token);
+    if (userError || !userData.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const userId = userData.user.id;
+    const { referral_code } = await req.json();
+
+    if (!referral_code || typeof referral_code !== 'string' || referral_code.trim().length < 4) {
+      return new Response(JSON.stringify({ error: 'Code invalide' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const code = referral_code.trim().toUpperCase();
+
+    // Service client for privileged operations
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // 1. Get current user profile
+    const { data: myProfile, error: profileErr } = await supabase
+      .from('profiles')
+      .select('referral_code, referred_by')
+      .eq('user_id', userId)
+      .single();
+
+    if (profileErr || !myProfile) {
+      return new Response(JSON.stringify({ error: 'Profil introuvable' }), {
+        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Already referred
+    if (myProfile.referred_by) {
+      return new Response(JSON.stringify({ error: 'Vous avez déjà utilisé un code de parrainage' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Self-referral check
+    if (myProfile.referral_code === code) {
+      return new Response(JSON.stringify({ error: 'Vous ne pouvez pas utiliser votre propre code' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 2. Find referrer
+    const { data: referrer, error: refErr } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('referral_code', code)
+      .single();
+
+    if (refErr || !referrer) {
+      return new Response(JSON.stringify({ error: 'Code de parrainage inconnu' }), {
+        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 3. Link referee to referrer
+    const { error: updateErr } = await supabase
+      .from('profiles')
+      .update({ referred_by: referrer.user_id })
+      .eq('user_id', userId);
+
+    if (updateErr) {
+      console.error('Update error:', updateErr);
+      return new Response(JSON.stringify({ error: 'Erreur lors de la mise à jour' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 4. Welcome bonus: +10 credits to referee
+    const { data: currentProfile } = await supabase
+      .from('profiles')
+      .select('credits_balance')
+      .eq('user_id', userId)
+      .single();
+
+    const currentBalance = currentProfile?.credits_balance || 0;
+    const newBalance = currentBalance + 10;
+
+    await supabase
+      .from('profiles')
+      .update({ credits_balance: newBalance, updated_at: new Date().toISOString() })
+      .eq('user_id', userId);
+
+    // Record transaction
+    await supabase
+      .from('credit_transactions')
+      .insert({
+        user_id: userId,
+        amount: 10,
+        transaction_type: 'bonus',
+        description: 'Bonus de bienvenue parrainage — 10 crédits',
+      });
+
+    console.log(`✅ Referral applied: ${userId} referred by ${referrer.user_id}, +10 credits`);
+
+    return new Response(JSON.stringify({ 
+      success: true, 
+      credits_added: 10, 
+      new_balance: newBalance 
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error: unknown) {
+    console.error('Error in apply-referral:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+});
