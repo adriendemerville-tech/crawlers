@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact } from 'lucide-react';
+import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,14 @@ const translations = {
     preview: 'Aperçu du rapport',
     previewHeader: 'En-tête personnalisé',
     previewFooter: 'Les mentions Crawlers.fr seront masquées',
+    reportHeaderLabel: 'Texte d\'introduction',
+    reportHeaderHint: 'Affiché après l\'en-tête du rapport (max 500 caractères)',
+    reportHeaderPlaceholder: 'Ex : Ce rapport a été réalisé par notre équipe d\'experts SEO...',
+    reportFooterLabel: 'Texte de conclusion',
+    reportFooterHint: 'Affiché avant le pied de page du rapport (max 500 caractères)',
+    reportFooterPlaceholder: 'Ex : Pour toute question, n\'hésitez pas à nous contacter...',
+    customTextsTitle: 'Textes personnalisés du rapport',
+    customTextsDescription: 'Ajoutez des messages personnalisés en début et fin de rapport',
     error: 'Erreur lors de la sauvegarde',
     uploadError: 'Erreur lors de l\'upload du logo',
     fileTooLarge: 'Le fichier dépasse 2 Mo',
@@ -62,6 +70,14 @@ const translations = {
     preview: 'Report Preview',
     previewHeader: 'Custom header',
     previewFooter: 'Crawlers.fr mentions will be hidden',
+    reportHeaderLabel: 'Introduction Text',
+    reportHeaderHint: 'Displayed after the report header (max 500 characters)',
+    reportHeaderPlaceholder: 'e.g. This report was prepared by our SEO experts...',
+    reportFooterLabel: 'Conclusion Text',
+    reportFooterHint: 'Displayed before the report footer (max 500 characters)',
+    reportFooterPlaceholder: 'e.g. For any questions, feel free to contact us...',
+    customTextsTitle: 'Custom Report Texts',
+    customTextsDescription: 'Add custom messages at the beginning and end of reports',
     error: 'Error saving branding',
     uploadError: 'Error uploading logo',
     fileTooLarge: 'File exceeds 2 MB',
@@ -90,6 +106,14 @@ const translations = {
     preview: 'Vista previa del informe',
     previewHeader: 'Encabezado personalizado',
     previewFooter: 'Las menciones de Crawlers.fr se ocultarán',
+    reportHeaderLabel: 'Texto de introducción',
+    reportHeaderHint: 'Se muestra después del encabezado del informe (máx. 500 caracteres)',
+    reportHeaderPlaceholder: 'Ej: Este informe fue realizado por nuestro equipo de expertos SEO...',
+    reportFooterLabel: 'Texto de conclusión',
+    reportFooterHint: 'Se muestra antes del pie de página del informe (máx. 500 caracteres)',
+    reportFooterPlaceholder: 'Ej: Para cualquier pregunta, no dude en contactarnos...',
+    customTextsTitle: 'Textos personalizados del informe',
+    customTextsDescription: 'Agrega mensajes personalizados al inicio y final de los informes',
     error: 'Error al guardar el branding',
     uploadError: 'Error al subir el logo',
     fileTooLarge: 'El archivo supera los 2 MB',
@@ -108,6 +132,8 @@ export function BrandingTab() {
   const [contactLastName, setContactLastName] = useState(profile?.agency_contact_last_name || '');
   const [contactPhone, setContactPhone] = useState(profile?.agency_contact_phone || '');
   const [contactEmail, setContactEmail] = useState(profile?.agency_contact_email || '');
+  const [reportHeaderText, setReportHeaderText] = useState(profile?.agency_report_header_text || '');
+  const [reportFooterText, setReportFooterText] = useState(profile?.agency_report_footer_text || '');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -164,6 +190,8 @@ export function BrandingTab() {
         agency_contact_last_name: contactLastName.trim() || null,
         agency_contact_phone: contactPhone.trim() || null,
         agency_contact_email: contactEmail.trim() || null,
+        agency_report_header_text: reportHeaderText.trim().slice(0, 500) || null,
+        agency_report_footer_text: reportFooterText.trim().slice(0, 500) || null,
       })
       .eq('user_id', user.id);
 
@@ -348,7 +376,45 @@ export function BrandingTab() {
         </CardContent>
       </Card>
 
-      {/* Save Button */}
+      {/* Custom Report Texts Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            {t.customTextsTitle}
+          </CardTitle>
+          <CardDescription>{t.customTextsDescription}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t.reportHeaderLabel}</Label>
+            <p className="text-xs text-muted-foreground">{t.reportHeaderHint}</p>
+            <textarea
+              value={reportHeaderText}
+              onChange={(e) => setReportHeaderText(e.target.value.slice(0, 500))}
+              placeholder={t.reportHeaderPlaceholder}
+              maxLength={500}
+              rows={3}
+              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+            />
+            <p className="text-xs text-muted-foreground text-right">{reportHeaderText.length}/500</p>
+          </div>
+          <div className="space-y-2">
+            <Label>{t.reportFooterLabel}</Label>
+            <p className="text-xs text-muted-foreground">{t.reportFooterHint}</p>
+            <textarea
+              value={reportFooterText}
+              onChange={(e) => setReportFooterText(e.target.value.slice(0, 500))}
+              placeholder={t.reportFooterPlaceholder}
+              maxLength={500}
+              rows={3}
+              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-none"
+            />
+            <p className="text-xs text-muted-foreground text-right">{reportFooterText.length}/500</p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Button onClick={handleSave} disabled={isSaving} className="gap-2">
         {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
         {isSaving ? t.saving : t.save}
