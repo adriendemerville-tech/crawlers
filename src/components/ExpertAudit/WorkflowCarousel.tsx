@@ -83,7 +83,6 @@ interface WorkflowCarouselProps {
   hasStrategicResult?: boolean;
   onNavigateToTechnical?: () => void;
   onNavigateToStrategic?: () => void;
-  isUrlLocked?: boolean;
 }
 
 export function WorkflowCarousel({
@@ -100,7 +99,6 @@ export function WorkflowCarousel({
   hasStrategicResult = false,
   onNavigateToTechnical,
   onNavigateToStrategic,
-  isUrlLocked = false,
 }: WorkflowCarouselProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
@@ -312,9 +310,8 @@ export function WorkflowCarousel({
                 placeholder={t.placeholder}
                 value={url}
                 onChange={(e) => onUrlChange(e.target.value)}
-                className={`pl-4 pr-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-sm ${isUrlLocked ? 'opacity-70 cursor-not-allowed' : ''}`}
-                disabled={isLoading || isStrategicLoading || isUrlLocked}
-                readOnly={isUrlLocked}
+                className="pl-4 pr-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-sm"
+                disabled={isLoading || isStrategicLoading}
               />
               <Search className="absolute right-8 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             </div>
