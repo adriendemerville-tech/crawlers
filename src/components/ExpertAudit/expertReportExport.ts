@@ -690,6 +690,46 @@ export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technic
         styles: { fontSize: 9 },
         columnStyles: { 1: { cellWidth: 70 } },
       });
+
+      currentY = ((doc as any).lastAutoTable?.finalY || currentY) + 10;
+    }
+
+    // Executive Roadmap (premium narrative roadmap)
+    if (strategic?.executive_roadmap && strategic.executive_roadmap.length > 0) {
+      // Check if we need a new page
+      if (currentY > doc.internal.pageSize.height - 60) {
+        doc.addPage();
+        currentY = 30;
+      }
+
+      doc.setFontSize(14);
+      doc.setTextColor(5, 150, 105);
+      doc.text('Feuille de Route Exécutive', 20, currentY);
+      currentY += 8;
+
+      const execRoadmapData = strategic.executive_roadmap.map((item: any) => [
+        item.priority || '—',
+        item.title || '—',
+        item.category || '—',
+        (item.prescriptive_action || '').substring(0, 80) + ((item.prescriptive_action || '').length > 80 ? '...' : ''),
+        item.expected_roi || '—',
+      ]);
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Priorité', 'Action', 'Catégorie', 'Prescription', 'ROI']],
+        body: execRoadmapData,
+        theme: 'striped',
+        headStyles: { fillColor: [5, 150, 105] },
+        styles: { fontSize: 8 },
+        columnStyles: {
+          0: { cellWidth: 22 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 22 },
+          3: { cellWidth: 75 },
+          4: { cellWidth: 16, halign: 'center' },
+        },
+      });
     }
   }
 
