@@ -245,32 +245,36 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                     </Badge>
                   )}
 
-                  <div className="flex flex-col items-center text-center space-y-3">
-                    <div>
-                      <h3 className="font-semibold text-base">{pkg.name}</h3>
-                      <p className="text-2xl font-bold mt-1 flex items-center justify-center gap-1.5">
-                        {pkg.credits}
-                        <CreditCoin size="md" />
-                      </p>
-                    </div>
+                  <div className="flex flex-col items-center text-center h-full justify-between">
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="font-semibold text-base">{pkg.name}</h3>
+                        <p className="text-2xl font-bold mt-1 flex items-center justify-center gap-1.5">
+                          {pkg.credits}
+                          <CreditCoin size="md" />
+                        </p>
+                      </div>
 
-                    <div className="space-y-1">
-                      <p className="text-xl font-bold">{pkg.price}€</p>
-                      <p className="text-xs text-muted-foreground">
-                        {pkg.pricePerCredit.toFixed(2).replace('.', ',')}€ {t.perCredit}
-                      </p>
-                      {pkg.savings && (
-                        <Badge variant="secondary" className="text-xs text-emerald-600 dark:text-emerald-400">
-                          <Check className="h-3 w-3 mr-1" />
-                          {pkg.savings} {t.savings}
-                        </Badge>
-                      )}
+                      <div className="space-y-1">
+                        <p className="text-xl font-bold">{pkg.price}€</p>
+                        <p className="text-xs text-muted-foreground">
+                          {pkg.pricePerCredit.toFixed(2).replace('.', ',')}€ {t.perCredit}
+                        </p>
+                        {pkg.savings ? (
+                          <Badge variant="secondary" className="text-xs text-emerald-600 dark:text-emerald-400">
+                            <Check className="h-3 w-3 mr-1" />
+                            {pkg.savings} {t.savings}
+                          </Badge>
+                        ) : (
+                          <div className="h-5" />
+                        )}
+                      </div>
                     </div>
 
                     <Button
                       onClick={() => handlePurchase(pkg.id)}
                       disabled={loadingPackage !== null}
-                      className={`w-full bg-gradient-to-r ${pkg.color} hover:opacity-90 text-white border-0`}
+                      className={`w-full bg-gradient-to-r ${pkg.color} hover:opacity-90 text-white border-0 mt-3`}
                       size="sm"
                     >
                       {isLoading ? (
