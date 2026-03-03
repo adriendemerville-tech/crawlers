@@ -342,24 +342,7 @@ export function MyWallet() {
 
           {/* Branding Tab */}
           <TabsContent value="branding">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Palette className="h-5 w-5 text-violet-500" />
-                  {language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White Label'}
-                </CardTitle>
-                <CardDescription>
-                  {language === 'fr' 
-                    ? 'Personnalisez vos rapports avec votre identité visuelle' 
-                    : language === 'es' 
-                      ? 'Personalice sus informes con su identidad visual'
-                      : 'Customize your reports with your brand identity'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <BrandingTab />
-              </CardContent>
-            </Card>
+            <BrandingTab />
           </TabsContent>
 
           {/* Clients Tab */}
