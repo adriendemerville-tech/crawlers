@@ -14,59 +14,62 @@ interface CodeBlockProps {
   allowScroll?: boolean; // When true (after payment), user can scroll freely
 }
 
-// Syntax highlighting for JavaScript
+// Token-based syntax highlighting for JavaScript
+// Uses a single-pass tokenizer to avoid regex interference between passes
 function highlightSyntax(code: string): string {
   if (!code) return '';
-  
-  // Escape HTML first
-  let highlighted = code
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
 
-  // Keywords (violet/purple)
-  highlighted = highlighted.replace(
-    /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|try|catch|finally|throw|new|this|typeof|instanceof|void|delete|in|of|class|extends|super|import|export|default|async|await|null|undefined|true|false)\b/g,
-    '<span class="text-violet-500 dark:text-violet-400">$1</span>'
-  );
+  const KEYWORDS = new Set([
+    'const','let','var','function','return','if','else','for','while','do',
+    'switch','case','break','continue','try','catch','finally','throw','new',
+    'this','typeof','instanceof','void','delete','in','of','class','extends',
+    'super','import','export','default','async','await','null','undefined','true','false'
+  ]);
 
-  // Strings (green)
-  highlighted = highlighted.replace(
-    /(["'`])(?:(?!\1)[^\\]|\\.)*?\1/g,
-    '<span class="text-emerald-600 dark:text-emerald-400">$&</span>'
-  );
+  const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const wrap = (cls: string, text: string) => `<span class="${cls}">${text}</span>`;
 
-  // Comments (gray)
-  highlighted = highlighted.replace(
-    /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)/g,
-    '<span class="text-muted-foreground italic">$1</span>'
-  );
+  // Tokenize in one pass: comments, strings, then words/numbers/other
+  const TOKEN_RE = /\/\/[^\n]*|\/\*[\s\S]*?\*\/|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|\b\d+\.?\d*\b|\b[a-zA-Z_$][a-zA-Z0-9_$]*\b|[^\s]/g;
 
-  // Numbers (orange)
-  highlighted = highlighted.replace(
-    /\b(\d+\.?\d*)\b/g,
-    '<span class="text-orange-500 dark:text-orange-400">$1</span>'
-  );
+  let result = '';
+  let lastIndex = 0;
 
-  // Function calls (purple)
-  highlighted = highlighted.replace(
-    /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g,
-    '<span class="text-purple-500 dark:text-purple-400">$1</span>('
-  );
+  for (const match of code.matchAll(TOKEN_RE)) {
+    const idx = match.index!;
+    // Preserve whitespace between tokens
+    if (idx > lastIndex) {
+      result += esc(code.slice(lastIndex, idx));
+    }
+    const token = match[0];
+    lastIndex = idx + token.length;
 
-  // Properties after dot (violet lighter)
-  highlighted = highlighted.replace(
-    /\.([a-zA-Z_$][a-zA-Z0-9_$]*)/g,
-    '.<span class="text-violet-400 dark:text-violet-300">$1</span>'
-  );
+    if (token.startsWith('//') || token.startsWith('/*')) {
+      result += wrap('text-muted-foreground italic', esc(token));
+    } else if (token.startsWith('"') || token.startsWith("'") || token.startsWith('`')) {
+      result += wrap('text-emerald-600 dark:text-emerald-400', esc(token));
+    } else if (/^\d/.test(token)) {
+      result += wrap('text-orange-500 dark:text-orange-400', esc(token));
+    } else if (KEYWORDS.has(token)) {
+      result += wrap('text-violet-500 dark:text-violet-400', esc(token));
+    } else if (/^[a-zA-Z_$]/.test(token)) {
+      // Peek ahead: is this a function call?
+      const after = code.slice(lastIndex).match(/^\s*\(/);
+      if (after) {
+        result += wrap('text-purple-500 dark:text-purple-400', esc(token));
+      } else {
+        result += esc(token);
+      }
+    } else {
+      result += esc(token);
+    }
+  }
+  // Trailing whitespace
+  if (lastIndex < code.length) {
+    result += esc(code.slice(lastIndex));
+  }
 
-  // HTML tags in strings (red)
-  highlighted = highlighted.replace(
-    /(&lt;\/?)([a-zA-Z][a-zA-Z0-9]*)/g,
-    '$1<span class="text-rose-500 dark:text-rose-400">$2</span>'
-  );
-
-  return highlighted;
+  return result;
 }
 
 export function CodeBlock({ 
