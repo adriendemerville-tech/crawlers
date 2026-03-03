@@ -231,7 +231,7 @@ export default function Profile() {
                 </TabsTrigger>
                 <TabsTrigger value="wallet" className="flex-1 gap-2">
                   {(profile?.plan_type === 'agency_pro' || isAdmin) ? (
-                    <Crown className="h-4 w-4 text-primary" />
+                    <Crown className="h-4 w-4 text-violet-500" />
                   ) : (
                     <Wallet className="h-4 w-4" />
                   )}
@@ -242,7 +242,7 @@ export default function Profile() {
                 <div className="ml-auto" />
                 <TabsTrigger value="settings" className="gap-2">
                   {(profile?.plan_type === 'agency_pro' || isAdmin) ? (
-                    <Crown className="h-4 w-4 text-yellow-500" style={{ filter: 'drop-shadow(0 0 2px rgba(234, 179, 8, 0.5))' }} />
+                    <Crown className="h-4 w-4 text-violet-500" style={{ filter: 'drop-shadow(0 0 2px rgba(139, 92, 246, 0.5))' }} />
                   ) : (
                     <Settings className="h-4 w-4" />
                   )}
