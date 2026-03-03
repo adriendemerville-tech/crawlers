@@ -277,9 +277,26 @@ export function ExpertAuditDashboard() {
       return;
     }
 
-    // Priority: URL from query params > cached URL from home (if different → reset) > saved session
+    const fromSites = searchParams.get('from') === 'sites';
+
+    // Priority: URL from "Mes sites" (highest) > URL from query params > cached URL from home > saved session
     if (urlFromParams) {
       setUrl(urlFromParams);
+      // When coming from "Mes sites", override localStorage to prevent conflict
+      if (fromSites) {
+        localStorage.setItem('crawlers_last_url', urlFromParams);
+        // Reset any prior audit session for a clean start
+        sessionStorage.removeItem('audit_url');
+        sessionStorage.removeItem('audit_technical_result');
+        sessionStorage.removeItem('audit_strategic_result');
+        sessionStorage.removeItem('audit_mode');
+        setTechnicalResult(null);
+        setStrategicResult(null);
+        setResult(null);
+        setAuditMode(null);
+        setCompletedSteps([]);
+        sessionStorage.setItem('audit_url', urlFromParams);
+      }
       // Clear the URL param from browser history
       navigate('/audit-expert', { replace: true });
     } else if (cachedUrl && savedUrl && cachedUrl !== savedUrl) {
