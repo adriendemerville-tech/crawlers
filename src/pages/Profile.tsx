@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, ClipboardList, Code2, Wallet, Shield, Radar, Crown } from 'lucide-react';
+import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,7 +29,7 @@ const translations = {
     actionPlans: 'Plans d\'Action',
     correctiveCodes: 'Codes Correctifs',
     wallet: 'Portefeuille',
-    tracking: 'Tracking',
+    tracking: 'Mes sites',
     firstName: 'Prénom',
     lastName: 'Nom',
     email: 'Email',
@@ -59,7 +59,7 @@ const translations = {
     actionPlans: 'Action Plans',
     correctiveCodes: 'Corrective Codes',
     wallet: 'Wallet',
-    tracking: 'Tracking',
+    tracking: 'My Sites',
     firstName: 'First Name',
     lastName: 'Last Name',
     email: 'Email',
@@ -89,7 +89,7 @@ const translations = {
     actionPlans: 'Planes de Acción',
     correctiveCodes: 'Códigos Correctivos',
     wallet: 'Billetera',
-    tracking: 'Tracking',
+    tracking: 'Mis sitios',
     firstName: 'Nombre',
     lastName: 'Apellido',
     email: 'Correo electrónico',
@@ -173,7 +173,7 @@ export default function Profile() {
                   <span className="hidden sm:inline">{t.myReports}</span>
                 </TabsTrigger>
                 <TabsTrigger value="action-plans" className="flex-1 gap-2">
-                  <ClipboardList className="h-4 w-4" />
+                  <CheckSquare className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.actionPlans}</span>
                 </TabsTrigger>
                 <TabsTrigger value="corrective-codes" className="flex-1 gap-2">
