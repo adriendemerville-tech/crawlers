@@ -241,12 +241,12 @@ export function MyWallet() {
       <div className="space-y-6">
         {/* Active Subscription Card — violet theme */}
         <Card className="border-violet-500/40 bg-gradient-to-br from-violet-500/10 via-violet-500/5 to-transparent">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2 pt-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Crown className="h-5 w-5 text-yellow-500" style={{ filter: 'drop-shadow(0 0 4px rgba(234, 179, 8, 0.6))' }} />
-                <span className="text-yellow-500 font-bold" style={{ filter: 'drop-shadow(0 0 4px rgba(234, 179, 8, 0.4))' }}>Pro Agency</span>
-                <Badge className="bg-violet-600 text-white text-xs">
+              <CardTitle className="flex items-center gap-1.5 text-base">
+                <Crown className="h-4 w-4 text-yellow-500" style={{ filter: 'drop-shadow(0 0 2px rgba(234, 179, 8, 0.3))' }} />
+                <span className="text-yellow-500 font-bold" style={{ filter: 'drop-shadow(0 0 2px rgba(234, 179, 8, 0.2))' }}>Pro Agency</span>
+                <Badge className="bg-violet-600 text-white text-xs ml-1">
                   {subscriptionStatus === 'canceling'
                     ? (language === 'fr' ? 'Résiliation en cours' : language === 'es' ? 'Cancelación en curso' : 'Canceling')
                     : (language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active')}
@@ -254,7 +254,7 @@ export function MyWallet() {
               </CardTitle>
             </div>
             {subscriptionStatus === 'canceling' && (
-              <div className="flex items-center gap-2 mt-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+              <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 {language === 'fr' 
                   ? "Votre abonnement reste actif jusqu'à la fin de la période en cours, puis sera résilié."
@@ -264,7 +264,7 @@ export function MyWallet() {
               </div>
             )}
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 pt-0">
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
                 <FileText className="h-4 w-4 text-violet-500 shrink-0" />
