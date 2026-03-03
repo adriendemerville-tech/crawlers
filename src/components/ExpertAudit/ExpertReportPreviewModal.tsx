@@ -99,7 +99,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[95vh] overflow-hidden flex flex-col p-0">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col p-0 [&>button]:hidden">
         {/* Header with actions */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
           <h2 className="text-lg font-semibold">{auditMode === 'technical' ? t.technicalAudit : t.strategic}</h2>
