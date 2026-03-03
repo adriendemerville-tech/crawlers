@@ -252,6 +252,20 @@ function humanizeBrandName(slug: string): string {
     if (!matched) {
       for (const [pat, rep] of particles) {
         if (lower.startsWith(pat, pos)) {
+          // Heuristique anti-préfixe : si la particule est courte (≤3 chars),
+          // vérifier que le reste du texte contient au moins une autre particule.
+          // Sinon "de" dans "debarrasseurs" serait splitté à tort.
+          if (pat.length <= 3) {
+            const remaining = lower.substring(pos + pat.length);
+            const hasMoreParticles = particles.some(([p]) => {
+              const idx = remaining.indexOf(p);
+              return idx > 0 && idx < remaining.length; // particle found INSIDE remaining, not at start
+            });
+            if (!hasMoreParticles && remaining.length > 3) {
+              // Pas de particule dans le reste → c'est probablement un préfixe (dé-, le-, etc.)
+              continue;
+            }
+          }
           words.push(rep);
           pos += pat.length;
           matched = true;
