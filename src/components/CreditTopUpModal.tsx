@@ -216,19 +216,13 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[960px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl">
+        <DialogHeader className="pb-0">
+          <DialogTitle className="text-base font-semibold">
             {t.title}
           </DialogTitle>
-          <DialogDescription className="flex items-center justify-between">
-            <span>{t.subtitle}</span>
-            <Badge variant="secondary">
-              {t.currentBalance}: {currentBalance} {t.credits}
-            </Badge>
-          </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4 sm:grid-cols-3">
+        <div className="grid gap-4 pt-2 sm:grid-cols-3">
           <AnimatePresence>
             {packages.map((pkg, index) => {
               const isLoading = loadingPackage === pkg.id;
@@ -247,7 +241,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                     <Badge 
                       className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0"
                     >
-                      {t.popular}
+                      {language === 'fr' ? 'Populaire' : language === 'es' ? 'Popular' : 'Popular'}
                     </Badge>
                   )}
 
@@ -424,7 +418,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="rounded-xl bg-gradient-to-r from-muted/30 via-muted/50 to-muted/30 p-3 space-y-2 flex flex-col justify-between"
+            className="rounded-xl border-2 border-[#0A66C2]/30 bg-gradient-to-r from-[#0A66C2]/5 via-transparent to-transparent p-3 space-y-2 flex flex-col justify-between"
           >
             <div className="flex items-center gap-3">
               <Handshake className="h-4 w-4 text-[#0A66C2] shrink-0" />
