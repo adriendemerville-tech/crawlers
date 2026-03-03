@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Palette } from 'lucide-react';
 import { BrandingTab } from '@/components/Profile/BrandingTab';
+import { ClientsTab } from '@/components/Profile/ClientsTab';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { AccountManager } from '@/components/Profile/AccountManager';
 
@@ -332,31 +333,7 @@ export function MyWallet() {
 
           {/* Clients Tab */}
           <TabsContent value="clients">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-violet-500" />
-                  Clients
-                </CardTitle>
-                <CardDescription>
-                  {language === 'fr' 
-                    ? 'Gérez vos clients et leurs rapports' 
-                    : language === 'es' 
-                      ? 'Gestione sus clientes y sus informes'
-                      : 'Manage your clients and their reports'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center justify-center py-10 space-y-4 text-center">
-                  <div className="p-3 rounded-full bg-violet-500/10">
-                    <Activity className="h-8 w-8 text-violet-400" />
-                  </div>
-                  <p className="text-sm text-muted-foreground max-w-xs">
-                    {language === 'fr' ? 'La gestion des clients sera bientôt disponible.' : language === 'es' ? 'La gestión de clientes estará disponible pronto.' : 'Client management coming soon.'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <ClientsTab />
           </TabsContent>
 
           {/* Invoices Tab */}
