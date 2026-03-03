@@ -76,7 +76,8 @@ const MODEL_PRICING: Record<string, { input: number; output: number; label: stri
 
 function estimateCost(model: string, promptTokens: number, completionTokens: number): number {
   const pricing = MODEL_PRICING[model] || { input: 0.50, output: 1.50 }; // fallback
-  return (promptTokens * pricing.input + completionTokens * pricing.output) / 1_000_000;
+  const usd = (promptTokens * pricing.input + completionTokens * pricing.output) / 1_000_000;
+  return usd * 0.92; // USD → EUR approximate
 }
 
 interface DailyData {
@@ -528,7 +529,7 @@ export function AnalyticsDashboard() {
                 <p className="text-xs text-muted-foreground">{tokenUsage.callCount} appels IA</p>
                 {tokenUsage.totalEstimatedCost > 0 && (
                   <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                    ~${tokenUsage.totalEstimatedCost.toFixed(4)}
+                    ~{tokenUsage.totalEstimatedCost.toFixed(4)}€
                   </span>
                 )}
               </div>
@@ -554,7 +555,7 @@ export function AnalyticsDashboard() {
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">Coût estimé total</p>
               <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
-                ${tokenUsage.totalEstimatedCost.toFixed(4)}
+                {tokenUsage.totalEstimatedCost.toFixed(4)}€
               </p>
             </div>
           </div>
@@ -581,7 +582,7 @@ export function AnalyticsDashboard() {
                           </span>
                         </div>
                         <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
-                          ${data.estimatedCost.toFixed(4)}
+                          {data.estimatedCost.toFixed(4)}€
                         </span>
                       </div>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
