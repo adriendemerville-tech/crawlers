@@ -127,6 +127,7 @@ export function MyTracking() {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const navigate = useNavigate();
+  const [isCollaborator, setIsCollaborator] = useState(false);
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
   const [statsMap, setStatsMap] = useState<Record<string, StatsEntry[]>>({});
@@ -188,6 +189,19 @@ export function MyTracking() {
 
   useEffect(() => { fetchSites(); }, [fetchSites]);
   useEffect(() => { fetchStats(); }, [fetchStats]);
+
+  // Check if user is a collaborator (not owner)
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('agency_team_members')
+      .select('id')
+      .eq('member_user_id', user.id)
+      .limit(1)
+      .then(({ data }) => {
+        setIsCollaborator(!!data && data.length > 0);
+      });
+  }, [user]);
 
   // Auto-refresh sites not audited in 24h — only once per login session
   useEffect(() => {
@@ -459,9 +473,11 @@ export function MyTracking() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleRemoveSite(currentSite.id)} className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {!isCollaborator && (
+                        <Button variant="ghost" size="sm" onClick={() => handleRemoveSite(currentSite.id)} className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
 
                       {/* WordPress Button → opens modal */}
                       <Button 
