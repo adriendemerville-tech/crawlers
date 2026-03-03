@@ -281,7 +281,7 @@ export function MyWallet() {
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
                 <Palette className="h-4 w-4 text-violet-500 shrink-0" />
                 <span className="text-sm font-medium">
-                  {language === 'fr' ? 'Rapports marque blanche' : language === 'es' ? 'Informes marca blanca' : 'White label reports'}
+                  {language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White label'}
                 </span>
               </div>
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
