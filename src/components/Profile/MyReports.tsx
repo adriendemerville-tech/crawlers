@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { FolderPlus, FileText, Trash2, FolderOpen, ChevronRight, MoreVertical, Loader2, Download, ArrowLeft } from 'lucide-react';
 import {
   DndContext,
@@ -36,6 +36,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCredits } from '@/contexts/CreditsContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SortableReportItem } from './SortableReportItem';
@@ -138,8 +140,11 @@ const translations = {
 };
 
 export function MyReports() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { language } = useLanguage();
+  const { isAgencyPro } = useCredits();
+  const { isAdmin } = useAdmin();
+  const isProUser = isAgencyPro || isAdmin;
   const t = translations[language];
 
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -151,6 +156,7 @@ export function MyReports() {
   const [newFolderName, setNewFolderName] = useState('');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<'folder' | 'report' | null>(null);
+  const [agencyClients, setAgencyClients] = useState<Array<{ first_name: string; last_name: string; email: string | null; sites: string[] }>>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -166,8 +172,48 @@ export function MyReports() {
   useEffect(() => {
     if (user) {
       fetchData();
+      if (isProUser) fetchAgencyClients();
     }
-  }, [user, currentFolderId]);
+  }, [user, currentFolderId, isProUser]);
+
+  const fetchAgencyClients = async () => {
+    if (!user) return;
+    const { data: clients } = await supabase
+      .from('agency_clients')
+      .select('first_name, last_name, email, id')
+      .eq('owner_user_id', user.id);
+    if (!clients) return;
+    const clientIds = clients.map(c => c.id);
+    if (clientIds.length === 0) { setAgencyClients([]); return; }
+    const { data: links } = await supabase
+      .from('agency_client_sites')
+      .select('client_id, tracked_site_id')
+      .in('client_id', clientIds);
+    const siteIds = [...new Set((links || []).map(l => l.tracked_site_id))];
+    let siteDomainMap: Record<string, string> = {};
+    if (siteIds.length > 0) {
+      const { data: sites } = await supabase
+        .from('tracked_sites')
+        .select('id, domain')
+        .in('id', siteIds);
+      (sites || []).forEach(s => { siteDomainMap[s.id] = s.domain; });
+    }
+    setAgencyClients(clients.map(c => ({
+      first_name: c.first_name,
+      last_name: c.last_name,
+      email: c.email,
+      sites: (links || []).filter(l => l.client_id === c.id).map(l => siteDomainMap[l.tracked_site_id]).filter(Boolean),
+    })));
+  };
+
+  const findClientForUrl = useCallback((url: string) => {
+    for (const client of agencyClients) {
+      if (client.sites.some(domain => url.includes(domain))) {
+        return { first_name: client.first_name, last_name: client.last_name, email: client.email };
+      }
+    }
+    return null;
+  }, [agencyClients]);
 
   const fetchData = async () => {
     if (!user) return;
@@ -466,6 +512,9 @@ export function MyReports() {
                     report={report}
                     onDelete={() => handleDeleteReport(report.id)}
                     translations={t}
+                    isProUser={isProUser}
+                    findClientForUrl={findClientForUrl}
+                    profileSignature={profile ? `${profile.first_name} ${profile.last_name}` : ''}
                   />
                 ))}
               </SortableContext>

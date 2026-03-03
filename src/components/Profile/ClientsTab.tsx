@@ -339,12 +339,12 @@ export function ClientsTab() {
                     </PopoverTrigger>
                     <PopoverContent className="p-0 w-72" align="end">
                       <Command shouldFilter={true}>
-                        <div className="[&_input]:!text-foreground [&_input]:!caret-foreground">
-                          <CommandInput 
-                            placeholder={t.searchSite} 
-                            autoFocus
-                          />
-                        </div>
+                        <CommandInput 
+                          placeholder={t.searchSite} 
+                          autoFocus
+                          className="text-foreground"
+                          style={{ color: 'var(--foreground)', caretColor: 'var(--foreground)' }}
+                        />
                         <CommandList>
                           <CommandEmpty>{t.noSites}</CommandEmpty>
                           <CommandGroup heading={language === 'fr' ? 'Sites trackés' : 'Tracked sites'}>
