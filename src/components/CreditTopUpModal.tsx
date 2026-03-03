@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Sparkles, Crown, Star, Linkedin, Handshake, Infinity, FileText, Code, Stamp } from 'lucide-react';
+import { Check, Loader2, Crown, Linkedin, Handshake, Infinity, FileText, Code, Stamp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -23,7 +23,6 @@ const packages = [
     credits: 10,
     price: 5,
     pricePerCredit: 0.50,
-    icon: Sparkles,
     color: 'from-blue-500 to-cyan-500',
     borderColor: 'border-blue-500/30',
     popular: false,
@@ -34,9 +33,8 @@ const packages = [
     credits: 50,
     price: 19,
     pricePerCredit: 0.38,
-    icon: Sparkles,
-    color: 'from-violet-500 to-purple-500',
-    borderColor: 'border-violet-500/50',
+    color: 'from-emerald-500 to-green-500',
+    borderColor: 'border-emerald-500/50',
     popular: true,
     savings: '24%',
   },
@@ -46,7 +44,6 @@ const packages = [
     credits: 150,
     price: 45,
     pricePerCredit: 0.30,
-    icon: Crown,
     color: 'from-amber-500 to-orange-500',
     borderColor: 'border-amber-500/30',
     popular: false,
@@ -153,7 +150,6 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
         <div className="grid gap-4 py-4 sm:grid-cols-3">
           <AnimatePresence>
             {packages.map((pkg, index) => {
-              const Icon = pkg.icon;
               const isLoading = loadingPackage === pkg.id;
 
               return (
@@ -163,22 +159,18 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className={`relative rounded-xl border-2 p-4 ${pkg.borderColor} ${
-                    pkg.popular ? 'ring-2 ring-violet-500/50' : ''
+                    pkg.popular ? 'ring-2 ring-emerald-500/50' : ''
                   } bg-card hover:border-primary/50 transition-all duration-300`}
                 >
                   {pkg.popular && (
                     <Badge 
-                      className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-500 to-purple-500 text-white border-0"
+                      className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0"
                     >
                       {t.popular}
                     </Badge>
                   )}
 
                   <div className="flex flex-col items-center text-center space-y-3">
-                    <div className={`p-2.5 rounded-lg bg-gradient-to-br ${pkg.color} text-white`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-
                     <div>
                       <h3 className="font-semibold text-base">{pkg.name}</h3>
                       <p className="text-2xl font-bold mt-1 flex items-center justify-center gap-1.5">
@@ -230,16 +222,16 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="relative rounded-xl border-2 border-primary/40 bg-gradient-to-r from-primary/5 via-primary/3 to-transparent p-5 overflow-hidden"
+          className="relative rounded-xl border-2 border-violet-500/40 bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent p-5 overflow-hidden"
         >
-          <Badge className="absolute top-3 right-3 bg-primary/90 text-primary-foreground gap-1 text-xs">
+          <Badge className="absolute top-3 right-3 bg-violet-600 text-white gap-1 text-xs">
             <Infinity className="h-3 w-3" />
             {language === 'fr' ? 'Illimité' : language === 'es' ? 'Ilimitado' : 'Unlimited'}
           </Badge>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex-1 space-y-2">
               <h3 className="font-bold text-base flex items-center gap-2">
-                <Crown className="h-5 w-5 text-primary" />
+                <Crown className="h-5 w-5 text-amber-400" />
                 {language === 'fr' ? 'Passez en forfait illimité avec Pro Agency' : language === 'es' ? 'Pase al plan ilimitado Pro Agency' : 'Go unlimited with Pro Agency'}
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -250,9 +242,9 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                     : 'No limits. Unlimited reports & fixes, white-label reports with your logo, and priority support — all included.'}
               </p>
               <div className="flex flex-wrap gap-3 pt-1">
-                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-primary" />{language === 'fr' ? 'Rapports ∞' : 'Reports ∞'}</span>
-                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Code className="h-3.5 w-3.5 text-primary" />{language === 'fr' ? 'Correctifs ∞' : 'Fixes ∞'}</span>
-                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Stamp className="h-3.5 w-3.5 text-primary" />{language === 'fr' ? 'Marque blanche' : 'White label'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Rapports ∞' : 'Reports ∞'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Code className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Correctifs ∞' : 'Fixes ∞'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Stamp className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Marque blanche' : 'White label'}</span>
               </div>
             </div>
             <div className="flex flex-col items-center gap-2 shrink-0">
@@ -273,9 +265,9 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                   }
                 }}
                 disabled={subscribeLoading}
-                className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground w-full"
+                className="gap-2 bg-gradient-to-r from-violet-600 via-purple-500 to-amber-400 hover:from-violet-700 hover:via-purple-600 hover:to-amber-500 text-white w-full border-0"
               >
-                {subscribeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
+                {subscribeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4 text-amber-300" />}
                 {language === 'fr' ? "S'abonner" : language === 'es' ? 'Suscribirse' : 'Subscribe'}
               </Button>
             </div>
