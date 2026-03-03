@@ -401,7 +401,7 @@ export function MyTracking() {
               <Radar className="h-5 w-5 text-primary" />
               {t.title}
             </CardTitle>
-            <CardDescription>{t.description}</CardDescription>
+            
           </div>
           <Button onClick={() => setShowAddModal(true)} className="gap-2">
             <Plus className="h-4 w-4" />
