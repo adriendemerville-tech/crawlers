@@ -237,12 +237,19 @@ serve(async (req) => {
       const planType = subscription.metadata?.plan_type || "agency_pro";
 
       if (userId) {
-        const status = subscription.status === "active" || subscription.status === "trialing" ? "active" : subscription.status;
+        const isActive = subscription.status === "active" || subscription.status === "trialing";
+        const cancelAtPeriodEnd = subscription.cancel_at_period_end;
+        
+        // If active but scheduled for cancellation, keep agency_pro until period end
+        const effectiveStatus = isActive
+          ? (cancelAtPeriodEnd ? "canceling" : "active")
+          : subscription.status;
+
         const { error: subError } = await supabase
           .from("profiles")
           .update({
-            plan_type: status === "active" ? planType : "free",
-            subscription_status: status,
+            plan_type: isActive ? planType : "free",
+            subscription_status: effectiveStatus,
             stripe_subscription_id: subscription.id,
             updated_at: new Date().toISOString(),
           })
@@ -251,7 +258,7 @@ serve(async (req) => {
         if (subError) {
           console.error("❌ Error updating subscription status:", subError);
         } else {
-          console.log(`✅ Subscription ${subscription.id} → ${status} for user ${userId}`);
+          console.log(`✅ Subscription ${subscription.id} → ${effectiveStatus} for user ${userId}`);
         }
       }
     }

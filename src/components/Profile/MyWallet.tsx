@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones } from 'lucide-react';
+import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -83,13 +83,27 @@ interface Transaction {
 }
 
 export function MyWallet() {
-  const { balance, isAgencyPro } = useCredits();
+  const { balance, isAgencyPro, subscriptionStatus } = useCredits();
   const { language } = useLanguage();
   const { user } = useAuth();
   const { toast } = useToast();
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
   const t = translations[language];
+
+  const handleOpenPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-customer-portal');
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (err) {
+      toast({ title: 'Erreur', description: String(err), variant: 'destructive' });
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   const { data: transactions, isLoading } = useQuery({
     queryKey: ['credit-transactions', user?.id],
@@ -298,7 +312,56 @@ export function MyWallet() {
         </Card>
       )}
 
-      {/* Transaction History with Tabs */}
+      {/* Active Subscription Card */}
+      {isAgencyPro && (
+        <Card className="border-primary/40 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Crown className="h-5 w-5 text-primary" />
+                Pro Agency
+                <Badge className="bg-primary/90 text-primary-foreground text-xs">
+                  {subscriptionStatus === 'canceling'
+                    ? (language === 'fr' ? 'Résiliation en cours' : language === 'es' ? 'Cancelación en curso' : 'Canceling')
+                    : (language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active')}
+                </Badge>
+              </CardTitle>
+            </div>
+            {subscriptionStatus === 'canceling' && (
+              <div className="flex items-center gap-2 mt-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                {language === 'fr' 
+                  ? "Votre abonnement reste actif jusqu'à la fin de la période en cours, puis sera résilié."
+                  : language === 'es'
+                    ? 'Su suscripción permanece activa hasta el final del período actual.'
+                    : 'Your subscription remains active until the end of the current billing period.'}
+              </div>
+            )}
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1"><FileText className="h-3.5 w-3.5" /> {language === 'fr' ? 'Rapports ∞' : 'Reports ∞'}</span>
+                <span className="flex items-center gap-1"><Code className="h-3.5 w-3.5" /> {language === 'fr' ? 'Correctifs ∞' : 'Fixes ∞'}</span>
+                <span className="flex items-center gap-1"><Headphones className="h-3.5 w-3.5" /> {language === 'fr' ? 'Support prioritaire' : 'Priority support'}</span>
+              </div>
+              <div className="ml-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenPortal}
+                  disabled={portalLoading}
+                  className="gap-2"
+                >
+                  {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                  {language === 'fr' ? 'Gérer mon abonnement' : language === 'es' ? 'Gestionar suscripción' : 'Manage subscription'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
