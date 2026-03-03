@@ -799,9 +799,15 @@ INSTRUCTIONS CRITIQUES:
 - UTILISE LES DONNÉES DE MARCHÉ RÉELLES pour keyword_positioning et market_data_summary
 - Les main_keywords doivent refléter les données DataForSEO reçues (volumes, difficultés, positions réels)
 - Ne jamais inventer d'URLs de concurrents irréelles, utilise des acteurs RÉELS du marché
-- L'executive_roadmap doit contenir MINIMUM 5 recommandations narratives BASÉES SUR LES DONNÉES
+- L'executive_roadmap doit contenir MINIMUM 6 recommandations narratives BASÉES SUR LES DONNÉES
 - Chaque prescriptive_action doit être un paragraphe complet (4-5 phrases), pas une phrase courte
 - Le JSON doit être pur, sans virgules traînantes, prêt pour JSON.parse()
+
+⚠️ RECOMMANDATION SOCIAL MÉDIA OBLIGATOIRE DANS L'EXECUTIVE ROADMAP:
+- L'executive_roadmap DOIT TOUJOURS contenir AU MOINS UNE recommandation avec category "Social"
+- Cette recommandation doit identifier LE réseau social le plus adapté à l'identité de marque du site analysé (LinkedIn pour B2B/expertise, Instagram pour lifestyle/visuel, TikTok pour jeune audience/e-commerce, X pour tech/opinion, YouTube pour tutoriels/démonstration, Reddit pour niches techniques)
+- La prescriptive_action doit détailler une stratégie d'acquisition concrète sur CE réseau spécifique: fréquence de publication, types de contenus à créer, hooks d'engagement, et comment cette présence alimentera la citabilité IA (les LLMs comme Perplexity et SearchGPT indexent fortement Reddit, X et YouTube)
+- Le choix du réseau doit être JUSTIFIÉ par l'analyse de l'identité de marque, du public cible et du secteur d'activité détectés
 
 ⚠️ DISTINCTION GOLIATH vs CONCURRENT DIRECT (CRITIQUE):
 - GOLIATH (leader): Acteur DOMINANT avec présence internationale ou nationale massive, historique de +10 ans, budget marketing x10, backlinks x10, référence du secteur que tout le monde connaît (ex: Amazon, L'Occitane, Décathlon pour leurs secteurs)
