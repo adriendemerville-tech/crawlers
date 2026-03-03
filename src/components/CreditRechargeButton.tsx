@@ -4,6 +4,7 @@ import { Plus, Crown, Infinity } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,14 +26,15 @@ export function CreditRechargeButton({ showZeroForGuest = false }: CreditRecharg
   const { balance, loading, isAgencyPro } = useCredits();
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const navigate = useNavigate();
   const t = translations[language];
 
   // Show loading state only for logged in users
   if (loading && user) return null;
 
-  // Pro Agency users: show golden badge instead of credit counter
-  if (user && isAgencyPro) {
+  // Pro Agency users & admins: show golden badge instead of credit counter
+  if (user && (isAgencyPro || isAdmin)) {
     return (
       <Button
         variant="outline"
