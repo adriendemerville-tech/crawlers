@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.apply-referral]
 verify_jwt = false
+
+[functions.track-share-click]
+verify_jwt = false

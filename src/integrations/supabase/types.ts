@@ -720,6 +720,30 @@ export type Database = {
           },
         ]
       }
+      shared_link_clicks: {
+        Row: {
+          created_at: string
+          id: string
+          referrer_id: string
+          report_id: string
+          visitor_ip: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referrer_id: string
+          report_id: string
+          visitor_ip: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referrer_id?: string
+          report_id?: string
+          visitor_ip?: string
+        }
+        Relationships: []
+      }
       solution_library: {
         Row: {
           category: string | null
