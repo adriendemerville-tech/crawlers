@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2, Wallet, Shield, Radar, Palette } from 'lucide-react';
+import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2, Wallet, Shield, Radar, Palette, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -241,7 +241,11 @@ export default function Profile() {
                 )}
                 <div className="ml-auto" />
                 <TabsTrigger value="settings" className="gap-2">
-                  <Settings className="h-4 w-4" />
+                  {profile?.plan_type === 'agency_pro' ? (
+                    <Crown className="h-4 w-4 text-yellow-500" style={{ filter: 'drop-shadow(0 0 2px rgba(234, 179, 8, 0.5))' }} />
+                  ) : (
+                    <Settings className="h-4 w-4" />
+                  )}
                 </TabsTrigger>
                 {isAdmin && (
                   <TabsTrigger value="admin" className="gap-2 text-primary">
