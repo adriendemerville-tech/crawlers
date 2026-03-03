@@ -1887,7 +1887,7 @@ function generateCorrectiveScript(
  */
 (function() {
   'use strict';
-${registryContext}
+
   // ═══════════════════════════════════════════════════════════
   // UTILITAIRES
   // ═══════════════════════════════════════════════════════════
