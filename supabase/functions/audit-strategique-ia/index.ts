@@ -1218,7 +1218,7 @@ IMPORTANT:
     const content = aiResponse.choices?.[0]?.message?.content;
 
     // Track token usage
-    trackTokenUsage('audit-strategique-ia', 'google/gemini-3-pro-preview', aiResponse.usage, url);
+    trackTokenUsage('audit-strategique-ia', 'google/gemini-2.5-pro', aiResponse.usage, url);
 
     if (!content) {
       console.error('No content in AI response');
