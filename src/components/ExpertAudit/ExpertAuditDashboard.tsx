@@ -140,6 +140,7 @@ const translations = {
 
 export function ExpertAuditDashboard() {
   const [url, setUrl] = useState('');
+  const [isLockedUrl, setIsLockedUrl] = useState(false);
   const [auditMode, setAuditMode] = useState<AuditMode>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isStrategicLoading, setIsStrategicLoading] = useState(false);
@@ -179,6 +180,7 @@ export function ExpertAuditDashboard() {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const urlFromParams = searchParams.get('url');
+    const fromSites = searchParams.get('from') === 'sites';
     const paymentSuccess = searchParams.get('success') === 'true';
     const auditIdFromParams = searchParams.get('audit_id');
     
@@ -280,6 +282,10 @@ export function ExpertAuditDashboard() {
     // Priority: URL from query params > cached URL from home (if different → reset) > saved session
     if (urlFromParams) {
       setUrl(urlFromParams);
+      if (fromSites) {
+        setIsLockedUrl(true);
+        sessionStorage.setItem('audit_locked_url', 'true');
+      }
       // Clear the URL param from browser history
       navigate('/audit-expert', { replace: true });
     } else if (cachedUrl && savedUrl && cachedUrl !== savedUrl) {
@@ -299,6 +305,9 @@ export function ExpertAuditDashboard() {
       return; // skip restoring old results
     } else if (savedUrl) {
       setUrl(savedUrl);
+      if (sessionStorage.getItem('audit_locked_url') === 'true') {
+        setIsLockedUrl(true);
+      }
     } else if (cachedUrl) {
       setUrl(cachedUrl);
     }
@@ -426,6 +435,8 @@ export function ExpertAuditDashboard() {
   const handleNewAudit = () => {
     // Clear all state
     setUrl('');
+    setIsLockedUrl(false);
+    sessionStorage.removeItem('audit_locked_url');
     setAuditMode(null);
     setResult(null);
     setTechnicalResult(null);
@@ -832,7 +843,8 @@ export function ExpertAuditDashboard() {
         currentStep={currentStep}
         completedSteps={completedSteps}
         url={url}
-        onUrlChange={(v: string) => { setUrl(v); if (v.trim()) localStorage.setItem('crawlers_last_url', v.trim()); }}
+        onUrlChange={(v: string) => { if (!isLockedUrl) { setUrl(v); if (v.trim()) localStorage.setItem('crawlers_last_url', v.trim()); } }}
+        isUrlLocked={isLockedUrl}
         onStartTechnical={handleTechnicalAudit}
         onStartStrategic={() => handleStrategicAudit()}
         onStartPayment={() => setIsCodeEditorOpen(true)}

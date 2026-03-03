@@ -486,7 +486,7 @@ export function MyTracking() {
                         size="sm" 
                         variant="outline"
                         className="gap-1.5"
-                        onClick={() => navigate(`/audit-expert?url=${encodeURIComponent(`https://${currentSite.domain}`)}`)}
+                        onClick={() => navigate(`/audit-expert?url=${encodeURIComponent(`https://${currentSite.domain}`)}&from=sites`)}
                       >
                         <Search className="h-3.5 w-3.5" />
                         {language === 'fr' ? 'Auditer' : language === 'es' ? 'Auditar' : 'Audit'}
