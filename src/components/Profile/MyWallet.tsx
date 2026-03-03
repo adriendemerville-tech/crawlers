@@ -265,7 +265,7 @@ export function MyWallet() {
             )}
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
                 <FileText className="h-4 w-4 text-violet-500 shrink-0" />
                 <span className="text-sm font-medium">
@@ -282,6 +282,12 @@ export function MyWallet() {
                 <Palette className="h-4 w-4 text-violet-500 shrink-0" />
                 <span className="text-sm font-medium">
                   {language === 'fr' ? 'Rapports marque blanche' : language === 'es' ? 'Informes marca blanca' : 'White label reports'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
+                <User className="h-4 w-4 text-violet-500 shrink-0" />
+                <span className="text-sm font-medium">
+                  {language === 'fr' ? '3 comptes inclus' : language === 'es' ? '3 cuentas incluidas' : '3 accounts included'}
                 </span>
               </div>
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
