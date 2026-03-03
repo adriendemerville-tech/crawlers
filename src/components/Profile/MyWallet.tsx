@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity } from 'lucide-react';
+import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { CreditCoin } from '@/components/ui/CreditCoin';
+import { useToast } from '@/hooks/use-toast';
 
 const translations = {
   fr: {
@@ -82,10 +83,12 @@ interface Transaction {
 }
 
 export function MyWallet() {
-  const { balance } = useCredits();
+  const { balance, isAgencyPro } = useCredits();
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
   const t = translations[language];
 
   const { data: transactions, isLoading } = useQuery({
@@ -219,6 +222,81 @@ export function MyWallet() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pro Agency Upsell Card */}
+      {!isAgencyPro && (
+        <Card className="border-primary/40 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent relative overflow-hidden">
+          <div className="absolute top-3 right-3">
+            <Badge className="bg-primary/90 text-primary-foreground gap-1 text-xs">
+              <Infinity className="h-3 w-3" />
+              {language === 'fr' ? 'Illimité' : language === 'es' ? 'Ilimitado' : 'Unlimited'}
+            </Badge>
+          </div>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Crown className="h-5 w-5 text-primary" />
+              {language === 'fr' ? 'Passer au plan Pro Agency' : language === 'es' ? 'Cambiar al plan Pro Agency' : 'Upgrade to Pro Agency'}
+            </CardTitle>
+            <CardDescription>
+              {language === 'fr' 
+                ? 'Tout illimité pour 49€/mois — idéal pour les professionnels et agences.' 
+                : language === 'es' 
+                  ? 'Todo ilimitado por 49€/mes — ideal para profesionales y agencias.'
+                  : 'Everything unlimited for €49/month — ideal for professionals and agencies.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+                <FileText className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-medium">
+                  {language === 'fr' ? 'Rapports illimités' : language === 'es' ? 'Informes ilimitados' : 'Unlimited reports'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+                <Code className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-medium">
+                  {language === 'fr' ? 'Correctifs illimités' : language === 'es' ? 'Correctivos ilimitados' : 'Unlimited fixes'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+                <Headphones className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-medium">
+                  {language === 'fr' ? 'Support prioritaire' : language === 'es' ? 'Soporte prioritario' : 'Priority support'}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <p className="text-2xl font-bold text-foreground">
+                49€<span className="text-sm font-normal text-muted-foreground">/
+                  {language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}
+                </span>
+              </p>
+              <Button
+                onClick={async () => {
+                  setSubscribeLoading(true);
+                  try {
+                    const { data, error } = await supabase.functions.invoke('create-subscription-session', {
+                      body: { returnUrl: window.location.href }
+                    });
+                    if (error) throw error;
+                    if (data?.url) window.location.href = data.url;
+                  } catch (err) {
+                    toast({ title: 'Erreur', description: String(err), variant: 'destructive' });
+                  } finally {
+                    setSubscribeLoading(false);
+                  }
+                }}
+                disabled={subscribeLoading}
+                className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground"
+              >
+                {subscribeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
+                {language === 'fr' ? "S'abonner" : language === 'es' ? 'Suscribirse' : 'Subscribe'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Transaction History with Tabs */}
       <Card>
