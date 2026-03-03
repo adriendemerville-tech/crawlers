@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -120,6 +120,22 @@ const translations = {
   },
 };
 
+type CardId = 'identity' | 'contact' | 'texts';
+
+/** Small auto-save status badge shown in each card header */
+function AutoSaveIndicator({ status }: { status: 'idle' | 'saving' | 'saved' }) {
+  if (status === 'idle') return null;
+  return (
+    <span className="ml-auto flex items-center gap-1 text-xs font-normal text-muted-foreground">
+      {status === 'saving' ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <Check className="h-3.5 w-3.5 text-emerald-500" />
+      )}
+    </span>
+  );
+}
+
 export function BrandingTab() {
   const { user, profile, refreshProfile } = useAuth();
   const { language } = useLanguage();
@@ -137,6 +153,107 @@ export function BrandingTab() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Track per-card auto-save status
+  const [cardStatus, setCardStatus] = useState<Record<CardId, 'idle' | 'saving' | 'saved'>>({
+    identity: 'idle',
+    contact: 'idle',
+    texts: 'idle',
+  });
+
+  // Detect which cards are dirty
+  const isIdentityDirty = logoUrl !== (profile?.agency_logo_url || '')
+    || primaryColor !== (profile?.agency_primary_color || '#7c3aed')
+    || brandName !== (profile?.agency_brand_name || '');
+
+  const isContactDirty = contactFirstName !== (profile?.agency_contact_first_name || '')
+    || contactLastName !== (profile?.agency_contact_last_name || '')
+    || contactPhone !== (profile?.agency_contact_phone || '')
+    || contactEmail !== (profile?.agency_contact_email || '');
+
+  const isTextsDirty = reportHeaderText !== (profile?.agency_report_header_text || '')
+    || reportFooterText !== (profile?.agency_report_footer_text || '');
+
+  const dirtyCards = useRef<Set<CardId>>(new Set());
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstRender = useRef(true);
+
+  const persistSave = useCallback(async (cards: Set<CardId>) => {
+    if (!user || cards.size === 0) return;
+
+    // Mark saving on dirty cards
+    setCardStatus(prev => {
+      const next = { ...prev };
+      cards.forEach(c => { next[c] = 'saving'; });
+      return next;
+    });
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        agency_logo_url: logoUrl || null,
+        agency_primary_color: primaryColor || null,
+        agency_brand_name: brandName.trim() || null,
+        agency_contact_first_name: contactFirstName.trim() || null,
+        agency_contact_last_name: contactLastName.trim() || null,
+        agency_contact_phone: contactPhone.trim() || null,
+        agency_contact_email: contactEmail.trim() || null,
+        agency_report_header_text: reportHeaderText.trim().slice(0, 500) || null,
+        agency_report_footer_text: reportFooterText.trim().slice(0, 500) || null,
+      })
+      .eq('user_id', user.id);
+
+    if (error) {
+      toast.error(t.error);
+      setCardStatus(prev => {
+        const next = { ...prev };
+        cards.forEach(c => { next[c] = 'idle'; });
+        return next;
+      });
+    } else {
+      setCardStatus(prev => {
+        const next = { ...prev };
+        cards.forEach(c => { next[c] = 'saved'; });
+        return next;
+      });
+      await refreshProfile();
+      // Reset "saved" badge after 2s
+      setTimeout(() => {
+        setCardStatus(prev => {
+          const next = { ...prev };
+          cards.forEach(c => { if (next[c] === 'saved') next[c] = 'idle'; });
+          return next;
+        });
+      }, 2000);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, logoUrl, primaryColor, brandName, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
+
+  // Debounced auto-save: triggers 1.5s after last change
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const dirty = new Set<CardId>();
+    if (isIdentityDirty) dirty.add('identity');
+    if (isContactDirty) dirty.add('contact');
+    if (isTextsDirty) dirty.add('texts');
+    dirtyCards.current = dirty;
+
+    if (dirty.size === 0) return;
+
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      persistSave(new Set(dirtyCards.current));
+    }, 1500);
+
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logoUrl, primaryColor, brandName, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -163,7 +280,6 @@ export function BrandingTab() {
         .getPublicUrl(filePath);
 
       setLogoUrl(`${publicUrl}?t=${Date.now()}`);
-      toast.success(t.saved);
     } catch (err) {
       console.error(err);
       toast.error(t.uploadError);
@@ -176,9 +292,13 @@ export function BrandingTab() {
     setLogoUrl('');
   };
 
-  const handleSave = async () => {
+  const handleManualSave = async () => {
     if (!user) return;
     setIsSaving(true);
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+
+    const allCards = new Set<CardId>(['identity', 'contact', 'texts'] as CardId[]);
+    setCardStatus({ identity: 'saving', contact: 'saving', texts: 'saving' });
 
     const { error } = await supabase
       .from('profiles')
@@ -199,9 +319,14 @@ export function BrandingTab() {
 
     if (error) {
       toast.error(t.error);
+      setCardStatus({ identity: 'idle', contact: 'idle', texts: 'idle' });
     } else {
       toast.success(t.saved);
+      setCardStatus({ identity: 'saved', contact: 'saved', texts: 'saved' });
       await refreshProfile();
+      setTimeout(() => {
+        setCardStatus({ identity: 'idle', contact: 'idle', texts: 'idle' });
+      }, 2000);
     }
   };
 
@@ -213,6 +338,7 @@ export function BrandingTab() {
           <CardTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5" />
             {t.title}
+            <AutoSaveIndicator status={cardStatus.identity} />
           </CardTitle>
           <CardDescription>{t.description}</CardDescription>
         </CardHeader>
@@ -329,6 +455,7 @@ export function BrandingTab() {
           <CardTitle className="flex items-center gap-2">
             <Contact className="h-5 w-5" />
             {t.contactTitle}
+            <AutoSaveIndicator status={cardStatus.contact} />
           </CardTitle>
           <CardDescription>{t.contactDescription}</CardDescription>
         </CardHeader>
@@ -382,6 +509,7 @@ export function BrandingTab() {
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             {t.customTextsTitle}
+            <AutoSaveIndicator status={cardStatus.texts} />
           </CardTitle>
           <CardDescription>{t.customTextsDescription}</CardDescription>
         </CardHeader>
@@ -415,8 +543,8 @@ export function BrandingTab() {
         </CardContent>
       </Card>
 
-      <div className="sticky bottom-4 z-10 flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving} size="lg" className="gap-2 shadow-lg">
+      <div className="sticky bottom-4 z-10 flex justify-center">
+        <Button onClick={handleManualSave} disabled={isSaving} size="lg" className="gap-2 shadow-lg">
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {isSaving ? t.saving : t.save}
         </Button>
