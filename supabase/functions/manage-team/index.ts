@@ -40,14 +40,24 @@ Deno.serve(async (req) => {
 
     const { action, ...params } = await req.json();
 
-    // Check user is Pro Agency
+    // Check user is Pro Agency or Admin
     const { data: profile } = await adminClient
       .from("profiles")
       .select("plan_type, subscription_status")
       .eq("user_id", user.id)
       .single();
 
-    if (!profile || profile.plan_type !== "agency_pro") {
+    const { data: adminRole } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    const isAdmin = !!adminRole;
+    const isAgencyPro = profile?.plan_type === "agency_pro";
+
+    if (!isAdmin && !isAgencyPro) {
       return new Response(
         JSON.stringify({ error: "Pro Agency subscription required" }),
         {
@@ -97,12 +107,16 @@ Deno.serve(async (req) => {
           );
         }
 
+        // Set expiry to 48 hours
+        const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+
         const { data: invitation, error } = await adminClient
           .from("agency_invitations")
           .insert({
             owner_user_id: user.id,
             role,
             email: email || null,
+            expires_at: expiresAt,
           })
           .select()
           .single();

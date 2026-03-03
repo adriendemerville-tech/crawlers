@@ -155,7 +155,15 @@ export function AccountManager() {
         body: { action: 'create_invitation', role: selectedRole },
       });
       if (error) throw error;
-      toast.success(t.inviteCreated);
+      
+      // Auto-copy the invitation link
+      if (data?.invitation?.token) {
+        const link = `${window.location.origin}/auth?invite=${data.invitation.token}`;
+        await navigator.clipboard.writeText(link);
+        toast.success(t.inviteCreated + ' — ' + t.copied);
+      } else {
+        toast.success(t.inviteCreated);
+      }
       await fetchTeam();
     } catch (err: any) {
       toast.error(err?.message || String(err));
