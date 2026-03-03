@@ -76,7 +76,7 @@ const translations = {
     copied: 'Copié !',
     copy: 'Copier',
     linkedinOffer: 'Partager sur LinkedIn',
-    linkedinDescription: 'Partagez votre audit et gagnez des crédits.',
+    linkedinDescription: 'Partagez votre audit et gagnez 50 crédits par clic.',
   },
   en: {
     title: 'Top up my credits',
@@ -100,7 +100,7 @@ const translations = {
     copied: 'Copied!',
     copy: 'Copy',
     linkedinOffer: 'Share on LinkedIn',
-    linkedinDescription: 'Share your audit and earn credits.',
+    linkedinDescription: 'Share your audit and earn 50 credits per click.',
   },
   es: {
     title: 'Recargar mis créditos',
@@ -124,7 +124,7 @@ const translations = {
     copied: '¡Copiado!',
     copy: 'Copiar',
     linkedinOffer: 'Compartir en LinkedIn',
-    linkedinDescription: 'Comparte tu auditoría y gana créditos.',
+    linkedinDescription: 'Comparta su auditoría y gane 50 créditos por clic.',
   },
 };
 
@@ -460,7 +460,7 @@ ${shareUrl}
                 LinkedIn
               </Button>
               <p className="text-xs text-muted-foreground/80 italic">
-                {language === 'fr' ? '50 crédits par visiteur unique (max 200).' : language === 'es' ? '50 créditos por visitante único (máx. 200).' : '50 credits per unique visitor (max 200).'}
+                {language === 'fr' ? 'Max 200 crédits.' : language === 'es' ? 'Máx. 200 créditos.' : 'Max 200 credits.'}
               </p>
             </div>
           </motion.div>
