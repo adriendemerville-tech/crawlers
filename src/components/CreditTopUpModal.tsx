@@ -449,7 +449,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="rounded-xl bg-gradient-to-r from-muted/30 via-muted/50 to-muted/30 p-4"
+          className="rounded-xl bg-gradient-to-r from-muted/30 via-muted/50 to-muted/30 p-4 space-y-3"
         >
           <div className="flex items-center gap-4">
             <Handshake className="h-5 w-5 text-[#0A66C2] shrink-0" />
@@ -463,7 +463,9 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
               variant="outline"
               className="shrink-0 gap-2 border-[#0A66C2]/50 text-[#0A66C2] hover:bg-[#0A66C2]/10 px-4"
               onClick={() => {
-                const text = encodeURIComponent("En moins de 5 minutes et sans expert, j'ai audité le référencement GEO de mon site. 🚀\n\nJe ne suis ni développeur, ni un pro du marketing, mais j'ai vite compris que les règles du jeu ont changé.\n\nAujourd'hui, nos futurs clients ne \"googlisent\" plus seulement : ils interrogent ChatGPT, Perplexity ou Gemini. Si notre entreprise n'y est pas citée comme une référence, on devient tout simplement invisible pour une part croissante du marché. 📉\n\nJ'ai testé Crawlers.AI (crawlers.fr) pour voir où j'en étais. Ce qui a vraiment fait la différence pour moi ? La clarté du plan d'action.\n\nD'habitude, les outils de diagnostic vous assomment avec des termes techniques comme \"balises H1\", \"fichiers JSON\" ou \"backlinks\". En tant que dirigeant, on veut des solutions, pas des devinettes.\n\nIci, j'ai obtenu une analyse en langage clair. L'outil m'a dit précisément : « Voici ce que l'IA comprend de votre activité, et voici le contenu spécifique à ajouter pour qu'elle vous recommande naturellement à vos prospects. » 💡\n\nC'est concret, actionnable immédiatement et surtout : on n'a pas besoin de savoir coder pour améliorer sa visibilité.\n\nPour quelqu'un qui doit gérer 10 priorités à la fois, c'est un gain de sérénité précieux. ✅\n\nJe partage la découverte car la transition vers le \"Generative Engine Optimization\" (GEO) est déjà là. Autant être parmi les premiers à prendre la vague plutôt que de la subir.\n\nAllez tester votre propre site sur crawlers.fr, le diagnostic est rapide et le retour à la réalité est salutaire.\n\n#Entrepreneuriat #GEO #IA #DigitalMarketing #Strategie #TPE #PME");
+                // Build personalized share URL with ref tracking
+                const shareUrl = user ? `https://crawlers.fr/temporaryreport/demo?ref=${user.id}` : 'https://crawlers.fr';
+                const text = encodeURIComponent(`En moins de 5 minutes et sans expert, j'ai audité le référencement GEO de mon site. 🚀\n\nJe ne suis ni développeur, ni un pro du marketing, mais j'ai vite compris que les règles du jeu ont changé.\n\nAujourd'hui, nos futurs clients ne "googlisent" plus seulement : ils interrogent ChatGPT, Perplexity ou Gemini. Si notre entreprise n'y est pas citée comme une référence, on devient tout simplement invisible pour une part croissante du marché. 📉\n\nJ'ai testé Crawlers.AI (crawlers.fr) pour voir où j'en étais. Ce qui a vraiment fait la différence pour moi ? La clarté du plan d'action.\n\nD'habitude, les outils de diagnostic vous assomment avec des termes techniques comme "balises H1", "fichiers JSON" ou "backlinks". En tant que dirigeant, on veut des solutions, pas des devinettes.\n\nIci, j'ai obtenu une analyse en langage clair. L'outil m'a dit précisément : « Voici ce que l'IA comprend de votre activité, et voici le contenu spécifique à ajouter pour qu'elle vous recommande naturellement à vos prospects. » 💡\n\nC'est concret, actionnable immédiatement et surtout : on n'a pas besoin de savoir coder pour améliorer sa visibilité.\n\nPour quelqu'un qui doit gérer 10 priorités à la fois, c'est un gain de sérénité précieux. ✅\n\n${shareUrl}\n\n#Entrepreneuriat #GEO #IA #DigitalMarketing #Strategie #TPE #PME`);
                 window.open(`https://www.linkedin.com/sharing/share-offsite/?text=${text}`, '_blank');
               }}
             >
@@ -471,6 +473,13 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
               LinkedIn
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground/80 italic pl-9">
+            {language === 'fr'
+              ? 'Gagnez 50 crédits pour chaque nouveau visiteur unique qui consulte votre rapport via ce lien (max 200 crédits).'
+              : language === 'es'
+                ? 'Gane 50 créditos por cada nuevo visitante único que consulte su informe a través de este enlace (máx. 200 créditos).'
+                : 'Earn 50 credits for each unique new visitor who views your report through this link (max 200 credits).'}
+          </p>
         </motion.div>
       </DialogContent>
     </Dialog>

@@ -85,7 +85,7 @@ export function ReportPreviewModal({
   currentUrl,
 }: ReportPreviewModalProps) {
   const { language } = useLanguage();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
@@ -195,7 +195,8 @@ export function ReportPreviewModal({
       if (error) throw error;
 
       if (responseData?.shareId) {
-        const temporaryLink = `https://crawlers.fr/temporaryreport/${responseData.shareId}`;
+        let temporaryLink = `https://crawlers.fr/temporaryreport/${responseData.shareId}`;
+        if (user?.id) temporaryLink += `?ref=${user.id}`;
         return temporaryLink;
       }
       return null;
