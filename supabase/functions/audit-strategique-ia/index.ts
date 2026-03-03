@@ -137,6 +137,185 @@ interface MarketData {
   fetch_timestamp: string;
 }
 
+// ==================== BRAND NAME HUMANIZATION ====================
+
+/**
+ * Humanise un slug de domaine en nom d'entreprise lisible.
+ * Ex: "lesdebarrasseursdelextreme" → "Les Débarrasseurs de l'Extrême"
+ * Utilise une segmentation par particules françaises + heuristiques.
+ */
+function humanizeBrandName(slug: string): string {
+  if (!slug || slug.length < 3) return slug;
+
+  // Si déjà séparé par tirets ou espaces, juste capitaliser
+  if (slug.includes('-') || slug.includes(' ')) {
+    return slug
+      .replace(/-/g, ' ')
+      .split(' ')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+  }
+
+  const lower = slug.toLowerCase();
+
+  // Particules françaises ordonnées par longueur décroissante pour matching greedy
+  const particles: [string, string][] = [
+    ['lextreme', "l'Extrême"],
+    ['lexpert', "l'Expert"],
+    ['lexpress', "l'Express"],
+    ['lentreprise', "l'Entreprise"],
+    ['limmobilier', "l'Immobilier"],
+    ['latelier', "l'Atelier"],
+    ['lagence', "l'Agence"],
+    ['letoile', "l'Étoile"],
+    ['lespace', "l'Espace"],
+    ['lequipe', "l'Équipe"],
+    ['dessous', 'Dessous'],
+    ['depuis', 'Depuis'],
+    ['entre', 'Entre'],
+    ['notre', 'Notre'],
+    ['votre', 'Votre'],
+    ['leurs', 'Leurs'],
+    ['chez', 'Chez'],
+    ['pour', 'Pour'],
+    ['avec', 'Avec'],
+    ['dans', 'Dans'],
+    ['sans', 'Sans'],
+    ['sous', 'Sous'],
+    ['plus', 'Plus'],
+    ['tres', 'Très'],
+    ['tout', 'Tout'],
+    ['bien', 'Bien'],
+    ['haut', 'Haut'],
+    ['les', 'Les'],
+    ['des', 'des'],
+    ['aux', 'aux'],
+    ['sur', 'sur'],
+    ['par', 'par'],
+    ['mes', 'Mes'],
+    ['tes', 'Tes'],
+    ['ses', 'Ses'],
+    ['nos', 'Nos'],
+    ['vos', 'Vos'],
+    ['mon', 'Mon'],
+    ['ton', 'Ton'],
+    ['son', 'Son'],
+    ['une', 'une'],
+    ['la', 'la'],
+    ['le', 'le'],
+    ['du', 'du'],
+    ['de', 'de'],
+    ['et', 'et'],
+    ['en', 'en'],
+    ['un', 'un'],
+    ['au', 'au'],
+  ];
+
+  const vowels = 'aeiouyéèêëàâäùûüôîï';
+
+  const words: string[] = [];
+  let pos = 0;
+
+  while (pos < lower.length) {
+    let matched = false;
+
+    // Essayer "l'" devant voyelle avec particule connue d'abord
+    if (lower[pos] === 'l' && pos + 1 < lower.length && vowels.includes(lower[pos + 1])) {
+      let knownParticle = false;
+      for (const [pat, rep] of particles) {
+        if (lower.startsWith(pat, pos) && pat.startsWith('l')) {
+          words.push(rep);
+          pos += pat.length;
+          knownParticle = true;
+          matched = true;
+          break;
+        }
+      }
+      if (!knownParticle) {
+        let endPos = lower.length;
+        for (let i = pos + 2; i < lower.length; i++) {
+          for (const [pat] of particles) {
+            if (lower.startsWith(pat, i)) { endPos = i; break; }
+          }
+          if (endPos !== lower.length) break;
+        }
+        const word = lower.substring(pos + 1, endPos);
+        if (word.length > 0) {
+          words.push("l'" + word.charAt(0).toUpperCase() + word.slice(1));
+          pos = endPos;
+          matched = true;
+        }
+      }
+    }
+
+    if (!matched) {
+      for (const [pat, rep] of particles) {
+        if (lower.startsWith(pat, pos)) {
+          words.push(rep);
+          pos += pat.length;
+          matched = true;
+          break;
+        }
+      }
+    }
+
+    if (!matched) {
+      let endPos = lower.length;
+      for (let i = pos + 1; i < lower.length; i++) {
+        if (lower[i] === 'l' && i + 1 < lower.length && vowels.includes(lower[i + 1])) {
+          endPos = i; break;
+        }
+        for (const [pat] of particles) {
+          if (lower.startsWith(pat, i)) { endPos = i; break; }
+        }
+        if (endPos !== lower.length) break;
+      }
+      const word = lower.substring(pos, endPos);
+      if (word.length > 0) {
+        words.push(word.charAt(0).toUpperCase() + word.slice(1));
+      }
+      pos = endPos;
+    }
+  }
+
+  if (words.length <= 1) {
+    return slug.charAt(0).toUpperCase() + slug.slice(1);
+  }
+
+  let result = words.join(' ');
+  result = result.charAt(0).toUpperCase() + result.slice(1);
+  return result.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Post-traite la réponse pour remplacer les slugs de domaine
+ * par le nom d'entreprise humanisé dans tous les textes.
+ */
+function sanitizeBrandNameInResponse(obj: any, domainSlug: string, humanName: string): any {
+  if (!obj || !domainSlug || !humanName || domainSlug === humanName) return obj;
+
+  const slugLower = domainSlug.toLowerCase();
+
+  function replaceInString(str: string): string {
+    if (!str || typeof str !== 'string') return str;
+    const regex = new RegExp(slugLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    return str.replace(regex, humanName);
+  }
+
+  function walk(node: any): any {
+    if (typeof node === 'string') return replaceInString(node);
+    if (Array.isArray(node)) return node.map(walk);
+    if (node && typeof node === 'object') {
+      const out: any = {};
+      for (const [k, v] of Object.entries(node)) { out[k] = walk(v); }
+      return out;
+    }
+    return node;
+  }
+
+  return walk(obj);
+}
+
 // ==================== DATAFORSEO FUNCTIONS ====================
 
 const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
@@ -186,17 +365,16 @@ async function detectBusinessContext(domain: string, htmlContent?: string): Prom
   );
   
   if (significantParts.length > 0) {
-    brandName = significantParts[0].replace(/-/g, ' ');
-    // Capitaliser le nom de marque
-    brandName = brandName.charAt(0).toUpperCase() + brandName.slice(1);
-    sector = significantParts[0].replace(/-/g, ' ');
+    const rawSlug = significantParts[0];
+    brandName = humanizeBrandName(rawSlug);
+    sector = rawSlug.replace(/-/g, ' ');
   } else {
-    // Fallback au premier élément non-TLD
-    brandName = domainParts[0].replace(/-/g, ' ');
-    sector = brandName;
+    const rawSlug = domainParts[0];
+    brandName = humanizeBrandName(rawSlug);
+    sector = rawSlug.replace(/-/g, ' ');
   }
   
-  console.log(`📋 Marque extraite: "${brandName}", secteur initial: "${sector}"`);
+  console.log(`📋 Marque extraite (humanisée): "${brandName}", secteur initial: "${sector}"`);
   
   return { sector, location, brandName };
 }
@@ -859,8 +1037,13 @@ Deno.serve(async (req) => {
       console.log('Could not parse URL, using as-is:', url);
     }
 
+    // Humanize brand name from domain slug
+    const domainSlug = domain.split('.')[0];
+    const humanBrandName = humanizeBrandName(domainSlug);
+    console.log(`🏷️ Nom de marque humanisé: "${domainSlug}" → "${humanBrandName}"`);
+
     console.log('═══════════════════════════════════════════════════════════════');
-    console.log('🚀 AUDIT STRATÉGIQUE IA PREMIUM pour:', domain);
+    console.log('🚀 AUDIT STRATÉGIQUE IA PREMIUM pour:', domain, `(${humanBrandName})`);
     console.log('═══════════════════════════════════════════════════════════════');
 
     // ==================== ÉTAPE 1: COLLECTER LES DONNÉES DATAFORSEO ====================
@@ -917,6 +1100,15 @@ Deno.serve(async (req) => {
     
     // Build prompt with hallucination corrections as priority weights if provided
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData);
+    
+    // Injecter le nom de marque humanisé dans le prompt
+    const brandNameInstruction = `
+⚠️ NOM DE L'ENTREPRISE (CRITIQUE - NE PAS CONFONDRE AVEC L'URL):
+Le domaine est "${domain}" mais le NOM RÉEL de l'entreprise est "${humanBrandName}".
+Dans TOUTES tes réponses (introduction, requêtes cibles, recommandations, roadmap), utilise TOUJOURS "${humanBrandName}" comme nom de l'entreprise, JAMAIS le slug technique "${domainSlug}".
+
+`;
+    userPrompt = brandNameInstruction + userPrompt;
     
     if (hallucinationCorrections) {
       console.log('📝 Corrections hallucination détectées - ajout au prompt...');
@@ -1067,6 +1259,10 @@ IMPORTANT:
         );
       }
     }
+
+    // ==================== ÉTAPE 3b: SANITIZE BRAND NAME IN RESPONSE ====================
+    console.log('\n🏷️ ÉTAPE 3b: Nettoyage du nom de marque dans la réponse...');
+    parsedAnalysis = sanitizeBrandNameInResponse(parsedAnalysis, domainSlug, humanBrandName);
 
     // ==================== ÉTAPE 4: ENRICHIR AVEC LES DONNÉES BRUTES ====================
     const result = {
