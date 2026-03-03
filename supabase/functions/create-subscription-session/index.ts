@@ -76,24 +76,28 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    // Create a recurring price inline
+    // Find the recurring price for the Pro Agency product
+    const prices = await stripe.prices.list({
+      product: "prod_U4ya5iGWNTDQoE",
+      active: true,
+      type: "recurring",
+      limit: 1,
+    });
+
+    if (prices.data.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Aucun prix récurrent trouvé pour ce produit." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const priceId = prices.data[0].id;
+    console.log(`💰 Using price: ${priceId}`);
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: "Crawlers.AI — Pro Agency",
-              description: "Rapports illimités, Correctifs illimités, Marque Blanche, Support prioritaire",
-            },
-            unit_amount: 4900,
-            recurring: { interval: "month" },
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       metadata: {
         user_id: user.id,
