@@ -71,6 +71,78 @@ export type Database = {
         }
         Relationships: []
       }
+      agency_client_sites: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          tracked_site_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          tracked_site_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          tracked_site_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_client_sites_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "agency_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agency_client_sites_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agency_clients: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          owner_user_id: string
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          owner_user_id: string
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          owner_user_id?: string
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agency_invitations: {
         Row: {
           accepted_by: string | null
