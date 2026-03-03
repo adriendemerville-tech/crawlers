@@ -121,7 +121,7 @@ export function FloatingChatBubble() {
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
         className={`fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ${
           isAgencyPro 
-            ? 'bg-violet-600 hover:bg-violet-700 border-0' 
+            ? '!bg-violet-600 hover:!bg-violet-700 border-0' 
             : ''
         }`}
         size="icon"
