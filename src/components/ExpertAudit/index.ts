@@ -24,6 +24,7 @@ import { HallucinationCorrectionModal } from './HallucinationCorrectionModal';
 import { KeywordPositioningCard } from './KeywordPositioningCard';
 import { InlineAuthForm } from './InlineAuthForm';
 import { AIBotsCard } from './AIBotsCard';
+import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 
 export {
   ExpertAuditDashboard,
@@ -56,6 +57,7 @@ export {
   KeywordPositioningCard,
   InlineAuthForm,
   AIBotsCard,
+  LLMConfusionDetectionCard,
 };
 
 export type { HallucinationAnalysis } from './HallucinationCorrectionModal';
