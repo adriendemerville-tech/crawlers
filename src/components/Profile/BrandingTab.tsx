@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,15 @@ const translations = {
     logoHint: 'PNG ou SVG transparent, max 2 Mo',
     colorLabel: 'Couleur principale',
     colorHint: 'Appliquée aux titres et boutons des rapports',
+    brandNameLabel: 'Nom de la marque',
+    brandNameHint: 'Affiché dans l\'en-tête de vos rapports',
+    brandNamePlaceholder: 'Ex : Mon Agence SEO',
+    contactTitle: 'Informations de contact',
+    contactDescription: 'Ces informations apparaîtront dans vos rapports clients',
+    contactFirstName: 'Prénom',
+    contactLastName: 'Nom',
+    contactPhone: 'Téléphone',
+    contactEmail: 'Email de contact',
     save: 'Enregistrer',
     saving: 'Enregistrement...',
     saved: 'Branding sauvegardé',
@@ -36,6 +45,15 @@ const translations = {
     logoHint: 'Transparent PNG or SVG, max 2 MB',
     colorLabel: 'Primary Color',
     colorHint: 'Applied to report titles and CTA buttons',
+    brandNameLabel: 'Brand Name',
+    brandNameHint: 'Displayed in the header of your reports',
+    brandNamePlaceholder: 'e.g. My SEO Agency',
+    contactTitle: 'Contact Information',
+    contactDescription: 'This information will appear in your client reports',
+    contactFirstName: 'First Name',
+    contactLastName: 'Last Name',
+    contactPhone: 'Phone',
+    contactEmail: 'Contact Email',
     save: 'Save',
     saving: 'Saving...',
     saved: 'Branding saved',
@@ -55,6 +73,15 @@ const translations = {
     logoHint: 'PNG o SVG transparente, máx. 2 MB',
     colorLabel: 'Color principal',
     colorHint: 'Aplicado a títulos y botones de los informes',
+    brandNameLabel: 'Nombre de la marca',
+    brandNameHint: 'Se muestra en el encabezado de tus informes',
+    brandNamePlaceholder: 'Ej: Mi Agencia SEO',
+    contactTitle: 'Información de contacto',
+    contactDescription: 'Esta información aparecerá en tus informes de clientes',
+    contactFirstName: 'Nombre',
+    contactLastName: 'Apellido',
+    contactPhone: 'Teléfono',
+    contactEmail: 'Email de contacto',
     save: 'Guardar',
     saving: 'Guardando...',
     saved: 'Branding guardado',
@@ -76,6 +103,11 @@ export function BrandingTab() {
 
   const [logoUrl, setLogoUrl] = useState(profile?.agency_logo_url || '');
   const [primaryColor, setPrimaryColor] = useState(profile?.agency_primary_color || '#7c3aed');
+  const [brandName, setBrandName] = useState(profile?.agency_brand_name || '');
+  const [contactFirstName, setContactFirstName] = useState(profile?.agency_contact_first_name || '');
+  const [contactLastName, setContactLastName] = useState(profile?.agency_contact_last_name || '');
+  const [contactPhone, setContactPhone] = useState(profile?.agency_contact_phone || '');
+  const [contactEmail, setContactEmail] = useState(profile?.agency_contact_email || '');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,7 +136,6 @@ export function BrandingTab() {
         .from('agency-logos')
         .getPublicUrl(filePath);
 
-      // Add cache-buster
       setLogoUrl(`${publicUrl}?t=${Date.now()}`);
       toast.success(t.saved);
     } catch (err) {
@@ -128,6 +159,11 @@ export function BrandingTab() {
       .update({
         agency_logo_url: logoUrl || null,
         agency_primary_color: primaryColor || null,
+        agency_brand_name: brandName.trim() || null,
+        agency_contact_first_name: contactFirstName.trim() || null,
+        agency_contact_last_name: contactLastName.trim() || null,
+        agency_contact_phone: contactPhone.trim() || null,
+        agency_contact_email: contactEmail.trim() || null,
       })
       .eq('user_id', user.id);
 
@@ -143,6 +179,7 @@ export function BrandingTab() {
 
   return (
     <div className="space-y-6">
+      {/* Identity Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -152,6 +189,19 @@ export function BrandingTab() {
           <CardDescription>{t.description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Brand Name */}
+          <div className="space-y-2">
+            <Label>{t.brandNameLabel}</Label>
+            <p className="text-xs text-muted-foreground">{t.brandNameHint}</p>
+            <Input
+              value={brandName}
+              onChange={(e) => setBrandName(e.target.value)}
+              placeholder={t.brandNamePlaceholder}
+              maxLength={100}
+              className="max-w-md"
+            />
+          </div>
+
           {/* Logo Upload */}
           <div className="space-y-3">
             <Label>{t.logoLabel}</Label>
@@ -230,6 +280,8 @@ export function BrandingTab() {
               >
                 {logoUrl ? (
                   <img src={logoUrl} alt="Logo" className="h-8 mx-auto mb-2 object-contain" />
+                ) : brandName ? (
+                  <div className="text-white font-bold text-lg mb-1">{brandName}</div>
                 ) : (
                   <div className="text-white font-bold text-lg mb-1">{t.previewHeader}</div>
                 )}
@@ -240,13 +292,67 @@ export function BrandingTab() {
               </div>
             </div>
           </div>
-
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {isSaving ? t.saving : t.save}
-          </Button>
         </CardContent>
       </Card>
+
+      {/* Contact Info Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Contact className="h-5 w-5" />
+            {t.contactTitle}
+          </CardTitle>
+          <CardDescription>{t.contactDescription}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>{t.contactFirstName}</Label>
+              <Input
+                value={contactFirstName}
+                onChange={(e) => setContactFirstName(e.target.value)}
+                maxLength={100}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t.contactLastName}</Label>
+              <Input
+                value={contactLastName}
+                onChange={(e) => setContactLastName(e.target.value)}
+                maxLength={100}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>{t.contactPhone}</Label>
+              <Input
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder="+33 6 00 00 00 00"
+                maxLength={30}
+                type="tel"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t.contactEmail}</Label>
+              <Input
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="contact@monagence.fr"
+                maxLength={255}
+                type="email"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Save Button */}
+      <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+        {isSaving ? t.saving : t.save}
+      </Button>
     </div>
   );
 }

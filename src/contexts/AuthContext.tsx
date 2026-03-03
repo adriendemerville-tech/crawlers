@@ -11,6 +11,11 @@ interface Profile {
   avatar_url: string | null;
   agency_logo_url: string | null;
   agency_primary_color: string | null;
+  agency_brand_name: string | null;
+  agency_contact_first_name: string | null;
+  agency_contact_last_name: string | null;
+  agency_contact_phone: string | null;
+  agency_contact_email: string | null;
   plan_type: string;
   created_at: string;
   updated_at: string;

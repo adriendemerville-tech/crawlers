@@ -385,6 +385,11 @@ export type Database = {
       }
       profiles: {
         Row: {
+          agency_brand_name: string | null
+          agency_contact_email: string | null
+          agency_contact_first_name: string | null
+          agency_contact_last_name: string | null
+          agency_contact_phone: string | null
           agency_logo_url: string | null
           agency_primary_color: string | null
           api_key: string
@@ -402,6 +407,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          agency_brand_name?: string | null
+          agency_contact_email?: string | null
+          agency_contact_first_name?: string | null
+          agency_contact_last_name?: string | null
+          agency_contact_phone?: string | null
           agency_logo_url?: string | null
           agency_primary_color?: string | null
           api_key?: string
@@ -419,6 +429,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          agency_brand_name?: string | null
+          agency_contact_email?: string | null
+          agency_contact_first_name?: string | null
+          agency_contact_last_name?: string | null
+          agency_contact_phone?: string | null
           agency_logo_url?: string | null
           agency_primary_color?: string | null
           api_key?: string
