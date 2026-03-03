@@ -349,11 +349,11 @@ export function Header() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    {/* Dashboard shortcut */}
+                    {/* Console shortcut */}
                     <DropdownMenuItem asChild>
                       <Link to="/console?tab=tracking" className="gap-2 cursor-pointer">
                         <LayoutDashboard className="h-4 w-4" />
-                        {t.dashboard}
+                        {t.console}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="gap-2 cursor-default hover:bg-transparent focus:bg-transparent">
