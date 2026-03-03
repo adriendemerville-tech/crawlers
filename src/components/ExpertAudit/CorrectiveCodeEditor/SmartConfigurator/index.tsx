@@ -583,7 +583,67 @@ export function SmartConfigurator({
     for (const task of allDynamicTasks) {
       if (task.isCompleted) continue;
       const titleLower = task.title.toLowerCase();
+      const descLower = ((task as any)._description || task.title).toLowerCase();
+      const combined = `${titleLower} ${descLower}`;
       
+      // ═══ FILTER: Skip tasks that can't be solved with code injection ═══
+      const NON_CODE_PATTERNS = [
+        'google business', 'google my business', 'fiche google',
+        'campagne', 'publicité', 'ads', 'adwords',
+        'partenariat', 'collaboration', 'networking',
+        'formation', 'recrutement', 'embauche',
+        'stratégie éditoriale', 'calendrier éditorial', 'planning',
+        'veille', 'benchmark', 'étude de marché',
+        'relation presse', 'communiqué',
+        'newsletter', 'emailing', 'email marketing',
+        'podcast', 'webinaire', 'webinar',
+      ];
+      const isNonCodeTask = NON_CODE_PATTERNS.some(p => combined.includes(p));
+      if (isNonCodeTask) continue;
+
+      // ═══ TRANSFORM: Convert social media tasks into code-actionable CTA fixes ═══
+      const SOCIAL_PATTERNS = [
+        'linkedin', 'twitter', 'x.com', 'tiktok', 'instagram', 'youtube',
+        'facebook', 'social media', 'réseaux sociaux', 'redes sociales',
+        'thought leadership', 'personal branding', 'fondateur',
+        'social proof', 'communauté', 'community',
+      ];
+      const isSocialTask = SOCIAL_PATTERNS.some(p => combined.includes(p));
+
+      if (isSocialTask) {
+        // Detect which platform is mentioned
+        let platform = 'LinkedIn';
+        let platformUrl = '';
+        if (combined.includes('youtube')) { platform = 'YouTube'; platformUrl = 'https://youtube.com/'; }
+        else if (combined.includes('tiktok')) { platform = 'TikTok'; platformUrl = 'https://tiktok.com/'; }
+        else if (combined.includes('instagram')) { platform = 'Instagram'; platformUrl = 'https://instagram.com/'; }
+        else if (combined.includes('twitter') || combined.includes('x.com')) { platform = 'X (Twitter)'; platformUrl = 'https://x.com/'; }
+        else if (combined.includes('facebook')) { platform = 'Facebook'; platformUrl = 'https://facebook.com/'; }
+        else { platform = 'LinkedIn'; platformUrl = 'https://linkedin.com/'; }
+
+        const fixId = `actionplan_cta_${platform.toLowerCase().replace(/[^a-z]/g, '')}_${task.id}`;
+        if (seenTitles.has(fixId)) continue;
+        seenTitles.add(fixId);
+
+        dynamicFixes.push({
+          id: fixId,
+          category: 'generative',
+          label: `CTA vers ${platform} du fondateur`,
+          description: `Injecte un bloc d'appel à l'action visible vers le profil ${platform}, renforçant l'autorité E-E-A-T et la citabilité par les LLMs`,
+          enabled: false,
+          priority: 'important' as const,
+          isRecommended: true,
+          data: {
+            _source: 'action_plan_transformed',
+            _originalTask: task.title,
+            _platform: platform,
+            _platformUrl: platformUrl,
+            _rationale: (task as any)._rationale || '',
+          },
+        });
+        continue;
+      }
+
       // Skip if we already have a hardcoded fix covering this
       const coveredByExisting = [...existingFixIds].some(fixId => {
         const fixLabel = fixes.find(f => f.id === fixId)?.label?.toLowerCase() || '';
@@ -606,7 +666,7 @@ export function SmartConfigurator({
         else if (catLower.includes('access')) fixCategory = 'accessibility';
         else fixCategory = 'seo';
       } else {
-        if (catLower.includes('identité') || catLower.includes('social')) fixCategory = 'strategic';
+        if (catLower.includes('identité')) fixCategory = 'strategic';
         else if (catLower.includes('contenu')) fixCategory = 'generative';
         else if (catLower.includes('autorité')) fixCategory = 'strategic';
         else if (catLower.includes('technique')) fixCategory = 'performance';
