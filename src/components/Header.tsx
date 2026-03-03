@@ -358,24 +358,21 @@ export function Header() {
                         {t.console}
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2 cursor-default hover:bg-transparent focus:bg-transparent">
+                    <DropdownMenuItem asChild className={isAgencyPro ? "gap-2 cursor-pointer" : "gap-2 cursor-default hover:bg-transparent focus:bg-transparent"}>
                       {isAgencyPro ? (
-                        <>
-                          <Crown className="h-4 w-4 text-primary" />
-                          <span>Pro Agency</span>
-                          <Badge className="ml-auto bg-primary/90 text-primary-foreground text-xs">
-                            {language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active'}
-                          </Badge>
-                        </>
+                        <Link to="/console?tab=wallet" className="gap-2 cursor-pointer">
+                          <Crown className="h-4 w-4 text-yellow-500" />
+                          <span className="text-yellow-500 font-semibold">Pro Agency</span>
+                        </Link>
                       ) : (
-                        <>
+                        <div>
                           <Wallet className="h-4 w-4 text-amber-500" />
                           <span>{t.wallet}</span>
                           <span className="ml-auto flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
                             {creditsBalance}
                             <CreditCoin size="sm" />
                           </span>
-                        </>
+                        </div>
                       )}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />

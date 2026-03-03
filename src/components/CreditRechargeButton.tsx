@@ -40,11 +40,9 @@ export function CreditRechargeButton({ showZeroForGuest = false }: CreditRecharg
         variant="outline"
         size="sm"
         onClick={() => navigate('/console?tab=wallet')}
-        className="gap-1.5 border-yellow-500/40 hover:border-yellow-500/60 hover:bg-yellow-500/10"
+        className="gap-1 border-yellow-500/40 hover:border-yellow-500/60 hover:bg-yellow-500/10 px-3"
       >
-        <Crown className="h-4 w-4 text-yellow-500" />
-        <span className="font-semibold text-yellow-500">Pro Agency</span>
-        <Infinity className="h-4 w-4 text-yellow-500" />
+        <Infinity className="h-5 w-5 text-yellow-500" />
       </Button>
     );
   }
