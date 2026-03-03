@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { FileText, Trash2, GripVertical } from 'lucide-react';
+import { FileText, Trash2, GripVertical, Send, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -15,13 +15,22 @@ interface Report {
   pdf_url: string | null;
 }
 
+interface AgencyClient {
+  first_name: string;
+  last_name: string;
+  email: string | null;
+}
+
 interface SortableReportItemProps {
   report: Report;
   onDelete: () => void;
   translations: any;
+  isProUser?: boolean;
+  findClientForUrl?: (url: string) => AgencyClient | null;
+  profileSignature?: string;
 }
 
-export function SortableReportItem({ report, onDelete, translations: t }: SortableReportItemProps) {
+export function SortableReportItem({ report, onDelete, translations: t, isProUser, findClientForUrl, profileSignature }: SortableReportItemProps) {
   const {
     attributes,
     listeners,
@@ -68,6 +77,32 @@ export function SortableReportItem({ report, onDelete, translations: t }: Sortab
 
   const reportHref = `/rapport/${report.id}`;
 
+  const handleSendToClient = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!findClientForUrl) return;
+    const client = findClientForUrl(report.url);
+    const reportTypeLabel = getReportTypeLabel(report.report_type);
+    const reportLink = `${window.location.origin}${reportHref}`;
+    const signature = profileSignature || '';
+
+    const clientName = client ? `${client.first_name} ${client.last_name}` : '';
+    const clientEmail = client?.email || '';
+
+    const body = client
+      ? `Bonjour ${clientName},\n\nVoici votre rapport ${reportTypeLabel} pour ${report.url} :\n${reportLink}\n\nBien à vous,\n${signature}`
+      : `Bonjour,\n\nVoici votre rapport ${reportTypeLabel} pour ${report.url} :\n${reportLink}\n\nBien à vous,\n${signature}`;
+
+    const subject = `Rapport ${reportTypeLabel} – ${report.url}`;
+    const mailtoUrl = `mailto:${encodeURIComponent(clientEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoUrl, '_blank');
+  };
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Open report in new tab for viewing/downloading
+    window.open(reportHref, '_blank');
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -104,16 +139,41 @@ export function SortableReportItem({ report, onDelete, translations: t }: Sortab
         </div>
       </a>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onDelete}
-        className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
-        aria-label={t.delete}
-      >
-        <Trash2 className="h-4 w-4" aria-hidden="true" />
-      </Button>
+      <div className="flex items-center gap-1">
+        {/* Download button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleDownload}
+          className="h-8 w-8 text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100 transition-all"
+          aria-label={t.download || 'Download'}
+        >
+          <Download className="h-4 w-4" aria-hidden="true" />
+        </Button>
+
+        {/* Send to client button (Pro Agency only) */}
+        {isProUser && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSendToClient}
+            className="h-8 w-8 text-muted-foreground hover:text-violet-500 opacity-0 group-hover:opacity-100 transition-all"
+            aria-label="Envoyer au client"
+          >
+            <Send className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        )}
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onDelete}
+          className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
+          aria-label={t.delete}
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </div>
     </div>
   );
 }
-
