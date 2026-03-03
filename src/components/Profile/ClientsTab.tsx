@@ -318,7 +318,7 @@ export function ClientsTab() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="p-0 w-72" align="end">
-                      <Command shouldFilter={true} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}>
+                      <Command shouldFilter={true}>
                         <CommandInput 
                           placeholder={t.searchSite} 
                           autoFocus
