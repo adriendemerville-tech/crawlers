@@ -99,7 +99,7 @@ interface Transaction {
 }
 
 export function MyWallet() {
-  const { balance, isAgencyPro, subscriptionStatus } = useCredits();
+  const { balance, isAgencyPro, subscriptionStatus, loading: creditsLoading } = useCredits();
   const { language } = useLanguage();
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
@@ -224,6 +224,15 @@ export function MyWallet() {
       </div>
     );
   };
+
+  // Show loader while credits context resolves to prevent flash
+  if (creditsLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   // Pro Agency: dedicated subscription page with sub-tabs
   if (isAgencyPro || isAdmin) {
