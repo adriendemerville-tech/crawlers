@@ -14,11 +14,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Credit packages configuration
+// Credit packages configuration — mapped to real Stripe products
 const CREDIT_PACKAGES = {
-  essential: { credits: 10, price_cents: 500, name: "Essentiel" },
-  pro: { credits: 50, price_cents: 1900, name: "Pro" },
-  premium: { credits: 150, price_cents: 4500, name: "Premium" },
+  essential: { credits: 10, price_cents: 500, name: "Essentiel", stripe_product_id: "prod_Tt71HPd497Zx9V" },
+  pro:       { credits: 50, price_cents: 1900, name: "Pro",       stripe_product_id: "prod_U4yjVH7b8EhmQF" },
+  premium:   { credits: 150, price_cents: 4500, name: "Premium",  stripe_product_id: "prod_U4ykI3KfQMFKNe" },
 } as const;
 
 type PackageType = keyof typeof CREDIT_PACKAGES;
@@ -68,7 +68,26 @@ serve(async (req) => {
     }
 
     const pkg = CREDIT_PACKAGES[package_type as PackageType];
-    console.log(`💳 Creating checkout for ${pkg.name}: ${pkg.credits} credits @ ${pkg.price_cents / 100}€`);
+    console.log(`💳 Creating checkout for ${pkg.name}: ${pkg.credits} credits (product: ${pkg.stripe_product_id})`);
+
+    // Fetch the active one-time price for this Stripe product
+    const prices = await stripe.prices.list({
+      product: pkg.stripe_product_id,
+      active: true,
+      type: "one_time",
+      limit: 1,
+    });
+
+    if (!prices.data.length) {
+      console.error(`No active price found for product ${pkg.stripe_product_id}`);
+      return new Response(
+        JSON.stringify({ error: "No active price found for this package" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const priceId = prices.data[0].id;
+    console.log(`🏷️ Using price: ${priceId}`);
 
     // Determine origin for redirect
     const origin = req.headers.get("origin") || "https://crawlers.lovable.app";
@@ -76,19 +95,7 @@ serve(async (req) => {
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: `Crawlers.AI - Pack ${pkg.name}`,
-              description: `${pkg.credits} crédits pour débloquer vos rapports stratégiques et les <scripts> correctifs`,
-            },
-            unit_amount: pkg.price_cents,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: "payment",
       metadata: {
         user_id: user.id,
