@@ -1094,17 +1094,42 @@ export function SmartConfigurator({
     return data?.id || null;
   }, [activeSiteId, user, siteDomain]);
 
+  const [shakeInject, setShakeInject] = useState(false);
+
+  // Verify actual plugin connectivity by pinging the site's REST endpoint
+  const verifySiteConnected = useCallback(async (): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      const { data: site } = await supabase
+        .from('tracked_sites')
+        .select('id, domain, current_config')
+        .eq('user_id', user.id)
+        .eq('domain', siteDomain)
+        .maybeSingle();
+
+      if (!site) return false;
+
+      // Check if the site has ever synced (has a non-empty current_config)
+      const config = site.current_config as Record<string, unknown> | null;
+      if (!config || Object.keys(config).length === 0) return false;
+
+      return true;
+    } catch {
+      return false;
+    }
+  }, [user, siteDomain]);
+
   // Apply modifications to WordPress via update-config + persist to tracked_sites
   const handleApplyToWordPress = useCallback(async () => {
     if (!generatedCode || !user) return;
 
-    const isConfigured = await checkWordPressConfig();
-    if (!isConfigured) {
-      toast({
-        title: 'Connexion WordPress requise',
-        description: 'Rendez-vous dans Console → Mes sites → WordPress pour configurer l\'intégration avant d\'injecter le code.',
-        variant: 'destructive',
+    const isConnected = await verifySiteConnected();
+    if (!isConnected) {
+      sonnerToast.error('Site non connecté', {
+        description: 'Installez et connectez le plugin WordPress avant d\'injecter le code.',
       });
+      setShakeInject(true);
+      setTimeout(() => setShakeInject(false), 1500);
       return;
     }
 
@@ -1152,7 +1177,7 @@ export function SmartConfigurator({
     } finally {
       setIsApplying(false);
     }
-  }, [generatedCode, user, siteDomain, checkWordPressConfig, resolveActiveSiteId, saveConfigToSite]);
+  }, [generatedCode, user, siteDomain, verifySiteConnected, resolveActiveSiteId, saveConfigToSite]);
   
 
   const enabledCount = fixConfigs.filter(f => f.enabled).length;
@@ -1321,6 +1346,10 @@ export function SmartConfigurator({
                       )}
                     </Button>
                     {/* Inject to WordPress button */}
+                    <motion.div
+                      animate={shakeInject ? { x: [0, -6, 6, -5, 5, -3, 3, -1, 1, 0] } : {}}
+                      transition={shakeInject ? { duration: 1.5, ease: 'easeInOut' } : {}}
+                    >
                     <Button
                       onClick={handleApplyToWordPress}
                       disabled={isApplying || applySuccess}
@@ -1344,6 +1373,7 @@ export function SmartConfigurator({
                         </>
                       )}
                     </Button>
+                    </motion.div>
                     {applySuccess && (
                       <motion.span
                         initial={{ opacity: 0, x: -8 }}
