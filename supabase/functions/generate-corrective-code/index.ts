@@ -1498,6 +1498,187 @@ function generateFixCode(
 }
 
 // ══════════════════════════════════════════════════════════════
+// GÉNÉRATION IA PERSONNALISÉE - TOUS LES CORRECTIFS
+// ══════════════════════════════════════════════════════════════
+
+async function generateAllFixesWithAI(
+  fixes: FixConfig[],
+  siteName: string,
+  siteUrl: string,
+  language: string,
+  auditContext: AuditContext,
+  roadmapContext: string = ''
+): Promise<Map<string, { fn: string; call: string }> | null> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) return null;
+
+  const langLabel = language === 'fr' ? 'français' : language === 'es' ? 'espagnol' : 'anglais';
+
+  // Build rich audit context for the prompt
+  const contextParts: string[] = [];
+  
+  if (auditContext.htmlAnalysis) {
+    const h = auditContext.htmlAnalysis;
+    contextParts.push(`ANALYSE HTML ACTUELLE:
+- Title actuel: "${h.title || '(absent)'}"
+- Meta description: "${h.metaDescription || '(absente)'}"
+- Nombre de H1: ${h.h1Count ?? '?'}
+- Images sans attribut alt: ${h.imagesMissingAlt ?? '?'}
+- Liens cassés: ${h.brokenLinks?.length ?? '?'}`);
+  }
+
+  if (auditContext.technicalScores) {
+    const s = auditContext.technicalScores;
+    contextParts.push(`SCORES TECHNIQUES:
+- Sémantique: ${s.semantic?.score ?? '?'}/${s.semantic?.maxScore ?? '?'}
+- Performance: ${s.performance?.score ?? '?'}/${s.performance?.maxScore ?? '?'}
+- Sécurité: ${s.security?.score ?? '?'}/${s.security?.maxScore ?? '?'}
+- AI-Ready: ${s.aiReady?.score ?? '?'}/${s.aiReady?.maxScore ?? '?'}
+- Score total: ${auditContext.totalScore ?? '?'}/200`);
+  }
+
+  if (auditContext.strategicAnalysis?.brandIdentity) {
+    const bi = auditContext.strategicAnalysis.brandIdentity;
+    contextParts.push(`IDENTITÉ DE MARQUE:
+- Nom: ${bi.brand_name || bi.name || siteName}
+- Secteur: ${bi.sector || '?'}
+- Proposition de valeur: ${bi.value_proposition || '?'}
+- Cible: ${bi.target_audience || '?'}
+- Ton: ${bi.tone || '?'}`);
+  }
+
+  if (auditContext.strategicAnalysis?.keywordPositioning?.main_keywords) {
+    const kw = auditContext.strategicAnalysis.keywordPositioning.main_keywords.slice(0, 10);
+    contextParts.push(`MOTS-CLÉS CIBLES: ${kw.map((k: any) => typeof k === 'string' ? k : `${k.keyword} (vol: ${k.volume || '?'}, diff: ${k.difficulty || '?'})`).join(', ')}`);
+  }
+
+  if (auditContext.strategicAnalysis?.competitiveLandscape?.goliaths) {
+    const g = auditContext.strategicAnalysis.competitiveLandscape.goliaths.slice(0, 5);
+    contextParts.push(`CONCURRENTS: ${g.map((c: any) => typeof c === 'string' ? c : c.name).join(', ')}`);
+  }
+
+  if (auditContext.pagespeedSummary) {
+    const ps = auditContext.pagespeedSummary;
+    contextParts.push(`PAGESPEED: Performance ${ps.performance ?? '?'}/100, LCP ${ps.lcp ?? '?'}ms, CLS ${ps.cls ?? '?'}`);
+  }
+
+  if (roadmapContext) {
+    contextParts.push(`ROADMAP STRATÉGIQUE:\n${roadmapContext}`);
+  }
+
+  // Build fixes description
+  const fixesDesc = fixes.map(f => {
+    let desc = `- ID: "${f.id}" | Catégorie: ${f.category} | Priorité: ${f.priority} | Label: "${f.label}"`;
+    if (f.data) {
+      const dataKeys = Object.keys(f.data).filter(k => typeof f.data![k] !== 'object');
+      if (dataKeys.length > 0) {
+        desc += ` | Données: ${dataKeys.map(k => `${k}="${f.data![k]}"`).join(', ')}`;
+      }
+    }
+    return desc;
+  }).join('\n');
+
+  const systemPrompt = `Tu es un architecte JavaScript expert en SEO technique, GEO (Generative Engine Optimization) et optimisation web.
+Tu génères du code JavaScript vanilla (ES5 compatible, pas de const/let/arrow functions) qui s'exécute dans un navigateur via une balise <script>.
+
+RÈGLES ABSOLUES:
+1. Chaque correctif DOIT être une fonction nommée avec un console.log final
+2. Le code doit être SPÉCIFIQUE au site analysé — utilise les données d'audit réelles (title actuel, mots-clés, secteur, marque, concurrents)
+3. N'utilise PAS de placeholders génériques comme "Votre partenaire de confiance" ou "Solutions innovantes"
+4. Les meta descriptions, titles, et contenus DOIVENT intégrer les vrais mots-clés du site
+5. Le JSON-LD DOIT refléter le vrai secteur et la vraie activité de la marque
+6. Langue du contenu généré: ${langLabel}
+7. Réponds UNIQUEMENT en JSON valide, sans markdown`;
+
+  const userPrompt = `Génère du code JavaScript personnalisé pour le site "${siteName}" (${siteUrl}).
+
+${contextParts.join('\n\n')}
+
+CORRECTIFS À GÉNÉRER:
+${fixesDesc}
+
+Réponds avec un JSON contenant un objet "fixes" où chaque clé est l'ID du correctif:
+{
+  "fixes": {
+    "fix_id_1": {
+      "fn": "  // Commentaire descriptif\\n  function nomDeLaFonction() {\\n    // code JS vanilla ES5 personnalisé\\n    console.log('[Crawlers.fr] Description de l action');\\n  }",
+      "call": "nomDeLaFonction();"
+    },
+    "fix_id_2": { ... }
+  }
+}
+
+IMPORTANT:
+- Le "fn" est le corps de la fonction (indenté de 2 espaces)
+- Le "call" est l'appel de la fonction
+- Les strings dans le code JS doivent utiliser des guillemets simples
+- Échappe correctement les caractères spéciaux dans le JSON
+- Chaque fonction doit être autonome et robuste (try/catch si nécessaire)
+- Pour fix_title: propose un vrai title optimisé basé sur les mots-clés et le secteur
+- Pour fix_meta_desc: rédige une vraie meta description avec les vrais mots-clés
+- Pour fix_jsonld: utilise le vrai type d'activité, le vrai secteur
+- Pour fix_h1: propose un H1 basé sur le mot-clé principal`;
+
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-3-flash-preview',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.4,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`❌ AI generation failed: ${response.status}`);
+      return null;
+    }
+
+    const aiResponse = await response.json();
+    const content = aiResponse.choices?.[0]?.message?.content;
+    if (!content) {
+      console.error('❌ Empty AI response for fix generation');
+      return null;
+    }
+
+    // Parse JSON robustly
+    let jsonContent = content;
+    if (content.includes('```json')) {
+      jsonContent = content.split('```json')[1].split('```')[0].trim();
+    } else if (content.includes('```')) {
+      jsonContent = content.split('```')[1].split('```')[0].trim();
+    }
+    jsonContent = jsonContent.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+
+    const parsed = JSON.parse(jsonContent);
+    const fixesMap = new Map<string, { fn: string; call: string }>();
+
+    if (parsed.fixes && typeof parsed.fixes === 'object') {
+      for (const [fixId, fixCode] of Object.entries(parsed.fixes)) {
+        const fc = fixCode as any;
+        if (fc.fn && fc.call) {
+          fixesMap.set(fixId, { fn: fc.fn, call: fc.call });
+        }
+      }
+    }
+
+    console.log(`✅ IA a généré ${fixesMap.size}/${fixes.length} correctifs personnalisés`);
+    return fixesMap.size > 0 ? fixesMap : null;
+
+  } catch (error) {
+    console.error('❌ Error in AI fix generation:', error);
+    return null;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
 // GÉNÉRATION DU SCRIPT COMPLET
 // ══════════════════════════════════════════════════════════════
 
@@ -1508,7 +1689,8 @@ function generateCorrectiveScript(
   language: string,
   registryContext: string = '',
   aiContent?: AIGeneratedContent,
-  attribution?: AttributionConfig | null
+  attribution?: AttributionConfig | null,
+  aiGeneratedFixes?: Map<string, { fn: string; call: string }> | null
 ): string {
   const enabledFixes = fixes.filter(f => f.enabled);
   if (enabledFixes.length === 0 && !attribution?.enabled) return '';
@@ -1568,7 +1750,9 @@ function generateCorrectiveScript(
 
   // Première moitié des corrections
   firstHalf.forEach(fix => {
-    const { fn, call } = generateFixCode(fix, siteName, siteUrl, language, aiContent);
+    // Prefer AI-generated personalized code, fallback to static template
+    const aiGenerated = aiGeneratedFixes?.get(fix.id);
+    const { fn, call } = aiGenerated || generateFixCode(fix, siteName, siteUrl, language, aiContent);
     if (fn) fixFunctions.push(fn);
     if (call) fixCalls.push(call);
   });
@@ -1579,7 +1763,8 @@ function generateCorrectiveScript(
 
   // Seconde moitié des corrections
   secondHalf.forEach(fix => {
-    const { fn, call } = generateFixCode(fix, siteName, siteUrl, language, aiContent);
+    const aiGenerated = aiGeneratedFixes?.get(fix.id);
+    const { fn, call } = aiGenerated || generateFixCode(fix, siteName, siteUrl, language, aiContent);
     if (fn) fixFunctions.push(fn);
     if (call) fixCalls.push(call);
   });
@@ -1819,8 +2004,18 @@ Deno.serve(async (req) => {
       aiContent = await generateStrategicContent(fixes, siteName, siteUrl, language, roadmapContext, auditContext);
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // ÉTAPE 3: Génération IA personnalisée de TOUS les correctifs
+    // ══════════════════════════════════════════════════════════════
+    let aiGeneratedFixes: Map<string, { fn: string; call: string }> | null = null;
+
+    if (useAI && auditContext) {
+      console.log('🤖 Génération IA personnalisée de TOUS les correctifs...');
+      aiGeneratedFixes = await generateAllFixesWithAI(enabledFixes, siteName, siteUrl, language, auditContext, roadmapContext);
+    }
+
     // Générer le script avec contexte et contenu IA
-    const code = generateCorrectiveScript(fixes, siteName, siteUrl, language, registryContext, aiContent, attribution);
+    const code = generateCorrectiveScript(fixes, siteName, siteUrl, language, registryContext, aiContent, attribution, aiGeneratedFixes);
     const linesCount = code.split('\n').length;
 
     // Catégoriser les fixes pour le résumé
