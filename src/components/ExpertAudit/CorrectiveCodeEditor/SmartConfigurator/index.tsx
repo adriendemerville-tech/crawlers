@@ -1113,7 +1113,7 @@ export function SmartConfigurator({
       // 2. Actually ping the WP plugin endpoint to confirm it's live
       const pingUrl = `https://${site.domain}/wp-json/crawlers/v1/ping`;
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
+      const timeout = setTimeout(() => controller.abort(), 3000);
       
       try {
         const res = await fetch(pingUrl, { 
