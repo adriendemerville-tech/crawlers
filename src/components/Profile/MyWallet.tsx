@@ -350,18 +350,26 @@ export function MyWallet() {
                   <div className="p-3 rounded-full bg-violet-500/10">
                     <Receipt className="h-8 w-8 text-violet-400" />
                   </div>
-                  <p className="text-sm text-muted-foreground max-w-xs">
-                    {t.invoicesDescription}
-                  </p>
-                  <Button
-                    variant="outline"
-                    onClick={handleOpenPortal}
-                    disabled={portalLoading}
-                    className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
-                  >
-                    {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                    {t.viewInvoices}
-                  </Button>
+                  {purchases.length === 0 ? (
+                    <p className="text-sm text-muted-foreground max-w-xs">
+                      {language === 'fr' ? 'Pas d\'achat, pas de facture.' : language === 'es' ? 'Sin compra, sin factura.' : 'No purchase, no invoice.'}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground max-w-xs">
+                        {t.invoicesDescription}
+                      </p>
+                      <Button
+                        variant="outline"
+                        onClick={handleOpenPortal}
+                        disabled={portalLoading}
+                        className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
+                      >
+                        {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                        {t.viewInvoices}
+                      </Button>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -618,50 +626,26 @@ export function MyWallet() {
                 <div className="p-3 rounded-full bg-muted">
                   <Receipt className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <p className="text-sm text-muted-foreground max-w-xs">
-                  {t.invoicesDescription}
-                </p>
-                <p className="text-xs text-muted-foreground/70 max-w-xs">
-                  {language === 'fr'
-                    ? 'Les factures sont disponibles après votre premier achat.'
-                    : language === 'es'
-                      ? 'Las facturas están disponibles después de su primera compra.'
-                      : 'Invoices are available after your first purchase.'}
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    setPortalLoading(true);
-                    try {
-                      const { data, error } = await supabase.functions.invoke('create-customer-portal');
-                      if (error) throw error;
-                      if (data?.error) {
-                        toast({
-                          title: language === 'fr' ? 'Aucune facture' : 'No invoices',
-                          description: language === 'fr'
-                            ? 'Effectuez un premier achat pour accéder à vos factures.'
-                            : 'Make a first purchase to access your invoices.',
-                        });
-                        return;
-                      }
-                      if (data?.url) window.location.href = data.url;
-                    } catch (err) {
-                      toast({
-                        title: language === 'fr' ? 'Aucune facture' : 'No invoices',
-                        description: language === 'fr'
-                          ? 'Effectuez un premier achat pour accéder à vos factures.'
-                          : 'Make a first purchase to access your invoices.',
-                      });
-                    } finally {
-                      setPortalLoading(false);
-                    }
-                  }}
-                  disabled={portalLoading}
-                  className="gap-2"
-                >
-                  {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                  {t.viewInvoices}
-                </Button>
+                {purchases.length === 0 ? (
+                  <p className="text-sm text-muted-foreground max-w-xs">
+                    {language === 'fr' ? 'Pas d\'achat, pas de facture.' : language === 'es' ? 'Sin compra, sin factura.' : 'No purchase, no invoice.'}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground max-w-xs">
+                      {t.invoicesDescription}
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={handleOpenPortal}
+                      disabled={portalLoading}
+                      className="gap-2"
+                    >
+                      {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                      {t.viewInvoices}
+                    </Button>
+                  </>
+                )}
               </div>
             </TabsContent>
           </Tabs>
