@@ -1,5 +1,5 @@
 import { useState, useRef, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 // Lazy load credit button (loads modal with framer-motion on demand)
 const CreditRechargeButton = lazy(() => import('./CreditRechargeButton').then(m => ({ default: m.CreditRechargeButton })));
@@ -93,7 +94,7 @@ export function Header() {
   const { language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
   const { user, profile, signOut, loading } = useAuth();
-  const { balance: creditsBalance } = useCredits();
+  const { balance: creditsBalance, isAgencyPro } = useCredits();
   const navigate = useNavigate();
   const location = useLocation();
   const t = translations[language];
@@ -355,14 +356,25 @@ export function Header() {
                         {t.dashboard}
                       </Link>
                     </DropdownMenuItem>
-                    {/* Wallet submenu */}
                     <DropdownMenuItem className="gap-2 cursor-default hover:bg-transparent focus:bg-transparent">
-                      <Wallet className="h-4 w-4 text-amber-500" />
-                      <span>{t.wallet}</span>
-                      <span className="ml-auto flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
-                        {creditsBalance}
-                        <CreditCoin size="sm" />
-                      </span>
+                      {isAgencyPro ? (
+                        <>
+                          <Crown className="h-4 w-4 text-primary" />
+                          <span>Pro Agency</span>
+                          <Badge className="ml-auto bg-primary/90 text-primary-foreground text-xs">
+                            {language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active'}
+                          </Badge>
+                        </>
+                      ) : (
+                        <>
+                          <Wallet className="h-4 w-4 text-amber-500" />
+                          <span>{t.wallet}</span>
+                          <span className="ml-auto flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-medium">
+                            {creditsBalance}
+                            <CreditCoin size="sm" />
+                          </span>
+                        </>
+                      )}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
