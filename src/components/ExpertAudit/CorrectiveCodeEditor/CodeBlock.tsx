@@ -34,10 +34,10 @@ function highlightSyntax(code: string): string {
 
   let result = '';
   let lastIndex = 0;
+  let prevTokenIsDot = false;
 
   for (const match of code.matchAll(TOKEN_RE)) {
     const idx = match.index!;
-    // Preserve whitespace between tokens
     if (idx > lastIndex) {
       result += esc(code.slice(lastIndex, idx));
     }
@@ -46,21 +46,29 @@ function highlightSyntax(code: string): string {
 
     if (token.startsWith('//') || token.startsWith('/*')) {
       result += wrap('text-muted-foreground italic', esc(token));
+      prevTokenIsDot = false;
     } else if (token.startsWith('"') || token.startsWith("'") || token.startsWith('`')) {
       result += wrap('text-emerald-600 dark:text-emerald-400', esc(token));
+      prevTokenIsDot = false;
     } else if (/^\d/.test(token)) {
       result += wrap('text-orange-500 dark:text-orange-400', esc(token));
+      prevTokenIsDot = false;
     } else if (KEYWORDS.has(token)) {
       result += wrap('text-violet-500 dark:text-violet-400', esc(token));
+      prevTokenIsDot = false;
     } else if (/^[a-zA-Z_$]/.test(token)) {
-      // Peek ahead: is this a function call?
       const after = code.slice(lastIndex).match(/^\s*\(/);
-      if (after) {
+      if (prevTokenIsDot) {
+        // Property/method after dot: method call → purple, property → lighter violet
+        result += wrap(after ? 'text-purple-500 dark:text-purple-400' : 'text-violet-400 dark:text-violet-300', esc(token));
+      } else if (after) {
         result += wrap('text-purple-500 dark:text-purple-400', esc(token));
       } else {
         result += esc(token);
       }
+      prevTokenIsDot = false;
     } else {
+      prevTokenIsDot = token === '.';
       result += esc(token);
     }
   }
