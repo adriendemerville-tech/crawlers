@@ -17,6 +17,7 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { Palette } from 'lucide-react';
 import { BrandingTab } from '@/components/Profile/BrandingTab';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
+import { AccountManager } from '@/components/Profile/AccountManager';
 
 const translations = {
   fr: {
@@ -329,7 +330,7 @@ export function MyWallet() {
             </TabsTrigger>
             <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-violet-600 data-[state=active]:text-white">
               <User className="h-4 w-4" />
-              <span className="hidden sm:inline">{language === 'fr' ? 'Profil' : language === 'es' ? 'Perfil' : 'Profile'}</span>
+              <span className="hidden sm:inline">{language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts'}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -461,9 +462,12 @@ export function MyWallet() {
             </Card>
           </TabsContent>
 
-          {/* Profile Tab */}
+          {/* Accounts Tab */}
           <TabsContent value="profile">
-            <ProfileSettings />
+            <AccountManager />
+            <div className="mt-6">
+              <ProfileSettings />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
