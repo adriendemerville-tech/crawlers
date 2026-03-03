@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { useToast } from '@/hooks/use-toast';
+import { useAdmin } from '@/hooks/useAdmin';
 
 const translations = {
   fr: {
@@ -98,6 +99,7 @@ export function MyWallet() {
   const { balance, isAgencyPro, subscriptionStatus } = useCredits();
   const { language } = useLanguage();
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const { toast } = useToast();
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
@@ -221,7 +223,7 @@ export function MyWallet() {
   };
 
   // Pro Agency: dedicated subscription page with invoices only
-  if (isAgencyPro) {
+  if (isAgencyPro || isAdmin) {
     return (
       <div className="space-y-6">
         {/* Active Subscription Card */}
