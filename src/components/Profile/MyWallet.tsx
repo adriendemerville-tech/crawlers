@@ -621,9 +621,41 @@ export function MyWallet() {
                 <p className="text-sm text-muted-foreground max-w-xs">
                   {t.invoicesDescription}
                 </p>
+                <p className="text-xs text-muted-foreground/70 max-w-xs">
+                  {language === 'fr'
+                    ? 'Les factures sont disponibles après votre premier achat.'
+                    : language === 'es'
+                      ? 'Las facturas están disponibles después de su primera compra.'
+                      : 'Invoices are available after your first purchase.'}
+                </p>
                 <Button
                   variant="outline"
-                  onClick={handleOpenPortal}
+                  onClick={async () => {
+                    setPortalLoading(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke('create-customer-portal');
+                      if (error) throw error;
+                      if (data?.error) {
+                        toast({
+                          title: language === 'fr' ? 'Aucune facture' : 'No invoices',
+                          description: language === 'fr'
+                            ? 'Effectuez un premier achat pour accéder à vos factures.'
+                            : 'Make a first purchase to access your invoices.',
+                        });
+                        return;
+                      }
+                      if (data?.url) window.location.href = data.url;
+                    } catch (err) {
+                      toast({
+                        title: language === 'fr' ? 'Aucune facture' : 'No invoices',
+                        description: language === 'fr'
+                          ? 'Effectuez un premier achat pour accéder à vos factures.'
+                          : 'Make a first purchase to access your invoices.',
+                      });
+                    } finally {
+                      setPortalLoading(false);
+                    }
+                  }}
                   disabled={portalLoading}
                   className="gap-2"
                 >
