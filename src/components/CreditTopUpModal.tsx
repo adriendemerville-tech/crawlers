@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Crown, Linkedin, Handshake, Infinity, FileText, Code, Stamp, Users } from 'lucide-react';
+import { Check, Loader2, Crown, Linkedin, Handshake, Infinity, FileText, Code, Stamp, Users, Copy, Gift, Share2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditsContext';
 import { Separator } from '@/components/ui/separator';
 import { CreditCoin } from '@/components/ui/CreditCoin';
+import { Input } from '@/components/ui/input';
 
 interface CreditTopUpModalProps {
   open: boolean;
@@ -66,6 +69,17 @@ const translations = {
     linkedinOffer: 'Vous aimez Crawlers.AI ?',
     linkedinDescription: 'Publiez votre rapport sur LinkedIn et recevez 50 crédits gratuits !',
     linkedinCta: 'Publier',
+    referralShare: 'Parrainez vos amis',
+    referralShareDesc: 'Gagnez 20 crédits quand votre ami effectue son premier achat',
+    copied: 'Copié !',
+    copy: 'Copier',
+    referralInput: 'Code de parrainage',
+    referralPlaceholder: 'Entrez un code...',
+    referralValidate: 'Valider',
+    referralSuccess: 'Code appliqué ! +10 crédits offerts 🎉',
+    referralAlready: 'Parrainage déjà activé ✓',
+    referralSelfError: 'Vous ne pouvez pas utiliser votre propre code',
+    referralValidating: 'Validation...',
   },
   en: {
     title: 'Top up my credits',
@@ -81,6 +95,17 @@ const translations = {
     linkedinOffer: 'Do you like Crawlers.AI?',
     linkedinDescription: 'Share your report on LinkedIn and get 50 free credits!',
     linkedinCta: 'Share',
+    referralShare: 'Refer your friends',
+    referralShareDesc: 'Earn 20 credits when your friend makes their first purchase',
+    copied: 'Copied!',
+    copy: 'Copy',
+    referralInput: 'Referral code',
+    referralPlaceholder: 'Enter a code...',
+    referralValidate: 'Apply',
+    referralSuccess: 'Code applied! +10 credits bonus 🎉',
+    referralAlready: 'Referral already active ✓',
+    referralSelfError: "You can't use your own code",
+    referralValidating: 'Validating...',
   },
   es: {
     title: 'Recargar mis créditos',
@@ -96,6 +121,17 @@ const translations = {
     linkedinOffer: '¿Te gusta Crawlers.AI?',
     linkedinDescription: '¡Publica tu informe en LinkedIn y recibe 50 créditos gratis!',
     linkedinCta: 'Publicar',
+    referralShare: 'Recomienda a tus amigos',
+    referralShareDesc: 'Gana 20 créditos cuando tu amigo haga su primera compra',
+    copied: '¡Copiado!',
+    copy: 'Copiar',
+    referralInput: 'Código de referido',
+    referralPlaceholder: 'Introduce un código...',
+    referralValidate: 'Validar',
+    referralSuccess: '¡Código aplicado! +10 créditos de regalo 🎉',
+    referralAlready: 'Referido ya activo ✓',
+    referralSelfError: 'No puedes usar tu propio código',
+    referralValidating: 'Validando...',
   },
 };
 
@@ -104,7 +140,68 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const { toast } = useToast();
   const { language } = useLanguage();
+  const { user, profile } = useAuth();
+  const { refreshBalance } = useCredits();
   const t = translations[language];
+
+  // Referral state
+  const [referralCode, setReferralCode] = useState('');
+  const [myReferralCode, setMyReferralCode] = useState<string | null>(null);
+  const [isReferred, setIsReferred] = useState(false);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [referralApplied, setReferralApplied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  // Fetch referral info
+  useEffect(() => {
+    if (!user || !open) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('referral_code, referred_by')
+        .eq('user_id', user.id)
+        .single();
+      if (data) {
+        setMyReferralCode((data as any).referral_code || null);
+        setIsReferred(!!(data as any).referred_by);
+      }
+    })();
+  }, [user, open]);
+
+  const handleCopyCode = async () => {
+    if (!myReferralCode) return;
+    await navigator.clipboard.writeText(myReferralCode);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
+  const handleApplyReferral = async () => {
+    if (!referralCode.trim() || !user) return;
+    
+    // Client-side self-referral check
+    if (referralCode.trim().toUpperCase() === myReferralCode) {
+      toast({ title: t.referralSelfError, variant: 'destructive' });
+      return;
+    }
+
+    setReferralLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('apply-referral', {
+        body: { referral_code: referralCode.trim() },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      setReferralApplied(true);
+      setIsReferred(true);
+      await refreshBalance();
+      toast({ title: t.referralSuccess });
+    } catch (err) {
+      toast({ title: t.error, description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
+    } finally {
+      setReferralLoading(false);
+    }
+  };
 
   const handlePurchase = async (packageId: string) => {
     setLoadingPackage(packageId);
@@ -134,7 +231,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[960px]">
+      <DialogContent className="sm:max-w-[960px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">
             {t.title}
@@ -216,6 +313,78 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
             })}
           </AnimatePresence>
         </div>
+
+        {/* Referral Section */}
+        {user && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="rounded-xl border-2 border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-transparent p-5 space-y-4"
+          >
+            <div className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-amber-500" />
+              <h3 className="font-bold text-base">{t.referralShare}</h3>
+            </div>
+
+            {/* Share section */}
+            {myReferralCode && (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">{t.referralShareDesc}</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-muted/50 rounded-lg px-4 py-2.5 font-mono text-base font-bold tracking-widest text-center select-all">
+                    {myReferralCode}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyCode}
+                    className="shrink-0 gap-1.5"
+                  >
+                    {codeCopied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                    {codeCopied ? t.copied : t.copy}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Input section */}
+            {!isReferred && !referralApplied ? (
+              <div className="space-y-2 pt-2 border-t border-border/50">
+                <p className="text-sm font-medium">{t.referralInput}</p>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    placeholder={t.referralPlaceholder}
+                    className="font-mono tracking-wider uppercase"
+                    maxLength={8}
+                    disabled={referralLoading}
+                  />
+                  <Button
+                    onClick={handleApplyReferral}
+                    disabled={!referralCode.trim() || referralLoading}
+                    size="sm"
+                    className="shrink-0 gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0"
+                  >
+                    {referralLoading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> {t.referralValidating}</>
+                    ) : (
+                      t.referralValidate
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-2 border-t border-border/50">
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
+                  <Check className="h-4 w-4" />
+                  {referralApplied ? t.referralSuccess : t.referralAlready}
+                </p>
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {/* Pro Agency Upsell */}
         <motion.div

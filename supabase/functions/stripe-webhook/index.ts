@@ -127,10 +127,71 @@ serve(async (req) => {
 
         if (transactionError) {
           console.error("❌ Error recording transaction:", transactionError);
-          // Don't fail the webhook, credits are already added
         }
 
         console.log(`✅ Credits added: ${currentBalance} → ${newBalance} for user ${userId}`);
+
+        // 🎁 REFERRAL REWARD: Check if this is the user's first purchase and they were referred
+        try {
+          // Count previous completed purchases for this user
+          const { count: previousPurchases } = await supabase
+            .from("credit_transactions")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("transaction_type", "purchase");
+
+          // If this is the first purchase (count = 1 because we just inserted one)
+          if (previousPurchases !== null && previousPurchases <= 1) {
+            const { data: buyerProfile } = await supabase
+              .from("profiles")
+              .select("referred_by")
+              .eq("user_id", userId)
+              .single();
+
+            if (buyerProfile?.referred_by) {
+              const referrerId = buyerProfile.referred_by;
+              const referralBonus = 20;
+
+              // Get referrer balance
+              const { data: referrerProfile } = await supabase
+                .from("profiles")
+                .select("credits_balance")
+                .eq("user_id", referrerId)
+                .single();
+
+              if (referrerProfile) {
+                const referrerNewBalance = (referrerProfile.credits_balance || 0) + referralBonus;
+                
+                await supabase
+                  .from("profiles")
+                  .update({ credits_balance: referrerNewBalance, updated_at: new Date().toISOString() })
+                  .eq("user_id", referrerId);
+
+                await supabase
+                  .from("credit_transactions")
+                  .insert({
+                    user_id: referrerId,
+                    amount: referralBonus,
+                    transaction_type: "bonus",
+                    description: `Récompense parrainage — filleul a effectué son premier achat`,
+                  });
+
+                await supabase
+                  .from("referral_rewards")
+                  .insert({
+                    referrer_id: referrerId,
+                    referee_id: userId,
+                    reward_amount: referralBonus,
+                    status: "completed",
+                  });
+
+                console.log(`🎁 Referral reward: +${referralBonus} credits to referrer ${referrerId}`);
+              }
+            }
+          }
+        } catch (refErr) {
+          console.error("⚠️ Referral reward error (non-blocking):", refErr);
+        }
 
         return new Response(
           JSON.stringify({ 
