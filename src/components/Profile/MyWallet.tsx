@@ -220,6 +220,107 @@ export function MyWallet() {
     );
   };
 
+  // Pro Agency: dedicated subscription page with invoices only
+  if (isAgencyPro) {
+    return (
+      <div className="space-y-6">
+        {/* Active Subscription Card */}
+        <Card className="border-primary/40 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Crown className="h-5 w-5 text-primary" />
+                Pro Agency
+                <Badge className="bg-primary/90 text-primary-foreground text-xs">
+                  {subscriptionStatus === 'canceling'
+                    ? (language === 'fr' ? 'Résiliation en cours' : language === 'es' ? 'Cancelación en curso' : 'Canceling')
+                    : (language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active')}
+                </Badge>
+              </CardTitle>
+            </div>
+            {subscriptionStatus === 'canceling' && (
+              <div className="flex items-center gap-2 mt-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                {language === 'fr' 
+                  ? "Votre abonnement reste actif jusqu'à la fin de la période en cours, puis sera résilié."
+                  : language === 'es'
+                    ? 'Su suscripción permanece activa hasta el final del período actual.'
+                    : 'Your subscription remains active until the end of the current billing period.'}
+              </div>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+                <FileText className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-medium">
+                  {language === 'fr' ? 'Rapports illimités' : language === 'es' ? 'Informes ilimitados' : 'Unlimited reports'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+                <Code className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-medium">
+                  {language === 'fr' ? 'Correctifs illimités' : language === 'es' ? 'Correctivos ilimitados' : 'Unlimited fixes'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+                <Headphones className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-medium">
+                  {language === 'fr' ? 'Support prioritaire' : language === 'es' ? 'Soporte prioritario' : 'Priority support'}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-1">
+              <p className="text-2xl font-bold text-foreground">
+                49€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenPortal}
+                disabled={portalLoading}
+                className="gap-2"
+              >
+                {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                {language === 'fr' ? 'Gérer mon abonnement' : language === 'es' ? 'Gestionar suscripción' : 'Manage subscription'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Invoices only */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              {t.invoices}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-10 space-y-4 text-center">
+              <div className="p-3 rounded-full bg-muted">
+                <Receipt className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                {t.invoicesDescription}
+              </p>
+              <Button
+                variant="outline"
+                onClick={handleOpenPortal}
+                disabled={portalLoading}
+                className="gap-2"
+              >
+                {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                {t.viewInvoices}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Free users: full wallet with credits, upsell, and transaction history
   return (
     <div className="space-y-6">
       {/* Balance Card */}
@@ -250,130 +351,77 @@ export function MyWallet() {
       </Card>
 
       {/* Pro Agency Upsell Card */}
-      {!isAgencyPro && (
-        <Card className="border-primary/40 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent relative overflow-hidden">
-          <div className="absolute top-3 right-3">
-            <Badge className="bg-primary/90 text-primary-foreground gap-1 text-xs">
-              <Infinity className="h-3 w-3" />
-              {language === 'fr' ? 'Illimité' : language === 'es' ? 'Ilimitado' : 'Unlimited'}
-            </Badge>
+      <Card className="border-primary/40 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent relative overflow-hidden">
+        <div className="absolute top-3 right-3">
+          <Badge className="bg-primary/90 text-primary-foreground gap-1 text-xs">
+            <Infinity className="h-3 w-3" />
+            {language === 'fr' ? 'Illimité' : language === 'es' ? 'Ilimitado' : 'Unlimited'}
+          </Badge>
+        </div>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Crown className="h-5 w-5 text-primary" />
+            {language === 'fr' ? 'Passer au plan Pro Agency' : language === 'es' ? 'Cambiar al plan Pro Agency' : 'Upgrade to Pro Agency'}
+          </CardTitle>
+          <CardDescription>
+            {language === 'fr' 
+              ? 'Tout illimité pour 49€/mois — idéal pour les professionnels et agences.' 
+              : language === 'es' 
+                ? 'Todo ilimitado por 49€/mes — ideal para profesionales y agencias.'
+                : 'Everything unlimited for €49/month — ideal for professionals and agencies.'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+              <FileText className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-sm font-medium">
+                {language === 'fr' ? 'Rapports illimités' : language === 'es' ? 'Informes ilimitados' : 'Unlimited reports'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+              <Code className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-sm font-medium">
+                {language === 'fr' ? 'Correctifs illimités' : language === 'es' ? 'Correctivos ilimitados' : 'Unlimited fixes'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+              <Headphones className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-sm font-medium">
+                {language === 'fr' ? 'Support prioritaire' : language === 'es' ? 'Soporte prioritario' : 'Priority support'}
+              </span>
+            </div>
           </div>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Crown className="h-5 w-5 text-primary" />
-              {language === 'fr' ? 'Passer au plan Pro Agency' : language === 'es' ? 'Cambiar al plan Pro Agency' : 'Upgrade to Pro Agency'}
-            </CardTitle>
-            <CardDescription>
-              {language === 'fr' 
-                ? 'Tout illimité pour 49€/mois — idéal pour les professionnels et agences.' 
-                : language === 'es' 
-                  ? 'Todo ilimitado por 49€/mes — ideal para profesionales y agencias.'
-                  : 'Everything unlimited for €49/month — ideal for professionals and agencies.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-                <FileText className="h-4 w-4 text-primary shrink-0" />
-                <span className="text-sm font-medium">
-                  {language === 'fr' ? 'Rapports illimités' : language === 'es' ? 'Informes ilimitados' : 'Unlimited reports'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-                <Code className="h-4 w-4 text-primary shrink-0" />
-                <span className="text-sm font-medium">
-                  {language === 'fr' ? 'Correctifs illimités' : language === 'es' ? 'Correctivos ilimitados' : 'Unlimited fixes'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-                <Headphones className="h-4 w-4 text-primary shrink-0" />
-                <span className="text-sm font-medium">
-                  {language === 'fr' ? 'Support prioritaire' : language === 'es' ? 'Soporte prioritario' : 'Priority support'}
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-2xl font-bold text-foreground">
-                49€<span className="text-sm font-normal text-muted-foreground">/
-                  {language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}
-                </span>
-              </p>
-              <Button
-                onClick={async () => {
-                  setSubscribeLoading(true);
-                  try {
-                    const { data, error } = await supabase.functions.invoke('create-subscription-session', {
-                      body: { returnUrl: window.location.href }
-                    });
-                    if (error) throw error;
-                    if (data?.url) window.location.href = data.url;
-                  } catch (err) {
-                    toast({ title: 'Erreur', description: String(err), variant: 'destructive' });
-                  } finally {
-                    setSubscribeLoading(false);
-                  }
-                }}
-                disabled={subscribeLoading}
-                className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground"
-              >
-                {subscribeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
-                {language === 'fr' ? "S'abonner" : language === 'es' ? 'Suscribirse' : 'Subscribe'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          <div className="flex items-center justify-between pt-1">
+            <p className="text-2xl font-bold text-foreground">
+              49€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
+            </p>
+            <Button
+              onClick={async () => {
+                setSubscribeLoading(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke('create-subscription-session', {
+                    body: { returnUrl: window.location.href }
+                  });
+                  if (error) throw error;
+                  if (data?.url) window.location.href = data.url;
+                } catch (err) {
+                  toast({ title: 'Erreur', description: String(err), variant: 'destructive' });
+                } finally {
+                  setSubscribeLoading(false);
+                }
+              }}
+              disabled={subscribeLoading}
+              className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground"
+            >
+              {subscribeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crown className="h-4 w-4" />}
+              {language === 'fr' ? "S'abonner" : language === 'es' ? 'Suscribirse' : 'Subscribe'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Active Subscription Card */}
-      {isAgencyPro && (
-        <Card className="border-primary/40 bg-gradient-to-br from-primary/5 via-primary/3 to-transparent">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Crown className="h-5 w-5 text-primary" />
-                Pro Agency
-                <Badge className="bg-primary/90 text-primary-foreground text-xs">
-                  {subscriptionStatus === 'canceling'
-                    ? (language === 'fr' ? 'Résiliation en cours' : language === 'es' ? 'Cancelación en curso' : 'Canceling')
-                    : (language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active')}
-                </Badge>
-              </CardTitle>
-            </div>
-            {subscriptionStatus === 'canceling' && (
-              <div className="flex items-center gap-2 mt-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-                <AlertTriangle className="h-4 w-4 shrink-0" />
-                {language === 'fr' 
-                  ? "Votre abonnement reste actif jusqu'à la fin de la période en cours, puis sera résilié."
-                  : language === 'es'
-                    ? 'Su suscripción permanece activa hasta el final del período actual.'
-                    : 'Your subscription remains active until the end of the current billing period.'}
-              </div>
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1"><FileText className="h-3.5 w-3.5" /> {language === 'fr' ? 'Rapports ∞' : 'Reports ∞'}</span>
-                <span className="flex items-center gap-1"><Code className="h-3.5 w-3.5" /> {language === 'fr' ? 'Correctifs ∞' : 'Fixes ∞'}</span>
-                <span className="flex items-center gap-1"><Headphones className="h-3.5 w-3.5" /> {language === 'fr' ? 'Support prioritaire' : 'Priority support'}</span>
-              </div>
-              <div className="ml-auto">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleOpenPortal}
-                  disabled={portalLoading}
-                  className="gap-2"
-                >
-                  {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                  {language === 'fr' ? 'Gérer mon abonnement' : language === 'es' ? 'Gestionar suscripción' : 'Manage subscription'}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
+      {/* Transaction History */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
