@@ -317,12 +317,16 @@ export function ClientsTab() {
                         <Plus className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="p-0 w-64" align="end">
-                      <Command>
-                        <CommandInput placeholder={t.searchSite} />
+                    <PopoverContent className="p-0 w-72" align="end">
+                      <Command shouldFilter={true} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}>
+                        <CommandInput 
+                          placeholder={t.searchSite} 
+                          autoFocus
+                          className="text-foreground caret-primary"
+                        />
                         <CommandList>
                           <CommandEmpty>{t.noSites}</CommandEmpty>
-                          <CommandGroup>
+                          <CommandGroup heading={language === 'fr' ? 'Sites trackés' : 'Tracked sites'}>
                             {getAvailableSites(client.id).map(site => (
                               <CommandItem
                                 key={site.id}
@@ -331,7 +335,10 @@ export function ClientsTab() {
                                 className="cursor-pointer"
                               >
                                 <Globe className="h-4 w-4 mr-2 text-violet-500" />
-                                <span className="truncate">{site.site_name || site.domain}</span>
+                                <div className="flex flex-col min-w-0">
+                                  <span className="truncate text-sm font-medium">{site.site_name || site.domain}</span>
+                                  {site.site_name && <span className="truncate text-xs text-muted-foreground">{site.domain}</span>}
+                                </div>
                               </CommandItem>
                             ))}
                           </CommandGroup>
