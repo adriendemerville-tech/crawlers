@@ -186,7 +186,7 @@ export default function Profile() {
                   ) : (
                     <Wallet className="h-4 w-4" />
                   )}
-                  <span className="hidden sm:inline">
+                  <span className={`hidden sm:inline ${isProUser ? 'text-yellow-500 font-semibold' : ''}`}>
                     {isProUser ? 'Pro Agency' : t.wallet}
                   </span>
                 </TabsTrigger>
