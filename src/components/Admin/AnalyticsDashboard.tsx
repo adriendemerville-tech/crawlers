@@ -13,7 +13,9 @@ import {
   CheckCircle,
   Globe,
   ExternalLink,
-  RefreshCw
+  RefreshCw,
+  Cpu,
+  Zap
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -46,6 +48,15 @@ interface AnalyticsStats {
   expertAuditStep2: number;
   expertAuditStep3: number;
   errorCount: number;
+}
+
+interface TokenUsageStats {
+  totalTokens: number;
+  promptTokens: number;
+  completionTokens: number;
+  callCount: number;
+  byFunction: Record<string, { tokens: number; calls: number }>;
+  paidApiCalls: number;
 }
 
 interface DailyData {
@@ -107,6 +118,14 @@ export function AnalyticsDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
+    totalTokens: 0,
+    promptTokens: 0,
+    completionTokens: 0,
+    callCount: 0,
+    byFunction: {},
+    paidApiCalls: 0,
+  });
 
   // Initial load
   useEffect(() => {
@@ -178,6 +197,41 @@ export function AnalyticsDashboard() {
         errorCount: events.filter(e => e.event_type === 'error').length,
       };
       setStats(newStats);
+
+      // Calculate token usage from ALL events (including ai_token_usage and paid_api_call)
+      const tokenEvents = allEvents?.filter(e => e.event_type === 'ai_token_usage') || [];
+      const paidApiEvents = allEvents?.filter(e => e.event_type === 'paid_api_call') || [];
+      
+      const byFunction: Record<string, { tokens: number; calls: number }> = {};
+      let totalTokens = 0;
+      let promptTokens = 0;
+      let completionTokens = 0;
+      
+      tokenEvents.forEach(e => {
+        const data = e.event_data as Record<string, unknown> | null;
+        if (data) {
+          const t = Number(data.total_tokens) || 0;
+          const p = Number(data.prompt_tokens) || 0;
+          const c = Number(data.completion_tokens) || 0;
+          totalTokens += t;
+          promptTokens += p;
+          completionTokens += c;
+          
+          const fn = (data.function_name as string) || 'unknown';
+          if (!byFunction[fn]) byFunction[fn] = { tokens: 0, calls: 0 };
+          byFunction[fn].tokens += t;
+          byFunction[fn].calls += 1;
+        }
+      });
+      
+      setTokenUsage({
+        totalTokens,
+        promptTokens,
+        completionTokens,
+        callCount: tokenEvents.length,
+        byFunction,
+        paidApiCalls: paidApiEvents.length,
+      });
 
       // Calculate daily data (last 30 days)
       const last30Days = Array.from({ length: 30 }, (_, i) => {
@@ -416,6 +470,68 @@ export function AnalyticsDashboard() {
           variant={stats.errorCount > 0 ? 'error' : 'default'}
         />
       </div>
+
+      {/* Token Usage Card */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Cpu className="h-4 w-4 text-primary" />
+                Consommation Tokens IA (30j)
+              </CardTitle>
+              <CardDescription>Tokens envoyés vers les services IA payants pour les audits</CardDescription>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-primary">
+                {tokenUsage.totalTokens.toLocaleString('fr-FR')}
+              </div>
+              <p className="text-xs text-muted-foreground">{tokenUsage.callCount} appels IA</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-xs text-muted-foreground">Tokens prompt (input)</p>
+              <p className="text-lg font-semibold">{tokenUsage.promptTokens.toLocaleString('fr-FR')}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-xs text-muted-foreground">Tokens completion (output)</p>
+              <p className="text-lg font-semibold">{tokenUsage.completionTokens.toLocaleString('fr-FR')}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Zap className="h-3 w-3" /> Appels API payants
+              </p>
+              <p className="text-lg font-semibold">{tokenUsage.paidApiCalls.toLocaleString('fr-FR')}</p>
+            </div>
+          </div>
+          
+          {Object.keys(tokenUsage.byFunction).length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Détail par fonction</p>
+              {Object.entries(tokenUsage.byFunction)
+                .sort(([, a], [, b]) => b.tokens - a.tokens)
+                .map(([fn, data]) => (
+                  <div key={fn} className="flex items-center justify-between p-2 rounded bg-muted/30">
+                    <span className="text-sm font-mono">{fn}</span>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="text-muted-foreground">{data.calls} appels</span>
+                      <span className="font-semibold text-primary">{data.tokens.toLocaleString('fr-FR')} tokens</span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+          
+          {tokenUsage.callCount === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Aucune donnée de consommation IA enregistrée sur cette période. Les compteurs se rempliront lors des prochains audits.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* URLs analysées */}
       <Card>

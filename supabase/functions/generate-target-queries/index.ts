@@ -1,3 +1,5 @@
+import { trackTokenUsage } from '../_shared/tokenTracker.ts';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -332,6 +334,9 @@ Réponds au format JSON exact suivant, sans texte avant ou après :
 
     const aiData = await response.json();
     const content = aiData.choices?.[0]?.message?.content;
+
+    // Track token usage
+    trackTokenUsage('generate-target-queries', 'google/gemini-2.5-flash', aiData.usage, domain);
 
     if (!content) {
       throw new Error('No content in AI response');

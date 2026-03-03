@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -1201,6 +1202,9 @@ IMPORTANT:
 
     const aiResponse = await response.json();
     const content = aiResponse.choices?.[0]?.message?.content;
+
+    // Track token usage
+    trackTokenUsage('audit-strategique-ia', 'google/gemini-3-pro-preview', aiResponse.usage, url);
 
     if (!content) {
       console.error('No content in AI response');
