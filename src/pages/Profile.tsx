@@ -233,7 +233,7 @@ export default function Profile() {
                   <Wallet className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.wallet}</span>
                 </TabsTrigger>
-                {profile?.plan_type === 'agency_pro' && (
+                {(profile?.plan_type === 'agency_pro' || isAdmin) && (
                   <TabsTrigger value="branding" className="flex-1 gap-2">
                     <Palette className="h-4 w-4" />
                     <span className="hidden sm:inline">Branding</span>
@@ -241,7 +241,7 @@ export default function Profile() {
                 )}
                 <div className="ml-auto" />
                 <TabsTrigger value="settings" className="gap-2">
-                  {profile?.plan_type === 'agency_pro' ? (
+                  {(profile?.plan_type === 'agency_pro' || isAdmin) ? (
                     <Crown className="h-4 w-4 text-yellow-500" style={{ filter: 'drop-shadow(0 0 2px rgba(234, 179, 8, 0.5))' }} />
                   ) : (
                     <Settings className="h-4 w-4" />
@@ -422,7 +422,7 @@ export default function Profile() {
                 <MyCorrectiveCodes />
               </TabsContent>
 
-              {profile?.plan_type === 'agency_pro' && (
+              {(profile?.plan_type === 'agency_pro' || isAdmin) && (
                 <TabsContent value="branding">
                   <BrandingTab />
                 </TabsContent>
