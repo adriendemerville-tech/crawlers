@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { 
   CheckCircle2, Zap, CreditCard, FileText, Code2, 
   Bot, Globe, Gauge, Brain, ArrowRight, Gift,
-  Crown, Infinity, Shield, Headphones, Loader2
+  Crown, Infinity, Shield, Headphones, Loader2, Users
 } from 'lucide-react';
 
 const translations = {
@@ -78,6 +78,7 @@ const translations = {
       'Rapports illimités',
       'Correctifs illimités',
       'Marque Blanche (White Label)',
+      '3 comptes inclus',
       'Support prioritaire',
     ],
     agencyCta: 'S\'abonner',
@@ -146,6 +147,7 @@ const translations = {
       'Unlimited reports',
       'Unlimited fixes',
       'White Label option',
+      '3 accounts included',
       'Priority support',
     ],
     agencyCta: 'Subscribe',
@@ -214,6 +216,7 @@ const translations = {
       'Informes ilimitados',
       'Correcciones ilimitadas',
       'Opción Marca Blanca',
+      '3 cuentas incluidas',
       'Soporte prioritario',
     ],
     agencyCta: 'Suscribirse',
@@ -224,7 +227,7 @@ const translations = {
   },
 };
 
-const agencyIcons = [Infinity, Infinity, Shield, Headphones];
+const agencyIcons = [Infinity, Infinity, Shield, Users, Headphones];
 
 export default function Tarifs() {
   const { language } = useLanguage();
