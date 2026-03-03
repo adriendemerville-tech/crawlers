@@ -1678,15 +1678,42 @@ async function generateAllFixesWithAI(
     return desc;
   }).join('\n');
 
+  // IDs des fixes head qui sont gérés par applySeoMetadata (ne pas regénérer en IA)
+  const HEAD_FIX_IDS_FOR_AI = new Set([
+    'fix_title', 'fix_meta_desc', 'fix_h1', 'fix_jsonld',
+    'enhance_semantic_meta', 'fix_hallucination'
+  ]);
+  const nonHeadFixes = fixes.filter(f => !HEAD_FIX_IDS_FOR_AI.has(f.id));
+
+  // Si tous les fixes sont des fixes <head>, pas besoin de l'IA pour les fonctions
+  if (nonHeadFixes.length === 0) {
+    console.log('ℹ️ Tous les fixes sont des fixes <head> — applySeoMetadata couvre tout');
+    return null;
+  }
+
   const systemPrompt = `Tu es un architecte JavaScript expert en SEO technique, GEO (Generative Engine Optimization) et optimisation web.
 Tu génères du code JavaScript vanilla (ES5 compatible, pas de const/let/arrow functions) qui s'exécute dans un navigateur via une balise <script>.
 
-RÈGLES ABSOLUES:
-1. Chaque correctif DOIT être une fonction nommée avec un console.log final
-2. Le code doit être SPÉCIFIQUE au site analysé — utilise les données d'audit réelles (title actuel, mots-clés, secteur, marque, concurrents)
-3. N'utilise PAS de placeholders génériques comme "Votre partenaire de confiance" ou "Solutions innovantes"
-4. Les meta descriptions, titles, et contenus DOIVENT intégrer les vrais mots-clés du site
-5. Le JSON-LD DOIT refléter le vrai secteur et la vraie activité de la marque
+ARCHITECTURE CENTRALISÉE — RÈGLES ABSOLUES:
+
+1. NE GÉNÈRE PAS de fonctions pour les fixes suivants (ils sont gérés par applySeoMetadata en amont):
+   fix_title, fix_meta_desc, fix_h1, fix_jsonld, enhance_semantic_meta, fix_hallucination
+   Si un de ces IDs est dans la liste, IGNORE-LE.
+
+2. SYSTÈME DE VERROUS (LOCKS): Chaque fonction que tu génères DOIT vérifier l'attribut data-crawlers-modified="true"
+   sur l'élément ciblé AVANT de le modifier. Si l'attribut existe, la fonction fait return silencieusement.
+   Après modification, la fonction DOIT poser cet attribut sur l'élément modifié.
+   Exemple:
+     var el = document.querySelector('.target');
+     if (el && el.getAttribute('data-crawlers-modified') === 'true') return;
+     // ... modification ...
+     el.setAttribute('data-crawlers-modified', 'true');
+
+3. PAGE_DATA: Un objet global PAGE_DATA existe déjà dans le scope. Tu peux y lire des valeurs
+   comme PAGE_DATA.metaDescription, PAGE_DATA.targetTitle, etc. Ne les redéfinis pas.
+
+4. Le code doit être SPÉCIFIQUE au site analysé — utilise les données d'audit réelles
+5. N'utilise PAS de placeholders génériques
 6. Langue du contenu généré: ${langLabel}
 7. Réponds UNIQUEMENT en JSON valide, sans markdown`;
 
@@ -1694,30 +1721,26 @@ RÈGLES ABSOLUES:
 
 ${contextParts.join('\n\n')}
 
-CORRECTIFS À GÉNÉRER:
+CORRECTIFS À GÉNÉRER (exclure fix_title, fix_meta_desc, fix_h1, fix_jsonld, enhance_semantic_meta, fix_hallucination):
 ${fixesDesc}
 
 Réponds avec un JSON contenant un objet "fixes" où chaque clé est l'ID du correctif:
 {
   "fixes": {
     "fix_id_1": {
-      "fn": "  // Commentaire descriptif\\n  function nomDeLaFonction() {\\n    // code JS vanilla ES5 personnalisé\\n    console.log('[Crawlers.fr] Description de l action');\\n  }",
+      "fn": "  // Commentaire descriptif\\n  function nomDeLaFonction() {\\n    var el = document.querySelector('.target');\\n    if (el && el.getAttribute('data-crawlers-modified') === 'true') return;\\n    // ... modifications ...\\n    el.setAttribute('data-crawlers-modified', 'true');\\n    console.log('[Crawlers.fr] Description');\\n  }",
       "call": "nomDeLaFonction();"
-    },
-    "fix_id_2": { ... }
+    }
   }
 }
 
 IMPORTANT:
+- NE PAS inclure de fixes pour: fix_title, fix_meta_desc, fix_h1, fix_jsonld, enhance_semantic_meta, fix_hallucination
+- Chaque fonction DOIT implémenter le système de verrous (data-crawlers-modified)
 - Le "fn" est le corps de la fonction (indenté de 2 espaces)
 - Le "call" est l'appel de la fonction
 - Les strings dans le code JS doivent utiliser des guillemets simples
-- Échappe correctement les caractères spéciaux dans le JSON
-- Chaque fonction doit être autonome et robuste (try/catch si nécessaire)
-- Pour fix_title: propose un vrai title optimisé basé sur les mots-clés et le secteur
-- Pour fix_meta_desc: rédige une vraie meta description avec les vrais mots-clés
-- Pour fix_jsonld: utilise le vrai type d'activité, le vrai secteur
-- Pour fix_h1: propose un H1 basé sur le mot-clé principal`;
+- Chaque fonction doit être autonome et robuste (try/catch si nécessaire)`;
 
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -1779,6 +1802,291 @@ IMPORTANT:
 }
 
 // ══════════════════════════════════════════════════════════════
+// ARCHITECTURE CENTRALISÉE - PAGE_DATA + UNIFIED SEO + LOCKS
+// ══════════════════════════════════════════════════════════════
+
+// IDs des fixes qui touchent au <head> (title, meta, JSON-LD, OG, etc.)
+const HEAD_FIX_IDS = new Set([
+  'fix_title', 'fix_meta_desc', 'fix_h1', 'fix_jsonld',
+  'enhance_semantic_meta', 'fix_hallucination'
+]);
+
+/**
+ * Règle 1: Consolidation des données (Single Source of Truth)
+ * Extrait toutes les valeurs des fixes activés pour construire PAGE_DATA.
+ * Résout les conflits en amont (un seul targetTitle, une seule metaDescription, etc.)
+ */
+function buildPageData(
+  enabledFixes: FixConfig[],
+  siteName: string,
+  siteUrl: string,
+  language: string,
+  aiContent?: AIGeneratedContent
+): Record<string, any> {
+  const pageData: Record<string, any> = {};
+
+  for (const fix of enabledFixes) {
+    switch (fix.id) {
+      case 'fix_title':
+        // Si l'IA a fourni un title via auditContext, il sera dans fix.data
+        pageData.targetTitle = fix.data?.title || `${siteName} - Site Officiel`;
+        pageData.maxTitleLength = 60;
+        break;
+      case 'fix_meta_desc':
+        pageData.metaDescription = fix.data?.description 
+          || aiContent?.semanticMeta?.description 
+          || `Découvrez ${siteName} - Votre partenaire de confiance.`;
+        break;
+      case 'fix_h1':
+        pageData.targetH1 = fix.data?.h1Text || null; // null = auto-détection
+        break;
+      case 'fix_jsonld':
+        pageData.jsonLd = {
+          type: fix.data?.schemaType || 'Organization',
+          name: siteName,
+          url: siteUrl,
+          language: language === 'fr' ? 'French' : language === 'es' ? 'Spanish' : 'English',
+        };
+        break;
+      case 'enhance_semantic_meta': {
+        const semanticData = aiContent?.semanticMeta || fix.data?.semantic || {
+          keywords: [siteName, 'expertise', 'qualité'],
+          description: `${siteName} - Solutions innovantes et de qualité.`
+        };
+        pageData.semanticKeywords = semanticData.keywords;
+        // Si pas encore de metaDescription, utiliser celle du sémantique
+        if (!pageData.metaDescription) {
+          pageData.metaDescription = semanticData.description;
+        }
+        pageData.ogSiteName = siteName;
+        break;
+      }
+      case 'fix_hallucination': {
+        const hData = fix.data || {};
+        pageData.hallucination = {
+          trueValue: hData.trueValue || siteName,
+          confusionSources: (hData.confusionSources || []).slice(0, 3),
+        };
+        break;
+      }
+    }
+  }
+
+  return pageData;
+}
+
+/**
+ * Règle 2: Unification des fonctions <head> (applySeoMetadata)
+ * Une seule fonction qui lit PAGE_DATA et applique toutes les métadonnées en une passe.
+ */
+function generateUnifiedSeoFunction(enabledFixes: FixConfig[], siteName: string, siteUrl: string, language: string): string {
+  const headFixes = enabledFixes.filter(f => HEAD_FIX_IDS.has(f.id));
+  if (headFixes.length === 0) return '';
+
+  const hasTitle = headFixes.some(f => f.id === 'fix_title');
+  const hasMetaDesc = headFixes.some(f => f.id === 'fix_meta_desc');
+  const hasH1 = headFixes.some(f => f.id === 'fix_h1');
+  const hasJsonLd = headFixes.some(f => f.id === 'fix_jsonld');
+  const hasSemantic = headFixes.some(f => f.id === 'enhance_semantic_meta');
+  const hasHallucination = headFixes.some(f => f.id === 'fix_hallucination');
+
+  let fn = `  // ═══════════════════════════════════════════════════════════
+  // UNIFIED SEO METADATA — Single pass sur le <head> + H1
+  // ═══════════════════════════════════════════════════════════
+  function applySeoMetadata(data) {
+    try {
+      var applied = [];
+`;
+
+  if (hasTitle) {
+    fn += `
+      // — Title —
+      if (data.targetTitle) {
+        var title = document.querySelector('title');
+        var finalTitle = data.targetTitle;
+        if (finalTitle.length > (data.maxTitleLength || 60)) {
+          finalTitle = finalTitle.substring(0, 57) + '...';
+        }
+        if (!title) {
+          title = document.createElement('title');
+          document.head.appendChild(title);
+        }
+        title.textContent = finalTitle;
+        title.setAttribute('data-crawlers-modified', 'true');
+        applied.push('title');
+      }
+`;
+  }
+
+  if (hasMetaDesc) {
+    fn += `
+      // — Meta Description —
+      if (data.metaDescription) {
+        var metaDesc = document.querySelector('meta[name="description"]');
+        if (!metaDesc) {
+          metaDesc = document.createElement('meta');
+          metaDesc.name = 'description';
+          document.head.appendChild(metaDesc);
+        }
+        metaDesc.content = data.metaDescription;
+        metaDesc.setAttribute('data-crawlers-modified', 'true');
+        applied.push('meta-description');
+      }
+`;
+  }
+
+  if (hasH1) {
+    fn += `
+      // — H1 —
+      var h1s = document.querySelectorAll('h1');
+      if (h1s.length === 0) {
+        var candidates = [
+          '.article-title','.hero-title','.page-title','.entry-title',
+          '.post-title','.main-title','.section-title'
+        ];
+        var mainTitle = null;
+        for (var i = 0; i < candidates.length; i++) {
+          mainTitle = document.querySelector('h2' + candidates[i]);
+          if (mainTitle) break;
+        }
+        if (!mainTitle) mainTitle = document.querySelector('main h2, article h2, .hero h2, header h2');
+        if (mainTitle && mainTitle.parentNode) {
+          var newH1 = document.createElement('h1');
+          newH1.innerHTML = data.targetH1 ? data.targetH1 : mainTitle.innerHTML;
+          newH1.className = mainTitle.className;
+          for (var a = 0; a < mainTitle.attributes.length; a++) {
+            var attr = mainTitle.attributes[a];
+            if (attr.name !== 'class') newH1.setAttribute(attr.name, attr.value);
+          }
+          newH1.setAttribute('data-crawlers-modified', 'true');
+          mainTitle.parentNode.replaceChild(newH1, mainTitle);
+          applied.push('h1-created');
+        }
+      } else if (h1s.length > 1) {
+        for (var j = 1; j < h1s.length; j++) {
+          var h2 = document.createElement('h2');
+          h2.className = h1s[j].className;
+          h2.innerHTML = h1s[j].innerHTML;
+          h2.setAttribute('data-crawlers-modified', 'true');
+          if (h1s[j].parentNode) h1s[j].parentNode.replaceChild(h2, h1s[j]);
+        }
+        applied.push('h1-deduplicated');
+      }
+`;
+  }
+
+  if (hasJsonLd) {
+    fn += `
+      // — JSON-LD Organization —
+      if (data.jsonLd && !document.querySelector('script[type="application/ld+json"][data-crawlers-modified]')) {
+        var jsonLd = {
+          "@context": "https://schema.org",
+          "@type": data.jsonLd.type,
+          "name": data.jsonLd.name,
+          "url": data.jsonLd.url,
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer service",
+            "availableLanguage": [data.jsonLd.language]
+          }
+        };
+        var script = document.createElement('script');
+        script.type = 'application/ld+json';
+        script.setAttribute('data-crawlers-modified', 'true');
+        script.textContent = JSON.stringify(jsonLd, null, 2);
+        document.head.appendChild(script);
+        applied.push('json-ld');
+      }
+`;
+  }
+
+  if (hasSemantic) {
+    fn += `
+      // — Semantic Meta (keywords, OG, Twitter, Dublin Core) —
+      if (data.semanticKeywords) {
+        var mk = document.querySelector('meta[name="keywords"]');
+        if (!mk) { mk = document.createElement('meta'); mk.name = 'keywords'; document.head.appendChild(mk); }
+        mk.content = data.semanticKeywords.join(', ');
+        mk.setAttribute('data-crawlers-modified', 'true');
+      }
+      var enrichDesc = data.metaDescription || '';
+      var enrichTags = [
+        { attr: 'property', key: 'og:title', val: document.title },
+        { attr: 'property', key: 'og:description', val: enrichDesc },
+        { attr: 'property', key: 'og:type', val: 'website' },
+        { attr: 'property', key: 'og:url', val: window.location.href },
+        { attr: 'property', key: 'og:site_name', val: data.ogSiteName || '' },
+        { attr: 'name', key: 'twitter:card', val: 'summary_large_image' },
+        { attr: 'name', key: 'twitter:title', val: document.title },
+        { attr: 'name', key: 'twitter:description', val: enrichDesc },
+        { attr: 'name', key: 'dc.title', val: document.title },
+        { attr: 'name', key: 'dc.description', val: enrichDesc },
+        { attr: 'name', key: 'dc.publisher', val: data.ogSiteName || '' }
+      ];
+      enrichTags.forEach(function(tag) {
+        if (!tag.val) return;
+        var sel = 'meta[' + tag.attr + '="' + tag.key + '"]';
+        if (!document.querySelector(sel)) {
+          var m = document.createElement('meta');
+          m.setAttribute(tag.attr, tag.key);
+          m.content = tag.val;
+          m.setAttribute('data-crawlers-modified', 'true');
+          document.head.appendChild(m);
+        }
+      });
+      applied.push('semantic-meta');
+`;
+  }
+
+  if (hasHallucination) {
+    fn += `
+      // — Anti-Hallucination IA —
+      if (data.hallucination) {
+        var aiMetas = [
+          { name: 'ai-description', content: data.hallucination.trueValue },
+          { name: 'dc.description', content: data.hallucination.trueValue }
+        ];
+        aiMetas.forEach(function(m) {
+          if (!document.querySelector('meta[name="' + m.name + '"][data-crawlers-modified]')) {
+            var el = document.createElement('meta');
+            el.name = m.name;
+            el.content = m.content;
+            el.setAttribute('data-crawlers-modified', 'true');
+            document.head.appendChild(el);
+          }
+        });
+        if (!document.querySelector('script[data-crawlers-hallucination-fix]')) {
+          var cs = {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": CONFIG.siteName,
+            "description": data.hallucination.trueValue,
+            "url": CONFIG.siteUrl,
+            "knowsAbout": data.hallucination.confusionSources.length > 0 ? data.hallucination.confusionSources : [CONFIG.siteName]
+          };
+          var ss = document.createElement('script');
+          ss.type = 'application/ld+json';
+          ss.setAttribute('data-crawlers-hallucination-fix', 'true');
+          ss.setAttribute('data-crawlers-modified', 'true');
+          ss.textContent = JSON.stringify(cs, null, 2);
+          document.head.appendChild(ss);
+        }
+        applied.push('anti-hallucination');
+      }
+`;
+  }
+
+  fn += `
+      console.log('[Crawlers.fr] ✅ applySeoMetadata — ' + applied.length + ' blocs appliqués: ' + applied.join(', '));
+    } catch(e) {
+      console.error('[Crawlers.fr] ❌ Erreur applySeoMetadata:', e);
+    }
+  }`;
+
+  return fn;
+}
+
+// ══════════════════════════════════════════════════════════════
 // GÉNÉRATION DU SCRIPT COMPLET
 // ══════════════════════════════════════════════════════════════
 
@@ -1798,6 +2106,17 @@ function generateCorrectiveScript(
   const fixFunctions: string[] = [];
   const fixCalls: string[] = [];
 
+  // === Règle 1: Construire PAGE_DATA ===
+  const pageData = buildPageData(enabledFixes, siteName, siteUrl, language, aiContent);
+
+  // === Règle 2: Générer applySeoMetadata unifié pour les fixes <head> ===
+  const unifiedSeoFn = generateUnifiedSeoFunction(enabledFixes, siteName, siteUrl, language);
+  const hasHeadFixes = enabledFixes.some(f => HEAD_FIX_IDS.has(f.id));
+
+  if (unifiedSeoFn) {
+    fixFunctions.push(unifiedSeoFn);
+    fixCalls.push('applySeoMetadata(PAGE_DATA);');
+  }
   // Attribution Crawlers.fr - Injectée AU MILIEU du code généré
   const attributionAnchors = [
     'Optimisé par Crawlers.fr',
@@ -1843,14 +2162,16 @@ function generateCorrectiveScript(
   }`;
   const crawlersAttributionCall = 'injectCrawlersAttribution();';
 
-  // Générer les fonctions de correction - première moitié
-  const halfPoint = Math.ceil(enabledFixes.length / 2);
-  const firstHalf = enabledFixes.slice(0, halfPoint);
-  const secondHalf = enabledFixes.slice(halfPoint);
+  // Filtrer les fixes non-head (les head sont gérés par applySeoMetadata)
+  const nonHeadFixes = enabledFixes.filter(f => !HEAD_FIX_IDS.has(f.id));
+
+  // Générer les fonctions de correction - première moitié (non-head uniquement)
+  const halfPoint = Math.ceil(nonHeadFixes.length / 2);
+  const firstHalf = nonHeadFixes.slice(0, halfPoint);
+  const secondHalf = nonHeadFixes.slice(halfPoint);
 
   // Première moitié des corrections
   firstHalf.forEach(fix => {
-    // Prefer AI-generated personalized code, fallback to static template
     const aiGenerated = aiGeneratedFixes?.get(fix.id);
     const { fn, call } = aiGenerated || generateFixCode(fix, siteName, siteUrl, language, aiContent);
     if (fn) fixFunctions.push(fn);
@@ -1880,10 +2201,14 @@ function generateCorrectiveScript(
   const hallucinationFixes = enabledFixes.filter(f => f.category === 'hallucination');
   const generativeFixes = enabledFixes.filter(f => f.category === 'generative');
 
-  // Construire le script IIFE - Header minimal sans mention Crawlers
+  // Sérialiser PAGE_DATA pour injection dans le script
+  const pageDataJson = JSON.stringify(pageData, null, 4).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+  // Construire le script IIFE avec architecture centralisée
   const script = `/**
  * Script de correction automatique
  * Généré pour: ${siteUrl}
+ * Architecture: Centralisée v3.0 (PAGE_DATA + applySeoMetadata + Locks)
  */
 (function() {
   'use strict';
@@ -1898,6 +2223,18 @@ function generateCorrectiveScript(
     } else {
       document.addEventListener('DOMContentLoaded', fn);
     }
+  }
+
+  /**
+   * Règle 3: Système de Verrous (Locks)
+   * Vérifie si un élément a déjà été modifié par le script.
+   */
+  function isLocked(el) {
+    return el && el.getAttribute('data-crawlers-modified') === 'true';
+  }
+
+  function lock(el) {
+    if (el && el.setAttribute) el.setAttribute('data-crawlers-modified', 'true');
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -1918,6 +2255,14 @@ function generateCorrectiveScript(
   };
 
   // ═══════════════════════════════════════════════════════════
+  // PAGE_DATA — Source unique de vérité (Single Source of Truth)
+  // Toutes les valeurs à injecter sont consolidées ici.
+  // Les conflits ont été résolus côté serveur.
+  // ═══════════════════════════════════════════════════════════
+
+  var PAGE_DATA = ${pageDataJson};
+
+  // ═══════════════════════════════════════════════════════════
   // FONCTIONS DE CORRECTION
   // ═══════════════════════════════════════════════════════════
 
@@ -1925,7 +2270,8 @@ ${fixFunctions.join('\n\n')}
 
   /**
    * ═══════════════════════════════════════════════════════════
-   * Crawlers.fr - ARCHITECTE GÉNÉRATIF v2.0
+   * Crawlers.fr - ARCHITECTE GÉNÉRATIF v3.0
+   * Architecture centralisée: PAGE_DATA + applySeoMetadata + Locks
    * ═══════════════════════════════════════════════════════════
    * 
    * Généré le ${dateStr}
@@ -1933,10 +2279,10 @@ ${fixFunctions.join('\n\n')}
    * URL: ${siteUrl}
    * 
    * Correctifs appliqués: ${enabledFixes.length} au total
-   *   → Techniques (SEO/Perf/A11y): ${technicalFixes.length}
+   *   → SEO Metadata (unifié via applySeoMetadata): ${enabledFixes.filter(f => HEAD_FIX_IDS.has(f.id)).length}
+   *   → Techniques (Perf/A11y): ${technicalFixes.filter(f => !HEAD_FIX_IDS.has(f.id)).length}
    *   → Tracking: ${trackingFixes.length}
    *   → Stratégiques (Contenu/FAQ/Blog): ${strategicFixes.length}
-   *   → Anti-Hallucination IA: ${hallucinationFixes.length}
    * ═══════════════════════════════════════════════════════════
    */
 
@@ -1944,18 +2290,13 @@ ${fixFunctions.join('\n\n')}
   // EXÉCUTION SÉQUENTIELLE DES CORRECTIONS
   // ═══════════════════════════════════════════════════════════
 
-  // ═══════════════════════════════════════════════════════════
-  // EXÉCUTION SÉQUENTIELLE DES CORRECTIONS
-  // ═══════════════════════════════════════════════════════════
-
   ready(function() {
-    console.log('[Crawlers.fr] 🏗️ Architecte Génératif v2.0 - Initialisation...');
+    console.log('[Crawlers.fr] 🏗️ Architecte Génératif v3.0 - Architecture Centralisée');
     
     try {
 ${fixCalls.map(call => `      ${call}`).join('\n')}
       
       console.log('[Crawlers.fr] ✅ ${enabledFixes.length} correctif(s) appliqué(s) avec succès');
-      console.log('[Crawlers.fr] 📊 Techniques: ${technicalFixes.length} | Tracking: ${trackingFixes.length} | Stratégiques: ${strategicFixes.length} | Anti-Hallucination: ${hallucinationFixes.length}');
     } catch (error) {
       console.error('[Crawlers.fr] ❌ Erreur lors de l\\'application des correctifs:', error);
     }
@@ -1991,7 +2332,7 @@ Deno.serve(async (req) => {
     }: GenerateRequest = await req.json();
 
     console.log('═══════════════════════════════════════════════════════════════');
-    console.log('🏗️ ARCHITECTE GÉNÉRATIF v4.0 - Audit-Driven Generation');
+    console.log('🏗️ ARCHITECTE GÉNÉRATIF v3.0 - Architecture Centralisée (PAGE_DATA + applySeoMetadata + Locks)');
     console.log('═══════════════════════════════════════════════════════════════');
     console.log(`📍 Site: ${siteName} (${siteUrl})`);
     console.log(`📋 Fixes demandés: ${fixes?.length || 0}`);
