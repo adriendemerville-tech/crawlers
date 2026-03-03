@@ -297,21 +297,6 @@ export function MyWallet() {
                 </span>
               </div>
             </div>
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-2xl font-bold text-foreground">
-                49€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenPortal}
-                disabled={portalLoading}
-                className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
-              >
-                {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                {language === 'fr' ? 'Gérer mon abonnement' : language === 'es' ? 'Gestionar suscripción' : 'Manage subscription'}
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
@@ -421,7 +406,7 @@ export function MyWallet() {
                       : 'Manage your card and billing information'}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-violet-500/5 border border-violet-500/20">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-full bg-violet-500/10">
@@ -445,6 +430,32 @@ export function MyWallet() {
                   >
                     {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
                     {language === 'fr' ? 'Modifier' : language === 'es' ? 'Modificar' : 'Update'}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg bg-violet-500/5 border border-violet-500/20">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-violet-500/10">
+                      <Crown className="h-5 w-5 text-yellow-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">
+                        Pro Agency — 49€<span className="text-xs font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {language === 'fr' ? 'Gérer, modifier ou résilier votre abonnement' : language === 'es' ? 'Gestionar, modificar o cancelar su suscripción' : 'Manage, update or cancel your subscription'}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOpenPortal}
+                    disabled={portalLoading}
+                    className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
+                  >
+                    {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                    {language === 'fr' ? 'Gérer mon abonnement' : language === 'es' ? 'Gestionar suscripción' : 'Manage subscription'}
                   </Button>
                 </div>
               </CardContent>
