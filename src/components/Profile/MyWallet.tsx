@@ -244,8 +244,8 @@ export function MyWallet() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Crown className="h-5 w-5 text-violet-500" />
-                Pro Agency
+                <Crown className="h-5 w-5 text-yellow-500" style={{ filter: 'drop-shadow(0 0 4px rgba(234, 179, 8, 0.6))' }} />
+                <span className="text-yellow-500 font-bold" style={{ filter: 'drop-shadow(0 0 4px rgba(234, 179, 8, 0.4))' }}>Pro Agency</span>
                 <Badge className="bg-violet-600 text-white text-xs">
                   {subscriptionStatus === 'canceling'
                     ? (language === 'fr' ? 'Résiliation en cours' : language === 'es' ? 'Cancelación en curso' : 'Canceling')
@@ -311,24 +311,24 @@ export function MyWallet() {
 
         {/* Sub-menu tabs */}
         <Tabs defaultValue="branding" className="space-y-4">
-          <TabsList className="w-full grid grid-cols-5 bg-violet-500/5 border border-violet-500/20">
-            <TabsTrigger value="branding" className="gap-2 data-[state=active]:bg-violet-600 data-[state=active]:text-white">
+          <TabsList className="w-full grid grid-cols-5 bg-muted/50 border">
+            <TabsTrigger value="branding" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
               <Palette className="h-4 w-4" />
               <span className="hidden sm:inline">Branding</span>
             </TabsTrigger>
-            <TabsTrigger value="clients" className="gap-2 data-[state=active]:bg-violet-600 data-[state=active]:text-white">
+            <TabsTrigger value="clients" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
               <Activity className="h-4 w-4" />
               <span className="hidden sm:inline">Clients</span>
             </TabsTrigger>
-            <TabsTrigger value="invoices" className="gap-2 data-[state=active]:bg-violet-600 data-[state=active]:text-white">
+            <TabsTrigger value="invoices" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
               <Receipt className="h-4 w-4" />
               <span className="hidden sm:inline">{language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices'}</span>
             </TabsTrigger>
-            <TabsTrigger value="payment" className="gap-2 data-[state=active]:bg-violet-600 data-[state=active]:text-white">
+            <TabsTrigger value="payment" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
               <CreditCard className="h-4 w-4" />
               <span className="hidden sm:inline">{language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment'}</span>
             </TabsTrigger>
-            <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-violet-600 data-[state=active]:text-white">
+            <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">{language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts'}</span>
             </TabsTrigger>
