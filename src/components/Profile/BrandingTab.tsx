@@ -415,10 +415,12 @@ export function BrandingTab() {
         </CardContent>
       </Card>
 
-      <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-        {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-        {isSaving ? t.saving : t.save}
-      </Button>
+      <div className="sticky bottom-4 z-10 flex justify-end">
+        <Button onClick={handleSave} disabled={isSaving} size="lg" className="gap-2 shadow-lg">
+          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          {isSaving ? t.saving : t.save}
+        </Button>
+      </div>
     </div>
   );
 }
