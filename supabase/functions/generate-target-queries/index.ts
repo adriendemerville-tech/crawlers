@@ -115,7 +115,19 @@ function humanizeBrandName(slug: string): string {
     }
     if (!matched) {
       for (const [pat, rep] of particles) {
-        if (lower.startsWith(pat, pos)) { words.push(rep); pos += pat.length; matched = true; break; }
+        if (lower.startsWith(pat, pos)) {
+          // Heuristique anti-préfixe : particule courte (≤3 chars) → vérifier
+          // que le reste contient d'autres particules, sinon c'est un préfixe (dé-, re-, etc.)
+          if (pat.length <= 3) {
+            const remaining = lower.substring(pos + pat.length);
+            const hasMoreParticles = particles.some(([p]) => {
+              const idx = remaining.indexOf(p);
+              return idx > 0 && idx < remaining.length;
+            });
+            if (!hasMoreParticles && remaining.length > 3) continue;
+          }
+          words.push(rep); pos += pat.length; matched = true; break;
+        }
       }
     }
     if (!matched) {
