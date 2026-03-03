@@ -16,6 +16,8 @@ interface Profile {
   agency_contact_last_name: string | null;
   agency_contact_phone: string | null;
   agency_contact_email: string | null;
+  agency_report_header_text: string | null;
+  agency_report_footer_text: string | null;
   plan_type: string;
   created_at: string;
   updated_at: string;

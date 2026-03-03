@@ -392,6 +392,8 @@ export type Database = {
           agency_contact_phone: string | null
           agency_logo_url: string | null
           agency_primary_color: string | null
+          agency_report_footer_text: string | null
+          agency_report_header_text: string | null
           api_key: string
           avatar_url: string | null
           created_at: string
@@ -414,6 +416,8 @@ export type Database = {
           agency_contact_phone?: string | null
           agency_logo_url?: string | null
           agency_primary_color?: string | null
+          agency_report_footer_text?: string | null
+          agency_report_header_text?: string | null
           api_key?: string
           avatar_url?: string | null
           created_at?: string
@@ -436,6 +440,8 @@ export type Database = {
           agency_contact_phone?: string | null
           agency_logo_url?: string | null
           agency_primary_color?: string | null
+          agency_report_footer_text?: string | null
+          agency_report_header_text?: string | null
           api_key?: string
           avatar_url?: string | null
           created_at?: string
