@@ -11,6 +11,11 @@ import { generatePageSpeedHTML } from './generators/pagespeedHtmlGenerator';
 
 export type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'full';
 
+export interface WhiteLabelBranding {
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+}
+
 interface ReportData {
   crawlResult?: CrawlResult | null;
   geoResult?: GeoResult | null;
@@ -51,7 +56,8 @@ export function generateReportHTML(
   type: ReportType, 
   data: ReportData | CrawlResult | GeoResult | LLMAnalysisResult | PageSpeedResult, 
   url: string, 
-  language: string
+  language: string,
+  branding?: WhiteLabelBranding
 ): string {
   const t = reportTranslations[language as keyof typeof reportTranslations] || reportTranslations.fr;
   const now = new Date().toLocaleString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US');
@@ -108,6 +114,25 @@ export function generateReportHTML(
     }
   }
 
+  const isWhiteLabel = branding?.logoUrl || branding?.primaryColor;
+
+  // Override header/footer for white-label
+  const headerHtml = isWhiteLabel
+    ? `<div class="header" style="background: linear-gradient(135deg, ${branding?.primaryColor || '#3b82f6'}, ${branding?.primaryColor || '#3b82f6'}cc);">
+        <div class="logo-wrapper">
+          ${branding?.logoUrl ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height: 32px;" />` : ''}
+        </div>
+        <h1 style="font-size: 20px; font-weight: 600; margin: 8px 0 4px;">${title}</h1>
+        <div class="date">${t.generatedAt} ${now}</div>
+      </div>`
+    : generateHeader(t, title, now);
+
+  const footerHtml = isWhiteLabel
+    ? `<div class="footer" style="background: linear-gradient(135deg, ${branding?.primaryColor || '#3b82f6'}, ${branding?.primaryColor || '#3b82f6'}cc);">
+        ${branding?.logoUrl ? `<div class="footer-brand"><img src="${branding.logoUrl}" alt="Logo" style="max-height: 20px;" /></div>` : ''}
+      </div>`
+    : generateFooter(t);
+
   return `<!DOCTYPE html>
 <html lang="${language}">
 <head>
@@ -121,9 +146,9 @@ export function generateReportHTML(
 </head>
 <body>
   <div class="container">
-    ${generateHeader(t, title, now)}
+    ${headerHtml}
     ${content}
-    ${generateFooter(t)}
+    ${footerHtml}
   </div>
 </body>
 </html>`;

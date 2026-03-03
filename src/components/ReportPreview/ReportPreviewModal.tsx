@@ -3,13 +3,14 @@ import { Download, Loader2, Check, Copy, Mail, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CrawlResult } from '@/types/crawler';
 import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
 import { PageSpeedResult } from '@/types/pagespeed';
-import { generateReportHTML } from './reportHtmlGenerator';
+import { generateReportHTML, WhiteLabelBranding } from './reportHtmlGenerator';
 import { generatePDF } from './pdfGenerator';
 
 type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'full';
@@ -84,6 +85,7 @@ export function ReportPreviewModal({
   currentUrl,
 }: ReportPreviewModalProps) {
   const { language } = useLanguage();
+  const { profile } = useAuth();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
@@ -156,9 +158,15 @@ export function ReportPreviewModal({
   const hasAnyData = crawlResult || geoResult || llmResult || pageSpeedResult;
   if (!hasAnyData) return null;
 
+  // White-label branding
+  const branding: WhiteLabelBranding | undefined =
+    profile?.plan_type === 'agency_pro' && (profile.agency_logo_url || profile.agency_primary_color)
+      ? { logoUrl: profile.agency_logo_url, primaryColor: profile.agency_primary_color }
+      : undefined;
+
   // Generate HTML with appropriate type
   const reportType = useFullType ? 'full' : effectiveType;
-  const htmlContent = generateReportHTML(reportType, data, url, language);
+  const htmlContent = generateReportHTML(reportType, data, url, language, branding);
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);

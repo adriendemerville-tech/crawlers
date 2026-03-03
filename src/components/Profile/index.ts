@@ -5,3 +5,4 @@ export { MyWallet } from './MyWallet';
 export { MyTracking } from './MyTracking';
 export { SortableReportItem } from './SortableReportItem';
 export { SortableFolderItem } from './SortableFolderItem';
+export { BrandingTab } from './BrandingTab';

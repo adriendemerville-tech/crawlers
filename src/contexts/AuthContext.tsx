@@ -9,6 +9,9 @@ interface Profile {
   last_name: string;
   email: string;
   avatar_url: string | null;
+  agency_logo_url: string | null;
+  agency_primary_color: string | null;
+  plan_type: string;
   created_at: string;
   updated_at: string;
 }

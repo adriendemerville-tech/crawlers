@@ -6,7 +6,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ExpertAuditResult } from '@/types/expertAudit';
-import { expertReportTranslations, generateExpertPDF, generateExpertReportHTML } from './expertReportExport';
+import { expertReportTranslations, generateExpertPDF, generateExpertReportHTML, WhiteLabelBranding } from './expertReportExport';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ExpertReportPreviewModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface ExpertReportPreviewModalProps {
 
 export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }: ExpertReportPreviewModalProps) {
   const { language } = useLanguage();
+  const { profile } = useAuth();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
@@ -26,12 +28,18 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
   const t =
     expertReportTranslations[language as keyof typeof expertReportTranslations] || expertReportTranslations.fr;
 
-  const htmlContent = generateExpertReportHTML(result, auditMode, t, language);
+  // White-label branding for agency_pro users
+  const branding: WhiteLabelBranding | undefined =
+    profile?.plan_type === 'agency_pro' && (profile.agency_logo_url || profile.agency_primary_color)
+      ? { logoUrl: profile.agency_logo_url, primaryColor: profile.agency_primary_color }
+      : undefined;
+
+  const htmlContent = generateExpertReportHTML(result, auditMode, t, language, branding);
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      generateExpertPDF(result, auditMode, t);
+      generateExpertPDF(result, auditMode, t, branding);
       toast.success(t.pdfSuccess);
     } catch (error) {
       console.error('PDF generation error:', error);
