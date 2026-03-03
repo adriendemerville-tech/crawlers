@@ -75,7 +75,7 @@ function getPublicBaseUrl(): string {
 export default function ReportViewer() {
   const { reportId } = useParams();
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const { language } = useLanguage();
   const t = uiTranslations[language as keyof typeof uiTranslations] || uiTranslations.en;
   const [report, setReport] = useState<SavedReportRow | null>(null);
@@ -108,18 +108,23 @@ export default function ReportViewer() {
     run();
   }, [user, reportId]);
 
+  // White-label branding
+  const branding = profile?.plan_type === 'agency_pro' && (profile.agency_logo_url || profile.agency_primary_color)
+    ? { logoUrl: profile.agency_logo_url, primaryColor: profile.agency_primary_color }
+    : undefined;
+
   const htmlContent = useMemo(() => {
     if (!report) return '';
     const type = report.report_type;
     if (type === 'seo_technical' || type === 'seo_strategic') {
       const auditMode = type === 'seo_technical' ? 'technical' : 'strategic';
       const et = expertReportTranslations[language as keyof typeof expertReportTranslations] || expertReportTranslations.fr;
-      return generateExpertReportHTML(report.report_data, auditMode, et, language);
+      return generateExpertReportHTML(report.report_data, auditMode, et, language, branding);
     }
 
     // simple reports
-    return generateReportHTML(type as any, report.report_data, report.url, language);
-  }, [report, language]);
+    return generateReportHTML(type as any, report.report_data, report.url, language, branding);
+  }, [report, language, branding]);
 
   const handleDownload = async () => {
     if (!report) return;
@@ -133,7 +138,7 @@ export default function ReportViewer() {
       if (report.report_type === 'seo_technical' || report.report_type === 'seo_strategic') {
         const auditMode = report.report_type === 'seo_technical' ? 'technical' : 'strategic';
         const et = expertReportTranslations[language as keyof typeof expertReportTranslations] || expertReportTranslations.fr;
-        generateExpertPDF(report.report_data, auditMode, et);
+        generateExpertPDF(report.report_data, auditMode, et, branding);
       } else {
         await generatePDF(report.report_type as any, report.report_data, report.url, language);
       }

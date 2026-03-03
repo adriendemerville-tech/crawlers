@@ -114,11 +114,17 @@ export type ExpertReportI18n = {
   [K in keyof typeof expertReportTranslations.fr]: string;
 };
 
+export interface WhiteLabelBranding {
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+}
+
 export function generateExpertReportHTML(
   result: ExpertAuditResult,
   auditMode: 'technical' | 'strategic',
   t: ExpertReportI18n,
-  language: string
+  language: string,
+  branding?: WhiteLabelBranding
 ): string {
   const now = new Date(result.scannedAt).toLocaleString(
     language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US'
@@ -416,6 +422,25 @@ export function generateExpertReportHTML(
     `;
   }
 
+  const isWhiteLabel = branding?.logoUrl || branding?.primaryColor;
+  const brandColor = branding?.primaryColor || '#7c3aed';
+  const headerGradient = isWhiteLabel
+    ? `linear-gradient(135deg, ${brandColor}, ${brandColor}cc)`
+    : 'linear-gradient(135deg, #7c3aed, #2563eb)';
+
+  const logoHtml = branding?.logoUrl
+    ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height: 40px; margin-bottom: 8px;" />`
+    : '🤖 Crawlers.fr';
+
+  const footerHtml = isWhiteLabel
+    ? `<div class="footer" style="background: ${headerGradient};">
+        <div class="footer-brand" style="color: white; font-size: 16px; font-weight: 600;">${branding?.logoUrl ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height: 24px;" />` : ''}</div>
+      </div>`
+    : `<div class="footer">
+        <div class="footer-brand">${t.poweredBy}</div>
+        <a href="https://crawlers.fr/audit-expert" class="footer-link">crawlers.fr/audit-expert</a>
+      </div>`;
+
   return `<!DOCTYPE html>
 <html lang="${language}">
 <head>
@@ -427,13 +452,13 @@ export function generateExpertReportHTML(
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: #f3f4f6; min-height: 100vh; padding: 40px 20px; }
     .container { max-width: 900px; margin: 0 auto; }
-    .header { text-align: center; margin-bottom: 40px; padding: 28px; background: linear-gradient(135deg, #7c3aed, #2563eb); border-radius: 20px; }
+    .header { text-align: center; margin-bottom: 40px; padding: 28px; background: ${headerGradient}; border-radius: 20px; }
     .logo { font-size: 28px; font-weight: 700; color: white; margin-bottom: 8px; }
     .subtitle { color: rgba(255,255,255,0.9); font-size: 14px; margin-bottom: 12px; }
     .url { color: rgba(255,255,255,0.8); font-size: 13px; }
     .date { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 8px; }
     .content { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .footer { text-align: center; margin-top: 40px; padding: 24px; background: linear-gradient(135deg, #7c3aed, #2563eb); border-radius: 16px; }
+    .footer { text-align: center; margin-top: 40px; padding: 24px; background: ${headerGradient}; border-radius: 16px; }
     .footer-brand { color: white; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
     .footer-link { color: white; text-decoration: none; font-weight: 500; padding: 10px 20px; background: rgba(255,255,255,0.2); border-radius: 10px; display: inline-block; }
     @media print {
@@ -450,7 +475,7 @@ export function generateExpertReportHTML(
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">🤖 Crawlers.fr</div>
+      <div class="logo">${logoHtml}</div>
       <div class="subtitle">${auditMode === 'technical' ? t.technicalAudit : t.strategic}</div>
       <div class="url">${result.url}</div>
       <div class="date">${t.generatedAt} ${now}</div>
@@ -458,24 +483,31 @@ export function generateExpertReportHTML(
     <div class="content">
       ${content}
     </div>
-    <div class="footer">
-      <div class="footer-brand">${t.poweredBy}</div>
-      <a href="https://crawlers.fr/audit-expert" class="footer-link">crawlers.fr/audit-expert</a>
-    </div>
+    ${footerHtml}
   </div>
 </body>
 </html>`;
 }
 
-export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technical' | 'strategic', t: ExpertReportI18n) {
+export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technical' | 'strategic', t: ExpertReportI18n, branding?: WhiteLabelBranding) {
   const doc = new jsPDF();
+  const isWhiteLabel = branding?.logoUrl || branding?.primaryColor;
+
+  // Parse brand color to RGB
+  const hexToRgb = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return [r, g, b] as [number, number, number];
+  };
+  const brandRgb = branding?.primaryColor ? hexToRgb(branding.primaryColor) : [124, 58, 237] as [number, number, number];
 
   // Header
-  doc.setFillColor(124, 58, 237);
+  doc.setFillColor(...brandRgb);
   doc.rect(0, 0, doc.internal.pageSize.width, 35, 'F');
   doc.setFontSize(20);
   doc.setTextColor(255, 255, 255);
-  doc.text('Crawlers.fr', 20, 18);
+  doc.text(isWhiteLabel ? '' : 'Crawlers.fr', 20, 18);
   doc.setFontSize(11);
   doc.text(auditMode === 'technical' ? t.technicalAudit : t.strategic, 20, 28);
   doc.text(result.domain, doc.internal.pageSize.width - 20, 22, { align: 'right' });
@@ -534,7 +566,7 @@ export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technic
       head: [['Catégorie', t.score]],
       body: scoresData,
       theme: 'striped',
-      headStyles: { fillColor: [124, 58, 237] },
+      headStyles: { fillColor: brandRgb },
       styles: { fontSize: 10 },
     });
 
@@ -555,9 +587,9 @@ export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technic
         startY: finalY + 20,
         head: [['Priorité', 'Action', 'Description']],
         body: recsData,
-        theme: 'striped',
-        headStyles: { fillColor: [124, 58, 237] },
-        styles: { fontSize: 9 },
+      theme: 'striped',
+      headStyles: { fillColor: brandRgb },
+      styles: { fontSize: 9 },
         columnStyles: { 2: { cellWidth: 70 } },
       });
     }
@@ -738,12 +770,17 @@ export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technic
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     const pageHeight = doc.internal.pageSize.height;
-    doc.setFillColor(124, 58, 237);
+    doc.setFillColor(...brandRgb);
     doc.rect(0, pageHeight - 20, doc.internal.pageSize.width, 20, 'F');
     doc.setFontSize(9);
     doc.setTextColor(255, 255, 255);
-    doc.text(t.poweredBy, 20, pageHeight - 8);
-    doc.text('crawlers.fr/audit-expert', doc.internal.pageSize.width - 20, pageHeight - 8, { align: 'right' });
+    if (isWhiteLabel) {
+      // No crawlers.fr mentions
+      doc.text('', 20, pageHeight - 8);
+    } else {
+      doc.text(t.poweredBy, 20, pageHeight - 8);
+      doc.text('crawlers.fr/audit-expert', doc.internal.pageSize.width - 20, pageHeight - 8, { align: 'right' });
+    }
   }
 
   doc.save(`audit-expert-${result.domain.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);

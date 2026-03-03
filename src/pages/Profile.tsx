@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2, Wallet, Shield, Radar } from 'lucide-react';
+import { User, Settings, FileText, ArrowLeft, LogOut, Save, Loader2, Globe, ClipboardList, Code2, Wallet, Shield, Radar, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import { MyWallet } from '@/components/Profile/MyWallet';
 import { MyTracking } from '@/components/Profile/MyTracking';
 import { AdminDashboard } from '@/components/Admin';
 import { WordPressIntegrationCard } from '@/components/Profile/WordPressIntegrationCard';
+import { BrandingTab } from '@/components/Profile/BrandingTab';
 import { useAdmin } from '@/hooks/useAdmin';
 
 const translations = {
@@ -232,6 +233,12 @@ export default function Profile() {
                   <Wallet className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.wallet}</span>
                 </TabsTrigger>
+                {profile?.plan_type === 'agency_pro' && (
+                  <TabsTrigger value="branding" className="flex-1 gap-2">
+                    <Palette className="h-4 w-4" />
+                    <span className="hidden sm:inline">Branding</span>
+                  </TabsTrigger>
+                )}
                 <div className="ml-auto" />
                 <TabsTrigger value="settings" className="gap-2">
                   <Settings className="h-4 w-4" />
@@ -410,6 +417,12 @@ export default function Profile() {
               <TabsContent value="corrective-codes">
                 <MyCorrectiveCodes />
               </TabsContent>
+
+              {profile?.plan_type === 'agency_pro' && (
+                <TabsContent value="branding">
+                  <BrandingTab />
+                </TabsContent>
+              )}
 
               {isAdmin && (
                 <TabsContent value="admin">
