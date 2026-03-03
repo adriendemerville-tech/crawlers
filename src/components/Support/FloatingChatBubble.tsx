@@ -3,6 +3,7 @@ import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditsContext';
 
 // Lazy load the chat window (heavy component with forms and messages)
 const ChatWindow = lazy(() => import('./ChatWindow').then(m => ({ default: m.ChatWindow })));
@@ -10,6 +11,7 @@ const ChatWindow = lazy(() => import('./ChatWindow').then(m => ({ default: m.Cha
 export function FloatingChatBubble() {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
+  const { isAgencyPro } = useCredits();
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Fetch unread messages count
@@ -117,11 +119,15 @@ export function FloatingChatBubble() {
       {/* Floating Button */}
       <Button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className="fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+        className={`fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ${
+          isAgencyPro 
+            ? 'bg-violet-600 hover:bg-violet-700 border-0' 
+            : ''
+        }`}
         size="icon"
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
       >
-        <MessageCircle className="h-6 w-6" />
+        <MessageCircle className={`h-6 w-6 ${isAgencyPro ? 'text-yellow-400' : ''}`} style={isAgencyPro ? { filter: 'drop-shadow(0 0 3px rgba(234, 179, 8, 0.5))' } : undefined} />
         {/* Notification Badge */}
         {unreadCount > 0 && !isOpen && (
           <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">

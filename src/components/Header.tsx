@@ -253,16 +253,18 @@ export function Header() {
               <span className="text-sm">{lexiqueLabels[language]}</span>
             </Button>
           </Link>
-          <Link to="/comparatif-audit-geo">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground hover:text-foreground"
-            >
-              <Scale className="h-4 w-4" />
-              <span className="text-sm">{t.comparatif}</span>
-            </Button>
-          </Link>
+          {!isAgencyPro && (
+            <Link to="/comparatif-audit-geo">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-muted-foreground hover:text-foreground"
+              >
+                <Scale className="h-4 w-4" />
+                <span className="text-sm">{t.comparatif}</span>
+              </Button>
+            </Link>
+          )}
           <Link to="/modifier-code-wordpress">
             <Button
               variant="ghost"
