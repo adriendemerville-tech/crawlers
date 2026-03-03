@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, Share2, Loader2, Check, Copy, Printer } from 'lucide-react';
+import { Download, Share2, Loader2, Check, Copy, Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -136,6 +136,14 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
                 <Share2 className="h-4 w-4" />
               )}
               {isSharing ? t.sharing : t.share}
+            </Button>
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              size="icon"
+              className="ml-2"
+            >
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </div>
