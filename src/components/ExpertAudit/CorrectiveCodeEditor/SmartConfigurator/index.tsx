@@ -1096,24 +1096,39 @@ export function SmartConfigurator({
 
   const [shakeInject, setShakeInject] = useState(false);
 
-  // Verify actual plugin connectivity by pinging the site's REST endpoint
+  // Verify actual plugin connectivity by pinging the WP site's REST endpoint
   const verifySiteConnected = useCallback(async (): Promise<boolean> => {
     if (!user) return false;
     try {
+      // 1. Get the site's api_key
       const { data: site } = await supabase
         .from('tracked_sites')
-        .select('id, domain, current_config')
+        .select('id, domain, api_key')
         .eq('user_id', user.id)
         .eq('domain', siteDomain)
         .maybeSingle();
 
-      if (!site) return false;
+      if (!site || !site.api_key) return false;
 
-      // Check if the site has ever synced (has a non-empty current_config)
-      const config = site.current_config as Record<string, unknown> | null;
-      if (!config || Object.keys(config).length === 0) return false;
-
-      return true;
+      // 2. Actually ping the WP plugin endpoint to confirm it's live
+      const pingUrl = `https://${site.domain}/wp-json/crawlers/v1/ping`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      
+      try {
+        const res = await fetch(pingUrl, { 
+          method: 'GET',
+          signal: controller.signal,
+          headers: { 'X-Crawlers-Key': site.api_key }
+        });
+        clearTimeout(timeout);
+        if (!res.ok) return false;
+        const data = await res.json();
+        return data?.connected === true || data?.status === 'ok';
+      } catch {
+        clearTimeout(timeout);
+        return false;
+      }
     } catch {
       return false;
     }
