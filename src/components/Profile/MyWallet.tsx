@@ -241,31 +241,29 @@ export function MyWallet() {
     return (
       <div className="space-y-6">
         {/* Active Subscription Card — violet theme */}
-        <Card className="border-violet-500/40 bg-gradient-to-br from-violet-500/10 via-violet-500/5 to-transparent">
-          <CardHeader className="pb-2 pt-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-1.5 text-base">
-                <Crown className="h-4 w-4 text-yellow-500" style={{ filter: 'drop-shadow(0 0 2px rgba(234, 179, 8, 0.3))' }} />
-                <span className="text-yellow-500 font-bold" style={{ filter: 'drop-shadow(0 0 2px rgba(234, 179, 8, 0.2))' }}>Pro Agency</span>
-                <Badge className="bg-violet-600 text-white text-xs ml-1">
-                  {subscriptionStatus === 'canceling'
-                    ? (language === 'fr' ? 'Résiliation en cours' : language === 'es' ? 'Cancelación en curso' : 'Canceling')
-                    : (language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active')}
-                </Badge>
-              </CardTitle>
+        <div className="pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-base font-semibold">
+              <Crown className="h-4 w-4 text-yellow-500" style={{ filter: 'drop-shadow(0 0 2px rgba(234, 179, 8, 0.3))' }} />
+              <span className="text-yellow-500 font-bold" style={{ filter: 'drop-shadow(0 0 2px rgba(234, 179, 8, 0.2))' }}>Pro Agency</span>
+              <Badge className="bg-violet-600 text-white text-xs ml-1">
+                {subscriptionStatus === 'canceling'
+                  ? (language === 'fr' ? 'Résiliation en cours' : language === 'es' ? 'Cancelación en curso' : 'Canceling')
+                  : (language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active')}
+              </Badge>
             </div>
-            {subscriptionStatus === 'canceling' && (
-              <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
-                <AlertTriangle className="h-4 w-4 shrink-0" />
-                {language === 'fr' 
-                  ? "Votre abonnement reste actif jusqu'à la fin de la période en cours, puis sera résilié."
-                  : language === 'es'
-                    ? 'Su suscripción permanece activa hasta el final del período actual.'
-                    : 'Your subscription remains active until the end of the current billing period.'}
-              </div>
-            )}
-          </CardHeader>
-        </Card>
+          </div>
+          {subscriptionStatus === 'canceling' && (
+            <div className="flex items-center gap-2 mt-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              {language === 'fr' 
+                ? "Votre abonnement reste actif jusqu'à la fin de la période en cours, puis sera résilié."
+                : language === 'es'
+                  ? 'Su suscripción permanece activa hasta el final del período actual.'
+                  : 'Your subscription remains active until the end of the current billing period.'}
+            </div>
+          )}
+        </div>
 
         {/* Sub-menu tabs */}
         <Tabs defaultValue="branding" className="space-y-4">
