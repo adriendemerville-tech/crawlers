@@ -240,14 +240,6 @@ export function MyWallet() {
   if (isAgencyPro || isAdmin) {
     return (
       <div className="space-y-6">
-        {/* Active Subscription Card — violet theme */}
-        <div className="flex items-center justify-end pb-2">
-          <Badge className="bg-violet-600 text-white text-xs">
-            {subscriptionStatus === 'canceling'
-              ? (language === 'fr' ? 'Résiliation en cours' : language === 'es' ? 'Cancelación en curso' : 'Canceling')
-              : (language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active')}
-          </Badge>
-        </div>
         {subscriptionStatus === 'canceling' && (
           <div className="flex items-center gap-2 mb-4 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
             <AlertTriangle className="h-4 w-4 shrink-0" />
