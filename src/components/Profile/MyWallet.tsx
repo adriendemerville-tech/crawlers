@@ -265,40 +265,6 @@ export function MyWallet() {
               </div>
             )}
           </CardHeader>
-          <CardContent className="space-y-3 pt-0">
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
-                <FileText className="h-4 w-4 text-violet-500 shrink-0" />
-                <span className="text-sm font-medium">
-                  {language === 'fr' ? 'Rapports et correctifs illimités' : language === 'es' ? 'Informes y correctivos ilimitados' : 'Unlimited reports & fixes'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
-                <Terminal className="h-4 w-4 text-violet-500 shrink-0" />
-                <span className="text-sm font-medium">
-                  {language === 'fr' ? '<code> correctif illimité' : language === 'es' ? '<code> correctivo ilimitado' : 'Unlimited corrective <code>'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
-                <Palette className="h-4 w-4 text-violet-500 shrink-0" />
-                <span className="text-sm font-medium">
-                  {language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White label'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
-                <Monitor className="h-4 w-4 text-violet-500 shrink-0" />
-                <span className="text-sm font-medium">
-                  {language === 'fr' ? 'Console multi-comptes' : language === 'es' ? 'Consola multi-cuentas' : 'Multi-account console'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
-                <Headphones className="h-4 w-4 text-violet-500 shrink-0" />
-                <span className="text-sm font-medium">
-                  {language === 'fr' ? 'Support prioritaire' : language === 'es' ? 'Soporte prioritario' : 'Priority support'}
-                </span>
-              </div>
-            </div>
-          </CardContent>
         </Card>
 
         {/* Sub-menu tabs */}
