@@ -104,7 +104,7 @@ export function MyWallet() {
   const { balance, isAgencyPro, subscriptionStatus, loading: creditsLoading } = useCredits();
   const { language } = useLanguage();
   const { user } = useAuth();
-  const { isAdmin } = useAdmin();
+  const { isAdmin, loading: adminLoading } = useAdmin();
   const { toast } = useToast();
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
@@ -228,7 +228,7 @@ export function MyWallet() {
   };
 
   // Show loader while credits context resolves to prevent flash
-  if (creditsLoading) {
+  if (creditsLoading || adminLoading) {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
