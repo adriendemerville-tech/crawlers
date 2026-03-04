@@ -260,7 +260,7 @@ export function MyWallet() {
         )}
 
         {/* Sub-menu tabs — vertical left layout */}
-        <Tabs defaultValue="branding" className="" orientation="vertical">
+        <Tabs defaultValue="branding" className="-mt-2" orientation="vertical">
           <div className="flex gap-4">
             <motion.div
               initial={{ height: 0, opacity: 0 }}
@@ -268,7 +268,7 @@ export function MyWallet() {
               transition={{ duration: 0.35, ease: 'easeOut' }}
               className="overflow-hidden shrink-0"
             >
-              <TabsList className="flex flex-col h-fit w-44 bg-muted/50 border p-1 gap-0.5 sticky top-20">
+              <TabsList className="flex flex-col h-fit w-48 bg-muted/50 border-2 border-violet-500/40 rounded-lg p-1.5 gap-1 sticky top-20">
                 {[
                   { value: 'branding', icon: Palette, label: 'Branding' },
                   { value: 'clients', icon: Activity, label: 'Clients' },
