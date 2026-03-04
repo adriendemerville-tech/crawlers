@@ -472,10 +472,10 @@ export function MyWallet() {
           </CardTitle>
           <CardDescription>
             {language === 'fr' 
-              ? 'Tout illimité — idéal pour les professionnels et agences.' 
+              ? 'Idéal pour les professionnels et agences.' 
               : language === 'es' 
-                ? 'Todo ilimitado — ideal para profesionales y agencias.'
-                : 'Everything unlimited — ideal for professionals and agencies.'}
+                ? 'Ideal para profesionales y agencias.'
+                : 'Ideal for professionals and agencies.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
