@@ -260,7 +260,7 @@ export function MyWallet() {
               transition={{ duration: 0.35, ease: 'easeOut' }}
               className="overflow-hidden shrink-0"
             >
-              <div className="mb-2 flex justify-center">
+              <div className="mb-2 flex justify-end">
                 <Badge className="bg-violet-600 text-white text-xs">
                   {subscriptionStatus === 'canceling'
                     ? (language === 'fr' ? 'Résiliation en cours' : language === 'es' ? 'Cancelación en curso' : 'Canceling')
