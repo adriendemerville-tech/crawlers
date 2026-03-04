@@ -461,7 +461,7 @@ export function MyWallet() {
       <Card className="border-violet-500/30 bg-gradient-to-br from-violet-500/5 to-transparent relative overflow-hidden">
         <div className="absolute top-3 right-3">
           <Badge className="bg-violet-600 text-white gap-1 text-xs">
-            <Infinity className="h-3 w-3" />
+            <span className="text-yellow-400 font-bold text-sm">∞</span>
             {language === 'fr' ? 'Illimité' : language === 'es' ? 'Ilimitado' : 'Unlimited'}
           </Badge>
         </div>
@@ -480,27 +480,27 @@ export function MyWallet() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-4 gap-2">
-            <div className="flex items-center gap-1.5 p-2 rounded-lg bg-muted/50 border">
+            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
               <FileText className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium whitespace-nowrap">
+              <span className="text-xs font-medium leading-tight">
                 {language === 'fr' ? 'Rapports & code correctifs ∞' : language === 'es' ? 'Informes & código ∞' : 'Reports & code ∞'}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 p-2 rounded-lg bg-muted/50 border">
+            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
               <Palette className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium whitespace-nowrap">
+              <span className="text-xs font-medium leading-tight">
                 {language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White label'}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 p-2 rounded-lg bg-muted/50 border">
+            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
               <Monitor className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium whitespace-nowrap">
+              <span className="text-xs font-medium leading-tight">
                 {language === 'fr' ? 'Multi-comptes' : language === 'es' ? 'Multi-cuentas' : 'Multi-account'}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 p-2 rounded-lg bg-muted/50 border">
+            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
               <Headphones className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-              <span className="text-xs font-medium whitespace-nowrap">
+              <span className="text-xs font-medium leading-tight">
                 {language === 'fr' ? 'Support prioritaire' : language === 'es' ? 'Soporte prioritario' : 'Priority support'}
               </span>
             </div>
