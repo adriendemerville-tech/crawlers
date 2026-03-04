@@ -479,13 +479,7 @@ export function MyWallet() {
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
               <FileText className="h-4 w-4 text-violet-500 shrink-0" />
               <span className="text-sm font-medium">
-                {language === 'fr' ? 'Rapports et correctifs illimités' : language === 'es' ? 'Informes y correctivos ilimitados' : 'Unlimited reports & fixes'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-              <Terminal className="h-4 w-4 text-violet-500 shrink-0" />
-              <span className="text-sm font-medium">
-                {language === 'fr' ? '<code> correctif illimité' : language === 'es' ? '<code> correctivo ilimitado' : 'Unlimited corrective <code>'}
+                {language === 'fr' ? 'Rapports et code correctifs illimités' : language === 'es' ? 'Informes y código correctivos ilimitados' : 'Unlimited reports & corrective code'}
               </span>
             </div>
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
