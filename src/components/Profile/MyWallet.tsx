@@ -266,26 +266,26 @@ export function MyWallet() {
         </div>
 
         {/* Sub-menu tabs — vertical left layout */}
-        <Tabs defaultValue="branding" className="space-y-4" orientation="vertical">
-          <div className="flex gap-6">
-            <TabsList className="flex flex-col h-auto w-48 shrink-0 bg-muted/50 border p-1.5 gap-1">
-              <TabsTrigger value="branding" className="w-full justify-start gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
+        <Tabs defaultValue="branding" className="" orientation="vertical">
+          <div className="flex gap-4">
+            <TabsList className="flex flex-col h-fit w-44 shrink-0 bg-muted/50 border p-1 gap-0.5 sticky top-20">
+              <TabsTrigger value="branding" className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
                 <Palette className="h-4 w-4" />
                 <span>Branding</span>
               </TabsTrigger>
-              <TabsTrigger value="clients" className="w-full justify-start gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
+              <TabsTrigger value="clients" className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
                 <Activity className="h-4 w-4" />
                 <span>Clients</span>
               </TabsTrigger>
-              <TabsTrigger value="invoices" className="w-full justify-start gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
+              <TabsTrigger value="invoices" className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
                 <Receipt className="h-4 w-4" />
                 <span>{language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices'}</span>
               </TabsTrigger>
-              <TabsTrigger value="payment" className="w-full justify-start gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
+              <TabsTrigger value="payment" className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
                 <CreditCard className="h-4 w-4" />
                 <span>{language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment'}</span>
               </TabsTrigger>
-              <TabsTrigger value="profile" className="w-full justify-start gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
+              <TabsTrigger value="profile" className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
                 <User className="h-4 w-4" />
                 <span>{language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts'}</span>
               </TabsTrigger>
