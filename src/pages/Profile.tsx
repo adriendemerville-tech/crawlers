@@ -159,12 +159,14 @@ export default function Profile() {
             transition={{ duration: 0.5 }}
           >
             <div className="mb-4">
-              <h1 className="text-3xl font-bold">{t.title}</h1>
+              <h1 className="text-3xl font-bold">
+                {t.title}
+                {isProUser && <span className="text-yellow-500 font-bold text-2xl ml-2">∞</span>}
+              </h1>
             </div>
 
             <Tabs defaultValue={initialTab} className="space-y-6">
               <TabsList className={`w-full flex ${isProUser ? 'border-2 border-violet-500/50' : ''}`}>
-                {isProUser && <span className="text-yellow-500 font-bold text-2xl -mr-1">∞</span>}
                 {isProUser && (
                   <TabsTrigger value="wallet" className="flex-1 gap-2">
                     <Crown className="h-4 w-4 text-yellow-500" />
