@@ -164,8 +164,8 @@ export default function Profile() {
 
             <Tabs defaultValue={initialTab} className="space-y-6">
               <TabsList className={`w-full flex ${isProUser ? 'border-2 border-violet-500/50' : ''}`}>
+                {isProUser && <span className="text-yellow-500 font-bold text-2xl -mr-1">∞</span>}
                 <TabsTrigger value="tracking" className="flex-1 gap-2">
-                  {isProUser && <span className="text-yellow-500 font-bold text-base" style={{ filter: 'drop-shadow(0 0 4px rgba(234, 179, 8, 0.6))' }}>∞</span>}
                   <Radar className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.tracking}</span>
                 </TabsTrigger>
@@ -183,7 +183,7 @@ export default function Profile() {
                 </TabsTrigger>
                 <TabsTrigger value="wallet" className="flex-1 gap-2">
                   {isProUser ? (
-                    <Crown className="h-4 w-4 text-yellow-500" style={{ filter: 'drop-shadow(0 0 4px rgba(234, 179, 8, 0.6))' }} />
+                    <Crown className="h-4 w-4 text-yellow-500" />
                   ) : (
                     <Wallet className="h-4 w-4" />
                   )}
