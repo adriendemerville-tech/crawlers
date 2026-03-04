@@ -258,7 +258,7 @@ export function MyWallet() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
-              className="overflow-hidden shrink-0 mt-[52px]"
+              className="overflow-hidden shrink-0"
             >
               <TabsList className="flex flex-col h-fit w-48 bg-muted/50 border-2 border-violet-500/40 rounded-lg p-1.5 gap-1 sticky top-20">
                 {[
