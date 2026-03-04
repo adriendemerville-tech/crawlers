@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User, Terminal, Monitor, Save } from 'lucide-react';
+import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User, Terminal, Monitor } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -241,20 +241,12 @@ export function MyWallet() {
     return (
       <div className="space-y-6">
         {/* Active Subscription Card — violet theme */}
-        <div className="flex items-center justify-end gap-2 pb-2">
+        <div className="flex items-center justify-end pb-2">
           <Badge className="bg-violet-600 text-white text-xs">
             {subscriptionStatus === 'canceling'
               ? (language === 'fr' ? 'Résiliation en cours' : language === 'es' ? 'Cancelación en curso' : 'Canceling')
               : (language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active')}
           </Badge>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-7 w-7 border-violet-500/30 hover:bg-violet-500/10"
-            onClick={() => window.dispatchEvent(new CustomEvent('branding-save'))}
-          >
-            <Save className="h-3.5 w-3.5" />
-          </Button>
         </div>
         {subscriptionStatus === 'canceling' && (
           <div className="flex items-center gap-2 mb-4 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
