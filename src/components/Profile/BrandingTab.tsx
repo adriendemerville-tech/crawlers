@@ -255,6 +255,7 @@ export function BrandingTab() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logoUrl, primaryColor, brandName, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
 
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -329,6 +330,13 @@ export function BrandingTab() {
       }, 2000);
     }
   };
+
+  // Listen for external save trigger from Pro Agency header
+  useEffect(() => {
+    const handler = () => handleManualSave();
+    window.addEventListener('branding-save', handler);
+    return () => window.removeEventListener('branding-save', handler);
+  }, [handleManualSave]);
 
   return (
     <div className="space-y-6">
@@ -543,12 +551,6 @@ export function BrandingTab() {
         </CardContent>
       </Card>
 
-      <div className="sticky bottom-4 z-10 flex justify-center">
-        <Button onClick={handleManualSave} disabled={isSaving} size="lg" className="gap-2 shadow-lg">
-          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {isSaving ? t.saving : t.save}
-        </Button>
-      </div>
     </div>
   );
 }
