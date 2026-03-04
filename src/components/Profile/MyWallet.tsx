@@ -541,7 +541,7 @@ export function MyWallet() {
             <History className="h-5 w-5" />
             {t.title}
           </CardTitle>
-          <CardDescription>{t.description}</CardDescription>
+          
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="all" className="w-full">
