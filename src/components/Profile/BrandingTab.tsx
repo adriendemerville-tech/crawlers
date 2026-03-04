@@ -341,27 +341,25 @@ export function BrandingTab() {
 
   return (
     <div className="space-y-6">
-      {/* Save button above first card */}
-      <div className="flex items-center">
-        <Button
-          variant="outline"
-          size="icon"
-          className="h-7 w-7 border-violet-500/30 hover:bg-violet-500/10"
-          onClick={handleManualSave}
-          disabled={isSaving}
-        >
-          {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-        </Button>
-      </div>
-
       {/* Identity Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="h-5 w-5" />
-            {t.title}
-            <AutoSaveIndicator status={cardStatus.identity} />
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5" />
+              {t.title}
+              <AutoSaveIndicator status={cardStatus.identity} />
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7 border-violet-500/30 hover:bg-violet-500/10"
+              onClick={handleManualSave}
+              disabled={isSaving}
+            >
+              {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            </Button>
+          </div>
           <CardDescription>{t.description}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
