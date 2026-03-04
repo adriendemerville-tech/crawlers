@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText, Check } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -341,8 +341,8 @@ export function BrandingTab() {
 
   return (
     <div className="space-y-6">
-      {/* Save button left, Active badge right */}
-      <div className="flex items-center justify-between">
+      {/* Save button above first card */}
+      <div className="flex items-center">
         <Button
           variant="outline"
           size="icon"
@@ -352,9 +352,6 @@ export function BrandingTab() {
         >
           {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
         </Button>
-        <Badge className="bg-violet-600 text-white text-xs">
-          {language === 'fr' ? 'Actif' : language === 'es' ? 'Activo' : 'Active'}
-        </Badge>
       </div>
 
       {/* Identity Card */}
