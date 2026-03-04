@@ -261,7 +261,7 @@ export function MyWallet() {
 
         {/* Sub-menu tabs — vertical left layout */}
         <Tabs defaultValue="branding" className="-mt-2" orientation="vertical">
-          <div className="flex gap-4">
+          <div className="flex items-start gap-4">
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
