@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User, Terminal } from 'lucide-react';
+import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User, Terminal, Monitor } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -270,13 +270,13 @@ export function MyWallet() {
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
                 <FileText className="h-4 w-4 text-violet-500 shrink-0" />
                 <span className="text-sm font-medium">
-                  {language === 'fr' ? 'Rapports illimités' : language === 'es' ? 'Informes ilimitados' : 'Unlimited reports'}
+                  {language === 'fr' ? 'Rapports et correctifs illimités' : language === 'es' ? 'Informes y correctivos ilimitados' : 'Unlimited reports & fixes'}
                 </span>
               </div>
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
-                <Code className="h-4 w-4 text-violet-500 shrink-0" />
+                <Terminal className="h-4 w-4 text-violet-500 shrink-0" />
                 <span className="text-sm font-medium">
-                  {language === 'fr' ? 'Correctifs illimités' : language === 'es' ? 'Correctivos ilimitados' : 'Unlimited fixes'}
+                  {language === 'fr' ? '<code> correctif illimité' : language === 'es' ? '<code> correctivo ilimitado' : 'Unlimited corrective <code>'}
                 </span>
               </div>
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
@@ -286,9 +286,9 @@ export function MyWallet() {
                 </span>
               </div>
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
-                <User className="h-4 w-4 text-violet-500 shrink-0" />
+                <Monitor className="h-4 w-4 text-violet-500 shrink-0" />
                 <span className="text-sm font-medium">
-                  {language === 'fr' ? '3 comptes inclus' : language === 'es' ? '3 cuentas incluidas' : '3 accounts included'}
+                  {language === 'fr' ? 'Console multi-comptes' : language === 'es' ? 'Consola multi-cuentas' : 'Multi-account console'}
                 </span>
               </div>
               <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/5 border border-violet-500/20">
@@ -515,13 +515,7 @@ export function MyWallet() {
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
               <FileText className="h-4 w-4 text-violet-500 shrink-0" />
               <span className="text-sm font-medium">
-                {language === 'fr' ? 'Rapports illimités' : language === 'es' ? 'Informes ilimitados' : 'Unlimited reports'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-              <Code className="h-4 w-4 text-violet-500 shrink-0" />
-              <span className="text-sm font-medium">
-                {language === 'fr' ? 'Correctifs illimités' : language === 'es' ? 'Correctivos ilimitados' : 'Unlimited fixes'}
+                {language === 'fr' ? 'Rapports et correctifs illimités' : language === 'es' ? 'Informes y correctivos ilimitados' : 'Unlimited reports & fixes'}
               </span>
             </div>
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
@@ -534,6 +528,12 @@ export function MyWallet() {
               <Palette className="h-4 w-4 text-violet-500 shrink-0" />
               <span className="text-sm font-medium">
                 {language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White label'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
+              <Monitor className="h-4 w-4 text-violet-500 shrink-0" />
+              <span className="text-sm font-medium">
+                {language === 'fr' ? 'Console multi-comptes' : language === 'es' ? 'Consola multi-cuentas' : 'Multi-account console'}
               </span>
             </div>
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
