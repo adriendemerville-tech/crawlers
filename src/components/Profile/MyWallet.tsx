@@ -268,28 +268,34 @@ export function MyWallet() {
         {/* Sub-menu tabs — vertical left layout */}
         <Tabs defaultValue="branding" className="" orientation="vertical">
           <div className="flex gap-4">
-            <TabsList className="flex flex-col h-fit w-44 shrink-0 bg-muted/50 border p-1 gap-0.5 sticky top-20">
-              <TabsTrigger value="branding" className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-                <Palette className="h-4 w-4" />
-                <span>Branding</span>
-              </TabsTrigger>
-              <TabsTrigger value="clients" className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-                <Activity className="h-4 w-4" />
-                <span>Clients</span>
-              </TabsTrigger>
-              <TabsTrigger value="invoices" className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-                <Receipt className="h-4 w-4" />
-                <span>{language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices'}</span>
-              </TabsTrigger>
-              <TabsTrigger value="payment" className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-                <CreditCard className="h-4 w-4" />
-                <span>{language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment'}</span>
-              </TabsTrigger>
-              <TabsTrigger value="profile" className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-                <User className="h-4 w-4" />
-                <span>{language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts'}</span>
-              </TabsTrigger>
-            </TabsList>
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="overflow-hidden shrink-0"
+            >
+              <TabsList className="flex flex-col h-fit w-44 bg-muted/50 border p-1 gap-0.5 sticky top-20">
+                {[
+                  { value: 'branding', icon: Palette, label: 'Branding' },
+                  { value: 'clients', icon: Activity, label: 'Clients' },
+                  { value: 'invoices', icon: Receipt, label: language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices' },
+                  { value: 'payment', icon: CreditCard, label: language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment' },
+                  { value: 'profile', icon: User, label: language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts' },
+                ].map((item, i) => (
+                  <motion.div
+                    key={item.value}
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + i * 0.06, duration: 0.25, ease: 'easeOut' }}
+                  >
+                    <TabsTrigger value={item.value} className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </TabsTrigger>
+                  </motion.div>
+                ))}
+              </TabsList>
+            </motion.div>
 
             <div className="flex-1 min-w-0">
               {/* Branding Tab */}
