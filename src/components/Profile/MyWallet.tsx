@@ -465,42 +465,42 @@ export function MyWallet() {
             {language === 'fr' ? 'Illimité' : language === 'es' ? 'Ilimitado' : 'Unlimited'}
           </Badge>
         </div>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2 pt-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Crown className="h-5 w-5 text-yellow-500" />
             {language === 'fr' ? 'Passer au plan Pro Agency' : language === 'es' ? 'Cambiar al plan Pro Agency' : 'Upgrade to Pro Agency'}
           </CardTitle>
           <CardDescription>
             {language === 'fr' 
-              ? 'Tout illimité pour 49€/mois — idéal pour les professionnels et agences.' 
+              ? 'Tout illimité — idéal pour les professionnels et agences.' 
               : language === 'es' 
-                ? 'Todo ilimitado por 49€/mes — ideal para profesionales y agencias.'
-                : 'Everything unlimited for €49/month — ideal for professionals and agencies.'}
+                ? 'Todo ilimitado — ideal para profesionales y agencias.'
+                : 'Everything unlimited — ideal for professionals and agencies.'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-              <FileText className="h-4 w-4 text-violet-500 shrink-0" />
-              <span className="text-sm font-medium">
-                {language === 'fr' ? 'Rapports et code correctifs illimités' : language === 'es' ? 'Informes y código correctivos ilimitados' : 'Unlimited reports & corrective code'}
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-4 gap-2">
+            <div className="flex items-center gap-1.5 p-2 rounded-lg bg-muted/50 border">
+              <FileText className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+              <span className="text-xs font-medium whitespace-nowrap">
+                {language === 'fr' ? 'Rapports & code correctifs ∞' : language === 'es' ? 'Informes & código ∞' : 'Reports & code ∞'}
               </span>
             </div>
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-              <Palette className="h-4 w-4 text-violet-500 shrink-0" />
-              <span className="text-sm font-medium">
+            <div className="flex items-center gap-1.5 p-2 rounded-lg bg-muted/50 border">
+              <Palette className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+              <span className="text-xs font-medium whitespace-nowrap">
                 {language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White label'}
               </span>
             </div>
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-              <Monitor className="h-4 w-4 text-violet-500 shrink-0" />
-              <span className="text-sm font-medium">
-                {language === 'fr' ? 'Console multi-comptes' : language === 'es' ? 'Consola multi-cuentas' : 'Multi-account console'}
+            <div className="flex items-center gap-1.5 p-2 rounded-lg bg-muted/50 border">
+              <Monitor className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+              <span className="text-xs font-medium whitespace-nowrap">
+                {language === 'fr' ? 'Multi-comptes' : language === 'es' ? 'Multi-cuentas' : 'Multi-account'}
               </span>
             </div>
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border">
-              <Headphones className="h-4 w-4 text-violet-500 shrink-0" />
-              <span className="text-sm font-medium">
+            <div className="flex items-center gap-1.5 p-2 rounded-lg bg-muted/50 border">
+              <Headphones className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+              <span className="text-xs font-medium whitespace-nowrap">
                 {language === 'fr' ? 'Support prioritaire' : language === 'es' ? 'Soporte prioritario' : 'Priority support'}
               </span>
             </div>
