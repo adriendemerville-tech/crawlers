@@ -165,6 +165,12 @@ export default function Profile() {
             <Tabs defaultValue={initialTab} className="space-y-6">
               <TabsList className={`w-full flex ${isProUser ? 'border-2 border-violet-500/50' : ''}`}>
                 {isProUser && <span className="text-yellow-500 font-bold text-2xl -mr-1">∞</span>}
+                {isProUser && (
+                  <TabsTrigger value="wallet" className="flex-1 gap-2">
+                    <Crown className="h-4 w-4 text-yellow-500" />
+                    <span className="hidden sm:inline text-yellow-500 font-semibold">Pro Agency</span>
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="tracking" className="flex-1 gap-2">
                   <Radar className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.tracking}</span>
@@ -181,16 +187,12 @@ export default function Profile() {
                   <Code2 className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.correctiveCodes}</span>
                 </TabsTrigger>
-                <TabsTrigger value="wallet" className="flex-1 gap-2">
-                  {isProUser ? (
-                    <Crown className="h-4 w-4 text-yellow-500" />
-                  ) : (
+                {!isProUser && (
+                  <TabsTrigger value="wallet" className="flex-1 gap-2">
                     <Wallet className="h-4 w-4" />
-                  )}
-                  <span className={`hidden sm:inline ${isProUser ? 'text-yellow-500 font-semibold' : ''}`}>
-                    {isProUser ? 'Pro Agency' : t.wallet}
-                  </span>
-                </TabsTrigger>
+                    <span className="hidden sm:inline">{t.wallet}</span>
+                  </TabsTrigger>
+                )}
                 <div className="ml-auto" />
                 {!isProUser && (
                   <TabsTrigger value="settings" className="gap-2">

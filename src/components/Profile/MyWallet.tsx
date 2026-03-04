@@ -265,159 +265,163 @@ export function MyWallet() {
           )}
         </div>
 
-        {/* Sub-menu tabs */}
-        <Tabs defaultValue="branding" className="space-y-4">
-          <TabsList className="w-full grid grid-cols-5 bg-muted/50 border">
-            <TabsTrigger value="branding" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-              <Palette className="h-4 w-4" />
-              <span className="hidden sm:inline">Branding</span>
-            </TabsTrigger>
-            <TabsTrigger value="clients" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-              <Activity className="h-4 w-4" />
-              <span className="hidden sm:inline">Clients</span>
-            </TabsTrigger>
-            <TabsTrigger value="invoices" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-              <Receipt className="h-4 w-4" />
-              <span className="hidden sm:inline">{language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices'}</span>
-            </TabsTrigger>
-            <TabsTrigger value="payment" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-              <CreditCard className="h-4 w-4" />
-              <span className="hidden sm:inline">{language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment'}</span>
-            </TabsTrigger>
-            <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">{language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts'}</span>
-            </TabsTrigger>
-          </TabsList>
+        {/* Sub-menu tabs — vertical left layout */}
+        <Tabs defaultValue="branding" className="space-y-4" orientation="vertical">
+          <div className="flex gap-6">
+            <TabsList className="flex flex-col h-auto w-48 shrink-0 bg-muted/50 border p-1.5 gap-1">
+              <TabsTrigger value="branding" className="w-full justify-start gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
+                <Palette className="h-4 w-4" />
+                <span>Branding</span>
+              </TabsTrigger>
+              <TabsTrigger value="clients" className="w-full justify-start gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
+                <Activity className="h-4 w-4" />
+                <span>Clients</span>
+              </TabsTrigger>
+              <TabsTrigger value="invoices" className="w-full justify-start gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
+                <Receipt className="h-4 w-4" />
+                <span>{language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices'}</span>
+              </TabsTrigger>
+              <TabsTrigger value="payment" className="w-full justify-start gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
+                <CreditCard className="h-4 w-4" />
+                <span>{language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment'}</span>
+              </TabsTrigger>
+              <TabsTrigger value="profile" className="w-full justify-start gap-2 data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
+                <User className="h-4 w-4" />
+                <span>{language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts'}</span>
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Branding Tab */}
-          <TabsContent value="branding">
-            <BrandingTab />
-          </TabsContent>
+            <div className="flex-1 min-w-0">
+              {/* Branding Tab */}
+              <TabsContent value="branding" className="mt-0">
+                <BrandingTab />
+              </TabsContent>
 
-          {/* Clients Tab */}
-          <TabsContent value="clients">
-            <ClientsTab />
-          </TabsContent>
+              {/* Clients Tab */}
+              <TabsContent value="clients" className="mt-0">
+                <ClientsTab />
+              </TabsContent>
 
-          {/* Invoices Tab */}
-          <TabsContent value="invoices">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Receipt className="h-5 w-5 text-violet-500" />
-                  {t.invoices}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center justify-center py-10 space-y-4 text-center">
-                  <div className="p-3 rounded-full bg-violet-500/10">
-                    <Receipt className="h-8 w-8 text-violet-400" />
-                  </div>
-                  {purchases.length === 0 ? (
-                    <p className="text-sm text-muted-foreground max-w-xs">
-                      {language === 'fr' ? 'Pas d\'achat, pas de facture.' : language === 'es' ? 'Sin compra, sin factura.' : 'No purchase, no invoice.'}
-                    </p>
-                  ) : (
-                    <>
-                      <p className="text-sm text-muted-foreground max-w-xs">
-                        {t.invoicesDescription}
-                      </p>
+              {/* Invoices Tab */}
+              <TabsContent value="invoices" className="mt-0">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Receipt className="h-5 w-5 text-violet-500" />
+                      {t.invoices}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col items-center justify-center py-10 space-y-4 text-center">
+                      <div className="p-3 rounded-full bg-violet-500/10">
+                        <Receipt className="h-8 w-8 text-violet-400" />
+                      </div>
+                      {purchases.length === 0 ? (
+                        <p className="text-sm text-muted-foreground max-w-xs">
+                          {language === 'fr' ? 'Pas d\'achat, pas de facture.' : language === 'es' ? 'Sin compra, sin factura.' : 'No purchase, no invoice.'}
+                        </p>
+                      ) : (
+                        <>
+                          <p className="text-sm text-muted-foreground max-w-xs">
+                            {t.invoicesDescription}
+                          </p>
+                          <Button
+                            variant="outline"
+                            onClick={handleOpenPortal}
+                            disabled={portalLoading}
+                            className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
+                          >
+                            {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                            {t.viewInvoices}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Payment Tab */}
+              <TabsContent value="payment" className="mt-0">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="h-5 w-5 text-violet-500" />
+                      {language === 'fr' ? 'Moyen de paiement' : language === 'es' ? 'Método de pago' : 'Payment method'}
+                    </CardTitle>
+                    <CardDescription>
+                      {language === 'fr' 
+                        ? 'Gérez votre carte bancaire et vos informations de facturation' 
+                        : language === 'es' 
+                          ? 'Gestione su tarjeta y datos de facturación'
+                          : 'Manage your card and billing information'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-violet-500/5 border border-violet-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full bg-violet-500/10">
+                          <CreditCard className="h-5 w-5 text-violet-500" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">
+                            {language === 'fr' ? 'Carte enregistrée' : language === 'es' ? 'Tarjeta registrada' : 'Card on file'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {language === 'fr' ? 'Modifier via le portail de paiement' : language === 'es' ? 'Modificar a través del portal de pagos' : 'Update via the billing portal'}
+                          </p>
+                        </div>
+                      </div>
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={handleOpenPortal}
                         disabled={portalLoading}
                         className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
                       >
                         {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                        {t.viewInvoices}
+                        {language === 'fr' ? 'Modifier' : language === 'es' ? 'Modificar' : 'Update'}
                       </Button>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                    </div>
 
-          {/* Payment Tab */}
-          <TabsContent value="payment">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5 text-violet-500" />
-                  {language === 'fr' ? 'Moyen de paiement' : language === 'es' ? 'Método de pago' : 'Payment method'}
-                </CardTitle>
-                <CardDescription>
-                  {language === 'fr' 
-                    ? 'Gérez votre carte bancaire et vos informations de facturation' 
-                    : language === 'es' 
-                      ? 'Gestione su tarjeta y datos de facturación'
-                      : 'Manage your card and billing information'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-violet-500/5 border border-violet-500/20">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-violet-500/10">
-                      <CreditCard className="h-5 w-5 text-violet-500" />
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-violet-500/5 border border-violet-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full bg-violet-500/10">
+                          <Crown className="h-5 w-5 text-yellow-500" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">
+                            Pro Agency — 49€<span className="text-xs font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {language === 'fr' ? 'Gérer, modifier ou résilier votre abonnement' : language === 'es' ? 'Gestionar, modificar o cancelar su suscripción' : 'Manage, update or cancel your subscription'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleOpenPortal}
+                        disabled={portalLoading}
+                        className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
+                      >
+                        {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                        {language === 'fr' ? 'Gérer mon abonnement' : language === 'es' ? 'Gestionar suscripción' : 'Manage subscription'}
+                      </Button>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {language === 'fr' ? 'Carte enregistrée' : language === 'es' ? 'Tarjeta registrada' : 'Card on file'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {language === 'fr' ? 'Modifier via le portail de paiement' : language === 'es' ? 'Modificar a través del portal de pagos' : 'Update via the billing portal'}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleOpenPortal}
-                    disabled={portalLoading}
-                    className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
-                  >
-                    {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                    {language === 'fr' ? 'Modifier' : language === 'es' ? 'Modificar' : 'Update'}
-                  </Button>
-                </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-violet-500/5 border border-violet-500/20">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-violet-500/10">
-                      <Crown className="h-5 w-5 text-yellow-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        Pro Agency — 49€<span className="text-xs font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {language === 'fr' ? 'Gérer, modifier ou résilier votre abonnement' : language === 'es' ? 'Gestionar, modificar o cancelar su suscripción' : 'Manage, update or cancel your subscription'}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleOpenPortal}
-                    disabled={portalLoading}
-                    className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
-                  >
-                    {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-                    {language === 'fr' ? 'Gérer mon abonnement' : language === 'es' ? 'Gestionar suscripción' : 'Manage subscription'}
-                  </Button>
+              {/* Accounts Tab */}
+              <TabsContent value="profile" className="mt-0">
+                <AccountManager />
+                <div className="mt-6">
+                  <ProfileSettings />
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Accounts Tab */}
-          <TabsContent value="profile">
-            <AccountManager />
-            <div className="mt-6">
-              <ProfileSettings />
+              </TabsContent>
             </div>
-          </TabsContent>
+          </div>
         </Tabs>
       </div>
     );
