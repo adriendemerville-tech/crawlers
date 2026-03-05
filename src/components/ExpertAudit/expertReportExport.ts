@@ -148,69 +148,160 @@ export function generateExpertReportHTML(
 
   if (auditMode === 'technical') {
     const scores = result.scores;
+    const insights = result.insights;
+    const crawlersData = result.rawData?.crawlersData;
+    const jsonLd = insights?.jsonLdValidation;
+    const contentDensity = insights?.contentDensity;
+    const linkProfile = insights?.linkProfile;
+    const semanticConsistency = insights?.semanticConsistency;
+
+    // Narrative translations
+    const nt = language === 'es' ? {
+      sectionTitle: 'La Técnica al servicio de la Adquisición (SEO & IA)',
+      bloc1: 'Puerta de Entrada & Accesibilidad', bloc2: 'Lenguaje Semántico & Comprensión', bloc3: 'Formato & Extracción',
+      robotsTxt: 'Robots.txt', aiBots: 'Bots IA', https: 'HTTPS', safeBrowsing: 'Safe Browsing',
+      titleTag: 'Title', metaDesc: 'Meta Desc', h1: 'H1', match: 'Title/H1', schema: 'Schema.org', jsonLd: 'JSON-LD',
+      words: 'palabras', textRatio: 'Texto/HTML', links: 'Enlaces', int: 'int.', ext: 'ext.',
+      permissive: 'Permisivo', restrictive: 'Restrictivo', chars: 'car.',
+    } : language === 'en' ? {
+      sectionTitle: 'How Technical SEO Powers Acquisition (SEO & AI)',
+      bloc1: 'Bot Gateway & Accessibility', bloc2: 'Semantic Language & Comprehension', bloc3: 'Formatting & Knowledge Extraction',
+      robotsTxt: 'Robots.txt', aiBots: 'AI Bots', https: 'HTTPS', safeBrowsing: 'Safe Browsing',
+      titleTag: 'Title', metaDesc: 'Meta Desc', h1: 'H1', match: 'Title/H1', schema: 'Schema.org', jsonLd: 'JSON-LD',
+      words: 'words', textRatio: 'Text/HTML', links: 'Links', int: 'int.', ext: 'ext.',
+      permissive: 'Permissive', restrictive: 'Restrictive', chars: 'chars',
+    } : {
+      sectionTitle: "La Technique au service de l'Acquisition (SEO & IA)",
+      bloc1: "Porte d'Entrée & Accessibilité", bloc2: 'Langage Sémantique & Compréhension', bloc3: 'Formatage & Extraction',
+      robotsTxt: 'Robots.txt', aiBots: 'Bots IA', https: 'HTTPS', safeBrowsing: 'Safe Browsing',
+      titleTag: 'Title', metaDesc: 'Meta Desc', h1: 'H1', match: 'Title/H1', schema: 'Schema.org', jsonLd: 'JSON-LD',
+      words: 'mots', textRatio: 'Texte/HTML', links: 'Liens', int: 'int.', ext: 'ext.',
+      permissive: 'Permissif', restrictive: 'Restrictif', chars: 'car.',
+    };
+
+    // Compute bloc scores
+    const bloc1Items = [scores.aiReady.hasRobotsTxt, scores.aiReady.robotsPermissive, scores.security.isHttps, scores.security.safeBrowsingOk];
+    const aiBotsAllowed = crawlersData ? crawlersData.allowedCount : (scores.aiReady.allowsAIBots ? Object.values(scores.aiReady.allowsAIBots).filter(Boolean).length : 0);
+    const aiBotsTotal = crawlersData ? crawlersData.bots.length : 6;
+    const bloc1Score = Math.round(((bloc1Items.filter(Boolean).length / bloc1Items.length) * 60 + (aiBotsAllowed / Math.max(aiBotsTotal, 1)) * 40));
+
+    const bloc2Items = [
+      scores.semantic.hasTitle && scores.semantic.titleLength <= 70,
+      scores.semantic.hasMetaDesc, scores.semantic.hasUniqueH1,
+      (semanticConsistency?.titleH1Similarity ?? 0) >= 30,
+      scores.aiReady.hasSchemaOrg, jsonLd?.valid ?? false,
+    ];
+    const bloc2Score = Math.round((bloc2Items.filter(Boolean).length / bloc2Items.length) * 100);
+
+    const wordCountOk = scores.semantic.wordCount >= 500;
+    const densityOk = (contentDensity?.ratio ?? 0) >= 15;
+    const hasLinks = (linkProfile?.total ?? 0) > 0;
+    const bloc3Score = Math.round(([wordCountOk, densityOk, hasLinks].filter(Boolean).length / 3) * 100);
+
+    const statusIcon = (ok: boolean | null) => ok === true ? '✅' : ok === false ? '❌' : '⚠️';
+    const gaugeColor = (s: number) => s >= 75 ? '#166534' : s >= 45 ? '#92400e' : '#991b1b';
+    const gaugeBg = (s: number) => s >= 75 ? '#dcfce7' : s >= 45 ? '#fef3c7' : '#fee2e2';
+
+    const statusRow = (label: string, ok: boolean | null, detail?: string) => `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px;">
+        <span style="color: #6b7280;">${label}</span>
+        <span style="display: flex; align-items: center; gap: 6px;">
+          ${detail ? `<span style="font-family: monospace; color: #334155; font-size: 11px;">${detail}</span>` : ''}
+          <span style="font-size: 13px;">${statusIcon(ok)}</span>
+        </span>
+      </div>`;
+
+    const miniGauge = (score: number) => `
+      <div style="text-align: center; min-width: 52px;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: ${gaugeBg(score)}; border: 3px solid ${gaugeColor(score)};">
+          <span style="font-weight: 700; font-size: 14px; color: ${gaugeColor(score)};">${score}%</span>
+        </div>
+      </div>`;
+
+    const narrativeBloc = (title: string, color: string, bgColor: string, score: number, rows: string) => `
+      <div style="background: ${bgColor}; padding: 14px 16px; border-radius: 10px; border-left: 3px solid ${color}; margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="font-size: 13px; font-weight: 600; color: ${color};">${title}</div>
+          ${miniGauge(score)}
+        </div>
+        ${rows}
+      </div>`;
 
     content = `
-      <div style="text-align: center; margin-bottom: 40px;">
-        <div style="display: inline-block; padding: 30px 50px; background: linear-gradient(135deg, #7c3aed, #2563eb); border-radius: 20px; margin-bottom: 20px;">
-          <div style="font-size: 56px; font-weight: bold; color: white;">${result.totalScore}/200</div>
-          <div style="color: rgba(255,255,255,0.9); font-size: 16px;">${t.score} Global</div>
+      <div style="text-align: center; margin-bottom: 28px;">
+        <div style="display: inline-block; padding: 22px 44px; background: linear-gradient(135deg, #7c3aed, #2563eb); border-radius: 18px; margin-bottom: 14px;">
+          <div style="font-size: 48px; font-weight: bold; color: white;">${result.totalScore}/200</div>
+          <div style="color: rgba(255,255,255,0.9); font-size: 14px;">${t.score} Global</div>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 40px;">
-        <div style="text-align: center; padding: 16px 8px; background: ${getScoreBg(scores.performance.score, scores.performance.maxScore)}; border-radius: 12px;">
-          <div style="font-size: 24px; font-weight: bold; color: ${getScoreColor(scores.performance.score, scores.performance.maxScore)};">${scores.performance.score}/${scores.performance.maxScore}</div>
-          <div style="color: ${getScoreColor(scores.performance.score, scores.performance.maxScore)}; font-size: 11px; margin-top: 4px;">${t.performance}</div>
-        </div>
-        <div style="text-align: center; padding: 16px 8px; background: ${getScoreBg(scores.technical.score, scores.technical.maxScore)}; border-radius: 12px;">
-          <div style="font-size: 24px; font-weight: bold; color: ${getScoreColor(scores.technical.score, scores.technical.maxScore)};">${scores.technical.score}/${scores.technical.maxScore}</div>
-          <div style="color: ${getScoreColor(scores.technical.score, scores.technical.maxScore)}; font-size: 11px; margin-top: 4px;">${t.technical}</div>
-        </div>
-        <div style="text-align: center; padding: 16px 8px; background: ${getScoreBg(scores.semantic.score, scores.semantic.maxScore)}; border-radius: 12px;">
-          <div style="font-size: 24px; font-weight: bold; color: ${getScoreColor(scores.semantic.score, scores.semantic.maxScore)};">${scores.semantic.score}/${scores.semantic.maxScore}</div>
-          <div style="color: ${getScoreColor(scores.semantic.score, scores.semantic.maxScore)}; font-size: 11px; margin-top: 4px;">${t.semantic}</div>
-        </div>
-        <div style="text-align: center; padding: 16px 8px; background: ${getScoreBg(scores.aiReady.score, scores.aiReady.maxScore)}; border-radius: 12px;">
-          <div style="font-size: 24px; font-weight: bold; color: ${getScoreColor(scores.aiReady.score, scores.aiReady.maxScore)};">${scores.aiReady.score}/${scores.aiReady.maxScore}</div>
-          <div style="color: ${getScoreColor(scores.aiReady.score, scores.aiReady.maxScore)}; font-size: 11px; margin-top: 4px;">${t.aiReady}</div>
-        </div>
-        <div style="text-align: center; padding: 16px 8px; background: ${getScoreBg(scores.security.score, scores.security.maxScore)}; border-radius: 12px;">
-          <div style="font-size: 24px; font-weight: bold; color: ${getScoreColor(scores.security.score, scores.security.maxScore)};">${scores.security.score}/${scores.security.maxScore}</div>
-          <div style="color: ${getScoreColor(scores.security.score, scores.security.maxScore)}; font-size: 11px; margin-top: 4px;">${t.security}</div>
-        </div>
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 24px;">
+        ${[
+          { s: scores.performance, l: t.performance },
+          { s: scores.technical, l: t.technical },
+          { s: scores.semantic, l: t.semantic },
+          { s: scores.aiReady, l: t.aiReady },
+          { s: scores.security, l: t.security },
+        ].map(({ s, l }) => `
+          <div style="text-align: center; padding: 10px 4px; background: ${getScoreBg(s.score, s.maxScore)}; border-radius: 10px;">
+            <div style="font-size: 20px; font-weight: bold; color: ${getScoreColor(s.score, s.maxScore)};">${s.score}/${s.maxScore}</div>
+            <div style="color: ${getScoreColor(s.score, s.maxScore)}; font-size: 10px; margin-top: 2px;">${l}</div>
+          </div>
+        `).join('')}
       </div>
 
       ${result.introduction ? `
-        <div style="background: #f8fafc; padding: 24px; border-radius: 12px; margin-bottom: 30px; border-left: 4px solid #7c3aed;">
-          <p style="color: #374151; line-height: 1.7; margin: 0 0 12px 0;">${result.introduction.presentation}</p>
-          <p style="color: #374151; line-height: 1.7; margin: 0 0 12px 0;">${result.introduction.strengths}</p>
-          <p style="color: #374151; line-height: 1.7; margin: 0;">${result.introduction.improvement}</p>
+        <div style="background: #f8fafc; padding: 16px; border-radius: 10px; margin-bottom: 20px; border-left: 3px solid #7c3aed;">
+          <p style="color: #374151; line-height: 1.6; margin: 0 0 8px 0; font-size: 12px;">${result.introduction.presentation}</p>
+          <p style="color: #374151; line-height: 1.6; margin: 0 0 8px 0; font-size: 12px;">${result.introduction.strengths}</p>
+          <p style="color: #374151; line-height: 1.6; margin: 0; font-size: 12px;">${result.introduction.improvement}</p>
         </div>
       ` : ''}
 
+      <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${nt.sectionTitle}</div>
+
+      ${narrativeBloc(nt.bloc1, '#7c3aed', '#faf5ff', bloc1Score, [
+        statusRow(nt.robotsTxt, scores.aiReady.hasRobotsTxt, scores.aiReady.robotsPermissive ? nt.permissive : scores.aiReady.hasRobotsTxt ? nt.restrictive : undefined),
+        statusRow(nt.aiBots, aiBotsAllowed > 0, `${aiBotsAllowed}/${aiBotsTotal}`),
+        statusRow(nt.https, scores.security.isHttps),
+        statusRow(nt.safeBrowsing, scores.security.safeBrowsingOk),
+      ].join(''))}
+
+      ${narrativeBloc(nt.bloc2, '#d97706', '#fffbeb', bloc2Score, [
+        statusRow(nt.titleTag, scores.semantic.hasTitle && scores.semantic.titleLength <= 70, scores.semantic.hasTitle ? `${scores.semantic.titleLength} ${nt.chars}` : undefined),
+        statusRow(nt.metaDesc, scores.semantic.hasMetaDesc, scores.semantic.hasMetaDesc ? `${scores.semantic.metaDescLength} ${nt.chars}` : undefined),
+        statusRow(nt.h1, scores.semantic.hasUniqueH1),
+        statusRow(nt.match, semanticConsistency ? semanticConsistency.titleH1Similarity >= 30 : null, semanticConsistency ? `${semanticConsistency.titleH1Similarity}%` : undefined),
+        statusRow(nt.schema, scores.aiReady.hasSchemaOrg, scores.aiReady.schemaTypes.length > 0 ? scores.aiReady.schemaTypes.slice(0, 2).join(', ') : undefined),
+        statusRow(nt.jsonLd, jsonLd?.valid ?? false, jsonLd ? `${jsonLd.count} script${jsonLd.count > 1 ? 's' : ''}` : undefined),
+      ].join(''))}
+
+      ${narrativeBloc(nt.bloc3, '#059669', '#f0fdf4', bloc3Score, [
+        statusRow(`${nt.words}`, wordCountOk, `~${scores.semantic.wordCount} ${nt.words}`),
+        statusRow(nt.textRatio, densityOk, contentDensity ? `${contentDensity.ratio}%` : undefined),
+        statusRow(nt.links, hasLinks, linkProfile ? `${linkProfile.internal} ${nt.int} / ${linkProfile.external} ${nt.ext}` : undefined),
+      ].join(''))}
+
       ${result.recommendations?.length > 0 ? `
-        <h3 style="font-size: 18px; color: #1f2937; margin-bottom: 16px;">${t.recommendations}</h3>
-        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin: 18px 0 8px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${t.recommendations}</div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
           <thead>
             <tr style="background: #f9fafb;">
-              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Priorité</th>
-              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Recommandation</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e5e7eb; width: 70px;">Priorité</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e5e7eb;">Recommandation</th>
             </tr>
           </thead>
           <tbody>
-            ${result.recommendations.slice(0, 10).map(rec => `
+            ${result.recommendations.slice(0, 6).map(rec => `
               <tr>
-                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
-                  <span style="padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; ${
+                <td style="padding: 6px 8px; border-bottom: 1px solid #e5e7eb;">
+                  <span style="padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; ${
                     rec.priority === 'critical' ? 'background: #fee2e2; color: #991b1b;' :
                     rec.priority === 'important' ? 'background: #fef3c7; color: #92400e;' :
                     'background: #dcfce7; color: #166534;'
                   }">${rec.priority === 'critical' ? t.critical : rec.priority === 'important' ? t.important : t.optional}</span>
                 </td>
-                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
-                  <strong>${rec.title}</strong><br>
-                  <small style="color: #6b7280;">${rec.description}</small>
-                </td>
+                <td style="padding: 6px 8px; border-bottom: 1px solid #e5e7eb; color: #374151;">${rec.title}</td>
               </tr>
             `).join('')}
           </tbody>
