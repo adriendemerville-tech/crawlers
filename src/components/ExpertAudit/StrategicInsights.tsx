@@ -21,6 +21,9 @@ import { HallucinationCorrectionModal, HallucinationDiagnosis } from './Hallucin
  import { LLMVisibilityCard } from './LLMVisibilityCard';
 import { LLMTargetQueriesCard } from '@/components/LLMTargetQueriesCard';
 import { PriorityContentCard } from './PriorityContentCard';
+import { PainScoreCard } from './PainScoreCard';
+import { ConversationalIntentCard } from './ConversationalIntentCard';
+import { ZeroClickRiskCard } from './ZeroClickRiskCard';
 
 import { CompetitorCorrections } from './CompetitorCorrectionModal';
 
@@ -190,6 +193,15 @@ export function StrategicInsights({
               </>
             )}
  
+          {/* Pain Score Module */}
+          <PainScoreCard analysis={analysis} domain={domain} />
+
+          {/* Conversational Intent Module */}
+          <ConversationalIntentCard analysis={analysis} />
+
+          {/* Zero-Click Risk Matrix */}
+          <ZeroClickRiskCard analysis={analysis} domain={domain} />
+
           {/* Premium Executive Roadmap (Narrative) */}
           {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (
             <PremiumRoadmapCard roadmap={analysis.executive_roadmap} />
