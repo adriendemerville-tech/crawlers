@@ -292,17 +292,19 @@ export function MyWallet() {
 
             <div className="flex-1 min-w-0 space-y-4">
               {/* CTA Nouvel audit */}
-              <Button
-                variant="hero"
-                className="w-full gap-2"
-                onClick={() => {
-                  // Navigate with a flag to force empty URL field
-                  window.location.href = '/audit-expert?new=1';
-                }}
-              >
-                <Radar className="h-4 w-4" />
-                {language === 'fr' ? 'Nouvel audit' : language === 'es' ? 'Nueva auditoría' : 'New audit'}
-              </Button>
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-violet-500/50 text-violet-600 dark:text-violet-400 hover:bg-violet-500/10 bg-transparent"
+                  onClick={() => {
+                    window.location.href = '/audit-expert?new=1';
+                  }}
+                >
+                  <Radar className="h-3.5 w-3.5" />
+                  {language === 'fr' ? 'Nouvel audit' : language === 'es' ? 'Nueva auditoría' : 'New audit'}
+                </Button>
+              </div>
               {/* Branding Tab */}
               <TabsContent value="branding" className="mt-0">
                 <BrandingTab />
