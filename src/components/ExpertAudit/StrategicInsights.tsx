@@ -185,6 +185,7 @@ export function StrategicInsights({
            {analysis.llm_visibility_raw && (
               <>
                 <LLMVisibilityCard data={analysis.llm_visibility_raw} />
+                <ConversationalIntentCard analysis={analysis} />
                 <LLMTargetQueriesCard 
                   domain={domain} 
                   coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
@@ -196,9 +197,6 @@ export function StrategicInsights({
                 <PriorityContentCard domain={domain} />
               </>
             )}
-
-          {/* Conversational Intent Module */}
-          <ConversationalIntentCard analysis={analysis} />
 
           {/* Premium Executive Roadmap (Narrative) */}
           {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (
