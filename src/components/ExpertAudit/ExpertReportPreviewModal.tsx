@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Download, Share2, Loader2, Check, Copy, Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ExpertAuditResult } from '@/types/expertAudit';
-import { expertReportTranslations, generateExpertPDF, generateExpertReportHTML, WhiteLabelBranding } from './expertReportExport';
+import { expertReportTranslations, generateExpertPDF, generateExpertReportHTML, WhiteLabelBranding, summarizeStrategicResult } from './expertReportExport';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface ExpertReportPreviewModalProps {
@@ -24,6 +24,8 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
   const [isSharing, setIsSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [summarizedResult, setSummarizedResult] = useState<ExpertAuditResult | null>(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
 
   const t =
     expertReportTranslations[language as keyof typeof expertReportTranslations] || expertReportTranslations.fr;
@@ -34,12 +36,30 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
       ? { logoUrl: profile.agency_logo_url, primaryColor: profile.agency_primary_color }
       : undefined;
 
-  const htmlContent = generateExpertReportHTML(result, auditMode, t, language, branding);
+  // Summarize strategic report texts via AI when modal opens
+  useEffect(() => {
+    if (!isOpen || auditMode !== 'strategic') {
+      setSummarizedResult(null);
+      return;
+    }
+    let cancelled = false;
+    setIsSummarizing(true);
+    summarizeStrategicResult(result, language).then((r) => {
+      if (!cancelled) {
+        setSummarizedResult(r);
+        setIsSummarizing(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [isOpen, result, auditMode, language]);
+
+  const effectiveResult = auditMode === 'strategic' && summarizedResult ? summarizedResult : result;
+  const htmlContent = generateExpertReportHTML(effectiveResult, auditMode, t, language, branding);
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      generateExpertPDF(result, auditMode, t, branding);
+      generateExpertPDF(effectiveResult, auditMode, t, branding);
       toast.success(t.pdfSuccess);
     } catch (error) {
       console.error('PDF generation error:', error);
@@ -177,7 +197,15 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
         )}
 
         {/* HTML Preview */}
-        <div className="flex-1 overflow-auto bg-muted/30">
+        <div className="flex-1 overflow-auto bg-muted/30 relative">
+          {isSummarizing && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-sm">
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>{language === 'fr' ? 'Résumé IA en cours…' : language === 'es' ? 'Resumen IA en curso…' : 'AI summary in progress…'}</span>
+              </div>
+            </div>
+          )}
           <iframe
             srcDoc={htmlContent}
             className="w-full h-full min-h-[600px]"

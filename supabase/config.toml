@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.track-share-click]
 verify_jwt = false
+
+[functions.summarize-report]
+verify_jwt = false
