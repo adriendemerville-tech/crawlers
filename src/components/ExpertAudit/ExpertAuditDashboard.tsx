@@ -633,8 +633,7 @@ export function ExpertAuditDashboard() {
       // Track step 1 completion
       trackAnalyticsEvent('expert_audit_step_1', { targetUrl: normalizedUrl });
       
-      // Auto-register site for tracking with initial KPIs
-      autoTrackSite(normalizedUrl, auditResult, 'technical');
+      // Site tracking is now manual via TrackSiteButton
 
       const reliabilityInfo = auditResult.meta?.reliabilityScore 
         ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
@@ -747,8 +746,7 @@ export function ExpertAuditDashboard() {
       // Track step 2 completion
       trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
       
-      // Auto-register site for tracking with initial KPIs
-      autoTrackSite(normalizedUrl, strategicData, 'strategic');
+      // Site tracking is now manual via TrackSiteButton
 
       // Fetch stored corrections for this domain (community knowledge)
       const domain = new URL(normalizedUrl).hostname;
@@ -887,7 +885,6 @@ export function ExpertAuditDashboard() {
               domain={technicalResult.domain} 
               url={technicalResult.url} 
               auditResult={technicalResult}
-              forceTracked={siteAutoTracked}
             />
           )}
         </motion.div>
