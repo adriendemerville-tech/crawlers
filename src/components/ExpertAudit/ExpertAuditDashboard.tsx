@@ -282,6 +282,24 @@ export function ExpertAuditDashboard() {
     }
 
     const fromSites = searchParams.get('from') === 'sites';
+    const isNewAudit = searchParams.get('new') === '1';
+
+    // Coming from Console "Nouvel audit" CTA → force clean slate
+    if (isNewAudit) {
+      setUrl('');
+      setAuditMode(null);
+      setResult(null);
+      setTechnicalResult(null);
+      setStrategicResult(null);
+      setCompletedSteps([]);
+      sessionStorage.removeItem('audit_url');
+      sessionStorage.removeItem('audit_technical_result');
+      sessionStorage.removeItem('audit_strategic_result');
+      sessionStorage.removeItem('audit_mode');
+      localStorage.removeItem('crawlers_last_url');
+      navigate('/audit-expert', { replace: true });
+      return;
+    }
 
     // Priority: URL from "Mes sites" (highest) > URL from query params > cached URL from home > saved session
     if (urlFromParams) {
