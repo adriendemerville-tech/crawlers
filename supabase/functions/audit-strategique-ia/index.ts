@@ -654,7 +654,7 @@ G. AUTORITÉ & CRÉDIBILITÉ (E-E-A-T & Knowledge Graph)
 22. Knowledge Graph Readiness: L'entité de la marque correspond-elle à un Knowledge Panel existant? Présence de citations externes de haute autorité? Liens sameAs vers Wikidata, Wikipedia? Profils LinkedIn d'équipe détectés?
 23. Études de cas & Social Proof: Détection de case studies avec métriques de résultats (ROI, avant/après), témoignages clients chiffrés, liens vers profils sociaux (LinkedIn surtout) validant la crédibilité humaine.`;
 
-function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null): string {
+function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = ''): string {
   let marketDataSection = '';
   
   if (marketData) {
@@ -699,6 +699,7 @@ ${missingContent.length > 0 ? missingContent.map(kw => `  - "${kw.keyword}" (${k
   }
 
   return `Analyse le domaine "${domain}" (${url}) avec les données suivantes:
+${pageContentContext}
 ${marketDataSection}
 
 DONNÉES CRAWLERS (Accessibilité bots IA):
@@ -945,6 +946,48 @@ Deno.serve(async (req) => {
       pagespeed: { note: 'Données non disponibles - audit stratégique autonome' },
     };
 
+    // ==================== FETCH PAGE CONTENT FOR CORE BUSINESS UNDERSTANDING ====================
+    let pageContentContext = '';
+    try {
+      const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
+      console.log('📄 Fetching page content for core business detection...');
+      const pageResp = await fetch(normalizedUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; VitalAuditBot/1.0)' },
+        redirect: 'follow',
+        signal: AbortSignal.timeout(8000),
+      });
+      if (pageResp.ok) {
+        const html = await pageResp.text();
+        const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+        const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*?)["']/i)
+          || html.match(/<meta\s+content=["']([^"']*?)["']\s+name=["']description["']/i);
+        const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+        const ogTitleMatch = html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']*?)["']/i);
+        const ogDescMatch = html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']*?)["']/i);
+        
+        const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
+        const metaDesc = metaDescMatch?.[1]?.trim() || '';
+        const h1 = h1Match?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
+        const ogTitle = ogTitleMatch?.[1]?.trim() || '';
+        const ogDesc = ogDescMatch?.[1]?.trim() || '';
+        
+        if (title || metaDesc || h1) {
+          pageContentContext = `
+CONTENU RÉEL DE LA PAGE (source fiable pour comprendre le core business):
+- Titre de la page: "${title || 'non détecté'}"
+- Meta description: "${metaDesc || ogDesc || 'non détectée'}"
+- Titre H1: "${h1 || 'non détecté'}"
+${ogTitle && ogTitle !== title ? `- OG Title: "${ogTitle}"` : ''}
+
+IMPORTANT: Utilise ces informations RÉELLES pour identifier précisément le core business, le secteur d'activité et la proposition de valeur du site. Ne te base PAS uniquement sur le nom de domaine.
+`;
+          console.log(`✅ Page content extracted: title="${title.substring(0, 60)}", h1="${h1.substring(0, 60)}"`);
+        }
+      }
+    } catch (e) {
+      console.log('⚠️ Could not fetch page content for context:', e instanceof Error ? e.message : e);
+    }
+
     // Extract domain from URL
     let domain = url;
     try {
@@ -1016,7 +1059,7 @@ Deno.serve(async (req) => {
     console.log('\n🤖 ÉTAPE 2: Génération de l\'analyse LLM avec données enrichies...');
     
     // Build prompt with hallucination corrections as priority weights if provided
-    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData);
+    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext);
     
     // Injecter le nom de marque humanisé dans le prompt
     const brandNameInstruction = `
