@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User, Terminal, Monitor } from 'lucide-react';
+import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User, Terminal, Monitor, Radar } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -290,7 +290,19 @@ export function MyWallet() {
               </TabsList>
             </motion.div>
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 space-y-4">
+              {/* CTA Nouvel audit */}
+              <Button
+                variant="hero"
+                className="w-full gap-2"
+                onClick={() => {
+                  // Navigate with a flag to force empty URL field
+                  window.location.href = '/audit-expert?new=1';
+                }}
+              >
+                <Radar className="h-4 w-4" />
+                {language === 'fr' ? 'Nouvel audit' : language === 'es' ? 'Nueva auditoría' : 'New audit'}
+              </Button>
               {/* Branding Tab */}
               <TabsContent value="branding" className="mt-0">
                 <BrandingTab />
