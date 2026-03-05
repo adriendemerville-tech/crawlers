@@ -165,6 +165,9 @@ export function StrategicInsights({
             />
           )}
 
+          {/* Pain Score Module — juste après l'analyse concurrentielle */}
+          <PainScoreCard analysis={analysis} domain={domain} />
+
           {/* Mots clés (doit apparaître entre Écosystème Concurrentiel et Autorité Sociale & Humaine) */}
           <KeywordModuleSection analysis={analysis} domain={domain} />
 
@@ -192,9 +195,6 @@ export function StrategicInsights({
                 <PriorityContentCard domain={domain} />
               </>
             )}
- 
-          {/* Pain Score Module */}
-          <PainScoreCard analysis={analysis} domain={domain} />
 
           {/* Conversational Intent Module */}
           <ConversationalIntentCard analysis={analysis} />
