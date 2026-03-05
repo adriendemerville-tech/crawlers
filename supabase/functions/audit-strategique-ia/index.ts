@@ -764,25 +764,25 @@ GÉNÈRE UN RAPPORT JSON PREMIUM avec cette structure exacte:
       "name": "Nom du leader (Goliath - acteur DOMINANT du marché)",
       "url": "URL du site",
       "authority_factor": "Facteur d'autorité principal (backlinks massifs, présence internationale, notoriété historique)",
-      "analysis": "Analyse de la position dominante - DOIT être un acteur avec: présence internationale OU nationale massive, budget marketing considérable, référence historique du secteur, volume de backlinks 10x+ supérieur au site analysé"
+      "analysis": "Analyse CONCISE de la position dominante (MAX 330 caractères) - acteur avec présence massive, budget marketing considérable, référence historique du secteur"
     },
     "direct_competitor": {
       "name": "Nom du concurrent direct (MÊME taille/surface que le site analysé)",
       "url": "URL du site",
       "authority_factor": "Parité d'offre et de surface commerciale détectée",
-      "analysis": "Analyse comparative - DOIT être une entreprise avec: surface commerciale SIMILAIRE au site analysé, même zone géographique cible, même positionnement prix, même typologie de clientèle, même stade de maturité business"
+      "analysis": "Analyse comparative CONCISE (MAX 330 caractères) - entreprise avec surface commerciale SIMILAIRE, même zone géographique, même positionnement prix"
     },
     "challenger": {
       "name": "Nom du challenger (acteur innovant/disruptif)",
       "url": "URL du site",
       "authority_factor": "Facteur de disruption",
-      "analysis": "Analyse de l'approche disruptive"
+      "analysis": "Analyse CONCISE de l'approche disruptive (MAX 330 caractères)"
     },
     "inspiration_source": {
       "name": "Nom de la source d'inspiration (hors-secteur)",
       "url": "URL du site",
       "authority_factor": "Best practice à adopter",
-      "analysis": "Pourquoi c'est un modèle à suivre"
+      "analysis": "Pourquoi c'est un modèle à suivre (MAX 330 caractères)"
     }
   },
   "geo_readiness": {
