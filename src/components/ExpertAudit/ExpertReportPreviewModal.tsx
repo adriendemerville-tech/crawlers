@@ -73,6 +73,22 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
     });
   }, [summarizedResult, user, auditMode, result]);
 
+  // Auto-save technical report when modal opens
+  useEffect(() => {
+    if (!isOpen || !user || auditMode !== 'technical') return;
+    const saveKey = `${result.url}-${auditMode}`;
+    if (hasSavedRef.current === saveKey) return;
+    hasSavedRef.current = saveKey;
+
+    const domain = (() => { try { return new URL(result.url.startsWith('http') ? result.url : `https://${result.url}`).hostname; } catch { return result.url; } })();
+    saveReport({
+      reportType: 'seo_technical',
+      title: `Audit Technique – ${domain}`,
+      url: result.url,
+      reportData: { result, auditMode },
+    });
+  }, [isOpen, user, auditMode, result]);
+
   const effectiveResult = auditMode === 'strategic' && summarizedResult ? summarizedResult : result;
   const htmlContent = generateExpertReportHTML(effectiveResult, auditMode, t, language, branding);
 
