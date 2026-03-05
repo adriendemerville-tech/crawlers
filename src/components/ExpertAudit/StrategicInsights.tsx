@@ -192,15 +192,13 @@ export function StrategicInsights({
                   selfCorrect
                   strategicAnalysis={analysis}
                 />
+                <ZeroClickRiskCard analysis={analysis} domain={domain} />
                 <PriorityContentCard domain={domain} />
               </>
             )}
 
           {/* Conversational Intent Module */}
           <ConversationalIntentCard analysis={analysis} />
-
-          {/* Zero-Click Risk Matrix */}
-          <ZeroClickRiskCard analysis={analysis} domain={domain} />
 
           {/* Premium Executive Roadmap (Narrative) */}
           {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (
