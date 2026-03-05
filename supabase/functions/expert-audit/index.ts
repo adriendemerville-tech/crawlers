@@ -110,6 +110,28 @@ interface HtmlAnalysis {
   hasSchemaOrg: boolean;
   schemaTypes: string[];
   isHttps: boolean;
+  hasGTM?: boolean;
+  hasGA4?: boolean;
+  imagesTotal?: number;
+  imagesMissingAlt?: number;
+  // Content freshness
+  mostRecentDate?: string | null;
+  contentAgeDays?: number | null;
+  dateSignalsCount?: number;
+  // JS dependency
+  isContentJSDependent?: boolean;
+  staticWordCount?: number;
+  jsContentRatio?: number;
+  hasSPAMarkers?: boolean;
+  // Schema complexity
+  schemaDepth?: number;
+  schemaFieldCount?: number;
+  schemaHasGraph?: boolean;
+  // AI-favored formats
+  hasTLDR?: boolean;
+  tableCount?: number;
+  listCount?: number;
+  hasFAQSection?: boolean;
 }
 
 interface RobotsAnalysis {
@@ -265,7 +287,111 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       const hasAlt = /alt\s*=\s*["'][^"']+["']/i.test(img);
       return !hasAlt;
     }).length;
-    
+
+    // ═══ CONTENT FRESHNESS DETECTION ═══
+    // Check for date signals in meta tags and HTML
+    const lastModifiedMeta = html.match(/<meta[^>]*name=["'](?:last-modified|article:modified_time|og:updated_time)["'][^>]*content=["']([^"']*)["']/i)
+      || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["'](?:last-modified|article:modified_time|og:updated_time)["']/i)
+      || html.match(/<meta[^>]*property=["'](?:article:modified_time|og:updated_time)["'][^>]*content=["']([^"']*)["']/i)
+      || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*property=["'](?:article:modified_time|og:updated_time)["']/i);
+    const publishedMeta = html.match(/<meta[^>]*(?:name|property)=["'](?:article:published_time|og:article:published_time|date|DC\.date)["'][^>]*content=["']([^"']*)["']/i)
+      || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*(?:name|property)=["'](?:article:published_time|date)["']/i);
+
+    // Check dateModified in JSON-LD
+    let jsonLdDateModified: string | null = null;
+    let jsonLdDatePublished: string | null = null;
+    for (const match of schemaMatches) {
+      try {
+        const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
+        const parsed = JSON.parse(jsonContent);
+        const items = parsed['@graph'] ? parsed['@graph'] : [parsed];
+        for (const item of items) {
+          if (item.dateModified) jsonLdDateModified = item.dateModified;
+          if (item.datePublished) jsonLdDatePublished = item.datePublished;
+        }
+      } catch { /* skip */ }
+    }
+
+    // Get Last-Modified HTTP header
+    const lastModifiedHeader = response.headers.get('Last-Modified');
+
+    // Determine most recent date signal
+    const dateSignals: string[] = [
+      lastModifiedMeta?.[1],
+      publishedMeta?.[1],
+      jsonLdDateModified,
+      jsonLdDatePublished,
+      lastModifiedHeader,
+    ].filter(Boolean) as string[];
+
+    let mostRecentDate: string | null = null;
+    let contentAgeDays: number | null = null;
+    const now = new Date();
+    for (const ds of dateSignals) {
+      try {
+        const d = new Date(ds);
+        if (!isNaN(d.getTime())) {
+          if (!mostRecentDate || d > new Date(mostRecentDate)) {
+            mostRecentDate = d.toISOString();
+            contentAgeDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+          }
+        }
+      } catch { /* skip */ }
+    }
+
+    // ═══ JS-DEPENDENCY DETECTION (Is content readable without JS?) ═══
+    // Heuristic: SPA frameworks render into an empty div; check if body has minimal text outside scripts
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const bodyHtml = bodyMatch ? bodyMatch[1] : html;
+    const bodyWithoutScripts = bodyHtml
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const staticWordCount = bodyWithoutScripts.split(' ').filter(w => w.length > 2).length;
+    // Detect SPA markers
+    const hasSPAMarkers = /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<\/div>/i.test(html)
+      || /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<noscript/i.test(html);
+    const jsContentRatio = wordCount > 0 ? staticWordCount / wordCount : 1;
+    const isContentJSDependent = hasSPAMarkers || (staticWordCount < 50 && jsContentRatio < 0.3);
+
+    // ═══ SCHEMA.ORG COMPLEXITY / NESTING ═══
+    let schemaDepth = 0;
+    let schemaFieldCount = 0;
+    let schemaHasGraph = false;
+    for (const match of schemaMatches) {
+      try {
+        const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
+        const parsed = JSON.parse(jsonContent);
+        if (parsed['@graph']) schemaHasGraph = true;
+        const countFields = (obj: any, depth: number): void => {
+          if (depth > schemaDepth) schemaDepth = depth;
+          if (!obj || typeof obj !== 'object') return;
+          if (Array.isArray(obj)) { obj.forEach(i => countFields(i, depth)); return; }
+          for (const [k, v] of Object.entries(obj)) {
+            schemaFieldCount++;
+            if (typeof v === 'object' && v !== null) countFields(v, depth + 1);
+          }
+        };
+        countFields(parsed, 0);
+      } catch { /* skip */ }
+    }
+
+    // ═══ AI-FAVORED FORMATS DETECTION ═══
+    // TL;DR / Summary at top
+    const hasTLDR = /tl;?dr|résumé|en bref|key takeaway|points clés/i.test(
+      html.substring(0, Math.min(html.length, html.indexOf('</body>') > 0 ? html.indexOf('</body>') : html.length)).substring(0, 5000)
+    );
+    // Tables
+    const tableCount = (html.match(/<table[\s>]/gi) || []).length;
+    // Bullet lists
+    const ulCount = (html.match(/<ul[\s>]/gi) || []).length;
+    const olCount = (html.match(/<ol[\s>]/gi) || []).length;
+    const listCount = ulCount + olCount;
+    // FAQ sections (common patterns)
+    const hasFAQSection = /faq|questions? fréquentes|frequently asked/i.test(html);
+
     return {
       hasTitle: titleContent.length > 0,
       titleLength: titleContent.length,
@@ -283,6 +409,24 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasGA4,
       imagesTotal: allImages.length,
       imagesMissingAlt,
+      // Content freshness
+      mostRecentDate,
+      contentAgeDays,
+      dateSignalsCount: dateSignals.length,
+      // JS dependency
+      isContentJSDependent,
+      staticWordCount,
+      jsContentRatio: Math.round(jsContentRatio * 100) / 100,
+      hasSPAMarkers,
+      // Schema complexity
+      schemaDepth,
+      schemaFieldCount,
+      schemaHasGraph,
+      // AI-favored formats
+      hasTLDR,
+      tableCount,
+      listCount,
+      hasFAQSection,
     };
   } catch (error) {
     console.error('HTML analysis failed:', error);
@@ -303,6 +447,20 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasGA4: false,
       imagesTotal: 0,
       imagesMissingAlt: 0,
+      mostRecentDate: null,
+      contentAgeDays: null,
+      dateSignalsCount: 0,
+      isContentJSDependent: false,
+      staticWordCount: 0,
+      jsContentRatio: 1,
+      hasSPAMarkers: false,
+      schemaDepth: 0,
+      schemaFieldCount: 0,
+      schemaHasGraph: false,
+      hasTLDR: false,
+      tableCount: 0,
+      listCount: 0,
+      hasFAQSection: false,
     };
   }
 }
@@ -790,6 +948,160 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
     }
   }
   
+  // ═══ CONTENT FRESHNESS RECOMMENDATION ═══
+  if (htmlAnalysis.contentAgeDays !== null && htmlAnalysis.contentAgeDays !== undefined) {
+    if (htmlAnalysis.contentAgeDays > 365) {
+      recommendations.push({
+        id: 'content-stale',
+        priority: 'critical',
+        category: 'contenu',
+        icon: '🔴',
+        title: 'Contenu obsolète : dernière mise à jour il y a plus d\'un an',
+        description: `Le contenu n'a pas été mis à jour depuis ${htmlAnalysis.contentAgeDays} jours (dernière date détectée : ${htmlAnalysis.mostRecentDate?.substring(0,10)}). Les moteurs IA privilégient les contenus frais et à jour. Google et les LLM accordent un avantage significatif aux pages régulièrement mises à jour.`,
+        weaknesses: [
+          `Dernière mise à jour détectée : il y a ${htmlAnalysis.contentAgeDays} jours`,
+          "Les LLM favorisent les sources récentes pour leurs citations",
+          "Google QDF (Query Deserves Freshness) pénalise les contenus datés",
+          "Risque d'informations périmées qui nuisent à la crédibilité"
+        ],
+        fixes: [
+          "Mettre à jour le contenu principal avec des données 2026",
+          "Ajouter/mettre à jour les balises dateModified dans le JSON-LD",
+          "Publier régulièrement du contenu frais (articles, actualités)",
+          "Actualiser les pages produits avec les dernières offres",
+          "Implémenter un calendrier éditorial de mise à jour trimestriel"
+        ]
+      });
+    } else if (htmlAnalysis.contentAgeDays > 90) {
+      recommendations.push({
+        id: 'content-aging',
+        priority: 'important',
+        category: 'contenu',
+        icon: '🟠',
+        title: 'Contenu vieillissant : mise à jour recommandée',
+        description: `Le contenu date de ${htmlAnalysis.contentAgeDays} jours. Bien que toujours valable, une mise à jour régulière améliorerait la citabilité par les IA génératives et le signal de fraîcheur Google.`,
+        strengths: [
+          "Des signaux de date sont présents sur la page",
+          "Le contenu est encore relativement récent"
+        ],
+        weaknesses: [
+          `Dernière mise à jour : il y a ${htmlAnalysis.contentAgeDays} jours`,
+          "Les concurrents avec du contenu plus frais sont privilégiés"
+        ],
+        fixes: [
+          "Actualiser les données et statistiques avec les plus récentes",
+          "Ajouter une section 'Dernière mise à jour' visible",
+          "Mettre à jour dateModified dans les données structurées"
+        ]
+      });
+    }
+  } else if (htmlAnalysis.dateSignalsCount === 0) {
+    recommendations.push({
+      id: 'no-date-signals',
+      priority: 'important',
+      category: 'ia',
+      icon: '🟠',
+      title: 'Aucun signal de fraîcheur détecté : invisible pour les IA',
+      description: 'Aucune date de publication ou de mise à jour n\'a été détectée sur cette page (ni meta tags, ni JSON-LD, ni header HTTP). Les moteurs IA et Google ne peuvent pas évaluer la fraîcheur du contenu.',
+      weaknesses: [
+        "Aucune balise datePublished ou dateModified en JSON-LD",
+        "Pas de meta article:modified_time ou og:updated_time",
+        "Pas de header HTTP Last-Modified",
+        "Les IA ne peuvent pas juger la pertinence temporelle"
+      ],
+      fixes: [
+        "Ajouter datePublished et dateModified dans le JSON-LD",
+        "Configurer article:modified_time dans les meta Open Graph",
+        "Configurer le serveur pour envoyer le header Last-Modified",
+        "Afficher visuellement la date de dernière mise à jour"
+      ]
+    });
+  }
+
+  // ═══ JS-DEPENDENCY RECOMMENDATION ═══
+  if (htmlAnalysis.isContentJSDependent) {
+    recommendations.push({
+      id: 'js-dependent-content',
+      priority: 'critical',
+      category: 'ia',
+      icon: '🔴',
+      title: 'Contenu invisible sans JavaScript : bots IA bloqués',
+      description: `Le contenu principal de la page nécessite l'exécution de JavaScript pour être affiché (${htmlAnalysis.staticWordCount} mots lisibles sans JS vs ${htmlAnalysis.wordCount} avec). Les crawlers IA basiques (GPTBot, ClaudeBot, CCBot) n'exécutent pas toujours le JavaScript, rendant votre contenu invisible pour les moteurs génératifs.`,
+      weaknesses: [
+        `Seulement ${htmlAnalysis.staticWordCount} mots accessibles sans JavaScript`,
+        htmlAnalysis.hasSPAMarkers ? "Framework SPA détecté (React/Vue/Next/Nuxt) avec rendu côté client" : "Contenu majoritairement généré par JavaScript",
+        "GPTBot et ClaudeBot ne font pas de rendering JS systématique",
+        "Réduction drastique de la citabilité dans les réponses IA"
+      ],
+      fixes: [
+        "Implémenter le Server-Side Rendering (SSR) ou Static Site Generation (SSG)",
+        "Utiliser le pre-rendering pour les crawlers (Prerender.io, Rendertron)",
+        "Ajouter une balise <noscript> avec le contenu principal en texte brut",
+        "Vérifier l'indexabilité avec 'curl -s URL | head -200' (sans JS)",
+        "Configurer le Dynamic Rendering pour servir du HTML statique aux bots"
+      ]
+    });
+  }
+
+  // ═══ SCHEMA COMPLEXITY RECOMMENDATION ═══
+  if (htmlAnalysis.hasSchemaOrg && htmlAnalysis.schemaDepth < 2 && htmlAnalysis.schemaFieldCount < 10) {
+    recommendations.push({
+      id: 'schema-shallow',
+      priority: 'important',
+      category: 'ia',
+      icon: '🟠',
+      title: 'Données structurées superficielles : potentiel inexploité',
+      description: `Vos données structurées Schema.org sont présentes mais peu détaillées (profondeur ${htmlAnalysis.schemaDepth}, ${htmlAnalysis.schemaFieldCount} champs). Des données structurées riches et imbriquées permettent aux IA d'identifier votre site comme une source fiable et experte.`,
+      strengths: [
+        `Types Schema.org détectés : ${htmlAnalysis.schemaTypes.join(', ')}`,
+        "Le balisage de base est en place"
+      ],
+      weaknesses: [
+        `Profondeur d'imbrication : ${htmlAnalysis.schemaDepth} (recommandé : 3+)`,
+        `Seulement ${htmlAnalysis.schemaFieldCount} champs renseignés`,
+        "Les données structurées complexes augmentent la confiance IA",
+        !htmlAnalysis.schemaHasGraph ? "Pas de @graph détecté (recommandé pour lier les entités)" : null
+      ].filter(Boolean),
+      fixes: [
+        "Enrichir les types existants avec tous les champs recommandés par Google",
+        "Utiliser @graph pour lier Organization, WebSite et les pages entre elles",
+        "Ajouter des types imbriqués (author > Person > Organization)",
+        "Inclure sameAs pour lier aux profils sociaux et Wikidata",
+        "Ajouter FAQPage, HowTo ou Review pour les contenus éligibles"
+      ]
+    });
+  }
+
+  // ═══ AI-FAVORED FORMATS RECOMMENDATION ═══
+  const missingFormats: string[] = [];
+  if (!htmlAnalysis.hasTLDR) missingFormats.push('résumé TL;DR en haut de page');
+  if (htmlAnalysis.tableCount === 0) missingFormats.push('tableaux comparatifs');
+  if (htmlAnalysis.listCount < 2) missingFormats.push('listes à puces structurées');
+  if (!htmlAnalysis.hasFAQSection) missingFormats.push('section FAQ');
+
+  if (missingFormats.length >= 2) {
+    recommendations.push({
+      id: 'missing-ai-formats',
+      priority: 'important',
+      category: 'ia',
+      icon: '🟠',
+      title: 'Formats IA absents : contenu non optimisé pour les moteurs génératifs',
+      description: `Votre page ne contient pas les formats de contenu privilégiés par les IA génératives : ${missingFormats.join(', ')}. Ces formats structurés augmentent significativement la probabilité d'être cité dans les réponses de ChatGPT, Perplexity et Google AI Overview.`,
+      weaknesses: [
+        ...missingFormats.map(f => `Format manquant : ${f}`),
+        "Les IA extraient prioritairement les tableaux, listes et résumés",
+        "Contenu non optimisé pour le Featured Snippet / Position 0"
+      ],
+      fixes: [
+        !htmlAnalysis.hasTLDR ? "Ajouter un résumé TL;DR ou 'En bref' dans les 200 premiers mots de la page" : null,
+        htmlAnalysis.tableCount === 0 ? "Créer des tableaux comparatifs (prix, caractéristiques, alternatives)" : null,
+        htmlAnalysis.listCount < 2 ? "Structurer les informations clés en listes à puces ou numérotées" : null,
+        !htmlAnalysis.hasFAQSection ? "Ajouter une section FAQ avec les questions fréquentes du secteur" : null,
+        "Utiliser des H2 interrogatifs ('Comment...?', 'Pourquoi...?') pour capter les requêtes IA"
+      ].filter(Boolean)
+    });
+  }
+
   // Robots.txt analysis
   if (!scores.aiReady?.robotsPermissive) {
     recommendations.push({

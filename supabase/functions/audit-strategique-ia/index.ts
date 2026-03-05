@@ -788,9 +788,14 @@ D. POSITIONNEMENT MOTS CLÉS (BASÉ SUR DONNÉES RÉELLES DATAFORSEO)
 13. Gaps Concurrentiels: Mots clés à fort volume où le site n'est pas classé
 
 E. FONDATIONS TECHNIQUES & SÉMANTIQUES
-14. Accessibilité Bots IA: Facilité de lecture pour les agents autonomes
+14. Accessibilité Bots IA: Facilité de lecture pour les agents autonomes + lisibilité du contenu SANS exécution JavaScript (contenu statique vs rendu JS)
 15. Infrastructure Performance: Impact de la vitesse sur la rétention IA/Humaine
-16. Cohérence Sémantique: Alignement du message Title/H1`;
+16. Cohérence Sémantique: Alignement du message Title/H1
+
+F. FRAÎCHEUR & FORMATS IA
+17. Fraîcheur des contenus: Y a-t-il des contenus mis à jour récemment (< 30 jours)? Les pages produits sont-elles à jour en 2026? Signaux dateModified/datePublished détectés?
+18. Complexité des données structurées: Profondeur d'imbrication Schema.org, utilisation de @graph, nombre de champs - les IA identifient les sources riches en données structurées complexes
+19. Formats IA-Ready: Présence de résumé TL;DR en haut de page, tableaux comparatifs, listes à puces, sections FAQ - formats privilégiés par les moteurs génératifs pour l'extraction de citations`;
 
 function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null): string {
   let marketDataSection = '';
@@ -936,6 +941,32 @@ GÉNÈRE UN RAPPORT JSON PREMIUM avec cette structure exacte:
     "semantic_coherence": {
       "title_h1_alignment": 0-100,
       "verdict": "Verdict sur la cohérence sémantique Title/H1"
+    },
+    "content_freshness": {
+      "has_recent_content": true/false,
+      "last_update_days": 0,
+      "verdict": "Verdict sur la fraîcheur: frais (<30j) / acceptable (30-90j) / vieillissant (90-365j) / obsolète (>365j) / inconnu",
+      "recommendation": "Recommandation spécifique pour la fraîcheur"
+    },
+    "js_dependency": {
+      "is_js_dependent": true/false,
+      "static_readability_score": 0-100,
+      "verdict": "Le contenu principal est-il lisible sans JS par les bots IA basiques?"
+    },
+    "structured_data_depth": {
+      "complexity_score": 0-100,
+      "nesting_depth": 0,
+      "uses_graph": true/false,
+      "verdict": "Évaluation de la richesse des données structurées pour identification comme source IA"
+    },
+    "ai_favored_formats": {
+      "has_tldr": true/false,
+      "has_tables": true/false,
+      "has_lists": true/false,
+      "has_faq": true/false,
+      "format_score": 0-100,
+      "missing_formats": ["format manquant 1"],
+      "verdict": "Évaluation de la présence des formats privilégiés par les IA génératives"
     }
   },
   "keyword_positioning": {
