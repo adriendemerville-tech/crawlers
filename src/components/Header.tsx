@@ -358,13 +358,8 @@ export function Header() {
                         {t.console}
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild className={isAgencyPro ? "gap-2 cursor-pointer" : "gap-2 cursor-default hover:bg-transparent focus:bg-transparent"}>
-                      {isAgencyPro ? (
-                        <Link to="/console?tab=wallet" className="gap-2 cursor-pointer">
-                          <Crown className="h-4 w-4 text-yellow-500" />
-                          <span className="text-yellow-500 font-semibold">Pro Agency</span>
-                        </Link>
-                      ) : (
+                    {!isAgencyPro && (
+                      <DropdownMenuItem asChild className="gap-2 cursor-default hover:bg-transparent focus:bg-transparent">
                         <div>
                           <Wallet className="h-4 w-4 text-amber-500" />
                           <span>{t.wallet}</span>
@@ -373,8 +368,8 @@ export function Header() {
                             <CreditCoin size="sm" />
                           </span>
                         </div>
-                      )}
-                    </DropdownMenuItem>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
                       <Link to="/console?tab=settings" className="gap-2 cursor-pointer">
