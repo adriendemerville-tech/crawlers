@@ -357,6 +357,20 @@ export interface GeoReadiness {
   js_dependency?: JsDependency;
   structured_data_depth?: StructuredDataDepth;
   ai_favored_formats?: AIFavoredFormats;
+  eeat_signals?: {
+    has_author_bios: boolean;
+    has_expert_citations: boolean;
+    data_density_score: number;
+    has_case_studies: boolean;
+    verdict: string;
+  };
+  knowledge_graph_readiness?: {
+    has_social_links: boolean;
+    has_linkedin_profiles: boolean;
+    has_wikidata_sameas: boolean;
+    entity_recognizability_score: number;
+    verdict: string;
+  };
 }
 
 // Hallucination correction data stored for reference

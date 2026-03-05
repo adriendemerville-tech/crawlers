@@ -132,6 +132,36 @@ interface HtmlAnalysis {
   tableCount?: number;
   listCount?: number;
   hasFAQSection?: boolean;
+  // Schema entity validation
+  schemaEntities?: {
+    hasOrganization: boolean;
+    hasProduct: boolean;
+    hasArticle: boolean;
+    hasReview: boolean;
+    hasFAQPage: boolean;
+    hasWebSite: boolean;
+    hasBreadcrumb: boolean;
+    hasPerson: boolean;
+  };
+  // FAQ + FAQPage coupling
+  hasFAQWithSchema?: boolean;
+  // E-E-A-T signals
+  hasAuthorBio?: boolean;
+  authorBioCount?: number;
+  hasExpertCitations?: boolean;
+  expertCitationCount?: number;
+  // Data density
+  dataDensityScore?: number;
+  statisticCount?: number;
+  percentageCount?: number;
+  // Social / LinkedIn links
+  hasSocialLinks?: boolean;
+  hasLinkedInLinks?: boolean;
+  socialLinksCount?: number;
+  linkedInLinksCount?: number;
+  // Case studies
+  hasCaseStudies?: boolean;
+  caseStudySignals?: number;
 }
 
 interface RobotsAnalysis {
@@ -392,6 +422,98 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     // FAQ sections (common patterns)
     const hasFAQSection = /faq|questions? fréquentes|frequently asked/i.test(html);
 
+    // ═══ SCHEMA ENTITY VALIDATION ═══
+    const schemaEntities = {
+      hasOrganization: schemaTypes.some(t => /organization/i.test(t)),
+      hasProduct: schemaTypes.some(t => /product/i.test(t)),
+      hasArticle: schemaTypes.some(t => /article|blogposting|newsarticle/i.test(t)),
+      hasReview: schemaTypes.some(t => /review/i.test(t)),
+      hasFAQPage: schemaTypes.some(t => /faqpage/i.test(t)),
+      hasWebSite: schemaTypes.some(t => /website/i.test(t)),
+      hasBreadcrumb: schemaTypes.some(t => /breadcrumb/i.test(t)),
+      hasPerson: schemaTypes.some(t => /person/i.test(t)),
+    };
+
+    // FAQ + FAQPage coupling check
+    const hasFAQWithSchema = hasFAQSection && schemaEntities.hasFAQPage;
+
+    // ═══ E-E-A-T SIGNALS ═══
+    // Author bios: look for common patterns
+    const authorPatterns = [
+      /(?:author|auteur|écrit par|rédigé par|by)\s*[:：]?\s*[A-ZÀ-Ü][a-zà-ü]+/gi,
+      /<[^>]*class=["'][^"']*(?:author|auteur|bio|expert)[^"']*["'][^>]*>/gi,
+      /itemprop=["']author["']/gi,
+    ];
+    let authorBioCount = 0;
+    for (const pattern of authorPatterns) {
+      const matches = html.match(pattern) || [];
+      authorBioCount += matches.length;
+    }
+    const hasAuthorBio = authorBioCount > 0;
+
+    // Expert citations: quotes, expert names, study references
+    const expertCitationPatterns = [
+      /(?:selon|d'après|affirme|explique|déclare)\s+[A-ZÀ-Ü][a-zà-ü]+\s+[A-ZÀ-Ü][a-zà-ü]+/gi,
+      /(?:according to|says|explains|notes)\s+[A-Z][a-z]+\s+[A-Z][a-z]+/gi,
+      /<blockquote[^>]*>/gi,
+      /(?:étude|study|research|rapport|report)\s+(?:de|by|from|du|publiée?)/gi,
+    ];
+    let expertCitationCount = 0;
+    for (const pattern of expertCitationPatterns) {
+      const matches = textContent.match(pattern) || [];
+      expertCitationCount += matches.length;
+    }
+    const hasExpertCitations = expertCitationCount > 0;
+
+    // ═══ DATA DENSITY (statistics, percentages, numbers) ═══
+    const percentageMatches = textContent.match(/\d+[\.,]?\d*\s*%/g) || [];
+    const percentageCount = percentageMatches.length;
+    const statisticPatterns = [
+      /\d+[\s ]?(?:millions?|milliards?|billion|million|k€|M€|k\$|M\$)/gi,
+      /(?:×|x)\s*\d+/gi,
+      /\+\s*\d+[\.,]?\d*\s*%/gi,
+      /\d+[\.,]?\d*\s*(?:fois|times)/gi,
+      /(?:de|from)\s+\d+\s+(?:à|to)\s+\d+/gi,
+    ];
+    let statisticCount = percentageCount;
+    for (const pattern of statisticPatterns) {
+      const matches = textContent.match(pattern) || [];
+      statisticCount += matches.length;
+    }
+    // Score: 0-100, based on data points per 500 words
+    const dataDensityScore = Math.min(100, Math.round((statisticCount / Math.max(1, wordCount / 500)) * 25));
+
+    // ═══ SOCIAL / LINKEDIN LINKS ═══
+    const socialLinkPatterns = [
+      /href=["'][^"']*linkedin\.com[^"']*["']/gi,
+      /href=["'][^"']*twitter\.com[^"']*["']/gi,
+      /href=["'][^"']*x\.com[^"']*["']/gi,
+      /href=["'][^"']*facebook\.com[^"']*["']/gi,
+      /href=["'][^"']*youtube\.com[^"']*["']/gi,
+      /href=["'][^"']*instagram\.com[^"']*["']/gi,
+    ];
+    let socialLinksCount = 0;
+    for (const pattern of socialLinkPatterns) {
+      socialLinksCount += (html.match(pattern) || []).length;
+    }
+    const linkedInLinks = html.match(/href=["'][^"']*linkedin\.com\/(?:in|company)\/[^"']*["']/gi) || [];
+    const linkedInLinksCount = linkedInLinks.length;
+    const hasSocialLinks = socialLinksCount > 0;
+    const hasLinkedInLinks = linkedInLinksCount > 0;
+
+    // ═══ CASE STUDIES DETECTION ═══
+    const caseStudyPatterns = [
+      /(?:étude[s]?\s+de\s+cas|case\s+stud(?:y|ies))/gi,
+      /(?:résultat[s]?\s+client|client\s+result|success\s+stor(?:y|ies)|témoignage[s]?\s+client)/gi,
+      /(?:avant[\s\/]+après|before[\s\/]+after)/gi,
+      /(?:ROI|retour sur investissement)\s*[:：]?\s*[\+]?\d/gi,
+    ];
+    let caseStudySignals = 0;
+    for (const pattern of caseStudyPatterns) {
+      caseStudySignals += (textContent.match(pattern) || []).length;
+    }
+    const hasCaseStudies = caseStudySignals > 0;
+
     return {
       hasTitle: titleContent.length > 0,
       titleLength: titleContent.length,
@@ -427,6 +549,26 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       tableCount,
       listCount,
       hasFAQSection,
+      // Schema entities
+      schemaEntities,
+      hasFAQWithSchema,
+      // E-E-A-T
+      hasAuthorBio,
+      authorBioCount,
+      hasExpertCitations,
+      expertCitationCount,
+      // Data density
+      dataDensityScore,
+      statisticCount,
+      percentageCount,
+      // Social links
+      hasSocialLinks,
+      hasLinkedInLinks,
+      socialLinksCount,
+      linkedInLinksCount,
+      // Case studies
+      hasCaseStudies,
+      caseStudySignals,
     };
   } catch (error) {
     console.error('HTML analysis failed:', error);
@@ -461,6 +603,21 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       tableCount: 0,
       listCount: 0,
       hasFAQSection: false,
+      schemaEntities: { hasOrganization: false, hasProduct: false, hasArticle: false, hasReview: false, hasFAQPage: false, hasWebSite: false, hasBreadcrumb: false, hasPerson: false },
+      hasFAQWithSchema: false,
+      hasAuthorBio: false,
+      authorBioCount: 0,
+      hasExpertCitations: false,
+      expertCitationCount: 0,
+      dataDensityScore: 0,
+      statisticCount: 0,
+      percentageCount: 0,
+      hasSocialLinks: false,
+      hasLinkedInLinks: false,
+      socialLinksCount: 0,
+      linkedInLinksCount: 0,
+      hasCaseStudies: false,
+      caseStudySignals: 0,
     };
   }
 }
@@ -494,6 +651,56 @@ async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
     };
   } catch {
     return { exists: false, permissive: true, content: '' };
+  }
+}
+
+interface SitemapAnalysis {
+  exists: boolean;
+  urlCount: number;
+  containsMainUrl: boolean;
+}
+
+async function checkSitemap(url: string): Promise<SitemapAnalysis> {
+  console.log('Checking sitemap.xml...');
+  
+  try {
+    const origin = new URL(url).origin;
+    const normalizedPath = new URL(url).pathname;
+    const sitemapUrl = `${origin}/sitemap.xml`;
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(sitemapUrl, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0)' }
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      return { exists: false, urlCount: 0, containsMainUrl: false };
+    }
+    
+    const content = await response.text();
+    const locMatches = content.match(/<loc>[^<]+<\/loc>/gi) || [];
+    const urls = locMatches.map(m => m.replace(/<\/?loc>/gi, '').trim());
+    
+    // Check if the analyzed URL (or its path) is in the sitemap
+    const containsMainUrl = urls.some(u => {
+      try {
+        const sitemapPath = new URL(u).pathname;
+        return sitemapPath === normalizedPath || u === url;
+      } catch { return false; }
+    });
+    
+    return {
+      exists: true,
+      urlCount: urls.length,
+      containsMainUrl,
+    };
+  } catch {
+    return { exists: false, urlCount: 0, containsMainUrl: false };
   }
 }
 
@@ -598,7 +805,7 @@ interface RecommendationItem {
   fixes?: string[];
 }
 
-function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiData: any): RecommendationItem[] {
+function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiData: any, crawlersResult?: any, sitemapAnalysis?: SitemapAnalysis): RecommendationItem[] {
   const recommendations: RecommendationItem[] = [];
   const audits = psiData?.lighthouseResult?.audits || {};
   
@@ -1102,7 +1309,38 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
     });
   }
 
-  // Robots.txt analysis
+  // ═══ AI BOTS SPECIFIC CHECK (GPTBot, ClaudeBot, PerplexityBot) ═══
+  if (crawlersResult) {
+    const criticalBots = [
+      { key: 'gptBot', name: 'GPTBot', company: 'OpenAI' },
+      { key: 'claudeBot', name: 'ClaudeBot', company: 'Anthropic' },
+      { key: 'perplexityBot', name: 'PerplexityBot', company: 'Perplexity' },
+    ];
+    const blockedCritical = criticalBots.filter(b => !crawlersResult.allowsAIBots?.[b.key]);
+    
+    if (blockedCritical.length > 0) {
+      recommendations.push({
+        id: 'critical-bots-blocked',
+        priority: 'critical',
+        category: 'ia',
+        icon: '🔴',
+        title: `Bots IA critiques bloqués : ${blockedCritical.map(b => b.name).join(', ')}`,
+        description: `${blockedCritical.length} crawler(s) IA essentiels sont bloqués dans votre robots.txt. Sans accès, votre site est INVISIBLE pour les moteurs génératifs correspondants. C'est un blocage critique pour la visibilité GEO.`,
+        weaknesses: [
+          ...blockedCritical.map(b => `${b.name} (${b.company}) : BLOQUÉ — votre contenu ne sera pas cité dans ${b.company}`),
+          "Perte totale de visibilité dans les réponses IA de ces moteurs",
+          "Les utilisateurs qui cherchent via ChatGPT, Claude ou Perplexity ne vous trouveront jamais"
+        ],
+        fixes: [
+          ...blockedCritical.map(b => `Ajouter 'User-agent: ${b.name}\\nAllow: /' dans robots.txt`),
+          "Supprimer les directives Disallow ciblant ces bots",
+          "Vérifier qu'aucun meta tag 'noindex' ne cible ces agents"
+        ]
+      });
+    }
+  }
+
+  // Robots.txt analysis (generic)
   if (!scores.aiReady?.robotsPermissive) {
     recommendations.push({
       id: 'robots-restrictive',
@@ -1110,17 +1348,212 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
       category: 'ia',
       icon: '🟠',
       title: 'Robots.txt restrictif : crawlers IA potentiellement bloqués',
-      description: 'Votre fichier robots.txt pourrait bloquer les crawlers des LLM (GPTBot, ClaudeBot, PerplexityBot). Cela réduit vos chances d\'être cité dans les réponses génératives.',
+      description: 'Votre fichier robots.txt contient des règles restrictives qui pourraient bloquer les crawlers IA.',
       weaknesses: [
         "Le robots.txt contient des règles Disallow restrictives",
-        "Les bots IA modernes pourraient être bloqués",
-        "Réduction de la visibilité dans les moteurs génératifs"
+        "Les bots IA modernes pourraient être bloqués"
       ],
       fixes: [
         "Vérifier que GPTBot, ClaudeBot, PerplexityBot ne sont pas bloqués",
-        "Ajouter des règles Allow explicites pour les crawlers IA si nécessaire",
-        "Supprimer les Disallow: / génériques qui bloquent tout",
-        "Tester avec robots.txt Tester de Google Search Console"
+        "Ajouter des règles Allow explicites pour les crawlers IA",
+        "Supprimer les Disallow: / génériques"
+      ]
+    });
+  }
+
+  // ═══ SITEMAP CHECK ═══
+  if (sitemapAnalysis) {
+    if (!sitemapAnalysis.exists) {
+      recommendations.push({
+        id: 'no-sitemap',
+        priority: 'important',
+        category: 'technique',
+        icon: '🟠',
+        title: 'Sitemap.xml absent : pages non déclarées aux moteurs',
+        description: 'Aucun fichier sitemap.xml n\'a été détecté. Le sitemap est essentiel pour déclarer vos pages prioritaires aux moteurs de recherche et aux crawlers IA.',
+        weaknesses: [
+          "Aucun sitemap.xml accessible à la racine du site",
+          "Les moteurs ne connaissent pas la liste complète de vos pages",
+          "Crawl budget potentiellement gaspillé sur des pages secondaires",
+          "Les nouveaux contenus sont découverts plus lentement"
+        ],
+        fixes: [
+          "Créer un fichier sitemap.xml à la racine du site",
+          "Inclure toutes les pages importantes avec les balises <loc> et <lastmod>",
+          "Déclarer le sitemap dans le robots.txt avec 'Sitemap: https://...'",
+          "Soumettre le sitemap dans Google Search Console"
+        ]
+      });
+    } else if (!sitemapAnalysis.containsMainUrl) {
+      recommendations.push({
+        id: 'page-not-in-sitemap',
+        priority: 'important',
+        category: 'technique',
+        icon: '🟠',
+        title: 'Page absente du sitemap : risque de non-indexation',
+        description: `Le sitemap.xml existe (${sitemapAnalysis.urlCount} URLs) mais la page analysée n'y figure pas. Les pages non déclarées dans le sitemap ont moins de chances d'être crawlées et indexées régulièrement.`,
+        weaknesses: [
+          "La page analysée n'est pas déclarée dans le sitemap",
+          `Le sitemap contient ${sitemapAnalysis.urlCount} URLs mais pas celle-ci`,
+          "Priorité d'indexation réduite pour cette page"
+        ],
+        fixes: [
+          "Ajouter cette URL dans le sitemap.xml",
+          "Vérifier que toutes les pages importantes sont incluses",
+          "Mettre à jour le <lastmod> à chaque modification de contenu"
+        ]
+      });
+    }
+  }
+
+  // ═══ SCHEMA ENTITY VALIDATION ═══
+  if (htmlAnalysis.hasSchemaOrg && htmlAnalysis.schemaEntities) {
+    const entities = htmlAnalysis.schemaEntities;
+    const missingEntities: string[] = [];
+    if (!entities.hasOrganization && !entities.hasPerson) missingEntities.push('Organization ou Person');
+    if (!entities.hasWebSite) missingEntities.push('WebSite');
+    
+    if (missingEntities.length > 0) {
+      recommendations.push({
+        id: 'missing-core-schema-entities',
+        priority: 'important',
+        category: 'ia',
+        icon: '🟠',
+        title: 'Entités Schema.org fondamentales manquantes',
+        description: `Vos données structurées existent mais ne contiennent pas les entités de base : ${missingEntities.join(', ')}. Ces entités sont indispensables pour que les IA identifient clairement votre marque et votre site.`,
+        weaknesses: [
+          ...missingEntities.map(e => `Entité ${e} absente du JSON-LD`),
+          "Les IA ne peuvent pas identifier l'entité propriétaire du site",
+          "Pas de sameAs pour lier aux profils sociaux et Knowledge Graph"
+        ],
+        fixes: [
+          !entities.hasOrganization ? "Ajouter Organization avec name, url, logo, sameAs, contactPoint" : null,
+          !entities.hasWebSite ? "Ajouter WebSite avec name, url, potentialAction (SearchAction)" : null,
+          "Utiliser @graph pour lier Organization → WebSite → WebPage",
+          "Ajouter sameAs avec les URLs Wikidata, LinkedIn, profils sociaux"
+        ].filter(Boolean)
+      });
+    }
+  }
+
+  // ═══ FAQ + FAQPAGE COUPLING ═══
+  if (htmlAnalysis.hasFAQSection && !htmlAnalysis.hasFAQWithSchema) {
+    recommendations.push({
+      id: 'faq-without-schema',
+      priority: 'important',
+      category: 'ia',
+      icon: '🟠',
+      title: 'FAQ détectée mais sans données structurées FAQPage',
+      description: 'Votre page contient une section FAQ mais elle n\'est pas couplée avec le balisage FAQPage Schema.org. Sans ce balisage, Google ne peut pas afficher les rich snippets FAQ et les IA ne peuvent pas extraire les Q&A de manière structurée.',
+      weaknesses: [
+        "Section FAQ présente dans le HTML mais sans FAQPage Schema",
+        "Pas de rich snippets FAQ possibles dans les résultats Google",
+        "Les IA doivent parser le HTML brut au lieu de données structurées",
+        "Opportunité de visibilité significative perdue"
+      ],
+      fixes: [
+        "Ajouter un bloc JSON-LD de type FAQPage avec les mainEntity",
+        "Chaque question doit être un objet Question avec acceptedAnswer",
+        "Valider avec Google Rich Results Test",
+        "S'assurer que les questions correspondent au contenu visible"
+      ]
+    });
+  }
+
+  // ═══ E-E-A-T SIGNALS ═══
+  if (!htmlAnalysis.hasAuthorBio && !htmlAnalysis.hasExpertCitations) {
+    recommendations.push({
+      id: 'no-eeat-signals',
+      priority: 'important',
+      category: 'contenu',
+      icon: '🟠',
+      title: 'Signaux E-E-A-T absents : crédibilité non démontrée',
+      description: 'Aucune signature d\'auteur ni citation d\'expert n\'a été détectée. Google et les IA évaluent la crédibilité via les signaux E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness). Leur absence réduit la confiance accordée à votre contenu.',
+      weaknesses: [
+        "Aucune bio d'auteur (Author Bio) détectée",
+        "Aucune citation d'expert ou de source faisant autorité",
+        "Le contenu semble anonyme — faible signal de confiance",
+        "Les IA favorisent les contenus avec attribution claire"
+      ],
+      fixes: [
+        "Ajouter une bio d'auteur avec nom, photo, titre et liens sociaux",
+        "Inclure des citations d'experts du secteur (avec nom + titre)",
+        "Ajouter des blockquotes avec attribution de source",
+        "Implémenter le Schema Person pour les auteurs dans le JSON-LD",
+        "Référencer des études, rapports ou données de sources reconnues"
+      ]
+    });
+  }
+
+  // ═══ DATA DENSITY ═══
+  if ((htmlAnalysis.dataDensityScore || 0) < 20 && (htmlAnalysis.wordCount || 0) > 300) {
+    recommendations.push({
+      id: 'low-data-density',
+      priority: 'important',
+      category: 'ia',
+      icon: '🟠',
+      title: 'Faible densité de données : contenu peu citable par les IA',
+      description: `Votre page contient très peu de données chiffrées (${htmlAnalysis.statisticCount || 0} statistiques, ${htmlAnalysis.percentageCount || 0} pourcentages). Les IA génératives privilégient les contenus riches en données factuelles pour les citer dans leurs réponses.`,
+      weaknesses: [
+        `Score de densité de données : ${htmlAnalysis.dataDensityScore}/100`,
+        `Seulement ${htmlAnalysis.statisticCount || 0} points de données détectés`,
+        "Les contenus sans chiffres sont rarement cités par les IA",
+        "Manque de preuves quantitatives pour convaincre les lecteurs"
+      ],
+      fixes: [
+        "Ajouter des statistiques sectorielles avec sources (ex: 'selon une étude XYZ, 78% des...')",
+        "Inclure des métriques de résultats concrets (chiffre d'affaires, croissance, ROI)",
+        "Créer des tableaux comparatifs avec des données chiffrées",
+        "Intégrer des pourcentages, dates et ordres de grandeur dans le texte",
+        "Citer des études de marché, rapports et benchmarks du secteur"
+      ]
+    });
+  }
+
+  // ═══ SOCIAL / LINKEDIN LINKS ═══
+  if (!htmlAnalysis.hasLinkedInLinks && !htmlAnalysis.hasSocialLinks) {
+    recommendations.push({
+      id: 'no-social-links',
+      priority: 'optional',
+      category: 'ia',
+      icon: '🟡',
+      title: 'Aucun lien vers les profils sociaux : crédibilité humaine non prouvée',
+      description: 'Aucun lien vers des profils sociaux (LinkedIn, Twitter/X, etc.) n\'a été détecté. Les profils sociaux, notamment LinkedIn, valident la crédibilité humaine de l\'équipe et renforcent les signaux E-E-A-T.',
+      weaknesses: [
+        "Aucun lien LinkedIn d'équipe ou de fondateur détecté",
+        "Aucun profil social lié à la marque",
+        "Les IA ne peuvent pas vérifier l'existence réelle de l'entité",
+        "Signal de confiance humaine absent"
+      ],
+      fixes: [
+        "Ajouter les liens LinkedIn des fondateurs/experts dans la page",
+        "Créer une section 'Notre équipe' avec les profils LinkedIn",
+        "Ajouter les sameAs dans le JSON-LD Organization (LinkedIn, Twitter, etc.)",
+        "Inclure des liens vers la page LinkedIn Company"
+      ]
+    });
+  }
+
+  // ═══ CASE STUDIES ═══
+  if (!htmlAnalysis.hasCaseStudies && (htmlAnalysis.wordCount || 0) > 500) {
+    recommendations.push({
+      id: 'no-case-studies',
+      priority: 'optional',
+      category: 'contenu',
+      icon: '🟡',
+      title: 'Absence d\'études de cas : preuves de résultats manquantes',
+      description: 'Aucune étude de cas, témoignage client avec métriques, ni preuve de résultats n\'a été détectée. Les études de cas avec des données concrètes sont parmi les contenus les plus cités par les IA et les plus valorisés par Google.',
+      weaknesses: [
+        "Aucun signal d'étude de cas (case study) détecté",
+        "Pas de métriques de résultats (ROI, croissance, avant/après)",
+        "Les IA citent en priorité les contenus avec preuves concrètes",
+        "Opportunité de content marketing hautement citable manquée"
+      ],
+      fixes: [
+        "Créer des études de cas clients avec des métriques avant/après",
+        "Inclure des chiffres concrets (ROI, % de croissance, gains mesurables)",
+        "Structurer avec le schéma : Contexte → Défi → Solution → Résultats",
+        "Ajouter le balisage Review ou Article pour ces contenus"
       ]
     });
   }
@@ -1153,12 +1586,13 @@ serve(async (req) => {
     console.log('Starting Expert Audit for:', normalizedUrl);
     
     // Run all checks in parallel
-    const [psiData, safeBrowsing, htmlAnalysis, robotsAnalysis, crawlersResult] = await Promise.all([
+    const [psiData, safeBrowsing, htmlAnalysis, robotsAnalysis, crawlersResult, sitemapAnalysis] = await Promise.all([
       fetchPageSpeedData(normalizedUrl),
       checkSafeBrowsing(normalizedUrl),
       analyzeHtml(normalizedUrl),
       checkRobotsTxt(normalizedUrl),
-      checkCrawlers(normalizedUrl)
+      checkCrawlers(normalizedUrl),
+      checkSitemap(normalizedUrl)
     ]);
     
     const categories = psiData.lighthouseResult?.categories || {};
@@ -1244,7 +1678,7 @@ serve(async (req) => {
       },
     };
     
-    const recommendations = generateRecommendations(scores, htmlAnalysis, psiData);
+    const recommendations = generateRecommendations(scores, htmlAnalysis, psiData, crawlersResult, sitemapAnalysis);
     
     // Generate narrative introduction using AI
     let introduction = null;
@@ -1356,6 +1790,7 @@ Réponds avec ce JSON exact:
             htmlAnalysis,
             robotsAnalysis,
             crawlersData: crawlersResult,
+            sitemapAnalysis,
           }
         }
       }),

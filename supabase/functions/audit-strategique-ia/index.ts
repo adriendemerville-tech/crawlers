@@ -794,8 +794,14 @@ E. FONDATIONS TECHNIQUES & SÉMANTIQUES
 
 F. FRAÎCHEUR & FORMATS IA
 17. Fraîcheur des contenus: Y a-t-il des contenus mis à jour récemment (< 30 jours)? Les pages produits sont-elles à jour en 2026? Signaux dateModified/datePublished détectés?
-18. Complexité des données structurées: Profondeur d'imbrication Schema.org, utilisation de @graph, nombre de champs - les IA identifient les sources riches en données structurées complexes
-19. Formats IA-Ready: Présence de résumé TL;DR en haut de page, tableaux comparatifs, listes à puces, sections FAQ - formats privilégiés par les moteurs génératifs pour l'extraction de citations`;
+18. Complexité des données structurées: Profondeur d'imbrication Schema.org, utilisation de @graph, nombre de champs - les IA identifient les sources riches en données structurées complexes. Valide la présence des entités Organization, Product, Article, Review.
+19. Formats IA-Ready: Présence de résumé TL;DR en haut de page, tableaux comparatifs, listes à puces, sections FAQ couplées avec FAQPage Schema
+
+G. AUTORITÉ & CRÉDIBILITÉ (E-E-A-T & Knowledge Graph)
+20. Signaux E-E-A-T: Présence de bios d'auteurs, citations d'experts nommés, blockquotes avec attribution. Évaluation de la crédibilité humaine du contenu.
+21. Densité de données: Évaluation de la richesse factuelle (statistiques, pourcentages, métriques de résultats, études citées). Les IA citent les contenus riches en données.
+22. Knowledge Graph Readiness: L'entité de la marque correspond-elle à un Knowledge Panel existant? Présence de citations externes de haute autorité? Liens sameAs vers Wikidata, Wikipedia? Profils LinkedIn d'équipe détectés?
+23. Études de cas & Social Proof: Détection de case studies avec métriques de résultats (ROI, avant/après), témoignages clients chiffrés, liens vers profils sociaux (LinkedIn surtout) validant la crédibilité humaine.`;
 
 function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null): string {
   let marketDataSection = '';
@@ -967,6 +973,20 @@ GÉNÈRE UN RAPPORT JSON PREMIUM avec cette structure exacte:
       "format_score": 0-100,
       "missing_formats": ["format manquant 1"],
       "verdict": "Évaluation de la présence des formats privilégiés par les IA génératives"
+    },
+    "eeat_signals": {
+      "has_author_bios": true/false,
+      "has_expert_citations": true/false,
+      "data_density_score": 0-100,
+      "has_case_studies": true/false,
+      "verdict": "Évaluation des signaux E-E-A-T détectés"
+    },
+    "knowledge_graph_readiness": {
+      "has_social_links": true/false,
+      "has_linkedin_profiles": true/false,
+      "has_wikidata_sameas": true/false,
+      "entity_recognizability_score": 0-100,
+      "verdict": "L'entité est-elle identifiable par les Knowledge Graphs et les IA?"
     }
   },
   "keyword_positioning": {
