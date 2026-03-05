@@ -314,6 +314,36 @@ export interface MarketDataSummary {
   data_source: 'dataforseo' | 'fallback';
 }
 
+export interface ContentFreshness {
+  has_recent_content: boolean;
+  last_update_days: number;
+  verdict: string;
+  recommendation: string;
+}
+
+export interface JsDependency {
+  is_js_dependent: boolean;
+  static_readability_score: number;
+  verdict: string;
+}
+
+export interface StructuredDataDepth {
+  complexity_score: number;
+  nesting_depth: number;
+  uses_graph: boolean;
+  verdict: string;
+}
+
+export interface AIFavoredFormats {
+  has_tldr: boolean;
+  has_tables: boolean;
+  has_lists: boolean;
+  has_faq: boolean;
+  format_score: number;
+  missing_formats: string[];
+  verdict: string;
+}
+
 export interface GeoReadiness {
   citability_score: number; // 0-100
   semantic_gap_analysis: SemanticGapMatrix;
@@ -323,6 +353,10 @@ export interface GeoReadiness {
     title_h1_alignment: number; // 0-100
     verdict: string;
   };
+  content_freshness?: ContentFreshness;
+  js_dependency?: JsDependency;
+  structured_data_depth?: StructuredDataDepth;
+  ai_favored_formats?: AIFavoredFormats;
 }
 
 // Hallucination correction data stored for reference
