@@ -106,14 +106,6 @@ export function ActionPlanCard({
                     )}
                   </div>
                 </div>
-                
-                {/* Description */}
-                <p className={cn(
-                  "text-sm text-muted-foreground leading-relaxed",
-                  isCompleted && "line-through"
-                )}>
-                  {recommendation.description}
-                </p>
 
                 {/* Expandable Details */}
                 <CollapsibleContent className="space-y-3 pt-3">
