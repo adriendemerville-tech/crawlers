@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Download, Loader2, Check, Copy, Mail, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -6,6 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useSaveReport } from '@/hooks/useSaveReport';
 import { CrawlResult } from '@/types/crawler';
 import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
@@ -90,6 +91,8 @@ export function ReportPreviewModal({
   const [isSharing, setIsSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const { saveReport } = useSaveReport();
+  const hasSavedRef = useRef<string | null>(null);
 
   const t = reportTranslations[language as keyof typeof reportTranslations] || reportTranslations.fr;
 
@@ -157,6 +160,31 @@ export function ReportPreviewModal({
   // Check if we have any data at all
   const hasAnyData = crawlResult || geoResult || llmResult || pageSpeedResult;
   if (!hasAnyData) return null;
+
+  // Auto-save report for authenticated users when modal opens
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (!isOpen || !user || !hasAnyData) return;
+    const saveKey = `${url}-${effectiveType}`;
+    if (hasSavedRef.current === saveKey) return;
+    hasSavedRef.current = saveKey;
+
+    const titleMap: Record<string, Record<string, string>> = {
+      crawlers: { fr: 'Crawlers IA', en: 'AI Crawlers', es: 'Crawlers IA' },
+      geo: { fr: 'Analyse GEO', en: 'GEO Analysis', es: 'Análisis GEO' },
+      llm: { fr: 'Visibilité LLM', en: 'LLM Visibility', es: 'Visibilidad LLM' },
+      pagespeed: { fr: 'PageSpeed', en: 'PageSpeed', es: 'PageSpeed' },
+    };
+    const domain = (() => { try { return new URL(url.startsWith('http') ? url : `https://${url}`).hostname; } catch { return url; } })();
+    const label = titleMap[effectiveType]?.[language] || effectiveType;
+
+    saveReport({
+      reportType: effectiveType as any,
+      title: `${label} – ${domain}`,
+      url,
+      reportData: data,
+    });
+  }, [isOpen, user, url, effectiveType]);
 
   // White-label branding
   const branding: WhiteLabelBranding | undefined =
