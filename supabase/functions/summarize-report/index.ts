@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
+import { trackTokenUsage } from "../_shared/tokenTracker.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -90,6 +90,10 @@ Règles :
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
+
+    // Track token usage for admin dashboard
+    const usage = data.usage;
+    trackTokenUsage("summarize-report", "google/gemini-2.5-flash", usage).catch(() => {});
 
     // Parse JSON from response, handling potential markdown wrapping
     let summaries: Record<string, string>;
