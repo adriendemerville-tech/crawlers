@@ -253,7 +253,7 @@ export function Header() {
               <span className="text-sm">{lexiqueLabels[language]}</span>
             </Button>
           </Link>
-          {isAgencyPro || isAuditExpertPage ? (
+          {isAgencyPro || isAuditExpertPage || isProfilePage ? (
             <Link to="/console">
               <Button
                 variant="ghost"
