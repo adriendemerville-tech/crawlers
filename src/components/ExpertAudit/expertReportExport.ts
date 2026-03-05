@@ -356,14 +356,20 @@ export function generateExpertReportHTML(
     })();
 
     // Helper for section cards
-    const sectionCard = (title: string, color: string, bgGradient: string, innerHtml: string) => `
-      <div style="background: ${bgGradient}; padding: 24px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid ${color};">
-        <h3 style="font-size: 16px; color: ${color}; margin: 0 0 14px 0;">${title}</h3>
+    const sectionCard = (title: string, color: string, bgGradient: string, innerHtml: string, lightTitle = false) => `
+      <div style="background: ${bgGradient}; padding: 20px; border-radius: 12px; margin-bottom: 16px; border-left: 4px solid ${color};">
+        <h3 style="font-size: 15px; color: ${color}; margin: 0 0 12px 0; font-weight: ${lightTitle ? '500' : '700'};">${title}</h3>
         ${innerHtml}
       </div>
     `;
-    const textBlock = (text: string) => `<p style="color: #374151; line-height: 1.7; margin: 0 0 8px 0;">${text}</p>`;
-    const labelValue = (label: string, value: string) => `<div style="margin-bottom: 6px;"><span style="font-size: 12px; color: #6b7280;">${label} : </span><strong style="color: #1f2937;">${value}</strong></div>`;
+    const textBlock = (text: string) => `<p style="color: #374151; line-height: 1.6; margin: 0 0 6px 0; font-size: 13px;">${text}</p>`;
+    const labelValue = (label: string, value: string) => `<div style="margin-bottom: 4px;"><span style="font-size: 12px; color: #6b7280;">${label} : </span><strong style="color: #1f2937;">${value}</strong></div>`;
+    const truncateText = (text: string, maxLen: number) => {
+      if (!text || text.length <= maxLen) return text;
+      const truncated = text.substring(0, maxLen);
+      const lastSpace = truncated.lastIndexOf(' ');
+      return (lastSpace > maxLen * 0.7 ? truncated.substring(0, lastSpace) : truncated) + '…';
+    };
 
     content = `
       <div style="text-align: center; margin-bottom: 40px;">
@@ -373,10 +379,10 @@ export function generateExpertReportHTML(
         </div>
       </div>
 
-      ${strategic?.executive_summary || strategic?.executiveSummary ? sectionCard(t.executiveSummary, '#059669', 'linear-gradient(135deg, #f0fdf4, #ecfeff)', textBlock(strategic?.executive_summary || strategic?.executiveSummary || '')) : ''}
+      ${strategic?.executive_summary || strategic?.executiveSummary ? sectionCard(t.executiveSummary, '#059669', 'linear-gradient(135deg, #f0fdf4, #ecfeff)', textBlock(truncateText(strategic?.executive_summary || strategic?.executiveSummary || '', 300))) : ''}
 
       ${strategic?.introduction ? sectionCard(t.introduction, '#7c3aed', '#faf5ff',
-        `${textBlock(strategic.introduction.presentation || '')}${textBlock(strategic.introduction.strengths || '')}${textBlock(strategic.introduction.improvement || '')}`) : ''}
+        `${textBlock(truncateText(strategic.introduction.presentation || '', 200))}${textBlock(truncateText(strategic.introduction.strengths || '', 150))}${textBlock(truncateText(strategic.introduction.improvement || '', 150))}`) : ''}
 
       ${strategic?.brand_identity ? `
         <div style="background: #faf5ff; padding: 24px; border-radius: 12px; margin-bottom: 20px;">
@@ -396,7 +402,7 @@ export function generateExpertReportHTML(
         '#7c3aed', '#faf5ff',
         `${labelValue(language === 'fr' ? "Force de l'entité" : 'Entity Strength', strategic.brand_authority.entity_strength || '—')}
          ${labelValue('Thought Leadership', (strategic.brand_authority.thought_leadership_score || 0) + '/100')}
-         ${textBlock(strategic.brand_authority.dna_analysis || '')}`) : ''}
+         ${textBlock(truncateText(strategic.brand_authority.dna_analysis || '', 200))}`) : ''}
 
       ${strategic?.competitive_landscape ? (() => {
         const cl = strategic.competitive_landscape;
@@ -418,7 +424,7 @@ export function generateExpertReportHTML(
         return sectionCard(
           language === 'fr' ? 'Signaux Sociaux & Autorité' : 'Social Signals & Authority',
           '#2563eb', 'linear-gradient(135deg, #eff6ff, #f0f9ff)',
-          `${tl ? `${labelValue('E-E-A-T', (tl.eeat_score || 0) + '/10')}${labelValue(language === 'fr' ? 'Reconnaissance' : 'Recognition', tl.entity_recognition || '—')}${textBlock(tl.analysis || '')}` : ''}
+          `${tl ? `${labelValue('E-E-A-T', (tl.eeat_score || 0) + '/10')}${labelValue(language === 'fr' ? 'Reconnaissance' : 'Recognition', tl.entity_recognition || '—')}${textBlock(truncateText(tl.analysis || '', 200))}` : ''}
            ${sent ? `${labelValue(language === 'fr' ? 'Sentiment global' : 'Sentiment', sent.overall_polarity || '—')}${labelValue(language === 'fr' ? 'Risque hallucination' : 'Hallucination Risk', sent.hallucination_risk || '—')}` : ''}
            ${proofRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Plateforme</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Présence</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Analyse</th></tr></thead><tbody>${proofRows}</tbody></table>` : ''}`
         );
@@ -429,9 +435,9 @@ export function generateExpertReportHTML(
         return sectionCard(
           language === 'fr' ? 'Intelligence de Marché' : 'Market Intelligence',
           '#d97706', 'linear-gradient(135deg, #fffbeb, #fef3c7)',
-          `${mi.sophistication ? `${labelValue(language === 'fr' ? 'Niveau de sophistication' : 'Sophistication', mi.sophistication.level + '/5')}${textBlock(mi.sophistication.description || '')}` : ''}
-           ${mi.semantic_gap ? `${labelValue(language === 'fr' ? 'Position vs Leader' : 'Position vs Leader', mi.semantic_gap.current_position + ' → ' + mi.semantic_gap.leader_position)}${labelValue('Gap', mi.semantic_gap.gap_distance + ' pts')}${textBlock(mi.semantic_gap.closing_strategy || '')}` : ''}
-           ${textBlock(mi.positioning_verdict || '')}`
+          `${mi.sophistication ? `${labelValue(language === 'fr' ? 'Niveau de sophistication' : 'Sophistication', mi.sophistication.level + '/5')}${textBlock(truncateText(mi.sophistication.description || '', 150))}` : ''}
+           ${mi.semantic_gap ? `${labelValue(language === 'fr' ? 'Position vs Leader' : 'Position vs Leader', mi.semantic_gap.current_position + ' → ' + mi.semantic_gap.leader_position)}${labelValue('Gap', mi.semantic_gap.gap_distance + ' pts')}${textBlock(truncateText(mi.semantic_gap.closing_strategy || '', 150))}` : ''}
+           ${textBlock(truncateText(mi.positioning_verdict || '', 200))}`
         );
       })() : ''}
 
@@ -448,7 +454,7 @@ export function generateExpertReportHTML(
             <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">Citations</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${citedCount}/${totalCount}</div></div>
             <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">Sentiment</div><div style="font-weight: 700; color: #0f172a;">${llm.overallSentiment || '—'}</div></div>
           </div>
-          ${textBlock(llm.coreValueSummary || '')}
+          ${textBlock(truncateText(llm.coreValueSummary || '', 200))}
           ${citationRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">LLM</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Citation</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Sentiment</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Résumé</th></tr></thead><tbody>${citationRows}</tbody></table>` : ''}`
         );
       })() : ''}
@@ -468,7 +474,8 @@ export function generateExpertReportHTML(
           ${gr.content_freshness ? labelValue(language === 'fr' ? 'Fraîcheur' : 'Freshness', gr.content_freshness.verdict || '—') : ''}
           ${gr.eeat_signals ? labelValue('E-E-A-T', gr.eeat_signals.verdict || '—') : ''}
           ${gr.knowledge_graph_readiness ? labelValue('Knowledge Graph', gr.knowledge_graph_readiness.verdict || '—') : ''}
-          ${formats?.missing_formats?.length ? `<div style="margin-top: 8px;"><span style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Formats manquants' : 'Missing'} : </span>${formats.missing_formats.map((f: string) => `<span style="display: inline-block; padding: 2px 8px; background: #fee2e2; color: #991b1b; border-radius: 6px; font-size: 11px; margin: 2px;">${f}</span>`).join('')}</div>` : ''}`
+          ${formats?.missing_formats?.length ? `<div style="margin-top: 8px;"><span style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Formats manquants' : 'Missing'} : </span>${formats.missing_formats.map((f: string) => `<span style="display: inline-block; padding: 2px 8px; background: #fee2e2; color: #991b1b; border-radius: 6px; font-size: 11px; margin: 2px;">${f}</span>`).join('')}</div>` : ''}`,
+          true
         );
       })() : ''}
 
@@ -483,8 +490,8 @@ export function generateExpertReportHTML(
                 <span style="margin-left: auto; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; ${item.priority === 'Prioritaire' ? 'background: #fee2e2; color: #991b1b;' : item.priority === 'Important' ? 'background: #fef3c7; color: #92400e;' : 'background: #dcfce7; color: #166534;'}">${item.priority || ''}</span>
                 ${item.expected_roi ? `<span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; background: #ede9fe; color: #6d28d9;">ROI ${item.expected_roi}</span>` : ''}
               </div>
-              <p style="color: #374151; line-height: 1.7; margin: 0 0 8px 0; font-size: 14px;">${item.prescriptive_action || ''}</p>
-              ${item.strategic_rationale ? `<p style="color: #6b7280; font-size: 13px; font-style: italic; margin: 0;">${item.strategic_rationale}</p>` : ''}
+              <p style="color: #374151; line-height: 1.6; margin: 0 0 6px 0; font-size: 13px;">${truncateText(item.prescriptive_action || '', 180)}</p>
+              ${item.strategic_rationale ? `<p style="color: #6b7280; font-size: 12px; font-style: italic; margin: 0;">${truncateText(item.strategic_rationale || '', 120)}</p>` : ''}
             </div>
           `).join('')}
         `;
