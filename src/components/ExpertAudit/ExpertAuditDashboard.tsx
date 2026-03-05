@@ -18,6 +18,7 @@ import { StrategicInsights } from './StrategicInsights';
 import { IntroductionCard } from './IntroductionCard';
 import { ExpertInsightsCard } from './ExpertInsightsCard';
 import { BrokenLinksCard } from './BrokenLinksCard';
+import { TechnicalNarrativeSection } from './TechnicalNarrativeSection';
 import { ExpertReportPreviewModal } from './ExpertReportPreviewModal';
 import { RegistrationGate } from './RegistrationGate';
 import { ReportAuthGate } from './ReportAuthGate';
@@ -1131,6 +1132,9 @@ export function ExpertAuditDashboard() {
               {result.insights?.brokenLinks && (
                 <BrokenLinksCard brokenLinks={result.insights.brokenLinks} />
               )}
+
+              {/* Technical Narrative Section - 3 pedagogical blocs */}
+              <TechnicalNarrativeSection result={result} />
 
               {/* Action Plan (refactored from RecommendationList) */}
               <ActionPlan recommendations={result.recommendations} url={result.url} />
