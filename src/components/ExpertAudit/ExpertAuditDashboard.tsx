@@ -1150,9 +1150,12 @@ export function ExpertAuditDashboard() {
               className="relative"
             >
               {/* Header : Titre */}
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-foreground">{t.strategicSectionTitle}</h2>
-                <p className="text-muted-foreground">{t.strategicSectionDesc}</p>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-8 w-1 rounded-full bg-gradient-to-b from-primary to-primary/40" />
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">{t.strategicSectionTitle}</h2>
+                  <p className="text-sm text-muted-foreground">{t.strategicSectionDesc}</p>
+                </div>
               </div>
 
               {/* Introduction - Toujours visible avec bouton Corriger */}

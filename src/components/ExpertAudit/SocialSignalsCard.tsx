@@ -64,10 +64,12 @@ export function SocialSignalsCard({ signals }: SocialSignalsCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.25 }}
     >
-      <Card className="border-2 border-violet-500/30 bg-gradient-to-br from-violet-500/5 to-transparent">
+      <Card className="border border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-transparent">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Users className="h-5 w-5 text-violet-500" />
+          <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10">
+              <Users className="h-4.5 w-4.5 text-violet-500" />
+            </div>
             Autorité Sociale & Humaine
             <Badge variant="outline" className="ml-auto text-xs text-violet-600 border-violet-500/50">
               Signaux Off-Site

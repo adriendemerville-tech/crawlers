@@ -45,11 +45,11 @@ export function ConversationalIntentCard({ analysis }: ConversationalIntentCardP
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.1 }}
     >
-      <Card className="border-2 border-accent/30 bg-gradient-to-br from-accent/5 to-transparent shadow-lg">
+      <Card className="border border-accent/20 bg-gradient-to-br from-accent/5 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
+          <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
-              <MessageCircleQuestion className="h-5 w-5 text-accent-foreground" />
+              <MessageCircleQuestion className="h-4.5 w-4.5 text-accent-foreground" />
             </div>
             Test d'Intention Conversationnelle
             <Badge variant="secondary" className="ml-auto text-xs">

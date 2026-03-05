@@ -59,8 +59,8 @@ export function IntroductionCard({
   const Icon = variant === 'technical' ? Zap : Lightbulb;
   const title = variant === 'technical' ? t.technicalTitle : t.strategicTitle;
   const gradientClass = variant === 'technical' 
-    ? 'border-primary/30 bg-gradient-to-br from-primary/5 to-transparent'
-    : 'border-slate-500/30 bg-gradient-to-br from-slate-500/10 to-transparent';
+    ? 'border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent'
+    : 'border border-muted-foreground/20 bg-gradient-to-br from-muted/30 to-transparent';
 
   // Build introduction text for hallucination modal
   const getIntroductionText = (): string => {

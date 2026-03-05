@@ -40,11 +40,13 @@
    };
  
    return (
-     <Card className="border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-transparent">
-       <CardHeader className="pb-3">
-         <div className="flex items-center justify-between">
-           <CardTitle className="flex items-center gap-2 text-lg">
-             <Brain className="h-5 w-5 text-purple-500" />
+      <Card className="border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10">
+                <Brain className="h-4.5 w-4.5 text-purple-500" />
+              </div>
              Visibilité LLMs
            </CardTitle>
            <Badge className={`${getScoreColor(data.overallScore)} bg-transparent border-current`}>
