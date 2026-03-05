@@ -358,7 +358,7 @@ export function generateExpertReportHTML(
     // Helper for section cards
     const sectionCard = (title: string, color: string, bgGradient: string, innerHtml: string, lightTitle = false) => `
       <div style="background: ${bgGradient}; padding: 20px; border-radius: 12px; margin-bottom: 16px; border-left: 4px solid ${color};">
-        <h3 style="font-size: 15px; color: ${color}; margin: 0 0 12px 0; font-weight: ${lightTitle ? '500' : '700'};">${title}</h3>
+        <div style="font-size: 15px; color: ${color}; margin: 0 0 12px 0; font-weight: ${lightTitle ? '500' : '700'};">${title}</div>
         ${innerHtml}
       </div>
     `;
@@ -884,10 +884,28 @@ export function extractStrategicTexts(result: ExpertAuditResult): Record<string,
   add('intro_improvement', s.introduction?.improvement);
   add('dna_analysis', s.brand_authority?.dna_analysis);
   add('tl_analysis', s.social_signals?.thought_leadership?.analysis);
+  add('reputation_vibration', s.social_signals?.sentiment?.reputation_vibration);
+  s.social_signals?.proof_sources?.forEach((src: any, i: number) => {
+    add(`social_proof_${i}_analysis`, src.analysis);
+  });
   add('soph_description', s.market_intelligence?.sophistication?.description);
   add('closing_strategy', s.market_intelligence?.semantic_gap?.closing_strategy);
   add('positioning_verdict', s.market_intelligence?.positioning_verdict);
   add('coreValueSummary', s.llm_visibility_raw?.coreValueSummary);
+  s.llm_visibility_raw?.citations?.forEach((c: any, i: number) => {
+    add(`llm_citation_${i}_summary`, c.summary);
+  });
+  // Competitive landscape
+  const cl = s.competitive_landscape;
+  if (cl) {
+    add('cl_leader_analysis', cl.leader?.analysis);
+    add('cl_direct_analysis', cl.direct_competitor?.analysis);
+    add('cl_challenger_analysis', cl.challenger?.analysis);
+    add('cl_inspiration_analysis', cl.inspiration_source?.analysis);
+  }
+  // GEO readiness
+  add('geo_performance_impact', s.geo_readiness?.performance_impact);
+  // Executive roadmap
   s.executive_roadmap?.forEach((item: any, i: number) => {
     add(`roadmap_${i}_action`, item.prescriptive_action);
     add(`roadmap_${i}_rationale`, item.strategic_rationale);
@@ -911,10 +929,28 @@ export function applySummaries(result: ExpertAuditResult, summaries: Record<stri
   }
   if (s.brand_authority && get('dna_analysis')) s.brand_authority.dna_analysis = get('dna_analysis')!;
   if (s.social_signals?.thought_leadership && get('tl_analysis')) s.social_signals.thought_leadership.analysis = get('tl_analysis')!;
+  if (s.social_signals?.sentiment && get('reputation_vibration')) s.social_signals.sentiment.reputation_vibration = get('reputation_vibration')!;
+  s.social_signals?.proof_sources?.forEach((src: any, i: number) => {
+    if (get(`social_proof_${i}_analysis`)) src.analysis = get(`social_proof_${i}_analysis`);
+  });
   if (s.market_intelligence?.sophistication && get('soph_description')) s.market_intelligence.sophistication.description = get('soph_description')!;
   if (s.market_intelligence?.semantic_gap && get('closing_strategy')) s.market_intelligence.semantic_gap.closing_strategy = get('closing_strategy')!;
   if (s.market_intelligence && get('positioning_verdict')) s.market_intelligence.positioning_verdict = get('positioning_verdict')!;
   if (s.llm_visibility_raw && get('coreValueSummary')) s.llm_visibility_raw.coreValueSummary = get('coreValueSummary')!;
+  s.llm_visibility_raw?.citations?.forEach((c: any, i: number) => {
+    if (get(`llm_citation_${i}_summary`)) c.summary = get(`llm_citation_${i}_summary`);
+  });
+  // Competitive landscape
+  const cl = s.competitive_landscape;
+  if (cl) {
+    if (get('cl_leader_analysis') && cl.leader) cl.leader.analysis = get('cl_leader_analysis')!;
+    if (get('cl_direct_analysis') && cl.direct_competitor) cl.direct_competitor.analysis = get('cl_direct_analysis')!;
+    if (get('cl_challenger_analysis') && cl.challenger) cl.challenger.analysis = get('cl_challenger_analysis')!;
+    if (get('cl_inspiration_analysis') && cl.inspiration_source) cl.inspiration_source.analysis = get('cl_inspiration_analysis')!;
+  }
+  // GEO readiness
+  if (s.geo_readiness && get('geo_performance_impact')) s.geo_readiness.performance_impact = get('geo_performance_impact')!;
+  // Executive roadmap
   s.executive_roadmap?.forEach((item: any, i: number) => {
     if (get(`roadmap_${i}_action`)) item.prescriptive_action = get(`roadmap_${i}_action`);
     if (get(`roadmap_${i}_rationale`)) item.strategic_rationale = get(`roadmap_${i}_rationale`);
