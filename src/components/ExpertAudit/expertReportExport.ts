@@ -362,8 +362,8 @@ export function generateExpertReportHTML(
         ${innerHtml}
       </div>
     `;
-    const textBlock = (text: string) => `<p style="color: #374151; line-height: 1.6; margin: 0 0 6px 0; font-size: 13px;">${text}</p>`;
-    const labelValue = (label: string, value: string) => `<div style="margin-bottom: 4px;"><span style="font-size: 12px; color: #6b7280;">${label} : </span><strong style="color: #1f2937;">${value}</strong></div>`;
+    const textBlock = (text: string) => `<p style="color: #374151; line-height: 1.7; margin: 0 0 8px 0;">${text}</p>`;
+    const labelValue = (label: string, value: string) => `<div style="margin-bottom: 6px;"><span style="font-size: 12px; color: #6b7280;">${label} : </span><strong style="color: #1f2937;">${value}</strong></div>`;
     const truncateText = (text: string, maxLen: number) => {
       if (!text || text.length <= maxLen) return text;
       const truncated = text.substring(0, maxLen);
