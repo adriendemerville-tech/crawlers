@@ -93,10 +93,12 @@ export function PremiumRoadmapCard({ roadmap }: PremiumRoadmapCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.4 }}
     >
-      <Card className="border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent">
+      <Card className="border border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Target className="h-5 w-5 text-emerald-500" />
+          <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10">
+              <Target className="h-4.5 w-4.5 text-emerald-500" />
+            </div>
             Feuille de Route Exécutive 2026
             <Badge variant="outline" className="ml-auto text-xs text-emerald-600 border-emerald-500/50">
               {roadmap.length} Initiatives Stratégiques

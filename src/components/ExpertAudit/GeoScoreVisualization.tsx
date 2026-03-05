@@ -37,10 +37,12 @@ export function GeoScoreVisualization({ geoScore }: GeoScoreVisualizationProps) 
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4 }}
     >
-      <Card className={`border-2 bg-gradient-to-br ${getScoreGradient(geoScore.score)}`}>
+      <Card className={`border border-primary/20 bg-gradient-to-br ${getScoreGradient(geoScore.score)}`}>
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Globe className="h-5 w-5 text-primary" />
+          <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Globe className="h-4.5 w-4.5 text-primary" />
+            </div>
             Score GEO / Citabilité IA
           </CardTitle>
         </CardHeader>

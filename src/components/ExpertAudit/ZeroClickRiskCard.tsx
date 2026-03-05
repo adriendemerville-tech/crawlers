@@ -99,11 +99,11 @@ export function ZeroClickRiskCard({ analysis, domain }: ZeroClickRiskCardProps) 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
     >
-      <Card className="border-2 border-destructive/20 bg-gradient-to-br from-destructive/5 via-transparent to-warning/5 shadow-lg">
+      <Card className="border border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
+          <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/10">
-              <Zap className="h-5 w-5 text-destructive" />
+              <Zap className="h-4.5 w-4.5 text-destructive" />
             </div>
             Matrice de Risque Zéro-Clic
             <Badge variant="outline" className="ml-auto text-xs border-destructive/30 text-destructive">

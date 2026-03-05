@@ -33,10 +33,12 @@ export function MarketIntelligenceCard({ intelligence }: MarketIntelligenceCardP
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
     >
-      <Card className="border-2 border-cyan-500/30 bg-gradient-to-br from-cyan-500/5 to-transparent">
+      <Card className="border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-transparent">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Brain className="h-5 w-5 text-cyan-500" />
+          <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/10">
+              <Brain className="h-4.5 w-4.5 text-cyan-500" />
+            </div>
             Intelligence Marché & Psychologie
             <Badge variant="outline" className="ml-auto text-xs text-cyan-600 border-cyan-500/50">
               Analyse Stratégique

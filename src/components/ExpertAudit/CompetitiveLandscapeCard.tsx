@@ -92,10 +92,12 @@ export function CompetitiveLandscapeCard({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <Card className="border-2 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
+        <Card className="border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <TrendingUp className="h-5 w-5 text-amber-500" />
+            <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
+                <TrendingUp className="h-4.5 w-4.5 text-amber-500" />
+              </div>
               Écosystème Concurrentiel
               <div className="ml-auto flex items-center gap-2">
                 <Button

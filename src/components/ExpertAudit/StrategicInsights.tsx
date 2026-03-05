@@ -106,10 +106,12 @@ export function StrategicInsights({
     >
       {/* Executive Summary - Only show if not hidden */}
       {!hideExecutiveSummary && (analysis.executive_summary || analysis.executiveSummary) && (
-        <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+        <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Lightbulb className="h-5 w-5 text-primary" />
+            <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <Lightbulb className="h-4.5 w-4.5 text-primary" />
+              </div>
               Synthèse Exécutive
             </CardTitle>
           </CardHeader>
@@ -203,10 +205,12 @@ export function StrategicInsights({
 
           {/* Brand Authority (if available) */}
           {analysis.brand_authority && (
-            <Card className="border-2">
+          <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Target className="h-5 w-5 text-primary" />
+                <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Target className="h-4.5 w-4.5 text-primary" />
+                  </div>
                   Autorité de Marque (Brand DNA)
                 </CardTitle>
               </CardHeader>
@@ -240,10 +244,12 @@ export function StrategicInsights({
 
           {/* GEO Readiness Details */}
           {analysis.geo_readiness && (
-            <Card className="border-2 border-primary/30">
+            <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Globe className="h-5 w-5 text-primary" />
+                <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Globe className="h-4.5 w-4.5 text-primary" />
+                  </div>
                   GEO Readiness 2026
                 </CardTitle>
               </CardHeader>
