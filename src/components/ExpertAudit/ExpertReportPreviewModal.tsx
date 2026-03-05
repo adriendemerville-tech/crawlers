@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Download, Share2, Loader2, Check, Copy, Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { expertReportTranslations, generateExpertPDF, generateExpertReportHTML, WhiteLabelBranding, summarizeStrategicResult } from './expertReportExport';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSaveReport } from '@/hooks/useSaveReport';
 
 interface ExpertReportPreviewModalProps {
   isOpen: boolean;
@@ -19,13 +20,15 @@ interface ExpertReportPreviewModalProps {
 
 export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }: ExpertReportPreviewModalProps) {
   const { language } = useLanguage();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  const { saveReport } = useSaveReport();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [summarizedResult, setSummarizedResult] = useState<ExpertAuditResult | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const hasSavedRef = useRef<string | null>(null);
 
   const t =
     expertReportTranslations[language as keyof typeof expertReportTranslations] || expertReportTranslations.fr;
@@ -52,6 +55,23 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
     });
     return () => { cancelled = true; };
   }, [isOpen, result, auditMode, language]);
+
+  // Auto-save strategic report after AI summarization completes
+  useEffect(() => {
+    if (!summarizedResult || !user || auditMode !== 'strategic') return;
+    const saveKey = `${result.url}-${auditMode}`;
+    if (hasSavedRef.current === saveKey) return;
+    hasSavedRef.current = saveKey;
+
+    const reportType = 'seo_strategic' as const;
+    const domain = (() => { try { return new URL(result.url.startsWith('http') ? result.url : `https://${result.url}`).hostname; } catch { return result.url; } })();
+    saveReport({
+      reportType,
+      title: `Audit Stratégique – ${domain}`,
+      url: result.url,
+      reportData: { result: summarizedResult, auditMode },
+    });
+  }, [summarizedResult, user, auditMode, result]);
 
   const effectiveResult = auditMode === 'strategic' && summarizedResult ? summarizedResult : result;
   const htmlContent = generateExpertReportHTML(effectiveResult, auditMode, t, language, branding);
