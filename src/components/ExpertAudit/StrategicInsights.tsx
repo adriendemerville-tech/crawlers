@@ -165,8 +165,6 @@ export function StrategicInsights({
             />
           )}
 
-          {/* Pain Score Module — juste après l'analyse concurrentielle */}
-          <PainScoreCard analysis={analysis} domain={domain} />
 
           {/* Mots clés (doit apparaître entre Écosystème Concurrentiel et Autorité Sociale & Humaine) */}
           <KeywordModuleSection analysis={analysis} domain={domain} />
