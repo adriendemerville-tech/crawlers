@@ -253,7 +253,18 @@ export function Header() {
               <span className="text-sm">{lexiqueLabels[language]}</span>
             </Button>
           </Link>
-          {!isAgencyPro && (
+          {isAgencyPro || isAuditExpertPage ? (
+            <Link to="/console">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-muted-foreground hover:text-foreground"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                <span className="text-sm">{t.console}</span>
+              </Button>
+            </Link>
+          ) : (
             <Link to="/comparatif-audit-geo">
               <Button
                 variant="ghost"
