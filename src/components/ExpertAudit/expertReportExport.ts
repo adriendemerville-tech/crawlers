@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ExpertAuditResult } from '@/types/expertAudit';
-
+import { supabase } from '@/integrations/supabase/client';
 export const expertReportTranslations = {
   fr: {
     title: "Rapport d'Audit Expert",
@@ -364,12 +364,7 @@ export function generateExpertReportHTML(
     `;
     const textBlock = (text: string) => `<p style="color: #374151; line-height: 1.7; margin: 0 0 8px 0;">${text}</p>`;
     const labelValue = (label: string, value: string) => `<div style="margin-bottom: 6px;"><span style="font-size: 12px; color: #6b7280;">${label} : </span><strong style="color: #1f2937;">${value}</strong></div>`;
-    const truncateText = (text: string, maxLen: number) => {
-      if (!text || text.length <= maxLen) return text;
-      const truncated = text.substring(0, maxLen);
-      const lastSpace = truncated.lastIndexOf(' ');
-      return (lastSpace > maxLen * 0.7 ? truncated.substring(0, lastSpace) : truncated) + '…';
-    };
+    // No truncation — texts may already be AI-summarized before calling this function
 
     content = `
       <div style="text-align: center; margin-bottom: 40px;">
@@ -379,10 +374,10 @@ export function generateExpertReportHTML(
         </div>
       </div>
 
-      ${strategic?.executive_summary || strategic?.executiveSummary ? sectionCard(t.executiveSummary, '#059669', 'linear-gradient(135deg, #f0fdf4, #ecfeff)', textBlock(truncateText(strategic?.executive_summary || strategic?.executiveSummary || '', 300))) : ''}
+      ${strategic?.executive_summary || strategic?.executiveSummary ? sectionCard(t.executiveSummary, '#059669', 'linear-gradient(135deg, #f0fdf4, #ecfeff)', textBlock(strategic?.executive_summary || strategic?.executiveSummary || '')) : ''}
 
       ${strategic?.introduction ? sectionCard(t.introduction, '#7c3aed', '#faf5ff',
-        `${textBlock(truncateText(strategic.introduction.presentation || '', 200))}${textBlock(truncateText(strategic.introduction.strengths || '', 150))}${textBlock(truncateText(strategic.introduction.improvement || '', 150))}`) : ''}
+        `${textBlock(strategic.introduction.presentation || '')}${textBlock(strategic.introduction.strengths || '')}${textBlock(strategic.introduction.improvement || '')}`) : ''}
 
       ${strategic?.brand_identity ? `
         <div style="background: #faf5ff; padding: 24px; border-radius: 12px; margin-bottom: 20px;">
@@ -402,7 +397,7 @@ export function generateExpertReportHTML(
         '#7c3aed', '#faf5ff',
         `${labelValue(language === 'fr' ? "Force de l'entité" : 'Entity Strength', strategic.brand_authority.entity_strength || '—')}
          ${labelValue('Thought Leadership', (strategic.brand_authority.thought_leadership_score || 0) + '/100')}
-         ${textBlock(truncateText(strategic.brand_authority.dna_analysis || '', 200))}`) : ''}
+         ${textBlock(strategic.brand_authority.dna_analysis || '')}`) : ''}
 
       ${strategic?.competitive_landscape ? (() => {
         const cl = strategic.competitive_landscape;
@@ -424,7 +419,7 @@ export function generateExpertReportHTML(
         return sectionCard(
           language === 'fr' ? 'Signaux Sociaux & Autorité' : 'Social Signals & Authority',
           '#2563eb', 'linear-gradient(135deg, #eff6ff, #f0f9ff)',
-          `${tl ? `${labelValue('E-E-A-T', (tl.eeat_score || 0) + '/10')}${labelValue(language === 'fr' ? 'Reconnaissance' : 'Recognition', tl.entity_recognition || '—')}${textBlock(truncateText(tl.analysis || '', 200))}` : ''}
+          `${tl ? `${labelValue('E-E-A-T', (tl.eeat_score || 0) + '/10')}${labelValue(language === 'fr' ? 'Reconnaissance' : 'Recognition', tl.entity_recognition || '—')}${textBlock(tl.analysis || '')}` : ''}
            ${sent ? `${labelValue(language === 'fr' ? 'Sentiment global' : 'Sentiment', sent.overall_polarity || '—')}${labelValue(language === 'fr' ? 'Risque hallucination' : 'Hallucination Risk', sent.hallucination_risk || '—')}` : ''}
            ${proofRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Plateforme</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Présence</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Analyse</th></tr></thead><tbody>${proofRows}</tbody></table>` : ''}`
         );
@@ -435,9 +430,9 @@ export function generateExpertReportHTML(
         return sectionCard(
           language === 'fr' ? 'Intelligence de Marché' : 'Market Intelligence',
           '#d97706', 'linear-gradient(135deg, #fffbeb, #fef3c7)',
-          `${mi.sophistication ? `${labelValue(language === 'fr' ? 'Niveau de sophistication' : 'Sophistication', mi.sophistication.level + '/5')}${textBlock(truncateText(mi.sophistication.description || '', 150))}` : ''}
-           ${mi.semantic_gap ? `${labelValue(language === 'fr' ? 'Position vs Leader' : 'Position vs Leader', mi.semantic_gap.current_position + ' → ' + mi.semantic_gap.leader_position)}${labelValue('Gap', mi.semantic_gap.gap_distance + ' pts')}${textBlock(truncateText(mi.semantic_gap.closing_strategy || '', 150))}` : ''}
-           ${textBlock(truncateText(mi.positioning_verdict || '', 200))}`
+          `${mi.sophistication ? `${labelValue(language === 'fr' ? 'Niveau de sophistication' : 'Sophistication', mi.sophistication.level + '/5')}${textBlock(mi.sophistication.description || '')}` : ''}
+           ${mi.semantic_gap ? `${labelValue(language === 'fr' ? 'Position vs Leader' : 'Position vs Leader', mi.semantic_gap.current_position + ' → ' + mi.semantic_gap.leader_position)}${labelValue('Gap', mi.semantic_gap.gap_distance + ' pts')}${textBlock(mi.semantic_gap.closing_strategy || '')}` : ''}
+           ${textBlock(mi.positioning_verdict || '')}`
         );
       })() : ''}
 
@@ -454,7 +449,7 @@ export function generateExpertReportHTML(
             <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">Citations</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${citedCount}/${totalCount}</div></div>
             <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">Sentiment</div><div style="font-weight: 700; color: #0f172a;">${llm.overallSentiment || '—'}</div></div>
           </div>
-          ${textBlock(truncateText(llm.coreValueSummary || '', 200))}
+          ${textBlock(llm.coreValueSummary || '')}
           ${citationRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">LLM</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Citation</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Sentiment</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Résumé</th></tr></thead><tbody>${citationRows}</tbody></table>` : ''}`
         );
       })() : ''}
@@ -490,8 +485,8 @@ export function generateExpertReportHTML(
                 <span style="margin-left: auto; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; ${item.priority === 'Prioritaire' ? 'background: #fee2e2; color: #991b1b;' : item.priority === 'Important' ? 'background: #fef3c7; color: #92400e;' : 'background: #dcfce7; color: #166534;'}">${item.priority || ''}</span>
                 ${item.expected_roi ? `<span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; background: #ede9fe; color: #6d28d9;">ROI ${item.expected_roi}</span>` : ''}
               </div>
-              <p style="color: #374151; line-height: 1.6; margin: 0 0 6px 0; font-size: 13px;">${truncateText(item.prescriptive_action || '', 180)}</p>
-              ${item.strategic_rationale ? `<p style="color: #6b7280; font-size: 12px; font-style: italic; margin: 0;">${truncateText(item.strategic_rationale || '', 120)}</p>` : ''}
+              <p style="color: #374151; line-height: 1.7; margin: 0 0 8px 0; font-size: 14px;">${item.prescriptive_action || ''}</p>
+              ${item.strategic_rationale ? `<p style="color: #6b7280; font-size: 13px; font-style: italic; margin: 0;">${item.strategic_rationale || ''}</p>` : ''}
             </div>
           `).join('')}
         `;
@@ -871,4 +866,77 @@ export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technic
   }
 
   doc.save(`audit-expert-${result.domain.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+}
+
+/**
+ * Extract all long text fields from a strategic analysis for AI summarization.
+ */
+export function extractStrategicTexts(result: ExpertAuditResult): Record<string, string> {
+  const s = result.strategicAnalysis;
+  if (!s) return {};
+  const texts: Record<string, string> = {};
+  const add = (key: string, val: any) => {
+    if (typeof val === 'string' && val.length > 80) texts[key] = val;
+  };
+  add('executive_summary', s.executive_summary || s.executiveSummary);
+  add('intro_presentation', s.introduction?.presentation);
+  add('intro_strengths', s.introduction?.strengths);
+  add('intro_improvement', s.introduction?.improvement);
+  add('dna_analysis', s.brand_authority?.dna_analysis);
+  add('tl_analysis', s.social_signals?.thought_leadership?.analysis);
+  add('soph_description', s.market_intelligence?.sophistication?.description);
+  add('closing_strategy', s.market_intelligence?.semantic_gap?.closing_strategy);
+  add('positioning_verdict', s.market_intelligence?.positioning_verdict);
+  add('coreValueSummary', s.llm_visibility_raw?.coreValueSummary);
+  s.executive_roadmap?.forEach((item: any, i: number) => {
+    add(`roadmap_${i}_action`, item.prescriptive_action);
+    add(`roadmap_${i}_rationale`, item.strategic_rationale);
+  });
+  return texts;
+}
+
+/**
+ * Apply AI summaries back into a deep-cloned result object.
+ */
+export function applySummaries(result: ExpertAuditResult, summaries: Record<string, string>): ExpertAuditResult {
+  const r = JSON.parse(JSON.stringify(result)) as ExpertAuditResult;
+  const s = r.strategicAnalysis;
+  if (!s) return r;
+  const get = (key: string) => summaries[key];
+  if (get('executive_summary')) { s.executive_summary = get('executive_summary'); if (s.executiveSummary) s.executiveSummary = get('executive_summary'); }
+  if (s.introduction) {
+    if (get('intro_presentation')) s.introduction.presentation = get('intro_presentation')!;
+    if (get('intro_strengths')) s.introduction.strengths = get('intro_strengths')!;
+    if (get('intro_improvement')) s.introduction.improvement = get('intro_improvement')!;
+  }
+  if (s.brand_authority && get('dna_analysis')) s.brand_authority.dna_analysis = get('dna_analysis')!;
+  if (s.social_signals?.thought_leadership && get('tl_analysis')) s.social_signals.thought_leadership.analysis = get('tl_analysis')!;
+  if (s.market_intelligence?.sophistication && get('soph_description')) s.market_intelligence.sophistication.description = get('soph_description')!;
+  if (s.market_intelligence?.semantic_gap && get('closing_strategy')) s.market_intelligence.semantic_gap.closing_strategy = get('closing_strategy')!;
+  if (s.market_intelligence && get('positioning_verdict')) s.market_intelligence.positioning_verdict = get('positioning_verdict')!;
+  if (s.llm_visibility_raw && get('coreValueSummary')) s.llm_visibility_raw.coreValueSummary = get('coreValueSummary')!;
+  s.executive_roadmap?.forEach((item: any, i: number) => {
+    if (get(`roadmap_${i}_action`)) item.prescriptive_action = get(`roadmap_${i}_action`);
+    if (get(`roadmap_${i}_rationale`)) item.strategic_rationale = get(`roadmap_${i}_rationale`);
+  });
+  return r;
+}
+
+/**
+ * Summarize a strategic audit result via AI, returning a new result with condensed texts.
+ * Falls back to the original result on error.
+ */
+export async function summarizeStrategicResult(result: ExpertAuditResult, language: string): Promise<ExpertAuditResult> {
+  const texts = extractStrategicTexts(result);
+  if (Object.keys(texts).length === 0) return result;
+  try {
+    const { data, error } = await supabase.functions.invoke('summarize-report', {
+      body: { texts, language },
+    });
+    if (error) { console.error('Summarize error:', error); return result; }
+    return applySummaries(result, data.summaries || {});
+  } catch (e) {
+    console.error('Summarize failed:', e);
+    return result;
+  }
 }
