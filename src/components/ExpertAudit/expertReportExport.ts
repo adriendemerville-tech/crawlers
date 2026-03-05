@@ -355,6 +355,16 @@ export function generateExpertReportHTML(
       `;
     })();
 
+    // Helper for section cards
+    const sectionCard = (title: string, color: string, bgGradient: string, innerHtml: string) => `
+      <div style="background: ${bgGradient}; padding: 24px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid ${color};">
+        <h3 style="font-size: 16px; color: ${color}; margin: 0 0 14px 0;">${title}</h3>
+        ${innerHtml}
+      </div>
+    `;
+    const textBlock = (text: string) => `<p style="color: #374151; line-height: 1.7; margin: 0 0 8px 0;">${text}</p>`;
+    const labelValue = (label: string, value: string) => `<div style="margin-bottom: 6px;"><span style="font-size: 12px; color: #6b7280;">${label} : </span><strong style="color: #1f2937;">${value}</strong></div>`;
+
     content = `
       <div style="text-align: center; margin-bottom: 40px;">
         <div style="display: inline-block; padding: 30px 50px; background: linear-gradient(135deg, #059669, #0891b2); border-radius: 20px; margin-bottom: 20px;">
@@ -363,59 +373,129 @@ export function generateExpertReportHTML(
         </div>
       </div>
 
-      ${strategic?.executive_summary || strategic?.executiveSummary ? `
-        <div style="background: linear-gradient(135deg, #f0fdf4, #ecfeff); padding: 24px; border-radius: 12px; margin-bottom: 30px; border-left: 4px solid #059669;">
-          <h3 style="font-size: 16px; color: #065f46; margin: 0 0 12px 0;">${t.executiveSummary}</h3>
-          <p style="color: #374151; line-height: 1.7; margin: 0;">${strategic?.executive_summary || strategic?.executiveSummary}</p>
-        </div>
-      ` : ''}
+      ${strategic?.executive_summary || strategic?.executiveSummary ? sectionCard(t.executiveSummary, '#059669', 'linear-gradient(135deg, #f0fdf4, #ecfeff)', textBlock(strategic?.executive_summary || strategic?.executiveSummary || '')) : ''}
+
+      ${strategic?.introduction ? sectionCard(t.introduction, '#7c3aed', '#faf5ff',
+        `${textBlock(strategic.introduction.presentation || '')}${textBlock(strategic.introduction.strengths || '')}${textBlock(strategic.introduction.improvement || '')}`) : ''}
 
       ${strategic?.brand_identity ? `
         <div style="background: #faf5ff; padding: 24px; border-radius: 12px; margin-bottom: 20px;">
           <h3 style="font-size: 16px; color: #7c3aed; margin: 0 0 16px 0;">${t.brandIdentity}</h3>
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-            <div>
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Archétype</div>
-              <div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.archetype}</div>
-            </div>
-            <div>
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Clarté</div>
-              <div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.clarity_score}/100</div>
-            </div>
+            <div><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Archétype</div><div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.archetype}</div></div>
+            <div><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Clarté</div><div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.clarity_score}/100</div></div>
           </div>
-          <div style="margin-top: 12px;">
-            <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Valeurs perçues</div>
-            <div>${strategic.brand_identity.perceived_values.map(v => `<span style="display: inline-block; padding: 4px 8px; background: #e9d5ff; color: #7c3aed; border-radius: 6px; font-size: 12px; margin: 2px;">${v}</span>`).join('')}</div>
+          <div style="margin-top: 12px;"><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Valeurs perçues</div>
+            <div>${strategic.brand_identity.perceived_values.map((v: string) => `<span style="display: inline-block; padding: 4px 8px; background: #e9d5ff; color: #7c3aed; border-radius: 6px; font-size: 12px; margin: 2px;">${v}</span>`).join('')}</div>
           </div>
         </div>
       ` : ''}
 
+      ${strategic?.brand_authority ? sectionCard(
+        language === 'fr' ? 'Autorité de Marque' : language === 'es' ? 'Autoridad de Marca' : 'Brand Authority',
+        '#7c3aed', '#faf5ff',
+        `${labelValue(language === 'fr' ? "Force de l'entité" : 'Entity Strength', strategic.brand_authority.entity_strength || '—')}
+         ${labelValue('Thought Leadership', (strategic.brand_authority.thought_leadership_score || 0) + '/100')}
+         ${textBlock(strategic.brand_authority.dna_analysis || '')}`) : ''}
+
+      ${strategic?.competitive_landscape ? (() => {
+        const cl = strategic.competitive_landscape;
+        const actorRow = (role: string, actor: any) => actor ? `<tr><td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #0f172a;">${role}</td><td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #334155;">${actor.name || '—'}</td><td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #6b7280; font-size: 13px;">${actor.analysis || '—'}</td></tr>` : '';
+        return sectionCard(
+          language === 'fr' ? 'Écosystème Concurrentiel' : 'Competitive Landscape',
+          '#dc2626', 'linear-gradient(135deg, #fef2f2, #fff7ed)',
+          `<table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 10px 12px; text-align: left; font-size: 12px;">Rôle</th><th style="padding: 10px 12px; text-align: left; font-size: 12px;">Acteur</th><th style="padding: 10px 12px; text-align: left; font-size: 12px;">Analyse</th></tr></thead><tbody>${actorRow('Leader', cl.leader)}${actorRow(language === 'fr' ? 'Concurrent direct' : 'Direct Competitor', cl.direct_competitor)}${actorRow('Challenger', cl.challenger)}${actorRow('Inspiration', cl.inspiration_source)}</tbody></table>`
+        );
+      })() : ''}
+
       ${keywordsSection}
 
-      ${strategic?.strategic_roadmap?.length > 0 ? `
+      ${strategic?.social_signals ? (() => {
+        const ss = strategic.social_signals;
+        const proofRows = ss.proof_sources?.map((s: any) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; text-transform: capitalize;">${s.platform}</td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; ${s.presence_level === 'strong' ? 'background: #dcfce7; color: #166534;' : s.presence_level === 'moderate' ? 'background: #fef3c7; color: #92400e;' : 'background: #fee2e2; color: #991b1b;'}">${s.presence_level}</span></td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #6b7280; font-size: 13px;">${s.analysis || ''}</td></tr>`).join('') || '';
+        const tl = ss.thought_leadership;
+        const sent = ss.sentiment;
+        return sectionCard(
+          language === 'fr' ? 'Signaux Sociaux & Autorité' : 'Social Signals & Authority',
+          '#2563eb', 'linear-gradient(135deg, #eff6ff, #f0f9ff)',
+          `${tl ? `${labelValue('E-E-A-T', (tl.eeat_score || 0) + '/10')}${labelValue(language === 'fr' ? 'Reconnaissance' : 'Recognition', tl.entity_recognition || '—')}${textBlock(tl.analysis || '')}` : ''}
+           ${sent ? `${labelValue(language === 'fr' ? 'Sentiment global' : 'Sentiment', sent.overall_polarity || '—')}${labelValue(language === 'fr' ? 'Risque hallucination' : 'Hallucination Risk', sent.hallucination_risk || '—')}` : ''}
+           ${proofRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Plateforme</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Présence</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Analyse</th></tr></thead><tbody>${proofRows}</tbody></table>` : ''}`
+        );
+      })() : ''}
+
+      ${strategic?.market_intelligence ? (() => {
+        const mi = strategic.market_intelligence;
+        return sectionCard(
+          language === 'fr' ? 'Intelligence de Marché' : 'Market Intelligence',
+          '#d97706', 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+          `${mi.sophistication ? `${labelValue(language === 'fr' ? 'Niveau de sophistication' : 'Sophistication', mi.sophistication.level + '/5')}${textBlock(mi.sophistication.description || '')}` : ''}
+           ${mi.semantic_gap ? `${labelValue(language === 'fr' ? 'Position vs Leader' : 'Position vs Leader', mi.semantic_gap.current_position + ' → ' + mi.semantic_gap.leader_position)}${labelValue('Gap', mi.semantic_gap.gap_distance + ' pts')}${textBlock(mi.semantic_gap.closing_strategy || '')}` : ''}
+           ${textBlock(mi.positioning_verdict || '')}`
+        );
+      })() : ''}
+
+      ${strategic?.llm_visibility_raw ? (() => {
+        const llm = strategic.llm_visibility_raw;
+        const citedCount = llm.citationRate?.cited || 0;
+        const totalCount = llm.citationRate?.total || 0;
+        const citationRows = llm.citations?.slice(0, 8).map((c: any) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600;">${c.provider?.name || '—'}</td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; ${c.cited ? 'background: #dcfce7; color: #166534;' : 'background: #fee2e2; color: #991b1b;'}">${c.cited ? '✓ Cité' : '✗ Invisible'}</span></td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; ${c.sentiment === 'positive' || c.sentiment === 'mostly_positive' ? 'background: #dcfce7; color: #166534;' : c.sentiment === 'neutral' ? 'background: #f3f4f6; color: #374151;' : 'background: #fee2e2; color: #991b1b;'}">${c.sentiment || '—'}</span></td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #6b7280; font-size: 12px;">${c.summary || ''}</td></tr>`).join('') || '';
+        return sectionCard(
+          language === 'fr' ? 'Visibilité LLM' : 'LLM Visibility',
+          '#8b5cf6', 'linear-gradient(135deg, #f5f3ff, #ede9fe)',
+          `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;">
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">Score</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${llm.overallScore || 0}/100</div></div>
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">Citations</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${citedCount}/${totalCount}</div></div>
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">Sentiment</div><div style="font-weight: 700; color: #0f172a;">${llm.overallSentiment || '—'}</div></div>
+          </div>
+          ${textBlock(llm.coreValueSummary || '')}
+          ${citationRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">LLM</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Citation</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Sentiment</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Résumé</th></tr></thead><tbody>${citationRows}</tbody></table>` : ''}`
+        );
+      })() : ''}
+
+      ${strategic?.geo_readiness ? (() => {
+        const gr = strategic.geo_readiness;
+        const formats = gr.ai_favored_formats;
+        return sectionCard(
+          language === 'fr' ? 'Préparation GEO' : 'GEO Readiness',
+          '#0891b2', 'linear-gradient(135deg, #ecfeff, #f0fdfa)',
+          `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;">
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Citabilité' : 'Citability'}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${gr.citability_score || 0}/100</div></div>
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Accessibilité IA' : 'AI Access'}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${gr.ai_accessibility_score || 0}/100</div></div>
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Formats IA' : 'AI Formats'}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${formats?.format_score || 0}/100</div></div>
+          </div>
+          ${gr.semantic_coherence ? labelValue(language === 'fr' ? 'Cohérence Title/H1' : 'Title/H1', gr.semantic_coherence.title_h1_alignment + '% — ' + gr.semantic_coherence.verdict) : ''}
+          ${gr.content_freshness ? labelValue(language === 'fr' ? 'Fraîcheur' : 'Freshness', gr.content_freshness.verdict || '—') : ''}
+          ${gr.eeat_signals ? labelValue('E-E-A-T', gr.eeat_signals.verdict || '—') : ''}
+          ${gr.knowledge_graph_readiness ? labelValue('Knowledge Graph', gr.knowledge_graph_readiness.verdict || '—') : ''}
+          ${formats?.missing_formats?.length ? `<div style="margin-top: 8px;"><span style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Formats manquants' : 'Missing'} : </span>${formats.missing_formats.map((f: string) => `<span style="display: inline-block; padding: 2px 8px; background: #fee2e2; color: #991b1b; border-radius: 6px; font-size: 11px; margin: 2px;">${f}</span>`).join('')}</div>` : ''}`
+        );
+      })() : ''}
+
+      ${strategic?.executive_roadmap?.length ? (() => {
+        return `
+          <h3 style="font-size: 18px; color: #1f2937; margin: 24px 0 16px 0;">${language === 'fr' ? 'Feuille de Route Exécutive' : language === 'es' ? 'Hoja de Ruta Ejecutiva' : 'Executive Roadmap'}</h3>
+          ${(strategic.executive_roadmap as any[]).map((item: any, i: number) => `
+            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 12px;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="font-size: 13px; font-weight: 700; color: white; background: #6366f1; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">${i + 1}</span>
+                <strong style="color: #0f172a; font-size: 15px;">${item.title || ''}</strong>
+                <span style="margin-left: auto; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; ${item.priority === 'Prioritaire' ? 'background: #fee2e2; color: #991b1b;' : item.priority === 'Important' ? 'background: #fef3c7; color: #92400e;' : 'background: #dcfce7; color: #166534;'}">${item.priority || ''}</span>
+                ${item.expected_roi ? `<span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; background: #ede9fe; color: #6d28d9;">ROI ${item.expected_roi}</span>` : ''}
+              </div>
+              <p style="color: #374151; line-height: 1.7; margin: 0 0 8px 0; font-size: 14px;">${item.prescriptive_action || ''}</p>
+              ${item.strategic_rationale ? `<p style="color: #6b7280; font-size: 13px; font-style: italic; margin: 0;">${item.strategic_rationale}</p>` : ''}
+            </div>
+          `).join('')}
+        `;
+      })() : ''}
+
+      ${strategic?.strategic_roadmap?.length > 0 && !(strategic?.executive_roadmap?.length) ? `
         <h3 style="font-size: 18px; color: #1f2937; margin-bottom: 16px;">${t.roadmap}</h3>
         <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-          <thead>
-            <tr style="background: #f9fafb;">
-              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Priorité</th>
-              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Action</th>
-              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Objectif</th>
-            </tr>
-          </thead>
+          <thead><tr style="background: #f9fafb;"><th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Priorité</th><th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Action</th><th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Objectif</th></tr></thead>
           <tbody>
-            ${strategic.strategic_roadmap.map(item => `
-              <tr>
-                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
-                  <span style="padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; ${
-                    item.priority === 'Prioritaire' ? 'background: #fee2e2; color: #991b1b;' :
-                    item.priority === 'Important' ? 'background: #fef3c7; color: #92400e;' :
-                    'background: #dcfce7; color: #166534;'
-                  }">${item.priority}</span>
-                </td>
-                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.action_concrete}</td>
-                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">${item.strategic_goal}</td>
-              </tr>
-            `).join('')}
+            ${strategic.strategic_roadmap.map((item: any) => `<tr><td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><span style="padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; ${item.priority === 'Prioritaire' ? 'background: #fee2e2; color: #991b1b;' : item.priority === 'Important' ? 'background: #fef3c7; color: #92400e;' : 'background: #dcfce7; color: #166534;'}">${item.priority}</span></td><td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.action_concrete}</td><td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">${item.strategic_goal}</td></tr>`).join('')}
           </tbody>
         </table>
       ` : ''}
