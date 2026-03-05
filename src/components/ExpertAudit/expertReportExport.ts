@@ -374,10 +374,10 @@ export function generateExpertReportHTML(
         </div>
       </div>
 
-      ${strategic?.executive_summary || strategic?.executiveSummary ? sectionCard(t.executiveSummary, '#059669', 'linear-gradient(135deg, #f0fdf4, #ecfeff)', textBlock(strategic?.executive_summary || strategic?.executiveSummary || '')) : ''}
-
       ${strategic?.introduction ? sectionCard(t.introduction, '#7c3aed', '#faf5ff',
         `${textBlock(strategic.introduction.presentation || '')}${textBlock(strategic.introduction.strengths || '')}${textBlock(strategic.introduction.improvement || '')}`) : ''}
+
+      ${strategic?.executive_summary || strategic?.executiveSummary ? sectionCard(t.executiveSummary, '#059669', 'linear-gradient(135deg, #f0fdf4, #ecfeff)', textBlock(strategic?.executive_summary || strategic?.executiveSummary || '')) : ''}
 
       ${strategic?.brand_identity ? `
         <div style="background: #faf5ff; padding: 24px; border-radius: 12px; margin-bottom: 20px;">
