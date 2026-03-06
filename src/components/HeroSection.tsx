@@ -24,7 +24,6 @@ const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 
 function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionProps) {
   const [url, setUrl] = useState('');
-  const [suggestedUrl, setSuggestedUrl] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const { t, language } = useLanguage();
   const [wordIndex, setWordIndex] = useState(0);
@@ -68,6 +67,12 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
 
   // Generate typo correction candidates for a domain
   const generateTypoCandidates = (domain: string): string[] => {
+    const candidates: string[] = [];
+    const domainPart = domain.split('/')[0];
+    const pathPart = domain.includes('/') ? domain.slice(domain.indexOf('/')) : '';
+    const tlds = ['com', 'fr', 'org', 'net', 'io', 'co', 'eu', 'de', 'es', 'it', 'uk', 'be', 'ch'];
+
+    // 1. TLD typo fixes
     const domainTypoFixes: Record<string, string> = {
       '.con': '.com', '.cmo': '.com', '.ocm': '.com', '.co,': '.com',
       '.fre': '.fr', '.f': '.fr', '.frr': '.fr',
@@ -75,25 +80,70 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
       '.nte': '.net', '.met': '.net',
       '.oi': '.io', '.gio': '.io',
     };
-    const candidates: string[] = [];
     for (const [typo, fix] of Object.entries(domainTypoFixes)) {
-      if (domain.endsWith(typo) || domain.includes(typo + '/')) {
-        candidates.push(domain.replace(typo, fix));
+      if (domainPart.endsWith(typo)) {
+        candidates.push(domainPart.replace(typo, fix) + pathPart);
       }
     }
-    const extPatterns = ['com', 'fr', 'org', 'net', 'io', 'co', 'eu', 'de', 'es', 'it', 'uk', 'be', 'ch'];
-    for (const ext of extPatterns) {
-      const regex = new RegExp(`([a-z0-9])${ext}(\\/|$)`, 'i');
-      if (!domain.includes(`.${ext}`) && regex.test(domain)) {
-        candidates.push(domain.replace(regex, `$1.${ext}$2`));
-        break;
+
+    // 2. Missing dot before TLD (e.g. "googlecom" → "google.com")
+    for (const ext of tlds) {
+      const regex = new RegExp(`([a-z0-9])${ext}$`, 'i');
+      if (!domainPart.includes('.') && regex.test(domainPart)) {
+        candidates.push(domainPart.replace(regex, `$1.${ext}`) + pathPart);
       }
     }
-    const domainPart = domain.split('/')[0];
+
+    // 3. No TLD at all (e.g. "cnews" → "cnews.fr", "cnews.com")
     if (!domainPart.includes('.')) {
-      candidates.push(domain.replace(domainPart, domainPart + '.com'));
-      candidates.push(domain.replace(domainPart, domainPart + '.fr'));
+      for (const ext of ['fr', 'com', 'org', 'net', 'io']) {
+        candidates.push(domainPart + '.' + ext + pathPart);
+      }
     }
+
+    // 4. Character-level substitutions on the name part (before TLD)
+    const charSubs: Record<string, string[]> = {
+      z: ['s'], s: ['z'], c: ['k'], k: ['c'], ph: ['f'], f: ['ph'],
+      x: ['s', 'ks'], q: ['k'], w: ['v'], v: ['w'], y: ['i'], i: ['y'],
+      ee: ['e'], oo: ['o'], ll: ['l'], ss: ['s'], tt: ['t'], nn: ['n'],
+    };
+    const namePart = domainPart.includes('.') ? domainPart.split('.').slice(0, -1).join('.') : domainPart;
+    const tldPart = domainPart.includes('.') ? '.' + domainPart.split('.').pop() : '';
+    const tldsToTry = tldPart ? [tldPart] : ['.fr', '.com'];
+
+    for (const [from, toList] of Object.entries(charSubs)) {
+      if (namePart.includes(from)) {
+        for (const to of toList) {
+          const fixed = namePart.replace(from, to);
+          for (const t of tldsToTry) {
+            candidates.push(fixed + t + pathPart);
+          }
+        }
+      }
+    }
+
+    // 5. Remove each character one at a time (for extra chars like "amazonn")
+    if (namePart.length > 3) {
+      for (let i = 0; i < namePart.length; i++) {
+        const fixed = namePart.slice(0, i) + namePart.slice(i + 1);
+        if (fixed.length >= 3) {
+          for (const t of tldsToTry) {
+            candidates.push(fixed + t + pathPart);
+          }
+        }
+      }
+    }
+
+    // 6. Swap adjacent characters
+    if (namePart.length > 2) {
+      for (let i = 0; i < namePart.length - 1; i++) {
+        const swapped = namePart.slice(0, i) + namePart[i + 1] + namePart[i] + namePart.slice(i + 2);
+        for (const t of tldsToTry) {
+          candidates.push(swapped + t + pathPart);
+        }
+      }
+    }
+
     return [...new Set(candidates)];
   };
 
@@ -107,36 +157,36 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     }
   };
 
-  // Validate URL and suggest correction if domain doesn't exist
-  const validateAndSuggest = async (normalizedUrl: string): Promise<{ exists: boolean; suggestion: string | null }> => {
+  // Silently find the best valid URL (original or corrected)
+  const findValidUrl = async (normalizedUrl: string): Promise<string> => {
     const withoutProtocol = normalizedUrl.replace(/^https?:\/\//, '');
     
     // First check if the original domain exists
     const originalExists = await checkDomainExists(normalizedUrl);
-    if (originalExists) return { exists: true, suggestion: null };
+    if (originalExists) return normalizedUrl;
     
-    // Domain doesn't exist, try to find a correction
+    // Domain doesn't exist — try corrections silently
     const candidates = generateTypoCandidates(withoutProtocol);
-    for (const candidate of candidates) {
-      const candidateUrl = `https://${candidate}`;
-      const exists = await checkDomainExists(candidateUrl);
-      if (exists) return { exists: false, suggestion: candidateUrl };
+    // Test candidates in parallel batches of 5 for speed
+    for (let i = 0; i < candidates.length; i += 5) {
+      const batch = candidates.slice(i, i + 5);
+      const results = await Promise.all(
+        batch.map(async (c) => {
+          const candidateUrl = `https://${c}`;
+          const exists = await checkDomainExists(candidateUrl);
+          return exists ? candidateUrl : null;
+        })
+      );
+      const found = results.find(Boolean);
+      if (found) return found;
     }
     
-    return { exists: false, suggestion: null };
-  };
-
-  const getUnreachableMessage = () => {
-    switch (language) {
-      case 'fr': return 'Cette URL ne semble mener vers aucune page accessible. Vérifiez l\'adresse et réessayez.';
-      case 'es': return 'Esta URL no parece llevar a ninguna página accesible. Verifique la dirección e intente de nuevo.';
-      default: return 'This URL doesn\'t seem to lead to any accessible page. Please check the address and try again.';
-    }
+    // No correction found — return original, let the edge function handle the error
+    return normalizedUrl;
   };
 
   const handleUrlChange = (value: string) => {
     setUrl(value);
-    setSuggestedUrl(null);
   };
 
   const handleUrlBlur = () => {
@@ -145,21 +195,6 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
       setUrl(normalized);
       localStorage.setItem('crawlers_last_url', normalized);
     }
-  };
-
-  const handleAcceptSuggestion = () => {
-    if (suggestedUrl) {
-      setUrl(suggestedUrl);
-      localStorage.setItem('crawlers_last_url', suggestedUrl);
-      setSuggestedUrl(null);
-      onSubmit(suggestedUrl);
-    }
-  };
-
-  const handleRejectSuggestion = async () => {
-    setSuggestedUrl(null);
-    // The original URL was already checked and doesn't exist — block submission
-    toast.error(getUnreachableMessage());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,29 +206,18 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
 
     setIsValidating(true);
     try {
-      const { exists, suggestion } = await validateAndSuggest(normalizedUrl);
-      
-      if (suggestion) {
-        // Domain doesn't exist but we found a correction
-        setSuggestedUrl(suggestion);
-        setIsValidating(false);
-        return;
+      const validUrl = await findValidUrl(normalizedUrl);
+      if (validUrl !== normalizedUrl) {
+        setUrl(validUrl);
+        localStorage.setItem('crawlers_last_url', validUrl);
       }
-      
-      if (!exists) {
-        // Domain doesn't exist and no correction found — block scan
-        toast.error(getUnreachableMessage());
-        setIsValidating(false);
-        return;
-      }
-    } catch {
-      // Network error during validation — block scan to be safe
-      toast.error(getUnreachableMessage());
       setIsValidating(false);
-      return;
+      onSubmit(validUrl);
+    } catch {
+      // Validation network error — proceed with original
+      setIsValidating(false);
+      onSubmit(normalizedUrl);
     }
-    setIsValidating(false);
-    onSubmit(normalizedUrl);
   };
 
   const getIgnoreText = () => {
@@ -373,25 +397,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
                 </>
               )}
             </Button>
-          </div>
-
-          {/* URL correction suggestion */}
-          {suggestedUrl && (
-            <div className="mt-3 flex flex-col sm:flex-row items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
-              <span className="text-muted-foreground">
-                {language === 'fr' ? 'Vouliez-vous dire' : language === 'es' ? '¿Quiso decir' : 'Did you mean'}{' '}
-                <strong className="text-foreground">{suggestedUrl.replace('https://', '')}</strong>{language === 'es' ? '?' : ' ?'}
-              </span>
-              <div className="flex gap-2">
-                <Button type="button" size="sm" variant="default" onClick={handleAcceptSuggestion}>
-                  {language === 'fr' ? 'Oui' : language === 'es' ? 'Sí' : 'Yes'}
-                </Button>
-                <Button type="button" size="sm" variant="outline" onClick={handleRejectSuggestion}>
-                  {language === 'fr' ? 'Non, continuer' : language === 'es' ? 'No, continuar' : 'No, continue'}
-                </Button>
-              </div>
-            </div>
-          )}
+        </div>
         </form>
 
         {/* Trust indicators */}
