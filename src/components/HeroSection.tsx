@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, memo, lazy, Suspense, useCallback } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Zap } from 'lucide-react';
@@ -23,6 +24,8 @@ const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 
 function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionProps) {
   const [url, setUrl] = useState('');
+  const [suggestedUrl, setSuggestedUrl] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
   const { t, language } = useLanguage();
   const [wordIndex, setWordIndex] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -52,21 +55,19 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     return () => clearInterval(interval);
   }, []);
 
+  // Basic normalization: add protocol and clean up, NO typo auto-correction
   const normalizeUrl = (input: string): string => {
     let normalized = input.trim();
     if (!normalized) return '';
-    
-    // Remove surrounding quotes or angle brackets
     normalized = normalized.replace(/^["'<]+|["'>]+$/g, '');
-    
-    // Lowercase the whole thing for domain processing
-    let lower = normalized.toLowerCase();
-    
-    // Remove protocol prefix if present for processing
-    let withoutProtocol = lower.replace(/^https?:\/\//, '');
-    let hadProtocol = lower !== withoutProtocol;
-    
-    // Fix common typos in domain extensions
+    let withoutProtocol = normalized.toLowerCase().replace(/^https?:\/\//, '');
+    withoutProtocol = withoutProtocol.replace(/\.{2,}/g, '.');
+    withoutProtocol = withoutProtocol.replace(/\.(\/)/, '$1').replace(/\.$/, '');
+    return `https://${withoutProtocol}`;
+  };
+
+  // Generate typo correction candidates for a domain
+  const generateTypoCandidates = (domain: string): string[] => {
     const domainTypoFixes: Record<string, string> = {
       '.con': '.com', '.cmo': '.com', '.ocm': '.com', '.co,': '.com',
       '.fre': '.fr', '.f': '.fr', '.frr': '.fr',
@@ -74,63 +75,103 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
       '.nte': '.net', '.met': '.net',
       '.oi': '.io', '.gio': '.io',
     };
+    const candidates: string[] = [];
     for (const [typo, fix] of Object.entries(domainTypoFixes)) {
-      if (withoutProtocol.endsWith(typo) || withoutProtocol.includes(typo + '/')) {
-        withoutProtocol = withoutProtocol.replace(typo, fix);
+      if (domain.endsWith(typo) || domain.includes(typo + '/')) {
+        candidates.push(domain.replace(typo, fix));
       }
     }
-    
-    // Fix missing dot before extension (e.g. "googlefr" → "google.fr", "examplecom" → "example.com")
     const extPatterns = ['com', 'fr', 'org', 'net', 'io', 'co', 'eu', 'de', 'es', 'it', 'uk', 'be', 'ch'];
     for (const ext of extPatterns) {
       const regex = new RegExp(`([a-z0-9])${ext}(\\/|$)`, 'i');
-      if (!withoutProtocol.includes(`.${ext}`) && regex.test(withoutProtocol)) {
-        withoutProtocol = withoutProtocol.replace(regex, `$1.${ext}$2`);
+      if (!domain.includes(`.${ext}`) && regex.test(domain)) {
+        candidates.push(domain.replace(regex, `$1.${ext}$2`));
         break;
       }
     }
-    
-    // Ensure there's at least a dot in the domain (basic domain validation)
-    const domainPart = withoutProtocol.split('/')[0];
+    const domainPart = domain.split('/')[0];
     if (!domainPart.includes('.')) {
-      // Try appending .com as default
-      withoutProtocol = withoutProtocol.replace(domainPart, domainPart + '.com');
+      candidates.push(domain.replace(domainPart, domainPart + '.com'));
+      candidates.push(domain.replace(domainPart, domainPart + '.fr'));
     }
+    return [...new Set(candidates)];
+  };
+
+  // Check if a domain actually resolves
+  const checkDomainExists = async (domainUrl: string): Promise<boolean> => {
+    try {
+      await fetch(domainUrl, { method: 'HEAD', mode: 'no-cors', signal: AbortSignal.timeout(4000) });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Validate URL and suggest correction if domain doesn't exist
+  const validateAndSuggest = async (normalizedUrl: string): Promise<string | null> => {
+    const withoutProtocol = normalizedUrl.replace(/^https?:\/\//, '');
+    const candidates = generateTypoCandidates(withoutProtocol);
+    if (candidates.length === 0) return null;
     
-    // Remove duplicate dots
-    withoutProtocol = withoutProtocol.replace(/\.{2,}/g, '.');
+    const originalExists = await checkDomainExists(normalizedUrl);
+    if (originalExists) return null;
     
-    // Remove trailing dot before slash or end
-    withoutProtocol = withoutProtocol.replace(/\.(\/)/, '$1').replace(/\.$/, '');
-    
-    // Rebuild with https
-    normalized = `https://${withoutProtocol}`;
-    
-    return normalized;
+    for (const candidate of candidates) {
+      const candidateUrl = `https://${candidate}`;
+      const exists = await checkDomainExists(candidateUrl);
+      if (exists) return candidateUrl;
+    }
+    return null;
   };
 
   const handleUrlChange = (value: string) => {
     setUrl(value);
+    setSuggestedUrl(null);
   };
 
   const handleUrlBlur = () => {
     if (url.trim()) {
       const normalized = normalizeUrl(url);
       setUrl(normalized);
-      // Persist URL to localStorage for expert audit pre-fill
       localStorage.setItem('crawlers_last_url', normalized);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (url.trim()) {
-      const normalizedUrl = normalizeUrl(url);
-      setUrl(normalizedUrl);
-      // Persist URL to localStorage for expert audit pre-fill
-      localStorage.setItem('crawlers_last_url', normalizedUrl);
-      onSubmit(normalizedUrl);
+  const handleAcceptSuggestion = () => {
+    if (suggestedUrl) {
+      setUrl(suggestedUrl);
+      localStorage.setItem('crawlers_last_url', suggestedUrl);
+      setSuggestedUrl(null);
+      onSubmit(suggestedUrl);
     }
+  };
+
+  const handleRejectSuggestion = () => {
+    setSuggestedUrl(null);
+    const normalizedUrl = normalizeUrl(url);
+    onSubmit(normalizedUrl);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!url.trim()) return;
+    const normalizedUrl = normalizeUrl(url);
+    setUrl(normalizedUrl);
+    localStorage.setItem('crawlers_last_url', normalizedUrl);
+
+    setIsValidating(true);
+    try {
+      const suggestion = await validateAndSuggest(normalizedUrl);
+      if (suggestion) {
+        setSuggestedUrl(suggestion);
+        setIsValidating(false);
+        return;
+      }
+    } catch {
+      // Validation failed, proceed anyway
+    }
+    setIsValidating(false);
+    onSubmit(normalizedUrl);
   };
 
   const getIgnoreText = () => {
@@ -287,13 +328,18 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
               type="submit" 
               variant="hero" 
               size="lg" 
-              disabled={isLoading}
+              disabled={isLoading || isValidating}
               className={cn(
                 "h-14 min-w-[122px] transition-shadow duration-500",
                 glowActive && "animate-cta-glow"
               )}
             >
-              {isLoading ? (
+              {isValidating ? (
+                <>
+                  <Zap className="h-5 w-5 animate-pulse" />
+                  {language === 'fr' ? 'Vérification…' : language === 'es' ? 'Verificando…' : 'Checking…'}
+                </>
+              ) : isLoading ? (
                 <>
                   <Zap className="h-5 w-5 animate-pulse" />
                   {content.loadingText}
@@ -306,6 +352,24 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
               )}
             </Button>
           </div>
+
+          {/* URL correction suggestion */}
+          {suggestedUrl && (
+            <div className="mt-3 flex flex-col sm:flex-row items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+              <span className="text-muted-foreground">
+                {language === 'fr' ? 'Vouliez-vous dire' : language === 'es' ? '¿Quiso decir' : 'Did you mean'}{' '}
+                <strong className="text-foreground">{suggestedUrl.replace('https://', '')}</strong>{language === 'es' ? '?' : ' ?'}
+              </span>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant="default" onClick={handleAcceptSuggestion}>
+                  {language === 'fr' ? 'Oui' : language === 'es' ? 'Sí' : 'Yes'}
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={handleRejectSuggestion}>
+                  {language === 'fr' ? 'Non, continuer' : language === 'es' ? 'No, continuar' : 'No, continue'}
+                </Button>
+              </div>
+            </div>
+          )}
         </form>
 
         {/* Trust indicators */}
