@@ -826,9 +826,7 @@ export function ExpertAuditDashboard() {
       } catch (retryError) {
         console.error('Strategic audit retry also failed:', retryError);
         toast({
-          title: t.error,
-          description: retryError instanceof Error ? retryError.message : t.auditFailed,
-          variant: 'destructive',
+          title: 'Erreur de chargement',
         });
       }
     } finally {
