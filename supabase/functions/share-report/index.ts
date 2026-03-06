@@ -153,7 +153,9 @@ function generateCrawlersHTML(data: any, t: any, url: string): string {
 }
 
 function generateGeoHTML(data: any, t: any, url: string): string {
-  const factorsRows = data.factors.map((factor: any) => `
+  const factorsRows = data.factors.map((factor: any) => {
+    const passed = factor.status === 'good' || factor.passed;
+    return `
     <tr>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
         <strong>${factor.name}</strong><br>
@@ -161,14 +163,14 @@ function generateGeoHTML(data: any, t: any, url: string): string {
       </td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">
         <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; ${
-          factor.passed ? 'background: #dcfce7; color: #166534;' : 'background: #fee2e2; color: #991b1b;'
-        }">${factor.passed ? t.passed : t.failed}</span>
+          passed ? 'background: #dcfce7; color: #166534;' : 'background: #fee2e2; color: #991b1b;'
+        }">${passed ? t.passed : t.failed}</span>
       </td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; font-weight: bold;">
-        ${factor.score}/100
+        ${factor.score}/${factor.maxScore || 100}
       </td>
     </tr>
-  `).join('');
+  `;}).join('');
 
   return `
     <div style="text-align: center; margin-bottom: 30px;">
@@ -195,26 +197,32 @@ function generateGeoHTML(data: any, t: any, url: string): string {
 }
 
 function generateLLMHTML(data: any, t: any, url: string): string {
-  const llmsRows = data.llmResults.map((llm: any) => `
+  const citations = data.citations || data.llmResults || [];
+  const llmsRows = citations.map((item: any) => {
+    const name = item.provider?.name || item.name || 'Unknown';
+    const cited = item.cited ?? item.mentioned ?? false;
+    const sentiment = item.sentiment || 'neutral';
+    const recommends = item.recommends ?? false;
+    return `
     <tr>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
-        <strong>${llm.name}</strong>
+        <strong>${name}</strong>
       </td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">
-        ${llm.mentioned ? '✅' : '❌'}
+        ${cited ? '✅' : '❌'}
       </td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">
         <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; ${
-          llm.sentiment === 'positive' ? 'background: #dcfce7; color: #166534;' :
-          llm.sentiment === 'negative' ? 'background: #fee2e2; color: #991b1b;' :
+          sentiment === 'positive' || sentiment === 'mostly_positive' ? 'background: #dcfce7; color: #166534;' :
+          sentiment === 'negative' ? 'background: #fee2e2; color: #991b1b;' :
           'background: #f3f4f6; color: #6b7280;'
-        }">${llm.sentiment}</span>
+        }">${sentiment}</span>
       </td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">
-        ${llm.recommends ? '👍' : '—'}
+        ${recommends ? '👍' : '—'}
       </td>
     </tr>
-  `).join('');
+  `;}).join('');
 
   return `
     <div style="text-align: center; margin-bottom: 30px;">
@@ -287,7 +295,14 @@ function generatePageSpeedHTML(data: any, t: any, url: string): string {
         </tr>
       </thead>
       <tbody>
-        ${Object.entries(data.metrics).map(([key, value]: [string, any]) => `
+        ${[
+          ['First Contentful Paint (FCP)', scores.fcp],
+          ['Largest Contentful Paint (LCP)', scores.lcp],
+          ['Cumulative Layout Shift (CLS)', scores.cls],
+          ['Total Blocking Time (TBT)', scores.tbt],
+          ['Speed Index', scores.speedIndex],
+          ['Time to Interactive (TTI)', scores.tti],
+        ].filter(([, v]) => v).map(([key, value]) => `
           <tr>
             <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${key}</td>
             <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; font-weight: bold;">${value}</td>

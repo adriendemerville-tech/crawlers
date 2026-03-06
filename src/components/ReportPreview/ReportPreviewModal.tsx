@@ -197,10 +197,21 @@ export function ReportPreviewModal({
   const reportType = useFullType ? 'full' : effectiveType;
   const htmlContent = generateReportHTML(reportType, data, url, language, branding);
 
+  // Get single-result data for the effective type (PDF/share always use single type)
+  const getSingleResultData = (): any => {
+    switch (effectiveType) {
+      case 'crawlers': return crawlResult || null;
+      case 'geo': return geoResult || null;
+      case 'llm': return llmResult || null;
+      case 'pagespeed': return pageSpeedResult || null;
+      default: return null;
+    }
+  };
+
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      await generatePDF(effectiveType, data, url, language);
+      await generatePDF(effectiveType, getSingleResultData(), url, language);
       toast.success(t.pdfSuccess);
     } catch (error) {
       console.error('PDF generation error:', error);
@@ -216,7 +227,7 @@ export function ReportPreviewModal({
         body: {
           type: effectiveType,
           url,
-          data,
+          data: getSingleResultData(),
           language,
         },
       });
