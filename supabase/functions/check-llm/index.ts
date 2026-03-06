@@ -275,11 +275,13 @@ Deno.serve(async (req) => {
 
     const citations = await Promise.all(citationPromises);
 
-    // Calculate metrics — exclude error models from calculations
+    // Calculate metrics — error models count as "not cited" to penalize the score
+    const totalModels = citations.length || 1;
     const validCitations = citations.filter(c => !c.error);
-    const totalValid = validCitations.length || 1; // avoid division by zero
+    const errorCount = citations.filter(c => c.error).length;
     const citedCount = validCitations.filter(c => c.cited).length;
-    const invisibleList = validCitations.filter(c => !c.cited).map(c => c.provider);
+    // Error models + non-cited valid models = invisible
+    const invisibleList = citations.filter(c => c.error || !c.cited).map(c => c.provider);
 
     const avgIterationDepth = citedCount > 0
       ? validCitations.filter(c => c.cited).reduce((sum, c) => sum + c.iterationDepth, 0) / citedCount
@@ -312,10 +314,11 @@ Deno.serve(async (req) => {
       overallSentiment = 'negative';
     }
 
-    const overallRecommendation = validCitations.filter(c => c.recommends).length > totalValid / 2;
+    const overallRecommendation = validCitations.filter(c => c.recommends).length > totalModels / 2;
 
-    // Calculate overall score — only based on valid (non-error) models
-    const citationScore = (citedCount / totalValid) * 40;
+    // Calculate overall score — use total models (including errors) as denominator
+    // Error models drag the score down since they count as "not cited"
+    const citationScore = (citedCount / totalModels) * 40;
     const sentimentScoreMap: Record<SentimentType, number> = {
       positive: 30,
       mostly_positive: 22,
@@ -325,7 +328,7 @@ Deno.serve(async (req) => {
     };
     const sentimentScore = sentimentScoreMap[overallSentiment];
     const recommendationScore = overallRecommendation ? 20 : 0;
-    const coreValueScore = validCitations.filter(c => c.coreValueMatch).length / totalValid * 10;
+    const coreValueScore = validCitations.filter(c => c.coreValueMatch).length / totalModels * 10;
 
     const overallScore = Math.round(citationScore + sentimentScore + recommendationScore + coreValueScore);
 
@@ -352,7 +355,7 @@ Deno.serve(async (req) => {
       overallScore,
       citationRate: {
         cited: citedCount,
-        total: totalValid,
+        total: totalModels,
       },
       invisibleList,
       averageIterationDepth: Math.round(avgIterationDepth * 10) / 10,
