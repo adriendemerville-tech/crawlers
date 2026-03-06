@@ -1,6 +1,5 @@
 import { LLMAnalysisResult } from '@/types/llm';
 import { TranslationKeys } from '../translations';
-import { icons } from '../reportStyles';
 
 function generateScoreGauge(score: number): string {
   const circumference = 2 * Math.PI * 45;
@@ -59,18 +58,13 @@ export function generateLLMHTML(data: LLMAnalysisResult, t: TranslationKeys, lan
         <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; justify-content: space-between; width: 100%;">
           <div style="flex: 1; min-width: 200px;">
             <div style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 20px; background: hsla(221, 83%, 53%, 0.1); margin-bottom: 8px;">
-              ${icons.brain}
               <span style="font-size: 14px; font-weight: 500; color: var(--primary);">${t.llm}</span>
             </div>
             <h2 class="url-title">
               ${data.domain}
-              <a href="${data.url}" target="_blank" rel="noopener noreferrer">
-                ${icons.externalLink}
-              </a>
             </h2>
             <div class="url-meta">
               <span class="url-meta-item">
-                ${icons.clock}
                 ${new Date(data.scannedAt).toLocaleTimeString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
               </span>
               <span>${data.citationRate.cited}/${data.citationRate.total} ${t.llmsCite}</span>
@@ -87,7 +81,6 @@ export function generateLLMHTML(data: LLMAnalysisResult, t: TranslationKeys, lan
     <!-- Citation Rate Card -->
     <div class="card" style="padding: 20px; margin-bottom: 24px;">
       <h3 class="section-title">
-        ${icons.brain}
         ${t.citationRate}
       </h3>
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">

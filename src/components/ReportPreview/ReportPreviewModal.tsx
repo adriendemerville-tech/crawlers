@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Download, Loader2, Check, Copy, Mail, X } from 'lucide-react';
+import { Download, Loader2, Check, Copy, Share2, Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -286,18 +286,31 @@ export function ReportPreviewModal({
     }
   };
 
+  const handlePrint = () => {
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:none;';
+    document.body.appendChild(iframe);
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc || !iframe.contentWindow) return;
+    iframeDoc.open();
+    iframeDoc.write(htmlContent);
+    iframeDoc.close();
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 500);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col p-0 [&>button]:hidden">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col p-0 [&>button]:hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
         {/* Header with actions */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
+          <h2 className="text-lg font-semibold">{t.title}</h2>
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold">{t.title}</h2>
-            <div className="h-4 w-px bg-border" />
             <Button
               onClick={handleDownloadPDF}
               disabled={isGeneratingPDF}
-              size="sm"
               className="gap-2 bg-primary hover:bg-primary/90"
             >
               {isGeneratingPDF ? (
@@ -308,10 +321,17 @@ export function ReportPreviewModal({
               {isGeneratingPDF ? t.generating : t.download}
             </Button>
             <Button
+              onClick={handlePrint}
+              variant="outline"
+              className="gap-2"
+            >
+              <Printer className="h-4 w-4" />
+              {language === 'fr' ? 'Imprimer' : language === 'es' ? 'Imprimir' : 'Print'}
+            </Button>
+            <Button
               onClick={handleCopyLink}
               disabled={isSharing}
               variant="outline"
-              size="sm"
               className="gap-2"
             >
               {isSharing && !shareUrl ? (
@@ -319,33 +339,48 @@ export function ReportPreviewModal({
               ) : copied ? (
                 <Check className="h-4 w-4 text-success" />
               ) : (
-                <Copy className="h-4 w-4" />
+                <Share2 className="h-4 w-4" />
               )}
-              {copied ? t.copied : t.copyLink}
+              {copied ? t.copied : t.share}
             </Button>
             <Button
-              onClick={handleShare}
-              disabled={isSharing}
-              variant="outline"
-              size="sm"
-              className="gap-2"
+              onClick={onClose}
+              variant="ghost"
+              size="icon"
+              className="ml-2"
             >
-              {isSharing && !shareUrl ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Mail className="h-4 w-4" />
-              )}
-              {t.share}
+              <X className="h-5 w-5" />
             </Button>
           </div>
-          {/* Premium close button */}
-          <button
-            onClick={onClose}
-            className="group flex items-center justify-center h-8 w-8 rounded-lg bg-muted/50 hover:bg-muted border border-border/50 hover:border-border transition-all duration-200 hover:shadow-sm"
-          >
-            <X className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-          </button>
         </div>
+
+        {/* Share link display */}
+        {shareUrl && (
+          <div className="px-6 py-3 bg-muted/50 border-b border-border">
+            <p className="text-xs text-muted-foreground mb-2">{t.copyLink}</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={shareUrl}
+                readOnly
+                className="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-md font-mono"
+              />
+              <Button
+                onClick={handleCopyLink}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                {copied ? (
+                  <Check className="h-4 w-4 text-success" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+                {copied ? t.copied : t.copyLink}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* HTML Preview */}
         <div className="flex-1 overflow-auto bg-muted/30">
