@@ -3,11 +3,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface ShareReportRequest {
-  type: 'crawlers' | 'geo' | 'llm' | 'pagespeed';
+  type: 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'expert-audit';
   url: string;
   data: any;
   language: string;
@@ -298,6 +298,34 @@ function generatePageSpeedHTML(data: any, t: any, url: string): string {
   `;
 }
 
+function generateExpertAuditHTML(data: any, t: any, url: string): string {
+  const auditMode = data.auditMode || 'technical';
+  const result = data.result || data;
+  const domain = result.domain || url;
+  const auditLabel = auditMode === 'technical' ? 'Audit Technique' : 'Audit Stratégique';
+
+  let sections = `<div style="text-align:center;margin-bottom:30px;">
+    <h1 style="font-size:24px;font-weight:700;color:#1f2937;">${domain}</h1>
+    <p style="font-size:16px;color:#6b7280;">${auditLabel}</p>
+    <p style="font-size:13px;color:#9ca3af;margin-top:4px;">Score: ${result.totalScore || 0}/${result.maxScore || 200}</p>
+  </div>`;
+
+  if (result.strategicAnalysis?.introduction?.main_narrative) {
+    sections += `<div style="padding:16px;background:#f9fafb;border-radius:12px;margin-bottom:16px;">
+      <p style="font-size:14px;color:#374151;line-height:1.6;">${result.strategicAnalysis.introduction.main_narrative}</p>
+    </div>`;
+  }
+
+  if (result.recommendations?.length) {
+    const recsHtml = result.recommendations.slice(0, 8).map((r: any) =>
+      `<li style="margin-bottom:8px;font-size:14px;color:#374151;">${r.title || r}</li>`
+    ).join('');
+    sections += `<div style="margin-top:16px;"><h3 style="font-size:16px;font-weight:600;margin-bottom:12px;">Recommandations</h3><ul style="padding-left:20px;">${recsHtml}</ul></div>`;
+  }
+
+  return sections;
+}
+
 function generateReportHTML(type: string, data: any, url: string, language: string): string {
   const t = translations[language as keyof typeof translations] || translations.en;
   const now = new Date().toLocaleString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US');
@@ -315,6 +343,9 @@ function generateReportHTML(type: string, data: any, url: string, language: stri
       break;
     case 'pagespeed':
       content = generatePageSpeedHTML(data, t, url);
+      break;
+    case 'expert-audit':
+      content = generateExpertAuditHTML(data, t, url);
       break;
   }
 
