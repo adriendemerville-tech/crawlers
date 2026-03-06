@@ -36,6 +36,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSaveReport } from '@/hooks/useSaveReport';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
+import { summarizeStrategicResult } from './expertReportExport';
 
 function formatMs(ms: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
@@ -148,6 +149,7 @@ export function ExpertAuditDashboard() {
   const [result, setResult] = useState<ExpertAuditResult | null>(null);
   const [technicalResult, setTechnicalResult] = useState<ExpertAuditResult | null>(null);
   const [strategicResult, setStrategicResult] = useState<ExpertAuditResult | null>(null);
+  const [preSummarizedResult, setPreSummarizedResult] = useState<ExpertAuditResult | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isCodeEditorOpen, setIsCodeEditorOpen] = useState(false);
@@ -292,6 +294,7 @@ export function ExpertAuditDashboard() {
       setResult(null);
       setTechnicalResult(null);
       setStrategicResult(null);
+      setPreSummarizedResult(null);
       setCompletedSteps([]);
       sessionStorage.removeItem('audit_url');
       sessionStorage.removeItem('audit_technical_result');
@@ -744,6 +747,12 @@ export function ExpertAuditDashboard() {
       // Clear any previous hallucination diagnosis since we re-analyzed
       setHallucinationDiagnosis(null);
       
+      // Pre-summarize for downloadable report (runs in background)
+      setPreSummarizedResult(null);
+      summarizeStrategicResult(strategicData, language).then((summarized) => {
+        setPreSummarizedResult(summarized);
+      }).catch((err) => console.error('[pre-summarize] error:', err));
+      
       // Track step 2 completion
       trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
       
@@ -819,6 +828,9 @@ export function ExpertAuditDashboard() {
         setStrategicResult(strategicData);
         setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
         setHallucinationDiagnosis(null);
+        // Pre-summarize retry result
+        setPreSummarizedResult(null);
+        summarizeStrategicResult(strategicData, language).then((s) => setPreSummarizedResult(s)).catch(() => {});
         trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
         const domain = new URL(normalizedUrl).hostname;
         fetchStoredCorrections(domain);
@@ -1391,6 +1403,7 @@ export function ExpertAuditDashboard() {
           onClose={handleReportModalClose}
           result={result}
           auditMode={auditMode}
+          preSummarizedResult={auditMode === 'strategic' ? preSummarizedResult : undefined}
         />
       )}
 
