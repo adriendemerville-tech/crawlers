@@ -164,6 +164,43 @@ function sanitizeBrandSlugInObject(obj: any, slug: string, humanName: string): a
   return walk(obj);
 }
 
+/**
+ * Fetch real metadata from the target site to ground the AI's understanding.
+ */
+async function fetchSiteMetadata(domain: string): Promise<{ title: string; description: string; ogSiteName: string; h1: string }> {
+  const fallback = { title: '', description: '', ogSiteName: '', h1: '' };
+  try {
+    const url = `https://${domain}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersBot/1.0)' },
+      signal: controller.signal,
+      redirect: 'follow',
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return fallback;
+    const html = await res.text();
+    const slice = html.substring(0, 30000); // only need head + early body
+
+    const titleMatch = slice.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const descMatch = slice.match(/<meta[^>]*name=["']description["'][^>]*content=["']([\s\S]*?)["']/i)
+      || slice.match(/<meta[^>]*content=["']([\s\S]*?)["'][^>]*name=["']description["']/i);
+    const ogNameMatch = slice.match(/<meta[^>]*property=["']og:site_name["'][^>]*content=["']([\s\S]*?)["']/i)
+      || slice.match(/<meta[^>]*content=["']([\s\S]*?)["'][^>]*property=["']og:site_name["']/i);
+    const h1Match = slice.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+
+    return {
+      title: titleMatch?.[1]?.trim().substring(0, 200) || '',
+      description: descMatch?.[1]?.trim().substring(0, 300) || '',
+      ogSiteName: ogNameMatch?.[1]?.trim().substring(0, 100) || '',
+      h1: h1Match?.[1]?.replace(/<[^>]+>/g, '').trim().substring(0, 200) || '',
+    };
+  } catch {
+    return fallback;
+  }
+}
+
 function buildValidationPrompt(queries: any[], strategicCtx: StrategicContext, brand: string, lang: string): string {
   const langInstructions: Record<string, string> = {
     fr: `Réponds UNIQUEMENT en français.`,
@@ -240,6 +277,10 @@ Deno.serve(async (req) => {
     // Build strategic context for validation
     const strategicCtx = strategicAnalysis ? buildStrategicContext(strategicAnalysis) : null;
 
+    // Fetch real site metadata to ground the AI's understanding
+    const siteMeta = await fetchSiteMetadata(domain);
+    console.log(`📄 Site metadata for ${domain}: title="${siteMeta.title}", og:site_name="${siteMeta.ogSiteName}", h1="${siteMeta.h1}"`);
+
     // Build context from citations
     const citationContext = (citations || [])
       .filter((c: any) => c.cited && c.summary)
@@ -273,18 +314,28 @@ Deno.serve(async (req) => {
 Utilise TOUJOURS "${humanBrandName}" dans les requêtes et textes, JAMAIS le slug "${brand}".
 ` : '';
 
+    // Build real site metadata block for grounding
+    const siteMetaBlock = (siteMeta.title || siteMeta.description || siteMeta.h1) ? `
+**MÉTADONNÉES RÉELLES DU SITE (SOURCE DE VÉRITÉ pour le core business — PRIORITAIRE sur toute autre hypothèse) :**
+${siteMeta.ogSiteName ? `- Nom du site (og:site_name) : ${siteMeta.ogSiteName}` : ''}
+${siteMeta.title ? `- Title : ${siteMeta.title}` : ''}
+${siteMeta.description ? `- Meta description : ${siteMeta.description}` : ''}
+${siteMeta.h1 ? `- H1 principal : ${siteMeta.h1}` : ''}
+` : '';
+
     const prompt = `Tu es un expert en GEO (Generative Engine Optimization). 
 
 Analyse ce site web et génère 5 requêtes stratégiques à cibler pour maximiser les recommandations par les LLMs.
 ${brandNameInstruction}
 **Site cible :** ${domain}
 **Marque :** ${humanBrandName}
+${siteMetaBlock}
 **Synthèse des perceptions LLM :** ${coreValueSummary || 'Non disponible'}
 **Détails des citations LLM :**
 ${citationContext || 'Aucune citation disponible'}
 ${strategicContextBlock}
 **RÈGLES CRITIQUES :**
-1. D'abord, identifie le CORE BUSINESS / produit phare / secteur de marché du site cible
+1. D'abord, déduis le CORE BUSINESS / produit phare / secteur de marché du site cible EN TE BASANT PRINCIPALEMENT sur les MÉTADONNÉES RÉELLES DU SITE ci-dessus (title, meta description, H1). Ces données sont factuelles et prioritaires. Ne te fie PAS aux synthèses LLM qui peuvent contenir des hallucinations.
 2. Identifie le LEADER DU MARCHÉ dans ce secteur (le concurrent dominant)
 3. Génère 5 requêtes qui mesurent le paramètre "recommandation" des LLMs :
    - 4 requêtes doivent interroger LE MARCHÉ sans mentionner la marque "${humanBrandName}" (ex: "quel est le meilleur outil pour [secteur]", "meilleure alternative à [leader du marché]", "comparatif [type de produit] [année]")
@@ -297,7 +348,7 @@ ${langInstructions[lang] || langInstructions.fr}
 
 Réponds au format JSON exact suivant, sans texte avant ou après :
 {
-  "coreBusiness": "description courte du core business détecté",
+  "coreBusiness": "description courte du core business détecté (basée sur les métadonnées réelles du site)",
   "marketLeader": "nom du leader de marché identifié",
   "queries": [
     {
