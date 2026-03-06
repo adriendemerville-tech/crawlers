@@ -32,6 +32,8 @@ import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
+import { UrlValidationBanner } from '@/components/UrlValidationBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSaveReport } from '@/hooks/useSaveReport';
@@ -177,6 +179,7 @@ export function ExpertAuditDashboard() {
   const location = useLocation();
   const { saveReport, isAuthenticated } = useSaveReport();
   const t = translations[language] || translations.fr;
+  const urlValidation = useUrlValidation(language);
 
   const isLoggedIn = !!user;
 
@@ -491,17 +494,7 @@ export function ExpertAuditDashboard() {
     }
   };
 
-  const normalizeUrl = (input: string): string => {
-    let normalized = input.trim();
-    if (!normalized) return '';
-    normalized = normalized.toLowerCase();
-    if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
-      normalized = `https://${input.trim()}`;
-    } else {
-      normalized = input.trim();
-    }
-    return normalized;
-  };
+  // normalizeUrl is now imported from @/hooks/useUrlValidation
 
   // Auto-register site in tracked_sites and save initial KPIs
   const autoTrackSite = useCallback(async (normalizedUrl: string, auditResult: ExpertAuditResult, mode: 'technical' | 'strategic') => {
@@ -602,9 +595,8 @@ export function ExpertAuditDashboard() {
     }
   }, [user]);
 
-  const handleTechnicalAudit = async () => {
-    if (!url.trim()) return;
-    const normalizedUrl = normalizeUrl(url);
+  const runTechnicalAudit = async (validatedUrl: string) => {
+    const normalizedUrl = validatedUrl;
     setAuditMode('technical');
     setIsLoading(true);
     setResult(null);
@@ -660,9 +652,17 @@ export function ExpertAuditDashboard() {
     }
   };
 
-  const handleStrategicAudit = async (hallucinationCorrections?: any, competitorCorrections?: any) => {
+  const handleTechnicalAudit = async () => {
     if (!url.trim()) return;
-    const normalizedUrl = normalizeUrl(url);
+    await urlValidation.validateAndCorrect(url, (validUrl) => {
+      setUrl(validUrl);
+      localStorage.setItem('crawlers_last_url', validUrl);
+      runTechnicalAudit(validUrl);
+    });
+  };
+
+  const runStrategicAudit = async (validatedUrl: string, hallucinationCorrections?: any, competitorCorrections?: any) => {
+    const normalizedUrl = validatedUrl;
     setAuditMode('strategic');
     setIsStrategicLoading(true);
     setResult(null);
@@ -846,7 +846,21 @@ export function ExpertAuditDashboard() {
     }
   };
 
-  // Navigate to cached technical report
+  const handleStrategicAudit = async (hallucinationCorrections?: any, competitorCorrections?: any) => {
+    if (!url.trim()) return;
+    // If corrections are provided, this is a re-run — skip URL validation
+    if (hallucinationCorrections || competitorCorrections) {
+      const normalizedUrl = normalizeUrl(url);
+      runStrategicAudit(normalizedUrl, hallucinationCorrections, competitorCorrections);
+      return;
+    }
+    await urlValidation.validateAndCorrect(url, (validUrl) => {
+      setUrl(validUrl);
+      localStorage.setItem('crawlers_last_url', validUrl);
+      runStrategicAudit(validUrl);
+    });
+  };
+
   const handleNavigateToTechnical = useCallback(() => {
     if (technicalResult) {
       setAuditMode('technical');
@@ -994,16 +1008,37 @@ export function ExpertAuditDashboard() {
         currentStep={currentStep}
         completedSteps={completedSteps}
         url={url}
-        onUrlChange={(v: string) => { setUrl(v); if (v.trim()) localStorage.setItem('crawlers_last_url', v.trim()); }}
+        onUrlChange={(v: string) => { setUrl(v); urlValidation.resetValidation(); if (v.trim()) localStorage.setItem('crawlers_last_url', v.trim()); }}
         onStartTechnical={handleTechnicalAudit}
         onStartStrategic={() => handleStrategicAudit()}
         onStartPayment={() => setIsCodeEditorOpen(true)}
-        isLoading={isLoading}
+        isLoading={isLoading || urlValidation.isValidating}
         isStrategicLoading={isStrategicLoading}
         hasTechnicalResult={!!technicalResult}
         hasStrategicResult={!!strategicResult}
         onNavigateToTechnical={handleNavigateToTechnical}
         onNavigateToStrategic={handleNavigateToStrategic}
+      />
+
+      {/* URL validation banners */}
+      <UrlValidationBanner
+        suggestedUrl={urlValidation.suggestedUrl}
+        urlNotFound={urlValidation.urlNotFound}
+        suggestionPrefix={urlValidation.getSuggestionPrefix()}
+        notFoundMessage={urlValidation.getNotFoundMessage()}
+        onAcceptSuggestion={() => {
+          if (!urlValidation.suggestedUrl) return;
+          const accepted = urlValidation.suggestedUrl;
+          setUrl(accepted);
+          localStorage.setItem('crawlers_last_url', accepted);
+          urlValidation.acceptSuggestion(accepted, (validUrl) => {
+            // Determine which audit to run based on current step
+            if (currentStep <= 1) runTechnicalAudit(validUrl);
+            else runStrategicAudit(validUrl);
+          });
+        }}
+        onDismissSuggestion={urlValidation.dismissSuggestion}
+        onDismissNotFound={urlValidation.dismissNotFound}
       />
 
       {/* Loading States Container - scroll target */}
