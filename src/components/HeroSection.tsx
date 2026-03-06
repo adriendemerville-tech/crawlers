@@ -27,6 +27,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
   const [url, setUrl] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [suggestedUrl, setSuggestedUrl] = useState<string | null>(null);
+  const [urlNotFound, setUrlNotFound] = useState(false);
   const { t, language } = useLanguage();
   const [wordIndex, setWordIndex] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -202,6 +203,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
   const handleUrlChange = (value: string) => {
     setUrl(value);
     setSuggestedUrl(null);
+    setUrlNotFound(false);
   };
 
   const handleUrlBlur = () => {
@@ -252,10 +254,8 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
       
       // No valid URL found at all
       setIsValidating(false);
-      const msg = language === 'fr' ? 'URL introuvable. Vérifiez l\'adresse et réessayez.' 
-                : language === 'es' ? 'URL no encontrada. Verifique la dirección e intente de nuevo.' 
-                : 'URL not found. Please check the address and try again.';
-      toast.error(msg);
+      setUrlNotFound(true);
+      setTimeout(() => setUrlNotFound(false), 5000);
     } catch {
       setIsValidating(false);
       onSubmit(normalizedUrl);
@@ -467,7 +467,27 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
           </div>
         )}
 
-        {/* Trust indicators */}
+        {/* URL not found notification */}
+        {urlNotFound && (
+          <div className="mx-auto mt-4 max-w-xl animate-in fade-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-4 shadow-lg">
+              <div className="h-2.5 w-2.5 rounded-full bg-destructive animate-pulse shrink-0" />
+              <p className="text-sm font-medium text-foreground text-center">
+                {language === 'fr' ? 'Cette URL ne pointe vers aucune page existante' 
+                  : language === 'es' ? 'Esta URL no apunta a ninguna página existente' 
+                  : 'This URL does not point to any existing page'}
+              </p>
+              <button
+                onClick={() => setUrlNotFound(false)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0 ml-2"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-success" />
