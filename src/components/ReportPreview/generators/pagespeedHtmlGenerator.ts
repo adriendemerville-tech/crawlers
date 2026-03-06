@@ -47,7 +47,6 @@ export function generatePageSpeedHTML(data: PageSpeedResult, t: TranslationKeys)
           <div class="metric-value">${v.value}</div>
         </div>
       </div>
-      <p class="metric-desc">${v.desc}</p>
     </div>
   `).join('');
 

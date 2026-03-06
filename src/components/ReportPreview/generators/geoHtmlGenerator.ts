@@ -108,11 +108,6 @@ export function generateGeoHTML(data: GeoResult, t: TranslationKeys, language: s
       </div>
     </div>
 
-    <!-- Info box -->
-    <div class="info-box">
-      <p><strong>GEO (Generative Engine Optimization)</strong> ${t.whatIsGeo}</p>
-    </div>
-
     <!-- Factor Cards Grid -->
     <div class="grid-2">
       ${factorCards}

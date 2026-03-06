@@ -103,7 +103,6 @@ export function generateLLMHTML(data: LLMAnalysisResult, t: TranslationKeys, lan
       <div class="progress-bar">
         <div class="progress-fill ${coveragePercent >= 70 ? 'progress-success' : coveragePercent >= 40 ? 'progress-warning' : 'progress-error'}" style="width: ${coveragePercent}%"></div>
       </div>
-      <p style="margin-top: 12px; font-size: 14px; color: var(--muted-foreground);">${t.citationRateDesc}</p>
     </div>
 
     <!-- LLM Cards Grid - Compact style -->
