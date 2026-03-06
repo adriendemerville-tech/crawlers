@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // ══════════════════════════════════════════════════════════════
-// INTERFACES - MOTEUR ARCHITECTE GÉNÉRATIF V2
+// INTERFACES - ARCHITECTE GÉNÉRATIF v3.0 — CLS-ZERO Protocol
 // ══════════════════════════════════════════════════════════════
 
 interface FixConfig {
@@ -668,22 +668,57 @@ function generateFixCode(
 
     case 'fix_lazy_images':
       return {
-        fn: `  // Lazy Loading des images
-  function enableLazyLoading() {
-    var images = document.querySelectorAll('img:not([loading])');
-    var viewportHeight = window.innerHeight;
-    
-    images.forEach(function(img) {
-      var rect = img.getBoundingClientRect();
-      if (rect.top > viewportHeight * 1.5) {
-        img.loading = 'lazy';
-        img.decoding = 'async';
+        fn: `  // Règle 3: Lazy Loading hors-écran + fetchpriority="high" sur image LCP
+  // Règle 4: Lock anti double-exécution
+  function optimizeImages() {
+    if (hasLock('fix_lazy_images')) return;
+    try {
+      var images = document.querySelectorAll('img');
+      var viewportHeight = window.innerHeight;
+      var lcpFixed = false;
+
+      // Règle 3: fetchpriority="high" sur l'image LCP via MutationObserver
+      var lcpSelectors = '.hero-banner img, .hero img, .featured-article img, [class*="hero"] img, [class*="banner"] img, header img, main > section:first-child img';
+      var lcpImg = document.querySelector(lcpSelectors);
+      if (lcpImg) {
+        lcpImg.setAttribute('fetchpriority', 'high');
+        lcpImg.setAttribute('loading', 'eager');
+        lcpImg.setAttribute('decoding', 'sync');
+        lcpFixed = true;
+        console.log('[Crawlers.fr] Règle 3 — fetchpriority=high sur image LCP');
       }
-    });
-    
-    console.log('[Crawlers.fr] Lazy loading activé sur', images.length, 'images');
+
+      // Règle 3: loading="lazy" sur les images hors-écran
+      images.forEach(function(img) {
+        if (img === lcpImg) return;
+        var rect = img.getBoundingClientRect();
+        if (rect.top > viewportHeight * 1.5) {
+          img.loading = 'lazy';
+          img.decoding = 'async';
+        }
+      });
+
+      // MutationObserver si image LCP pas encore dans le DOM
+      if (!lcpFixed) {
+        var observer = new MutationObserver(function(mutations) {
+          var found = document.querySelector(lcpSelectors);
+          if (found) {
+            found.setAttribute('fetchpriority', 'high');
+            found.setAttribute('loading', 'eager');
+            found.setAttribute('decoding', 'sync');
+            observer.disconnect();
+            console.log('[Crawlers.fr] Règle 3 — MutationObserver: fetchpriority=high appliqué');
+          }
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+        setTimeout(function() { observer.disconnect(); }, 10000);
+      }
+
+      setLock(document.body, 'fix_lazy_images');
+      console.log('[Crawlers.fr] Règle 3 — optimisation images (lazy + LCP)');
+    } catch(e) { console.error('[Crawlers.fr] Erreur optimizeImages:', e); }
   }`,
-        call: 'enableLazyLoading();'
+        call: 'optimizeImages();'
       };
 
     case 'fix_https_redirect':
@@ -840,41 +875,24 @@ function generateFixCode(
       const trueValue = hallucinationData.trueValue || siteName;
       const confusionFixes = (hallucinationData.confusionSources || []).slice(0, 3);
       return {
-        fn: `  // Correction Hallucination IA - Injection métadonnées anti-confusion
+        fn: `  // Règle 1: Correction Hallucination IA — JSON-LD dans <head> uniquement
+  // Règle 4: Lock anti double-exécution
   function fixHallucination() {
-    var metas = [
-      { name: 'ai-description', content: '${trueValue.replace(/'/g, "\\'")}' },
-      { name: 'dc.description', content: '${trueValue.replace(/'/g, "\\'")}' },
-      { property: 'og:description', content: '${trueValue.replace(/'/g, "\\'")}' }
-    ];
-    
-    metas.forEach(function(meta) {
-      var existing = document.querySelector('meta[name="' + meta.name + '"], meta[property="' + meta.property + '"]');
-      if (!existing) {
-        var el = document.createElement('meta');
-        if (meta.name) el.setAttribute('name', meta.name);
-        if (meta.property) el.setAttribute('property', meta.property);
-        el.content = meta.content;
-        document.head.appendChild(el);
-      }
-    });
-    
-    var clarificationSchema = {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "${siteName}",
-      "description": "${trueValue.replace(/"/g, '\\"').replace(/'/g, "\\'")}",
-      "url": "${siteUrl}",
-      "knowsAbout": ${JSON.stringify(confusionFixes.length > 0 ? confusionFixes : [siteName])}
-    };
-    
-    var schemaScript = document.createElement('script');
-    schemaScript.type = 'application/ld+json';
-    schemaScript.setAttribute('data-crawlers-hallucination-fix', 'true');
-    schemaScript.textContent = JSON.stringify(clarificationSchema, null, 2);
-    document.head.appendChild(schemaScript);
-    
-    console.log('[Crawlers.fr] ✓ Correction hallucination IA appliquée');
+    if (hasLock('fix_hallucination')) return;
+    try {
+      // Règle 1: Données sémantiques via JSON-LD exclusivement
+      injectJsonLd('hallucination-fix', {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "${siteName}",
+        "description": "${trueValue.replace(/"/g, '\\"').replace(/'/g, "\\'")}",
+        "url": "${siteUrl}",
+        "knowsAbout": ${JSON.stringify(confusionFixes.length > 0 ? confusionFixes : [siteName])},
+        "disambiguatingDescription": "${trueValue.replace(/"/g, '\\"').replace(/'/g, "\\'")}"
+      });
+      setLock(document.head, 'fix_hallucination');
+      console.log('[Crawlers.fr] ✓ Correction hallucination IA — JSON-LD (Règle 1)');
+    } catch(e) { console.error('[Crawlers.fr] Erreur fixHallucination:', e); }
   }`,
         call: 'fixHallucination();'
       };
@@ -903,63 +921,18 @@ function generateFixCode(
         }))
       };
 
-      const faqHtml = faqItems.map((item: any, idx: number) => 
-        `<div class="crawlers-faq-item" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-          <h3 itemprop="name" class="crawlers-faq-question">${item.question}</h3>
-          <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-            <p itemprop="text" class="crawlers-faq-answer">${item.answer}</p>
-          </div>
-        </div>`
-      ).join('\\n        ');
-
       return {
-        fn: `  // 🏗️ ARCHITECTE: Injection Section FAQ avec Schema.org FAQPage
+        fn: `  // Règle 1: FAQ → JSON-LD FAQPage dans <head> uniquement (données sémantiques IA/GEO)
+  // Impact CLS = 0 (pas de HTML visible injecté)
+  // Règle 4: Lock anti double-exécution
   function injectFAQSection() {
-    // Vérifier si une FAQ existe déjà
-    if (document.querySelector('[itemtype="https://schema.org/FAQPage"]') || document.querySelector('.crawlers-faq-section')) {
-      console.log('[Crawlers.fr] FAQ déjà présente');
-      return;
-    }
-    
-    // Créer le conteneur FAQ
-    var faqSection = document.createElement('section');
-    faqSection.className = 'crawlers-faq-section';
-    faqSection.setAttribute('itemscope', '');
-    faqSection.setAttribute('itemtype', 'https://schema.org/FAQPage');
-    faqSection.innerHTML = \`
-      <style>
-        .crawlers-faq-section { padding: 3rem 1.5rem; background: #f9fafb; margin: 2rem 0; }
-        .crawlers-faq-title { font-size: 1.75rem; font-weight: 700; margin-bottom: 1.5rem; text-align: center; }
-        .crawlers-faq-item { background: white; border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .crawlers-faq-question { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; color: #111827; }
-        .crawlers-faq-answer { color: #4b5563; line-height: 1.6; margin: 0; }
-      </style>
-      <h2 class="crawlers-faq-title">Questions Fréquentes</h2>
-      <div class="crawlers-faq-container">
-        ${faqHtml}
-      </div>
-    \`;
-    
-    // Injecter avant le footer ou à la fin du main
-    var footer = document.querySelector('footer');
-    var main = document.querySelector('main');
-    if (footer && footer.parentNode) {
-      footer.parentNode.insertBefore(faqSection, footer);
-    } else if (main) {
-      main.appendChild(faqSection);
-    } else {
-      document.body.appendChild(faqSection);
-    }
-    
-    // Injecter le JSON-LD FAQPage
-    var faqSchema = ${JSON.stringify(faqJsonLd)};
-    var schemaScript = document.createElement('script');
-    schemaScript.type = 'application/ld+json';
-    schemaScript.setAttribute('data-crawlers-faq', 'true');
-    schemaScript.textContent = JSON.stringify(faqSchema, null, 2);
-    document.head.appendChild(schemaScript);
-    
-    console.log('[Crawlers.fr] 🏗️ Section FAQ injectée avec ${faqItems.length} questions et Schema.org FAQPage');
+    if (hasLock('inject_faq')) return;
+    try {
+      // Règle 1: Données sémantiques via JSON-LD exclusivement
+      injectJsonLd('faq', ${JSON.stringify(faqJsonLd)});
+      setLock(document.head, 'inject_faq');
+      console.log('[Crawlers.fr] 🏗️ FAQ JSON-LD injecté (Règle 1 — ${faqItems.length} questions)');
+    } catch(e) { console.error('[Crawlers.fr] Erreur injectFAQSection:', e); }
   }`,
         call: 'injectFAQSection();'
       };
@@ -979,44 +952,42 @@ function generateFixCode(
       ).join('\\n        ');
 
       return {
-        fn: `  // 🏗️ ARCHITECTE: Injection Section Blog/Contenu Éditorial
+        fn: `  // Règle 2B: Blog → Skeleton (espace réservé via min-height) avant injection HTML
+  // CLS = 0 grâce à la réservation d'espace
+  // Règle 4: Lock anti double-exécution
   function injectBlogSection() {
-    if (document.querySelector('.crawlers-blog-section')) {
-      console.log('[Crawlers.fr] Section blog déjà présente');
-      return;
-    }
-    
-    var blogSection = document.createElement('article');
-    blogSection.className = 'crawlers-blog-section';
-    blogSection.setAttribute('itemscope', '');
-    blogSection.setAttribute('itemtype', 'https://schema.org/Article');
-    blogSection.innerHTML = \`
-      <style>
-        .crawlers-blog-section { padding: 3rem 1.5rem; max-width: 800px; margin: 2rem auto; }
-        .crawlers-blog-title { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; color: #111827; }
-        .crawlers-blog-intro { font-size: 1.125rem; color: #4b5563; margin-bottom: 1.5rem; line-height: 1.7; font-style: italic; }
-        .crawlers-blog-paragraph { color: #374151; line-height: 1.8; margin-bottom: 1rem; }
-      </style>
-      <h2 class="crawlers-blog-title" itemprop="headline">${blogData.title}</h2>
-      <p class="crawlers-blog-intro" itemprop="description">${blogData.intro}</p>
-      <div itemprop="articleBody">
-        ${blogParagraphsHtml}
-      </div>
-      <meta itemprop="author" content="${siteName}">
-      <meta itemprop="publisher" content="${siteName}">
-    \`;
-    
-    var main = document.querySelector('main');
-    var hero = document.querySelector('.hero, [class*="hero"], header + section');
-    if (hero && hero.parentNode) {
-      hero.parentNode.insertBefore(blogSection, hero.nextSibling);
-    } else if (main) {
-      main.insertBefore(blogSection, main.firstChild);
-    } else {
-      document.body.insertBefore(blogSection, document.body.firstChild);
-    }
-    
-    console.log('[Crawlers.fr] 🏗️ Section blog/contenu éditorial injectée avec Schema.org Article');
+    if (hasLock('inject_blog_section')) return;
+    try {
+      // Règle 2B: Injecter le style skeleton AVANT le HTML pour réserver l'espace
+      var skeletonStyle = document.createElement('style');
+      skeletonStyle.textContent = '.crawlers-blog-section { min-height: 300px; transition: min-height 0.3s ease; padding: 3rem 1.5rem; max-width: 800px; margin: 2rem auto; } .crawlers-blog-title { font-size: 2rem; font-weight: 700; margin-bottom: 1rem; color: #111827; } .crawlers-blog-intro { font-size: 1.125rem; color: #4b5563; margin-bottom: 1.5rem; line-height: 1.7; font-style: italic; } .crawlers-blog-paragraph { color: #374151; line-height: 1.8; margin-bottom: 1rem; }';
+      document.head.appendChild(skeletonStyle);
+
+      var blogSection = document.createElement('article');
+      blogSection.className = 'crawlers-blog-section';
+      blogSection.innerHTML = '<h2 class="crawlers-blog-title">${blogData.title}</h2><p class="crawlers-blog-intro">${blogData.intro}</p><div>${blogParagraphsHtml}</div>';
+
+      // Règle 1: JSON-LD Article dans <head>
+      injectJsonLd('article', {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "${blogData.title}",
+        "description": "${blogData.intro}",
+        "author": { "@type": "Organization", "name": "${siteName}" },
+        "publisher": { "@type": "Organization", "name": "${siteName}" }
+      });
+
+      // Insertion avant le footer (pas en haut de page)
+      var footer = document.querySelector('footer');
+      if (footer && footer.parentNode) {
+        footer.parentNode.insertBefore(blogSection, footer);
+      } else {
+        document.body.appendChild(blogSection);
+      }
+
+      setLock(blogSection, 'inject_blog_section');
+      console.log('[Crawlers.fr] 🏗️ Blog injecté (Règle 2B — skeleton + Règle 1 — JSON-LD)');
+    } catch(e) { console.error('[Crawlers.fr] Erreur injectBlogSection:', e); }
   }`,
         call: 'injectBlogSection();'
       };
@@ -1028,153 +999,115 @@ function generateFixCode(
       };
 
       return {
-        fn: `  // 🏗️ ARCHITECTE: Enrichissement Sémantique des Métadonnées
+        fn: `  // Enrichissement Sémantique — head uniquement (pas d'impact CLS)
+  // Règle 4: Lock anti double-exécution
   function enhanceSemanticMeta() {
-    var keywords = ${JSON.stringify(semanticData.keywords)};
-    var optimizedDesc = '${semanticData.description.replace(/'/g, "\\'")}';
-    
-    // Meta keywords (toujours utile pour certains moteurs et LLM)
-    var metaKeywords = document.querySelector('meta[name="keywords"]');
-    if (!metaKeywords) {
-      metaKeywords = document.createElement('meta');
-      metaKeywords.name = 'keywords';
-      document.head.appendChild(metaKeywords);
-    }
-    metaKeywords.content = keywords.join(', ');
-    
-    // Open Graph enrichi
-    var ogTags = [
-      { property: 'og:title', content: document.title },
-      { property: 'og:description', content: optimizedDesc },
-      { property: 'og:type', content: 'website' },
-      { property: 'og:url', content: window.location.href },
-      { property: 'og:site_name', content: '${siteName}' }
-    ];
-    
-    ogTags.forEach(function(tag) {
-      var existing = document.querySelector('meta[property="' + tag.property + '"]');
-      if (!existing) {
-        var meta = document.createElement('meta');
-        meta.setAttribute('property', tag.property);
-        meta.content = tag.content;
-        document.head.appendChild(meta);
+    if (hasLock('enhance_semantic_meta')) return;
+    try {
+      var keywords = ${JSON.stringify(semanticData.keywords)};
+      var optimizedDesc = '${semanticData.description.replace(/'/g, "\\'")}';
+      
+      // Meta keywords
+      var metaKeywords = document.querySelector('meta[name="keywords"]');
+      if (!metaKeywords) {
+        metaKeywords = document.createElement('meta');
+        metaKeywords.name = 'keywords';
+        document.head.appendChild(metaKeywords);
       }
-    });
-    
-    // Twitter Card
-    var twitterTags = [
-      { name: 'twitter:card', content: 'summary_large_image' },
-      { name: 'twitter:title', content: document.title },
-      { name: 'twitter:description', content: optimizedDesc }
-    ];
-    
-    twitterTags.forEach(function(tag) {
-      var existing = document.querySelector('meta[name="' + tag.name + '"]');
-      if (!existing) {
-        var meta = document.createElement('meta');
-        meta.name = tag.name;
-        meta.content = tag.content;
-        document.head.appendChild(meta);
-      }
-    });
-    
-    // Dublin Core pour citations académiques/IA
-    var dcTags = [
-      { name: 'dc.title', content: document.title },
-      { name: 'dc.description', content: optimizedDesc },
-      { name: 'dc.publisher', content: '${siteName}' },
-      { name: 'dc.language', content: '${language}' }
-    ];
-    
-    dcTags.forEach(function(tag) {
-      var existing = document.querySelector('meta[name="' + tag.name + '"]');
-      if (!existing) {
-        var meta = document.createElement('meta');
-        meta.name = tag.name;
-        meta.content = tag.content;
-        document.head.appendChild(meta);
-      }
-    });
-    
-    console.log('[Crawlers.fr] 🏗️ Métadonnées sémantiques enrichies (OG, Twitter, DC)');
+      metaKeywords.content = keywords.join(', ');
+      
+      // Open Graph
+      var ogTags = [
+        { property: 'og:title', content: document.title },
+        { property: 'og:description', content: optimizedDesc },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:url', content: window.location.href },
+        { property: 'og:site_name', content: '${siteName}' }
+      ];
+      ogTags.forEach(function(tag) {
+        if (!document.querySelector('meta[property="' + tag.property + '"]')) {
+          var meta = document.createElement('meta');
+          meta.setAttribute('property', tag.property);
+          meta.content = tag.content;
+          document.head.appendChild(meta);
+        }
+      });
+      
+      // Twitter Card
+      var twitterTags = [
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: document.title },
+        { name: 'twitter:description', content: optimizedDesc }
+      ];
+      twitterTags.forEach(function(tag) {
+        if (!document.querySelector('meta[name="' + tag.name + '"]')) {
+          var meta = document.createElement('meta');
+          meta.name = tag.name;
+          meta.content = tag.content;
+          document.head.appendChild(meta);
+        }
+      });
+      
+      // Dublin Core
+      var dcTags = [
+        { name: 'dc.title', content: document.title },
+        { name: 'dc.description', content: optimizedDesc },
+        { name: 'dc.publisher', content: '${siteName}' },
+        { name: 'dc.language', content: '${language}' }
+      ];
+      dcTags.forEach(function(tag) {
+        if (!document.querySelector('meta[name="' + tag.name + '"]')) {
+          var meta = document.createElement('meta');
+          meta.name = tag.name;
+          meta.content = tag.content;
+          document.head.appendChild(meta);
+        }
+      });
+      
+      setLock(document.head, 'enhance_semantic_meta');
+      console.log('[Crawlers.fr] 🏗️ Métadonnées sémantiques enrichies (OG, Twitter, DC)');
+    } catch(e) { console.error('[Crawlers.fr] Erreur enhanceSemanticMeta:', e); }
   }`,
         call: 'enhanceSemanticMeta();'
       };
 
     case 'inject_breadcrumbs':
       return {
-        fn: `  // 🏗️ ARCHITECTE: Injection Fil d'Ariane avec Schema.org BreadcrumbList
+        fn: `  // Règle 1: Breadcrumbs → JSON-LD BreadcrumbList dans <head> uniquement
+  // Impact CLS = 0 (pas de HTML visible)
+  // Règle 4: Lock anti double-exécution
   function injectBreadcrumbs() {
-    if (document.querySelector('[itemtype="https://schema.org/BreadcrumbList"]') || document.querySelector('.crawlers-breadcrumbs')) {
-      console.log('[Crawlers.fr] Fil d\\'ariane déjà présent');
-      return;
-    }
-    
-    var path = window.location.pathname.split('/').filter(Boolean);
-    var breadcrumbs = [{ name: 'Accueil', url: '/' }];
-    var currentPath = '';
-    
-    path.forEach(function(segment, index) {
-      currentPath += '/' + segment;
-      var name = segment.replace(/-/g, ' ').replace(/\\b\\w/g, function(l) { return l.toUpperCase(); });
-      breadcrumbs.push({ name: name, url: currentPath });
-    });
-    
-    if (breadcrumbs.length < 2) return; // Pas besoin sur la home
-    
-    var breadcrumbSchema = {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      "itemListElement": breadcrumbs.map(function(item, index) {
-        return {
-          "@type": "ListItem",
-          "position": index + 1,
-          "name": item.name,
-          "item": window.location.origin + item.url
-        };
-      })
-    };
-    
-    var nav = document.createElement('nav');
-    nav.className = 'crawlers-breadcrumbs';
-    nav.setAttribute('aria-label', 'Fil d\\'ariane');
-    nav.innerHTML = \`
-      <style>
-        .crawlers-breadcrumbs { padding: 0.75rem 1.5rem; font-size: 0.875rem; color: #6b7280; }
-        .crawlers-breadcrumbs ol { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .crawlers-breadcrumbs li { display: flex; align-items: center; }
-        .crawlers-breadcrumbs li:not(:last-child)::after { content: '›'; margin-left: 0.5rem; color: #9ca3af; }
-        .crawlers-breadcrumbs a { color: #3b82f6; text-decoration: none; }
-        .crawlers-breadcrumbs a:hover { text-decoration: underline; }
-      </style>
-      <ol itemscope itemtype="https://schema.org/BreadcrumbList">
-        \${breadcrumbs.map(function(item, index) {
-          var isLast = index === breadcrumbs.length - 1;
-          return '<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">' +
-            (isLast ? '<span itemprop="name">' + item.name + '</span>' :
-              '<a itemprop="item" href="' + item.url + '"><span itemprop="name">' + item.name + '</span></a>') +
-            '<meta itemprop="position" content="' + (index + 1) + '">' +
-            '</li>';
-        }).join('')}
-      </ol>
-    \`;
-    
-    var main = document.querySelector('main');
-    var header = document.querySelector('header');
-    if (header && header.nextSibling) {
-      header.parentNode.insertBefore(nav, header.nextSibling);
-    } else if (main) {
-      main.insertBefore(nav, main.firstChild);
-    }
-    
-    // Injecter le JSON-LD
-    var schemaScript = document.createElement('script');
-    schemaScript.type = 'application/ld+json';
-    schemaScript.setAttribute('data-crawlers-breadcrumbs', 'true');
-    schemaScript.textContent = JSON.stringify(breadcrumbSchema, null, 2);
-    document.head.appendChild(schemaScript);
-    
-    console.log('[Crawlers.fr] 🏗️ Fil d\\'ariane injecté avec Schema.org BreadcrumbList');
+    if (hasLock('inject_breadcrumbs')) return;
+    try {
+      var path = window.location.pathname.split('/').filter(Boolean);
+      var items = [{ name: 'Accueil', url: '/' }];
+      var currentPath = '';
+      
+      path.forEach(function(segment) {
+        currentPath += '/' + segment;
+        var name = segment.replace(/-/g, ' ').replace(/\\b\\w/g, function(l) { return l.toUpperCase(); });
+        items.push({ name: name, url: currentPath });
+      });
+      
+      if (items.length < 2) return;
+
+      // Règle 1: JSON-LD uniquement dans <head>
+      injectJsonLd('breadcrumbs', {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": items.map(function(item, index) {
+          return {
+            "@type": "ListItem",
+            "position": index + 1,
+            "name": item.name,
+            "item": window.location.origin + item.url
+          };
+        })
+      });
+      
+      setLock(document.head, 'inject_breadcrumbs');
+      console.log('[Crawlers.fr] 🏗️ Breadcrumbs JSON-LD injecté (Règle 1)');
+    } catch(e) { console.error('[Crawlers.fr] Erreur injectBreadcrumbs:', e); }
   }`,
         call: 'injectBreadcrumbs();'
       };
@@ -1190,37 +1123,37 @@ function generateFixCode(
         openingHours: 'Mo-Fr 09:00-18:00'
       };
       
+      const localBusinessSchema: Record<string, any> = {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": localData.name,
+        "url": siteUrl,
+        "openingHours": localData.openingHours
+      };
+      if (localData.address) {
+        localBusinessSchema.address = {
+          "@type": "PostalAddress",
+          "streetAddress": localData.address,
+          "addressLocality": localData.city,
+          "postalCode": localData.postalCode,
+          "addressCountry": localData.country
+        };
+      }
+      if (localData.phone) {
+        localBusinessSchema.telephone = localData.phone;
+      }
+      
       return {
-        fn: `  // 🏗️ ARCHITECTE: Injection Schema.org LocalBusiness
+        fn: `  // Règle 1: LocalBusiness → JSON-LD dans <head> uniquement (données sémantiques)
+  // Impact CLS = 0
+  // Règle 4: Lock anti double-exécution
   function injectLocalBusiness() {
-    if (document.querySelector('[data-crawlers-local-business]')) {
-      console.log('[Crawlers.fr] LocalBusiness déjà présent');
-      return;
-    }
-    
-    var localBusinessSchema = {
-      "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "name": "${localData.name}",
-      "url": "${siteUrl}",
-      ${localData.address ? `"address": {
-        "@type": "PostalAddress",
-        "streetAddress": "${localData.address}",
-        "addressLocality": "${localData.city}",
-        "postalCode": "${localData.postalCode}",
-        "addressCountry": "${localData.country}"
-      },` : ''}
-      ${localData.phone ? `"telephone": "${localData.phone}",` : ''}
-      "openingHours": "${localData.openingHours}"
-    };
-    
-    var schemaScript = document.createElement('script');
-    schemaScript.type = 'application/ld+json';
-    schemaScript.setAttribute('data-crawlers-local-business', 'true');
-    schemaScript.textContent = JSON.stringify(localBusinessSchema, null, 2);
-    document.head.appendChild(schemaScript);
-    
-    console.log('[Crawlers.fr] 🏗️ Schema.org LocalBusiness injecté');
+    if (hasLock('inject_local_business')) return;
+    try {
+      injectJsonLd('local-business', ${JSON.stringify(localBusinessSchema)});
+      setLock(document.head, 'inject_local_business');
+      console.log('[Crawlers.fr] 🏗️ LocalBusiness JSON-LD injecté (Règle 1)');
+    } catch(e) { console.error('[Crawlers.fr] Erreur injectLocalBusiness:', e); }
   }`,
         call: 'injectLocalBusiness();'
       };
@@ -1697,28 +1630,36 @@ async function generateAllFixesWithAI(
   const systemPrompt = `Tu es un architecte JavaScript expert en SEO technique, GEO (Generative Engine Optimization) et optimisation web.
 Tu génères du code JavaScript vanilla (ES5 compatible, pas de const/let/arrow functions) qui s'exécute dans un navigateur via une balise <script>.
 
-ARCHITECTURE CENTRALISÉE — RÈGLES ABSOLUES:
+PROTOCOLE CLS-ZERO — RÈGLES ABSOLUES:
 
 1. NE GÉNÈRE PAS de fonctions pour les fixes suivants (ils sont gérés par applySeoMetadata en amont):
    fix_title, fix_meta_desc, fix_h1, fix_jsonld, enhance_semantic_meta, fix_hallucination
    Si un de ces IDs est dans la liste, IGNORE-LE.
 
-2. SYSTÈME DE VERROUS (LOCKS): Chaque fonction que tu génères DOIT vérifier l'attribut data-crawlers-modified="true"
-   sur l'élément ciblé AVANT de le modifier. Si l'attribut existe, la fonction fait return silencieusement.
-   Après modification, la fonction DOIT poser cet attribut sur l'élément modifié.
+2. DONNÉES SÉMANTIQUES (Règle 1): Utilise EXCLUSIVEMENT le format JSON-LD via la fonction utilitaire injectJsonLd(id, data) pour FAQ, entités, avis.
+   Exemple: injectJsonLd('faq', { "@context": "https://schema.org", "@type": "FAQPage", ... });
+
+3. CONTENU VISIBLE — ATTRIBUTION (Règle 2A): NE GÈRE PAS l'attribution, elle est injectée automatiquement en bas de page.
+
+4. CONTENU VISIBLE — SKELETON (Règle 2B): Pour toute injection HTML visible en haut/milieu de page, le script DOIT d'abord injecter un style CSS avec min-height fixe pour réserver l'espace (CLS = 0) AVANT d'injecter le HTML.
+   Exemple: injectWithSkeleton('footer', htmlContent, '100px', 'before');
+
+5. OPTIMISATIONS IMAGES (Règle 3): Applique loading="lazy" sur les images hors-écran et fetchpriority="high" sur l'image LCP via MutationObserver.
+
+6. LOCKS (Règle 4): Chaque fonction DOIT appeler hasLock(id) au début et setLock(el, id) après modification.
    Exemple:
-     var el = document.querySelector('.target');
-     if (el && el.getAttribute('data-crawlers-modified') === 'true') return;
+     if (hasLock('my_fix')) return;
      // ... modification ...
-     el.setAttribute('data-crawlers-modified', 'true');
+     setLock(element, 'my_fix');
 
-3. PAGE_DATA: Un objet global PAGE_DATA existe déjà dans le scope. Tu peux y lire des valeurs
-   comme PAGE_DATA.metaDescription, PAGE_DATA.targetTitle, etc. Ne les redéfinis pas.
+7. STRUCTURE (Règle 5): Chaque fonction dans un bloc try/catch. Commente quelle règle CLS est appliquée.
 
-4. Le code doit être SPÉCIFIQUE au site analysé — utilise les données d'audit réelles
-5. N'utilise PAS de placeholders génériques
-6. Langue du contenu généré: ${langLabel}
-7. Réponds UNIQUEMENT en JSON valide, sans markdown`;
+8. PAGE_DATA: Un objet global PAGE_DATA existe déjà dans le scope. Tu peux y lire des valeurs.
+
+9. Le code doit être SPÉCIFIQUE au site analysé — utilise les données d'audit réelles
+10. N'utilise PAS de placeholders génériques
+11. Langue du contenu généré: ${langLabel}
+12. Réponds UNIQUEMENT en JSON valide, sans markdown`;
 
   const userPrompt = `Génère du code JavaScript personnalisé pour le site "${siteName}" (${siteUrl}).
 
@@ -1731,7 +1672,7 @@ Réponds avec un JSON contenant un objet "fixes" où chaque clé est l'ID du cor
 {
   "fixes": {
     "fix_id_1": {
-      "fn": "  // Commentaire descriptif\\n  function nomDeLaFonction() {\\n    var el = document.querySelector('.target');\\n    if (el && el.getAttribute('data-crawlers-modified') === 'true') return;\\n    // ... modifications ...\\n    el.setAttribute('data-crawlers-modified', 'true');\\n    console.log('[Crawlers.fr] Description');\\n  }",
+      "fn": "  // Règle X: Commentaire CLS\\n  function nomDeLaFonction() {\\n    if (hasLock('fix_id_1')) return;\\n    try {\\n      // ... modifications ...\\n      setLock(element, 'fix_id_1');\\n      console.log('[Crawlers.fr] Description');\\n    } catch(e) { console.error('[Crawlers.fr] Erreur:', e); }\\n  }",
       "call": "nomDeLaFonction();"
     }
   }
@@ -1739,11 +1680,13 @@ Réponds avec un JSON contenant un objet "fixes" où chaque clé est l'ID du cor
 
 IMPORTANT:
 - NE PAS inclure de fixes pour: fix_title, fix_meta_desc, fix_h1, fix_jsonld, enhance_semantic_meta, fix_hallucination
-- Chaque fonction DOIT implémenter le système de verrous (data-crawlers-modified)
+- Règle 4: Chaque fonction DOIT utiliser hasLock(id)/setLock(el, id) — PAS data-crawlers-modified
+- Règle 1: Données sémantiques → injectJsonLd(id, data) dans <head>
+- Règle 2B: Contenu visible haut/milieu → injectWithSkeleton(selector, html, minHeight, position)
+- Règle 5: Chaque fonction dans try/catch. Commenter la règle CLS appliquée
 - Le "fn" est le corps de la fonction (indenté de 2 espaces)
 - Le "call" est l'appel de la fonction
-- Les strings dans le code JS doivent utiliser des guillemets simples
-- Chaque fonction doit être autonome et robuste (try/catch si nécessaire)`;
+- Les strings dans le code JS doivent utiliser des guillemets simples`;
 
   try {
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -2121,48 +2064,33 @@ function generateCorrectiveScript(
     fixFunctions.push(unifiedSeoFn);
     fixCalls.push('applySeoMetadata(PAGE_DATA);');
   }
-  // Attribution Crawlers.fr - Injectée AU MILIEU du code généré
-  const attributionAnchors = [
-    'Optimisé par Crawlers.fr',
-    'Technologie Crawlers.fr', 
-    'Powered by Crawlers.fr',
-    'SEO by Crawlers.fr',
-    'Architecte Génératif Crawlers.fr'
-  ];
-  const randomAnchor = attributionAnchors[Math.floor(Math.random() * attributionAnchors.length)];
-  
-  const crawlersAttributionFn = `  // Attribution Crawlers.fr - Lien technologique
+  // Règle 2A: Attribution Crawlers.fr — bas de page, opacité 1, discret mais visible
+  const crawlersAttributionFn = `  // Règle 2A: Attribution — Bas de page (footer), visible, discret
+  // "Optimisé pour les IA par crawlers.fr" — opacité 1
   function injectCrawlersAttribution() {
-    // Vérifier si l'attribution existe déjà
-    if (document.querySelector('[data-crawlers-attribution]')) return;
-    
-    // Créer le lien d'attribution
-    var link = document.createElement('a');
-    link.href = 'https://crawlers.fr';
-    link.textContent = '${randomAnchor}';
-    link.rel = 'dofollow';
-    link.target = '_blank';
-    link.setAttribute('data-crawlers-attribution', 'true');
-    link.style.cssText = 'font-size: 11px; color: #64748b; text-decoration: none; opacity: 0.7; transition: opacity 0.2s;';
-    link.onmouseover = function() { this.style.opacity = '1'; };
-    link.onmouseout = function() { this.style.opacity = '0.7'; };
-    
-    // Trouver ou créer le conteneur footer
-    var footer = document.querySelector('footer');
-    if (footer) {
+    if (hasLock('attribution')) return;
+    try {
+      var link = document.createElement('a');
+      link.href = 'https://crawlers.fr';
+      link.textContent = 'Optimis\\u00e9 pour les IA par crawlers.fr';
+      link.rel = 'dofollow';
+      link.target = '_blank';
+      link.style.cssText = 'font-size: 11px; color: #64748b; text-decoration: none; opacity: 1;';
+
       var container = document.createElement('div');
-      container.style.cssText = 'text-align: center; padding: 8px 0; border-top: 1px solid #e2e8f0; margin-top: 16px;';
+      container.style.cssText = 'text-align: center; padding: 8px 0; font-size: 11px;';
       container.appendChild(link);
-      footer.appendChild(container);
-    } else {
-      // Fallback: injecter avant </body>
-      var container = document.createElement('div');
-      container.style.cssText = 'text-align: center; padding: 12px 0; font-size: 11px; color: #64748b; background: #f8fafc;';
-      container.appendChild(link);
-      document.body.appendChild(container);
-    }
-    
-    console.log('[Crawlers.fr] ✅ Attribution injectée');
+      setLock(container, 'attribution');
+
+      // Règle 2A: Injecter à la toute fin du footer ou du body
+      var footer = document.querySelector('footer');
+      if (footer) {
+        footer.appendChild(container);
+      } else {
+        document.body.appendChild(container);
+      }
+      console.log('[Crawlers.fr] ✅ Attribution injectée (Règle 2A — bas de page)');
+    } catch(e) { console.error('[Crawlers.fr] Erreur attribution:', e); }
   }`;
   const crawlersAttributionCall = 'injectCrawlersAttribution();';
 
@@ -2210,36 +2138,85 @@ function generateCorrectiveScript(
 
   // Construire le script IIFE avec architecture centralisée
   const script = `/**
- * Script de correction automatique
- * Généré pour: ${siteUrl}
- * Architecture: Centralisée v3.0 (PAGE_DATA + applySeoMetadata + Locks)
+ * ═══════════════════════════════════════════════════════════════
+ * 🏗️ Crawlers.fr — ARCHITECTE GÉNÉRATIF v3.0 (CLS-ZERO Protocol)
+ * ═══════════════════════════════════════════════════════════════
+ * 
+ * Généré le ${dateStr}
+ * Site: ${siteName}
+ * URL: ${siteUrl}
+ * 
+ * Correctifs appliqués: ${enabledFixes.length} au total
+ *   → SEO Metadata (unifié via applySeoMetadata): ${enabledFixes.filter(f => HEAD_FIX_IDS.has(f.id)).length}
+ *   → Techniques (Perf/A11y): ${technicalFixes.filter(f => !HEAD_FIX_IDS.has(f.id)).length}
+ *   → Tracking: ${trackingFixes.length}
+ *   → Stratégiques (JSON-LD sémantique): ${strategicFixes.length}
+ *
+ * Protocole CLS-ZERO:
+ *   Règle 1  — Données sémantiques → JSON-LD <head> uniquement
+ *   Règle 2A — Attribution → bas de page (footer), opacité 1
+ *   Règle 2B — Contenu visible → skeleton (min-height) avant injection
+ *   Règle 3  — lazy/fetchpriority via MutationObserver
+ *   Règle 4  — Locks (data-crawlers-lock) anti double-exécution
+ *   Règle 5  — IIFE + try/catch
+ * ═══════════════════════════════════════════════════════════════
  */
 (function() {
   'use strict';
 
   // ═══════════════════════════════════════════════════════════
-  // UTILITAIRES
+  // UTILITAIRES CLS-ZERO
   // ═══════════════════════════════════════════════════════════
 
   function ready(fn) {
-    if (document.readyState !== 'loading') {
-      fn();
+    if (document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
+  }
+
+  // Règle 4: Système de Locks — empêche la double exécution
+  function hasLock(id) {
+    return !!document.querySelector('[data-crawlers-lock="' + id + '"]');
+  }
+  function setLock(el, id) {
+    if (el && el.setAttribute) el.setAttribute('data-crawlers-lock', id);
+  }
+
+  // Règle 1: Injection JSON-LD dans <head> (données sémantiques IA/GEO)
+  function injectJsonLd(id, data) {
+    if (document.querySelector('script[data-crawlers-jsonld="' + id + '"]')) return;
+    var script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.setAttribute('data-crawlers-jsonld', id);
+    script.textContent = JSON.stringify(data, null, 2);
+    document.head.appendChild(script);
+    console.log('[Crawlers.fr] JSON-LD injecté:', id);
+  }
+
+  // Règle 2B: Skeleton — réserve l'espace (min-height) avant injection HTML
+  function injectWithSkeleton(targetSelector, html, minHeight, insertPosition) {
+    var skeletonId = 'crawlers-skeleton-' + Math.random().toString(36).substr(2, 6);
+    var style = document.createElement('style');
+    style.textContent = '#' + skeletonId + ' { min-height: ' + minHeight + '; transition: min-height 0.3s ease; }';
+    document.head.appendChild(style);
+    var container = document.createElement('div');
+    container.id = skeletonId;
+    container.innerHTML = html;
+    var target = document.querySelector(targetSelector);
+    if (target && insertPosition === 'before') {
+      target.parentNode.insertBefore(container, target);
+    } else if (target && insertPosition === 'after') {
+      target.parentNode.insertBefore(container, target.nextSibling);
     } else {
-      document.addEventListener('DOMContentLoaded', fn);
+      var footer = document.querySelector('footer');
+      if (footer && footer.parentNode) footer.parentNode.insertBefore(container, footer);
+      else document.body.appendChild(container);
     }
+    return container;
   }
 
-  /**
-   * Règle 3: Système de Verrous (Locks)
-   * Vérifie si un élément a déjà été modifié par le script.
-   */
-  function isLocked(el) {
-    return el && el.getAttribute('data-crawlers-modified') === 'true';
-  }
-
-  function lock(el) {
-    if (el && el.setAttribute) el.setAttribute('data-crawlers-modified', 'true');
-  }
+  // Legacy compat aliases (used by applySeoMetadata)
+  function isLocked(el) { return el && el.getAttribute('data-crawlers-modified') === 'true'; }
+  function lock(el) { if (el && el.setAttribute) el.setAttribute('data-crawlers-modified', 'true'); }
 
   // ═══════════════════════════════════════════════════════════
   // CONFIGURATION
@@ -2259,9 +2236,7 @@ function generateCorrectiveScript(
   };
 
   // ═══════════════════════════════════════════════════════════
-  // PAGE_DATA — Source unique de vérité (Single Source of Truth)
-  // Toutes les valeurs à injecter sont consolidées ici.
-  // Les conflits ont été résolus côté serveur.
+  // PAGE_DATA — Source unique de vérité
   // ═══════════════════════════════════════════════════════════
 
   var PAGE_DATA = ${pageDataJson};
@@ -2272,37 +2247,19 @@ function generateCorrectiveScript(
 
 ${fixFunctions.join('\n\n')}
 
-  /**
-   * ═══════════════════════════════════════════════════════════
-   * Crawlers.fr - ARCHITECTE GÉNÉRATIF v3.0
-   * Architecture centralisée: PAGE_DATA + applySeoMetadata + Locks
-   * ═══════════════════════════════════════════════════════════
-   * 
-   * Généré le ${dateStr}
-   * Site: ${siteName}
-   * URL: ${siteUrl}
-   * 
-   * Correctifs appliqués: ${enabledFixes.length} au total
-   *   → SEO Metadata (unifié via applySeoMetadata): ${enabledFixes.filter(f => HEAD_FIX_IDS.has(f.id)).length}
-   *   → Techniques (Perf/A11y): ${technicalFixes.filter(f => !HEAD_FIX_IDS.has(f.id)).length}
-   *   → Tracking: ${trackingFixes.length}
-   *   → Stratégiques (Contenu/FAQ/Blog): ${strategicFixes.length}
-   * ═══════════════════════════════════════════════════════════
-   */
-
   // ═══════════════════════════════════════════════════════════
-  // EXÉCUTION SÉQUENTIELLE DES CORRECTIONS
+  // EXÉCUTION — Règle 5: try/catch global
   // ═══════════════════════════════════════════════════════════
 
   ready(function() {
-    console.log('[Crawlers.fr] 🏗️ Architecte Génératif v3.0 - Architecture Centralisée');
+    console.log('[Crawlers.fr] 🏗️ Architecte Génératif v3.0 — CLS-ZERO Protocol');
     
     try {
 ${fixCalls.map(call => `      ${call}`).join('\n')}
       
-      console.log('[Crawlers.fr] ✅ ${enabledFixes.length} correctif(s) appliqué(s) avec succès');
+      console.log('[Crawlers.fr] ✅ ${enabledFixes.length} correctif(s) appliqué(s) — CLS-ZERO');
     } catch (error) {
-      console.error('[Crawlers.fr] ❌ Erreur lors de l\\'application des correctifs:', error);
+      console.error('[Crawlers.fr] ❌ Erreur:', error);
     }
   });
 
@@ -2336,7 +2293,7 @@ Deno.serve(async (req) => {
     }: GenerateRequest = await req.json();
 
     console.log('═══════════════════════════════════════════════════════════════');
-    console.log('🏗️ ARCHITECTE GÉNÉRATIF v3.0 - Architecture Centralisée (PAGE_DATA + applySeoMetadata + Locks)');
+    console.log('🏗️ ARCHITECTE GÉNÉRATIF v3.0 — CLS-ZERO Protocol');
     console.log('═══════════════════════════════════════════════════════════════');
     console.log(`📍 Site: ${siteName} (${siteUrl})`);
     console.log(`📋 Fixes demandés: ${fixes?.length || 0}`);
