@@ -23,9 +23,91 @@ async function checkUrl(url: string): Promise<{ ok: boolean; status: number; fin
   }
 }
 
-// A URL is considered "real" if it returns 2xx and has substantial content (not a parked page)
 function isRealSite(result: { ok: boolean; contentLength: number }): boolean {
   return result.ok && result.contentLength > 1000;
+}
+
+// Use Gemini to resolve brand name to official domain, then validate
+async function searchBrandDomain(query: string): Promise<string | null> {
+  try {
+    const cleanQuery = query
+      .replace(/^https?:\/\//, '')
+      .replace(/\.(com|fr|org|net|io|co|eu)$/, '')
+      .replace(/[^a-zA-Z0-9àâäéèêëïîôùûüÿçœæ\s-]/gi, '')
+      .trim();
+
+    if (!cleanQuery || cleanQuery.length < 2) return null;
+
+    console.log(`[validate-url] Resolving brand via LLM: "${cleanQuery}"`);
+
+    const apiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!apiKey) {
+      console.error('[validate-url] LOVABLE_API_KEY not configured');
+      return null;
+    }
+
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 8000);
+
+    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        max_tokens: 100,
+        temperature: 0,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a domain resolver. Given a brand/company name, return ONLY the official website domain (e.g. "emmaus-france.org" or "croix-rouge.fr"). Return ONLY the domain, nothing else. No protocol, no path. If you are unsure, return "UNKNOWN".'
+          },
+          {
+            role: 'user',
+            content: `What is the official website domain for: "${cleanQuery}"?`
+          }
+        ]
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(tid);
+
+    if (!res.ok) {
+      console.error(`[validate-url] LLM error: ${res.status}`);
+      return null;
+    }
+
+    const data = await res.json();
+    const domain = data.choices?.[0]?.message?.content?.trim()
+      ?.replace(/^https?:\/\//, '')
+      ?.replace(/^www\./, '')
+      ?.replace(/\/$/, '')
+      ?.toLowerCase();
+
+    if (!domain || domain === 'unknown' || domain.length < 4 || !domain.includes('.')) {
+      console.log(`[validate-url] LLM returned no valid domain: "${domain}"`);
+      return null;
+    }
+
+    console.log(`[validate-url] LLM suggested domain: ${domain}`);
+
+    // Validate the LLM suggestion with both www and non-www
+    const candidates = [`https://www.${domain}`, `https://${domain}`];
+    for (const url of candidates) {
+      const result = await checkUrl(url);
+      if (isRealSite(result)) {
+        console.log(`[validate-url] Brand resolved: "${cleanQuery}" → ${result.finalUrl || url}`);
+        return result.finalUrl || url;
+      }
+    }
+
+    return null;
+  } catch (err) {
+    console.error('[validate-url] Brand search error:', err);
+    return null;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -34,7 +116,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { urls } = await req.json();
+    const { urls, searchBrand } = await req.json();
 
     if (!urls || !Array.isArray(urls) || urls.length === 0) {
       return new Response(
@@ -43,10 +125,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Limit to 10 URLs max
     const toCheck = urls.slice(0, 10) as string[];
-
-    console.log(`[validate-url] Checking ${toCheck.length} URLs`);
+    console.log(`[validate-url] Checking ${toCheck.length} URLs, searchBrand=${searchBrand || 'none'}`);
 
     const results = await Promise.all(
       toCheck.map(async (url: string) => {
@@ -62,10 +142,19 @@ Deno.serve(async (req) => {
       })
     );
 
+    const anyValid = results.some(r => r.valid);
+    let brandResult: string | null = null;
+
+    // If no candidate is valid AND searchBrand is provided, ask LLM
+    if (!anyValid && searchBrand) {
+      brandResult = await searchBrandDomain(searchBrand);
+    }
+
     console.log(`[validate-url] Results:`, results.map(r => `${r.url}: ${r.valid}`).join(', '));
+    if (brandResult) console.log(`[validate-url] Brand fallback: ${brandResult}`);
 
     return new Response(
-      JSON.stringify({ results }),
+      JSON.stringify({ results, brandResult }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err: any) {

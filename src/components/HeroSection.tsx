@@ -26,6 +26,7 @@ const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionProps) {
   const [url, setUrl] = useState('');
   const [isValidating, setIsValidating] = useState(false);
+  const [suggestedUrl, setSuggestedUrl] = useState<string | null>(null);
   const { t, language } = useLanguage();
   const [wordIndex, setWordIndex] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -162,46 +163,45 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
   };
 
   // Server-side URL validation via edge function
-  const validateUrls = async (urls: string[]): Promise<Array<{ url: string; valid: boolean }>> => {
+  const validateUrls = async (urls: string[], searchBrand?: string): Promise<{ results: Array<{ url: string; valid: boolean }>; brandResult?: string }> => {
     try {
       const { data, error } = await supabase.functions.invoke('validate-url', {
-        body: { urls },
+        body: { urls, searchBrand },
       });
-      if (error || !data?.results) return urls.map(u => ({ url: u, valid: false }));
-      return data.results;
+      if (error || !data?.results) return { results: urls.map(u => ({ url: u, valid: false })) };
+      return { results: data.results, brandResult: data.brandResult || undefined };
     } catch {
-      return urls.map(u => ({ url: u, valid: false }));
+      return { results: urls.map(u => ({ url: u, valid: false })) };
     }
   };
 
-  // Silently find the best valid URL (original or corrected)
-  const findValidUrl = async (normalizedUrl: string): Promise<string> => {
+  // Find valid URL: returns { validUrl, originalValid }
+  const findValidUrl = async (normalizedUrl: string): Promise<{ validUrl: string | null; originalValid: boolean }> => {
     const withoutProtocol = normalizedUrl.replace(/^https?:\/\//, '');
     
-    // Generate candidates
     const candidates = generateTypoCandidates(withoutProtocol);
-    
-    // Build list: original first, then top candidates (limit to avoid too many requests)
     const allUrls = [normalizedUrl, ...candidates.slice(0, 9).map(c => `https://${c}`)];
     const uniqueUrls = [...new Set(allUrls)];
     
-    // Validate all in one server-side call
-    const results = await validateUrls(uniqueUrls);
+    // Pass the brand name for Google search fallback
+    const brandName = withoutProtocol.split('.')[0].split('/')[0];
+    const { results, brandResult } = await validateUrls(uniqueUrls, brandName);
     
-    // If original is valid, use it
     const originalResult = results.find(r => r.url === normalizedUrl);
-    if (originalResult?.valid) return normalizedUrl;
+    if (originalResult?.valid) return { validUrl: normalizedUrl, originalValid: true };
     
-    // Otherwise, return first valid candidate
     const validCandidate = results.find(r => r.valid && r.url !== normalizedUrl);
-    if (validCandidate) return validCandidate.url;
+    if (validCandidate) return { validUrl: validCandidate.url, originalValid: false };
     
-    // No valid URL found — return original, let the edge function handle the error
-    return normalizedUrl;
+    // Fallback: use brand search result from Google
+    if (brandResult) return { validUrl: brandResult, originalValid: false };
+    
+    return { validUrl: null, originalValid: false };
   };
 
   const handleUrlChange = (value: string) => {
     setUrl(value);
+    setSuggestedUrl(null);
   };
 
   const handleUrlBlur = () => {
@@ -212,24 +212,51 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     }
   };
 
+  const acceptSuggestion = () => {
+    if (!suggestedUrl) return;
+    setUrl(suggestedUrl);
+    localStorage.setItem('crawlers_last_url', suggestedUrl);
+    setSuggestedUrl(null);
+    onSubmit(suggestedUrl);
+  };
+
+  const dismissSuggestion = () => {
+    setSuggestedUrl(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
     const normalizedUrl = normalizeUrl(url);
     setUrl(normalizedUrl);
     localStorage.setItem('crawlers_last_url', normalizedUrl);
+    setSuggestedUrl(null);
 
     setIsValidating(true);
     try {
-      const validUrl = await findValidUrl(normalizedUrl);
-      if (validUrl !== normalizedUrl) {
-        setUrl(validUrl);
-        localStorage.setItem('crawlers_last_url', validUrl);
+      const { validUrl, originalValid } = await findValidUrl(normalizedUrl);
+      
+      if (originalValid) {
+        // Original URL works, proceed
+        setIsValidating(false);
+        onSubmit(normalizedUrl);
+        return;
       }
+      
+      if (validUrl) {
+        // Found a correction — ask the user
+        setIsValidating(false);
+        setSuggestedUrl(validUrl);
+        return;
+      }
+      
+      // No valid URL found at all
       setIsValidating(false);
-      onSubmit(validUrl);
+      const msg = language === 'fr' ? 'URL introuvable. Vérifiez l\'adresse et réessayez.' 
+                : language === 'es' ? 'URL no encontrada. Verifique la dirección e intente de nuevo.' 
+                : 'URL not found. Please check the address and try again.';
+      toast.error(msg);
     } catch {
-      // Validation network error — proceed with original
       setIsValidating(false);
       onSubmit(normalizedUrl);
     }
@@ -414,6 +441,31 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
             </Button>
         </div>
         </form>
+
+        {/* URL suggestion banner */}
+        {suggestedUrl && (
+          <div className="mx-auto mt-3 max-w-3xl animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+              <p className="text-sm text-foreground">
+                {language === 'fr' ? 'Voulez-vous dire' : language === 'es' ? '¿Quiso decir' : 'Did you mean'}{' '}
+                <button
+                  onClick={acceptSuggestion}
+                  className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                >
+                  {suggestedUrl.replace(/^https?:\/\//, '')}
+                </button>
+                {language === 'es' ? '?' : ' ?'}
+              </p>
+              <button
+                onClick={dismissSuggestion}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Trust indicators */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
