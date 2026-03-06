@@ -647,12 +647,18 @@ F. FRAÎCHEUR & FORMATS IA
 17. Fraîcheur des contenus: Y a-t-il des contenus mis à jour récemment (< 30 jours)? Les pages produits sont-elles à jour en 2026? Signaux dateModified/datePublished détectés?
 18. Complexité des données structurées: Profondeur d'imbrication Schema.org, utilisation de @graph, nombre de champs - les IA identifient les sources riches en données structurées complexes. Valide la présence des entités Organization, Product, Article, Review.
 19. Formats IA-Ready: Présence de résumé TL;DR en haut de page, tableaux comparatifs, listes à puces, sections FAQ couplées avec FAQPage Schema
+20. First-Party Data: Le contenu est-il basé sur des données propriétaires exclusives (études internes, benchmarks maison, statistiques clients) ou du contenu recyclé? Les IA valorisent les sources primaires.
+21. Changelog de Marque: Existe-t-il un historique structuré des informations clés (CEO, siège, dates de création, jalons) permettant aux IA de ne PAS halluciner sur des faits de la marque?
 
 G. AUTORITÉ & CRÉDIBILITÉ (E-E-A-T & Knowledge Graph)
-20. Signaux E-E-A-T: Présence de bios d'auteurs, citations d'experts nommés, blockquotes avec attribution. Évaluation de la crédibilité humaine du contenu.
-21. Densité de données: Évaluation de la richesse factuelle (statistiques, pourcentages, métriques de résultats, études citées). Les IA citent les contenus riches en données.
-22. Knowledge Graph Readiness: L'entité de la marque correspond-elle à un Knowledge Panel existant? Présence de citations externes de haute autorité? Liens sameAs vers Wikidata, Wikipedia? Profils LinkedIn d'équipe détectés?
-23. Études de cas & Social Proof: Détection de case studies avec métriques de résultats (ROI, avant/après), témoignages clients chiffrés, liens vers profils sociaux (LinkedIn surtout) validant la crédibilité humaine.`;
+22. Signaux E-E-A-T: Présence de bios d'auteurs, citations d'experts nommés, blockquotes avec attribution. Évaluation de la crédibilité humaine du contenu.
+23. Densité de données: Évaluation de la richesse factuelle (statistiques, pourcentages, métriques de résultats, études citées). Les IA citent les contenus riches en données.
+24. Knowledge Graph Readiness: L'entité de la marque correspond-elle à un Knowledge Panel existant? Présence de citations externes de haute autorité? Liens sameAs vers Wikidata, Wikipedia? Profils LinkedIn d'équipe détectés?
+25. Études de cas & Social Proof: Détection de case studies avec métriques de résultats (ROI, avant/après), témoignages clients chiffrés, liens vers profils sociaux (LinkedIn surtout) validant la crédibilité humaine.
+
+H. MONITORING & INFRASTRUCTURE IA
+26. Monitoring LLM: Le site a-t-il configuré le suivi du trafic provenant des LLM dans GA4? Détection des referrers IA (chatgpt.com, perplexity.ai, claude.ai). Le reporting inclut-il une dimension "IA Traffic"?
+27. Fichier llms.txt: Présence et qualité du fichier /llms.txt pour guider les agents IA sur l'identité et les capacités de l'entité.`;
 
 function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = ''): string {
   let marketDataSection = '';
@@ -839,6 +845,22 @@ GÉNÈRE UN RAPPORT JSON PREMIUM avec cette structure exacte:
       "has_wikidata_sameas": true/false,
       "entity_recognizability_score": 0-100,
       "verdict": "L'entité est-elle identifiable par les Knowledge Graphs et les IA?"
+    },
+    "first_party_data": {
+      "has_proprietary_data": true/false,
+      "data_sources": ["Type de donnée propriétaire détectée"],
+      "verdict": "Le contenu repose-t-il sur des données exclusives ou du contenu recyclé?"
+    },
+    "brand_changelog": {
+      "has_structured_history": true/false,
+      "key_facts_visible": true/false,
+      "hallucination_risk": "low|medium|high",
+      "verdict": "Les informations clés de la marque sont-elles structurées pour éviter les hallucinations IA?"
+    },
+    "llm_monitoring": {
+      "has_ga4_llm_tracking": true/false,
+      "recommended_setup": "Configuration recommandée pour tracker le trafic LLM dans GA4",
+      "verdict": "Le site est-il équipé pour mesurer le trafic provenant des IA?"
     }
   },
   "keyword_positioning": {
