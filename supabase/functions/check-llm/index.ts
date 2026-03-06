@@ -172,17 +172,14 @@ async function queryLLM(
     }
 
     // Parse JSON from response (handle markdown code blocks and extra text)
-    let jsonStr = content;
-    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch) {
-      jsonStr = jsonMatch[1];
-    } else {
-      // Fallback: extract JSON by finding first { and last }
-      const firstBrace = content.indexOf('{');
-      const lastBrace = content.lastIndexOf('}');
-      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-        jsonStr = content.substring(firstBrace, lastBrace + 1);
-      }
+    let jsonStr = content.trim();
+    // Strip markdown fences aggressively
+    jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '');
+    // Fallback: extract JSON by finding first { and last }
+    const firstBrace = jsonStr.indexOf('{');
+    const lastBrace = jsonStr.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
     }
 
     const parsed = JSON.parse(jsonStr.trim());
