@@ -111,6 +111,11 @@
 
   html {
     font-size: 110%;
+    overflow-x: hidden;
+  }
+
+  body {
+    overflow-x: hidden;
   }
 
   body {
