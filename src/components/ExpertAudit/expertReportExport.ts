@@ -454,7 +454,7 @@ export function generateExpertReportHTML(
       </div>
     `;
     const textBlock = (text: string) => `<p style="color: #374151; line-height: 1.7; margin: 0 0 8px 0;">${text}</p>`;
-    const labelValue = (label: string, value: string) => `<div style="margin-bottom: 6px;"><span style="font-size: 12px; color: #6b7280;">${label} : </span><strong style="color: #1f2937;">${value}</strong></div>`;
+    const labelValue = (label: string, value: string) => `<div style="margin-bottom: 6px;"><span style="font-size: 12px; font-weight: 600; color: #0f172a; text-transform: uppercase; letter-spacing: 0.03em;">${label} : </span><span style="color: #374151; font-weight: 400;">${value}</span></div>`;
     // No truncation — texts may already be AI-summarized before calling this function
 
     content = `
