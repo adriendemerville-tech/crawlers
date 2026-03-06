@@ -110,23 +110,22 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                             <span className={`text-xs ${fix.enabled ? 'font-medium' : 'text-muted-foreground'}`}>
                               {fix.label}
                             </span>
-                            {fix.enabled && (
-                              <Badge 
-                                variant="outline" 
-                                className={`text-[9px] px-1 py-0 h-4 ${priorityConfig[fix.priority].color}`}
-                              >
-                                <PriorityIcon className="w-2 h-2 mr-0.5" />
-                                {priorityConfig[fix.priority].label}
-                              </Badge>
-                            )}
-                            {fix.isRecommended && (
-                              <Badge 
-                                variant="outline" 
-                                className="text-[9px] px-1 py-0 h-4 bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30"
-                              >
-                                Recommandé
-                              </Badge>
-                            )}
+                             {fix.isRecommended ? (
+                               <Badge 
+                                 variant="outline" 
+                                 className="text-[9px] px-1 py-0 h-4 bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30"
+                               >
+                                 Recommandé
+                               </Badge>
+                             ) : fix.enabled && (
+                               <Badge 
+                                 variant="outline" 
+                                 className={`text-[9px] px-1 py-0 h-4 ${priorityConfig[fix.priority].color}`}
+                               >
+                                 <PriorityIcon className="w-2 h-2 mr-0.5" />
+                                 {priorityConfig[fix.priority].label}
+                               </Badge>
+                             )}
                           </div>
                         </div>
                       </div>
