@@ -1,17 +1,16 @@
 import { CrawlResult } from '@/types/crawler';
 import { TranslationKeys } from '../translations';
-import { icons } from '../reportStyles';
 
 export function generateCrawlersHTML(data: CrawlResult, t: TranslationKeys, language: string): string {
   const allowed = data.bots.filter((b) => b.status === 'allowed').length;
   const blocked = data.bots.filter((b) => b.status === 'blocked').length;
   const unknown = data.bots.filter((b) => b.status === 'unknown').length;
 
-  const getStatusIcon = (status: string) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'allowed': return icons.check;
-      case 'blocked': return icons.x;
-      default: return icons.helpCircle;
+      case 'allowed': return `✓ ${t.allowed}`;
+      case 'blocked': return `✗ ${t.blocked}`;
+      default: return `? ${t.unknown}`;
     }
   };
 
@@ -23,13 +22,6 @@ export function generateCrawlersHTML(data: CrawlResult, t: TranslationKeys, lang
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'allowed': return t.allowed;
-      case 'blocked': return t.blocked;
-      default: return t.unknown;
-    }
-  };
 
   const botsCards = data.bots.map((bot) => `
     <div class="card bot-card">
@@ -39,7 +31,6 @@ export function generateCrawlersHTML(data: CrawlResult, t: TranslationKeys, lang
           <div class="bot-company">${bot.company}</div>
         </div>
         <div class="status-badge ${getStatusClass(bot.status)}">
-          ${getStatusIcon(bot.status)}
           ${getStatusLabel(bot.status)}
         </div>
       </div>
@@ -57,23 +48,15 @@ export function generateCrawlersHTML(data: CrawlResult, t: TranslationKeys, lang
     <div class="card summary-header card-shadow-lg">
       <div class="summary-header-content">
         <div class="url-info">
-          <div class="url-icon-wrapper">
-            ${icons.globe}
-          </div>
           <div>
             <h2 class="url-title">
               ${data.url}
-              <a href="${data.url.startsWith('http') ? data.url : `https://${data.url}`}" target="_blank" rel="noopener noreferrer">
-                ${icons.externalLink}
-              </a>
             </h2>
             <div class="url-meta">
               <span class="url-meta-item">
-                ${icons.fileText}
                 ${t.httpStatus} ${data.httpStatus}
               </span>
               <span class="url-meta-item">
-                ${icons.clock}
                 ${new Date(data.scannedAt).toLocaleTimeString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
               </span>
             </div>

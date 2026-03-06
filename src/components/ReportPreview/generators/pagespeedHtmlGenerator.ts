@@ -1,6 +1,5 @@
 import { PageSpeedResult } from '@/types/pagespeed';
 import { TranslationKeys } from '../translations';
-import { icons } from '../reportStyles';
 
 function getScoreColor(score: number): string {
   if (score >= 90) return 'var(--success)';
@@ -30,18 +29,17 @@ export function generatePageSpeedHTML(data: PageSpeedResult, t: TranslationKeys)
   `).join('');
 
   const vitals = [
-    { icon: icons.zap, label: 'First Contentful Paint', value: scores.fcp, desc: t.fcpDesc },
-    { icon: icons.timer, label: 'Largest Contentful Paint', value: scores.lcp, desc: t.lcpDesc },
-    { icon: icons.move, label: 'Cumulative Layout Shift', value: scores.cls, desc: t.clsDesc },
-    { icon: icons.clock, label: 'Total Blocking Time', value: scores.tbt, desc: t.tbtDesc },
-    { icon: icons.gauge, label: 'Speed Index', value: scores.speedIndex, desc: t.speedIndexDesc },
-    { icon: icons.mousePointer, label: 'Time to Interactive', value: scores.tti, desc: t.ttiDesc },
+    { label: 'First Contentful Paint', value: scores.fcp, desc: t.fcpDesc },
+    { label: 'Largest Contentful Paint', value: scores.lcp, desc: t.lcpDesc },
+    { label: 'Cumulative Layout Shift', value: scores.cls, desc: t.clsDesc },
+    { label: 'Total Blocking Time', value: scores.tbt, desc: t.tbtDesc },
+    { label: 'Speed Index', value: scores.speedIndex, desc: t.speedIndexDesc },
+    { label: 'Time to Interactive', value: scores.tti, desc: t.ttiDesc },
   ];
 
   const vitalCards = vitals.map(v => `
     <div class="card metric-card">
       <div class="metric-header">
-        <div class="metric-icon">${v.icon}</div>
         <div>
           <div class="metric-label">${v.label}</div>
           <div class="metric-value">${v.value}</div>
@@ -53,7 +51,6 @@ export function generatePageSpeedHTML(data: PageSpeedResult, t: TranslationKeys)
   return `
     <!-- Section title -->
     <h2 class="section-title" style="margin-bottom: 24px;">
-      ${icons.gauge}
       ${t.pagespeed}
     </h2>
 
@@ -65,7 +62,6 @@ export function generatePageSpeedHTML(data: PageSpeedResult, t: TranslationKeys)
     <!-- Core Web Vitals -->
     <div class="card" style="padding: 24px;">
       <h3 class="section-title">
-        ${icons.zap}
         ${t.coreWebVitals}
       </h3>
       <div class="grid-3" style="margin-top: 16px;">

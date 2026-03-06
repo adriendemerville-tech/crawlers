@@ -1,6 +1,5 @@
 import { GeoResult } from '@/types/geo';
 import { TranslationKeys } from '../translations';
-import { icons } from '../reportStyles';
 
 function generateScoreGauge(score: number, label: string): string {
   const circumference = 2 * Math.PI * 45;
@@ -30,11 +29,11 @@ export function generateGeoHTML(data: GeoResult, t: TranslationKeys, language: s
   const passedFactors = data.factors.filter(f => f.status === 'good').length;
   const totalFactors = data.factors.length;
 
-  const getStatusIcon = (status: string) => {
+  const getStatusText = (status: string) => {
     switch (status) {
-      case 'good': return icons.check;
-      case 'warning': return icons.alertTriangle;
-      default: return icons.x;
+      case 'good': return '✓';
+      case 'warning': return '⚠';
+      default: return '✗';
     }
   };
 
@@ -60,7 +59,7 @@ export function generateGeoHTML(data: GeoResult, t: TranslationKeys, language: s
           <div class="factor-title-row">
             <span class="factor-name">${factor.name}</span>
             <div class="factor-status-icon ${getStatusClass(factor.status)}">
-              ${getStatusIcon(factor.status)}
+              ${getStatusText(factor.status)}
             </div>
           </div>
           <p class="factor-desc">${factor.description}</p>
@@ -85,18 +84,13 @@ export function generateGeoHTML(data: GeoResult, t: TranslationKeys, language: s
           <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; justify-content: space-between; width: 100%;">
             <div style="flex: 1; min-width: 200px;">
               <div style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 20px; background: hsla(221, 83%, 53%, 0.1); margin-bottom: 8px;">
-                ${icons.sparkles}
                 <span style="font-size: 14px; font-weight: 500; color: var(--primary);">${t.geo}</span>
               </div>
               <h2 class="url-title">
                 ${data.url}
-                <a href="${data.url}" target="_blank" rel="noopener noreferrer">
-                  ${icons.externalLink}
-                </a>
               </h2>
               <div class="url-meta">
               <span class="url-meta-item">
-                ${icons.clock}
                 ${new Date(data.scannedAt).toLocaleTimeString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
               </span>
                 <span>${passedFactors}/${totalFactors} ${t.checksPassed}</span>
