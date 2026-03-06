@@ -39,17 +39,19 @@ serve(async (req) => {
       .map(([key, value]) => `### ${key}\n${value}`)
       .join("\n\n");
 
-    const systemPrompt = `Tu es un rédacteur expert en SEO et marketing digital. Tu résumes des sections de rapport d'audit stratégique pour un format PDF téléchargeable. 
+    const systemPrompt = `Tu es un rédacteur expert en SEO et marketing digital. Tu résumes des sections de rapport d'audit stratégique pour un format PDF téléchargeable qui doit tenir en 6 pages MAXIMUM (environ 3000 mots au total pour l'ensemble des sections).
 
 Règles :
-- Résume chaque section en divisant la longueur par 2 environ
-- Conserve les données chiffrées, les noms propres et les recommandations clés
-- Garde un ton professionnel mais accessible (pas trop corporate)
+- Résume chaque section de façon agressive : divise la longueur par 3 minimum
+- Les sections longues (>500 caractères) doivent être réduites à 2-3 phrases percutantes maximum
+- Conserve UNIQUEMENT les données chiffrées clés, les noms propres et les 1-2 recommandations les plus importantes
+- Supprime les listes à puces longues : garde maximum 3 points par liste
+- Garde un ton professionnel mais direct et concis
 - Rédige en ${lang}
 - Retourne UNIQUEMENT un objet JSON avec les mêmes clés que l'entrée et les textes résumés comme valeurs
 - Ne mets pas de bloc markdown, juste le JSON brut`;
 
-    const userPrompt = `Résume chacune de ces sections de rapport (divise la longueur par 2) :\n\n${textsBlock}`;
+    const userPrompt = `Résume chacune de ces sections de rapport pour qu'elles tiennent dans un PDF de 6 pages maximum. Sois très concis, va à l'essentiel :\n\n${textsBlock}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
