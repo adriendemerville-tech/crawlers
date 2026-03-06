@@ -17,10 +17,10 @@ const LLM_PROVIDERS: LLMProvider[] = [
   { id: 'gpt4', name: 'GPT-4', company: 'OpenAI', model: 'openai/gpt-4-turbo' },
   { id: 'gpt4o', name: 'GPT-4o', company: 'OpenAI', model: 'openai/gpt-4o' },
   { id: 'claude35', name: 'Claude 3.5 Sonnet', company: 'Anthropic', model: 'anthropic/claude-3.5-sonnet' },
-  { id: 'claude3opus', name: 'Claude 3 Opus', company: 'Anthropic', model: 'anthropic/claude-3-opus' },
-  { id: 'gemini', name: 'Gemini Pro', company: 'Google', model: 'google/gemini-pro-1.5' },
-  { id: 'gemini2', name: 'Gemini 2.0', company: 'Google', model: 'google/gemini-2.0-flash-001' },
-  { id: 'perplexity', name: 'Perplexity AI', company: 'Perplexity', model: 'perplexity/llama-3.1-sonar-large-128k-online' },
+  { id: 'claude3opus', name: 'Claude 3.7 Sonnet', company: 'Anthropic', model: 'anthropic/claude-3.7-sonnet' },
+  { id: 'gemini', name: 'Gemini 2.5 Pro', company: 'Google', model: 'google/gemini-2.5-pro-preview' },
+  { id: 'gemini2', name: 'Gemini 2.0 Flash', company: 'Google', model: 'google/gemini-2.0-flash-001' },
+  { id: 'perplexity', name: 'Perplexity Sonar', company: 'Perplexity', model: 'perplexity/sonar' },
   { id: 'mistral', name: 'Mistral Large', company: 'Mistral AI', model: 'mistralai/mistral-large' },
 ];
 
