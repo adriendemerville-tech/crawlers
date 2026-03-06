@@ -261,6 +261,10 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     
     const html = await response.text();
     
+    // ═══ HSTS DETECTION ═══
+    const hstsHeader = response.headers.get('Strict-Transport-Security');
+    const hasHSTS = !!hstsHeader;
+
     // Extract title
     const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
     const titleContent = titleMatch ? titleMatch[1].trim() : '';
@@ -422,7 +426,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     // FAQ sections (common patterns)
     const hasFAQSection = /faq|questions? fréquentes|frequently asked/i.test(html);
 
-    // ═══ SCHEMA ENTITY VALIDATION ═══
+    // ═══ SCHEMA ENTITY VALIDATION (Enhanced) ═══
     const schemaEntities = {
       hasOrganization: schemaTypes.some(t => /organization/i.test(t)),
       hasProduct: schemaTypes.some(t => /product/i.test(t)),
@@ -432,7 +436,40 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasWebSite: schemaTypes.some(t => /website/i.test(t)),
       hasBreadcrumb: schemaTypes.some(t => /breadcrumb/i.test(t)),
       hasPerson: schemaTypes.some(t => /person/i.test(t)),
+      hasProfilePage: schemaTypes.some(t => /profilepage/i.test(t)),
+      hasAuthor: false, // set below
     };
+
+    // ═══ sameAs / WIKIDATA / AUTHOR DETECTION IN JSON-LD ═══
+    let hasSameAs = false;
+    let hasWikidataSameAs = false;
+    let hasAuthorInJsonLd = false;
+    for (const match of schemaMatches) {
+      try {
+        const jsonContent = match.replace(/<script[^>]*>|<\/script>/gi, '');
+        const parsed = JSON.parse(jsonContent);
+        const checkNode = (node: any): void => {
+          if (!node || typeof node !== 'object') return;
+          if (Array.isArray(node)) { node.forEach(checkNode); return; }
+          if (node.sameAs) {
+            hasSameAs = true;
+            const sameAsArr = Array.isArray(node.sameAs) ? node.sameAs : [node.sameAs];
+            if (sameAsArr.some((s: string) => typeof s === 'string' && /wikidata\.org/i.test(s))) {
+              hasWikidataSameAs = true;
+            }
+          }
+          if (node.author || node['@type'] === 'Author') {
+            hasAuthorInJsonLd = true;
+          }
+          if (node['@graph']) checkNode(node['@graph']);
+          for (const k in node) {
+            if (k !== '@graph' && node[k] && typeof node[k] === 'object') checkNode(node[k]);
+          }
+        };
+        checkNode(parsed);
+      } catch { /* skip */ }
+    }
+    schemaEntities.hasAuthor = hasAuthorInJsonLd;
 
     // FAQ + FAQPage coupling check
     const hasFAQWithSchema = hasFAQSection && schemaEntities.hasFAQPage;
@@ -567,6 +604,12 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       socialLinksCount,
       linkedInLinksCount,
       // Case studies
+      // HSTS
+      hasHSTS,
+      // Schema enhanced
+      hasSameAs,
+      hasWikidataSameAs,
+      hasAuthorInJsonLd,
       hasCaseStudies,
       caseStudySignals,
     };
@@ -603,7 +646,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       tableCount: 0,
       listCount: 0,
       hasFAQSection: false,
-      schemaEntities: { hasOrganization: false, hasProduct: false, hasArticle: false, hasReview: false, hasFAQPage: false, hasWebSite: false, hasBreadcrumb: false, hasPerson: false },
+      schemaEntities: { hasOrganization: false, hasProduct: false, hasArticle: false, hasReview: false, hasFAQPage: false, hasWebSite: false, hasBreadcrumb: false, hasPerson: false, hasProfilePage: false, hasAuthor: false },
       hasFAQWithSchema: false,
       hasAuthorBio: false,
       authorBioCount: 0,
@@ -616,6 +659,10 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasLinkedInLinks: false,
       socialLinksCount: 0,
       linkedInLinksCount: 0,
+      hasHSTS: false,
+      hasSameAs: false,
+      hasWikidataSameAs: false,
+      hasAuthorInJsonLd: false,
       hasCaseStudies: false,
       caseStudySignals: 0,
     };
@@ -652,6 +699,86 @@ async function checkRobotsTxt(url: string): Promise<RobotsAnalysis> {
   } catch {
     return { exists: false, permissive: true, content: '' };
   }
+}
+
+// ═══ LLMS.TXT CHECK ═══
+interface LlmsTxtAnalysis {
+  exists: boolean;
+  contentLength: number;
+  hasStructuredFormat: boolean;
+}
+
+async function checkLlmsTxt(url: string): Promise<LlmsTxtAnalysis> {
+  console.log('Checking llms.txt...');
+  try {
+    const origin = new URL(url).origin;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const response = await fetch(`${origin}/llms.txt`, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0)' }
+    });
+    clearTimeout(timeoutId);
+    if (!response.ok) return { exists: false, contentLength: 0, hasStructuredFormat: false };
+    const content = await response.text();
+    // Check for structured formatting (headings, sections)
+    const hasStructuredFormat = /^#\s/m.test(content) || /^\*\*/m.test(content) || content.includes('## ');
+    return { exists: true, contentLength: content.length, hasStructuredFormat };
+  } catch {
+    return { exists: false, contentLength: 0, hasStructuredFormat: false };
+  }
+}
+
+// ═══ IMAGE/VIDEO SITEMAP CHECK ═══
+interface SpecializedSitemapAnalysis {
+  hasImageSitemap: boolean;
+  hasVideoSitemap: boolean;
+}
+
+async function checkSpecializedSitemaps(url: string): Promise<SpecializedSitemapAnalysis> {
+  console.log('Checking specialized sitemaps...');
+  const origin = new URL(url).origin;
+  const results = { hasImageSitemap: false, hasVideoSitemap: false };
+
+  // Check common paths for image/video sitemaps
+  const checks = [
+    { paths: ['/image-sitemap.xml', '/sitemap-image.xml', '/sitemap_image.xml'], key: 'hasImageSitemap' as const },
+    { paths: ['/video-sitemap.xml', '/sitemap-video.xml', '/sitemap_video.xml'], key: 'hasVideoSitemap' as const },
+  ];
+
+  // Also check main sitemap for image/video namespace
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 5000);
+    const mainResp = await fetch(`${origin}/sitemap.xml`, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0)' }
+    });
+    if (mainResp.ok) {
+      const content = await mainResp.text();
+      if (/xmlns:image/i.test(content) || /<image:loc>/i.test(content)) results.hasImageSitemap = true;
+      if (/xmlns:video/i.test(content) || /<video:content_loc>/i.test(content)) results.hasVideoSitemap = true;
+    }
+  } catch { /* skip */ }
+
+  // Check dedicated sitemap files
+  for (const check of checks) {
+    if (results[check.key]) continue; // already found in main sitemap
+    for (const path of check.paths) {
+      try {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 3000);
+        const resp = await fetch(`${origin}${path}`, {
+          method: 'HEAD',
+          signal: controller.signal,
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0)' }
+        });
+        if (resp.ok) { results[check.key] = true; break; }
+      } catch { /* skip */ }
+    }
+  }
+
+  return results;
 }
 
 interface SitemapAnalysis {
@@ -805,7 +932,7 @@ interface RecommendationItem {
   fixes?: string[];
 }
 
-function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiData: any, crawlersResult?: any, sitemapAnalysis?: SitemapAnalysis): RecommendationItem[] {
+function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiData: any, crawlersResult?: any, sitemapAnalysis?: SitemapAnalysis, llmsTxtAnalysis?: LlmsTxtAnalysis, specializedSitemaps?: SpecializedSitemapAnalysis): RecommendationItem[] {
   const recommendations: RecommendationItem[] = [];
   const audits = psiData?.lighthouseResult?.audits || {};
   
@@ -1558,6 +1685,137 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
     });
   }
   
+  // ═══ LLMS.TXT CHECK ═══
+  if (llmsTxtAnalysis && !llmsTxtAnalysis.exists) {
+    recommendations.push({
+      id: 'no-llms-txt',
+      priority: 'important',
+      category: 'ia',
+      icon: '🟠',
+      title: 'Fichier llms.txt absent : pas de guidage pour les LLM',
+      description: 'Aucun fichier llms.txt n\'a été détecté à la racine du site. Ce fichier (standard émergent) permet de guider les LLM sur l\'identité, les services et les instructions d\'interaction pour votre entité. C\'est un signal de maturité GEO.',
+      weaknesses: [
+        "Aucun fichier /llms.txt accessible",
+        "Les LLM ne disposent d'aucune instruction pour comprendre votre entité",
+        "Pas de guidage structuré pour les agents IA autonomes",
+        "Opportunité de positionnement GEO manquée"
+      ],
+      fixes: [
+        "Créer un fichier llms.txt à la racine du site (format Markdown)",
+        "Inclure : mission, services, capacités, cas d'usage, URL clés",
+        "Ajouter des instructions de comportement pour les agents IA",
+        "Référencer le fichier dans votre robots.txt si pertinent",
+        "Mettre à jour régulièrement pour refléter l'offre actuelle"
+      ]
+    });
+  }
+
+  // ═══ SPECIALIZED SITEMAPS (Image/Video) ═══
+  if (specializedSitemaps) {
+    const missingSpecialized: string[] = [];
+    if (!specializedSitemaps.hasImageSitemap && (htmlAnalysis.imagesTotal || 0) > 5) {
+      missingSpecialized.push('images');
+    }
+    if (!specializedSitemaps.hasVideoSitemap) {
+      // Only recommend if we detect video content on page
+      const hasVideoContent = htmlAnalysis.schemaTypes?.some(t => /video/i.test(t));
+      if (hasVideoContent) missingSpecialized.push('vidéos');
+    }
+    if (missingSpecialized.length > 0) {
+      recommendations.push({
+        id: 'no-specialized-sitemaps',
+        priority: 'optional',
+        category: 'technique',
+        icon: '🟡',
+        title: `Sitemaps spécialisés manquants : ${missingSpecialized.join(', ')}`,
+        description: `Aucun sitemap dédié pour les ${missingSpecialized.join(' et les ')} n'a été détecté. Les sitemaps spécialisés améliorent l'indexation des contenus rich media par Google et les moteurs IA.`,
+        weaknesses: [
+          ...missingSpecialized.map(t => `Pas de sitemap ${t} détecté`),
+          "Les contenus rich media sont découverts plus lentement",
+          "Opportunité de rich snippets visuels manquée"
+        ],
+        fixes: [
+          ...missingSpecialized.includes('images') ? ["Créer un sitemap image avec namespace xmlns:image dans le sitemap principal"] : [],
+          ...missingSpecialized.includes('vidéos') ? ["Créer un sitemap vidéo dédié avec xmlns:video"] : [],
+          "Déclarer les sitemaps spécialisés dans le robots.txt",
+          "Soumettre dans Google Search Console"
+        ]
+      });
+    }
+  }
+
+  // ═══ HSTS CHECK ═══
+  if (htmlAnalysis.isHttps && !htmlAnalysis.hasHSTS) {
+    recommendations.push({
+      id: 'no-hsts',
+      priority: 'important',
+      category: 'securite',
+      icon: '🟠',
+      title: 'HSTS non activé : sécurité de transport incomplète',
+      description: 'Le header Strict-Transport-Security (HSTS) n\'est pas configuré. HSTS force les navigateurs à utiliser HTTPS, empêchant les attaques man-in-the-middle et le downgrade HTTP. C\'est un signal de confiance pour les moteurs et les IA.',
+      weaknesses: [
+        "Header Strict-Transport-Security absent",
+        "Vulnérabilité aux attaques de type SSL stripping",
+        "Signal de sécurité incomplet pour Google et les IA",
+        "Non éligible à la HSTS preload list"
+      ],
+      fixes: [
+        "Ajouter le header : Strict-Transport-Security: max-age=31536000; includeSubDomains",
+        "Tester d'abord avec un max-age court (86400) avant d'augmenter",
+        "Envisager l'ajout à la HSTS Preload List (hstspreload.org)",
+        "Vérifier que toutes les sous-domaines supportent HTTPS avant includeSubDomains"
+      ]
+    });
+  }
+
+  // ═══ SAMEAS / WIKIDATA CHECK ═══
+  if (htmlAnalysis.hasSchemaOrg && !htmlAnalysis.hasSameAs) {
+    recommendations.push({
+      id: 'no-sameas',
+      priority: 'important',
+      category: 'ia',
+      icon: '🟠',
+      title: 'Liens sameAs absents du JSON-LD : entité non reliée au Knowledge Graph',
+      description: 'Aucun lien sameAs n\'a été détecté dans vos données structurées. Les liens sameAs permettent aux moteurs et IA de relier votre entité à Wikidata, Wikipedia et aux profils sociaux officiels, renforçant drastiquement la reconnaissance dans le Knowledge Graph.',
+      weaknesses: [
+        "Aucun sameAs dans le JSON-LD Organization",
+        "L'entité n'est pas liée au Knowledge Graph de Google",
+        "Les IA ne peuvent pas vérifier l'identité de la marque via des sources tierces",
+        "Faible signal de confiance pour les réponses génératives"
+      ],
+      fixes: [
+        "Ajouter sameAs dans le JSON-LD Organization avec les URLs : LinkedIn, Twitter/X, Facebook, YouTube",
+        "Créer une entrée Wikidata pour votre organisation et l'inclure dans sameAs",
+        "Lier vers votre page Wikipedia si elle existe",
+        "Inclure les URLs exactes des profils sociaux officiels (pas des profils personnels)"
+      ]
+    });
+  }
+
+  // ═══ SCHEMA AUTHOR / PROFILEPAGE CHECK ═══
+  if (htmlAnalysis.schemaEntities?.hasArticle && !htmlAnalysis.hasAuthorInJsonLd) {
+    recommendations.push({
+      id: 'article-without-author-schema',
+      priority: 'important',
+      category: 'ia',
+      icon: '🟠',
+      title: 'Article sans Schema Author : signaux E-E-A-T incomplets',
+      description: 'Un schéma Article est détecté mais sans propriété author structurée en JSON-LD. Google et les IA utilisent le Schema Author pour évaluer l\'expertise et la crédibilité du contenu. Son absence affaiblit les signaux E-E-A-T.',
+      weaknesses: [
+        "Schema Article présent mais sans author structuré",
+        "Google ne peut pas identifier l'auteur via les données structurées",
+        "Signaux E-E-A-T (Expertise, Experience) incomplets",
+        "Les IA ne peuvent pas attribuer le contenu à un expert identifié"
+      ],
+      fixes: [
+        "Ajouter author: { @type: 'Person', name: '...', url: '...', sameAs: ['linkedin...'] } dans le JSON-LD Article",
+        "Implémenter ProfilePage Schema pour les pages auteur dédiées",
+        "Lier l'auteur à son profil LinkedIn et/ou Google Scholar via sameAs",
+        "Ajouter jobTitle, worksFor et knowsAbout pour renforcer l'expertise"
+      ]
+    });
+  }
+
   // Sort by priority
   const priorityOrder = { critical: 0, important: 1, optional: 2 };
   recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
@@ -1586,13 +1844,15 @@ serve(async (req) => {
     console.log('Starting Expert Audit for:', normalizedUrl);
     
     // Run all checks in parallel
-    const [psiData, safeBrowsing, htmlAnalysis, robotsAnalysis, crawlersResult, sitemapAnalysis] = await Promise.all([
+    const [psiData, safeBrowsing, htmlAnalysis, robotsAnalysis, crawlersResult, sitemapAnalysis, llmsTxtAnalysis, specializedSitemaps] = await Promise.all([
       fetchPageSpeedData(normalizedUrl),
       checkSafeBrowsing(normalizedUrl),
       analyzeHtml(normalizedUrl),
       checkRobotsTxt(normalizedUrl),
       checkCrawlers(normalizedUrl),
-      checkSitemap(normalizedUrl)
+      checkSitemap(normalizedUrl),
+      checkLlmsTxt(normalizedUrl),
+      checkSpecializedSitemaps(normalizedUrl),
     ]);
     
     const categories = psiData.lighthouseResult?.categories || {};
@@ -1621,10 +1881,11 @@ serve(async (req) => {
     if (htmlAnalysis.hasSchemaOrg) aiReadyScore += 15;
     if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 15;
     
-    // E. Security (20 pts)
+    // E. Security (20 pts) - Enhanced with HSTS
     let securityScore = 0;
-    if (htmlAnalysis.isHttps) securityScore += 10;
-    if (safeBrowsing.safe) securityScore += 10;
+    if (htmlAnalysis.isHttps) securityScore += 8;
+    if (safeBrowsing.safe) securityScore += 8;
+    if (htmlAnalysis.hasHSTS) securityScore += 4;
     
     const totalScore = performanceScore + technicalScore + semanticScore + aiReadyScore + securityScore;
     
@@ -1673,12 +1934,13 @@ serve(async (req) => {
         score: securityScore,
         maxScore: 20,
         isHttps: htmlAnalysis.isHttps,
+        hasHSTS: htmlAnalysis.hasHSTS,
         safeBrowsingOk: safeBrowsing.safe,
         threats: safeBrowsing.threats,
       },
     };
     
-    const recommendations = generateRecommendations(scores, htmlAnalysis, psiData, crawlersResult, sitemapAnalysis);
+    const recommendations = generateRecommendations(scores, htmlAnalysis, psiData, crawlersResult, sitemapAnalysis, llmsTxtAnalysis, specializedSitemaps);
     
     // Generate narrative introduction using AI
     let introduction = null;
@@ -1791,6 +2053,8 @@ Réponds avec ce JSON exact:
             robotsAnalysis,
             crawlersData: crawlersResult,
             sitemapAnalysis,
+            llmsTxtAnalysis,
+            specializedSitemaps,
           }
         }
       }),
