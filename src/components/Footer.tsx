@@ -124,124 +124,10 @@ function FooterComponent() {
   const allArticles = blogArticles;
 
   return (
-    <footer className="border-t border-border bg-card" role="contentinfo">
-      {/* Main Footer Content */}
-      <div className="mx-auto max-w-7xl px-4 py-12">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          
-          {/* Brand & Description */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-foreground">Crawlers AI</span>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {language === 'fr' 
-                ? 'Analysez et optimisez la visibilité de votre site web pour les moteurs de recherche IA et les LLM en 2026. Outils gratuits pour le SEO et le GEO en France et en Europe.'
-                : language === 'es'
-                ? 'Analice y optimice la visibilidad de su sitio web para motores de búsqueda IA y LLM en 2026. Herramientas gratuitas para SEO y GEO en España, México y Argentina.'
-                : 'Analyze and optimize your website visibility for AI search engines and LLMs in 2026. Free tools for SEO and GEO in Great Britain and USA.'}
-            </p>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Mail className="h-4 w-4" />
-              <a href="mailto:contact@crawlers.fr" className="hover:text-primary transition-colors">
-                contact@crawlers.fr
-              </a>
-            </div>
-          </div>
-
-          {/* Tools */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-              {language === 'fr' ? 'Nos Outils' : language === 'es' ? 'Herramientas' : 'Our Tools'}
-            </h3>
-            <nav aria-label="Outils d'analyse">
-              <ul className="space-y-3">
-                {toolsLinks.map((link) => (
-                  <li key={link.href}>
-                    <a 
-                      href={link.href}
-                      className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                      title={link.description}
-                    >
-                      <link.icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>{link.label}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-              {language === 'fr' ? 'Ressources' : language === 'es' ? 'Recursos' : 'Resources'}
-            </h3>
-            <nav aria-label="Ressources">
-              <ul className="space-y-3">
-                {resourcesLinks.map((link) => (
-                  <li key={link.href}>
-                    {link.href.startsWith('/') ? (
-                      <Link
-                        to={link.href}
-                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                        title={link.description}
-                      >
-                        {link.href === '/tarifs' ? (
-                          <CreditCard className="h-4 w-4 flex-shrink-0" />
-                        ) : (
-                          <FileText className="h-4 w-4 flex-shrink-0" />
-                        )}
-                        <span>{link.label}</span>
-                      </Link>
-                    ) : (
-                      <a 
-                        href={link.href}
-                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                        title={link.description}
-                      >
-                        <FileText className="h-4 w-4 flex-shrink-0" />
-                        <span>{link.label}</span>
-                      </a>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
-
-          {/* Partners */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-              {language === 'fr' ? 'Découvrir aussi' : language === 'es' ? 'Descubrir también' : 'Also Discover'}
-            </h3>
-            <ul className="space-y-3">
-              {partnerLinks.map((link) => (
-                <li key={link.href}>
-                  <a 
-                    href={link.href}
-                    target="_blank"
-                    rel={link.dofollow ? 'noopener' : 'noopener noreferrer nofollow'}
-                    className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                    title={link.description}
-                  >
-                    <ExternalLink className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="font-medium">{link.label}</span>
-                      <p className="text-xs text-muted-foreground/80 group-hover:text-muted-foreground">
-                        {link.description}
-                      </p>
-                    </div>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Ressources & Guides Section */}
+    <>
+      {/* Ressources & Guides Section - Above Footer */}
       {allArticles.length > 0 && (
-        <div className="border-t border-border">
+        <section className="border-t border-border bg-muted/20">
           <div className="mx-auto max-w-7xl px-4 py-8">
             <div className="flex items-center gap-2 mb-4">
               <BookOpen className="h-5 w-5 text-primary" />
@@ -275,60 +161,176 @@ function FooterComponent() {
               </Link>
             </div>
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Bottom Bar */}
-      <div className="border-t border-border bg-muted/30">
-        <div className="mx-auto max-w-7xl px-4 py-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Legal Links */}
-            <nav aria-label="Mentions légales" className="flex flex-wrap gap-x-6 gap-y-2">
-              {legalLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <Shield className="h-3 w-3" />
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
+      <footer className="border-t border-border bg-card" role="contentinfo">
+        {/* Main Footer Content */}
+        <div className="mx-auto max-w-7xl px-4 py-12">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            
+            {/* Brand & Description */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-foreground">Crawlers AI</span>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {language === 'fr' 
+                  ? 'Analysez et optimisez la visibilité de votre site web pour les moteurs de recherche IA et les LLM en 2026. Outils gratuits pour le SEO et le GEO en France et en Europe.'
+                  : language === 'es'
+                  ? 'Analice y optimice la visibilidad de su sitio web para motores de búsqueda IA y LLM en 2026. Herramientas gratuitas para SEO y GEO en España, México y Argentina.'
+                  : 'Analyze and optimize your website visibility for AI search engines and LLMs in 2026. Free tools for SEO and GEO in Great Britain and USA.'}
+              </p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Mail className="h-4 w-4" />
+                <a href="mailto:contact@crawlers.fr" className="hover:text-primary transition-colors">
+                  contact@crawlers.fr
+                </a>
+              </div>
+            </div>
 
-            {/* Copyright */}
-            <p className="text-xs text-muted-foreground">
-              © {new Date().getFullYear()} Crawlers AI - crawlers.fr | 
-              {language === 'fr' 
-                ? ' Tous droits réservés'
-                : language === 'es'
-                ? ' Todos los derechos reservados'
-                : ' All rights reserved'}
-            </p>
+            {/* Tools */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                {language === 'fr' ? 'Nos Outils' : language === 'es' ? 'Herramientas' : 'Our Tools'}
+              </h3>
+              <nav aria-label="Outils d'analyse">
+                <ul className="space-y-3">
+                  {toolsLinks.map((link) => (
+                    <li key={link.href}>
+                      <a 
+                        href={link.href}
+                        className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                        title={link.description}
+                      >
+                        <link.icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span>{link.label}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                {language === 'fr' ? 'Ressources' : language === 'es' ? 'Recursos' : 'Resources'}
+              </h3>
+              <nav aria-label="Ressources">
+                <ul className="space-y-3">
+                  {resourcesLinks.map((link) => (
+                    <li key={link.href}>
+                      {link.href.startsWith('/') ? (
+                        <Link
+                          to={link.href}
+                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                          title={link.description}
+                        >
+                          {link.href === '/tarifs' ? (
+                            <CreditCard className="h-4 w-4 flex-shrink-0" />
+                          ) : (
+                            <FileText className="h-4 w-4 flex-shrink-0" />
+                          )}
+                          <span>{link.label}</span>
+                        </Link>
+                      ) : (
+                        <a 
+                          href={link.href}
+                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                          title={link.description}
+                        >
+                          <FileText className="h-4 w-4 flex-shrink-0" />
+                          <span>{link.label}</span>
+                        </a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+
+            {/* Partners */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                {language === 'fr' ? 'Découvrir aussi' : language === 'es' ? 'Descubrir también' : 'Also Discover'}
+              </h3>
+              <ul className="space-y-3">
+                {partnerLinks.map((link) => (
+                  <li key={link.href}>
+                    <a 
+                      href={link.href}
+                      target="_blank"
+                      rel={link.dofollow ? 'noopener' : 'noopener noreferrer nofollow'}
+                      className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                      title={link.description}
+                    >
+                      <ExternalLink className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="font-medium">{link.label}</span>
+                        <p className="text-xs text-muted-foreground/80 group-hover:text-muted-foreground">
+                          {link.description}
+                        </p>
+                      </div>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Schema.org structured data for SEO */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{
-        __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          "name": "Crawlers AI",
-          "url": "https://crawlers.fr",
-          "logo": "https://crawlers.fr/favicon.svg",
-          "description": language === 'fr' 
-            ? "Outils d'analyse SEO et GEO pour optimiser la visibilité de votre site web auprès des moteurs de recherche IA et des LLM."
-            : "SEO and GEO analysis tools to optimize your website visibility for AI search engines and LLMs.",
-          "contactPoint": {
-            "@type": "ContactPoint",
-            "email": "contact@crawlers.fr",
-            "contactType": "customer service"
-          },
-          "sameAs": []
-        })
-      }} />
-    </footer>
+        {/* Bottom Bar */}
+        <div className="border-t border-border bg-muted/30">
+          <div className="mx-auto max-w-7xl px-4 py-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              {/* Legal Links */}
+              <nav aria-label="Mentions légales" className="flex flex-wrap gap-x-6 gap-y-2">
+                {legalLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <Shield className="h-3 w-3" />
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+
+              {/* Copyright */}
+              <p className="text-xs text-muted-foreground">
+                © {new Date().getFullYear()} Crawlers AI - crawlers.fr | 
+                {language === 'fr' 
+                  ? ' Tous droits réservés'
+                  : language === 'es'
+                  ? ' Todos los derechos reservados'
+                  : ' All rights reserved'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Schema.org structured data for SEO */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Crawlers AI",
+            "url": "https://crawlers.fr",
+            "logo": "https://crawlers.fr/favicon.svg",
+            "description": language === 'fr' 
+              ? "Outils d'analyse SEO et GEO pour optimiser la visibilité de votre site web auprès des moteurs de recherche IA et des LLM."
+              : "SEO and GEO analysis tools to optimize your website visibility for AI search engines and LLMs.",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "email": "contact@crawlers.fr",
+              "contactType": "customer service"
+            },
+            "sameAs": []
+          })
+        }} />
+      </footer>
+    </>
   );
 }
 
