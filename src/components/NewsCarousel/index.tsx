@@ -218,7 +218,7 @@ export function NewsCarousel() {
                 placeholder=""
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-10 w-full sm:w-80"
+                className="pr-10 w-full sm:w-60"
               />
             </div>
             
