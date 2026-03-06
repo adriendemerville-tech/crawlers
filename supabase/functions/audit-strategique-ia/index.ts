@@ -1045,6 +1045,10 @@ IMPORTANT: Utilise ces informations RÉELLES pour identifier précisément le co
       console.log('⚠️ Could not fetch page content for context:', e instanceof Error ? e.message : e);
     }
 
+    // Extract domain from URL
+    const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
+    const domain = new URL(normalizedUrl).hostname;
+
     // Humanize brand name: prefer HTML-extracted name, fallback to domain slug
     const domainSlug = domain.split('.')[0];
     const humanBrandName = extractedBrandName || humanizeBrandName(domainSlug);

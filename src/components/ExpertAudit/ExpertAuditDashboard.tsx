@@ -762,11 +762,75 @@ export function ExpertAuditDashboard() {
     } catch (error) {
       console.error('Strategic audit error:', error);
       trackAnalyticsEvent('error', { eventData: { type: 'strategic_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
-      toast({
-        title: t.error,
-        description: error instanceof Error ? error.message : t.auditFailed,
-        variant: 'destructive',
-      });
+      // Auto-retry once silently instead of showing error toast
+      try {
+        console.log('Strategic audit: auto-retrying...');
+        const { data: retryData, error: retryError } = await supabase.functions.invoke('audit-strategique-ia', {
+          body: { url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null }
+        });
+        if (retryError) throw retryError;
+        if (!retryData?.success) throw new Error(retryData?.error || 'Retry failed');
+
+        const keywordPositioning = retryData?.data?.keyword_positioning ?? retryData?.data?.keywordPositioning ?? null;
+        const marketDataSummary = retryData?.data?.market_data_summary ?? retryData?.data?.marketDataSummary ?? null;
+
+        const strategicData: ExpertAuditResult = {
+          url: normalizedUrl,
+          domain: new URL(normalizedUrl).hostname,
+          totalScore: retryData.data.overallScore * 2,
+          maxScore: 200,
+          scores: {
+            performance: { score: 0, maxScore: 40, psiPerformance: 0, lcp: 0, cls: 0, tbt: 0, fcp: 0 },
+            technical: { score: 0, maxScore: 50, psiSeo: 0, httpStatus: 200, isHttps: true },
+            semantic: { score: 0, maxScore: 60, hasTitle: false, titleLength: 0, hasMetaDesc: false, metaDescLength: 0, h1Count: 0, hasUniqueH1: false, wordCount: 0 },
+            aiReady: { score: 0, maxScore: 30, hasSchemaOrg: false, schemaTypes: [], hasRobotsTxt: false, robotsPermissive: false },
+            security: { score: 0, maxScore: 20, isHttps: true, safeBrowsingOk: true, threats: [] },
+          },
+          recommendations: [],
+          rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
+          scannedAt: retryData.data.scannedAt || new Date().toISOString(),
+          strategicAnalysis: {
+            introduction: retryData.data.introduction,
+            brand_authority: retryData.data.brand_authority,
+            social_signals: retryData.data.social_signals,
+            market_intelligence: retryData.data.market_intelligence,
+            competitive_landscape: retryData.data.competitive_landscape,
+            geo_readiness: retryData.data.geo_readiness,
+            executive_roadmap: retryData.data.executive_roadmap,
+            keyword_positioning: keywordPositioning,
+            market_data_summary: marketDataSummary,
+            brand_identity: retryData.data.brand_identity,
+            market_positioning: retryData.data.market_positioning,
+            geo_score: retryData.data.geo_score,
+            strategic_roadmap: retryData.data.strategic_roadmap,
+            executive_summary: retryData.data.executive_summary,
+            brandPerception: retryData.data.brandPerception,
+            geoAnalysis: retryData.data.geoAnalysis,
+            llmVisibility: retryData.data.llmVisibility,
+            testQueries: retryData.data.testQueries,
+            executiveSummary: retryData.data.executiveSummary,
+            overallScore: retryData.data.overallScore || retryData.data.geo_readiness?.citability_score || retryData.data.geo_score?.score,
+            hallucinationCorrections: hallucinationCorrections || null,
+            llm_visibility_raw: retryData.data.llm_visibility_raw || null,
+          },
+        };
+
+        setResult(strategicData);
+        setStrategicResult(strategicData);
+        setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+        setHallucinationDiagnosis(null);
+        trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
+        const domain = new URL(normalizedUrl).hostname;
+        fetchStoredCorrections(domain);
+        toast({ title: t.strategicComplete, description: t.strategicDesc2 });
+      } catch (retryError) {
+        console.error('Strategic audit retry also failed:', retryError);
+        toast({
+          title: t.error,
+          description: retryError instanceof Error ? retryError.message : t.auditFailed,
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsStrategicLoading(false);
     }
