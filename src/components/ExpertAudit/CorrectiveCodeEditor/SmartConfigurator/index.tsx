@@ -278,22 +278,25 @@ export function SmartConfigurator({
 
   useEffect(() => {
     if (isOpen) {
-      setIsReady(false);
       fetchWpSiteData();
       fetchAuditIntelligence();
-    } else {
-      setIsReady(false);
     }
   }, [isOpen, fetchWpSiteData, fetchAuditIntelligence]);
 
-  // Mark as ready once preloading finishes (one-way: no flicker)
+  // Mark as ready once preloading finishes (one-way: stays true once set to avoid flicker on re-focus)
   useEffect(() => {
-    if (isOpen && !isPreloading) {
-      // Small delay to let fixConfigs settle before showing
+    if (isOpen && !isPreloading && !isReady) {
       const t = setTimeout(() => setIsReady(true), 50);
       return () => clearTimeout(t);
     }
-  }, [isOpen, isPreloading]);
+  }, [isOpen, isPreloading, isReady]);
+
+  // Reset ready state only when modal is explicitly closed
+  useEffect(() => {
+    if (!isOpen) {
+      setIsReady(false);
+    }
+  }, [isOpen]);
 
   // Generate fix configurations from audit results
   const availableFixes = useMemo(() => {
@@ -1260,18 +1263,6 @@ export function SmartConfigurator({
                   )}
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="strategic" 
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-3"
-                >
-                  <Sparkles className="w-4 h-4 mr-1" />
-                  Stratégie
-                  {strategicCount > 0 && (
-                    <span className="ml-1 text-xs bg-blue-500/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
-                      {strategicCount}
-                    </span>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger 
                   value="generative" 
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:bg-transparent py-3 px-3"
                 >
@@ -1280,6 +1271,18 @@ export function SmartConfigurator({
                   {generativeCount > 0 && (
                     <span className="ml-1 text-xs bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded">
                       {generativeCount}
+                    </span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="strategic" 
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-3"
+                >
+                  <Sparkles className="w-4 h-4 mr-1" />
+                  Stratégie
+                  {strategicCount > 0 && (
+                    <span className="ml-1 text-xs bg-blue-500/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
+                      {strategicCount}
                     </span>
                   )}
                 </TabsTrigger>
