@@ -96,19 +96,39 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
     setIsGeneratingPDF(true);
     try {
       const domain = result.domain?.replace(/[^a-zA-Z0-9]/g, '-') || 'site';
-      const fileName = auditMode === 'technical' ? `rapport_technique_${domain}.html` : `rapport_strategique_${domain}.html`;
-      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const fileName = auditMode === 'technical' ? `rapport_technique_${domain}` : `rapport_strategique_${domain}`;
+      
+      // Create hidden iframe for print-to-PDF
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+      
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!iframeDoc || !iframe.contentWindow) throw new Error('Cannot create print frame');
+      
+      // Inject HTML with print-friendly title for PDF filename
+      const printHtml = htmlContent.replace(/<title>.*?<\/title>/, `<title>${fileName}</title>`);
+      iframeDoc.open();
+      iframeDoc.write(printHtml);
+      iframeDoc.close();
+      
+      // Wait for content to render then trigger print (save as PDF)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      iframe.contentWindow.print();
+      
+      // Clean up after a delay
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+      
       toast.success(t.pdfSuccess);
     } catch (error) {
-      console.error('Download error:', error);
+      console.error('PDF generation error:', error);
       toast.error(t.pdfError);
     } finally {
       setIsGeneratingPDF(false);
