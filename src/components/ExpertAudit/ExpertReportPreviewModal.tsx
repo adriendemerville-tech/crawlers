@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ExpertAuditResult } from '@/types/expertAudit';
-import { expertReportTranslations, generateExpertPDF, generateExpertReportHTML, WhiteLabelBranding, summarizeStrategicResult } from './expertReportExport';
+import { expertReportTranslations, generateExpertReportHTML, WhiteLabelBranding, summarizeStrategicResult } from './expertReportExport';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveReport } from '@/hooks/useSaveReport';
 
@@ -95,7 +95,22 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      generateExpertPDF(effectiveResult, auditMode, t, branding);
+      // Use the HTML report (which is always up-to-date) rendered in a print window
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        const domain = result.domain?.replace(/[^a-zA-Z0-9]/g, '-') || 'site';
+        const fileName = auditMode === 'technical' ? `rapport_technique_${domain}` : `rapport_strategique_${domain}`;
+        // Inject a title for the PDF filename and auto-trigger print (Save as PDF)
+        const htmlWithTitle = htmlContent.replace(
+          /<title>[^<]*<\/title>/,
+          `<title>${fileName}</title>`
+        );
+        printWindow.document.write(htmlWithTitle);
+        printWindow.document.close();
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
       toast.success(t.pdfSuccess);
     } catch (error) {
       console.error('PDF generation error:', error);
