@@ -126,8 +126,9 @@ export function generateExpertReportHTML(
   language: string,
   branding?: WhiteLabelBranding
 ): string {
-  const now = new Date(result.scannedAt).toLocaleString(
-    language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US'
+  const now = new Date(result.scannedAt).toLocaleDateString(
+    language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
+    { year: 'numeric', month: 'long', day: 'numeric' }
   );
 
   const getScoreColor = (score: number, max: number) => {
