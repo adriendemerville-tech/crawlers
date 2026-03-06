@@ -948,6 +948,7 @@ Deno.serve(async (req) => {
 
     // ==================== FETCH PAGE CONTENT FOR CORE BUSINESS UNDERSTANDING ====================
     let pageContentContext = '';
+    let extractedBrandName = '';
     try {
       const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
       console.log('📄 Fetching page content for core business detection...');
@@ -964,6 +965,40 @@ Deno.serve(async (req) => {
         const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
         const ogTitleMatch = html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']*?)["']/i);
         const ogDescMatch = html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']*?)["']/i);
+        
+        // Extract brand name from HTML metadata (most reliable sources first)
+        const ogSiteNameMatch = html.match(/<meta\s+property=["']og:site_name["']\s+content=["']([^"']*?)["']/i);
+        const jsonLdMatch = html.match(/"@type"\s*:\s*"Organization"[\s\S]*?"name"\s*:\s*"([^"]+)"/i)
+          || html.match(/"name"\s*:\s*"([^"]+)"[\s\S]*?"@type"\s*:\s*"Organization"/i);
+        const appNameMatch = html.match(/<meta\s+name=["']application-name["']\s+content=["']([^"']*?)["']/i);
+        
+        // Priority: og:site_name > JSON-LD Organization.name > application-name > title before separator
+        if (ogSiteNameMatch?.[1]?.trim()) {
+          extractedBrandName = ogSiteNameMatch[1].trim();
+        } else if (jsonLdMatch?.[1]?.trim()) {
+          extractedBrandName = jsonLdMatch[1].trim();
+        } else if (appNameMatch?.[1]?.trim()) {
+          extractedBrandName = appNameMatch[1].trim();
+        } else if (titleMatch?.[1]) {
+          // Extract brand from title: "Page Name | Brand" or "Page Name - Brand"
+          const titleText = titleMatch[1].replace(/<[^>]+>/g, '').trim();
+          const separators = [' | ', ' - ', ' — ', ' – ', ' :: ', ' · '];
+          for (const sep of separators) {
+            if (titleText.includes(sep)) {
+              const parts = titleText.split(sep);
+              // Brand is usually the last part
+              const candidate = parts[parts.length - 1].trim();
+              if (candidate.length >= 2 && candidate.length <= 50) {
+                extractedBrandName = candidate;
+              }
+              break;
+            }
+          }
+        }
+        
+        if (extractedBrandName) {
+          console.log(`🏷️ Nom de marque extrait du HTML: "${extractedBrandName}"`);
+        }
         
         const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
         const metaDesc = metaDescMatch?.[1]?.trim() || '';
@@ -988,19 +1023,10 @@ IMPORTANT: Utilise ces informations RÉELLES pour identifier précisément le co
       console.log('⚠️ Could not fetch page content for context:', e instanceof Error ? e.message : e);
     }
 
-    // Extract domain from URL
-    let domain = url;
-    try {
-      const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
-      domain = urlObj.hostname.replace('www.', '');
-    } catch (e) {
-      console.log('Could not parse URL, using as-is:', url);
-    }
-
-    // Humanize brand name from domain slug
+    // Humanize brand name: prefer HTML-extracted name, fallback to domain slug
     const domainSlug = domain.split('.')[0];
-    const humanBrandName = humanizeBrandName(domainSlug);
-    console.log(`🏷️ Nom de marque humanisé: "${domainSlug}" → "${humanBrandName}"`);
+    const humanBrandName = extractedBrandName || humanizeBrandName(domainSlug);
+    console.log(`🏷️ Nom de marque final: "${humanBrandName}" (source: ${extractedBrandName ? 'HTML metadata' : 'domain slug'})`);
 
     console.log('═══════════════════════════════════════════════════════════════');
     console.log('🚀 AUDIT STRATÉGIQUE IA PREMIUM pour:', domain, `(${humanBrandName})`);
