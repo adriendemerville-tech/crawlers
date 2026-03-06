@@ -26,7 +26,9 @@ export type AnalyticsEventType =
   | 'expert_audit_step_1'
   | 'expert_audit_step_2'
   | 'expert_audit_step_3'
-  | 'error';
+  | 'error'
+  | 'scan_error'
+  | 'scan_error_final';
 
 interface TrackEventOptions {
   targetUrl?: string;
