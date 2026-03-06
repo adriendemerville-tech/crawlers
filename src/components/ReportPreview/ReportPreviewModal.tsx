@@ -306,9 +306,9 @@ export function ReportPreviewModal({
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col p-0 [&>button]:hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
         {/* Header with actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
-          <h2 className="text-lg font-semibold">{t.title}</h2>
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card w-full shrink-0">
+          <h2 className="text-lg font-semibold shrink-0">{t.title}</h2>
+          <div className="flex items-center gap-3 ml-auto">
             <Button
               onClick={handleDownloadPDF}
               disabled={isGeneratingPDF}
