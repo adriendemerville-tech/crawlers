@@ -56,11 +56,55 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     let normalized = input.trim();
     if (!normalized) return '';
     
-    const lowerInput = normalized.toLowerCase();
+    // Remove surrounding quotes or angle brackets
+    normalized = normalized.replace(/^["'<]+|["'>]+$/g, '');
     
-    if (!lowerInput.startsWith('http://') && !lowerInput.startsWith('https://')) {
-      normalized = `https://${normalized}`;
+    // Lowercase the whole thing for domain processing
+    let lower = normalized.toLowerCase();
+    
+    // Remove protocol prefix if present for processing
+    let withoutProtocol = lower.replace(/^https?:\/\//, '');
+    let hadProtocol = lower !== withoutProtocol;
+    
+    // Fix common typos in domain extensions
+    const domainTypoFixes: Record<string, string> = {
+      '.con': '.com', '.cmo': '.com', '.ocm': '.com', '.co,': '.com',
+      '.fre': '.fr', '.f': '.fr', '.frr': '.fr',
+      '.rog': '.org', '.ogr': '.org',
+      '.nte': '.net', '.met': '.net',
+      '.oi': '.io', '.gio': '.io',
+    };
+    for (const [typo, fix] of Object.entries(domainTypoFixes)) {
+      if (withoutProtocol.endsWith(typo) || withoutProtocol.includes(typo + '/')) {
+        withoutProtocol = withoutProtocol.replace(typo, fix);
+      }
     }
+    
+    // Fix missing dot before extension (e.g. "googlefr" → "google.fr", "examplecom" → "example.com")
+    const extPatterns = ['com', 'fr', 'org', 'net', 'io', 'co', 'eu', 'de', 'es', 'it', 'uk', 'be', 'ch'];
+    for (const ext of extPatterns) {
+      const regex = new RegExp(`([a-z0-9])${ext}(\\/|$)`, 'i');
+      if (!withoutProtocol.includes(`.${ext}`) && regex.test(withoutProtocol)) {
+        withoutProtocol = withoutProtocol.replace(regex, `$1.${ext}$2`);
+        break;
+      }
+    }
+    
+    // Ensure there's at least a dot in the domain (basic domain validation)
+    const domainPart = withoutProtocol.split('/')[0];
+    if (!domainPart.includes('.')) {
+      // Try appending .com as default
+      withoutProtocol = withoutProtocol.replace(domainPart, domainPart + '.com');
+    }
+    
+    // Remove duplicate dots
+    withoutProtocol = withoutProtocol.replace(/\.{2,}/g, '.');
+    
+    // Remove trailing dot before slash or end
+    withoutProtocol = withoutProtocol.replace(/\.(\/)/, '$1').replace(/\.$/, '');
+    
+    // Rebuild with https
+    normalized = `https://${withoutProtocol}`;
     
     return normalized;
   };
