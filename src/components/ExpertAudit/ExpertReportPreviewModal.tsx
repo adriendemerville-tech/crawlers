@@ -127,7 +127,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
         body: {
           type: 'expert-audit',
           url: result.url,
-          data: { result, auditMode },
+          data: { result: effectiveResult, auditMode },
           language,
         },
       });
