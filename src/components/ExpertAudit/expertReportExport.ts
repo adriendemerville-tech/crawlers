@@ -694,10 +694,11 @@ export function generateExpertReportHTML(
     body { font-family: 'Inter', sans-serif; background: #f3f4f6; min-height: 100vh; padding: 40px 20px; }
     .container { max-width: 900px; margin: 0 auto; }
     .header { text-align: center; margin-bottom: 40px; padding: 28px; background: ${headerGradient}; border-radius: 20px; }
-    .logo { font-size: 28px; font-weight: 700; color: white; margin-bottom: 8px; }
-    .subtitle { color: rgba(255,255,255,0.9); font-size: 14px; margin-bottom: 12px; }
-    .url { color: rgba(255,255,255,0.8); font-size: 13px; }
-    .date { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 8px; }
+    .header-site { font-size: 26px; font-weight: 700; color: white; margin-bottom: 6px; word-break: break-all; }
+    .header-audit-type { color: rgba(255,255,255,0.9); font-size: 15px; font-weight: 500; margin-bottom: 14px; }
+    .header-brand { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); font-size: 12px; }
+    .header-brand svg { vertical-align: middle; }
+    .date { color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 8px; }
     .content { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     .footer { text-align: center; margin-top: 40px; padding: 24px; background: ${headerGradient}; border-radius: 16px; }
     .footer-brand { color: white; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
@@ -716,9 +717,9 @@ export function generateExpertReportHTML(
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">${logoHtml}</div>
-      <div class="subtitle">${auditMode === 'technical' ? t.technicalAudit : t.strategic}</div>
-      <div class="url">${result.url}</div>
+      <div class="header-site">${result.domain || result.url}</div>
+      <div class="header-audit-type">${auditMode === 'technical' ? t.technicalAudit : t.strategic}</div>
+      <div class="header-brand">${isWhiteLabel && branding?.logoUrl ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height: 18px;" />` : `${crawlersLogoSvg} Crawlers.fr`}</div>
       <div class="date">${t.generatedAt} ${now}</div>
     </div>
     <div class="content">
