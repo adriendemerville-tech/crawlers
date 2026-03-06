@@ -88,7 +88,8 @@ export function ReportPreviewModal({
   const { language } = useLanguage();
   const { profile, user } = useAuth();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const [isEmailing, setIsEmailing] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const { saveReport } = useSaveReport();
@@ -235,7 +236,7 @@ export function ReportPreviewModal({
   };
 
   const handleCopyLink = async () => {
-    setIsSharing(true);
+    setIsCopying(true);
     try {
       let linkToCopy = shareUrl;
       
@@ -256,12 +257,12 @@ export function ReportPreviewModal({
       console.error('Copy error:', error);
       toast.error(t.shareError);
     } finally {
-      setIsSharing(false);
+      setIsCopying(false);
     }
   };
 
   const handleShare = async () => {
-    setIsSharing(true);
+    setIsEmailing(true);
     try {
       let linkToShare = shareUrl;
       
@@ -282,7 +283,7 @@ export function ReportPreviewModal({
       console.error('Share error:', error);
       toast.error(t.shareError);
     } finally {
-      setIsSharing(false);
+      setIsEmailing(false);
     }
   };
 
@@ -330,18 +331,31 @@ export function ReportPreviewModal({
             </Button>
             <Button
               onClick={handleCopyLink}
-              disabled={isSharing}
+              disabled={isCopying}
               variant="outline"
               className="gap-2"
             >
-              {isSharing && !shareUrl ? (
+              {isCopying ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : copied ? (
                 <Check className="h-4 w-4 text-success" />
               ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              {copied ? t.copied : t.copyLink}
+            </Button>
+            <Button
+              onClick={handleShare}
+              disabled={isEmailing}
+              variant="outline"
+              className="gap-2"
+            >
+              {isEmailing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
                 <Share2 className="h-4 w-4" />
               )}
-              {copied ? t.copied : t.share}
+              {t.share}
             </Button>
             <Button
               onClick={onClose}
