@@ -204,14 +204,15 @@ async function queryLLM(
     };
   } catch (error) {
     console.error(`Failed to query ${model}:`, error);
-    // Return a "not cited" response on error
+    // Return an error response — will be treated as neutral (not counted in score)
     return {
       cited: false,
-      sentiment: 'neutral',
+      sentiment: 'neutral' as SentimentType,
       recommends: false,
       summary: t.unableToRetrieve(domain),
       coreValueMatch: false,
       hallucinations: [],
+      error: true,
     };
   }
 }
@@ -262,23 +263,26 @@ Deno.serve(async (req) => {
           company: provider.company,
         },
         cited: result.cited,
-        iterationDepth: Math.min(iterationDepth, 5), // Cap at 5
+        iterationDepth: Math.min(iterationDepth, 5),
         sentiment: result.sentiment,
         recommends: result.recommends,
         coreValueMatch: result.coreValueMatch,
         summary: result.summary,
         hallucinations: result.hallucinations?.length ? result.hallucinations : undefined,
+        ...(result.error ? { error: true } : {}),
       };
     });
 
     const citations = await Promise.all(citationPromises);
 
-    // Calculate metrics
-    const citedCount = citations.filter(c => c.cited).length;
-    const invisibleList = citations.filter(c => !c.cited).map(c => c.provider);
+    // Calculate metrics — exclude error models from calculations
+    const validCitations = citations.filter(c => !c.error);
+    const totalValid = validCitations.length || 1; // avoid division by zero
+    const citedCount = validCitations.filter(c => c.cited).length;
+    const invisibleList = validCitations.filter(c => !c.cited).map(c => c.provider);
 
     const avgIterationDepth = citedCount > 0
-      ? citations.filter(c => c.cited).reduce((sum, c) => sum + c.iterationDepth, 0) / citedCount
+      ? validCitations.filter(c => c.cited).reduce((sum, c) => sum + c.iterationDepth, 0) / citedCount
       : 0;
 
     const sentimentCounts: Record<SentimentType, number> = { 
@@ -288,7 +292,7 @@ Deno.serve(async (req) => {
       mixed: 0, 
       negative: 0 
     };
-    citations.filter(c => c.cited).forEach(c => {
+    validCitations.filter(c => c.cited).forEach(c => {
       if (sentimentCounts[c.sentiment] !== undefined) {
         sentimentCounts[c.sentiment]++;
       }
@@ -303,16 +307,15 @@ Deno.serve(async (req) => {
     if (mixedTotal > positiveTotal && mixedTotal > negativeTotal && mixedTotal > sentimentCounts.neutral) {
       overallSentiment = 'mixed';
     } else if (positiveTotal > negativeTotal && positiveTotal > sentimentCounts.neutral) {
-      // More positive than negative - determine if "positive" or "mostly_positive"
       overallSentiment = sentimentCounts.positive >= sentimentCounts.mostly_positive ? 'positive' : 'mostly_positive';
     } else if (negativeTotal > positiveTotal) {
       overallSentiment = 'negative';
     }
 
-    const overallRecommendation = citations.filter(c => c.recommends).length > citations.length / 2;
+    const overallRecommendation = validCitations.filter(c => c.recommends).length > totalValid / 2;
 
-    // Calculate overall score with 5-level sentiment
-    const citationScore = (citedCount / LLM_PROVIDERS.length) * 40;
+    // Calculate overall score — only based on valid (non-error) models
+    const citationScore = (citedCount / totalValid) * 40;
     const sentimentScoreMap: Record<SentimentType, number> = {
       positive: 30,
       mostly_positive: 22,
@@ -322,7 +325,7 @@ Deno.serve(async (req) => {
     };
     const sentimentScore = sentimentScoreMap[overallSentiment];
     const recommendationScore = overallRecommendation ? 20 : 0;
-    const coreValueScore = citations.filter(c => c.coreValueMatch).length / LLM_PROVIDERS.length * 10;
+    const coreValueScore = validCitations.filter(c => c.coreValueMatch).length / totalValid * 10;
 
     const overallScore = Math.round(citationScore + sentimentScore + recommendationScore + coreValueScore);
 
@@ -349,7 +352,7 @@ Deno.serve(async (req) => {
       overallScore,
       citationRate: {
         cited: citedCount,
-        total: LLM_PROVIDERS.length,
+        total: totalValid,
       },
       invisibleList,
       averageIterationDepth: Math.round(avgIterationDepth * 10) / 10,

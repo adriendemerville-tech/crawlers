@@ -16,6 +16,7 @@ export interface LLMCitation {
   coreValueMatch: boolean;
   summary: string;
   hallucinations?: string[];
+  error?: boolean; // true when the model could not be queried
 }
 
 export interface LLMAnalysisResult {

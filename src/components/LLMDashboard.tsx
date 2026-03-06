@@ -767,9 +767,11 @@ export function LLMDashboard({ result, isLoading, onCorrection }: LLMDashboardPr
                 key={citation.provider.id}
                 className={cn(
                   "transition-all",
-                  citation.cited 
-                    ? "border-success/30 bg-success/5" 
-                    : "border-destructive/30 bg-destructive/5"
+                  citation.error
+                    ? "border-muted/50 bg-muted/10 opacity-70"
+                    : citation.cited 
+                      ? "border-success/30 bg-success/5" 
+                      : "border-destructive/30 bg-destructive/5"
                 )}
               >
                 <CardContent className="p-4">
@@ -778,14 +780,29 @@ export function LLMDashboard({ result, isLoading, onCorrection }: LLMDashboardPr
                       <p className="font-semibold text-foreground">{citation.provider.name}</p>
                       <p className="text-xs text-muted-foreground">{citation.provider.company}</p>
                     </div>
-                    {citation.cited ? (
+                    {citation.error ? (
+                      <Minus className="h-5 w-5 text-muted-foreground" />
+                    ) : citation.cited ? (
                       <Eye className="h-5 w-5 text-success" />
                     ) : (
                       <EyeOff className="h-5 w-5 text-destructive" />
                     )}
                   </div>
                   
-                  {citation.cited && (
+                  {citation.error && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground italic">
+                        {language === 'fr' ? 'Données indisponibles' : language === 'es' ? 'Datos no disponibles' : 'Data unavailable'}
+                      </p>
+                      {citation.summary && (
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {citation.summary}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {!citation.error && citation.cited && (
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">{t.llm.iterations} :</span>
@@ -810,7 +827,6 @@ export function LLMDashboard({ result, isLoading, onCorrection }: LLMDashboardPr
                         )}
                       </div>
 
-                      {/* Always show the model's short explanation/summary */}
                       {citation.summary && (
                         <div className="pt-2">
                           <p className="text-xs text-muted-foreground leading-relaxed">
@@ -821,7 +837,7 @@ export function LLMDashboard({ result, isLoading, onCorrection }: LLMDashboardPr
                     </div>
                   )}
                   
-                  {!citation.cited && (
+                  {!citation.error && !citation.cited && (
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">{t.llm.notMentioned}</p>
                       {citation.summary && (
