@@ -108,20 +108,30 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
   };
 
   // Validate URL and suggest correction if domain doesn't exist
-  const validateAndSuggest = async (normalizedUrl: string): Promise<string | null> => {
+  const validateAndSuggest = async (normalizedUrl: string): Promise<{ exists: boolean; suggestion: string | null }> => {
     const withoutProtocol = normalizedUrl.replace(/^https?:\/\//, '');
-    const candidates = generateTypoCandidates(withoutProtocol);
-    if (candidates.length === 0) return null;
     
+    // First check if the original domain exists
     const originalExists = await checkDomainExists(normalizedUrl);
-    if (originalExists) return null;
+    if (originalExists) return { exists: true, suggestion: null };
     
+    // Domain doesn't exist, try to find a correction
+    const candidates = generateTypoCandidates(withoutProtocol);
     for (const candidate of candidates) {
       const candidateUrl = `https://${candidate}`;
       const exists = await checkDomainExists(candidateUrl);
-      if (exists) return candidateUrl;
+      if (exists) return { exists: false, suggestion: candidateUrl };
     }
-    return null;
+    
+    return { exists: false, suggestion: null };
+  };
+
+  const getUnreachableMessage = () => {
+    switch (language) {
+      case 'fr': return 'Cette URL ne semble mener vers aucune page accessible. Vérifiez l\'adresse et réessayez.';
+      case 'es': return 'Esta URL no parece llevar a ninguna página accesible. Verifique la dirección e intente de nuevo.';
+      default: return 'This URL doesn\'t seem to lead to any accessible page. Please check the address and try again.';
+    }
   };
 
   const handleUrlChange = (value: string) => {
@@ -146,10 +156,10 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     }
   };
 
-  const handleRejectSuggestion = () => {
+  const handleRejectSuggestion = async () => {
     setSuggestedUrl(null);
-    const normalizedUrl = normalizeUrl(url);
-    onSubmit(normalizedUrl);
+    // The original URL was already checked and doesn't exist — block submission
+    toast.error(getUnreachableMessage());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -161,14 +171,26 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
 
     setIsValidating(true);
     try {
-      const suggestion = await validateAndSuggest(normalizedUrl);
+      const { exists, suggestion } = await validateAndSuggest(normalizedUrl);
+      
       if (suggestion) {
+        // Domain doesn't exist but we found a correction
         setSuggestedUrl(suggestion);
         setIsValidating(false);
         return;
       }
+      
+      if (!exists) {
+        // Domain doesn't exist and no correction found — block scan
+        toast.error(getUnreachableMessage());
+        setIsValidating(false);
+        return;
+      }
     } catch {
-      // Validation failed, proceed anyway
+      // Network error during validation — block scan to be safe
+      toast.error(getUnreachableMessage());
+      setIsValidating(false);
+      return;
     }
     setIsValidating(false);
     onSubmit(normalizedUrl);
