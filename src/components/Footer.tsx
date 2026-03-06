@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen } from 'lucide-react';
+import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
@@ -12,25 +12,37 @@ function FooterComponent() {
       icon: Bot, 
       label: language === 'fr' ? 'Analyse Bots IA' : language === 'es' ? 'Análisis Bots IA' : 'AI Bots Analysis',
       href: '#crawlers',
-      description: language === 'fr' ? 'Vérifiez l\'accès des robots IA à votre site' : 'Check AI bot access to your site'
+      description: language === 'fr' ? 'Vérifiez l\'accès des robots IA à votre site' : 'Check AI bot access to your site',
+      gold: false
     },
     { 
       icon: Globe, 
       label: language === 'fr' ? 'Score GEO' : 'GEO Score',
       href: '#geo',
-      description: language === 'fr' ? 'Optimisation pour moteurs génératifs' : 'Generative engine optimization'
+      description: language === 'fr' ? 'Optimisation pour moteurs génératifs' : 'Generative engine optimization',
+      gold: false
     },
     { 
       icon: Brain, 
       label: language === 'fr' ? 'Visibilité LLM' : 'LLM Visibility',
       href: '#llm',
-      description: language === 'fr' ? 'Analyse de citabilité par les IA' : 'AI citation analysis'
+      description: language === 'fr' ? 'Analyse de citabilité par les IA' : 'AI citation analysis',
+      gold: false
     },
     { 
       icon: Gauge, 
       label: 'PageSpeed',
       href: '#pagespeed',
-      description: language === 'fr' ? 'Performance et Core Web Vitals' : 'Performance & Core Web Vitals'
+      description: language === 'fr' ? 'Performance et Core Web Vitals' : 'Performance & Core Web Vitals',
+      gold: false
+    },
+    { 
+      icon: Radar, 
+      label: language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit',
+      href: '/audit-expert',
+      description: language === 'fr' ? 'Audit SEO/GEO approfondi par IA' : 'In-depth AI-powered SEO/GEO audit',
+      gold: true,
+      isRoute: true
     },
   ];
 
@@ -198,14 +210,25 @@ function FooterComponent() {
                 <ul className="space-y-3">
                   {toolsLinks.map((link) => (
                     <li key={link.href}>
-                      <a 
-                        href={link.href}
-                        className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                        title={link.description}
-                      >
-                        <link.icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        <span>{link.label}</span>
-                      </a>
+                      {link.isRoute ? (
+                        <Link
+                          to={link.href}
+                          className={`group flex items-start gap-2 text-sm transition-colors ${link.gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                          title={link.description}
+                        >
+                          <link.icon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${link.gold ? 'text-amber-500' : ''}`} />
+                          <span>{link.label}</span>
+                        </Link>
+                      ) : (
+                        <a 
+                          href={link.href}
+                          className="group flex items-start gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                          title={link.description}
+                        >
+                          <link.icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                          <span>{link.label}</span>
+                        </a>
+                      )}
                     </li>
                   ))}
                 </ul>
