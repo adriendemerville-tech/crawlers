@@ -6,6 +6,7 @@ import { Search, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load framer-motion - only needed after hydration for animations
 const MotionSpan = lazy(() => 
@@ -101,7 +102,18 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
       }
     }
 
-    // 4. Character-level substitutions on the name part (before TLD)
+    // 4. Alternative TLDs (e.g. "cnews.com" → "cnews.fr", "cnews.org")
+    if (domainPart.includes('.')) {
+      const parts = domainPart.split('.');
+      const name = parts.slice(0, -1).join('.');
+      const currentTld = parts[parts.length - 1];
+      const altTlds = ['fr', 'com', 'org', 'net', 'io', 'eu', 'co'].filter(t => t !== currentTld);
+      for (const alt of altTlds) {
+        candidates.push(name + '.' + alt + pathPart);
+      }
+    }
+
+    // 5. Character-level substitutions on the name part (before TLD)
     const charSubs: Record<string, string[]> = {
       z: ['s'], s: ['z'], c: ['k'], k: ['c'], ph: ['f'], f: ['ph'],
       x: ['s', 'ks'], q: ['k'], w: ['v'], v: ['w'], y: ['i'], i: ['y'],
@@ -109,7 +121,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     };
     const namePart = domainPart.includes('.') ? domainPart.split('.').slice(0, -1).join('.') : domainPart;
     const tldPart = domainPart.includes('.') ? '.' + domainPart.split('.').pop() : '';
-    const tldsToTry = tldPart ? [tldPart] : ['.fr', '.com'];
+    const tldsToTry = tldPart ? [tldPart, ...['.fr', '.com'].filter(t => t !== tldPart)] : ['.fr', '.com'];
 
     for (const [from, toList] of Object.entries(charSubs)) {
       if (namePart.includes(from)) {
@@ -122,7 +134,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
       }
     }
 
-    // 5. Remove each character one at a time (for extra chars like "amazonn")
+    // 6. Remove each character one at a time (for extra chars like "amazonn")
     if (namePart.length > 3) {
       for (let i = 0; i < namePart.length; i++) {
         const fixed = namePart.slice(0, i) + namePart.slice(i + 1);
@@ -134,7 +146,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
       }
     }
 
-    // 6. Swap adjacent characters
+    // 7. Swap adjacent characters
     if (namePart.length > 2) {
       for (let i = 0; i < namePart.length - 1; i++) {
         const swapped = namePart.slice(0, i) + namePart[i + 1] + namePart[i] + namePart.slice(i + 2);
@@ -147,13 +159,16 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     return [...new Set(candidates)];
   };
 
-  // Check if a domain actually resolves
-  const checkDomainExists = async (domainUrl: string): Promise<boolean> => {
+  // Server-side URL validation via edge function
+  const validateUrls = async (urls: string[]): Promise<Array<{ url: string; valid: boolean }>> => {
     try {
-      await fetch(domainUrl, { method: 'HEAD', mode: 'no-cors', signal: AbortSignal.timeout(4000) });
-      return true;
+      const { data, error } = await supabase.functions.invoke('validate-url', {
+        body: { urls },
+      });
+      if (error || !data?.results) return urls.map(u => ({ url: u, valid: false }));
+      return data.results;
     } catch {
-      return false;
+      return urls.map(u => ({ url: u, valid: false }));
     }
   };
 
@@ -161,27 +176,25 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
   const findValidUrl = async (normalizedUrl: string): Promise<string> => {
     const withoutProtocol = normalizedUrl.replace(/^https?:\/\//, '');
     
-    // First check if the original domain exists
-    const originalExists = await checkDomainExists(normalizedUrl);
-    if (originalExists) return normalizedUrl;
-    
-    // Domain doesn't exist — try corrections silently
+    // Generate candidates
     const candidates = generateTypoCandidates(withoutProtocol);
-    // Test candidates in parallel batches of 5 for speed
-    for (let i = 0; i < candidates.length; i += 5) {
-      const batch = candidates.slice(i, i + 5);
-      const results = await Promise.all(
-        batch.map(async (c) => {
-          const candidateUrl = `https://${c}`;
-          const exists = await checkDomainExists(candidateUrl);
-          return exists ? candidateUrl : null;
-        })
-      );
-      const found = results.find(Boolean);
-      if (found) return found;
-    }
     
-    // No correction found — return original, let the edge function handle the error
+    // Build list: original first, then top candidates (limit to avoid too many requests)
+    const allUrls = [normalizedUrl, ...candidates.slice(0, 9).map(c => `https://${c}`)];
+    const uniqueUrls = [...new Set(allUrls)];
+    
+    // Validate all in one server-side call
+    const results = await validateUrls(uniqueUrls);
+    
+    // If original is valid, use it
+    const originalResult = results.find(r => r.url === normalizedUrl);
+    if (originalResult?.valid) return normalizedUrl;
+    
+    // Otherwise, return first valid candidate
+    const validCandidate = results.find(r => r.valid && r.url !== normalizedUrl);
+    if (validCandidate) return validCandidate.url;
+    
+    // No valid URL found — return original, let the edge function handle the error
     return normalizedUrl;
   };
 
