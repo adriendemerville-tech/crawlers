@@ -649,9 +649,23 @@ export function generateExpertReportHTML(
     ? `linear-gradient(135deg, ${brandColor}, ${brandColor}cc)`
     : 'linear-gradient(135deg, #7c3aed, #2563eb)';
 
+  const crawlersLogoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="36" height="36" style="vertical-align: middle; margin-right: 8px;">
+    <defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#d4a017"/></linearGradient></defs>
+    <rect width="40" height="40" rx="10" fill="url(#bg)"/>
+    <g fill="white">
+      <rect x="12" y="10" width="16" height="14" rx="3"/>
+      <circle cx="17" cy="17" r="2" fill="#7c3aed"/>
+      <circle cx="23" cy="17" r="2" fill="#7c3aed"/>
+      <rect x="15" y="26" width="10" height="3" rx="1.5"/>
+      <rect x="10" y="14" width="2" height="6" rx="1"/>
+      <rect x="28" y="14" width="2" height="6" rx="1"/>
+      <rect x="18" y="6" width="4" height="4" rx="2"/>
+    </g>
+  </svg>`;
+
   const logoHtml = branding?.logoUrl
     ? `<img src="${branding.logoUrl}" alt="Logo" style="max-height: 40px; margin-bottom: 8px;" />`
-    : '🤖 Crawlers.fr';
+    : `${crawlersLogoSvg} Crawlers.fr`;
 
   const footerHtml = isWhiteLabel
     ? `<div class="footer" style="background: ${headerGradient};">
