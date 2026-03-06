@@ -1160,13 +1160,31 @@ export function ExpertAuditDashboard() {
 
               {/* Introduction - Toujours visible avec bouton Corriger */}
               {result.strategicAnalysis?.introduction && (
-                <IntroductionCard 
-                  introduction={result.strategicAnalysis.introduction} 
-                  variant="strategic"
-                  domain={result.domain || url}
-                  siteName={result.domain || url}
-                  onHallucinationData={handleHallucinationCorrectionComplete}
-                />
+                <>
+                  <IntroductionCard 
+                    introduction={result.strategicAnalysis.introduction} 
+                    variant="strategic"
+                    domain={result.domain || url}
+                    siteName={result.domain || url}
+                    onHallucinationData={handleHallucinationCorrectionComplete}
+                  />
+                  {/* Report button under introduction */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex justify-center py-4"
+                  >
+                    <Button
+                      onClick={handleReportButtonClick}
+                      size="lg"
+                      className="gap-3 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+                    >
+                      <FileDown className="h-5 w-5" />
+                      {t.viewReport}
+                    </Button>
+                  </motion.div>
+                </>
               )}
 
               {/* Hallucination Diagnosis Results - Displayed under introduction after diagnosis */}

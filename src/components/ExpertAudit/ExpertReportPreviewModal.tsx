@@ -162,7 +162,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
           <div className="flex items-center gap-3">
             <Button
               onClick={handleDownloadPDF}
-              disabled={isGeneratingPDF}
+              disabled={isGeneratingPDF || (auditMode === 'strategic' && isSummarizing)}
               className="gap-2 bg-primary hover:bg-primary/90"
             >
               {isGeneratingPDF ? (
@@ -170,7 +170,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              {isGeneratingPDF ? t.generating : t.download}
+              {isGeneratingPDF ? t.generating : isSummarizing ? (language === 'fr' ? 'Résumé IA…' : 'AI Summary…') : t.download}
             </Button>
             <Button
               onClick={handlePrint}
