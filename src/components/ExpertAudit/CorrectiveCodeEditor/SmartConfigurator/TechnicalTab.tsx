@@ -127,14 +127,6 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                                 Recommandé
                               </Badge>
                             )}
-                            {fix.data?._source === 'action_plan' && (
-                              <Badge 
-                                variant="outline" 
-                                className="text-[9px] px-1 py-0 h-4 bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30"
-                              >
-                                Plan d'action
-                              </Badge>
-                            )}
                           </div>
                         </div>
                       </div>
