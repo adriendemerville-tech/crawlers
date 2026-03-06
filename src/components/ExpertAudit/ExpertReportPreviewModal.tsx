@@ -95,25 +95,20 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      // Use the HTML report (which is always up-to-date) rendered in a print window
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        const domain = result.domain?.replace(/[^a-zA-Z0-9]/g, '-') || 'site';
-        const fileName = auditMode === 'technical' ? `rapport_technique_${domain}` : `rapport_strategique_${domain}`;
-        // Inject a title for the PDF filename and auto-trigger print (Save as PDF)
-        const htmlWithTitle = htmlContent.replace(
-          /<title>[^<]*<\/title>/,
-          `<title>${fileName}</title>`
-        );
-        printWindow.document.write(htmlWithTitle);
-        printWindow.document.close();
-        printWindow.onload = () => {
-          printWindow.print();
-        };
-      }
+      const domain = result.domain?.replace(/[^a-zA-Z0-9]/g, '-') || 'site';
+      const fileName = auditMode === 'technical' ? `rapport_technique_${domain}.html` : `rapport_strategique_${domain}.html`;
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       toast.success(t.pdfSuccess);
     } catch (error) {
-      console.error('PDF generation error:', error);
+      console.error('Download error:', error);
       toast.error(t.pdfError);
     } finally {
       setIsGeneratingPDF(false);
@@ -134,12 +129,13 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
 
       if (error) throw error;
 
-      if (responseData?.shareUrl) {
-        // Transform to crawlers.fr domain
-        const shareId = responseData.shareUrl.split('/').pop();
+      const shareId = responseData?.shareId || responseData?.shareUrl?.split('/').pop();
+      if (shareId) {
         const crawlersUrl = `https://crawlers.fr/r/${shareId}`;
         setShareUrl(crawlersUrl);
         toast.success(t.shareSuccess);
+      } else {
+        throw new Error('No share ID returned');
       }
     } catch (error) {
       console.error('Share error:', error);
