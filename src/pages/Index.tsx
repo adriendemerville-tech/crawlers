@@ -264,22 +264,72 @@ const Index = () => {
         });
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('[scan-error]', activeTab, error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to check URL';
       
-      // Track error
-      trackAnalyticsEvent('error', { eventData: { message: errorMessage, url } });
+      // Track error silently in analytics (visible in admin dashboard)
+      trackAnalyticsEvent('scan_error', { eventData: { tab: activeTab, message: errorMessage, url, timestamp: new Date().toISOString() } });
       
       if (errorMessage.includes('quota') || errorMessage.includes('429')) {
         setQuotaExceeded(true);
+        setIsLoading(false);
         return;
       }
       
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      // Silent auto-retry: no visible error, loading continues
+      console.warn('[scan-retry] Auto-retrying scan for', activeTab, url);
+      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+      try {
+        // Single retry attempt
+        if (activeTab === 'crawlers') {
+          const { data: retryData, error: retryError } = await supabase.functions.invoke('check-crawlers', { body: { url } });
+          if (!retryError && retryData?.success) {
+            setCrawlResult(retryData.data);
+            trackAnalyticsEvent('free_analysis_crawlers', { targetUrl: url });
+            storeAnalyzedUrl(url);
+            triggerTutorialIfNeeded();
+          } else {
+            console.error('[scan-retry-failed] crawlers', retryError);
+            trackAnalyticsEvent('scan_error_final', { eventData: { tab: 'crawlers', message: retryError?.message || 'retry failed', url } });
+          }
+        } else if (activeTab === 'geo') {
+          const { data: retryData, error: retryError } = await supabase.functions.invoke('check-geo', { body: { url, lang: language } });
+          if (!retryError && retryData?.success) {
+            setGeoResult(retryData.data);
+            trackAnalyticsEvent('free_analysis_geo', { targetUrl: url });
+            storeAnalyzedUrl(url);
+            triggerTutorialIfNeeded();
+          } else {
+            console.error('[scan-retry-failed] geo', retryError);
+            trackAnalyticsEvent('scan_error_final', { eventData: { tab: 'geo', message: retryError?.message || 'retry failed', url } });
+          }
+        } else if (activeTab === 'llm') {
+          const { data: retryData, error: retryError } = await supabase.functions.invoke('check-llm', { body: { url, lang: language } });
+          if (!retryError && retryData?.success) {
+            setLlmResult(retryData.data);
+            trackAnalyticsEvent('free_analysis_llm', { targetUrl: url });
+            storeAnalyzedUrl(url);
+            triggerTutorialIfNeeded();
+          } else {
+            console.error('[scan-retry-failed] llm', retryError);
+            trackAnalyticsEvent('scan_error_final', { eventData: { tab: 'llm', message: retryError?.message || 'retry failed', url } });
+          }
+        } else {
+          setIsPageSpeedLoading(true);
+          const { data: retryData, error: retryError } = await supabase.functions.invoke('check-pagespeed', { body: { url, strategy: pageSpeedStrategy } });
+          if (!retryError && retryData?.success) {
+            if (pageSpeedStrategy === 'mobile') setMobilePageSpeedResult(retryData.data);
+            else setDesktopPageSpeedResult(retryData.data);
+          } else {
+            console.error('[scan-retry-failed] pagespeed', retryError);
+            trackAnalyticsEvent('scan_error_final', { eventData: { tab: 'pagespeed', message: retryError?.message || 'retry failed', url } });
+          }
+          setIsPageSpeedLoading(false);
+        }
+      } catch (retryErr) {
+        console.error('[scan-retry-exception]', retryErr);
+        trackAnalyticsEvent('scan_error_final', { eventData: { tab: activeTab, message: retryErr instanceof Error ? retryErr.message : 'retry exception', url } });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -324,12 +374,8 @@ const Index = () => {
           setDesktopPageSpeedResult(data.data);
         }
       } catch (error) {
-        console.error('Error:', error);
-        toast({
-          title: 'Error',
-          description: error instanceof Error ? error.message : 'Failed to refresh PageSpeed.',
-          variant: 'destructive',
-        });
+        console.error('[pagespeed-switch-error]', error);
+        trackAnalyticsEvent('scan_error', { eventData: { tab: 'pagespeed', message: error instanceof Error ? error.message : 'strategy switch failed', url: currentUrl } });
       } finally {
         setIsPageSpeedLoading(false);
       }
@@ -351,12 +397,8 @@ const Index = () => {
         description: language === 'fr' ? 'L\'analyse a été relancée avec votre correction.' : language === 'es' ? 'El análisis se relanzó con su corrección.' : 'Analysis reloaded with your correction.',
       });
     } catch (err) {
-      console.error('LLM correction error:', err);
-      toast({
-        title: 'Error',
-        description: err instanceof Error ? err.message : 'Failed',
-        variant: 'destructive',
-      });
+      console.error('[llm-correction-error]', err);
+      trackAnalyticsEvent('scan_error', { eventData: { tab: 'llm', message: err instanceof Error ? err.message : 'correction failed', url: currentUrl } });
     } finally {
       setIsLoading(false);
     }
