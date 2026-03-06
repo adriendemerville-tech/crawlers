@@ -217,7 +217,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
   return (
     <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
       <CardHeader className={compact ? 'pb-2' : 'pb-3'}>
-        <CardTitle className="flex items-center gap-2 text-base">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <Search className="h-5 w-5 text-primary" />
           {t.title}
         </CardTitle>
@@ -252,8 +252,8 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
               {i + 1}
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">"{q.query}"</p>
-              <p className="text-xs text-muted-foreground mt-1">{q.intent}</p>
+              <p className="text-base font-medium text-foreground">"{q.query}"</p>
+              <p className="text-sm text-muted-foreground mt-1">{q.intent}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {q.mentionsBrand && (
