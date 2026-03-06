@@ -138,7 +138,7 @@ export function Header() {
   const handleMouseLeave = () => {
     closeTimeoutRef.current = setTimeout(() => {
       setIsProfileOpen(false);
-    }, 150);
+    }, 300);
   };
 
   return (
