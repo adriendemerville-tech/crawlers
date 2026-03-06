@@ -61,6 +61,8 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     if (!normalized) return '';
     normalized = normalized.replace(/^["'<]+|["'>]+$/g, '');
     let withoutProtocol = normalized.toLowerCase().replace(/^https?:\/\//, '');
+    // Replace spaces with hyphens (common in brand names like "croix rouge" → "croix-rouge")
+    withoutProtocol = withoutProtocol.replace(/\s+/g, '-');
     withoutProtocol = withoutProtocol.replace(/\.{2,}/g, '.');
     withoutProtocol = withoutProtocol.replace(/\.(\/)/, '$1').replace(/\.$/, '');
     return `https://${withoutProtocol}`;
