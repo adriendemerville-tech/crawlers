@@ -15,10 +15,11 @@ interface ExpertReportPreviewModalProps {
   onClose: () => void;
   result: ExpertAuditResult;
   auditMode: 'technical' | 'strategic';
+  preSummarizedResult?: ExpertAuditResult | null;
 }
 
 
-export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }: ExpertReportPreviewModalProps) {
+export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, preSummarizedResult }: ExpertReportPreviewModalProps) {
   const { language } = useLanguage();
   const { user, profile } = useAuth();
   const { saveReport } = useSaveReport();
@@ -39,12 +40,18 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode }:
       ? { logoUrl: profile.agency_logo_url, primaryColor: profile.agency_primary_color }
       : undefined;
 
-  // Summarize strategic report texts via AI when modal opens
+  // Use pre-summarized result if available, otherwise summarize on open
   useEffect(() => {
     if (!isOpen || auditMode !== 'strategic') {
       setSummarizedResult(null);
       return;
     }
+    // If dashboard already pre-summarized, use it directly
+    if (preSummarizedResult) {
+      setSummarizedResult(preSummarizedResult);
+      return;
+    }
+    // Fallback: summarize when modal opens
     let cancelled = false;
     setIsSummarizing(true);
     summarizeStrategicResult(result, language).then((r) => {
