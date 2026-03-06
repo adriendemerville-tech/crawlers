@@ -160,6 +160,9 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
       if (shareId) {
         const crawlersUrl = `https://crawlers.fr/r/${shareId}`;
         setShareUrl(crawlersUrl);
+        await navigator.clipboard.writeText(crawlersUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
         toast.success(t.shareSuccess);
       } else {
         throw new Error('No share ID returned');
