@@ -227,6 +227,18 @@ export function generateExpertReportHTML(
         ${rows}
       </div>`;
 
+    // Performance details from rawData
+    const psiPerf = scores.performance.psiPerformance;
+    const lcp = scores.performance.lcp;
+    const cls = scores.performance.cls;
+    const tbt = scores.performance.tbt;
+    const fcp = (result.rawData as any)?.fcp;
+    const si = (result.rawData as any)?.speedIndex;
+
+    // Broken links
+    const brokenCount = scores.technical.brokenLinksCount ?? 0;
+    const brokenChecked = scores.technical.brokenLinksChecked ?? 0;
+
     content = `
       <div style="text-align: center; margin-bottom: 28px;">
         <div style="display: inline-block; padding: 22px 44px; background: linear-gradient(135deg, #7c3aed, #2563eb); border-radius: 18px; margin-bottom: 14px;">
@@ -258,6 +270,27 @@ export function generateExpertReportHTML(
         </div>
       ` : ''}
 
+      <!-- Performance & Core Web Vitals -->
+      <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${language === 'fr' ? 'Performance & Core Web Vitals' : 'Performance & Core Web Vitals'}</div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px;">
+        <div style="padding: 10px; background: ${psiPerf >= 90 ? '#dcfce7' : psiPerf >= 50 ? '#fef3c7' : '#fee2e2'}; border-radius: 10px; text-align: center;">
+          <div style="font-size: 11px; color: #6b7280;">Score PSI</div>
+          <div style="font-size: 20px; font-weight: 700; color: ${psiPerf >= 90 ? '#166534' : psiPerf >= 50 ? '#92400e' : '#991b1b'};">${psiPerf}%</div>
+        </div>
+        <div style="padding: 10px; background: ${lcp <= 2500 ? '#dcfce7' : lcp <= 4000 ? '#fef3c7' : '#fee2e2'}; border-radius: 10px; text-align: center;">
+          <div style="font-size: 11px; color: #6b7280;">LCP</div>
+          <div style="font-size: 20px; font-weight: 700; color: ${lcp <= 2500 ? '#166534' : '#92400e'};">${lcp >= 1000 ? (lcp / 1000).toFixed(1) + 's' : Math.round(lcp) + 'ms'}</div>
+        </div>
+        <div style="padding: 10px; background: ${cls <= 0.1 ? '#dcfce7' : cls <= 0.25 ? '#fef3c7' : '#fee2e2'}; border-radius: 10px; text-align: center;">
+          <div style="font-size: 11px; color: #6b7280;">CLS</div>
+          <div style="font-size: 20px; font-weight: 700; color: ${cls <= 0.1 ? '#166534' : '#92400e'};">${cls.toFixed(2)}</div>
+        </div>
+        <div style="padding: 10px; background: ${tbt <= 200 ? '#dcfce7' : tbt <= 600 ? '#fef3c7' : '#fee2e2'}; border-radius: 10px; text-align: center;">
+          <div style="font-size: 11px; color: #6b7280;">TBT</div>
+          <div style="font-size: 20px; font-weight: 700; color: ${tbt <= 200 ? '#166534' : '#92400e'};">${tbt >= 1000 ? (tbt / 1000).toFixed(1) + 's' : Math.round(tbt) + 'ms'}</div>
+        </div>
+      </div>
+
       <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${nt.sectionTitle}</div>
 
       ${narrativeBloc(nt.bloc1, '#7c3aed', '#faf5ff', bloc1Score, [
@@ -282,6 +315,18 @@ export function generateExpertReportHTML(
         statusRow(nt.links, hasLinks, linkProfile ? `${linkProfile.internal} ${nt.int} / ${linkProfile.external} ${nt.ext}` : undefined),
       ].join(''))}
 
+      <!-- Broken Links -->
+      ${brokenCount > 0 ? `
+        <div style="background: #fef2f2; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #dc2626; margin-bottom: 16px;">
+          <div style="font-size: 13px; font-weight: 600; color: #dc2626; margin-bottom: 4px;">${language === 'fr' ? 'Liens cassés détectés' : 'Broken Links Detected'}</div>
+          <div style="font-size: 12px; color: #991b1b;">${brokenCount} ${language === 'fr' ? 'lien(s) cassé(s) sur' : 'broken link(s) out of'} ${brokenChecked} ${language === 'fr' ? 'vérifiés' : 'checked'}</div>
+        </div>
+      ` : `
+        <div style="background: #f0fdf4; padding: 10px 16px; border-radius: 10px; border-left: 3px solid #059669; margin-bottom: 16px;">
+          <div style="font-size: 12px; color: #166534;">${language === 'fr' ? 'Aucun lien cassé détecté' : 'No broken links detected'} (${brokenChecked} ${language === 'fr' ? 'vérifiés' : 'checked'})</div>
+        </div>
+      `}
+
       ${result.recommendations?.length > 0 ? `
         <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin: 18px 0 8px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${t.recommendations}</div>
         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
@@ -292,7 +337,7 @@ export function generateExpertReportHTML(
             </tr>
           </thead>
           <tbody>
-            ${result.recommendations.slice(0, 6).map(rec => `
+            ${result.recommendations.slice(0, 8).map(rec => `
               <tr>
                 <td style="padding: 6px 8px; border-bottom: 1px solid #e5e7eb;">
                   <span style="padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; ${
@@ -301,7 +346,10 @@ export function generateExpertReportHTML(
                     'background: #dcfce7; color: #166534;'
                   }">${rec.priority === 'critical' ? t.critical : rec.priority === 'important' ? t.important : t.optional}</span>
                 </td>
-                <td style="padding: 6px 8px; border-bottom: 1px solid #e5e7eb; color: #374151;">${rec.title}</td>
+                <td style="padding: 6px 8px; border-bottom: 1px solid #e5e7eb;">
+                  <div style="color: #1f2937; font-weight: 500;">${rec.title}</div>
+                  <div style="color: #6b7280; font-size: 11px; margin-top: 2px;">${rec.description || ''}</div>
+                </td>
               </tr>
             `).join('')}
           </tbody>
@@ -368,7 +416,7 @@ export function generateExpertReportHTML(
                 </thead>
                 <tbody>
                   ${kp.main_keywords
-                    .slice(0, 10)
+                    .slice(0, 6)
                     .map(
                       (kw: any) => `
                         <tr>
@@ -393,7 +441,7 @@ export function generateExpertReportHTML(
               <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Quick wins (positions 11–20)</div>
               <ul style="margin: 0; padding-left: 18px; color: #334155; line-height: 1.7;">
                 ${kp.quick_wins
-                  .slice(0, 6)
+                  .slice(0, 4)
                   .map(
                     (qw: any) =>
                       `<li><strong>\"${qw.keyword || '—'}\"</strong> — ${renderRank(qw.current_rank)} • ${renderNumber(qw.volume)} vol/mois</li>`
@@ -411,7 +459,7 @@ export function generateExpertReportHTML(
               <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Gaps de contenu (opportunités)</div>
               <ul style="margin: 0; padding-left: 18px; color: #334155; line-height: 1.7;">
                 ${kp.content_gaps
-                  .slice(0, 6)
+                  .slice(0, 4)
                   .map(
                     (gap: any) =>
                       `<li><strong>\"${gap.keyword || '—'}\"</strong> — ${renderNumber(gap.volume)} vol/mois</li>`
@@ -428,7 +476,7 @@ export function generateExpertReportHTML(
             <div style="margin-top: 14px; padding: 14px; background: #f8fafc; border-radius: 12px; border: 1px solid #e5e7eb;">
               <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Recommandations mots-clés</div>
               <ul style="margin: 0; padding-left: 18px; color: #0f172a; line-height: 1.7;">
-                ${kp.recommendations.slice(0, 6).map((r: any) => `<li>${r}</li>`).join('')}
+                ${kp.recommendations.slice(0, 4).map((r: any) => `<li>${r}</li>`).join('')}
               </ul>
             </div>
           `
@@ -531,7 +579,7 @@ export function generateExpertReportHTML(
         const llm = strategic.llm_visibility_raw;
         const citedCount = llm.citationRate?.cited || 0;
         const totalCount = llm.citationRate?.total || 0;
-        const citationRows = llm.citations?.slice(0, 8).map((c: any) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600;">${c.provider?.name || '—'}</td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; ${c.cited ? 'background: #dcfce7; color: #166534;' : 'background: #fee2e2; color: #991b1b;'}">${c.cited ? 'Cité' : 'Invisible'}</span></td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; ${c.sentiment === 'positive' || c.sentiment === 'mostly_positive' ? 'background: #dcfce7; color: #166534;' : c.sentiment === 'neutral' ? 'background: #f3f4f6; color: #374151;' : 'background: #fee2e2; color: #991b1b;'}">${c.sentiment || '—'}</span></td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #6b7280; font-size: 12px;">${c.summary || ''}</td></tr>`).join('') || '';
+        const citationRows = llm.citations?.slice(0, 5).map((c: any) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600;">${c.provider?.name || '—'}</td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; ${c.cited ? 'background: #dcfce7; color: #166534;' : 'background: #fee2e2; color: #991b1b;'}">${c.cited ? 'Cité' : 'Invisible'}</span></td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; ${c.sentiment === 'positive' || c.sentiment === 'mostly_positive' ? 'background: #dcfce7; color: #166534;' : c.sentiment === 'neutral' ? 'background: #f3f4f6; color: #374151;' : 'background: #fee2e2; color: #991b1b;'}">${c.sentiment || '—'}</span></td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #6b7280; font-size: 12px;">${c.summary || ''}</td></tr>`).join('') || '';
         return sectionCard(
           language === 'fr' ? 'Visibilité LLM' : 'LLM Visibility',
           '#8b5cf6', 'linear-gradient(135deg, #f5f3ff, #ede9fe)',
@@ -568,7 +616,7 @@ export function generateExpertReportHTML(
       ${strategic?.executive_roadmap?.length ? (() => {
         return `
           <h3 style="font-size: 18px; color: #1f2937; margin: 24px 0 16px 0;">${language === 'fr' ? 'Feuille de Route Exécutive' : language === 'es' ? 'Hoja de Ruta Ejecutiva' : 'Executive Roadmap'}</h3>
-          ${(strategic.executive_roadmap as any[]).map((item: any, i: number) => `
+          ${(strategic.executive_roadmap as any[]).slice(0, 4).map((item: any, i: number) => `
             <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 12px;">
               <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span style="font-size: 13px; font-weight: 700; color: white; background: #6366f1; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">${i + 1}</span>
