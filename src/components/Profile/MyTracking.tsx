@@ -789,7 +789,7 @@ export function MyTracking() {
                       ) : gscData && gscData.rows.length > 0 ? (
                         <div className="space-y-4 relative">
                           {gscLoading && (
-                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-[1px] rounded-lg">
+                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-[1px] rounded-lg pointer-events-none">
                               <div className="flex items-center gap-2">
                                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                                 <span className="text-xs text-muted-foreground">
@@ -799,7 +799,7 @@ export function MyTracking() {
                             </div>
                           )}
                           {/* Date controls */}
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2 relative z-20">
                             {/* Date mode toggle with integrated calendar */}
                             <div className="flex rounded-lg border bg-muted p-0.5 text-xs">
                               <Popover>
@@ -815,7 +815,7 @@ export function MyTracking() {
                                     )}
                                   </button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
+                                <PopoverContent className="w-auto p-0 z-50 pointer-events-auto" align="start" sideOffset={4}>
                                   <Calendar
                                     mode="single"
                                     selected={gscSinceDate}
