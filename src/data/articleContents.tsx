@@ -1781,9 +1781,7 @@ Allow: /`}</pre>
         </p>
 
         <GeoTable
-          titleFr="SEO vs GEO : Objectifs, Métriques et Stratégies"
-          titleEn="SEO vs GEO: Objectives, Metrics and Strategies"
-          titleEs="SEO vs GEO: Objetivos, Métricas y Estrategias"
+          caption={{ fr: 'SEO vs GEO : Objectifs, Métriques et Stratégies', en: 'SEO vs GEO: Objectives, Metrics and Strategies', es: 'SEO vs GEO: Objetivos, Métricas y Estrategias' }}
           rows={[
             { factor: { fr: 'Objectif principal', en: 'Main objective', es: 'Objetivo principal' }, seo: { fr: 'Être cliqué (trafic)', en: 'Get clicked (traffic)', es: 'Ser clicado (tráfico)' }, geo: { fr: 'Être cité (influence)', en: 'Get cited (influence)', es: 'Ser citado (influencia)' }, importance: 'essential' },
             { factor: { fr: 'KPI de référence', en: 'Reference KPI', es: 'KPI de referencia' }, seo: { fr: 'Position SERP, CTR', en: 'SERP position, CTR', es: 'Posición SERP, CTR' }, geo: { fr: 'Fréquence de citation LLM', en: 'LLM citation frequency', es: 'Frecuencia de citación LLM' }, importance: 'essential' },
