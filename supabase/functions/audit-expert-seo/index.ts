@@ -363,12 +363,12 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
       console.log('[SmartFetch] Auto-contrôle échoué:', selfAudit.reason);
       console.log('[SmartFetch] Tentative 2: Fallback rendu JavaScript via Browserless.io...');
       
-      const BROWSERLESS_API_KEY = Deno.env.get('BROWSERLESS_API_KEY');
+      const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY') || Deno.env.get('BROWSERLESS_API_KEY');
       
-      if (BROWSERLESS_API_KEY) {
+      if (RENDERING_KEY) {
         try {
           // Browserless.io /content endpoint for full HTML rendering
-          const renderUrl = `https://chrome.browserless.io/content?token=${BROWSERLESS_API_KEY}`;
+          const renderUrl = `https://chrome.browserless.io/content?token=${RENDERING_KEY}`;
           
           // User-Agent identique au fetch initial pour éviter les blocages
           const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CrawlersFR/2.0';
@@ -438,8 +438,8 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
           }
         }
       } else {
-        console.log('[SmartFetch] ⚠️ BROWSERLESS_API_KEY non configurée dans les secrets - fallback JS impossible');
-        console.log('[SmartFetch] 💡 Configurez la clé API Browserless.io pour activer le rendu des SPA');
+        console.log('[SmartFetch] ⚠️ RENDERING_API_KEY non configurée dans les secrets - fallback JS impossible');
+        console.log('[SmartFetch] 💡 Configurez la clé API Browserless.io (secret RENDERING_API_KEY) pour activer le rendu des SPA');
       }
       
       // Return original with degraded reliability

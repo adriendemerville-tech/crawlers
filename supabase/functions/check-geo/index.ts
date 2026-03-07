@@ -478,15 +478,69 @@ Deno.serve(async (req) => {
       console.log('[GEO-AUDIT] Failed to fetch robots.txt:', e);
     }
 
-    // Fetch the page
+    // Fetch the page (with JS rendering fallback for SPAs)
     let pageHtml = '';
+    let usedRendering = false;
     try {
       const pageResponse = await fetch(normalizedUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GEOChecker/1.0)' },
+        headers: { 
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
         redirect: 'follow'
       });
       if (pageResponse.ok) {
         pageHtml = await pageResponse.text();
+        
+        // Check if content is SPA-generated (empty body = needs JS rendering)
+        const bodyMatch = pageHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+        const bodyContent = bodyMatch ? bodyMatch[1] : pageHtml;
+        const textOnly = bodyContent
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        const hasSPAMarker = /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<\/div>/i.test(pageHtml)
+          || /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<noscript/i.test(pageHtml);
+        
+        if ((textOnly.length < 200 && pageHtml.length > 1000) || (hasSPAMarker && textOnly.length < 500)) {
+          console.log(`[GEO-AUDIT] SPA detected (${textOnly.length} chars text, ${pageHtml.length} chars HTML). Trying JS rendering...`);
+          
+          const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
+          if (RENDERING_KEY) {
+            try {
+              const renderUrl = `https://chrome.browserless.io/content?token=${RENDERING_KEY}`;
+              const renderResponse = await fetch(renderUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  url: normalizedUrl,
+                  rejectResourceTypes: ['image', 'media', 'font'],
+                  waitFor: 3000,
+                  gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
+                  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                }),
+                signal: AbortSignal.timeout(30000),
+              });
+              
+              if (renderResponse.ok) {
+                const renderedHtml = await renderResponse.text();
+                if (renderedHtml.length > pageHtml.length) {
+                  console.log(`[GEO-AUDIT] ✅ JS rendering success (${renderedHtml.length} chars vs ${pageHtml.length} static)`);
+                  pageHtml = renderedHtml;
+                  usedRendering = true;
+                }
+              } else {
+                console.log(`[GEO-AUDIT] ⚠️ Rendering API error: ${renderResponse.status}`);
+              }
+            } catch (renderErr) {
+              console.log('[GEO-AUDIT] ⚠️ Rendering fallback failed:', renderErr instanceof Error ? renderErr.message : renderErr);
+            }
+          } else {
+            console.log('[GEO-AUDIT] ⚠️ RENDERING_API_KEY not configured - JS rendering unavailable');
+          }
+        }
       }
     } catch (e) {
       console.log('[GEO-AUDIT] Failed to fetch page:', e);

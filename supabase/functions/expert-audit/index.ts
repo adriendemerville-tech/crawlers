@@ -249,7 +249,8 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/1.0; +https://crawlers.fr)'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       }
     });
     
@@ -259,7 +260,54 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       throw new Error(`HTTP ${response.status}`);
     }
     
-    const html = await response.text();
+    let html = await response.text();
+    
+    // SPA detection: if body is mostly empty, try JS rendering
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const bodyContent = bodyMatch ? bodyMatch[1] : html;
+    const textOnly = bodyContent
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const hasSPAMarker = /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<\/div>/i.test(html)
+      || /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<noscript/i.test(html);
+    
+    if ((textOnly.length < 200 && html.length > 1000) || (hasSPAMarker && textOnly.length < 500)) {
+      console.log(`[analyzeHtml] SPA detected (${textOnly.length} chars text). Trying JS rendering...`);
+      
+      const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
+      if (RENDERING_KEY) {
+        try {
+          const renderUrl = `https://chrome.browserless.io/content?token=${RENDERING_KEY}`;
+          const renderResponse = await fetch(renderUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url,
+              rejectResourceTypes: ['image', 'media', 'font'],
+              waitFor: 3000,
+              gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
+              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            }),
+            signal: AbortSignal.timeout(30000),
+          });
+          
+          if (renderResponse.ok) {
+            const renderedHtml = await renderResponse.text();
+            if (renderedHtml.length > html.length) {
+              console.log(`[analyzeHtml] ✅ JS rendering success (${renderedHtml.length} chars)`);
+              html = renderedHtml;
+            }
+          } else {
+            console.log(`[analyzeHtml] ⚠️ Rendering API error: ${renderResponse.status}`);
+          }
+        } catch (renderErr) {
+          console.log('[analyzeHtml] ⚠️ Rendering fallback failed:', renderErr instanceof Error ? renderErr.message : renderErr);
+        }
+      }
+    }
     
     // ═══ HSTS DETECTION ═══
     const hstsHeader = response.headers.get('Strict-Transport-Security');
