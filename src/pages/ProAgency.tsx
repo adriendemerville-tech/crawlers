@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
+import { DownloadAuthGate } from '@/components/DownloadAuthGate';
 import {
   Crown, Infinity, Shield, Users, Headphones, Loader2,
   CheckCircle2, ArrowRight, Zap, FileText, Code2, BarChart3,
