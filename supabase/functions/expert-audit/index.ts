@@ -628,6 +628,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       wordCount,
       hasSchemaOrg: schemaTypes.length > 0,
       schemaTypes,
+      isSchemaJsGenerated,
       isHttps: url.startsWith('https://'),
       hasGTM,
       hasGA4,
