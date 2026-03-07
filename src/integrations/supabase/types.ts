@@ -635,6 +635,7 @@ export type Database = {
           baseline_traffic: number
           client_id: string
           created_at: string
+          domain: string | null
           id: string
           predicted_increase_pct: number
           predicted_traffic: number
@@ -646,6 +647,7 @@ export type Database = {
           baseline_traffic?: number
           client_id: string
           created_at?: string
+          domain?: string | null
           id?: string
           predicted_increase_pct?: number
           predicted_traffic?: number
@@ -657,6 +659,7 @@ export type Database = {
           baseline_traffic?: number
           client_id?: string
           created_at?: string
+          domain?: string | null
           id?: string
           predicted_increase_pct?: number
           predicted_traffic?: number
