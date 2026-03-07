@@ -547,7 +547,7 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
   console.log(`[Headings] H1: ${h1Contents.length}, H2: ${h2Contents.length}`);
   
   // === ÉTAPE 2 : Analyse JSON-LD AVANT suppression des scripts ===
-  const jsonLdValidation = analyzeJsonLd(doc);
+  const jsonLdValidation = analyzeJsonLd(doc, html);
   console.log(`[JSON-LD] Trouvé ${jsonLdValidation.count} scripts, types: ${jsonLdValidation.types.join(', ') || 'aucun'}`);
   
   // === ÉTAPE 3 : Analyse du profil de liens (DOM complet) ===
