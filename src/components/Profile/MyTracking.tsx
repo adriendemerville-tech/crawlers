@@ -122,11 +122,28 @@ interface StatsEntry {
   voice_share: number | null;
 }
 
+interface GscDataRow {
+  keys: string[];
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+interface GscData {
+  rows: GscDataRow[];
+  total_clicks: number;
+  total_impressions: number;
+  avg_position: number;
+  date_range: { start: string; end: string };
+}
+
 export function MyTracking() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isCollaborator, setIsCollaborator] = useState(false);
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
@@ -148,6 +165,12 @@ export function MyTracking() {
   const [wpApiKeyVisible, setWpApiKeyVisible] = useState(false);
   const [wpApiKeyCopied, setWpApiKeyCopied] = useState(false);
   const [generatingMagicLink, setGeneratingMagicLink] = useState(false);
+
+  // GSC state
+  const [gscConnecting, setGscConnecting] = useState(false);
+  const [gscData, setGscData] = useState<GscData | null>(null);
+  const [gscLoading, setGscLoading] = useState(false);
+  const gscConnected = !!(profile as any)?.gsc_access_token;
 
   const fetchSites = useCallback(async () => {
     if (!user) return;
