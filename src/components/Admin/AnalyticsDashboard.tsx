@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Eye,
   UserPlus,
+  ShieldCheck,
   CheckCircle,
   Globe,
   ExternalLink,
