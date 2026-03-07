@@ -535,6 +535,137 @@ async function checkRankings(
 }
 
 /**
+ * Détecte le concurrent local via une requête SERP localisée (ex: "plombier châteaurenard").
+ * Retourne le premier résultat organique local différent du domaine cible, avec un site web.
+ * Si le domaine cible est 1er local, retourne le 2ème local.
+ */
+async function findLocalCompetitor(
+  domain: string,
+  sector: string,
+  locationCode: number,
+  pageContentContext: string
+): Promise<{ name: string; url: string; rank: number } | null> {
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
+
+  // Extraire la ville depuis le pageContentContext ou le domaine
+  // On essaie d'identifier la localisation depuis les métadonnées de la page
+  let city = '';
+  
+  // Chercher une ville dans le contexte de page
+  const cityPatterns = [
+    /(?:à|a|en|sur)\s+([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)/g,
+    /([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)\s*(?:\d{5})/g,
+  ];
+  
+  if (pageContentContext) {
+    for (const pattern of cityPatterns) {
+      const match = pattern.exec(pageContentContext);
+      if (match?.[1] && match[1].length > 2 && match[1].length < 30) {
+        city = match[1];
+        break;
+      }
+    }
+  }
+
+  // Construire la requête localisée
+  const localQuery = city 
+    ? `${sector} ${city}` 
+    : sector;
+  
+  console.log(`🏙️ Recherche concurrent local: "${localQuery}"`);
+
+  try {
+    const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
+      method: 'POST',
+      headers: {
+        'Authorization': getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([{
+        keyword: localQuery,
+        location_code: locationCode,
+        language_code: 'fr',
+        depth: 20,
+        se_domain: 'google.fr',
+      }]),
+    });
+
+    if (!response.ok) {
+      console.error('❌ Erreur API SERP local:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    const items = data.tasks?.[0]?.result?.[0]?.items;
+    if (!items || !Array.isArray(items)) return null;
+
+    const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
+    
+    // Filtrer uniquement les résultats organiques avec un domaine
+    const organicResults = items.filter((item: any) => 
+      item.type === 'organic' && item.domain && item.url
+    );
+
+    // Trouver la position du domaine cible
+    const targetIdx = organicResults.findIndex((item: any) => {
+      const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
+      return itemDomain.includes(cleanDomain) || cleanDomain.includes(itemDomain);
+    });
+
+    let competitor: any = null;
+
+    if (targetIdx === -1) {
+      // Le domaine cible n'est pas dans les SERPs → prendre le 1er résultat local (différent du target)
+      competitor = organicResults.find((item: any) => {
+        const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
+        return !itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain);
+      });
+    } else if (targetIdx === 0) {
+      // Le domaine cible est 1er → prendre le 2ème résultat (1er concurrent local en dessous)
+      competitor = organicResults.find((item: any, idx: number) => {
+        if (idx <= targetIdx) return false;
+        const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
+        return !itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain);
+      });
+    } else {
+      // Le domaine cible n'est pas 1er → prendre le concurrent juste AU-DESSUS dans les SERPs
+      for (let i = targetIdx - 1; i >= 0; i--) {
+        const item = organicResults[i];
+        const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
+        if (!itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain)) {
+          competitor = item;
+          break;
+        }
+      }
+      // Fallback: prendre le premier résultat différent
+      if (!competitor) {
+        competitor = organicResults.find((item: any) => {
+          const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
+          return !itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain);
+        });
+      }
+    }
+
+    if (competitor) {
+      const result = {
+        name: competitor.title?.split(' - ')[0]?.split(' | ')[0]?.trim() || competitor.domain,
+        url: competitor.url,
+        rank: competitor.rank_absolute || competitor.rank_group || 0,
+      };
+      console.log(`✅ Concurrent local trouvé: "${result.name}" (${result.url}) en position ${result.rank}`);
+      console.log(`   Domaine cible "${domain}" en position ${targetIdx >= 0 ? targetIdx + 1 : 'non classé'} pour "${localQuery}"`);
+      return result;
+    }
+
+    console.log('⚠️ Aucun concurrent local trouvé dans les SERPs');
+    return null;
+  } catch (error) {
+    console.error('❌ Erreur recherche concurrent local:', error);
+    return null;
+  }
+}
+
+/**
  * Fonction principale pour récupérer les données de marché DataForSEO
  */
 async function fetchMarketData(domain: string): Promise<MarketData | null> {
