@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
+import { DownloadAuthGate } from '@/components/DownloadAuthGate';
 import {
   Crown, Infinity, Shield, Users, Headphones, Loader2,
   CheckCircle2, ArrowRight, Zap, FileText, Code2, BarChart3,
@@ -253,11 +254,9 @@ export default function ProAgency() {
 
   useCanonicalHreflang('/pro-agency');
 
-  const handleSubscribe = async () => {
-    if (!user) {
-      toast.error(t.ctaLoginRequired);
-      return;
-    }
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const doSubscribe = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-subscription-session');
@@ -269,6 +268,28 @@ export default function ProAgency() {
       setLoading(false);
     }
   };
+
+  const handleSubscribe = async () => {
+    if (!user) {
+      sessionStorage.setItem('download_pending', 'pro_agency_subscribe');
+      sessionStorage.setItem('download_return_path', '/pro-agency');
+      setShowAuthModal(true);
+      return;
+    }
+    await doSubscribe();
+  };
+
+  // Auto-trigger subscription after auth redirect
+  useEffect(() => {
+    if (user) {
+      const pending = sessionStorage.getItem('download_pending');
+      if (pending === 'pro_agency_subscribe') {
+        sessionStorage.removeItem('download_pending');
+        sessionStorage.removeItem('download_return_path');
+        doSubscribe();
+      }
+    }
+  }, [user]);
 
   const faqSchema = {
     "@context": "https://schema.org",
@@ -490,16 +511,11 @@ export default function ProAgency() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button
                 size="lg"
-                onClick={user ? handleSubscribe : undefined}
-                asChild={!user}
+                onClick={handleSubscribe}
                 disabled={loading}
                 className="bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold shadow-lg"
               >
-                {user ? (
-                  loading ? <><Loader2 className="h-5 w-5 animate-spin mr-2" />{t.ctaLoading}</> : <><Crown className="h-5 w-5 mr-2 text-yellow-300" />{t.ctaSubscribe}</>
-                ) : (
-                  <Link to="/auth"><Crown className="h-5 w-5 mr-2 text-yellow-300" />{t.ctaSubscribe}</Link>
-                )}
+                {loading ? <><Loader2 className="h-5 w-5 animate-spin mr-2" />{t.ctaLoading}</> : <><Crown className="h-5 w-5 mr-2 text-yellow-300" />{t.ctaSubscribe}</>}
               </Button>
               <Button variant="outline" size="lg" asChild>
                 <Link to="/tarifs">{t.seePricing}</Link>
@@ -520,6 +536,20 @@ export default function ProAgency() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
 
       <Footer />
+
+      {/* Auth Gate Modal */}
+      {showAuthModal && (
+        <DownloadAuthGate
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthenticated={() => {
+            setShowAuthModal(false);
+            doSubscribe();
+          }}
+          returnPath="/pro-agency"
+          pendingAction="pro_agency_subscribe"
+        />
+      )}
     </div>
   );
 }

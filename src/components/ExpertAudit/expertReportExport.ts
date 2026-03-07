@@ -213,16 +213,18 @@ export function generateExpertReportHTML(
       </div>`;
 
     const miniGauge = (score: number) => {
-      const r = 20;
+      const r = 18;
       const circ = 2 * Math.PI * r;
-      const offset = circ - (score / 100) * circ;
+      const clampedScore = Math.max(0, Math.min(100, score));
+      const offset = circ - (clampedScore / 100) * circ;
       return `
       <div style="text-align: center; min-width: 52px;">
         <svg width="48" height="48" viewBox="0 0 48 48">
-          <circle cx="24" cy="24" r="${r}" fill="${gaugeBg(score)}" stroke="#e5e7eb" stroke-width="4" />
-          <circle cx="24" cy="24" r="${r}" fill="none" stroke="${gaugeColor(score)}" stroke-width="4" stroke-linecap="round"
-            stroke-dasharray="${circ}" stroke-dashoffset="${offset}" transform="rotate(-90 24 24)" />
-          <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="${gaugeColor(score)}">${score}%</text>
+          <circle cx="24" cy="24" r="${r}" fill="${gaugeBg(score)}" stroke="none" />
+          <circle cx="24" cy="24" r="${r}" fill="none" stroke="#e5e7eb" stroke-width="5" />
+          <circle cx="24" cy="24" r="${r}" fill="none" stroke="${gaugeColor(score)}" stroke-width="5" stroke-linecap="round"
+            stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}" transform="rotate(-90 24 24)" />
+          <text x="24" y="25" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="${gaugeColor(score)}">${score}%</text>
         </svg>
       </div>`;
     };

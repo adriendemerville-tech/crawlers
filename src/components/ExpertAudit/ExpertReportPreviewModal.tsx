@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ExpertAuditResult } from '@/types/expertAudit';
-import { expertReportTranslations, generateExpertReportHTML, WhiteLabelBranding, summarizeStrategicResult } from './expertReportExport';
+import { expertReportTranslations, generateExpertReportHTML, generateExpertPDF, WhiteLabelBranding, summarizeStrategicResult } from './expertReportExport';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveReport } from '@/hooks/useSaveReport';
 
@@ -102,37 +102,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      const domain = result.domain?.replace(/[^a-zA-Z0-9]/g, '-') || 'site';
-      const fileName = auditMode === 'technical' ? `rapport_technique_${domain}` : `rapport_strategique_${domain}`;
-      
-      // Create hidden iframe for print-to-PDF
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = 'none';
-      document.body.appendChild(iframe);
-      
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDoc || !iframe.contentWindow) throw new Error('Cannot create print frame');
-      
-      // Inject HTML with print-friendly title for PDF filename
-      const printHtml = htmlContent.replace(/<title>.*?<\/title>/, `<title>${fileName}</title>`);
-      iframeDoc.open();
-      iframeDoc.write(printHtml);
-      iframeDoc.close();
-      
-      // Wait for content to render then trigger print (save as PDF)
-      await new Promise(resolve => setTimeout(resolve, 500));
-      iframe.contentWindow.print();
-      
-      // Clean up after a delay
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-      }, 1000);
-      
+      generateExpertPDF(effectiveResult, auditMode, t, branding);
       toast.success(t.pdfSuccess);
     } catch (error) {
       console.error('PDF generation error:', error);

@@ -135,9 +135,12 @@ export default function Auth() {
 
     if (user) {
       const returnPath = sessionStorage.getItem('audit_return_path');
+      const downloadReturnPath = sessionStorage.getItem('download_return_path');
       if (returnPath) {
         sessionStorage.removeItem('audit_return_path');
         navigate(returnPath);
+      } else if (downloadReturnPath) {
+        navigate(downloadReturnPath);
       } else {
         const auditUrl = sessionStorage.getItem('audit_url');
         if (auditUrl) {
