@@ -13,6 +13,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { useStructuredData } from '@/hooks/useStructuredData';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
+import { Link } from 'react-router-dom';
+import { Crown, ArrowRight } from 'lucide-react';
 
 // Lazy load heavy dashboard components
 const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then(m => ({ default: m.ResultsDashboard })));
