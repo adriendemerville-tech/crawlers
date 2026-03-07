@@ -284,6 +284,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
           onAcceptSuggestion={handleAcceptSuggestion}
           onDismissSuggestion={validation.dismissSuggestion}
           onDismissNotFound={validation.dismissNotFound}
+          onIgnoreSuggestion={handleIgnoreSuggestion}
         />
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
