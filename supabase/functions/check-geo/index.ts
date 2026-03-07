@@ -623,7 +623,7 @@ Deno.serve(async (req) => {
     // =========================================================================
     const aiBotsResult = checkAIBotsAllowed(robotsTxt);
     const metaResult = analyzeMetaTags(doc);
-    const structuredData = analyzeStructuredData(doc);
+    const structuredData = analyzeStructuredData(doc, pageHtml);
     const contentResult = analyzeContent(doc);
     const spaInfo = detectSPAMarkers(doc);
     const ogResult = analyzeOpenGraph(doc);
