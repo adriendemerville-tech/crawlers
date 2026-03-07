@@ -163,8 +163,9 @@ Deno.serve(async (req) => {
     const anyValid = results.some(r => r.valid);
     let brandResult: string | null = null;
 
-    // If no candidate is valid AND searchBrand is provided, ask LLM
-    if (!anyValid && searchBrand) {
+    // Always run brand search when original URL failed, even if a candidate matched
+    // (candidates may match parking pages, LLM gives the real official domain)
+    if (searchBrand) {
       brandResult = await searchBrandDomain(searchBrand);
     }
 
