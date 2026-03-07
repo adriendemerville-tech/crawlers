@@ -357,7 +357,7 @@ export function MyTracking() {
       }
     } catch (err: any) {
       console.error('GSC login error:', err);
-      toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
+      toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : language === 'es' ? 'Error de conexión Search Console' : 'Search Console connection error');
     } finally {
       setGscConnecting(false);
     }
