@@ -27,8 +27,11 @@ async function checkUrl(url: string): Promise<{ ok: boolean; status: number; fin
   }
 }
 
-function isRealSite(result: { ok: boolean; contentLength: number }): boolean {
-  return result.ok && result.contentLength > 1000;
+function isRealSite(result: { ok: boolean; status: number; contentLength: number; finalUrl: string }): boolean {
+  // Accept 200-399 with enough content, or 403 (WAF/Cloudflare) if the response has some content
+  // Many major sites (liberation.fr, etc.) return 403 to bot-like user agents but are real sites
+  if (result.status === 403 && result.contentLength > 100) return true;
+  return result.ok && result.contentLength > 500;
 }
 
 // Use Gemini to resolve brand name to official domain, then validate
