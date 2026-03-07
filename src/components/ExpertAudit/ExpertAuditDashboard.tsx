@@ -325,6 +325,8 @@ export function ExpertAuditDashboard() {
         setAuditMode(null);
         setCompletedSteps([]);
         sessionStorage.setItem('audit_url', urlFromParams);
+        // Auto-launch technical audit without URL validation (trusted source)
+        setTimeout(() => runTechnicalAudit(urlFromParams), 100);
       }
       // Clear the URL param from browser history
       navigate('/audit-expert', { replace: true });
@@ -654,6 +656,23 @@ export function ExpertAuditDashboard() {
 
   const handleTechnicalAudit = async () => {
     if (!url.trim()) return;
+    const normalizedUrl = normalizeUrl(url);
+    // Skip URL validation if user already made a decision for this URL
+    if (user) {
+      const { data: existing } = await supabase
+        .from('url_correction_decisions')
+        .select('decision, corrected_url')
+        .eq('user_id', user.id)
+        .eq('original_url', normalizedUrl)
+        .maybeSingle();
+      if (existing) {
+        const finalUrl = existing.decision === 'accepted' && existing.corrected_url ? existing.corrected_url : normalizedUrl;
+        setUrl(finalUrl);
+        localStorage.setItem('crawlers_last_url', finalUrl);
+        runTechnicalAudit(finalUrl);
+        return;
+      }
+    }
     await urlValidation.validateAndCorrect(url, (validUrl) => {
       setUrl(validUrl);
       localStorage.setItem('crawlers_last_url', validUrl);
@@ -854,6 +873,23 @@ export function ExpertAuditDashboard() {
       runStrategicAudit(normalizedUrl, hallucinationCorrections, competitorCorrections);
       return;
     }
+    const normalizedUrl = normalizeUrl(url);
+    // Skip URL validation if user already made a decision for this URL
+    if (user) {
+      const { data: existing } = await supabase
+        .from('url_correction_decisions')
+        .select('decision, corrected_url')
+        .eq('user_id', user.id)
+        .eq('original_url', normalizedUrl)
+        .maybeSingle();
+      if (existing) {
+        const finalUrl = existing.decision === 'accepted' && existing.corrected_url ? existing.corrected_url : normalizedUrl;
+        setUrl(finalUrl);
+        localStorage.setItem('crawlers_last_url', finalUrl);
+        runStrategicAudit(finalUrl);
+        return;
+      }
+    }
     await urlValidation.validateAndCorrect(url, (validUrl) => {
       setUrl(validUrl);
       localStorage.setItem('crawlers_last_url', validUrl);
@@ -1029,6 +1065,15 @@ export function ExpertAuditDashboard() {
               const accepted = urlValidation.suggestedUrl;
               setUrl(accepted);
               localStorage.setItem('crawlers_last_url', accepted);
+              // Persist correction decision for logged-in user
+              if (user) {
+                supabase.from('url_correction_decisions').upsert({
+                  user_id: user.id,
+                  original_url: normalizeUrl(url),
+                  corrected_url: accepted,
+                  decision: 'accepted',
+                }, { onConflict: 'user_id,original_url' }).then(() => {});
+              }
               urlValidation.acceptSuggestion(accepted, (validUrl) => {
                 if (currentStep <= 1) runTechnicalAudit(validUrl);
                 else runStrategicAudit(validUrl);
@@ -1038,6 +1083,15 @@ export function ExpertAuditDashboard() {
             onDismissNotFound={urlValidation.dismissNotFound}
             onIgnoreSuggestion={() => {
               const original = normalizeUrl(url);
+              // Persist ignore decision for logged-in user
+              if (user) {
+                supabase.from('url_correction_decisions').upsert({
+                  user_id: user.id,
+                  original_url: original,
+                  corrected_url: urlValidation.suggestedUrl,
+                  decision: 'ignored',
+                }, { onConflict: 'user_id,original_url' }).then(() => {});
+              }
               urlValidation.dismissSuggestion();
               if (currentStep <= 1) runTechnicalAudit(original);
               else runStrategicAudit(original);
