@@ -148,11 +148,11 @@ export async function findValidUrl(normalizedUrl: string): Promise<UrlValidation
   const brandName = withoutProtocol.split('.')[0].split('/')[0];
   const { results, brandResult } = await validateUrls(candidateUrls, brandName);
 
+  // Prefer brand result from LLM (more accurate) over typo candidates (may match parking pages)
+  if (brandResult) return { validUrl: brandResult, originalValid: false };
+
   const validCandidate = results.find(r => r.valid);
   if (validCandidate) return { validUrl: validCandidate.url, originalValid: false };
-
-  // Fallback: use brand search result from LLM
-  if (brandResult) return { validUrl: brandResult, originalValid: false };
 
   return { validUrl: null, originalValid: false };
 }
