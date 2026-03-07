@@ -231,17 +231,55 @@ interface JsonLdValidation {
   types: string[];
   parseErrors: string[];
   rawCount: number;
+  isJsGenerated: boolean;
 }
 
-function analyzeStructuredData(doc: ReturnType<DOMParser['parseFromString']>): JsonLdValidation {
+/**
+ * Detect if JSON-LD / Schema.org is dynamically generated via JavaScript
+ * rather than present as static HTML in the source.
+ */
+function detectJsGeneratedSchema(html: string): boolean {
+  // 1. Check for JSON-LD string literals inside regular <script> tags (not type="application/ld+json")
+  const regularScripts = html.match(/<script(?![^>]*type\s*=\s*["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi) || [];
+  
+  for (const script of regularScripts) {
+    const content = script.replace(/<script[^>]*>|<\/script>/gi, '');
+    // Detect JS that builds or injects JSON-LD dynamically
+    if (
+      /application\/ld\+json/i.test(content) ||
+      (/@context.*schema\.org/i.test(content) && /JSON\.stringify|createElement|innerHTML|insertAdjacentHTML|appendChild/i.test(content)) ||
+      /structured[_-]?data|jsonLd|json_ld|schemaMarkup|schema_markup/i.test(content)
+    ) {
+      return true;
+    }
+  }
+  
+  // 2. Check for common schema injection libraries/plugins patterns
+  const jsSchemaPatterns = [
+    /window\.__NEXT_DATA__[\s\S]*?@context/i,
+    /nuxt[\s\S]*?jsonld|__NUXT__[\s\S]*?schema/i,
+    /gtm.*application\/ld\+json/i,
+    /tagmanager.*schema\.org/i,
+  ];
+  
+  for (const pattern of jsSchemaPatterns) {
+    if (pattern.test(html)) return true;
+  }
+  
+  return false;
+}
+
+function analyzeStructuredData(doc: ReturnType<DOMParser['parseFromString']>, rawHtml: string): JsonLdValidation {
+  const isJsGenerated = detectJsGeneratedSchema(rawHtml);
+  
   if (!doc) {
-    return { hasJsonLd: false, isValid: false, types: [], parseErrors: [], rawCount: 0 };
+    return { hasJsonLd: false, isValid: false, types: [], parseErrors: [], rawCount: 0, isJsGenerated };
   }
 
   const jsonLdScripts = doc.querySelectorAll('script[type="application/ld+json"]');
   
   if (jsonLdScripts.length === 0) {
-    return { hasJsonLd: false, isValid: false, types: [], parseErrors: [], rawCount: 0 };
+    return { hasJsonLd: false, isValid: false, types: [], parseErrors: [], rawCount: 0, isJsGenerated };
   }
 
   const types: string[] = [];
@@ -284,7 +322,8 @@ function analyzeStructuredData(doc: ReturnType<DOMParser['parseFromString']>): J
     isValid: validCount > 0 && parseErrors.length === 0,
     types,
     parseErrors,
-    rawCount: jsonLdScripts.length
+    rawCount: jsonLdScripts.length,
+    isJsGenerated
   };
 }
 
