@@ -277,6 +277,18 @@ export default function ProAgency() {
     await doSubscribe();
   };
 
+  // Auto-trigger subscription after auth redirect
+  useEffect(() => {
+    if (user) {
+      const pending = sessionStorage.getItem('download_pending');
+      if (pending === 'pro_agency_subscribe') {
+        sessionStorage.removeItem('download_pending');
+        sessionStorage.removeItem('download_return_path');
+        doSubscribe();
+      }
+    }
+  }, [user]);
+
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
