@@ -816,6 +816,7 @@ export function MyTracking() {
 
                             {/* Date pickers for range mode */}
                             {gscDateMode === 'range' && (
+                              <>
                                 <Popover>
                                   <PopoverTrigger asChild>
                                     <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
