@@ -457,20 +457,6 @@ const ModifierCodeWordPress = () => {
           </div>
         </section>
 
-        {/* ═══════════════════ SCANNER WORDPRESS ═══════════════════ */}
-        <section className="py-20 bg-muted/30">
-          <div className="container mx-auto px-4 max-w-2xl">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold tracking-tight mb-3">
-                Votre site est-il sous WordPress ?
-              </h2>
-              <p className="text-muted-foreground">
-                Entrez une URL pour détecter instantanément si le site utilise WordPress.
-              </p>
-            </div>
-            <WordPressScanner />
-          </div>
-        </section>
 
         {/* ═══════════════════ FAQ ═══════════════════ */}
         <section className="py-20 bg-background">
