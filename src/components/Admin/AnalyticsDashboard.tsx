@@ -361,6 +361,22 @@ export function AnalyticsDashboard() {
       });
       
       setErrorEvents(enrichedErrors);
+
+      // Fetch system reliability metrics
+      const { data: metricsData } = await supabase
+        .from('system_metrics')
+        .select('current_reliability_score, total_audits_processed, total_predictions_made')
+        .limit(1)
+        .maybeSingle();
+      
+      if (metricsData) {
+        setReliabilityScore({
+          score: metricsData.current_reliability_score,
+          audits: metricsData.total_audits_processed,
+          predictions: metricsData.total_predictions_made,
+        });
+      }
+
       setLastUpdated(new Date());
 
     } catch (error) {
