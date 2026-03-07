@@ -844,36 +844,36 @@ export function MyTracking() {
                             {/* Date pickers for range mode */}
                             {gscDateMode === 'range' && (
                               <>
-                                <Popover>
+                                <Popover open={rangeStartCalOpen} onOpenChange={setRangeStartCalOpen}>
                                   <PopoverTrigger asChild>
                                     <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
                                       <CalendarIcon className="h-3 w-3" />
                                       {format(gscRangeStart, 'dd/MM/yyyy')}
                                     </Button>
                                   </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0 z-50" align="start" sideOffset={4}>
+                                  <PopoverContent className="w-auto p-0 pointer-events-auto" align="start" sideOffset={4}>
                                     <Calendar
                                       mode="single"
                                       selected={gscRangeStart}
-                                      onSelect={(d) => d && setGscRangeStart(d)}
+                                      onSelect={(d) => { if (d) { setGscRangeStart(d); setRangeStartCalOpen(false); } }}
                                       disabled={(d) => d > gscRangeEnd || d < new Date('2020-01-01')}
                                       className={cn("p-3 pointer-events-auto")}
                                     />
                                   </PopoverContent>
                                 </Popover>
                                 <span className="text-xs text-muted-foreground">→</span>
-                                <Popover>
+                                <Popover open={rangeEndCalOpen} onOpenChange={setRangeEndCalOpen}>
                                   <PopoverTrigger asChild>
                                     <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
                                       <CalendarIcon className="h-3 w-3" />
                                       {format(gscRangeEnd, 'dd/MM/yyyy')}
                                     </Button>
                                   </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0 z-50" align="start" sideOffset={4}>
+                                  <PopoverContent className="w-auto p-0 pointer-events-auto" align="start" sideOffset={4}>
                                     <Calendar
                                       mode="single"
                                       selected={gscRangeEnd}
-                                      onSelect={(d) => d && setGscRangeEnd(d)}
+                                      onSelect={(d) => { if (d) { setGscRangeEnd(d); setRangeEndCalOpen(false); } }}
                                       disabled={(d) => d > new Date() || d < gscRangeStart}
                                       className={cn("p-3 pointer-events-auto")}
                                     />
