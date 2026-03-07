@@ -811,7 +811,7 @@ export function MyTracking() {
                                 className={cn("px-2.5 py-1 rounded-md transition-colors", gscDateMode === 'range' && "bg-background shadow-sm font-medium")}
                                 onClick={() => setGscDateMode('range')}
                               >
-                                {language === 'fr' ? 'Entre' : 'Between'}
+                                {language === 'fr' ? 'Entre' : language === 'es' ? 'Entre' : 'Between'}
                               </button>
                             </div>
 
