@@ -136,18 +136,19 @@ export type UrlValidationResult = {
 export async function findValidUrl(normalizedUrl: string): Promise<UrlValidationResult> {
   const withoutProtocol = normalizedUrl.replace(/^https?:\/\//, '');
 
-  const candidates = generateTypoCandidates(withoutProtocol);
-  const allUrls = [normalizedUrl, ...candidates.slice(0, 9).map(c => `https://${c}`)];
-  const uniqueUrls = [...new Set(allUrls)];
-
-  // Pass the brand name for LLM search fallback
-  const brandName = withoutProtocol.split('.')[0].split('/')[0];
-  const { results, brandResult } = await validateUrls(uniqueUrls, brandName);
-
-  const originalResult = results.find(r => r.url === normalizedUrl);
+  // Step 1: Check the original URL first (alone, with full timeout)
+  const { results: originalResults } = await validateUrls([normalizedUrl]);
+  const originalResult = originalResults.find(r => r.url === normalizedUrl);
   if (originalResult?.valid) return { validUrl: normalizedUrl, originalValid: true };
 
-  const validCandidate = results.find(r => r.valid && r.url !== normalizedUrl);
+  // Step 2: Only if original fails, try typo candidates + brand search
+  const candidates = generateTypoCandidates(withoutProtocol);
+  const candidateUrls = [...new Set(candidates.slice(0, 9).map(c => `https://${c}`))].filter(u => u !== normalizedUrl);
+
+  const brandName = withoutProtocol.split('.')[0].split('/')[0];
+  const { results, brandResult } = await validateUrls(candidateUrls, brandName);
+
+  const validCandidate = results.find(r => r.valid);
   if (validCandidate) return { validUrl: validCandidate.url, originalValid: false };
 
   // Fallback: use brand search result from LLM
