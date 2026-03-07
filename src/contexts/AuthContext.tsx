@@ -19,6 +19,7 @@ interface Profile {
   agency_report_header_text: string | null;
   agency_report_footer_text: string | null;
   plan_type: string;
+  gsc_access_token: string | null;
   created_at: string;
   updated_at: string;
 }
