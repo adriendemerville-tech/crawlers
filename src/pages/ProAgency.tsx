@@ -271,6 +271,8 @@ export default function ProAgency() {
 
   const handleSubscribe = async () => {
     if (!user) {
+      sessionStorage.setItem('download_pending', 'pro_agency_subscribe');
+      sessionStorage.setItem('download_return_path', '/pro-agency');
       setShowAuthModal(true);
       return;
     }
