@@ -203,14 +203,15 @@ GUARDRAILS:
 - business_impact.annual_value_euro = monthly_value_euro × 12.`;
 
     // ── Call Gemini ──
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openrouterKey}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': supabaseUrl,
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'anthropic/claude-3.5-sonnet',
         messages: [
           { role: 'system', content: 'You are a quantitative search traffic simulator. Return only valid JSON.' },
           { role: 'user', content: prompt },
