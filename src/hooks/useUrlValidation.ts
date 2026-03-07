@@ -254,6 +254,7 @@ export function useUrlValidation(language: string = 'fr') {
     validateAndCorrect,
     resetValidation,
     dismissSuggestion,
+    showNotFound,
     dismissNotFound,
     acceptSuggestion: (url: string, onValidUrl: (url: string) => void) => {
       setSuggestedUrl(null);
