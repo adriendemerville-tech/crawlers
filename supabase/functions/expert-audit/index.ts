@@ -1910,6 +1910,40 @@ serve(async (req) => {
     const normalizedUrl = normalizeUrl(url);
     const domain = extractDomain(normalizedUrl);
     
+    // ── Cache check ──
+    const ck = cacheKey('expert-audit', { url: normalizedUrl });
+    const cached = await getCached(ck);
+    if (cached) {
+      console.log('[expert-audit] Cache HIT for:', normalizedUrl);
+      return new Response(JSON.stringify(cached), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'HIT' },
+      });
+    }
+    
+    // ── Rate limiting (authenticated users) ──
+    const authHeader = req.headers.get('Authorization') || '';
+    if (authHeader) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+        const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+        if (supabaseUrl && supabaseKey) {
+          const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+          const sb = createClient(supabaseUrl, supabaseKey, { global: { headers: { Authorization: authHeader } } });
+          const { data: { user } } = await sb.auth.getUser();
+          if (user) {
+            const rl = await checkRateLimit(user.id, 'expert_audit', 15, 60);
+            if (!rl.allowed) {
+              return new Response(JSON.stringify({ success: false, error: 'Rate limit exceeded. Please wait before running another audit.', rate_limit: rl }), {
+                status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[rate-limit] check error (non-blocking):', e);
+      }
+    }
+    
     console.log('Starting Expert Audit for:', normalizedUrl);
     
     // Run all checks in parallel
