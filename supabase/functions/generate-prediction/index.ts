@@ -481,6 +481,7 @@ serve(async (req) => {
       // Consistency tracking
       consistency_anchor: anchorPrediction,
       consistency_clamped: consistencyClamped,
+      consistency_skip_reason: consistencySkipReason,
     };
 
     // ── Persist ──
