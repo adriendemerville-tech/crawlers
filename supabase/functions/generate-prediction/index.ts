@@ -238,7 +238,7 @@ GUARDRAILS:
     const raw = aiData.choices?.[0]?.message?.content || '';
     const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
-    await trackTokenUsage('generate-prediction', 'google/gemini-2.5-flash', aiData.usage);
+    await trackTokenUsage('generate-prediction', 'anthropic/claude-3.5-sonnet', aiData.usage);
 
     let prediction: any;
     try { prediction = JSON.parse(cleaned); }
