@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,8 +6,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
