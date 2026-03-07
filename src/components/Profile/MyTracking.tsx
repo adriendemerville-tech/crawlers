@@ -502,6 +502,18 @@ export function MyTracking() {
                         size="sm" 
                         variant="outline"
                         className="gap-1.5"
+                        onClick={() => {
+                          toast.info(language === 'fr' ? 'Connexion Search Console à venir' : 'Search Console connection coming soon');
+                        }}
+                      >
+                        <Plug className="h-3.5 w-3.5" />
+                        Search Console
+                      </Button>
+
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="gap-1.5"
                         onClick={() => navigate(`/audit-expert?url=${encodeURIComponent(`https://${currentSite.domain}`)}&from=sites`)}
                       >
                         <Search className="h-3.5 w-3.5" />
