@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.summarize-report]
 verify_jwt = false
+
+[functions.gsc-auth]
+verify_jwt = false
