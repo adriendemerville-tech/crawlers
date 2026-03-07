@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,8 +6,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -172,6 +175,22 @@ export function MyTracking() {
   const [gscLoading, setGscLoading] = useState(false);
   const gscConnected = !!profile?.gsc_access_token;
 
+  // GSC date range & granularity
+  type GscDateMode = 'since' | 'range';
+  type GscGranularity = 'daily' | 'weekly' | 'monthly';
+  const [gscDateMode, setGscDateMode] = useState<GscDateMode>('since');
+  const [gscSinceDate, setGscSinceDate] = useState<Date>(() => {
+    const d = new Date(); d.setDate(d.getDate() - 30); return d;
+  });
+  const [gscRangeStart, setGscRangeStart] = useState<Date>(() => {
+    const d = new Date(); d.setDate(d.getDate() - 30); return d;
+  });
+  const [gscRangeEnd, setGscRangeEnd] = useState<Date>(new Date());
+  const [gscGranularity, setGscGranularity] = useState<GscGranularity>('daily');
+
+  const gscStartDate = gscDateMode === 'since' ? gscSinceDate : gscRangeStart;
+  const gscEndDate = gscDateMode === 'since' ? new Date() : gscRangeEnd;
+
   const fetchSites = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
@@ -254,7 +273,13 @@ export function MyTracking() {
     setGscLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('gsc-auth', {
-        body: { action: 'fetch', user_id: user.id, site_url: `https://${currentSiteDomain}` },
+        body: { 
+          action: 'fetch', 
+          user_id: user.id, 
+          site_url: `https://${currentSiteDomain}`,
+          start_date: gscStartDate.toISOString().split('T')[0],
+          end_date: gscEndDate.toISOString().split('T')[0],
+        },
       });
       if (error) throw error;
       if (data?.error) {
@@ -267,7 +292,7 @@ export function MyTracking() {
     } finally {
       setGscLoading(false);
     }
-  }, [user, currentSiteDomain]);
+  }, [user, currentSiteDomain, gscStartDate, gscEndDate]);
 
   useEffect(() => {
     if (gscConnected && currentSiteDomain) {
@@ -276,6 +301,47 @@ export function MyTracking() {
       setGscData(null);
     }
   }, [gscConnected, currentSiteDomain, fetchGscData]);
+
+  // Aggregate GSC rows by granularity
+  const gscAggregatedRows = useMemo(() => {
+    if (!gscData?.rows?.length) return [];
+    const rows = gscData.rows.map(r => ({
+      date: r.keys?.[0] || '',
+      clicks: r.clicks,
+      impressions: r.impressions,
+      position: r.position,
+    }));
+
+    if (gscGranularity === 'daily') return rows;
+
+    const buckets: Record<string, { clicks: number; impressions: number; posSum: number; count: number }> = {};
+    for (const r of rows) {
+      let key: string;
+      if (gscGranularity === 'weekly') {
+        const d = new Date(r.date);
+        const day = d.getDay();
+        const monday = new Date(d);
+        monday.setDate(d.getDate() - ((day + 6) % 7));
+        key = monday.toISOString().split('T')[0];
+      } else {
+        key = r.date.slice(0, 7); // YYYY-MM
+      }
+      if (!buckets[key]) buckets[key] = { clicks: 0, impressions: 0, posSum: 0, count: 0 };
+      buckets[key].clicks += r.clicks;
+      buckets[key].impressions += r.impressions;
+      buckets[key].posSum += r.position;
+      buckets[key].count += 1;
+    }
+    return Object.entries(buckets)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, b]) => ({
+        date,
+        clicks: b.clicks,
+        impressions: b.impressions,
+        position: parseFloat((b.posSum / b.count).toFixed(1)),
+      }));
+  }, [gscData, gscGranularity]);
+
 
   const handleConnectGsc = async () => {
     if (!user) return;
@@ -713,6 +779,99 @@ export function MyTracking() {
                         </div>
                       ) : gscData && gscData.rows.length > 0 ? (
                         <div className="space-y-4">
+                          {/* Date controls */}
+                          <div className="flex flex-wrap items-center gap-2">
+                            {/* Date mode toggle */}
+                            <div className="flex rounded-lg border bg-muted p-0.5 text-xs">
+                              <button
+                                className={cn("px-2.5 py-1 rounded-md transition-colors", gscDateMode === 'since' && "bg-background shadow-sm font-medium")}
+                                onClick={() => setGscDateMode('since')}
+                              >
+                                {language === 'fr' ? 'Depuis' : 'Since'}
+                              </button>
+                              <button
+                                className={cn("px-2.5 py-1 rounded-md transition-colors", gscDateMode === 'range' && "bg-background shadow-sm font-medium")}
+                                onClick={() => setGscDateMode('range')}
+                              >
+                                {language === 'fr' ? 'Entre' : 'Between'}
+                              </button>
+                            </div>
+
+                            {/* Date pickers */}
+                            {gscDateMode === 'since' ? (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                                    <CalendarIcon className="h-3 w-3" />
+                                    {format(gscSinceDate, 'dd/MM/yyyy')}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={gscSinceDate}
+                                    onSelect={(d) => d && setGscSinceDate(d)}
+                                    disabled={(d) => d > new Date() || d < new Date('2020-01-01')}
+                                    className={cn("p-3 pointer-events-auto")}
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            ) : (
+                              <>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                                      <CalendarIcon className="h-3 w-3" />
+                                      {format(gscRangeStart, 'dd/MM/yyyy')}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={gscRangeStart}
+                                      onSelect={(d) => d && setGscRangeStart(d)}
+                                      disabled={(d) => d > gscRangeEnd || d < new Date('2020-01-01')}
+                                      className={cn("p-3 pointer-events-auto")}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                <span className="text-xs text-muted-foreground">→</span>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                                      <CalendarIcon className="h-3 w-3" />
+                                      {format(gscRangeEnd, 'dd/MM/yyyy')}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={gscRangeEnd}
+                                      onSelect={(d) => d && setGscRangeEnd(d)}
+                                      disabled={(d) => d > new Date() || d < gscRangeStart}
+                                      className={cn("p-3 pointer-events-auto")}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </>
+                            )}
+
+                            {/* Granularity toggle */}
+                            <div className="flex rounded-lg border bg-muted p-0.5 text-xs ml-auto">
+                              {(['daily', 'weekly', 'monthly'] as const).map((g) => (
+                                <button
+                                  key={g}
+                                  className={cn("px-2 py-1 rounded-md transition-colors", gscGranularity === g && "bg-background shadow-sm font-medium")}
+                                  onClick={() => setGscGranularity(g)}
+                                >
+                                  {g === 'daily' ? (language === 'fr' ? 'Jour' : 'Day') 
+                                    : g === 'weekly' ? (language === 'fr' ? 'Sem.' : 'Week')
+                                    : (language === 'fr' ? 'Mois' : 'Month')}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
                           {/* GSC KPI summary */}
                           <div className="grid grid-cols-3 gap-3">
                             <div className="rounded-lg border bg-card p-3 space-y-1">
@@ -727,7 +886,7 @@ export function MyTracking() {
                                 <Eye className="h-3 w-3" />
                                 Impressions
                               </div>
-                              <p className="text-lg font-semibold" style={{ color: 'hsl(262, 83%, 58%)' }}>{gscData.total_impressions.toLocaleString()}</p>
+                              <p className="text-lg font-semibold text-accent-foreground">{gscData.total_impressions.toLocaleString()}</p>
                             </div>
                             <div className="rounded-lg border bg-card p-3 space-y-1">
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -738,14 +897,14 @@ export function MyTracking() {
                             </div>
                           </div>
 
-                          {/* GSC Chart - mimics Search Console style */}
+                          {/* GSC Chart */}
                           <div className="h-72">
                             <ResponsiveContainer width="100%" height="100%">
-                              <ComposedChart data={gscData.rows.map(row => ({
-                                date: row.keys?.[0]?.slice(5) || '',
+                              <ComposedChart data={gscAggregatedRows.map(row => ({
+                                date: gscGranularity === 'monthly' ? row.date : row.date.slice(5),
                                 clicks: row.clicks,
                                 impressions: row.impressions,
-                                position: parseFloat(row.position?.toFixed(1) || '0'),
+                                position: typeof row.position === 'number' ? parseFloat(row.position.toFixed(1)) : 0,
                               }))} margin={{ left: 0, right: 40, top: 5, bottom: 5 }}>
                                 <defs>
                                   <linearGradient id="gscClicksGradient" x1="0" y1="0" x2="0" y2="1">
