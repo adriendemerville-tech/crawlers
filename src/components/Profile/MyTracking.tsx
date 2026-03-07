@@ -815,7 +815,7 @@ export function MyTracking() {
                                     )}
                                   </button>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
+                                <PopoverContent className="w-auto p-0 z-50 pointer-events-auto" align="start" sideOffset={4}>
                                   <Calendar
                                     mode="single"
                                     selected={gscSinceDate}
