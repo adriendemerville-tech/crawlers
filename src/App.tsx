@@ -41,6 +41,7 @@ const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
 const ComparatifAuditGeo = lazy(() => import("./pages/ComparatifAuditGeo"));
 const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersSemrush"));
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
+const ProAgency = lazy(() => import("./pages/ProAgency"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
@@ -95,6 +96,7 @@ const App = () => (
                           <Route path="/comparatif-audit-geo" element={<ComparatifAuditGeo />} />
                           <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
                           <Route path="/modifier-code-wordpress" element={<ModifierCodeWordPress />} />
+                          <Route path="/pro-agency" element={<ProAgency />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>

@@ -13,6 +13,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { useStructuredData } from '@/hooks/useStructuredData';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
+import { Link } from 'react-router-dom';
+import { Crown, ArrowRight } from 'lucide-react';
 
 // Lazy load heavy dashboard components
 const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then(m => ({ default: m.ResultsDashboard })));
@@ -545,6 +547,31 @@ const Index = () => {
         <Suspense fallback={<SectionSkeleton />}>
           <SolutionSection />
         </Suspense>
+
+        {/* Pro Agency CTA Banner */}
+        <section className="border-y border-violet-500/20 bg-gradient-to-r from-violet-950/10 via-background to-amber-950/10 py-10">
+          <div className="mx-auto max-w-4xl px-4 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <Crown className="h-8 w-8 text-yellow-500 shrink-0" />
+              <div>
+                <h3 className="font-bold text-foreground text-lg">
+                  {language === 'fr' ? 'Passez en illimité avec Pro Agency' : language === 'es' ? 'Pase a ilimitado con Pro Agency' : 'Go unlimited with Pro Agency'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {language === 'fr' ? 'Rapports, correctifs & marque blanche — 49€/mois' : language === 'es' ? 'Informes, correcciones y marca blanca — 49€/mes' : 'Reports, fixes & white label — €49/month'}
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/pro-agency"
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-violet-600 to-amber-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg hover:shadow-xl hover:from-violet-700 hover:to-amber-600 transition-all whitespace-nowrap"
+            >
+              {language === 'fr' ? 'Découvrir l\'abonnement Pro' : language === 'es' ? 'Descubrir la suscripción Pro' : 'Discover Pro subscription'}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
+
         <Suspense fallback={<SectionSkeleton />}>
           <NewsCarousel />
         </Suspense>
