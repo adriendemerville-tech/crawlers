@@ -14,6 +14,20 @@ const CTR_CURVE: Record<number, number> = {
   6: 0.06, 7: 0.04, 8: 0.03, 9: 0.02, 10: 0.01,
 };
 
+/** Seasonal coefficients by sector × month (0=Jan … 11=Dec). */
+const SEASONALITY_MATRIX: Record<string, number[]> = {
+  //                   Jan   Feb   Mar   Apr   May   Jun   Jul   Aug   Sep   Oct   Nov   Dec
+  Retail:       [0.85, 0.80, 0.90, 0.95, 1.00, 1.05, 1.00, 0.90, 1.10, 1.15, 1.30, 1.50],
+  RealEstate:   [0.90, 0.95, 1.30, 1.25, 1.20, 1.15, 1.05, 0.85, 1.10, 1.05, 0.95, 0.80],
+  Medical:      [1.15, 1.10, 1.05, 1.00, 0.95, 0.90, 0.85, 0.85, 1.10, 1.15, 1.10, 1.00],
+  Services:     [1.00, 1.00, 1.05, 1.05, 1.00, 0.95, 0.90, 0.85, 1.10, 1.10, 1.05, 1.00],
+  Travel:       [1.10, 1.05, 1.00, 1.10, 1.25, 1.35, 1.40, 1.30, 1.05, 0.90, 0.80, 0.95],
+  Finance:      [1.20, 1.10, 1.15, 1.05, 1.00, 0.95, 0.90, 0.90, 1.05, 1.10, 1.10, 1.05],
+  Education:    [1.15, 1.10, 1.00, 0.95, 0.90, 0.85, 0.80, 1.20, 1.30, 1.15, 1.05, 0.90],
+};
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
 // ─── FUEL: Pre-processing Utilities ─────────────────────────────────────────
 
 function computeTDI(errorCount: number): number {
@@ -52,17 +66,43 @@ function classifyDepth(data: Record<string, any>): 'thin' | 'utility' | 'authori
 
 const REBOUND_DAYS: Record<string, number> = { authority: 45, utility: 55, thin: 60 };
 
-/** Look up CTR for a given position (clamped 1–10, fallback 0.005 for >10) */
 function ctrAt(pos: number): number {
   const rounded = Math.round(Math.max(1, Math.min(pos, 10)));
   return CTR_CURVE[rounded] ?? 0.005;
 }
 
-/** Compute potential position gain from TDI */
 function potentialGain(tdi: number): number {
   if (tdi < 15) return 3;
   if (tdi < 50) return 1.5;
   return 0.5;
+}
+
+/** Resolve sector from extracted_data to a SEASONALITY_MATRIX key */
+function resolveSector(ext: Record<string, any>): string {
+  const raw = (ext.sector || ext.industry || ext.niche || 'Services').toString().toLowerCase();
+  const map: Record<string, string> = {
+    retail: 'Retail', ecommerce: 'Retail', 'e-commerce': 'Retail', boutique: 'Retail', shop: 'Retail',
+    realestate: 'RealEstate', immobilier: 'RealEstate', 'real estate': 'RealEstate', immo: 'RealEstate',
+    medical: 'Medical', santé: 'Medical', health: 'Medical', pharma: 'Medical', clinique: 'Medical',
+    travel: 'Travel', tourisme: 'Travel', voyage: 'Travel', hotel: 'Travel', 'hôtel': 'Travel',
+    finance: 'Finance', banque: 'Finance', assurance: 'Finance', insurance: 'Finance', crypto: 'Finance',
+    education: 'Education', formation: 'Education', 'e-learning': 'Education', école: 'Education',
+  };
+  for (const [pattern, sector] of Object.entries(map)) {
+    if (raw.includes(pattern)) return sector;
+  }
+  return 'Services';
+}
+
+/** Average seasonal coefficient over the next 3 months (90-day projection window) */
+function seasonalFactor90d(sector: string): number {
+  const now = new Date();
+  const m0 = now.getMonth();
+  const coeffs = SEASONALITY_MATRIX[sector] || SEASONALITY_MATRIX['Services'];
+  const c1 = coeffs[m0];
+  const c2 = coeffs[(m0 + 1) % 12];
+  const c3 = coeffs[(m0 + 2) % 12];
+  return Math.round(((c1 + c2 + c3) / 3) * 1000) / 1000;
 }
 
 // ─── GSC SEGMENTATION ───────────────────────────────────────────────────────
@@ -130,28 +170,42 @@ function segmentGsc(gsc_data: any, root: string): GscSegment {
 
 interface Anchors {
   potentialPositionGain: number;
-  theoreticalNonBrandGain: number;
+  targetPos: number;
+  theoreticalNonBrandGain: number;  // raw, before seasonality
+  seasonalGain: number;             // after seasonality
+  seasonalFactor: number;
+  sector: string;
+  currentMonth: number;
   baseAiRisk: number;
   realisticFloor: number;
   realisticCeiling: number;
 }
 
-function computeAnchors(seg: GscSegment, tdiScore: number): Anchors {
+function computeAnchors(seg: GscSegment, tdiScore: number, sector: string): Anchors {
   const gain = potentialGain(tdiScore);
   const currentCtr = ctrAt(seg.avgPos);
-  const newPos = Math.max(1, seg.avgPos - gain);
-  const newCtr = ctrAt(newPos);
+  const targetPos = Math.max(1, seg.avgPos - gain);
+  const newCtr = ctrAt(targetPos);
   const theoreticalNonBrandGain = Math.round(seg.nonBrandImpressions * (newCtr - currentCtr));
+
+  const currentMonth = new Date().getMonth();
+  const sf = seasonalFactor90d(sector);
+  const seasonalGain = Math.round(Math.max(0, theoreticalNonBrandGain) * sf);
 
   const baseAiRisk = Math.min(100, Math.max(0,
     Math.round((seg.lowIntentClicks / (seg.nonBrandClicks || 1)) * 100)
   ));
 
-  const realisticTarget = seg.totalClicks + Math.max(0, theoreticalNonBrandGain);
-  const realisticFloor = Math.round(realisticTarget * 0.80);
-  const realisticCeiling = Math.round(realisticTarget * 1.20);
+  // ±15% corridor around seasonal-adjusted gain
+  const realisticTarget = seg.totalClicks + Math.max(0, seasonalGain);
+  const realisticFloor = Math.round(realisticTarget * 0.85);
+  const realisticCeiling = Math.round(realisticTarget * 1.15);
 
-  return { potentialPositionGain: gain, theoreticalNonBrandGain, baseAiRisk, realisticFloor, realisticCeiling };
+  return {
+    potentialPositionGain: gain, targetPos, theoreticalNonBrandGain,
+    seasonalGain, seasonalFactor: sf, sector, currentMonth,
+    baseAiRisk, realisticFloor, realisticCeiling,
+  };
 }
 
 // ─── PROMPT BUILDER ─────────────────────────────────────────────────────────
@@ -165,6 +219,8 @@ function buildPrompt(
   depth: string,
   reboundDays: number,
 ): string {
+  const monthName = MONTH_NAMES[anchors.currentMonth];
+
   return `You are a Senior Search Data Scientist running a causal traffic simulation for the 2026 Search ecosystem.
 
 ## PRE-COMPUTED INTELLIGENCE (use as-is, do NOT recalculate)
@@ -188,18 +244,22 @@ function buildPrompt(
   ├─ High-Intent (transactional/local): ${seg.highIntentClicks} clicks, ${seg.highIntentImpressions} impressions
   └─ Low-Intent (informational): ${seg.lowIntentClicks} clicks, ${seg.lowIntentImpressions} impressions
 
-## DETERMINISTIC ANCHORS — YOU MUST RESPECT THESE
+## INFLEXIBLE TRUTHS — YOU MUST RESPECT THESE
 
-### CTR-Based Theoretical Gain
-The calculated CTR-based theoretical gain is **${anchors.theoreticalNonBrandGain}** additional non-brand clicks (based on improving avg position by ${anchors.potentialPositionGain.toFixed(1)} positions).
-Your **Realistic** scenario's total clicks MUST equal brand clicks (${seg.brandClicks}) + current non-brand clicks (${seg.nonBrandClicks}) + a gain that is within ±20% of ${anchors.theoreticalNonBrandGain}.
-Use your expertise on the audit's EEAT and content quality to decide the exact position within this range.
+### 1. CTR Base Gain
+Based on industry CTR curves, moving from position ${seg.avgPos.toFixed(1)} to position ${anchors.targetPos.toFixed(1)} yields a raw theoretical gain of **${anchors.theoreticalNonBrandGain}** non-brand clicks.
+After applying the seasonal coefficient (${anchors.seasonalFactor}), the adjusted gain is **${anchors.seasonalGain}** clicks.
+Your **Realistic** scenario's total clicks MUST equal brand clicks (${seg.brandClicks}) + current non-brand clicks (${seg.nonBrandClicks}) + a gain that is within **±15%** of ${anchors.seasonalGain}.
+Use your expertise on the audit's EEAT and content quality to decide the exact position within this corridor.
 
-### AI Risk Constraint
+### 2. Sector Seasonality
+We are in **${monthName}**. The sector is **${anchors.sector}**. The seasonal coefficient for the ${anchors.sector} industry over the next 90 days is **${anchors.seasonalFactor}**. You MUST multiply your growth estimates by this factor. A coefficient > 1.0 means favorable season; < 1.0 means headwinds.
+
+### 3. AI Risk Constraint
 The calculated Base AI Risk is **${anchors.baseAiRisk}/100**.
 You may adjust ai_risk_score by ONLY ±15 points from this base. Final ai_risk_score must be between ${Math.max(0, anchors.baseAiRisk - 15)} and ${Math.min(100, anchors.baseAiRisk + 15)}.
 
-### Scenario Spread (STRICT)
+### 4. Scenario Spread (STRICT)
 - pessimistic.clicks = realistic.clicks × 0.7
 - aggressive.clicks = realistic.clicks × 1.4
 
@@ -223,7 +283,7 @@ Fixing technical errors triggers a ${reboundDays}-day trust rebound window.
     "technical_unlock_potential": <integer>,
     "ai_cannibalization_risk": "low"|"medium"|"high"
   },
-  "reasoning": "<2-3 sentence strategic explanation focusing on causality>"
+  "reasoning": "<2-3 sentence strategic explanation focusing on causality and seasonality>"
 }
 
 GUARDRAILS:
@@ -243,13 +303,11 @@ function validateAndCorrect(
 ): any {
   const p = prediction;
 
-  // 1. Stability check on realistic
+  // 1. Stability check on realistic (±15% corridor)
   let realisticClicks = p.scenarios?.realistic?.clicks ?? seg.totalClicks;
   if (realisticClicks < anchors.realisticFloor || realisticClicks > anchors.realisticCeiling) {
-    // Clamp to nearest boundary
     realisticClicks = Math.max(anchors.realisticFloor, Math.min(anchors.realisticCeiling, realisticClicks));
   }
-  // Floor at baseline
   realisticClicks = Math.max(realisticClicks, seg.totalClicks);
 
   // 2. Enforce scenario spread
@@ -331,12 +389,13 @@ serve(async (req) => {
     const root = domainRoot(ext.domain || audit.file_path || '');
     const depth = classifyDepth(ext);
     const reboundDays = REBOUND_DAYS[depth];
+    const sector = resolveSector(ext);
 
     // ── GSC segmentation ──
     const seg = segmentGsc(gsc_data, root);
 
-    // ── Deterministic anchors ──
-    const anchors = computeAnchors(seg, tdiScore);
+    // ── Deterministic anchors (now with seasonality) ──
+    const anchors = computeAnchors(seg, tdiScore, sector);
 
     // ── Build prompt ──
     const prompt = buildPrompt(ext, seg, anchors, tdiScore, errorCount, depth, reboundDays);
@@ -392,10 +451,8 @@ serve(async (req) => {
     let consistencyClamped = false;
     let consistencySkipReason: string | null = null;
 
-    // Check if a corrective code or WP sync has been applied for this domain
     let hasPatch = false;
     if (siteDomain) {
-      // 1. Check saved_corrective_codes for this domain
       const { data: codes } = await supabase
         .from('saved_corrective_codes')
         .select('id')
@@ -403,7 +460,6 @@ serve(async (req) => {
         .limit(1);
       if (codes && codes.length > 0) hasPatch = true;
 
-      // 2. Check tracked_sites for active WP config (sync happened)
       if (!hasPatch) {
         const { data: wpSites } = await supabase
           .from('tracked_sites')
@@ -412,7 +468,6 @@ serve(async (req) => {
           .limit(1);
         if (wpSites && wpSites.length > 0) {
           const cfg = wpSites[0].current_config as Record<string, any> | null;
-          // A non-empty config with fixes signals a WP injection
           if (cfg && (cfg.fixes?.length > 0 || cfg.last_sync)) hasPatch = true;
         }
       }
@@ -421,18 +476,23 @@ serve(async (req) => {
     if (hasPatch) {
       consistencySkipReason = 'patch_detected';
     } else if (siteDomain) {
-      // Only clamp if same audit_id has prior predictions (re-run of same audit)
       const { data: priorPreds } = await supabase
         .from('predictions')
-        .select('predicted_traffic')
+        .select('predicted_traffic, prediction_details')
         .eq('audit_id', audit_id)
         .order('created_at', { ascending: true })
         .limit(1);
 
       if (priorPreds && priorPreds.length > 0) {
         anchorPrediction = priorPreds[0].predicted_traffic;
-        const lowerBound = Math.round(anchorPrediction * 0.98);
-        const upperBound = Math.round(anchorPrediction * 1.02);
+
+        // Check if TDI has significantly changed (>30% delta) — if so, widen corridor
+        const priorTdi = (priorPreds[0].prediction_details as any)?._meta?.tdi_score;
+        const tdiDelta = priorTdi != null ? Math.abs(tdiScore - priorTdi) / (priorTdi || 1) : 0;
+        const consistencyMargin = tdiDelta > 0.30 ? 0.10 : 0.02; // 10% if TDI changed significantly, else 2%
+
+        const lowerBound = Math.round(anchorPrediction * (1 - consistencyMargin));
+        const upperBound = Math.round(anchorPrediction * (1 + consistencyMargin));
         const currentRealistic = prediction.scenarios.realistic.clicks;
 
         if (currentRealistic < lowerBound || currentRealistic > upperBound) {
@@ -472,7 +532,12 @@ serve(async (req) => {
       low_intent_clicks: seg.lowIntentClicks,
       // Deterministic anchor fields
       theoretical_gain_anchor: anchors.theoreticalNonBrandGain,
-      ai_adjustment_delta: (prediction.scenarios.realistic.clicks - seg.totalClicks) - anchors.theoreticalNonBrandGain,
+      seasonal_gain_anchor: anchors.seasonalGain,
+      seasonal_factor: anchors.seasonalFactor,
+      sector: anchors.sector,
+      current_month: anchors.currentMonth,
+      target_position: anchors.targetPos,
+      ai_adjustment_delta: (prediction.scenarios.realistic.clicks - seg.totalClicks) - anchors.seasonalGain,
       base_ai_risk: anchors.baseAiRisk,
       realistic_floor: anchors.realisticFloor,
       realistic_ceiling: anchors.realisticCeiling,
