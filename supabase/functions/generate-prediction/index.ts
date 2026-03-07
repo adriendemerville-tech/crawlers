@@ -7,35 +7,38 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// ─── 1. FUEL: Intelligence Refinement ───────────────────────────────────────
+// ─── FUEL: Pre-processing Utilities ─────────────────────────────────────────
 
-/**
- * Technical Debt Index (TDI)
- * Non-linear gravity: 10 errors ≈ x1, 50 ≈ x10 (log decay of trust).
- * Returns a multiplier ≥ 1 representing how much technical debt drags ranking.
- */
+/** Technical Debt Index — non-linear gravity: errors^1.5 */
 function computeTDI(errorCount: number): number {
-  if (errorCount <= 0) return 1;
-  // log₁₀ curve: TDI = 1 + 9 * (log10(errors) / log10(50))²
-  const normalised = Math.log10(Math.max(errorCount, 1)) / Math.log10(50);
-  return 1 + 9 * Math.pow(Math.min(normalised, 1), 2);
+  return errorCount > 0 ? Math.pow(errorCount, 1.5) : 0;
 }
 
-/**
- * Detect Local Entity Signals from extracted audit data.
- * Returns true when NAP / GBP / Maps mentions are found.
- */
-function hasLocalEntitySignals(data: Record<string, any>): boolean {
-  const blob = JSON.stringify(data).toLowerCase();
-  const localPatterns = ['nap', 'google business', 'gbp', 'google maps', 'local pack', 'local seo', 'geo_keywords'];
-  return localPatterns.some(p => blob.includes(p));
+/** Extract bare domain root for brand matching (e.g. "my-site" from "www.my-site.com") */
+function domainRoot(domain: string): string {
+  return domain.replace(/^www\./, '').split('.')[0].toLowerCase();
 }
 
-/**
- * Classify content quality into Thin / Utility / Authority.
- * Uses content_quality_score + word count heuristics.
- */
-function classifySemanticDepth(data: Record<string, any>): 'thin' | 'utility' | 'authority' {
+function isBrand(keyword: string, root: string): boolean {
+  const kw = keyword.toLowerCase();
+  return kw.includes(root) || kw.includes(root.replace(/-/g, ' '));
+}
+
+type Intent = 'high_intent' | 'low_intent';
+
+function classifyIntent(keyword: string): Intent {
+  const kw = keyword.toLowerCase();
+  const highSignals = [
+    'acheter','buy','prix','price','tarif','devis','promo','discount',
+    'commande','livraison','shop','boutique','comparatif','avis',
+    'près de','near me','à proximité','horaire','itinéraire',
+    'reservation','réservation','location','louer','souscrire',
+  ];
+  return highSignals.some(s => kw.includes(s)) ? 'high_intent' : 'low_intent';
+}
+
+/** Semantic depth — drives trust-rebound speed */
+function classifyDepth(data: Record<string, any>): 'thin' | 'utility' | 'authority' {
   const cqs = Number(data.content_quality_score) || 0;
   const words = Number(data.word_count) || 0;
   if (cqs >= 75 || words >= 2000) return 'authority';
@@ -43,52 +46,9 @@ function classifySemanticDepth(data: Record<string, any>): 'thin' | 'utility' | 
   return 'thin';
 }
 
-// Trust-rebound speed coefficients (days to see 80% of gains)
-const TRUST_REBOUND_DAYS: Record<string, number> = {
-  authority: 30,
-  utility: 55,
-  thin: 80,
-};
+const REBOUND_DAYS: Record<string, number> = { authority: 45, utility: 55, thin: 60 };
 
-// ─── 2. Brand Filter & Intent Segmentation ──────────────────────────────────
-
-interface GscRow {
-  keys?: string[];
-  clicks?: number;
-  impressions?: number;
-  position?: number;
-  ctr?: number;
-}
-
-function extractDomainRoot(domain: string): string {
-  return domain.replace(/^www\./, '').split('.')[0].toLowerCase();
-}
-
-function isBrandKeyword(keyword: string, domainRoot: string): boolean {
-  const kw = keyword.toLowerCase();
-  return kw.includes(domainRoot) || kw.includes(domainRoot.replace(/-/g, ' '));
-}
-
-type IntentBucket = 'transactional' | 'informational' | 'local';
-
-function classifyIntent(keyword: string, hasLocalSignals: boolean): IntentBucket {
-  const kw = keyword.toLowerCase();
-  const txSignals = ['acheter', 'buy', 'prix', 'price', 'tarif', 'devis', 'promo', 'discount', 'order', 'commande', 'livraison', 'shop', 'boutique', 'comparatif', 'avis'];
-  const localSignals = ['près de', 'near me', 'à proximité', 'ville', 'quartier', 'adresse', 'horaire', 'itinéraire'];
-  if (localSignals.some(s => kw.includes(s))) return 'local';
-  if (txSignals.some(s => kw.includes(s))) return 'transactional';
-  if (hasLocalSignals && kw.length < 25) return 'local'; // short-tail + local entity → local
-  return 'informational';
-}
-
-// 2026 SGE-adjusted growth coefficients per intent bucket
-const INTENT_GROWTH_COEFF: Record<IntentBucket, number> = {
-  transactional: 1.10,   // +10% boost (commercial resilience)
-  informational: 0.60,   // −40% penalty (AI Overview cannibalization)
-  local: 1.25,           // +25% (local pack gains)
-};
-
-// ─── 3. Serve ───────────────────────────────────────────────────────────────
+// ─── SERVE ──────────────────────────────────────────────────────────────────
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -113,181 +73,127 @@ serve(async (req) => {
 
     // ── Fetch audit ──
     const { data: audit, error: auditErr } = await supabase
-      .from('pdf_audits')
-      .select('*')
-      .eq('id', audit_id)
-      .single();
+      .from('pdf_audits').select('*').eq('id', audit_id).single();
 
     if (auditErr || !audit || audit.status !== 'processed') {
       throw new Error('Audit not found or not yet processed');
     }
 
-    const extractedData: Record<string, any> = audit.extracted_data || {};
+    const ext: Record<string, any> = audit.extracted_data || {};
 
-    // ── FUEL: Pre-computation ──
-    const errorCount = Number(extractedData.errors) || 0;
-    const tdi = computeTDI(errorCount);
-    const localSignals = hasLocalEntitySignals(extractedData);
-    const semanticDepth = classifySemanticDepth(extractedData);
-    const trustReboundDays = TRUST_REBOUND_DAYS[semanticDepth];
+    // ── FUEL: Pre-compute intelligence ──
+    const errorCount = Number(ext.errors) || 0;
+    const tdiScore = computeTDI(errorCount);
+    const root = domainRoot(ext.domain || audit.file_path || '');
+    const depth = classifyDepth(ext);
+    const reboundDays = REBOUND_DAYS[depth];
 
-    // ── GSC baseline + Brand filter + Intent segmentation ──
-    const domainRoot = extractDomainRoot(extractedData.domain || audit.file_path || '');
-    let totalClicks = 0;
-    let totalImpressions = 0;
-    let positionSum = 0;
-    let rowCount = 0;
-    let brandClicks = 0;
+    // ── GSC segmentation ──
+    let totalClicks = 0, totalImpressions = 0, posSum = 0, rowCount = 0;
+    let brandClicks = 0, brandImpressions = 0;
+    let highIntentClicks = 0, highIntentImpressions = 0;
+    let lowIntentClicks = 0, lowIntentImpressions = 0;
 
-    const intentBuckets: Record<IntentBucket, { clicks: number; impressions: number; keywords: string[] }> = {
-      transactional: { clicks: 0, impressions: 0, keywords: [] },
-      informational: { clicks: 0, impressions: 0, keywords: [] },
-      local: { clicks: 0, impressions: 0, keywords: [] },
-    };
-
+    interface GscRow { keys?: string[]; clicks?: number; impressions?: number; position?: number }
     const rows: GscRow[] = gsc_data?.rows || [];
+
     if (rows.length > 0) {
-      for (const row of rows) {
-        const clicks = row.clicks || 0;
-        const impressions = row.impressions || 0;
-        const position = row.position || 0;
-        const keyword = (row.keys?.[0] || '').toLowerCase();
+      for (const r of rows) {
+        const c = r.clicks || 0, im = r.impressions || 0, pos = r.position || 0;
+        const kw = (r.keys?.[0] || '').toLowerCase();
+        totalClicks += c; totalImpressions += im; posSum += pos; rowCount++;
 
-        totalClicks += clicks;
-        totalImpressions += impressions;
-        positionSum += position;
-        rowCount++;
-
-        if (isBrandKeyword(keyword, domainRoot)) {
-          brandClicks += clicks;
-          continue; // Exclude brand from growth calculation
+        if (isBrand(kw, root)) {
+          brandClicks += c; brandImpressions += im;
+          continue;
         }
-
-        const intent = classifyIntent(keyword, localSignals);
-        intentBuckets[intent].clicks += clicks;
-        intentBuckets[intent].impressions += impressions;
-        intentBuckets[intent].keywords.push(keyword);
+        if (classifyIntent(kw) === 'high_intent') {
+          highIntentClicks += c; highIntentImpressions += im;
+        } else {
+          lowIntentClicks += c; lowIntentImpressions += im;
+        }
       }
     } else if (gsc_data?.total_clicks) {
       totalClicks = gsc_data.total_clicks;
       totalImpressions = gsc_data.total_impressions || 0;
-      positionSum = (gsc_data.avg_position || 0) * 1;
-      rowCount = 1;
-      // Without keyword-level data, split heuristically
-      const nonBrand = totalClicks * 0.7; // assume 30% brand
-      brandClicks = totalClicks * 0.3;
-      intentBuckets.informational.clicks = nonBrand * 0.5;
-      intentBuckets.transactional.clicks = nonBrand * 0.35;
-      intentBuckets.local.clicks = nonBrand * 0.15;
+      posSum = gsc_data.avg_position || 0; rowCount = 1;
+      brandClicks = Math.round(totalClicks * 0.30);
+      const nb = totalClicks - brandClicks;
+      highIntentClicks = Math.round(nb * 0.35);
+      lowIntentClicks = nb - highIntentClicks;
+      brandImpressions = Math.round(totalImpressions * 0.30);
+      highIntentImpressions = Math.round((totalImpressions - brandImpressions) * 0.35);
+      lowIntentImpressions = totalImpressions - brandImpressions - highIntentImpressions;
     }
 
-    const avgPosition = rowCount > 0 ? positionSum / rowCount : 0;
+    const avgPos = rowCount > 0 ? posSum / rowCount : 0;
     const nonBrandClicks = totalClicks - brandClicks;
-    const localMultiplier = localSignals ? 1.25 : 1.0;
 
-    // ── Intent distribution summary for prompt ──
-    const intentSummary = Object.entries(intentBuckets)
-      .map(([intent, b]) => `${intent}: ${b.clicks} clicks, ${b.impressions} impressions, ${b.keywords.length} keywords`)
-      .join('\n');
+    // ── THE ENGINE: Multi-Path Simulation Prompt ──
+    const prompt = `You are a Senior Search Data Scientist running a causal traffic simulation for the 2026 Search ecosystem.
 
-    // ── 2. THE ENGINE: Multi-Path Simulation Prompt ──
-    const prompt = `You are a Quantitative Search Analyst simulating the 2026 Search ecosystem.
+## PRE-COMPUTED INTELLIGENCE (use as-is, do NOT recalculate)
+- Technical Debt Index (TDI): ${tdiScore.toFixed(1)} (from ${errorCount} errors, formula: errors^1.5)
+  → A high TDI creates an "Indexing Ceiling": Google throttles crawl budget, limiting any content gains until technical debt is resolved.
+- Semantic Depth: "${depth}" → Trust Rebound ETA: ${reboundDays} days
+- Domain Authority: ${ext.domain_authority || 'N/A'}
 
-## PRE-COMPUTED INTELLIGENCE (do NOT recalculate — use as inputs)
-- Technical Debt Index (TDI): ${tdi.toFixed(2)} (from ${errorCount} errors, logarithmic trust decay)
-- Semantic Depth Classification: "${semanticDepth}" → Trust Rebound ETA: ${trustReboundDays} days
-- Local Entity Signals Detected: ${localSignals} (${localSignals ? '+25% local-intent multiplier active' : 'no local multiplier'})
-- Domain Authority estimate: ${extractedData.domain_authority || 'N/A'}
+## AUDIT DATA
+- Technical SEO score: ${ext.technical_score || 'N/A'}/100
+- Content quality score: ${ext.content_quality_score || 'N/A'}/100
+- Page speed score: ${ext.page_speed_score || 'N/A'}
+- Mobile score: ${ext.mobile_score || 'N/A'}
+- Structured data present: ${ext.structured_data_present || false}
+- Schema types: ${JSON.stringify(ext.schema_types || [])}
 
-## AUDIT DATA (from PDF extraction)
-- Technical SEO score: ${extractedData.technical_score || 'N/A'}/100
-- Content quality score: ${extractedData.content_quality_score || 'N/A'}/100
-- Page speed score: ${extractedData.page_speed_score || 'N/A'}
-- Mobile score: ${extractedData.mobile_score || 'N/A'}
-- Structured data present: ${extractedData.structured_data_present || false}
-- Schema types: ${JSON.stringify(extractedData.schema_types || [])}
-- GEO keywords: ${JSON.stringify(extractedData.geo_keywords || [])}
-- Location target: ${extractedData.location_target || 'N/A'}
+## GSC BASELINE (30 days)
+- Total clicks: ${totalClicks} | Impressions: ${totalImpressions} | Avg position: ${avgPos.toFixed(1)}
+- Brand clicks: ${brandClicks} (FROZEN — apply 0% growth to brand traffic)
+- Non-Brand clicks: ${nonBrandClicks}
+  ├─ High-Intent (transactional/local): ${highIntentClicks} clicks, ${highIntentImpressions} impressions
+  └─ Low-Intent (informational): ${lowIntentClicks} clicks, ${lowIntentImpressions} impressions
 
-## GSC BASELINE (last 30 days)
-- Total clicks: ${totalClicks} (Brand: ${brandClicks}, Non-Brand: ${nonBrandClicks})
-- Total impressions: ${totalImpressions}
-- Average position: ${avgPosition.toFixed(1)}
-- Keyword count analysed: ${rowCount}
+## 2026 CTR REALITY — SGE (AI Overviews)
+- Informational queries: Apply a −35% traffic penalty (AI Overviews cannibalize these).
+- Transactional pages with proper Structured Data: Apply a +15% boost.
+- Brand queries: 0% growth (constant).
 
-## INTENT SEGMENTATION (non-brand only)
-${intentSummary}
+## TRUST REBOUND PRINCIPLE
+Fixing technical errors triggers a "Trust Rebound": a ${reboundDays}-day window where impressions increase first, then clicks follow 2-3 weeks later. Factor this lag into your 90-day projection.
 
-## 2026 SGE CTR DYNAMICS (use these coefficients)
-- Transactional keywords: +10% CTR resilience (commercial intent survives AI Overviews)
-- Informational "How-to" keywords: −40% CTR penalty (AI Overview cannibalization)
-- Local keywords: +25% CTR boost (local pack + Maps integration)
+## YOUR TASK — MULTI-PATH SIMULATION
+Simulate 3 scenarios over 90 days assuming all audit recommendations are implemented:
 
-## POSITION-BASED CTR CURVE (2026 post-SGE)
-Position 1: 27% | Position 2: 20% | Position 3: 14% | Position 4: 9% | Position 5: 6%
-Position 6-10: 2-4% | Position 11+: <1%
+1. **Pessimistic** — High AI cannibalization (SGE expands aggressively), 1 core update disruption, slow trust rebound.
+2. **Realistic** — Standard SGE impact as described above, normal trust rebound at ${reboundDays} days.
+3. **Aggressive** — Technical bottleneck fully removed within 30 days, minimal SGE expansion, fast rebound.
 
-## YOUR 4-STEP REASONING (execute each step explicitly)
+For each scenario, calculate the final monthly clicks = Brand clicks (unchanged) + predicted Non-Brand clicks.
 
-### Step 1: Bottleneck Removal
-Identify the SINGLE technical fix from the audit that unlocks the most crawl budget. Name it and quantify the expected position gain (in decimal positions).
+Also compute:
+- ai_cannibalization_risk: "low" if <15% of traffic is informational, "high" if >50%, else "medium"
+- estimated_revenue_impact_euro: (predicted_non_brand_clicks_realistic × estimated avg CPC for the sector in EUR)
+- technical_unlock_potential: estimated additional clicks/month unlocked solely by fixing the ${errorCount} technical errors (removing the indexing ceiling)
 
-### Step 2: Trust Rebound Simulation
-Using the semantic depth "${semanticDepth}" and TDI ${tdi.toFixed(2)}, estimate the 90-day trajectory:
-- Day 0-${trustReboundDays}: Partial re-indexation, ${semanticDepth === 'authority' ? 'fast' : semanticDepth === 'utility' ? 'moderate' : 'slow'} trust recovery
-- Day ${trustReboundDays}-90: Full velocity phase
-
-### Step 3: 2026 CTR Dynamics
-Apply SGE cannibalization penalties per intent bucket. Calculate expected clicks per bucket after position gains.
-
-### Step 4: Probabilistic Scenarios
-Generate 3 paths factoring "Google Update Volatility":
-- Conservative (P25): Assume 1 minor core update disruption, slow recovery
-- Realistic (P50): Normal trajectory, partial SGE expansion
-- Optimistic (P75): No disruptions, all fixes indexed within 45 days
-
-## OUTPUT FORMAT (return ONLY this JSON, no markdown fences)
+## OUTPUT — Return ONLY this JSON (no markdown fences, no commentary)
 {
   "scenarios": {
-    "conservative": {
-      "predicted_increase_pct": <number>,
-      "predicted_traffic": <integer>,
-      "reasoning": "<1-2 sentences>"
-    },
-    "realistic": {
-      "predicted_increase_pct": <number>,
-      "predicted_traffic": <integer>,
-      "reasoning": "<1-2 sentences>"
-    },
-    "optimistic": {
-      "predicted_increase_pct": <number>,
-      "predicted_traffic": <integer>,
-      "reasoning": "<1-2 sentences>"
-    }
+    "pessimistic": { "clicks": <integer>, "increase_pct": <number> },
+    "realistic": { "clicks": <integer>, "increase_pct": <number> },
+    "aggressive": { "clicks": <integer>, "increase_pct": <number> }
   },
-  "primary_prediction": {
-    "predicted_increase_pct": <realistic scenario value>,
-    "predicted_traffic": <realistic scenario value>,
-    "confidence_level": "low"|"medium"|"high"
+  "market_insights": {
+    "ai_cannibalization_risk": "low"|"medium"|"high",
+    "estimated_revenue_impact_euro": <number>,
+    "technical_unlock_potential": <integer>
   },
-  "bottleneck_fix": "<name of the single most impactful fix>",
-  "trust_rebound_days": <integer, estimated days to 80% recovery>,
-  "cannibalization_risk": <0-100, % of predicted traffic likely captured by Google AI answers>,
-  "velocity_score": <0.0-1.0, climb speed based on TDI vs DA>,
-  "market_opportunity_euro": <estimated monthly value: predicted_traffic * avg_cpc_for_sector>,
-  "intent_breakdown": {
-    "transactional": { "current_clicks": <n>, "predicted_clicks": <n>, "growth_pct": <n> },
-    "informational": { "current_clicks": <n>, "predicted_clicks": <n>, "growth_pct": <n> },
-    "local": { "current_clicks": <n>, "predicted_clicks": <n>, "growth_pct": <n> }
-  },
-  "key_factors": ["<factor 1>", "<factor 2>", "<factor 3>"],
-  "reasoning": "<2-3 sentence overall explanation>"
+  "reasoning": "<2-3 sentence strategic explanation focusing on causality>"
 }
 
-CRITICAL GUARDRAILS:
-- predicted_traffic in ALL scenarios MUST be ≥ ${totalClicks} (baseline). Fixing errors cannot reduce traffic.
-- Brand traffic (${brandClicks} clicks) is CONSTANT — do not include it in growth calculations. Add it back to final numbers.
-- Use the pre-computed TDI, intent coefficients, and local multiplier as given.`;
+GUARDRAILS:
+- Every scenario's "clicks" MUST be ≥ ${totalClicks} (fixing errors cannot reduce traffic).
+- Brand traffic (${brandClicks}) is constant — add it unchanged to every scenario.
+- Only Non-Brand traffic is scalable.`;
 
     // ── Call Gemini ──
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -299,7 +205,7 @@ CRITICAL GUARDRAILS:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a quantitative search traffic simulator. Return only valid JSON. No markdown fences. No commentary outside JSON.' },
+          { role: 'system', content: 'You are a quantitative search traffic simulator. Return only valid JSON.' },
           { role: 'user', content: prompt },
         ],
       }),
@@ -321,61 +227,46 @@ CRITICAL GUARDRAILS:
     }
 
     const aiData = await aiResponse.json();
-    const rawContent = aiData.choices?.[0]?.message?.content || '';
-    const cleaned = rawContent.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    const raw = aiData.choices?.[0]?.message?.content || '';
+    const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
-    // Track token usage
     await trackTokenUsage('generate-prediction', 'google/gemini-2.5-flash', aiData.usage);
 
     let prediction: any;
-    try {
-      prediction = JSON.parse(cleaned);
-    } catch {
-      throw new Error(`Failed to parse prediction JSON: ${cleaned.substring(0, 300)}`);
-    }
+    try { prediction = JSON.parse(cleaned); }
+    catch { throw new Error(`Failed to parse prediction JSON: ${cleaned.substring(0, 300)}`); }
 
-    // ── Mathematical Guardrails ──
-    const ensureFloor = (val: number) => Math.max(val, totalClicks);
-    if (prediction.scenarios) {
-      for (const key of ['conservative', 'realistic', 'optimistic']) {
-        if (prediction.scenarios[key]) {
-          prediction.scenarios[key].predicted_traffic = ensureFloor(prediction.scenarios[key].predicted_traffic || 0);
-        }
+    // ── Guardrails: floor at baseline ──
+    const floor = (v: number) => Math.max(v, totalClicks);
+    for (const key of ['pessimistic', 'realistic', 'aggressive']) {
+      if (prediction.scenarios?.[key]) {
+        prediction.scenarios[key].clicks = floor(prediction.scenarios[key].clicks || 0);
       }
     }
-    if (prediction.primary_prediction) {
-      prediction.primary_prediction.predicted_traffic = ensureFloor(prediction.primary_prediction.predicted_traffic || 0);
-    }
 
-    // Inject pre-computed metadata
+    // Inject metadata for auditability
     prediction._meta = {
-      tdi,
+      tdi_score: tdiScore,
       error_count: errorCount,
-      semantic_depth: semanticDepth,
-      trust_rebound_days_computed: trustReboundDays,
-      local_signals: localSignals,
-      local_multiplier: localMultiplier,
+      semantic_depth: depth,
+      trust_rebound_days: reboundDays,
       brand_clicks: brandClicks,
       non_brand_clicks: nonBrandClicks,
-      intent_coefficients: INTENT_GROWTH_COEFF,
+      high_intent_clicks: highIntentClicks,
+      low_intent_clicks: lowIntentClicks,
     };
 
-    // ── Extract primary values for DB ──
-    const primaryIncrease = prediction.primary_prediction?.predicted_increase_pct
-      ?? prediction.scenarios?.realistic?.predicted_increase_pct
-      ?? 0;
-    const primaryTraffic = prediction.primary_prediction?.predicted_traffic
-      ?? prediction.scenarios?.realistic?.predicted_traffic
-      ?? totalClicks;
+    // ── Persist — map to existing predictions schema ──
+    const realisticClicks = prediction.scenarios?.realistic?.clicks ?? totalClicks;
+    const realisticPct = prediction.scenarios?.realistic?.increase_pct ?? 0;
 
-    // ── Save prediction ──
-    const { data: savedPrediction, error: saveErr } = await supabase
+    const { data: saved, error: saveErr } = await supabase
       .from('predictions')
       .insert({
         audit_id,
         client_id,
-        predicted_increase_pct: primaryIncrease,
-        predicted_traffic: ensureFloor(primaryTraffic),
+        predicted_increase_pct: realisticPct,
+        predicted_traffic: floor(realisticClicks),
         baseline_traffic: totalClicks,
         baseline_data: gsc_data || {},
         prediction_details: prediction,
@@ -385,10 +276,9 @@ CRITICAL GUARDRAILS:
 
     if (saveErr) throw new Error(`Failed to save prediction: ${saveErr.message}`);
 
-    // ── Recalculate system reliability ──
     await supabase.rpc('recalculate_reliability');
 
-    return new Response(JSON.stringify({ success: true, prediction: savedPrediction }), {
+    return new Response(JSON.stringify({ success: true, prediction: saved }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
