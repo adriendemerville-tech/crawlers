@@ -779,15 +779,25 @@ export function MyTracking() {
                             {language === 'fr' ? 'Connecter Search Console' : 'Connect Search Console'}
                           </Button>
                         </div>
-                      ) : gscLoading ? (
-                        <div className="py-8 text-center">
-                          <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
-                          <p className="text-sm text-muted-foreground mt-3">
-                            {language === 'fr' ? 'Chargement des données...' : 'Loading data...'}
-                          </p>
+                      ) : gscLoading && !gscData ? (
+                        <div className="flex items-center justify-center gap-2 py-10">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">
+                            {language === 'fr' ? 'Chargement…' : 'Loading…'}
+                          </span>
                         </div>
                       ) : gscData && gscData.rows.length > 0 ? (
-                        <div className="space-y-4">
+                        <div className="space-y-4 relative">
+                          {gscLoading && (
+                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-[1px] rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">
+                                  {language === 'fr' ? 'Mise à jour…' : 'Updating…'}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                           {/* Date controls */}
                           <div className="flex flex-wrap items-center gap-2">
                             {/* Date mode toggle with integrated calendar */}
