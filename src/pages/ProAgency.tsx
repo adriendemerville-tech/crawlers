@@ -521,6 +521,18 @@ export default function ProAgency() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
 
       <Footer />
+
+      {/* Auth Gate Modal */}
+      {showAuthModal && (
+        <DownloadAuthGate
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthenticated={() => {
+            setShowAuthModal(false);
+            doSubscribe();
+          }}
+        />
+      )}
     </div>
   );
 }
