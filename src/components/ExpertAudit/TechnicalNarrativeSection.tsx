@@ -297,6 +297,17 @@ export function TechnicalNarrativeSection({ result }: TechnicalNarrativeSectionP
             <StatusRow icon={<Code2 className="h-3.5 w-3.5" />} label={t.schemaOrg} ok={scores.aiReady.hasSchemaOrg} detail={scores.aiReady.schemaTypes.length > 0 ? scores.aiReady.schemaTypes.slice(0, 2).join(', ') : undefined} />
             <StatusRow icon={<Code2 className="h-3.5 w-3.5" />} label={t.jsonLd} ok={jsonLd?.valid ?? false} detail={jsonLd ? `${jsonLd.count} script${jsonLd.count > 1 ? 's' : ''}` : undefined} />
             
+            {(scores.aiReady.isSchemaJsGenerated || jsonLd?.isJsGenerated) && (
+              <div className="rounded-lg bg-orange-500/10 border border-orange-500/30 p-3 mt-2">
+                <p className="text-sm text-foreground flex items-start gap-2 leading-relaxed">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-orange-500" />
+                  <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                    JSON et Schema détectés, mais les robots n'aiment pas le JavaScript.
+                  </span>
+                </p>
+              </div>
+            )}
+            
             <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 mt-3">
               <p className="text-sm text-foreground flex items-start gap-2 leading-relaxed">
                 <Sparkles className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
