@@ -76,6 +76,12 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     validation.acceptSuggestion(accepted, onSubmit);
   };
 
+  const handleIgnoreSuggestion = () => {
+    const normalized = normalizeUrl(url);
+    validation.dismissSuggestion();
+    onSubmit(normalized);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
