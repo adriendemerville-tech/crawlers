@@ -7,14 +7,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// ─── CONSTANTS ──────────────────────────────────────────────────────────────
+
+const CTR_CURVE: Record<number, number> = {
+  1: 0.31, 2: 0.24, 3: 0.18, 4: 0.13, 5: 0.09,
+  6: 0.06, 7: 0.04, 8: 0.03, 9: 0.02, 10: 0.01,
+};
+
 // ─── FUEL: Pre-processing Utilities ─────────────────────────────────────────
 
-/** Technical Debt Index — non-linear gravity: errors^1.5 */
 function computeTDI(errorCount: number): number {
   return errorCount > 0 ? Math.pow(errorCount, 1.5) : 0;
 }
 
-/** Extract bare domain root for brand matching (e.g. "my-site" from "www.my-site.com") */
 function domainRoot(domain: string): string {
   return domain.replace(/^www\./, '').split('.')[0].toLowerCase();
 }
@@ -37,7 +42,6 @@ function classifyIntent(keyword: string): Intent {
   return highSignals.some(s => kw.includes(s)) ? 'high_intent' : 'low_intent';
 }
 
-/** Semantic depth — drives trust-rebound speed */
 function classifyDepth(data: Record<string, any>): 'thin' | 'utility' | 'authority' {
   const cqs = Number(data.content_quality_score) || 0;
   const words = Number(data.word_count) || 0;
@@ -47,6 +51,246 @@ function classifyDepth(data: Record<string, any>): 'thin' | 'utility' | 'authori
 }
 
 const REBOUND_DAYS: Record<string, number> = { authority: 45, utility: 55, thin: 60 };
+
+/** Look up CTR for a given position (clamped 1–10, fallback 0.005 for >10) */
+function ctrAt(pos: number): number {
+  const rounded = Math.round(Math.max(1, Math.min(pos, 10)));
+  return CTR_CURVE[rounded] ?? 0.005;
+}
+
+/** Compute potential position gain from TDI */
+function potentialGain(tdi: number): number {
+  if (tdi < 15) return 3;
+  if (tdi < 50) return 1.5;
+  return 0.5;
+}
+
+// ─── GSC SEGMENTATION ───────────────────────────────────────────────────────
+
+interface GscRow { keys?: string[]; clicks?: number; impressions?: number; position?: number }
+
+interface GscSegment {
+  totalClicks: number;
+  totalImpressions: number;
+  avgPos: number;
+  brandClicks: number;
+  brandImpressions: number;
+  highIntentClicks: number;
+  highIntentImpressions: number;
+  lowIntentClicks: number;
+  lowIntentImpressions: number;
+  nonBrandClicks: number;
+  nonBrandImpressions: number;
+}
+
+function segmentGsc(gsc_data: any, root: string): GscSegment {
+  let totalClicks = 0, totalImpressions = 0, posSum = 0, rowCount = 0;
+  let brandClicks = 0, brandImpressions = 0;
+  let highIntentClicks = 0, highIntentImpressions = 0;
+  let lowIntentClicks = 0, lowIntentImpressions = 0;
+
+  const rows: GscRow[] = gsc_data?.rows || [];
+
+  if (rows.length > 0) {
+    for (const r of rows) {
+      const c = r.clicks || 0, im = r.impressions || 0, pos = r.position || 0;
+      const kw = (r.keys?.[0] || '').toLowerCase();
+      totalClicks += c; totalImpressions += im; posSum += pos; rowCount++;
+      if (isBrand(kw, root)) { brandClicks += c; brandImpressions += im; continue; }
+      if (classifyIntent(kw) === 'high_intent') { highIntentClicks += c; highIntentImpressions += im; }
+      else { lowIntentClicks += c; lowIntentImpressions += im; }
+    }
+  } else if (gsc_data?.total_clicks) {
+    totalClicks = gsc_data.total_clicks;
+    totalImpressions = gsc_data.total_impressions || 0;
+    posSum = gsc_data.avg_position || 0; rowCount = 1;
+    brandClicks = Math.round(totalClicks * 0.30);
+    const nb = totalClicks - brandClicks;
+    highIntentClicks = Math.round(nb * 0.35);
+    lowIntentClicks = nb - highIntentClicks;
+    brandImpressions = Math.round(totalImpressions * 0.30);
+    highIntentImpressions = Math.round((totalImpressions - brandImpressions) * 0.35);
+    lowIntentImpressions = totalImpressions - brandImpressions - highIntentImpressions;
+  }
+
+  const avgPos = rowCount > 0 ? posSum / rowCount : 0;
+  const nonBrandClicks = totalClicks - brandClicks;
+  const nonBrandImpressions = totalImpressions - brandImpressions;
+
+  return {
+    totalClicks, totalImpressions, avgPos,
+    brandClicks, brandImpressions,
+    highIntentClicks, highIntentImpressions,
+    lowIntentClicks, lowIntentImpressions,
+    nonBrandClicks, nonBrandImpressions,
+  };
+}
+
+// ─── DETERMINISTIC ANCHORS ──────────────────────────────────────────────────
+
+interface Anchors {
+  potentialPositionGain: number;
+  theoreticalNonBrandGain: number;
+  baseAiRisk: number;
+  realisticFloor: number;
+  realisticCeiling: number;
+}
+
+function computeAnchors(seg: GscSegment, tdiScore: number): Anchors {
+  const gain = potentialGain(tdiScore);
+  const currentCtr = ctrAt(seg.avgPos);
+  const newPos = Math.max(1, seg.avgPos - gain);
+  const newCtr = ctrAt(newPos);
+  const theoreticalNonBrandGain = Math.round(seg.nonBrandImpressions * (newCtr - currentCtr));
+
+  const baseAiRisk = Math.min(100, Math.max(0,
+    Math.round((seg.lowIntentClicks / (seg.nonBrandClicks || 1)) * 100)
+  ));
+
+  const realisticTarget = seg.totalClicks + Math.max(0, theoreticalNonBrandGain);
+  const realisticFloor = Math.round(realisticTarget * 0.80);
+  const realisticCeiling = Math.round(realisticTarget * 1.20);
+
+  return { potentialPositionGain: gain, theoreticalNonBrandGain, baseAiRisk, realisticFloor, realisticCeiling };
+}
+
+// ─── PROMPT BUILDER ─────────────────────────────────────────────────────────
+
+function buildPrompt(
+  ext: Record<string, any>,
+  seg: GscSegment,
+  anchors: Anchors,
+  tdiScore: number,
+  errorCount: number,
+  depth: string,
+  reboundDays: number,
+): string {
+  return `You are a Senior Search Data Scientist running a causal traffic simulation for the 2026 Search ecosystem.
+
+## PRE-COMPUTED INTELLIGENCE (use as-is, do NOT recalculate)
+- Technical Debt Index (TDI): ${tdiScore.toFixed(1)} (from ${errorCount} errors, formula: errors^1.5)
+  → High TDI creates an "Indexing Ceiling": Google throttles crawl budget.
+- Semantic Depth: "${depth}" → Trust Rebound ETA: ${reboundDays} days
+- Domain Authority: ${ext.domain_authority || 'N/A'}
+
+## AUDIT DATA
+- Technical SEO score: ${ext.technical_score || 'N/A'}/100
+- Content quality score: ${ext.content_quality_score || 'N/A'}/100
+- Page speed score: ${ext.page_speed_score || 'N/A'}
+- Mobile score: ${ext.mobile_score || 'N/A'}
+- Structured data present: ${ext.structured_data_present || false}
+- Schema types: ${JSON.stringify(ext.schema_types || [])}
+
+## GSC BASELINE (30 days)
+- Total clicks: ${seg.totalClicks} | Impressions: ${seg.totalImpressions} | Avg position: ${seg.avgPos.toFixed(1)}
+- Brand clicks: ${seg.brandClicks} (FROZEN — 0% growth)
+- Non-Brand clicks: ${seg.nonBrandClicks}
+  ├─ High-Intent (transactional/local): ${seg.highIntentClicks} clicks, ${seg.highIntentImpressions} impressions
+  └─ Low-Intent (informational): ${seg.lowIntentClicks} clicks, ${seg.lowIntentImpressions} impressions
+
+## DETERMINISTIC ANCHORS — YOU MUST RESPECT THESE
+
+### CTR-Based Theoretical Gain
+The calculated CTR-based theoretical gain is **${anchors.theoreticalNonBrandGain}** additional non-brand clicks (based on improving avg position by ${anchors.potentialPositionGain.toFixed(1)} positions).
+Your **Realistic** scenario's total clicks MUST equal brand clicks (${seg.brandClicks}) + current non-brand clicks (${seg.nonBrandClicks}) + a gain that is within ±20% of ${anchors.theoreticalNonBrandGain}.
+Use your expertise on the audit's EEAT and content quality to decide the exact position within this range.
+
+### AI Risk Constraint
+The calculated Base AI Risk is **${anchors.baseAiRisk}/100**.
+You may adjust ai_risk_score by ONLY ±15 points from this base. Final ai_risk_score must be between ${Math.max(0, anchors.baseAiRisk - 15)} and ${Math.min(100, anchors.baseAiRisk + 15)}.
+
+### Scenario Spread (STRICT)
+- pessimistic.clicks = realistic.clicks × 0.7
+- aggressive.clicks = realistic.clicks × 1.4
+
+## TRUST REBOUND PRINCIPLE
+Fixing technical errors triggers a ${reboundDays}-day trust rebound window.
+
+## OUTPUT — Return ONLY this JSON (no markdown fences, no commentary)
+{
+  "scenarios": {
+    "pessimistic": { "clicks": <integer>, "increase_pct": <number> },
+    "realistic": { "clicks": <integer>, "increase_pct": <number> },
+    "aggressive": { "clicks": <integer>, "increase_pct": <number> }
+  },
+  "ai_risk_score": <integer ${Math.max(0, anchors.baseAiRisk - 15)}-${Math.min(100, anchors.baseAiRisk + 15)}>,
+  "business_impact": {
+    "monthly_value_euro": <number>,
+    "annual_value_euro": <number>,
+    "cpc_basis": { "high_intent_cpc": <number>, "low_intent_cpc": <number> }
+  },
+  "market_insights": {
+    "technical_unlock_potential": <integer>,
+    "ai_cannibalization_risk": "low"|"medium"|"high"
+  },
+  "reasoning": "<2-3 sentence strategic explanation focusing on causality>"
+}
+
+GUARDRAILS:
+- Realistic clicks MUST be between ${anchors.realisticFloor} and ${anchors.realisticCeiling}.
+- Brand traffic (${seg.brandClicks}) is constant — included unchanged.
+- ai_risk_score MUST be integer between ${Math.max(0, anchors.baseAiRisk - 15)} and ${Math.min(100, anchors.baseAiRisk + 15)}.
+- business_impact.annual_value_euro = monthly_value_euro × 12.
+- Use CPC: high-intent × €1.20, low-intent × €0.25. Only NET GAIN over baseline.`;
+}
+
+// ─── POST-PROCESSING ────────────────────────────────────────────────────────
+
+function validateAndCorrect(
+  prediction: any,
+  seg: GscSegment,
+  anchors: Anchors,
+): any {
+  const p = prediction;
+
+  // 1. Stability check on realistic
+  let realisticClicks = p.scenarios?.realistic?.clicks ?? seg.totalClicks;
+  if (realisticClicks < anchors.realisticFloor || realisticClicks > anchors.realisticCeiling) {
+    // Clamp to nearest boundary
+    realisticClicks = Math.max(anchors.realisticFloor, Math.min(anchors.realisticCeiling, realisticClicks));
+  }
+  // Floor at baseline
+  realisticClicks = Math.max(realisticClicks, seg.totalClicks);
+
+  // 2. Enforce scenario spread
+  const pessimisticClicks = Math.max(seg.totalClicks, Math.round(realisticClicks * 0.7));
+  const aggressiveClicks = Math.round(realisticClicks * 1.4);
+
+  p.scenarios = {
+    pessimistic: { clicks: pessimisticClicks, increase_pct: pct(pessimisticClicks, seg.totalClicks) },
+    realistic:   { clicks: realisticClicks,   increase_pct: pct(realisticClicks, seg.totalClicks) },
+    aggressive:  { clicks: aggressiveClicks,  increase_pct: pct(aggressiveClicks, seg.totalClicks) },
+  };
+
+  // 3. Clamp AI risk
+  const minRisk = Math.max(0, anchors.baseAiRisk - 15);
+  const maxRisk = Math.min(100, anchors.baseAiRisk + 15);
+  p.ai_risk_score = Math.min(maxRisk, Math.max(minRisk, p.ai_risk_score ?? anchors.baseAiRisk));
+
+  // 4. ROI propagation from validated clicks
+  const netGain = realisticClicks - seg.totalClicks;
+  if (netGain > 0 && seg.nonBrandClicks > 0) {
+    const hiRatio = seg.highIntentClicks / seg.nonBrandClicks;
+    const loRatio = seg.lowIntentClicks / seg.nonBrandClicks;
+    const hiCpc = p.business_impact?.cpc_basis?.high_intent_cpc ?? 1.20;
+    const loCpc = p.business_impact?.cpc_basis?.low_intent_cpc ?? 0.25;
+    const monthlyValue = Math.round((netGain * hiRatio * hiCpc + netGain * loRatio * loCpc) * 100) / 100;
+    p.business_impact = {
+      monthly_value_euro: monthlyValue,
+      annual_value_euro: Math.round(monthlyValue * 12 * 100) / 100,
+      cpc_basis: { high_intent_cpc: hiCpc, low_intent_cpc: loCpc },
+    };
+  } else {
+    p.business_impact = p.business_impact || { monthly_value_euro: 0, annual_value_euro: 0, cpc_basis: { high_intent_cpc: 1.20, low_intent_cpc: 0.25 } };
+  }
+
+  return p;
+}
+
+function pct(final: number, baseline: number): number {
+  if (baseline <= 0) return 0;
+  return Math.round(((final - baseline) / baseline) * 10000) / 100;
+}
 
 // ─── SERVE ──────────────────────────────────────────────────────────────────
 
@@ -81,7 +325,7 @@ serve(async (req) => {
 
     const ext: Record<string, any> = audit.extracted_data || {};
 
-    // ── FUEL: Pre-compute intelligence ──
+    // ── Pre-compute intelligence ──
     const errorCount = Number(ext.errors) || 0;
     const tdiScore = computeTDI(errorCount);
     const root = domainRoot(ext.domain || audit.file_path || '');
@@ -89,120 +333,15 @@ serve(async (req) => {
     const reboundDays = REBOUND_DAYS[depth];
 
     // ── GSC segmentation ──
-    let totalClicks = 0, totalImpressions = 0, posSum = 0, rowCount = 0;
-    let brandClicks = 0, brandImpressions = 0;
-    let highIntentClicks = 0, highIntentImpressions = 0;
-    let lowIntentClicks = 0, lowIntentImpressions = 0;
+    const seg = segmentGsc(gsc_data, root);
 
-    interface GscRow { keys?: string[]; clicks?: number; impressions?: number; position?: number }
-    const rows: GscRow[] = gsc_data?.rows || [];
+    // ── Deterministic anchors ──
+    const anchors = computeAnchors(seg, tdiScore);
 
-    if (rows.length > 0) {
-      for (const r of rows) {
-        const c = r.clicks || 0, im = r.impressions || 0, pos = r.position || 0;
-        const kw = (r.keys?.[0] || '').toLowerCase();
-        totalClicks += c; totalImpressions += im; posSum += pos; rowCount++;
+    // ── Build prompt ──
+    const prompt = buildPrompt(ext, seg, anchors, tdiScore, errorCount, depth, reboundDays);
 
-        if (isBrand(kw, root)) {
-          brandClicks += c; brandImpressions += im;
-          continue;
-        }
-        if (classifyIntent(kw) === 'high_intent') {
-          highIntentClicks += c; highIntentImpressions += im;
-        } else {
-          lowIntentClicks += c; lowIntentImpressions += im;
-        }
-      }
-    } else if (gsc_data?.total_clicks) {
-      totalClicks = gsc_data.total_clicks;
-      totalImpressions = gsc_data.total_impressions || 0;
-      posSum = gsc_data.avg_position || 0; rowCount = 1;
-      brandClicks = Math.round(totalClicks * 0.30);
-      const nb = totalClicks - brandClicks;
-      highIntentClicks = Math.round(nb * 0.35);
-      lowIntentClicks = nb - highIntentClicks;
-      brandImpressions = Math.round(totalImpressions * 0.30);
-      highIntentImpressions = Math.round((totalImpressions - brandImpressions) * 0.35);
-      lowIntentImpressions = totalImpressions - brandImpressions - highIntentImpressions;
-    }
-
-    const avgPos = rowCount > 0 ? posSum / rowCount : 0;
-    const nonBrandClicks = totalClicks - brandClicks;
-
-    // ── THE ENGINE: Multi-Path Simulation Prompt ──
-    const prompt = `You are a Senior Search Data Scientist running a causal traffic simulation for the 2026 Search ecosystem.
-
-## PRE-COMPUTED INTELLIGENCE (use as-is, do NOT recalculate)
-- Technical Debt Index (TDI): ${tdiScore.toFixed(1)} (from ${errorCount} errors, formula: errors^1.5)
-  → A high TDI creates an "Indexing Ceiling": Google throttles crawl budget, limiting any content gains until technical debt is resolved.
-- Semantic Depth: "${depth}" → Trust Rebound ETA: ${reboundDays} days
-- Domain Authority: ${ext.domain_authority || 'N/A'}
-
-## AUDIT DATA
-- Technical SEO score: ${ext.technical_score || 'N/A'}/100
-- Content quality score: ${ext.content_quality_score || 'N/A'}/100
-- Page speed score: ${ext.page_speed_score || 'N/A'}
-- Mobile score: ${ext.mobile_score || 'N/A'}
-- Structured data present: ${ext.structured_data_present || false}
-- Schema types: ${JSON.stringify(ext.schema_types || [])}
-
-## GSC BASELINE (30 days)
-- Total clicks: ${totalClicks} | Impressions: ${totalImpressions} | Avg position: ${avgPos.toFixed(1)}
-- Brand clicks: ${brandClicks} (FROZEN — apply 0% growth to brand traffic)
-- Non-Brand clicks: ${nonBrandClicks}
-  ├─ High-Intent (transactional/local): ${highIntentClicks} clicks, ${highIntentImpressions} impressions
-  └─ Low-Intent (informational): ${lowIntentClicks} clicks, ${lowIntentImpressions} impressions
-
-## 2026 CTR REALITY — SGE (AI Overviews)
-- Informational queries: Apply a −35% traffic penalty (AI Overviews cannibalize these).
-- Transactional pages with proper Structured Data: Apply a +15% boost.
-- Brand queries: 0% growth (constant).
-
-## TRUST REBOUND PRINCIPLE
-Fixing technical errors triggers a "Trust Rebound": a ${reboundDays}-day window where impressions increase first, then clicks follow 2-3 weeks later. Factor this lag into your 90-day projection.
-
-## YOUR TASK — MULTI-PATH SIMULATION
-Simulate 3 scenarios over 90 days assuming all audit recommendations are implemented:
-
-1. **Pessimistic** — High AI cannibalization (SGE expands aggressively), 1 core update disruption, slow trust rebound.
-2. **Realistic** — Standard SGE impact as described above, normal trust rebound at ${reboundDays} days.
-3. **Aggressive** — Technical bottleneck fully removed within 30 days, minimal SGE expansion, fast rebound.
-
-For each scenario, calculate the final monthly clicks = Brand clicks (unchanged) + predicted Non-Brand clicks.
-
-Also compute:
-- ai_risk_score: integer 0-100 representing overall AI disruption risk for this site's niche. 0 = negligible AI Overviews impact, 100 = most queries fully answered by AI. Base it on the informational/transactional ratio and sector vulnerability.
-- business_impact_euro: Estimated monthly value in EUR of the realistic traffic gain. Use CPC estimation: high-intent clicks × €1.20 avg CPC + low-intent clicks × €0.25 avg CPC. Only count the NET GAIN over baseline.
-- technical_unlock_potential: estimated additional clicks/month unlocked solely by fixing the ${errorCount} technical errors (removing the indexing ceiling)
-
-## OUTPUT — Return ONLY this JSON (no markdown fences, no commentary)
-{
-  "scenarios": {
-    "pessimistic": { "clicks": <integer>, "increase_pct": <number> },
-    "realistic": { "clicks": <integer>, "increase_pct": <number> },
-    "aggressive": { "clicks": <integer>, "increase_pct": <number> }
-  },
-  "ai_risk_score": <integer 0-100>,
-  "business_impact": {
-    "monthly_value_euro": <number>,
-    "annual_value_euro": <number>,
-    "cpc_basis": { "high_intent_cpc": <number>, "low_intent_cpc": <number> }
-  },
-  "market_insights": {
-    "technical_unlock_potential": <integer>,
-    "ai_cannibalization_risk": "low"|"medium"|"high"
-  },
-  "reasoning": "<2-3 sentence strategic explanation focusing on causality — explain WHICH specific bottleneck removal drives the traffic gain>"
-}
-
-GUARDRAILS:
-- Every scenario's "clicks" MUST be ≥ ${totalClicks} (fixing errors cannot reduce traffic).
-- Brand traffic (${brandClicks}) is constant — add it unchanged to every scenario.
-- Only Non-Brand traffic is scalable.
-- ai_risk_score MUST be an integer between 0 and 100.
-- business_impact.annual_value_euro = monthly_value_euro × 12.`;
-
-    // ── Call Gemini ──
+    // ── Call AI ──
     const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -244,29 +383,33 @@ GUARDRAILS:
     try { prediction = JSON.parse(cleaned); }
     catch { throw new Error(`Failed to parse prediction JSON: ${cleaned.substring(0, 300)}`); }
 
-    // ── Guardrails: floor at baseline ──
-    const floor = (v: number) => Math.max(v, totalClicks);
-    for (const key of ['pessimistic', 'realistic', 'aggressive']) {
-      if (prediction.scenarios?.[key]) {
-        prediction.scenarios[key].clicks = floor(prediction.scenarios[key].clicks || 0);
-      }
-    }
+    // ── Post-processing: validate & correct ──
+    prediction = validateAndCorrect(prediction, seg, anchors);
 
-    // Inject metadata for auditability
+    // ── Inject auditable metadata ──
+    const aiRealisticRaw = JSON.parse(cleaned).scenarios?.realistic?.clicks ?? null;
     prediction._meta = {
       tdi_score: tdiScore,
       error_count: errorCount,
       semantic_depth: depth,
       trust_rebound_days: reboundDays,
-      brand_clicks: brandClicks,
-      non_brand_clicks: nonBrandClicks,
-      high_intent_clicks: highIntentClicks,
-      low_intent_clicks: lowIntentClicks,
+      brand_clicks: seg.brandClicks,
+      non_brand_clicks: seg.nonBrandClicks,
+      high_intent_clicks: seg.highIntentClicks,
+      low_intent_clicks: seg.lowIntentClicks,
+      // Deterministic anchor fields
+      theoretical_gain_anchor: anchors.theoreticalNonBrandGain,
+      ai_adjustment_delta: (prediction.scenarios.realistic.clicks - seg.totalClicks) - anchors.theoreticalNonBrandGain,
+      base_ai_risk: anchors.baseAiRisk,
+      realistic_floor: anchors.realisticFloor,
+      realistic_ceiling: anchors.realisticCeiling,
+      potential_position_gain: anchors.potentialPositionGain,
+      ai_raw_realistic_clicks: aiRealisticRaw,
     };
 
-    // ── Persist — map to existing predictions schema ──
-    const realisticClicks = prediction.scenarios?.realistic?.clicks ?? totalClicks;
-    const realisticPct = prediction.scenarios?.realistic?.increase_pct ?? 0;
+    // ── Persist ──
+    const realisticClicks = prediction.scenarios.realistic.clicks;
+    const realisticPct = prediction.scenarios.realistic.increase_pct;
 
     const { data: saved, error: saveErr } = await supabase
       .from('predictions')
@@ -274,8 +417,8 @@ GUARDRAILS:
         audit_id,
         client_id,
         predicted_increase_pct: realisticPct,
-        predicted_traffic: floor(realisticClicks),
-        baseline_traffic: totalClicks,
+        predicted_traffic: realisticClicks,
+        baseline_traffic: seg.totalClicks,
         baseline_data: gsc_data || {},
         prediction_details: prediction,
       })
