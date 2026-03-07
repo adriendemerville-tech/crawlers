@@ -1629,12 +1629,11 @@ Allow: /`}</pre>
         </p>
 
         <SgeSummaryBox
-          titleFr="Ce que cela signifie pour votre stratégie"
-          titleEn="What this means for your strategy"
-          titleEs="Qué significa esto para tu estrategia"
-          contentFr="Le SEO ne meurt pas : il mute. Votre site doit désormais parler deux langues — celle des SERP classiques ET celle des LLMs. L'audit GEO devient aussi fondamental que l'audit technique SEO l'était en 2015."
-          contentEn="SEO isn't dying: it's mutating. Your site must now speak two languages — that of classic SERPs AND that of LLMs. GEO auditing is becoming as fundamental as technical SEO auditing was in 2015."
-          contentEs="El SEO no muere: muta. Tu sitio debe hablar dos idiomas — el de las SERPs clásicas Y el de los LLMs. La auditoría GEO es tan fundamental como la auditoría técnica SEO lo era en 2015."
+          points={[
+            'Le SEO ne meurt pas : il mute. Votre site doit parler deux langues — SERP classiques ET LLMs.',
+            'L\'audit GEO devient aussi fondamental que l\'audit technique SEO l\'était en 2015.',
+            'Google reste le péage, mais les règles du jeu changent avec Gemini et les AI Overviews.',
+          ]}
         />
 
         <h2 className="text-2xl font-bold mt-10 mb-4">Conclusion : le GEO n'est pas l'ennemi du SEO, c'est son évolution</h2>
