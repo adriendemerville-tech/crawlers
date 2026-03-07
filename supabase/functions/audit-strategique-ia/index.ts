@@ -1268,6 +1268,30 @@ Dans TOUTES tes réponses (introduction, requêtes cibles, recommandations, road
 `;
     userPrompt = brandNameInstruction + userPrompt;
     
+    // Injecter les données du concurrent local réel si disponible
+    if (localCompetitorData) {
+      const localCompetitorInstruction = `
+═══════════════════════════════════════════════════════════════
+🏙️ CONCURRENT LOCAL RÉEL IDENTIFIÉ VIA SERP GOOGLE (DONNÉES FACTUELLES)
+═══════════════════════════════════════════════════════════════
+
+Un concurrent local a été identifié via une recherche Google localisée. Tu DOIS utiliser ces informations pour le champ "direct_competitor" dans competitive_landscape:
+
+- NOM: "${localCompetitorData.name}"
+- URL: "${localCompetitorData.url}"
+- POSITION SERP: ${localCompetitorData.rank}
+
+INSTRUCTIONS:
+1. Utilise EXACTEMENT ce concurrent comme "direct_competitor" dans competitive_landscape
+2. L'URL est OBLIGATOIRE et doit être "${localCompetitorData.url}"
+3. Analyse son facteur d'autorité et son positionnement par rapport au site cible
+4. Ce concurrent est un acteur numérique LOCAL, positionné dans les SERPs pour des requêtes géolocalisées
+
+`;
+      userPrompt = localCompetitorInstruction + userPrompt;
+    }
+
+    
     if (hallucinationCorrections) {
       console.log('📝 Corrections hallucination détectées - ajout au prompt...');
       const correctionsSection = `
