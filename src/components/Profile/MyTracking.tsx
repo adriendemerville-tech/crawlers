@@ -179,9 +179,7 @@ export function MyTracking() {
   type GscDateMode = 'since' | 'range';
   type GscGranularity = 'daily' | 'weekly' | 'monthly';
   const [gscDateMode, setGscDateMode] = useState<GscDateMode>('since');
-  const [gscSinceDate, setGscSinceDate] = useState<Date>(() => {
-    const d = new Date(); d.setDate(d.getDate() - 30); return d;
-  });
+  const [gscSinceDate, setGscSinceDate] = useState<Date>(() => new Date('2026-01-01'));
   const [gscRangeStart, setGscRangeStart] = useState<Date>(() => {
     const d = new Date(); d.setDate(d.getDate() - 30); return d;
   });
