@@ -273,7 +273,13 @@ export function MyTracking() {
     setGscLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('gsc-auth', {
-        body: { action: 'fetch', user_id: user.id, site_url: `https://${currentSiteDomain}` },
+        body: { 
+          action: 'fetch', 
+          user_id: user.id, 
+          site_url: `https://${currentSiteDomain}`,
+          start_date: gscStartDate.toISOString().split('T')[0],
+          end_date: gscEndDate.toISOString().split('T')[0],
+        },
       });
       if (error) throw error;
       if (data?.error) {
@@ -286,7 +292,7 @@ export function MyTracking() {
     } finally {
       setGscLoading(false);
     }
-  }, [user, currentSiteDomain]);
+  }, [user, currentSiteDomain, gscStartDate, gscEndDate]);
 
   useEffect(() => {
     if (gscConnected && currentSiteDomain) {
