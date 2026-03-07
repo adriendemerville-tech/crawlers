@@ -195,12 +195,53 @@ serve(async (req) => {
         }).eq('user_id', user_id);
       }
 
-      // Fetch GSC data
-      const targetSite = site_url || profile.gsc_site_url;
-      if (!targetSite) {
+      // Fetch GSC data — resolve the correct site property first
+      const requestedSite = site_url || profile.gsc_site_url;
+      if (!requestedSite) {
         return new Response(JSON.stringify({ error: 'No site URL configured' }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
+      }
+
+      // List all GSC properties to find the matching one
+      const sitesResp = await fetch('https://www.googleapis.com/webmasters/v3/sites', {
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+      });
+      
+      let resolvedSiteUrl = requestedSite;
+      if (sitesResp.ok) {
+        const sitesData = await sitesResp.json();
+        const allSites: { siteUrl: string; permissionLevel: string }[] = sitesData.siteEntry || [];
+        
+        // Extract bare domain from the requested URL for matching
+        const bareDomain = requestedSite
+          .replace(/^https?:\/\//, '')
+          .replace(/^www\./, '')
+          .replace(/\/+$/, '')
+          .toLowerCase();
+
+        // Try to find a matching property (sc-domain:, https://, https://www., http://)
+        const match = allSites.find(s => {
+          const su = s.siteUrl.toLowerCase();
+          if (su === `sc-domain:${bareDomain}`) return true;
+          const cleaned = su.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+          return cleaned === bareDomain;
+        });
+
+        if (match) {
+          resolvedSiteUrl = match.siteUrl;
+          console.log(`[gsc-auth] Resolved "${requestedSite}" → "${resolvedSiteUrl}"`);
+        } else {
+          console.log(`[gsc-auth] No matching property found for "${bareDomain}". Available: ${allSites.map(s => s.siteUrl).join(', ')}`);
+          return new Response(JSON.stringify({ 
+            error: 'Site not found in Search Console',
+            available_sites: allSites.map(s => s.siteUrl),
+          }), {
+            status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      } else {
+        await sitesResp.text(); // consume body
       }
 
       const endDate = new Date();
@@ -208,7 +249,7 @@ serve(async (req) => {
       startDate.setDate(startDate.getDate() - 30);
 
       const gscResp = await fetch(
-        `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(targetSite)}/searchAnalytics/query`,
+        `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(resolvedSiteUrl)}/searchAnalytics/query`,
         {
           method: 'POST',
           headers: {
