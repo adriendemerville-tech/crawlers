@@ -7,6 +7,24 @@ const MODERN_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit
 
 const TIMEOUT_MS = 15_000;
 
+function isSPAHtml(html: string): boolean {
+  // Detect SPA markers: empty root div, module scripts, minimal body text
+  const hasSPARoot = /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*(<\/div>|<noscript)/i.test(html);
+  const hasModuleScripts = /<script\s+[^>]*type=["']module["'][^>]*>/i.test(html);
+  
+  // Check if body has very little text content
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  const bodyContent = bodyMatch ? bodyMatch[1] : '';
+  const textOnly = bodyContent
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  return (hasSPARoot || hasModuleScripts) && textOnly.length < 500;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -67,6 +85,44 @@ Deno.serve(async (req) => {
     // Determine the base URL (final URL after redirects)
     const finalUrl = response.url || targetUrl;
     const baseUrl = new URL(finalUrl);
+
+    // Check if this is a SPA — if so, try Browserless for rendered HTML
+    if (isSPAHtml(html)) {
+      console.log(`[fetch-external-site] SPA detected for ${finalUrl}. Trying JS rendering...`);
+      
+      const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
+      if (RENDERING_KEY) {
+        try {
+          const renderUrl = `https://chrome.browserless.io/content?token=${RENDERING_KEY}`;
+          const renderResponse = await fetch(renderUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url: finalUrl,
+              waitFor: 3000,
+              gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
+              userAgent: MODERN_USER_AGENT,
+            }),
+            signal: AbortSignal.timeout(30000),
+          });
+          
+          if (renderResponse.ok) {
+            const renderedHtml = await renderResponse.text();
+            if (renderedHtml.length > html.length) {
+              console.log(`[fetch-external-site] ✅ JS rendering success (${renderedHtml.length} chars vs ${html.length} static)`);
+              html = renderedHtml;
+            }
+          } else {
+            console.log(`[fetch-external-site] ⚠️ Rendering error: ${renderResponse.status}`);
+          }
+        } catch (renderErr: any) {
+          console.log(`[fetch-external-site] ⚠️ Rendering fallback failed: ${renderErr.message}`);
+        }
+      } else {
+        console.log('[fetch-external-site] ⚠️ RENDERING_API_KEY not set — SPA preview unavailable');
+      }
+    }
+
     const baseHref = `${baseUrl.protocol}//${baseUrl.host}${baseUrl.pathname.replace(/\/[^/]*$/, '/')}`; 
 
     // Inject <base> tag right after <head> for relative asset resolution
