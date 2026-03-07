@@ -101,7 +101,7 @@ export function ProfileSettings() {
       .eq('user_id', user.id);
     setIsSaving(false);
     if (error) {
-      toast.error('Erreur lors de la sauvegarde');
+      toast.error(language === 'fr' ? 'Erreur lors de la sauvegarde' : language === 'es' ? 'Error al guardar' : 'Error saving');
     } else {
       toast.success(t.saved);
       await refreshProfile();

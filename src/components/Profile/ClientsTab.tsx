@@ -223,7 +223,7 @@ export function ClientsTab() {
     });
     if (error) {
       if (error.code === '23505') {
-        toast.info(language === 'fr' ? 'Site déjà associé' : 'Site already linked');
+        toast.info(language === 'fr' ? 'Site déjà associé' : language === 'es' ? 'Sitio ya asociado' : 'Site already linked');
       } else {
         toast.error(error.message);
       }
@@ -347,7 +347,7 @@ export function ClientsTab() {
                         />
                         <CommandList>
                           <CommandEmpty>{t.noSites}</CommandEmpty>
-                          <CommandGroup heading={language === 'fr' ? 'Sites trackés' : 'Tracked sites'}>
+                          <CommandGroup heading={language === 'fr' ? 'Sites trackés' : language === 'es' ? 'Sitios rastreados' : 'Tracked sites'}>
                             {getAvailableSites(client.id).map(site => (
                               <CommandItem
                                 key={site.id}
@@ -387,7 +387,7 @@ export function ClientsTab() {
               {t.newClient}
             </DialogTitle>
             <DialogDescription>
-              {language === 'fr' ? 'Renseignez les informations du client.' : 'Fill in client details.'}
+              {language === 'fr' ? 'Renseignez les informations du client.' : language === 'es' ? 'Complete la información del cliente.' : 'Fill in client details.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">

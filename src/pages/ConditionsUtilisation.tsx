@@ -4,6 +4,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+const t3 = (language: string, fr: string, en: string, es: string) =>
+  language === 'fr' ? fr : language === 'es' ? es : en;
+
 const ConditionsUtilisation = () => {
   const { language } = useLanguage();
 
@@ -17,191 +20,213 @@ const ConditionsUtilisation = () => {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            {language === 'fr' ? 'Retour à l\'accueil' : 'Back to home'}
+            {t3(language, 'Retour à l\'accueil', 'Back to home', 'Volver al inicio')}
           </Link>
 
           <article className="prose prose-gray dark:prose-invert max-w-none">
             <h1 className="text-3xl font-bold text-foreground mb-8">
-              {language === 'fr' ? 'Conditions Générales d\'Utilisation et de Vente (CGU/CGV)' : language === 'es' ? 'Términos de Uso y Venta' : 'Terms of Use and Sale'}
+              {t3(language, 'Conditions Générales d\'Utilisation et de Vente (CGU/CGV)', 'Terms of Use and Sale', 'Términos de Uso y Venta')}
             </h1>
 
             <p className="text-muted-foreground leading-relaxed mb-8">
-              {language === 'fr'
-                ? 'En accédant et en utilisant le site Crawlers AI, vous acceptez sans réserve les présentes conditions générales d\'utilisation et de vente. Ces conditions régissent l\'accès aux services gratuits et payants proposés par la plateforme.'
-                : 'By accessing and using the Crawlers AI website, you unconditionally accept these terms of use and sale. These terms govern access to both free and paid services offered by the platform.'}
+              {t3(language,
+                'En accédant et en utilisant le site Crawlers AI, vous acceptez sans réserve les présentes conditions générales d\'utilisation et de vente. Ces conditions régissent l\'accès aux services gratuits et payants proposés par la plateforme.',
+                'By accessing and using the Crawlers AI website, you unconditionally accept these terms of use and sale. These terms govern access to both free and paid services offered by the platform.',
+                'Al acceder y utilizar el sitio Crawlers AI, usted acepta sin reservas los presentes términos de uso y venta. Estos términos rigen el acceso a los servicios gratuitos y de pago ofrecidos por la plataforma.'
+              )}
             </p>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '1. Objet' : '1. Purpose'}
+                {t3(language, '1. Objet', '1. Purpose', '1. Objeto')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                {language === 'fr'
-                  ? 'Crawlers AI est une plateforme proposant des outils d\'analyse SEO et GEO pour optimiser la visibilité des sites web auprès des moteurs de recherche traditionnels et des moteurs de recherche IA (ChatGPT, Perplexity, Claude, etc.). La plateforme propose des services gratuits (outils d\'analyse, audit technique) et des services payants (audit stratégique, codes correctifs) accessibles via un système de crédits prépayés.'
-                  : 'Crawlers AI is a platform offering SEO and GEO analysis tools to optimize website visibility for traditional search engines and AI search engines (ChatGPT, Perplexity, Claude, etc.). The platform offers free services (analysis tools, technical audit) and paid services (strategic audit, corrective codes) accessible via a prepaid credit system.'}
+                {t3(language,
+                  'Crawlers AI est une plateforme proposant des outils d\'analyse SEO et GEO pour optimiser la visibilité des sites web auprès des moteurs de recherche traditionnels et des moteurs de recherche IA (ChatGPT, Perplexity, Claude, etc.). La plateforme propose des services gratuits (outils d\'analyse, audit technique) et des services payants (audit stratégique, codes correctifs) accessibles via un système de crédits prépayés.',
+                  'Crawlers AI is a platform offering SEO and GEO analysis tools to optimize website visibility for traditional search engines and AI search engines (ChatGPT, Perplexity, Claude, etc.). The platform offers free services (analysis tools, technical audit) and paid services (strategic audit, corrective codes) accessible via a prepaid credit system.',
+                  'Crawlers AI es una plataforma que ofrece herramientas de análisis SEO y GEO para optimizar la visibilidad de los sitios web en los motores de búsqueda tradicionales y los motores de búsqueda IA (ChatGPT, Perplexity, Claude, etc.). La plataforma ofrece servicios gratuitos (herramientas de análisis, auditoría técnica) y servicios de pago (auditoría estratégica, códigos correctivos) accesibles mediante un sistema de créditos prepagados.'
+                )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '2. Accès aux services' : '2. Access to Services'}
+                {t3(language, '2. Accès aux services', '2. Access to Services', '2. Acceso a los servicios')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                {language === 'fr'
-                  ? 'Les services de Crawlers AI sont répartis en trois catégories :'
-                  : 'Crawlers AI services are divided into three categories:'}
+                {t3(language, 'Les services de Crawlers AI sont répartis en trois catégories :', 'Crawlers AI services are divided into three categories:', 'Los servicios de Crawlers AI se dividen en tres categorías:')}
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                <li><strong>{language === 'fr' ? 'Services gratuits sans inscription :' : 'Free services without registration:'}</strong> {language === 'fr' ? 'Analyse des bots IA, Score GEO, Visibilité LLM, PageSpeed' : 'AI bot analysis, GEO Score, LLM Visibility, PageSpeed'}</li>
-                <li><strong>{language === 'fr' ? 'Services gratuits avec inscription :' : 'Free services with registration:'}</strong> {language === 'fr' ? 'Audit technique SEO complet (200 points), 2 premiers audits stratégiques offerts' : 'Complete technical SEO audit (200 points), first 2 strategic audits free'}</li>
-                <li><strong>{language === 'fr' ? 'Services premium payants :' : 'Premium paid services:'}</strong> {language === 'fr' ? 'Audit stratégique IA (2 crédits), modules de codes correctifs (1 crédit ou paiement unique)' : 'Strategic AI audit (2 credits), corrective code modules (1 credit or one-time payment)'}</li>
+                <li><strong>{t3(language, 'Services gratuits sans inscription :', 'Free services without registration:', 'Servicios gratuitos sin registro:')}</strong> {t3(language, 'Analyse des bots IA, Score GEO, Visibilité LLM, PageSpeed', 'AI bot analysis, GEO Score, LLM Visibility, PageSpeed', 'Análisis de bots IA, Score GEO, Visibilidad LLM, PageSpeed')}</li>
+                <li><strong>{t3(language, 'Services gratuits avec inscription :', 'Free services with registration:', 'Servicios gratuitos con registro:')}</strong> {t3(language, 'Audit technique SEO complet (200 points), 2 premiers audits stratégiques offerts', 'Complete technical SEO audit (200 points), first 2 strategic audits free', 'Auditoría técnica SEO completa (200 puntos), 2 primeras auditorías estratégicas gratuitas')}</li>
+                <li><strong>{t3(language, 'Services premium payants :', 'Premium paid services:', 'Servicios premium de pago:')}</strong> {t3(language, 'Audit stratégique IA (2 crédits), modules de codes correctifs (1 crédit ou paiement unique)', 'Strategic AI audit (2 credits), corrective code modules (1 credit or one-time payment)', 'Auditoría estratégica IA (2 créditos), módulos de códigos correctivos (1 crédito o pago único)')}</li>
               </ul>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '3. Tarification et modalités de paiement' : '3. Pricing and Payment Terms'}
+                {t3(language, '3. Tarification et modalités de paiement', '3. Pricing and Payment Terms', '3. Precios y modalidades de pago')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                {language === 'fr' ? 'Les prix sont indiqués en euros TTC. Les paiements sont sécurisés par Stripe.' : 'Prices are indicated in euros including VAT. Payments are secured by Stripe.'}
+                {t3(language, 'Les prix sont indiqués en euros TTC. Les paiements sont sécurisés par Stripe.', 'Prices are indicated in euros including VAT. Payments are secured by Stripe.', 'Los precios se indican en euros IVA incluido. Los pagos están asegurados por Stripe.')}
               </p>
               <div className="bg-muted/50 rounded-lg p-6 mb-4">
-                <h3 className="font-semibold text-foreground mb-3">{language === 'fr' ? 'Packs de crédits :' : 'Credit packs:'}</h3>
+                <h3 className="font-semibold text-foreground mb-3">{t3(language, 'Packs de crédits :', 'Credit packs:', 'Paquetes de créditos:')}</h3>
                 <ul className="text-muted-foreground space-y-1">
-                  <li>• {language === 'fr' ? 'Essentiel : 10 crédits = 5€ TTC' : 'Essential: 10 credits = €5 incl. VAT'}</li>
-                  <li>• {language === 'fr' ? 'Pro : 50 crédits = 19€ TTC' : 'Pro: 50 credits = €19 incl. VAT'}</li>
-                  <li>• {language === 'fr' ? 'Premium : 150 crédits = 45€ TTC' : 'Premium: 150 credits = €45 incl. VAT'}</li>
+                  <li>• {t3(language, 'Essentiel : 10 crédits = 5€ TTC', 'Essential: 10 credits = €5 incl. VAT', 'Esencial: 10 créditos = 5€ IVA incl.')}</li>
+                  <li>• {t3(language, 'Pro : 50 crédits = 19€ TTC', 'Pro: 50 credits = €19 incl. VAT', 'Pro: 50 créditos = 19€ IVA incl.')}</li>
+                  <li>• {t3(language, 'Premium : 150 crédits = 45€ TTC', 'Premium: 150 credits = €45 incl. VAT', 'Premium: 150 créditos = 45€ IVA incl.')}</li>
                 </ul>
               </div>
               <div className="bg-muted/50 rounded-lg p-6">
-                <h3 className="font-semibold text-foreground mb-3">{language === 'fr' ? 'Codes correctifs (paiement unique) :' : 'Corrective codes (one-time payment):'}</h3>
+                <h3 className="font-semibold text-foreground mb-3">{t3(language, 'Codes correctifs (paiement unique) :', 'Corrective codes (one-time payment):', 'Códigos correctivos (pago único):')}</h3>
                 <ul className="text-muted-foreground space-y-1">
-                  <li>• {language === 'fr' ? 'Module basique : 3€ TTC' : 'Basic module: €3 incl. VAT'}</li>
-                  <li>• {language === 'fr' ? 'Module avancé : 6€ TTC' : 'Advanced module: €6 incl. VAT'}</li>
-                  <li>• {language === 'fr' ? 'Module complet : 12€ TTC' : 'Complete module: €12 incl. VAT'}</li>
+                  <li>• {t3(language, 'Module basique : 3€ TTC', 'Basic module: €3 incl. VAT', 'Módulo básico: 3€ IVA incl.')}</li>
+                  <li>• {t3(language, 'Module avancé : 6€ TTC', 'Advanced module: €6 incl. VAT', 'Módulo avanzado: 6€ IVA incl.')}</li>
+                  <li>• {t3(language, 'Module complet : 12€ TTC', 'Complete module: €12 incl. VAT', 'Módulo completo: 12€ IVA incl.')}</li>
                 </ul>
               </div>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '4. Droit de rétractation' : '4. Right of Withdrawal'}
+                {t3(language, '4. Droit de rétractation', '4. Right of Withdrawal', '4. Derecho de desistimiento')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                {language === 'fr'
-                  ? 'Conformément aux articles L.221-18 et suivants du Code de la consommation, vous disposez d\'un délai de 14 jours à compter de l\'achat pour exercer votre droit de rétractation, sans avoir à justifier de motifs ni à payer de pénalités.'
-                  : 'In accordance with articles L.221-18 et seq. of the French Consumer Code, you have a period of 14 days from the purchase to exercise your right of withdrawal, without having to justify reasons or pay penalties.'}
+                {t3(language,
+                  'Conformément aux articles L.221-18 et suivants du Code de la consommation, vous disposez d\'un délai de 14 jours à compter de l\'achat pour exercer votre droit de rétractation, sans avoir à justifier de motifs ni à payer de pénalités.',
+                  'In accordance with articles L.221-18 et seq. of the French Consumer Code, you have a period of 14 days from the purchase to exercise your right of withdrawal, without having to justify reasons or pay penalties.',
+                  'De conformidad con los artículos L.221-18 y siguientes del Código de Consumo francés, usted dispone de un plazo de 14 días desde la compra para ejercer su derecho de desistimiento, sin necesidad de justificar motivos ni pagar penalización alguna.'
+                )}
               </p>
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-4">
                 <p className="text-muted-foreground">
-                  <strong className="text-amber-600 dark:text-amber-400">{language === 'fr' ? 'Exception :' : 'Exception:'}</strong>{' '}
-                  {language === 'fr'
-                    ? 'Conformément à l\'article L.221-28 du Code de la consommation, le droit de rétractation ne peut être exercé pour les contenus numériques non fournis sur un support matériel dont l\'exécution a commencé après accord préalable exprès du consommateur et renoncement exprès à son droit de rétractation. Cela inclut les crédits utilisés et les codes correctifs générés et consultés.'
-                    : 'In accordance with article L.221-28 of the French Consumer Code, the right of withdrawal cannot be exercised for digital content not supplied on a tangible medium the execution of which has begun after the consumer\'s prior express consent and acknowledgment that they thereby forfeit their right of withdrawal. This includes used credits and corrective codes that have been generated and viewed.'}
+                  <strong className="text-amber-600 dark:text-amber-400">{t3(language, 'Exception :', 'Exception:', 'Excepción:')}</strong>{' '}
+                  {t3(language,
+                    'Conformément à l\'article L.221-28 du Code de la consommation, le droit de rétractation ne peut être exercé pour les contenus numériques non fournis sur un support matériel dont l\'exécution a commencé après accord préalable exprès du consommateur et renoncement exprès à son droit de rétractation. Cela inclut les crédits utilisés et les codes correctifs générés et consultés.',
+                    'In accordance with article L.221-28 of the French Consumer Code, the right of withdrawal cannot be exercised for digital content not supplied on a tangible medium the execution of which has begun after the consumer\'s prior express consent and acknowledgment that they thereby forfeit their right of withdrawal. This includes used credits and corrective codes that have been generated and viewed.',
+                    'De conformidad con el artículo L.221-28 del Código de Consumo francés, el derecho de desistimiento no puede ejercerse para los contenidos digitales no suministrados en un soporte material cuya ejecución haya comenzado tras el consentimiento previo expreso del consumidor y la renuncia expresa a su derecho de desistimiento. Esto incluye los créditos utilizados y los códigos correctivos generados y consultados.'
+                  )}
                 </p>
               </div>
               <p className="text-muted-foreground leading-relaxed">
-                {language === 'fr'
-                  ? 'Pour exercer votre droit de rétractation sur des crédits non utilisés, contactez-nous à contact@crawlers.fr avec votre numéro de commande.'
-                  : 'To exercise your right of withdrawal on unused credits, contact us at contact@crawlers.fr with your order number.'}
+                {t3(language,
+                  'Pour exercer votre droit de rétractation sur des crédits non utilisés, contactez-nous à contact@crawlers.fr avec votre numéro de commande.',
+                  'To exercise your right of withdrawal on unused credits, contact us at contact@crawlers.fr with your order number.',
+                  'Para ejercer su derecho de desistimiento sobre créditos no utilizados, contáctenos en contact@crawlers.fr con su número de pedido.'
+                )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '5. Livraison des services numériques' : '5. Delivery of Digital Services'}
+                {t3(language, '5. Livraison des services numériques', '5. Delivery of Digital Services', '5. Entrega de servicios digitales')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                {language === 'fr'
-                  ? 'Les crédits sont crédités sur votre compte immédiatement après confirmation du paiement par Stripe. Les rapports d\'audit et les codes correctifs sont générés et accessibles instantanément après utilisation des crédits. Les contenus numériques sont disponibles dans votre espace personnel.'
-                  : 'Credits are credited to your account immediately after payment confirmation by Stripe. Audit reports and corrective codes are generated and accessible instantly after using credits. Digital content is available in your personal space.'}
+                {t3(language,
+                  'Les crédits sont crédités sur votre compte immédiatement après confirmation du paiement par Stripe. Les rapports d\'audit et les codes correctifs sont générés et accessibles instantanément après utilisation des crédits. Les contenus numériques sont disponibles dans votre espace personnel.',
+                  'Credits are credited to your account immediately after payment confirmation by Stripe. Audit reports and corrective codes are generated and accessible instantly after using credits. Digital content is available in your personal space.',
+                  'Los créditos se acreditan en su cuenta inmediatamente después de la confirmación del pago por Stripe. Los informes de auditoría y los códigos correctivos se generan y son accesibles instantáneamente tras el uso de los créditos. Los contenidos digitales están disponibles en su espacio personal.'
+                )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '6. Durée de validité des crédits' : '6. Credit Validity Period'}
+                {t3(language, '6. Durée de validité des crédits', '6. Credit Validity Period', '6. Período de validez de los créditos')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                {language === 'fr'
-                  ? 'Les crédits achetés sont valables sans limitation de durée. Ils restent utilisables tant que votre compte est actif. En cas de suppression de compte à votre demande, les crédits non utilisés sont perdus.'
-                  : 'Purchased credits are valid without time limit. They remain usable as long as your account is active. If your account is deleted at your request, unused credits are forfeited.'}
+                {t3(language,
+                  'Les crédits achetés sont valables sans limitation de durée. Ils restent utilisables tant que votre compte est actif. En cas de suppression de compte à votre demande, les crédits non utilisés sont perdus.',
+                  'Purchased credits are valid without time limit. They remain usable as long as your account is active. If your account is deleted at your request, unused credits are forfeited.',
+                  'Los créditos comprados son válidos sin límite de tiempo. Permanecen utilizables mientras su cuenta esté activa. En caso de eliminación de la cuenta a su solicitud, los créditos no utilizados se pierden.'
+                )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '7. Remboursement' : '7. Refund'}
+                {t3(language, '7. Remboursement', '7. Refund', '7. Reembolso')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                {language === 'fr'
-                  ? 'En cas de problème technique empêchant la génération d\'un rapport ou d\'un code correctif après utilisation de crédits, les crédits concernés seront recrédités sur votre compte sous 48h. Pour toute réclamation, contactez contact@crawlers.fr avec les détails du problème rencontré.'
-                  : 'In case of a technical problem preventing the generation of a report or corrective code after using credits, the concerned credits will be recredited to your account within 48 hours. For any complaint, contact contact@crawlers.fr with details of the problem encountered.'}
+                {t3(language,
+                  'En cas de problème technique empêchant la génération d\'un rapport ou d\'un code correctif après utilisation de crédits, les crédits concernés seront recrédités sur votre compte sous 48h. Pour toute réclamation, contactez contact@crawlers.fr avec les détails du problème rencontré.',
+                  'In case of a technical problem preventing the generation of a report or corrective code after using credits, the concerned credits will be recredited to your account within 48 hours. For any complaint, contact contact@crawlers.fr with details of the problem encountered.',
+                  'En caso de problema técnico que impida la generación de un informe o un código correctivo tras el uso de créditos, los créditos afectados se reacreditarán en su cuenta en un plazo de 48 horas. Para cualquier reclamación, contacte contact@crawlers.fr con los detalles del problema encontrado.'
+                )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '8. Utilisation des outils' : '8. Use of Tools'}
+                {t3(language, '8. Utilisation des outils', '8. Use of Tools', '8. Uso de las herramientas')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                {language === 'fr' ? 'L\'utilisateur s\'engage à :' : 'The user agrees to:'}
+                {t3(language, 'L\'utilisateur s\'engage à :', 'The user agrees to:', 'El usuario se compromete a:')}
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                <li>{language === 'fr' ? 'Utiliser les outils de manière légale et éthique' : 'Use the tools legally and ethically'}</li>
-                <li>{language === 'fr' ? 'Ne pas tenter de surcharger ou perturber les serveurs' : 'Not attempt to overload or disrupt the servers'}</li>
-                <li>{language === 'fr' ? 'Ne pas utiliser les outils à des fins malveillantes' : 'Not use the tools for malicious purposes'}</li>
-                <li>{language === 'fr' ? 'Respecter les droits de propriété intellectuelle des tiers' : 'Respect the intellectual property rights of third parties'}</li>
-                <li>{language === 'fr' ? 'Ne pas automatiser massivement les requêtes sans autorisation' : 'Not massively automate requests without authorization'}</li>
-                <li>{language === 'fr' ? 'Ne pas revendre ou redistribuer les codes correctifs générés' : 'Not resell or redistribute generated corrective codes'}</li>
+                <li>{t3(language, 'Utiliser les outils de manière légale et éthique', 'Use the tools legally and ethically', 'Utilizar las herramientas de manera legal y ética')}</li>
+                <li>{t3(language, 'Ne pas tenter de surcharger ou perturber les serveurs', 'Not attempt to overload or disrupt the servers', 'No intentar sobrecargar ni perturbar los servidores')}</li>
+                <li>{t3(language, 'Ne pas utiliser les outils à des fins malveillantes', 'Not use the tools for malicious purposes', 'No utilizar las herramientas con fines maliciosos')}</li>
+                <li>{t3(language, 'Respecter les droits de propriété intellectuelle des tiers', 'Respect the intellectual property rights of third parties', 'Respetar los derechos de propiedad intelectual de terceros')}</li>
+                <li>{t3(language, 'Ne pas automatiser massivement les requêtes sans autorisation', 'Not massively automate requests without authorization', 'No automatizar masivamente las solicitudes sin autorización')}</li>
+                <li>{t3(language, 'Ne pas revendre ou redistribuer les codes correctifs générés', 'Not resell or redistribute generated corrective codes', 'No revender ni redistribuir los códigos correctivos generados')}</li>
               </ul>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '9. Résultats d\'analyse' : '9. Analysis Results'}
+                {t3(language, '9. Résultats d\'analyse', '9. Analysis Results', '9. Resultados de análisis')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                {language === 'fr'
-                  ? 'Les résultats fournis par nos outils sont donnés à titre indicatif. Ils ne constituent pas des conseils professionnels et ne garantissent pas l\'amélioration du référencement. Crawlers AI ne peut être tenu responsable des décisions prises sur la base de ces résultats.'
-                  : 'The results provided by our tools are given for informational purposes only. They do not constitute professional advice and do not guarantee SEO improvement. Crawlers AI cannot be held responsible for decisions made based on these results.'}
+                {t3(language,
+                  'Les résultats fournis par nos outils sont donnés à titre indicatif. Ils ne constituent pas des conseils professionnels et ne garantissent pas l\'amélioration du référencement. Crawlers AI ne peut être tenu responsable des décisions prises sur la base de ces résultats.',
+                  'The results provided by our tools are given for informational purposes only. They do not constitute professional advice and do not guarantee SEO improvement. Crawlers AI cannot be held responsible for decisions made based on these results.',
+                  'Los resultados proporcionados por nuestras herramientas se ofrecen a título indicativo. No constituyen asesoramiento profesional y no garantizan la mejora del posicionamiento. Crawlers AI no puede ser considerado responsable de las decisiones tomadas sobre la base de estos resultados.'
+                )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '10. Propriété intellectuelle' : '10. Intellectual Property'}
+                {t3(language, '10. Propriété intellectuelle', '10. Intellectual Property', '10. Propiedad intelectual')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                {language === 'fr'
-                  ? 'Tous les éléments du site (design, logos, textes, code source, algorithmes) sont protégés par le droit de la propriété intellectuelle. Les codes correctifs générés pour vous peuvent être utilisés librement sur vos propres sites. Toute reproduction ou redistribution commerciale non autorisée est strictement interdite.'
-                  : 'All elements of the site (design, logos, texts, source code, algorithms) are protected by intellectual property law. Corrective codes generated for you can be freely used on your own sites. Any unauthorized commercial reproduction or redistribution is strictly prohibited.'}
+                {t3(language,
+                  'Tous les éléments du site (design, logos, textes, code source, algorithmes) sont protégés par le droit de la propriété intellectuelle. Les codes correctifs générés pour vous peuvent être utilisés librement sur vos propres sites. Toute reproduction ou redistribution commerciale non autorisée est strictement interdite.',
+                  'All elements of the site (design, logos, texts, source code, algorithms) are protected by intellectual property law. Corrective codes generated for you can be freely used on your own sites. Any unauthorized commercial reproduction or redistribution is strictly prohibited.',
+                  'Todos los elementos del sitio (diseño, logotipos, textos, código fuente, algoritmos) están protegidos por el derecho de propiedad intelectual. Los códigos correctivos generados para usted pueden utilizarse libremente en sus propios sitios. Toda reproducción o redistribución comercial no autorizada está estrictamente prohibida.'
+                )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '11. Limitation de responsabilité' : '11. Limitation of Liability'}
+                {t3(language, '11. Limitation de responsabilité', '11. Limitation of Liability', '11. Limitación de responsabilidad')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                {language === 'fr'
-                  ? 'Crawlers AI est fourni "en l\'état" sans garantie d\'aucune sorte. Nous ne garantissons pas la disponibilité continue du service ni l\'exactitude des résultats. En aucun cas, Crawlers AI ne pourra être tenu responsable de dommages directs ou indirects résultant de l\'utilisation du site, dans la limite permise par la loi.'
-                  : 'Crawlers AI is provided "as is" without warranty of any kind. We do not guarantee continuous availability of the service or accuracy of results. Under no circumstances shall Crawlers AI be liable for direct or indirect damages resulting from the use of the site, to the extent permitted by law.'}
+                {t3(language,
+                  'Crawlers AI est fourni "en l\'état" sans garantie d\'aucune sorte. Nous ne garantissons pas la disponibilité continue du service ni l\'exactitude des résultats. En aucun cas, Crawlers AI ne pourra être tenu responsable de dommages directs ou indirects résultant de l\'utilisation du site, dans la limite permise par la loi.',
+                  'Crawlers AI is provided "as is" without warranty of any kind. We do not guarantee continuous availability of the service or accuracy of results. Under no circumstances shall Crawlers AI be liable for direct or indirect damages resulting from the use of the site, to the extent permitted by law.',
+                  'Crawlers AI se proporciona "tal cual" sin garantía de ningún tipo. No garantizamos la disponibilidad continua del servicio ni la exactitud de los resultados. En ningún caso Crawlers AI podrá ser considerado responsable de daños directos o indirectos resultantes del uso del sitio, en la medida permitida por la ley.'
+                )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '12. Médiation des litiges' : '12. Dispute Mediation'}
+                {t3(language, '12. Médiation des litiges', '12. Dispute Mediation', '12. Mediación de litigios')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                {language === 'fr'
-                  ? 'Conformément aux articles L.612-1 et suivants du Code de la consommation, en cas de litige, vous pouvez recourir gratuitement au service de médiation de la consommation. Le médiateur compétent est :'
-                  : 'In accordance with articles L.612-1 et seq. of the French Consumer Code, in case of dispute, you can use the consumer mediation service free of charge. The competent mediator is:'}
+                {t3(language,
+                  'Conformément aux articles L.612-1 et suivants du Code de la consommation, en cas de litige, vous pouvez recourir gratuitement au service de médiation de la consommation. Le médiateur compétent est :',
+                  'In accordance with articles L.612-1 et seq. of the French Consumer Code, in case of dispute, you can use the consumer mediation service free of charge. The competent mediator is:',
+                  'De conformidad con los artículos L.612-1 y siguientes del Código de Consumo francés, en caso de litigio, puede recurrir gratuitamente al servicio de mediación del consumo. El mediador competente es:'
+                )}
               </p>
               <div className="bg-muted/50 rounded-lg p-6">
                 <p className="text-muted-foreground">
-                  <strong className="text-foreground">{language === 'fr' ? 'Médiateur de la consommation :' : 'Consumer Mediator:'}</strong><br />
+                  <strong className="text-foreground">{t3(language, 'Médiateur de la consommation :', 'Consumer Mediator:', 'Mediador del consumo:')}</strong><br />
                   CM2C (Centre de Médiation de la Consommation de Conciliateurs de Justice)<br />
                   14 rue Saint Jean - 75017 Paris<br />
                   <a href="https://www.cm2c.net" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.cm2c.net</a>
@@ -211,28 +236,32 @@ const ConditionsUtilisation = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '13. Modifications des CGU/CGV' : '13. Modifications to Terms'}
+                {t3(language, '13. Modifications des CGU/CGV', '13. Modifications to Terms', '13. Modificaciones de los términos')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                {language === 'fr'
-                  ? 'Crawlers AI se réserve le droit de modifier les présentes CGU/CGV à tout moment. Les modifications entrent en vigueur dès leur publication sur le site. Les utilisateurs seront informés par email des modifications substantielles. L\'utilisation continue du site après modification vaut acceptation des nouvelles conditions.'
-                  : 'Crawlers AI reserves the right to modify these Terms at any time. Modifications take effect upon publication on the site. Users will be informed by email of substantial modifications. Continued use of the site after modification constitutes acceptance of the new terms.'}
+                {t3(language,
+                  'Crawlers AI se réserve le droit de modifier les présentes CGU/CGV à tout moment. Les modifications entrent en vigueur dès leur publication sur le site. Les utilisateurs seront informés par email des modifications substantielles. L\'utilisation continue du site après modification vaut acceptation des nouvelles conditions.',
+                  'Crawlers AI reserves the right to modify these Terms at any time. Modifications take effect upon publication on the site. Users will be informed by email of substantial modifications. Continued use of the site after modification constitutes acceptance of the new terms.',
+                  'Crawlers AI se reserva el derecho de modificar los presentes términos en cualquier momento. Las modificaciones entran en vigor desde su publicación en el sitio. Los usuarios serán informados por email de las modificaciones sustanciales. El uso continuado del sitio tras la modificación implica la aceptación de los nuevos términos.'
+                )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {language === 'fr' ? '14. Droit applicable' : '14. Applicable Law'}
+                {t3(language, '14. Droit applicable', '14. Applicable Law', '14. Derecho aplicable')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                {language === 'fr'
-                  ? 'Les présentes CGU/CGV sont régies par le droit français. Tout litige sera soumis à la compétence exclusive des tribunaux français, sous réserve des règles de compétence impératives au bénéfice du consommateur.'
-                  : 'These Terms are governed by French law. Any dispute shall be subject to the exclusive jurisdiction of the French courts, subject to mandatory jurisdiction rules for the benefit of the consumer.'}
+                {t3(language,
+                  'Les présentes CGU/CGV sont régies par le droit français. Tout litige sera soumis à la compétence exclusive des tribunaux français, sous réserve des règles de compétence impératives au bénéfice du consommateur.',
+                  'These Terms are governed by French law. Any dispute shall be subject to the exclusive jurisdiction of the French courts, subject to mandatory jurisdiction rules for the benefit of the consumer.',
+                  'Los presentes términos se rigen por el derecho francés. Todo litigio será sometido a la competencia exclusiva de los tribunales franceses, sujeto a las reglas de competencia imperativas en beneficio del consumidor.'
+                )}
               </p>
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {language === 'fr' ? 'Dernière mise à jour : 31 janvier 2026' : language === 'es' ? 'Última actualización: 31 de enero de 2026' : 'Last updated: January 31, 2026'}
+              {t3(language, 'Dernière mise à jour : 31 janvier 2026', 'Last updated: January 31, 2026', 'Última actualización: 31 de enero de 2026')}
             </p>
           </article>
         </div>

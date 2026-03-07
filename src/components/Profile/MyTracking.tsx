@@ -251,14 +251,14 @@ export function MyTracking() {
     const gscError = searchParams.get('gsc_error');
     
     if (gscConnectedParam === 'true') {
-      toast.success(language === 'fr' ? 'Search Console connecté !' : 'Search Console connected!');
+      toast.success(language === 'fr' ? 'Search Console connecté !' : language === 'es' ? '¡Search Console conectado!' : 'Search Console connected!');
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('gsc_connected');
       setSearchParams(newParams, { replace: true });
       // Force refresh to pick up new token
       window.location.reload();
     } else if (gscError) {
-      toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
+      toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : language === 'es' ? 'Error de conexión Search Console' : 'Search Console connection error');
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('gsc_error');
       setSearchParams(newParams, { replace: true });
@@ -357,7 +357,7 @@ export function MyTracking() {
       }
     } catch (err: any) {
       console.error('GSC login error:', err);
-      toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
+      toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : language === 'es' ? 'Error de conexión Search Console' : 'Search Console connection error');
     } finally {
       setGscConnecting(false);
     }
@@ -621,7 +621,7 @@ export function MyTracking() {
                         <h3 className="font-semibold text-lg">{currentSite.domain}</h3>
                         <p className="text-xs text-muted-foreground">
                           {t.lastAudit}: {currentSite.last_audit_at 
-                            ? new Date(currentSite.last_audit_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US')
+                            ? new Date(currentSite.last_audit_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')
                             : t.never}
                           {refreshingSites.has(currentSite.id) && (
                             <Badge variant="outline" className="ml-2 text-xs">
@@ -770,19 +770,19 @@ export function MyTracking() {
                           <Plug className="h-8 w-8 mx-auto opacity-30" />
                           <p className="text-sm text-muted-foreground">
                             {language === 'fr' 
-                              ? 'Connectez votre compte Google Search Console pour visualiser vos données de performance.' 
+                              ? 'Conecte su cuenta de Google Search Console para visualizar sus datos de rendimiento.' 
                               : 'Connect your Google Search Console account to view your performance data.'}
                           </p>
                           <Button variant="outline" size="sm" className="gap-2" onClick={handleConnectGsc} disabled={gscConnecting}>
                             {gscConnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plug className="h-4 w-4" />}
-                            {language === 'fr' ? 'Connecter Search Console' : 'Connect Search Console'}
+                            {language === 'fr' ? 'Connecter Search Console' : language === 'es' ? 'Conectar Search Console' : 'Connect Search Console'}
                           </Button>
                         </div>
                       ) : gscLoading && !gscData ? (
                         <div className="flex items-center justify-center gap-2 py-10">
                           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                           <span className="text-xs text-muted-foreground">
-                            {language === 'fr' ? 'Chargement…' : 'Loading…'}
+                            {language === 'fr' ? 'Chargement…' : language === 'es' ? 'Cargando…' : 'Loading…'}
                           </span>
                         </div>
                       ) : gscData && gscData.rows.length > 0 ? (
@@ -792,7 +792,7 @@ export function MyTracking() {
                               <div className="flex items-center gap-2">
                                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                                 <span className="text-xs text-muted-foreground">
-                                  {language === 'fr' ? 'Mise à jour…' : 'Updating…'}
+                                  {language === 'fr' ? 'Mise à jour…' : language === 'es' ? 'Actualizando…' : 'Updating…'}
                                 </span>
                               </div>
                             </div>
@@ -805,13 +805,13 @@ export function MyTracking() {
                                 className={cn("px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5", gscDateMode === 'since' && "bg-background shadow-sm font-medium")}
                                 onClick={() => setGscDateMode('since')}
                               >
-                                {language === 'fr' ? 'Depuis' : 'Since'}
+                                {language === 'fr' ? 'Depuis' : language === 'es' ? 'Desde' : 'Since'}
                               </button>
                               <button
                                 className={cn("px-2.5 py-1 rounded-md transition-colors", gscDateMode === 'range' && "bg-background shadow-sm font-medium")}
                                 onClick={() => setGscDateMode('range')}
                               >
-                                {language === 'fr' ? 'Entre' : 'Between'}
+                                {language === 'fr' ? 'Entre' : language === 'es' ? 'Entre' : 'Between'}
                               </button>
                             </div>
 
@@ -885,9 +885,9 @@ export function MyTracking() {
                                   className={cn("px-2 py-1 rounded-md transition-colors", gscGranularity === g && "bg-background shadow-sm font-medium")}
                                   onClick={() => setGscGranularity(g)}
                                 >
-                                  {g === 'daily' ? (language === 'fr' ? 'Jour' : 'Day') 
-                                    : g === 'weekly' ? (language === 'fr' ? 'Sem.' : 'Week')
-                                    : (language === 'fr' ? 'Mois' : 'Month')}
+                                  {g === 'daily' ? (language === 'fr' ? 'Jour' : language === 'es' ? 'Día' : 'Day') 
+                                    : g === 'weekly' ? (language === 'fr' ? 'Sem.' : language === 'es' ? 'Sem.' : 'Week')
+                                    : (language === 'fr' ? 'Mois' : language === 'es' ? 'Mes' : 'Month')}
                                 </button>
                               ))}
                             </div>

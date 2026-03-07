@@ -185,7 +185,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              {isGeneratingPDF ? t.generating : isSummarizing ? (language === 'fr' ? 'Résumé IA…' : 'AI Summary…') : t.download}
+              {isGeneratingPDF ? t.generating : isSummarizing ? (language === 'fr' ? 'Résumé IA…' : language === 'es' ? 'Resumen IA…' : 'AI Summary…') : t.download}
             </Button>
             <Button
               onClick={handlePrint}

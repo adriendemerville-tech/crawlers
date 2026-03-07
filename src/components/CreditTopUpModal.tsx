@@ -321,9 +321,9 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                     : 'No limits. Unlimited reports & fixes, white-label reports with your logo, and priority support — all included.'}
               </p>
               <div className="flex flex-wrap gap-3 pt-1">
-                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Rapports ∞' : 'Reports ∞'}</span>
-                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Code className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Correctifs ∞' : 'Fixes ∞'}</span>
-                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Stamp className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Marque blanche' : 'White label'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Rapports ∞' : language === 'es' ? 'Informes ∞' : 'Reports ∞'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Code className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Correctifs ∞' : language === 'es' ? 'Correctivos ∞' : 'Fixes ∞'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Stamp className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White label'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Users className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '3 comptes inclus' : language === 'es' ? '3 cuentas' : '3 accounts'}</span>
               </div>
             </div>

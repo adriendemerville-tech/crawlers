@@ -250,7 +250,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success(language === 'fr' ? 'Plugin téléchargé ! Uploadez-le dans WordPress.' : 'Plugin downloaded! Upload it in WordPress.');
+    toast.success(language === 'fr' ? 'Plugin téléchargé ! Uploadez-le dans WordPress.' : language === 'es' ? '¡Plugin descargado! Súbalo en WordPress.' : 'Plugin downloaded! Upload it in WordPress.');
   };
 
   const handleMagicLink = async () => {
