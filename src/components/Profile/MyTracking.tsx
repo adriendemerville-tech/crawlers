@@ -621,7 +621,7 @@ export function MyTracking() {
                         <h3 className="font-semibold text-lg">{currentSite.domain}</h3>
                         <p className="text-xs text-muted-foreground">
                           {t.lastAudit}: {currentSite.last_audit_at 
-                            ? new Date(currentSite.last_audit_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US')
+                            ? new Date(currentSite.last_audit_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')
                             : t.never}
                           {refreshingSites.has(currentSite.id) && (
                             <Badge variant="outline" className="ml-2 text-xs">
