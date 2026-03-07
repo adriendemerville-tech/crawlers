@@ -83,6 +83,7 @@ interface WorkflowCarouselProps {
   hasStrategicResult?: boolean;
   onNavigateToTechnical?: () => void;
   onNavigateToStrategic?: () => void;
+  validationBanner?: React.ReactNode;
 }
 
 export function WorkflowCarousel({
