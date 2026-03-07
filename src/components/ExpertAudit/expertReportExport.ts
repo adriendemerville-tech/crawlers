@@ -218,14 +218,12 @@ export function generateExpertReportHTML(
       const offset = circ - (score / 100) * circ;
       return `
       <div style="text-align: center; min-width: 52px;">
-        <svg width="48" height="48" viewBox="0 0 48 48" style="transform: rotate(-90deg);">
+        <svg width="48" height="48" viewBox="0 0 48 48">
           <circle cx="24" cy="24" r="${r}" fill="${gaugeBg(score)}" stroke="#e5e7eb" stroke-width="4" />
           <circle cx="24" cy="24" r="${r}" fill="none" stroke="${gaugeColor(score)}" stroke-width="4" stroke-linecap="round"
-            stroke-dasharray="${circ}" stroke-dashoffset="${offset}" />
+            stroke-dasharray="${circ}" stroke-dashoffset="${offset}" transform="rotate(-90 24 24)" />
+          <text x="24" y="24" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="${gaugeColor(score)}">${score}%</text>
         </svg>
-        <div style="margin-top: -36px; position: relative;">
-          <span style="font-weight: 700; font-size: 13px; color: ${gaugeColor(score)};">${score}%</span>
-        </div>
       </div>`;
     };
 

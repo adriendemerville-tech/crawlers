@@ -187,7 +187,7 @@ export default function ReportViewer() {
       if (!responseData?.success) throw new Error(responseData?.error || 'share failed');
 
       const shareId = responseData.shareId as string;
-      const link = `${getPublicBaseUrl()}/temporaryreport/${shareId}`;
+      const link = `${getPublicBaseUrl()}/temporarylink/${shareId}`;
       setShareUrl(link);
       toast.success(t.shareReady);
 

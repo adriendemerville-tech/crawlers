@@ -338,7 +338,7 @@ Saludos`,
                 </label>
                 <div className="flex gap-2">
                   <Input 
-                    value={`crawlers.fr/r/${shareUrl.split('/').pop()?.split('?')[0] || ''}`} 
+                    value={`crawlers.fr/temporarylink/${shareUrl.split('/').pop()?.split('?')[0] || ''}`} 
                     readOnly 
                     className="flex-1 text-sm font-mono" 
                   />
