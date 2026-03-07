@@ -546,6 +546,8 @@ export default function ProAgency() {
             setShowAuthModal(false);
             doSubscribe();
           }}
+          returnPath="/pro-agency"
+          pendingAction="pro_agency_subscribe"
         />
       )}
     </div>
