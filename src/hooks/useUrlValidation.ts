@@ -179,6 +179,11 @@ export function useUrlValidation(language: string = 'fr') {
     setSuggestedUrl(null);
   }, []);
 
+  const showNotFound = useCallback(() => {
+    setUrlNotFound(true);
+    setTimeout(() => setUrlNotFound(false), 5000);
+  }, []);
+
   const dismissNotFound = useCallback(() => {
     setUrlNotFound(false);
   }, []);
@@ -249,6 +254,7 @@ export function useUrlValidation(language: string = 'fr') {
     validateAndCorrect,
     resetValidation,
     dismissSuggestion,
+    showNotFound,
     dismissNotFound,
     acceptSuggestion: (url: string, onValidUrl: (url: string) => void) => {
       setSuggestedUrl(null);
