@@ -775,7 +775,7 @@ export function MyTracking() {
                           </p>
                           <Button variant="outline" size="sm" className="gap-2" onClick={handleConnectGsc} disabled={gscConnecting}>
                             {gscConnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plug className="h-4 w-4" />}
-                            {language === 'fr' ? 'Connecter Search Console' : 'Connect Search Console'}
+                            {language === 'fr' ? 'Connecter Search Console' : language === 'es' ? 'Conectar Search Console' : 'Connect Search Console'}
                           </Button>
                         </div>
                       ) : gscLoading && !gscData ? (
