@@ -8,7 +8,7 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 async function checkUrl(url: string): Promise<{ ok: boolean; status: number; finalUrl: string; contentLength: number }> {
   try {
     const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 5000);
+    const tid = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(url, {
       method: 'GET',
       headers: { 'User-Agent': UA, 'Accept': 'text/html' },
