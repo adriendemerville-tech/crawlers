@@ -850,7 +850,7 @@ export function MyTracking() {
                                       {format(gscRangeStart, 'dd/MM/yyyy')}
                                     </Button>
                                   </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0 pointer-events-auto" align="start" sideOffset={4}>
+                                  <PopoverContent className="w-auto p-0 pointer-events-auto z-[60]" align="start" sideOffset={4}>
                                     <Calendar
                                       mode="single"
                                       selected={gscRangeStart}
