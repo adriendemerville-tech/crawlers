@@ -135,7 +135,18 @@ Deno.serve(async (req) => {
     const results = await Promise.all(
       toCheck.map(async (url: string) => {
         const formatted = url.startsWith('http') ? url : `https://${url}`;
-        const result = await checkUrl(formatted);
+        // Try the URL as-is first
+        let result = await checkUrl(formatted);
+        
+        // If it fails and doesn't have www., try with www.
+        if (!isRealSite(result) && !formatted.includes('://www.')) {
+          const withWww = formatted.replace('://', '://www.');
+          const wwwResult = await checkUrl(withWww);
+          if (isRealSite(wwwResult)) {
+            result = wwwResult;
+          }
+        }
+        
         return {
           url: formatted,
           valid: isRealSite(result),

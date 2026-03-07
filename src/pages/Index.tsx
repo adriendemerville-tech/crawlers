@@ -174,7 +174,14 @@ const Index = () => {
 
   const handleCheck = async (url: string) => {
     setIsLoading(true);
-    // Ne pas effacer les résultats existants - seulement mettre à jour l'outil actuel
+    // Clear current tab's results to avoid showing stale data from a different URL
+    if (activeTab === 'crawlers') setCrawlResult(null);
+    else if (activeTab === 'geo') setGeoResult(null);
+    else if (activeTab === 'llm') setLlmResult(null);
+    else if (activeTab === 'pagespeed') {
+      if (pageSpeedStrategy === 'mobile') setMobilePageSpeedResult(null);
+      else setDesktopPageSpeedResult(null);
+    }
     setQuotaExceeded(false);
     setCurrentUrl(url);
 
