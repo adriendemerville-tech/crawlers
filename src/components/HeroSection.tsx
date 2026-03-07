@@ -215,7 +215,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
         {content.useAnimatedHeadline ? (
           renderAnimatedHeadline()
         ) : (
-          <h1 className="mb-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-5xl sm:whitespace-nowrap lg:text-6xl">
+          <h1 className="mb-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl text-balance">
             {content.headline}
           </h1>
         )}
