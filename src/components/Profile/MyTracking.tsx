@@ -189,7 +189,8 @@ export function MyTracking() {
   const [gscGranularity, setGscGranularity] = useState<GscGranularity>('daily');
 
   const gscStartDate = gscDateMode === 'since' ? gscSinceDate : gscRangeStart;
-  const gscEndDate = gscDateMode === 'since' ? new Date() : gscRangeEnd;
+  const [gscTodayDate] = useState(() => new Date());
+  const gscEndDate = gscDateMode === 'since' ? gscTodayDate : gscRangeEnd;
 
   const fetchSites = useCallback(async () => {
     if (!user) return;
