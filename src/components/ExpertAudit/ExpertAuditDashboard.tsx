@@ -325,6 +325,8 @@ export function ExpertAuditDashboard() {
         setAuditMode(null);
         setCompletedSteps([]);
         sessionStorage.setItem('audit_url', urlFromParams);
+        // Auto-launch technical audit without URL validation (trusted source)
+        setTimeout(() => runTechnicalAudit(urlFromParams), 100);
       }
       // Clear the URL param from browser history
       navigate('/audit-expert', { replace: true });
