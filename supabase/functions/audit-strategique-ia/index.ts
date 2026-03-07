@@ -1200,8 +1200,22 @@ IMPORTANT: Utilise ces informations RÉELLES pour identifier précisément le co
       console.log('⚠️ DataForSEO non disponible, l\'audit utilisera uniquement le LLM');
     }
 
-     // ==================== ÉTAPE 1b: APPELER CHECK-LLM POUR VISIBILITÉ LLM ====================
-     console.log('\n🤖 ÉTAPE 1b: Appel de check-llm pour analyse de visibilité LLM...');
+    // ==================== ÉTAPE 1b: RECHERCHE CONCURRENT LOCAL VIA SERP ====================
+    console.log('\n🏙️ ÉTAPE 1b: Recherche du concurrent local via SERP...');
+    let localCompetitorData: { name: string; url: string; rank: number } | null = null;
+    
+    try {
+      const context = await detectBusinessContext(domain);
+      const location = await getLocationCode(context.location);
+      if (location) {
+        localCompetitorData = await findLocalCompetitor(domain, context.sector, location.code, pageContentContext);
+      }
+    } catch (lcError) {
+      console.error('❌ Erreur recherche concurrent local:', lcError);
+    }
+
+     // ==================== ÉTAPE 1c: APPELER CHECK-LLM POUR VISIBILITÉ LLM ====================
+     console.log('\n🤖 ÉTAPE 1c: Appel de check-llm pour analyse de visibilité LLM...');
      let llmVisibilityData = null;
      
      try {
