@@ -6,15 +6,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Download, Link2, MoreVertical, AlertCircle, Search } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area, Bar, BarChart, ComposedChart } from 'recharts';
 import { SmartConfigurator } from '@/components/ExpertAudit/CorrectiveCodeEditor/SmartConfigurator';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 
@@ -122,11 +122,28 @@ interface StatsEntry {
   voice_share: number | null;
 }
 
+interface GscDataRow {
+  keys: string[];
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+interface GscData {
+  rows: GscDataRow[];
+  total_clicks: number;
+  total_impressions: number;
+  avg_position: number;
+  date_range: { start: string; end: string };
+}
+
 export function MyTracking() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isCollaborator, setIsCollaborator] = useState(false);
 
   const [sites, setSites] = useState<TrackedSite[]>([]);
@@ -148,6 +165,12 @@ export function MyTracking() {
   const [wpApiKeyVisible, setWpApiKeyVisible] = useState(false);
   const [wpApiKeyCopied, setWpApiKeyCopied] = useState(false);
   const [generatingMagicLink, setGeneratingMagicLink] = useState(false);
+
+  // GSC state
+  const [gscConnecting, setGscConnecting] = useState(false);
+  const [gscData, setGscData] = useState<GscData | null>(null);
+  const [gscLoading, setGscLoading] = useState(false);
+  const gscConnected = !!profile?.gsc_access_token;
 
   const fetchSites = useCallback(async () => {
     if (!user) return;
@@ -202,6 +225,94 @@ export function MyTracking() {
         setIsCollaborator(!!data && data.length > 0);
       });
   }, [user]);
+
+  // Handle GSC OAuth callback (Google redirects with ?code=xxx&state=user_id)
+  useEffect(() => {
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    if (!code || !user) return;
+    // Only process if state matches user_id (to distinguish from other OAuth flows)
+    if (state && state !== user.id) return;
+    
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('gsc-auth', {
+          body: { action: 'callback', code, user_id: user.id, redirect_uri: `${window.location.origin}/console` },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        toast.success(language === 'fr' ? 'Search Console connecté !' : 'Search Console connected!');
+        // Clean URL params
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('code');
+        newParams.delete('state');
+        newParams.delete('scope');
+        setSearchParams(newParams, { replace: true });
+        // Refresh profile to get gsc_access_token
+        window.location.href = '/console';
+      } catch (err: any) {
+        console.error('GSC callback error:', err);
+        toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('code');
+        newParams.delete('state');
+        newParams.delete('scope');
+        setSearchParams(newParams, { replace: true });
+      }
+    })();
+  }, [searchParams, user]);
+
+  const currentSiteDomain = sites.find(s => s.id === selectedSite)?.domain;
+
+  // Fetch GSC data when site is selected and GSC is connected
+  const fetchGscData = useCallback(async () => {
+    if (!user || !currentSiteDomain) return;
+    setGscLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('gsc-auth', {
+        body: { action: 'fetch', user_id: user.id, site_url: `https://${currentSiteDomain}` },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        if (data.error === 'GSC not connected') return;
+        throw new Error(data.error);
+      }
+      setGscData(data);
+    } catch (err: any) {
+      console.error('GSC fetch error:', err);
+    } finally {
+      setGscLoading(false);
+    }
+  }, [user, currentSiteDomain]);
+
+  useEffect(() => {
+    if (gscConnected && currentSiteDomain) {
+      fetchGscData();
+    } else {
+      setGscData(null);
+    }
+  }, [gscConnected, currentSiteDomain, fetchGscData]);
+
+  const handleConnectGsc = async () => {
+    if (!user) return;
+    setGscConnecting(true);
+    try {
+      const redirectUri = `${window.location.origin}/console`;
+      const { data, error } = await supabase.functions.invoke('gsc-auth', {
+        body: { action: 'login', user_id: user.id, redirect_uri: redirectUri },
+      });
+      if (error) throw error;
+      if (data?.auth_url) {
+        // Open Google OAuth in same window
+        window.location.href = data.auth_url;
+      }
+    } catch (err: any) {
+      console.error('GSC login error:', err);
+      toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
+    } finally {
+      setGscConnecting(false);
+    }
+  };
 
   // Auto-refresh sites not audited in 24h — only once per login session
   useEffect(() => {
@@ -500,13 +611,12 @@ export function MyTracking() {
 
                       <Button 
                         size="sm" 
-                        variant="outline"
-                        className="gap-1.5"
-                        onClick={() => {
-                          toast.info(language === 'fr' ? 'Connexion Search Console à venir' : 'Search Console connection coming soon');
-                        }}
+                        variant={gscConnected ? "outline" : "outline"}
+                        className={`gap-1.5 ${gscConnected ? 'border-green-500/50 text-green-700 dark:text-green-400' : ''}`}
+                        disabled={gscConnecting}
+                        onClick={handleConnectGsc}
                       >
-                        <Plug className="h-3.5 w-3.5" />
+                        {gscConnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : gscConnected ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Plug className="h-3.5 w-3.5" />}
                         Search Console
                       </Button>
 
@@ -583,6 +693,115 @@ export function MyTracking() {
                       </CardContent>
                     </Card>
                   )}
+
+                  {/* Google Search Console Chart */}
+                  <Card className={!gscConnected ? 'border-dashed opacity-60' : ''}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Search className="h-4 w-4" />
+                        Google Search Console
+                        {gscConnected && gscData && (
+                          <Badge variant="secondary" className="text-xs font-normal ml-auto">
+                            {gscData.date_range.start} → {gscData.date_range.end}
+                          </Badge>
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {!gscConnected ? (
+                        <div className="py-8 text-center space-y-3">
+                          <Plug className="h-8 w-8 mx-auto opacity-30" />
+                          <p className="text-sm text-muted-foreground">
+                            {language === 'fr' 
+                              ? 'Connectez votre compte Google Search Console pour visualiser vos données de performance.' 
+                              : 'Connect your Google Search Console account to view your performance data.'}
+                          </p>
+                          <Button variant="outline" size="sm" className="gap-2" onClick={handleConnectGsc} disabled={gscConnecting}>
+                            {gscConnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plug className="h-4 w-4" />}
+                            {language === 'fr' ? 'Connecter Search Console' : 'Connect Search Console'}
+                          </Button>
+                        </div>
+                      ) : gscLoading ? (
+                        <div className="py-8 text-center">
+                          <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
+                          <p className="text-sm text-muted-foreground mt-3">
+                            {language === 'fr' ? 'Chargement des données...' : 'Loading data...'}
+                          </p>
+                        </div>
+                      ) : gscData && gscData.rows.length > 0 ? (
+                        <div className="space-y-4">
+                          {/* GSC KPI summary */}
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="rounded-lg border bg-card p-3 space-y-1">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <MousePointerClick className="h-3 w-3" />
+                                {language === 'fr' ? 'Clics' : 'Clicks'}
+                              </div>
+                              <p className="text-lg font-semibold text-primary">{gscData.total_clicks.toLocaleString()}</p>
+                            </div>
+                            <div className="rounded-lg border bg-card p-3 space-y-1">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Eye className="h-3 w-3" />
+                                Impressions
+                              </div>
+                              <p className="text-lg font-semibold" style={{ color: 'hsl(262, 83%, 58%)' }}>{gscData.total_impressions.toLocaleString()}</p>
+                            </div>
+                            <div className="rounded-lg border bg-card p-3 space-y-1">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <TrendingUp className="h-3 w-3" />
+                                {language === 'fr' ? 'Position moy.' : 'Avg. position'}
+                              </div>
+                              <p className="text-lg font-semibold">{gscData.avg_position.toFixed(1)}</p>
+                            </div>
+                          </div>
+
+                          {/* GSC Chart - mimics Search Console style */}
+                          <div className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <ComposedChart data={gscData.rows.map(row => ({
+                                date: row.keys?.[0]?.slice(5) || '',
+                                clicks: row.clicks,
+                                impressions: row.impressions,
+                                position: parseFloat(row.position?.toFixed(1) || '0'),
+                              }))} margin={{ left: 0, right: 40, top: 5, bottom: 5 }}>
+                                <defs>
+                                  <linearGradient id="gscClicksGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                  </linearGradient>
+                                  <linearGradient id="gscImpressionsGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0.2} />
+                                    <stop offset="95%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0} />
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                <XAxis dataKey="date" className="text-xs" interval="preserveStartEnd" tick={{ fontSize: 10 }} />
+                                <YAxis yAxisId="left" className="text-xs" tick={{ fontSize: 10 }} />
+                                <YAxis yAxisId="right" orientation="right" className="text-xs" tick={{ fontSize: 10 }} reversed domain={[0, 'auto']} />
+                                <Tooltip 
+                                  contentStyle={{ 
+                                    borderRadius: '8px', 
+                                    fontSize: '12px',
+                                    backgroundColor: 'hsl(var(--background))',
+                                    border: '1px solid hsl(var(--border))',
+                                  }} 
+                                />
+                                <Legend />
+                                <Area yAxisId="left" type="monotone" dataKey="clicks" name={language === 'fr' ? 'Clics' : 'Clicks'} stroke="hsl(var(--primary))" fill="url(#gscClicksGradient)" strokeWidth={2} />
+                                <Area yAxisId="left" type="monotone" dataKey="impressions" name="Impressions" stroke="hsl(262, 83%, 58%)" fill="url(#gscImpressionsGradient)" strokeWidth={2} />
+                                <Line yAxisId="right" type="monotone" dataKey="position" name={language === 'fr' ? 'Position moy.' : 'Avg. Position'} stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={false} strokeDasharray="4 2" />
+                              </ComposedChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-8 text-center text-muted-foreground text-sm">
+                          <Search className="h-8 w-8 mx-auto mb-3 opacity-30" />
+                          <p>{language === 'fr' ? 'Aucune donnée Search Console disponible pour ce site.' : 'No Search Console data available for this site.'}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
               )}
             </div>
