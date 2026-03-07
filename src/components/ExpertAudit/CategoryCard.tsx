@@ -2,7 +2,8 @@ import { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, Info } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
 interface CategoryCardProps {
@@ -20,6 +21,14 @@ const variantStyles = {
   semantic: { container: 'bg-amber-500/10 text-amber-500', border: 'border-amber-500/20', gradient: 'from-amber-500/5' },
   ai: { container: 'bg-primary/10 text-primary', border: 'border-primary/20', gradient: 'from-primary/5' },
   security: { container: 'bg-emerald-500/10 text-emerald-500', border: 'border-emerald-500/20', gradient: 'from-emerald-500/5' },
+};
+
+const methodologyTexts: Record<string, string> = {
+  performance: "Score basé sur l'agrégation des Core Web Vitals (LCP, CLS, TBT) pondérés par l'importance du mobile-first en 2026.",
+  technical: "Analyse de la structure Hn, du balisage Schema.org et de la conformité aux standards W3C (Pondération : 50 pts).",
+  semantic: "Calcul de la densité lexicale et de l'adéquation aux intentions de recherche via analyse vectorielle propriétaire (Pondération : 60 pts).",
+  ai: "Mesure de l'accessibilité pour les User-Agents IA, présence du fichier llms.txt et score de citabilité sur les moteurs génératifs GPT/Claude/Gemini.",
+  security: "Audit des protocoles SSL, détection de malwares et vérification du statut Safe Browsing.",
 };
 
 export function CategoryCard({ icon, title, score, maxScore, children, variant = 'performance' }: CategoryCardProps) {
@@ -63,6 +72,24 @@ export function CategoryCard({ icon, title, score, maxScore, children, variant =
       </CardHeader>
       <CardContent className="space-y-1">
         {children}
+        <div className="flex justify-end pt-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+                <Info className="h-3 w-3" />
+                Méthodologie
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              side="top"
+              align="end"
+              sideOffset={8}
+              className="w-72 p-3 text-xs leading-relaxed text-foreground/90 backdrop-blur-xl bg-background/80 border border-border/50 shadow-xl rounded-lg"
+            >
+              {methodologyTexts[variant]}
+            </PopoverContent>
+          </Popover>
+        </div>
       </CardContent>
     </Card>
   );
