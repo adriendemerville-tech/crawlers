@@ -904,10 +904,10 @@ GÉNÈRE UN RAPPORT JSON PREMIUM avec cette structure exacte:
       "analysis": "Analyse CONCISE de la position dominante (MAX 330 caractères) - acteur avec présence massive, budget marketing considérable, référence historique du secteur"
     },
     "direct_competitor": {
-      "name": "Nom du concurrent direct (MÊME taille/surface que le site analysé)",
-      "url": "URL du site",
-      "authority_factor": "Parité d'offre et de surface commerciale détectée",
-      "analysis": "Analyse comparative CONCISE (MAX 330 caractères) - entreprise avec surface commerciale SIMILAIRE, même zone géographique, même positionnement prix"
+      "name": "Nom du concurrent local (DOIT avoir un site web, identifié via les SERPs localisés)",
+      "url": "URL OBLIGATOIRE du site du concurrent local",
+      "authority_factor": "Proximité SERP locale et parité d'offre détectée",
+      "analysis": "Analyse comparative CONCISE (MAX 330 caractères) - concurrent numérique local positionné juste au-dessus ou en-dessous dans les SERPS localisés, même zone géographique, même cible client"
     },
     "challenger": {
       "name": "Nom du challenger (acteur innovant/disruptif)",
