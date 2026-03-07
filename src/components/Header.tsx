@@ -283,7 +283,17 @@ export function Header() {
               className="gap-1.5 text-muted-foreground hover:text-foreground"
             >
               <Puzzle className="h-4 w-4" />
-              <span className="text-sm">{language === 'fr' ? 'WordPress' : language === 'es' ? 'WordPress' : 'WordPress'}</span>
+              <span className="text-sm">WordPress</span>
+            </Button>
+          </Link>
+          <Link to="/observatoire">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+            >
+              <Radar className="h-4 w-4" />
+              <span className="text-sm">{language === 'fr' ? 'Observatoire' : language === 'es' ? 'Observatorio' : 'Observatory'}</span>
             </Button>
           </Link>
         </div>

@@ -792,6 +792,33 @@ export type Database = {
           },
         ]
       }
+      scan_results: {
+        Row: {
+          created_at: string
+          error_404_count: number
+          has_json_ld: boolean
+          id: string
+          load_time_ms: number
+          scan_type: string
+        }
+        Insert: {
+          created_at?: string
+          error_404_count?: number
+          has_json_ld?: boolean
+          id?: string
+          load_time_ms?: number
+          scan_type?: string
+        }
+        Update: {
+          created_at?: string
+          error_404_count?: number
+          has_json_ld?: boolean
+          id?: string
+          load_time_ms?: number
+          scan_type?: string
+        }
+        Relationships: []
+      }
       shared_link_clicks: {
         Row: {
           created_at: string
