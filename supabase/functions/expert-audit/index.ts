@@ -1999,6 +1999,7 @@ serve(async (req) => {
         maxScore: 30,
         hasSchemaOrg: htmlAnalysis.hasSchemaOrg,
         schemaTypes: htmlAnalysis.schemaTypes,
+        isSchemaJsGenerated: htmlAnalysis.isSchemaJsGenerated,
         hasRobotsTxt: robotsAnalysis.exists,
         robotsPermissive: robotsAnalysis.permissive,
         allowsAIBots: crawlersResult?.allowsAIBots,
