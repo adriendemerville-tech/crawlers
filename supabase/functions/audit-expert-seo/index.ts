@@ -1496,7 +1496,13 @@ serve(async (req) => {
     if (htmlAnalysis.wordCount >= 500) semanticScore += 20;
     
     let aiReadyScore = 0;
-    if (htmlAnalysis.hasSchemaOrg) aiReadyScore += 15;
+    if (htmlAnalysis.hasSchemaOrg) {
+      aiReadyScore += 15;
+      if (htmlAnalysis.insights?.jsonLdValidation?.isJsGenerated) {
+        aiReadyScore -= 3;
+        console.log('[Audit-Expert-SEO] ⚠️ Schema is JS-generated — AI Ready score penalized (-3)');
+      }
+    }
     if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 15;
     
     // Bonus/penalty for broken links (affects technical score)
