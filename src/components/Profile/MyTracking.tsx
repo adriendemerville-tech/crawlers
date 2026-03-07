@@ -281,9 +281,8 @@ export function MyTracking() {
     if (!user) return;
     setGscConnecting(true);
     try {
-      const redirectUri = `${window.location.origin}/console`;
       const { data, error } = await supabase.functions.invoke('gsc-auth', {
-        body: { action: 'login', user_id: user.id, redirect_uri: redirectUri },
+        body: { action: 'login', user_id: user.id, frontend_origin: window.location.origin },
       });
       if (error) throw error;
       if (data?.auth_url) {
