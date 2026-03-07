@@ -100,6 +100,7 @@ const App = () => (
                           <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
                           <Route path="/modifier-code-wordpress" element={<ModifierCodeWordPress />} />
                           <Route path="/pro-agency" element={<ProAgency />} />
+                          <Route path="/observatoire" element={<Observatoire />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
