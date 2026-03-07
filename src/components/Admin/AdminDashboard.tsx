@@ -1,9 +1,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, FileText, BarChart3, MessageCircle, Shield } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, Shield, Brain } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
+import { PredictionsDashboard } from './PredictionEngine';
 
 export function AdminDashboard() {
   return (
@@ -32,6 +33,10 @@ export function AdminDashboard() {
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Statistiques</span>
           </TabsTrigger>
+          <TabsTrigger value="predictions" className="flex-1 gap-2">
+            <Brain className="h-4 w-4" />
+            <span className="hidden sm:inline">Prédictions</span>
+          </TabsTrigger>
           <TabsTrigger value="support" className="flex-1 gap-2">
             <MessageCircle className="h-4 w-4" />
             <span className="hidden sm:inline">SAV</span>
@@ -48,6 +53,10 @@ export function AdminDashboard() {
 
         <TabsContent value="analytics">
           <AnalyticsDashboard />
+        </TabsContent>
+
+        <TabsContent value="predictions">
+          <PredictionsDashboard />
         </TabsContent>
 
         <TabsContent value="support">
