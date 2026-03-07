@@ -656,6 +656,23 @@ export function ExpertAuditDashboard() {
 
   const handleTechnicalAudit = async () => {
     if (!url.trim()) return;
+    const normalizedUrl = normalizeUrl(url);
+    // Skip URL validation if user already made a decision for this URL
+    if (user) {
+      const { data: existing } = await supabase
+        .from('url_correction_decisions')
+        .select('decision, corrected_url')
+        .eq('user_id', user.id)
+        .eq('original_url', normalizedUrl)
+        .maybeSingle();
+      if (existing) {
+        const finalUrl = existing.decision === 'accepted' && existing.corrected_url ? existing.corrected_url : normalizedUrl;
+        setUrl(finalUrl);
+        localStorage.setItem('crawlers_last_url', finalUrl);
+        runTechnicalAudit(finalUrl);
+        return;
+      }
+    }
     await urlValidation.validateAndCorrect(url, (validUrl) => {
       setUrl(validUrl);
       localStorage.setItem('crawlers_last_url', validUrl);
