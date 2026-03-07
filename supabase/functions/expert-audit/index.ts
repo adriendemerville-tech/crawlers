@@ -360,7 +360,23 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       }
     }
 
-    // Detect GTM / GA4 / analytics
+    // Detect if schema is JS-generated
+    const isSchemaJsGenerated = (() => {
+      const regularScripts = html.match(/<script(?![^>]*type\s*=\s*["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi) || [];
+      for (const script of regularScripts) {
+        const content = script.replace(/<script[^>]*>|<\/script>/gi, '');
+        if (
+          /application\/ld\+json/i.test(content) ||
+          (/@context.*schema\.org/i.test(content) && /JSON\.stringify|createElement|innerHTML|insertAdjacentHTML|appendChild/i.test(content)) ||
+          /structured[_-]?data|jsonLd|json_ld|schemaMarkup|schema_markup/i.test(content)
+        ) return true;
+      }
+      if (/window\.__NEXT_DATA__[\s\S]*?@context/i.test(html)) return true;
+      if (/nuxt[\s\S]*?jsonld|__NUXT__[\s\S]*?schema/i.test(html)) return true;
+      if (/gtm.*application\/ld\+json/i.test(html) || /tagmanager.*schema\.org/i.test(html)) return true;
+      return false;
+    })();
+    if (isSchemaJsGenerated) console.log('[analyzeHtml] ⚠️ Schema/JSON-LD appears to be JS-generated');
     const hasGTM = /googletagmanager\.com\/gtm\.js/i.test(html) || /GTM-[A-Z0-9]+/i.test(html);
     const hasGA4 = /googletagmanager\.com\/gtag\/js\?id=G-/i.test(html) || /gtag\s*\(\s*['"]config['"]\s*,\s*['"]G-/i.test(html);
     
