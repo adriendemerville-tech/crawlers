@@ -170,7 +170,7 @@ export function MyTracking() {
   const [gscConnecting, setGscConnecting] = useState(false);
   const [gscData, setGscData] = useState<GscData | null>(null);
   const [gscLoading, setGscLoading] = useState(false);
-  const gscConnected = !!(profile as any)?.gsc_access_token;
+  const gscConnected = !!profile?.gsc_access_token;
 
   const fetchSites = useCallback(async () => {
     if (!user) return;
