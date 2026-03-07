@@ -115,7 +115,7 @@ serve(async (req) => {
   // POST: API calls (login, fetch)
   // ═══════════════════════════════════════════════════════════════════
   try {
-    const { action, site_url, user_id, frontend_origin } = await req.json();
+    const { action, site_url, user_id, frontend_origin, start_date, end_date } = await req.json();
 
     // === LOGIN: Generate OAuth URL ===
     if (action === 'login') {
