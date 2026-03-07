@@ -11,7 +11,11 @@ async function checkUrl(url: string): Promise<{ ok: boolean; status: number; fin
     const tid = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(url, {
       method: 'GET',
-      headers: { 'User-Agent': UA, 'Accept': 'text/html' },
+      headers: {
+        'User-Agent': UA,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+      },
       redirect: 'follow',
       signal: controller.signal,
     });
@@ -23,8 +27,11 @@ async function checkUrl(url: string): Promise<{ ok: boolean; status: number; fin
   }
 }
 
-function isRealSite(result: { ok: boolean; contentLength: number }): boolean {
-  return result.ok && result.contentLength > 1000;
+function isRealSite(result: { ok: boolean; status: number; contentLength: number; finalUrl: string }): boolean {
+  // Accept 200-399 with enough content, or 403 (WAF/Cloudflare) if the response has some content
+  // Many major sites (liberation.fr, etc.) return 403 to bot-like user agents but are real sites
+  if (result.status === 403 && result.contentLength > 100) return true;
+  return result.ok && result.contentLength > 500;
 }
 
 // Use Gemini to resolve brand name to official domain, then validate
@@ -131,7 +138,18 @@ Deno.serve(async (req) => {
     const results = await Promise.all(
       toCheck.map(async (url: string) => {
         const formatted = url.startsWith('http') ? url : `https://${url}`;
-        const result = await checkUrl(formatted);
+        // Try the URL as-is first
+        let result = await checkUrl(formatted);
+        
+        // If it fails and doesn't have www., try with www.
+        if (!isRealSite(result) && !formatted.includes('://www.')) {
+          const withWww = formatted.replace('://', '://www.');
+          const wwwResult = await checkUrl(withWww);
+          if (isRealSite(wwwResult)) {
+            result = wwwResult;
+          }
+        }
+        
         return {
           url: formatted,
           valid: isRealSite(result),
