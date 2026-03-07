@@ -244,9 +244,8 @@ serve(async (req) => {
         await sitesResp.text(); // consume body
       }
 
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - 30);
+      const endDate = end_date ? new Date(end_date) : new Date();
+      const startDate = start_date ? new Date(start_date) : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
 
       const gscResp = await fetch(
         `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(resolvedSiteUrl)}/searchAnalytics/query`,
