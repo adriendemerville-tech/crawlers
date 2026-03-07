@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { WordPressScanner } from '@/components/WordPressScanner';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -435,6 +436,21 @@ const ModifierCodeWordPress = () => {
                 Le résultat : un <strong className="text-foreground">gain de performance LLM</strong> mesurable dès la première synchronisation, sans toucher une ligne de code PHP.
               </p>
             </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════ SCANNER WORDPRESS ═══════════════════ */}
+        <section className="py-20 bg-muted/30">
+          <div className="container mx-auto px-4 max-w-2xl">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold tracking-tight mb-3">
+                Votre site est-il sous WordPress ?
+              </h2>
+              <p className="text-muted-foreground">
+                Entrez une URL pour détecter instantanément si le site utilise WordPress.
+              </p>
+            </div>
+            <WordPressScanner />
           </div>
         </section>
 
