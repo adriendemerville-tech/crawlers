@@ -258,7 +258,7 @@ export function MyTracking() {
       // Force refresh to pick up new token
       window.location.reload();
     } else if (gscError) {
-      toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
+      toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : language === 'es' ? 'Error de conexión Search Console' : 'Search Console connection error');
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('gsc_error');
       setSearchParams(newParams, { replace: true });
