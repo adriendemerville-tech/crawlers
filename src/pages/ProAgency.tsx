@@ -496,16 +496,11 @@ export default function ProAgency() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button
                 size="lg"
-                onClick={user ? handleSubscribe : undefined}
-                asChild={!user}
+                onClick={handleSubscribe}
                 disabled={loading}
                 className="bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold shadow-lg"
               >
-                {user ? (
-                  loading ? <><Loader2 className="h-5 w-5 animate-spin mr-2" />{t.ctaLoading}</> : <><Crown className="h-5 w-5 mr-2 text-yellow-300" />{t.ctaSubscribe}</>
-                ) : (
-                  <Link to="/auth"><Crown className="h-5 w-5 mr-2 text-yellow-300" />{t.ctaSubscribe}</Link>
-                )}
+                {loading ? <><Loader2 className="h-5 w-5 animate-spin mr-2" />{t.ctaLoading}</> : <><Crown className="h-5 w-5 mr-2 text-yellow-300" />{t.ctaSubscribe}</>}
               </Button>
               <Button variant="outline" size="lg" asChild>
                 <Link to="/tarifs">{t.seePricing}</Link>
