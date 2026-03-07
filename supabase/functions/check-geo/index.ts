@@ -1,5 +1,6 @@
 import { DOMParser, Element } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
 import { getGeoTranslations, parseLanguage, type Language } from '../_shared/translations.ts';
+import { assertSafeUrl } from '../_shared/ssrf.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -499,6 +500,7 @@ Deno.serve(async (req) => {
     }
 
     const normalizedUrl = normalizeUrl(url);
+    assertSafeUrl(normalizedUrl);
     const urlObj = new URL(normalizedUrl);
     const robotsTxtUrl = `${urlObj.origin}/robots.txt`;
 

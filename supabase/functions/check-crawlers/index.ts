@@ -1,3 +1,5 @@
+import { assertSafeUrl } from '../_shared/ssrf.ts';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -139,6 +141,7 @@ Deno.serve(async (req) => {
     }
 
     const normalizedUrl = normalizeUrl(url);
+    assertSafeUrl(normalizedUrl);
     const urlObj = new URL(normalizedUrl);
     const robotsTxtUrl = `${urlObj.origin}/robots.txt`;
 

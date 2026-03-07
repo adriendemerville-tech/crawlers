@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { assertSafeUrl } from '../_shared/ssrf.ts'
+import { cacheKey, getCached, setCache, checkRateLimit } from '../_shared/auditCache.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -95,7 +97,7 @@ async function saveRecommendationsToRegistry(
   }
 }
 
-const GOOGLE_API_KEY = "AIzaSyALHaypJWTqbt8K1klhQkYeLPRBjaOs2hc";
+const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
 interface HtmlAnalysis {
   hasTitle: boolean;
@@ -242,6 +244,7 @@ async function checkSafeBrowsing(url: string): Promise<{ safe: boolean; threats:
 
 async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
   console.log('Analyzing HTML...');
+  assertSafeUrl(url);
   
   try {
     const controller = new AbortController();
@@ -1907,6 +1910,40 @@ serve(async (req) => {
     const normalizedUrl = normalizeUrl(url);
     const domain = extractDomain(normalizedUrl);
     
+    // ── Cache check ──
+    const ck = cacheKey('expert-audit', { url: normalizedUrl });
+    const cached = await getCached(ck);
+    if (cached) {
+      console.log('[expert-audit] Cache HIT for:', normalizedUrl);
+      return new Response(JSON.stringify(cached), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'HIT' },
+      });
+    }
+    
+    // ── Rate limiting (authenticated users) ──
+    const authHeader = req.headers.get('Authorization') || '';
+    if (authHeader) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+        const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+        if (supabaseUrl && supabaseKey) {
+          const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+          const sb = createClient(supabaseUrl, supabaseKey, { global: { headers: { Authorization: authHeader } } });
+          const { data: { user } } = await sb.auth.getUser();
+          if (user) {
+            const rl = await checkRateLimit(user.id, 'expert_audit', 15, 60);
+            if (!rl.allowed) {
+              return new Response(JSON.stringify({ success: false, error: 'Rate limit exceeded. Please wait before running another audit.', rate_limit: rl }), {
+                status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[rate-limit] check error (non-blocking):', e);
+      }
+    }
+    
     console.log('Starting Expert Audit for:', normalizedUrl);
     
     // Run all checks in parallel
@@ -2108,31 +2145,36 @@ Réponds avec ce JSON exact:
       ).catch(err => console.error('Erreur sauvegarde registre:', err));
     }
     
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          url: normalizedUrl,
-          domain,
-          scannedAt: new Date().toISOString(),
-          totalScore,
-          maxScore: 200,
-          scores,
-          recommendations,
-          introduction,
-          rawData: {
-            psi: { categories, audits: Object.keys(audits).slice(0, 10) },
-            safeBrowsing,
-            htmlAnalysis,
-            robotsAnalysis,
-            crawlersData: crawlersResult,
-            sitemapAnalysis,
-            llmsTxtAnalysis,
-            specializedSitemaps,
-          }
+    const responseBody = {
+      success: true,
+      data: {
+        url: normalizedUrl,
+        domain,
+        scannedAt: new Date().toISOString(),
+        totalScore,
+        maxScore: 200,
+        scores,
+        recommendations,
+        introduction,
+        rawData: {
+          psi: { categories, audits: Object.keys(audits).slice(0, 10) },
+          safeBrowsing,
+          htmlAnalysis,
+          robotsAnalysis,
+          crawlersData: crawlersResult,
+          sitemapAnalysis,
+          llmsTxtAnalysis,
+          specializedSitemaps,
         }
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      }
+    };
+
+    // Store in cache (async, non-blocking) — TTL 60 min
+    setCache(ck, 'expert-audit', responseBody, 60).catch(e => console.error('[cache] write error:', e));
+
+    return new Response(
+      JSON.stringify(responseBody),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'MISS' } }
     );
     
   } catch (error) {

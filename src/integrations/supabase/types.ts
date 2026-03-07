@@ -298,6 +298,33 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string
+          function_name: string
+          id: string
+          result_data: Json
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at?: string
+          function_name: string
+          id?: string
+          result_data?: Json
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string
+          function_name?: string
+          id?: string
+          result_data?: Json
+        }
+        Relationships: []
+      }
       audit_recommendations_registry: {
         Row: {
           audit_type: string
@@ -1360,6 +1387,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_action: string
+          p_max_count?: number
+          p_user_id: string
+          p_window_minutes?: number
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
