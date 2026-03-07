@@ -387,7 +387,7 @@ export function ClientsTab() {
               {t.newClient}
             </DialogTitle>
             <DialogDescription>
-              {language === 'fr' ? 'Renseignez les informations du client.' : 'Fill in client details.'}
+              {language === 'fr' ? 'Renseignez les informations du client.' : language === 'es' ? 'Complete la información del cliente.' : 'Fill in client details.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">

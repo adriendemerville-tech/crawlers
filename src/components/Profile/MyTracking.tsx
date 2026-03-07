@@ -885,9 +885,9 @@ export function MyTracking() {
                                   className={cn("px-2 py-1 rounded-md transition-colors", gscGranularity === g && "bg-background shadow-sm font-medium")}
                                   onClick={() => setGscGranularity(g)}
                                 >
-                                  {g === 'daily' ? (language === 'fr' ? 'Jour' : 'Day') 
-                                    : g === 'weekly' ? (language === 'fr' ? 'Sem.' : 'Week')
-                                    : (language === 'fr' ? 'Mois' : 'Month')}
+                                  {g === 'daily' ? (language === 'fr' ? 'Jour' : language === 'es' ? 'Día' : 'Day') 
+                                    : g === 'weekly' ? (language === 'fr' ? 'Sem.' : language === 'es' ? 'Sem.' : 'Week')
+                                    : (language === 'fr' ? 'Mois' : language === 'es' ? 'Mes' : 'Month')}
                                 </button>
                               ))}
                             </div>
