@@ -386,17 +386,46 @@ serve(async (req) => {
     // ── Post-processing: validate & correct ──
     prediction = validateAndCorrect(prediction, seg, anchors);
 
-    // ── Consistency Rule: ±2% of first prediction for same domain ──
+    // ── Consistency Rule: ±2% if same audit_id AND no code patch detected ──
     const siteDomain = ext.domain || root || '';
     let anchorPrediction: number | null = null;
     let consistencyClamped = false;
+    let consistencySkipReason: string | null = null;
 
+    // Check if a corrective code or WP sync has been applied for this domain
+    let hasPatch = false;
     if (siteDomain) {
+      // 1. Check saved_corrective_codes for this domain
+      const { data: codes } = await supabase
+        .from('saved_corrective_codes')
+        .select('id')
+        .ilike('url', `%${siteDomain}%`)
+        .limit(1);
+      if (codes && codes.length > 0) hasPatch = true;
+
+      // 2. Check tracked_sites for active WP config (sync happened)
+      if (!hasPatch) {
+        const { data: wpSites } = await supabase
+          .from('tracked_sites')
+          .select('id, current_config')
+          .ilike('domain', `%${siteDomain}%`)
+          .limit(1);
+        if (wpSites && wpSites.length > 0) {
+          const cfg = wpSites[0].current_config as Record<string, any> | null;
+          // A non-empty config with fixes signals a WP injection
+          if (cfg && (cfg.fixes?.length > 0 || cfg.last_sync)) hasPatch = true;
+        }
+      }
+    }
+
+    if (hasPatch) {
+      consistencySkipReason = 'patch_detected';
+    } else if (siteDomain) {
+      // Only clamp if same audit_id has prior predictions (re-run of same audit)
       const { data: priorPreds } = await supabase
         .from('predictions')
-        .select('predicted_traffic, prediction_details')
-        .eq('domain', siteDomain)
-        .eq('client_id', client_id)
+        .select('predicted_traffic')
+        .eq('audit_id', audit_id)
         .order('created_at', { ascending: true })
         .limit(1);
 
@@ -407,16 +436,13 @@ serve(async (req) => {
         const currentRealistic = prediction.scenarios.realistic.clicks;
 
         if (currentRealistic < lowerBound || currentRealistic > upperBound) {
-          // Clamp to ±2% of the anchor prediction
           const clamped = Math.max(lowerBound, Math.min(upperBound, currentRealistic));
           prediction.scenarios.realistic.clicks = clamped;
           prediction.scenarios.realistic.increase_pct = pct(clamped, seg.totalClicks);
-          // Re-derive pessimistic/aggressive from clamped realistic
           const pessClamped = Math.max(seg.totalClicks, Math.round(clamped * 0.7));
           const aggrClamped = Math.round(clamped * 1.4);
           prediction.scenarios.pessimistic = { clicks: pessClamped, increase_pct: pct(pessClamped, seg.totalClicks) };
           prediction.scenarios.aggressive = { clicks: aggrClamped, increase_pct: pct(aggrClamped, seg.totalClicks) };
-          // Re-propagate ROI
           const netGain = clamped - seg.totalClicks;
           if (netGain > 0 && seg.nonBrandClicks > 0) {
             const hiRatio = seg.highIntentClicks / seg.nonBrandClicks;
@@ -428,6 +454,8 @@ serve(async (req) => {
           }
           consistencyClamped = true;
         }
+      } else {
+        consistencySkipReason = 'new_audit';
       }
     }
 
