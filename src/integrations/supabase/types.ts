@@ -1100,6 +1100,33 @@ export type Database = {
         }
         Relationships: []
       }
+      url_correction_decisions: {
+        Row: {
+          corrected_url: string | null
+          created_at: string
+          decision: string
+          id: string
+          original_url: string
+          user_id: string
+        }
+        Insert: {
+          corrected_url?: string | null
+          created_at?: string
+          decision: string
+          id?: string
+          original_url: string
+          user_id: string
+        }
+        Update: {
+          corrected_url?: string | null
+          created_at?: string
+          decision?: string
+          id?: string
+          original_url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
