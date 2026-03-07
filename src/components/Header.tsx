@@ -331,7 +331,7 @@ export function Header() {
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
-                <DropdownMenu open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+                <DropdownMenu open={isProfileOpen} onOpenChange={(open) => { if (open) setIsProfileOpen(true); }}>
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="ghost" 
