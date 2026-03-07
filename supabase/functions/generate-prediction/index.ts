@@ -66,8 +66,8 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) throw new Error('LOVABLE_API_KEY is not configured');
+    const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
+    if (!openrouterKey) throw new Error('OPENROUTER_API_KEY is not configured');
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
@@ -203,14 +203,15 @@ GUARDRAILS:
 - business_impact.annual_value_euro = monthly_value_euro × 12.`;
 
     // ── Call Gemini ──
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openrouterKey}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': supabaseUrl,
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'anthropic/claude-3.5-sonnet',
         messages: [
           { role: 'system', content: 'You are a quantitative search traffic simulator. Return only valid JSON.' },
           { role: 'user', content: prompt },
@@ -237,7 +238,7 @@ GUARDRAILS:
     const raw = aiData.choices?.[0]?.message?.content || '';
     const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
-    await trackTokenUsage('generate-prediction', 'google/gemini-2.5-flash', aiData.usage);
+    await trackTokenUsage('generate-prediction', 'anthropic/claude-3.5-sonnet', aiData.usage);
 
     let prediction: any;
     try { prediction = JSON.parse(cleaned); }
