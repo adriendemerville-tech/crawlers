@@ -68,6 +68,12 @@ function FooterComponent() {
       description: language === 'fr' ? 'Optimisez WordPress pour l\'IA sans coder' : 'Optimize WordPress for AI without coding'
     },
     { 
+      label: 'Pro Agency',
+      href: '/pro-agency',
+      description: language === 'fr' ? 'Abonnement illimité pour agences SEO' : language === 'es' ? 'Suscripción ilimitada para agencias SEO' : 'Unlimited subscription for SEO agencies',
+      gold: true
+    },
+    { 
       label: language === 'fr' ? 'Blog' : 'Blog',
       href: '/blog',
       description: language === 'fr' ? 'Articles et guides SEO/GEO' : 'SEO/GEO articles and guides'
