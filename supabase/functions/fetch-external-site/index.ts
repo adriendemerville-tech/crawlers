@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
     }
 
     console.log(`[fetch-external-site] Fetching: ${targetUrl}`);
+    assertSafeUrl(targetUrl);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);

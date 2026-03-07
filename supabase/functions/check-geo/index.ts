@@ -500,6 +500,7 @@ Deno.serve(async (req) => {
     }
 
     const normalizedUrl = normalizeUrl(url);
+    assertSafeUrl(normalizedUrl);
     const urlObj = new URL(normalizedUrl);
     const robotsTxtUrl = `${urlObj.origin}/robots.txt`;
 

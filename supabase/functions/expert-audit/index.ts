@@ -243,6 +243,7 @@ async function checkSafeBrowsing(url: string): Promise<{ safe: boolean; threats:
 
 async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
   console.log('Analyzing HTML...');
+  assertSafeUrl(url);
   
   try {
     const controller = new AbortController();
