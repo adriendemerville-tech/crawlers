@@ -432,11 +432,14 @@ serve(async (req: Request) => {
     const shortId = generateShortId();
     const fileName = `reports/${shortId}.html`;
 
+    // Encode as Uint8Array so Supabase respects the contentType header
+    const htmlBytes = new TextEncoder().encode(html);
+
     // Upload to storage
     const { error: uploadError } = await supabase.storage
       .from('shared-reports')
-      .upload(fileName, html, {
-        contentType: 'text/html',
+      .upload(fileName, htmlBytes, {
+        contentType: 'text/html; charset=utf-8',
         upsert: false,
       });
 
