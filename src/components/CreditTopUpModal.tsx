@@ -437,7 +437,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                 size="sm"
                 className="w-full gap-2 border-[#0A66C2]/50 text-[#0A66C2] hover:bg-[#0A66C2]/10"
                 onClick={() => {
-                  const shareUrl = user ? `https://crawlers.fr/temporaryreport/demo?ref=${user.id}` : 'https://crawlers.fr';
+                  const shareUrl = user ? `https://crawlers.fr/temporarylink/demo?ref=${user.id}` : 'https://crawlers.fr';
                   const text = encodeURIComponent(`En moins de 5 minutes et sans expert, j'ai audité le référencement GEO de mon site. 🚀
 
 Je ne suis ni développeur, ni un pro du marketing, mais j'ai vite compris que les règles du jeu ont changé.

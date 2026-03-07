@@ -158,7 +158,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
 
       const shareId = responseData?.shareId || responseData?.shareUrl?.split('/').pop();
       if (shareId) {
-        const crawlersUrl = `https://crawlers.fr/r/${shareId}`;
+        const crawlersUrl = `https://crawlers.fr/temporarylink/${shareId}`;
         setShareUrl(crawlersUrl);
         await navigator.clipboard.writeText(crawlersUrl);
         setCopied(true);

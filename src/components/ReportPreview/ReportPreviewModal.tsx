@@ -235,7 +235,7 @@ export function ReportPreviewModal({
       if (error) throw error;
 
       if (responseData?.shareId) {
-        let temporaryLink = `https://crawlers.fr/temporaryreport/${responseData.shareId}`;
+        let temporaryLink = `https://crawlers.fr/temporarylink/${responseData.shareId}`;
         if (user?.id) temporaryLink += `?ref=${user.id}`;
         return temporaryLink;
       }
