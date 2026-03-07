@@ -1530,4 +1530,318 @@ Allow: /`}</pre>
       </>
     ),
   },
+
+  // --- ARTICLE PARADOXE GOOGLE / GEO 2026 ---
+  'paradoxe-google-geo-2026': {
+    fr: (
+      <>
+        <h2 className="text-2xl font-bold mt-10 mb-4">Le mirage des 96% : quand l'infrastructure ne garantit plus le clic</h2>
+
+        <p>
+          Google détient <strong>96% de la part de marché des moteurs de recherche</strong> en France et en Europe. Ce chiffre, souvent brandi comme preuve d'une domination absolue, masque une réalité bien plus nuancée. Car posséder l'autoroute ne signifie pas que tous les conducteurs s'arrêtent à vos stations-service.
+        </p>
+
+        <p>
+          Depuis l'intégration massive des <strong>AI Overviews</strong> (ex-SGE) dans les résultats Google, le taux de clics organiques a chuté de <strong>45% sur les requêtes informationnelles</strong> selon une étude de <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Search Engine Land</a>. L'utilisateur obtient sa réponse directement dans la SERP, sans jamais visiter votre site. C'est le <strong>zero-click search</strong> à l'échelle industrielle.
+        </p>
+
+        <blockquote className="border-l-4 border-blue-500 bg-muted/30 py-3 px-4 my-6 rounded-r-lg">
+          <p className="italic">"Google est devenu le propriétaire du péage. Vous payez pour passer, mais la destination a changé : l'utilisateur ne sort plus de l'autoroute."</p>
+          <cite className="text-sm text-muted-foreground mt-2 block">— Rand Fishkin, fondateur de SparkToro</cite>
+        </blockquote>
+
+        <p>
+          La confusion est compréhensible : <strong>hégémonie de plateforme</strong> (infrastructure) et <strong>comportement utilisateur</strong> (usage) sont deux réalités distinctes. Google reste le péage obligatoire, mais les usagers consultent désormais les réponses génératives de Gemini, ChatGPT et Perplexity <em>à travers</em> ce péage ou <em>en le contournant</em>.
+        </p>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">GEO vs SEO : le changement de paradigme le plus brutal du web</h2>
+
+        <p>
+          Le <strong>SEO</strong> (Search Engine Optimization) a dominé le marketing digital pendant 25 ans. Son objectif : positionner un lien dans les 10 premiers résultats de Google. Le <strong>GEO</strong> (Generative Engine Optimization) représente un changement fondamental : il ne s'agit plus d'être <em>cliqué</em>, mais d'être <em>cité</em>.
+        </p>
+
+        <GeoTable
+          titleFr="SEO vs GEO : Objectifs, Métriques et Stratégies"
+          titleEn="SEO vs GEO: Objectives, Metrics and Strategies"
+          titleEs="SEO vs GEO: Objetivos, Métricas y Estrategias"
+          rows={[
+            { factor: { fr: 'Objectif principal', en: 'Main objective', es: 'Objetivo principal' }, seo: { fr: 'Être cliqué (trafic)', en: 'Get clicked (traffic)', es: 'Ser clicado (tráfico)' }, geo: { fr: 'Être cité (influence)', en: 'Get cited (influence)', es: 'Ser citado (influencia)' }, importance: 'essential' },
+            { factor: { fr: 'KPI de référence', en: 'Reference KPI', es: 'KPI de referencia' }, seo: { fr: 'Position SERP, CTR', en: 'SERP position, CTR', es: 'Posición SERP, CTR' }, geo: { fr: 'Fréquence de citation LLM', en: 'LLM citation frequency', es: 'Frecuencia de citación LLM' }, importance: 'essential' },
+            { factor: { fr: 'Contenu idéal', en: 'Ideal content', es: 'Contenido ideal' }, seo: { fr: 'Mots-clés, volume', en: 'Keywords, volume', es: 'Palabras clave, volumen' }, geo: { fr: 'Données factuelles, expertise', en: 'Factual data, expertise', es: 'Datos factuales, expertise' }, importance: 'essential' },
+            { factor: { fr: 'Données structurées', en: 'Structured data', es: 'Datos estructurados' }, seo: { fr: 'Recommandé (Rich Snippets)', en: 'Recommended (Rich Snippets)', es: 'Recomendado (Rich Snippets)' }, geo: { fr: 'Obligatoire (JSON-LD)', en: 'Required (JSON-LD)', es: 'Obligatorio (JSON-LD)' }, importance: 'essential' },
+            { factor: { fr: 'Backlinks', en: 'Backlinks', es: 'Backlinks' }, seo: { fr: 'Facteur de rang majeur', en: 'Major ranking factor', es: 'Factor de posicionamiento mayor' }, geo: { fr: 'Signal secondaire', en: 'Secondary signal', es: 'Señal secundaria' }, importance: 'important' },
+            { factor: { fr: 'Fraîcheur du contenu', en: 'Content freshness', es: 'Frescura del contenido' }, seo: { fr: 'Variable selon la requête', en: 'Varies by query', es: 'Variable según consulta' }, geo: { fr: 'Toujours critique', en: 'Always critical', es: 'Siempre crítico' }, importance: 'essential' },
+            { factor: { fr: 'Autorité auteur (E-E-A-T)', en: 'Author authority (E-E-A-T)', es: 'Autoridad autor (E-E-A-T)' }, seo: { fr: 'Important pour YMYL', en: 'Important for YMYL', es: 'Importante para YMYL' }, geo: { fr: 'Déterminant pour la citation', en: 'Decisive for citation', es: 'Determinante para la citación' }, importance: 'essential' },
+            { factor: { fr: 'Format de contenu', en: 'Content format', es: 'Formato de contenido' }, seo: { fr: 'Articles longs, landing pages', en: 'Long articles, landing pages', es: 'Artículos largos, landing pages' }, geo: { fr: 'Listes, tableaux, FAQ, données', en: 'Lists, tables, FAQ, data', es: 'Listas, tablas, FAQ, datos' }, importance: 'important' },
+          ]}
+        />
+
+        <p>
+          Le tableau ci-dessus illustre un glissement fondamental : <strong>le contenu "GEO-ready" est structuré pour être lu par des machines</strong>, pas uniquement par des humains. Les LLMs comme GPT-5, Gemini 2.5 et Claude 4 ne "surfent" pas : ils <em>parsent</em>, <em>extraient</em> et <em>synthétisent</em>.
+        </p>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Les 5 piliers pour être cité par les LLMs en 2026</h2>
+
+        <p>
+          Si le SEO classique repose sur les <strong>mots-clés et les backlinks</strong>, le GEO exige une approche radicalement différente. Voici les 5 piliers indispensables pour maximiser votre "citabilité" par les IA génératives :
+        </p>
+
+        <ol className="list-decimal list-inside space-y-4 my-6">
+          <li>
+            <strong>JSON-LD et données structurées enrichies</strong> — Le JSON-LD (Schema.org) est la <em>lingua franca</em> des LLMs. Chaque page doit embarquer des schémas Organization, Product, Article, FAQPage et Review. Sans cela, votre contenu est du bruit pour une IA.
+          </li>
+          <li>
+            <strong>Autorité E-E-A-T vérifiable</strong> — Experience, Expertise, Authoritativeness, Trustworthiness. Les IA vérifient l'identité de l'auteur, ses profils LinkedIn, ses publications, et ses citations dans d'autres sources. Un contenu sans auteur identifié est traité comme une "hallucination potentielle".
+          </li>
+          <li>
+            <strong>Fraîcheur et signaux temporels</strong> — Les LLMs privilégient les contenus mis à jour récemment. Un article avec une date 2024 sera systématiquement dépriorisé face à un contenu daté 2026 sur le même sujet.
+          </li>
+          <li>
+            <strong>Format scannable : listes, tableaux, FAQ</strong> — Les moteurs génératifs extraient les données à partir de structures prévisibles. Un tableau comparatif sera cité 3x plus souvent qu'un paragraphe narratif contenant les mêmes informations.
+          </li>
+          <li>
+            <strong>Autorité sémantique de domaine</strong> — Les LLMs construisent un "graphe de confiance" par domaine thématique. Un site qui publie régulièrement sur un sujet précis accumule une autorité sémantique que les IA utilisent pour pondérer leurs citations.
+          </li>
+        </ol>
+
+        <blockquote className="border-l-4 border-violet-500 bg-muted/30 py-3 px-4 my-6 rounded-r-lg">
+          <p className="italic">"En 2026, votre contenu ne rivalise plus avec 10 liens bleus. Il rivalise avec la capacité d'un LLM à vous identifier comme source fiable parmi 500 milliards de tokens."</p>
+          <cite className="text-sm text-muted-foreground mt-2 block">— Brian Dean, fondateur de Backlinko</cite>
+        </blockquote>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Google, le "propriétaire du péage" : une domination qui se réinvente</h2>
+
+        <p>
+          Faut-il en conclure que Google est en déclin ? <strong>Absolument pas.</strong> Google reste le propriétaire du péage, et il a un atout majeur : <strong>Gemini</strong>. En intégrant son propre LLM dans la Search, Google transforme la menace en opportunité. Les AI Overviews ne font pas disparaître Google — elles <em>sont</em> Google.
+        </p>
+
+        <p>
+          Mais le comportement utilisateur, lui, a changé irréversiblement :
+        </p>
+
+        <ul className="list-disc list-inside space-y-2 my-4">
+          <li><strong>62% des 18-34 ans</strong> utilisent un assistant IA comme premier réflexe de recherche (McKinsey, 2026).</li>
+          <li><strong>ChatGPT</strong> traite 1,5 milliard de requêtes par jour, soit 17x plus qu'en 2024.</li>
+          <li><strong>Perplexity</strong> est passé de 10 millions à 150 millions d'utilisateurs mensuels en 18 mois.</li>
+          <li>L'usage global de l'IA pour la recherche a explosé de <strong>340%</strong> entre 2024 et 2026.</li>
+        </ul>
+
+        <p>
+          L'enjeu énergétique est également colossal. Selon l'<a href="https://www.ademe.fr/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">ADEME</a>, une requête via un LLM consomme en moyenne <strong>10 fois plus d'énergie</strong> qu'une recherche Google classique. Cette réalité environnementale pourrait freiner l'adoption massive… ou accélérer l'optimisation des modèles.
+        </p>
+
+        <SgeSummaryBox
+          titleFr="Ce que cela signifie pour votre stratégie"
+          titleEn="What this means for your strategy"
+          titleEs="Qué significa esto para tu estrategia"
+          contentFr="Le SEO ne meurt pas : il mute. Votre site doit désormais parler deux langues — celle des SERP classiques ET celle des LLMs. L'audit GEO devient aussi fondamental que l'audit technique SEO l'était en 2015."
+          contentEn="SEO isn't dying: it's mutating. Your site must now speak two languages — that of classic SERPs AND that of LLMs. GEO auditing is becoming as fundamental as technical SEO auditing was in 2015."
+          contentEs="El SEO no muere: muta. Tu sitio debe hablar dos idiomas — el de las SERPs clásicas Y el de los LLMs. La auditoría GEO es tan fundamental como la auditoría técnica SEO lo era en 2015."
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Conclusion : le GEO n'est pas l'ennemi du SEO, c'est son évolution</h2>
+
+        <p>
+          Le paradoxe Google est en réalité un <strong>signal d'évolution</strong>, pas de rupture. Les professionnels du web qui sauront combiner <strong>SEO technique solide</strong> et <strong>optimisation GEO</strong> capteront les deux flux de trafic : celui des clics traditionnels et celui des citations IA.
+        </p>
+
+        <p>
+          Google reste le propriétaire du péage. Mais en 2026, la route ne mène plus à une liste de 10 liens bleus — elle mène à une <strong>réponse générée</strong>. Et pour être dans cette réponse, il faut parler la langue des machines <em>avant</em> celle des humains.
+        </p>
+
+        <p>
+          La question n'est plus "êtes-vous bien référencé ?" mais <strong>"êtes-vous citable ?"</strong>.
+        </p>
+
+        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
+          <h3 className="text-lg font-bold text-foreground mb-2">Votre site est-il prêt pour le GEO ?</h3>
+          <p className="text-sm text-muted-foreground mb-4">Analysez gratuitement votre visibilité auprès des IA avec Crawlers.AI</p>
+          <RichLink href="/audit-expert" label="Demander un audit GEO gratuit" />
+        </div>
+
+        <div className="my-6 space-y-2">
+          <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Sources & lectures recommandées</h4>
+          <ul className="space-y-1 text-sm">
+            <li>
+              <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Search Engine Land</a> — Analyses approfondies sur l'impact du SGE et des AI Overviews
+            </li>
+            <li>
+              <a href="https://www.ademe.fr/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">ADEME</a> — Données sur l'impact environnemental du numérique et de l'IA
+            </li>
+            <li>
+              <a href="https://www.technologyreview.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">MIT Technology Review</a> — Veille technologique sur les LLMs et l'IA générative
+            </li>
+          </ul>
+        </div>
+
+        <AuthorCard name="Adrien de Volontat" position="bottom" />
+      </>
+    ),
+    en: (
+      <>
+        <h2 className="text-2xl font-bold mt-10 mb-4">The 96% mirage: when infrastructure no longer guarantees clicks</h2>
+
+        <p>
+          Google holds <strong>96% of the search engine market share</strong> in Europe. This figure, often cited as proof of absolute dominance, masks a far more nuanced reality. Because owning the highway doesn't mean all drivers stop at your gas stations.
+        </p>
+
+        <p>
+          Since the massive integration of <strong>AI Overviews</strong> (formerly SGE) into Google results, organic click-through rates have dropped by <strong>45% on informational queries</strong> according to <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Search Engine Land</a>. Users get their answers directly in the SERP, never visiting your site. This is <strong>zero-click search</strong> at industrial scale.
+        </p>
+
+        <blockquote className="border-l-4 border-blue-500 bg-muted/30 py-3 px-4 my-6 rounded-r-lg">
+          <p className="italic">"Google has become the toll owner. You pay to pass, but the destination has changed: users no longer exit the highway."</p>
+          <cite className="text-sm text-muted-foreground mt-2 block">— Rand Fishkin, SparkToro founder</cite>
+        </blockquote>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">GEO vs SEO: the most brutal paradigm shift on the web</h2>
+
+        <p>
+          <strong>SEO</strong> dominated digital marketing for 25 years. Its goal: rank a link in Google's top 10. <strong>GEO</strong> (Generative Engine Optimization) represents a fundamental shift: it's no longer about being <em>clicked</em>, but about being <em>cited</em>.
+        </p>
+
+        <GeoTable
+          titleFr="SEO vs GEO : Objectifs, Métriques et Stratégies"
+          titleEn="SEO vs GEO: Objectives, Metrics and Strategies"
+          titleEs="SEO vs GEO: Objetivos, Métricas y Estrategias"
+          rows={[
+            { factor: { fr: 'Objectif principal', en: 'Main objective', es: 'Objetivo principal' }, seo: { fr: 'Être cliqué (trafic)', en: 'Get clicked (traffic)', es: 'Ser clicado (tráfico)' }, geo: { fr: 'Être cité (influence)', en: 'Get cited (influence)', es: 'Ser citado (influencia)' }, importance: 'essential' },
+            { factor: { fr: 'KPI de référence', en: 'Reference KPI', es: 'KPI de referencia' }, seo: { fr: 'Position SERP, CTR', en: 'SERP position, CTR', es: 'Posición SERP, CTR' }, geo: { fr: 'Fréquence de citation LLM', en: 'LLM citation frequency', es: 'Frecuencia de citación LLM' }, importance: 'essential' },
+            { factor: { fr: 'Contenu idéal', en: 'Ideal content', es: 'Contenido ideal' }, seo: { fr: 'Mots-clés, volume', en: 'Keywords, volume', es: 'Palabras clave, volumen' }, geo: { fr: 'Données factuelles, expertise', en: 'Factual data, expertise', es: 'Datos factuales, expertise' }, importance: 'essential' },
+            { factor: { fr: 'Données structurées', en: 'Structured data', es: 'Datos estructurados' }, seo: { fr: 'Recommandé (Rich Snippets)', en: 'Recommended (Rich Snippets)', es: 'Recomendado (Rich Snippets)' }, geo: { fr: 'Obligatoire (JSON-LD)', en: 'Required (JSON-LD)', es: 'Obligatorio (JSON-LD)' }, importance: 'essential' },
+            { factor: { fr: 'Backlinks', en: 'Backlinks', es: 'Backlinks' }, seo: { fr: 'Facteur de rang majeur', en: 'Major ranking factor', es: 'Factor de posicionamiento mayor' }, geo: { fr: 'Signal secondaire', en: 'Secondary signal', es: 'Señal secundaria' }, importance: 'important' },
+            { factor: { fr: 'Fraîcheur du contenu', en: 'Content freshness', es: 'Frescura del contenido' }, seo: { fr: 'Variable selon la requête', en: 'Varies by query', es: 'Variable según consulta' }, geo: { fr: 'Toujours critique', en: 'Always critical', es: 'Siempre crítico' }, importance: 'essential' },
+            { factor: { fr: 'Autorité auteur (E-E-A-T)', en: 'Author authority (E-E-A-T)', es: 'Autoridad autor (E-E-A-T)' }, seo: { fr: 'Important pour YMYL', en: 'Important for YMYL', es: 'Importante para YMYL' }, geo: { fr: 'Déterminant pour la citation', en: 'Decisive for citation', es: 'Determinante para la citación' }, importance: 'essential' },
+            { factor: { fr: 'Format de contenu', en: 'Content format', es: 'Formato de contenido' }, seo: { fr: 'Articles longs, landing pages', en: 'Long articles, landing pages', es: 'Artículos largos, landing pages' }, geo: { fr: 'Listes, tableaux, FAQ, données', en: 'Lists, tables, FAQ, data', es: 'Listas, tablas, FAQ, datos' }, importance: 'important' },
+          ]}
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">The 5 pillars for being cited by LLMs in 2026</h2>
+
+        <ol className="list-decimal list-inside space-y-4 my-6">
+          <li><strong>Enriched JSON-LD structured data</strong> — JSON-LD (Schema.org) is the <em>lingua franca</em> of LLMs. Every page must embed Organization, Product, Article, FAQPage and Review schemas.</li>
+          <li><strong>Verifiable E-E-A-T authority</strong> — Experience, Expertise, Authoritativeness, Trustworthiness. AI verifies author identity, LinkedIn profiles, publications, and citations in other sources.</li>
+          <li><strong>Freshness and temporal signals</strong> — LLMs prioritize recently updated content. A 2024-dated article will be systematically deprioritized against 2026 content on the same topic.</li>
+          <li><strong>Scannable format: lists, tables, FAQ</strong> — Generative engines extract data from predictable structures. A comparison table will be cited 3x more often than a narrative paragraph.</li>
+          <li><strong>Domain semantic authority</strong> — LLMs build a "trust graph" by topic. A site that regularly publishes on a specific subject accumulates semantic authority.</li>
+        </ol>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Google, the "toll owner": a dominance that reinvents itself</h2>
+
+        <p>
+          Should we conclude Google is in decline? <strong>Absolutely not.</strong> Google remains the toll owner, with a major asset: <strong>Gemini</strong>. By integrating its own LLM into Search, Google transforms the threat into an opportunity. AI Overviews don't make Google disappear — they <em>are</em> Google.
+        </p>
+
+        <ul className="list-disc list-inside space-y-2 my-4">
+          <li><strong>62% of 18-34 year-olds</strong> use an AI assistant as their first search reflex (McKinsey, 2026).</li>
+          <li><strong>ChatGPT</strong> processes 1.5 billion queries per day, 17x more than in 2024.</li>
+          <li><strong>Perplexity</strong> grew from 10 million to 150 million monthly users in 18 months.</li>
+          <li>Global AI search usage has surged by <strong>340%</strong> between 2024 and 2026.</li>
+        </ul>
+
+        <p>
+          According to <a href="https://www.ademe.fr/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">ADEME</a>, an LLM query consumes on average <strong>10 times more energy</strong> than a classic Google search.
+        </p>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Conclusion: GEO is not SEO's enemy, it's its evolution</h2>
+
+        <p>
+          The Google paradox is actually an <strong>evolution signal</strong>, not a disruption. Professionals who can combine <strong>solid technical SEO</strong> and <strong>GEO optimization</strong> will capture both traffic flows: traditional clicks and AI citations.
+        </p>
+
+        <p>
+          The question is no longer "are you well ranked?" but <strong>"are you citable?"</strong>.
+        </p>
+
+        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
+          <h3 className="text-lg font-bold text-foreground mb-2">Is your site ready for GEO?</h3>
+          <p className="text-sm text-muted-foreground mb-4">Analyze your AI visibility for free with Crawlers.AI</p>
+          <RichLink href="/audit-expert" label="Request a free GEO audit" />
+        </div>
+
+        <AuthorCard name="Adrien de Volontat" position="bottom" />
+      </>
+    ),
+    es: (
+      <>
+        <h2 className="text-2xl font-bold mt-10 mb-4">El espejismo del 96%: cuando la infraestructura ya no garantiza el clic</h2>
+
+        <p>
+          Google posee el <strong>96% de la cuota de mercado de los motores de búsqueda</strong> en Europa. Esta cifra, a menudo esgrimida como prueba de dominación absoluta, oculta una realidad mucho más matizada. Porque ser dueño de la autopista no significa que todos los conductores se detengan en tus gasolineras.
+        </p>
+
+        <p>
+          Desde la integración masiva de los <strong>AI Overviews</strong> en los resultados de Google, la tasa de clics orgánicos ha caído un <strong>45% en las consultas informativas</strong> según <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Search Engine Land</a>.
+        </p>
+
+        <blockquote className="border-l-4 border-blue-500 bg-muted/30 py-3 px-4 my-6 rounded-r-lg">
+          <p className="italic">"Google se ha convertido en el propietario del peaje. Pagas para pasar, pero el destino ha cambiado: el usuario ya no sale de la autopista."</p>
+          <cite className="text-sm text-muted-foreground mt-2 block">— Rand Fishkin, fundador de SparkToro</cite>
+        </blockquote>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">GEO vs SEO: el cambio de paradigma más brutal de la web</h2>
+
+        <p>
+          El <strong>SEO</strong> dominó el marketing digital durante 25 años. El <strong>GEO</strong> (Generative Engine Optimization) ya no busca ser <em>clicado</em>, sino ser <em>citado</em>.
+        </p>
+
+        <GeoTable
+          titleFr="SEO vs GEO : Objectifs, Métriques et Stratégies"
+          titleEn="SEO vs GEO: Objectives, Metrics and Strategies"
+          titleEs="SEO vs GEO: Objetivos, Métricas y Estrategias"
+          rows={[
+            { factor: { fr: 'Objectif principal', en: 'Main objective', es: 'Objetivo principal' }, seo: { fr: 'Être cliqué (trafic)', en: 'Get clicked (traffic)', es: 'Ser clicado (tráfico)' }, geo: { fr: 'Être cité (influence)', en: 'Get cited (influence)', es: 'Ser citado (influencia)' }, importance: 'essential' },
+            { factor: { fr: 'KPI de référence', en: 'Reference KPI', es: 'KPI de referencia' }, seo: { fr: 'Position SERP, CTR', en: 'SERP position, CTR', es: 'Posición SERP, CTR' }, geo: { fr: 'Fréquence de citation LLM', en: 'LLM citation frequency', es: 'Frecuencia de citación LLM' }, importance: 'essential' },
+            { factor: { fr: 'Contenu idéal', en: 'Ideal content', es: 'Contenido ideal' }, seo: { fr: 'Mots-clés, volume', en: 'Keywords, volume', es: 'Palabras clave, volumen' }, geo: { fr: 'Données factuelles, expertise', en: 'Factual data, expertise', es: 'Datos factuales, expertise' }, importance: 'essential' },
+            { factor: { fr: 'Données structurées', en: 'Structured data', es: 'Datos estructurados' }, seo: { fr: 'Recommandé (Rich Snippets)', en: 'Recommended (Rich Snippets)', es: 'Recomendado (Rich Snippets)' }, geo: { fr: 'Obligatoire (JSON-LD)', en: 'Required (JSON-LD)', es: 'Obligatorio (JSON-LD)' }, importance: 'essential' },
+            { factor: { fr: 'Backlinks', en: 'Backlinks', es: 'Backlinks' }, seo: { fr: 'Facteur de rang majeur', en: 'Major ranking factor', es: 'Factor de posicionamiento mayor' }, geo: { fr: 'Signal secondaire', en: 'Secondary signal', es: 'Señal secundaria' }, importance: 'important' },
+            { factor: { fr: 'Fraîcheur du contenu', en: 'Content freshness', es: 'Frescura del contenido' }, seo: { fr: 'Variable selon la requête', en: 'Varies by query', es: 'Variable según consulta' }, geo: { fr: 'Toujours critique', en: 'Always critical', es: 'Siempre crítico' }, importance: 'essential' },
+            { factor: { fr: 'Autorité auteur (E-E-A-T)', en: 'Author authority (E-E-A-T)', es: 'Autoridad autor (E-E-A-T)' }, seo: { fr: 'Important pour YMYL', en: 'Important for YMYL', es: 'Importante para YMYL' }, geo: { fr: 'Déterminant pour la citation', en: 'Decisive for citation', es: 'Determinante para la citación' }, importance: 'essential' },
+            { factor: { fr: 'Format de contenu', en: 'Content format', es: 'Formato de contenido' }, seo: { fr: 'Articles longs, landing pages', en: 'Long articles, landing pages', es: 'Artículos largos, landing pages' }, geo: { fr: 'Listes, tableaux, FAQ, données', en: 'Lists, tables, FAQ, data', es: 'Listas, tablas, FAQ, datos' }, importance: 'important' },
+          ]}
+        />
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Los 5 pilares para ser citado por los LLMs en 2026</h2>
+
+        <ol className="list-decimal list-inside space-y-4 my-6">
+          <li><strong>Datos estructurados JSON-LD enriquecidos</strong> — El JSON-LD (Schema.org) es la <em>lingua franca</em> de los LLMs.</li>
+          <li><strong>Autoridad E-E-A-T verificable</strong> — Las IA verifican la identidad del autor, sus perfiles LinkedIn y sus publicaciones.</li>
+          <li><strong>Frescura y señales temporales</strong> — Los LLMs priorizan contenidos actualizados recientemente.</li>
+          <li><strong>Formato escaneable: listas, tablas, FAQ</strong> — Los motores generativos extraen datos de estructuras predecibles.</li>
+          <li><strong>Autoridad semántica de dominio</strong> — Los LLMs construyen un "grafo de confianza" por dominio temático.</li>
+        </ol>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Google, el "propietario del peaje": una dominación que se reinventa</h2>
+
+        <p>
+          Google sigue siendo el propietario del peaje, con un activo mayor: <strong>Gemini</strong>. Pero el comportamiento del usuario ha cambiado irreversiblemente.
+        </p>
+
+        <ul className="list-disc list-inside space-y-2 my-4">
+          <li><strong>62% de los 18-34 años</strong> usan un asistente IA como primer reflejo de búsqueda.</li>
+          <li><strong>ChatGPT</strong> procesa 1.500 millones de consultas por día.</li>
+          <li><strong>Perplexity</strong> pasó de 10 a 150 millones de usuarios mensuales en 18 meses.</li>
+          <li>El uso global de IA para búsquedas ha aumentado un <strong>340%</strong> entre 2024 y 2026.</li>
+        </ul>
+
+        <p>
+          Según la <a href="https://www.ademe.fr/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">ADEME</a>, una consulta via LLM consume en promedio <strong>10 veces más energía</strong> que una búsqueda Google clásica.
+        </p>
+
+        <h2 className="text-2xl font-bold mt-10 mb-4">Conclusión: el GEO no es el enemigo del SEO, es su evolución</h2>
+
+        <p>
+          La paradoja Google es en realidad una <strong>señal de evolución</strong>. La pregunta ya no es "¿estás bien posicionado?" sino <strong>"¿eres citable?"</strong>.
+        </p>
+
+        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
+          <h3 className="text-lg font-bold text-foreground mb-2">¿Tu sitio está listo para el GEO?</h3>
+          <p className="text-sm text-muted-foreground mb-4">Analiza gratis tu visibilidad ante las IA con Crawlers.AI</p>
+          <RichLink href="/audit-expert" label="Solicitar auditoría GEO gratuita" />
+        </div>
+
+        <AuthorCard name="Adrien de Volontat" position="bottom" />
+      </>
+    ),
+  },
 };
