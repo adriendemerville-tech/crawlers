@@ -658,16 +658,18 @@ export function MyTracking() {
                         )}
                       </Button>
 
-                      <Button 
-                        size="sm" 
-                        variant={gscConnected ? "outline" : "outline"}
-                        className={`gap-1.5 ${gscConnected ? 'border-green-500/50 text-green-700 dark:text-green-400' : ''}`}
-                        disabled={gscConnecting}
-                        onClick={handleConnectGsc}
-                      >
-                        {gscConnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : gscConnected ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Plug className="h-3.5 w-3.5" />}
-                        Search Console
-                      </Button>
+                      {!gscConnected && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="gap-1.5"
+                          disabled={gscConnecting}
+                          onClick={handleConnectGsc}
+                        >
+                          {gscConnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plug className="h-3.5 w-3.5" />}
+                          Search Console
+                        </Button>
+                      )}
 
                       <Button 
                         size="sm" 
