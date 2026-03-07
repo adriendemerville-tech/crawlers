@@ -45,6 +45,8 @@ interface DownloadAuthGateProps {
   isOpen: boolean;
   onClose: () => void;
   onAuthenticated: () => void;
+  returnPath?: string;
+  pendingAction?: string;
 }
 
 export function DownloadAuthGate({ isOpen, onClose, onAuthenticated }: DownloadAuthGateProps) {
