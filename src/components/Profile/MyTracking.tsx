@@ -226,10 +226,13 @@ export function MyTracking() {
       });
   }, [user]);
 
-  // Handle GSC OAuth callback
+  // Handle GSC OAuth callback (Google redirects with ?code=xxx&state=user_id)
   useEffect(() => {
-    const code = searchParams.get('gsc_code');
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
     if (!code || !user) return;
+    // Only process if state matches user_id (to distinguish from other OAuth flows)
+    if (state && state !== user.id) return;
     
     (async () => {
       try {
@@ -237,17 +240,24 @@ export function MyTracking() {
           body: { action: 'callback', code, user_id: user.id, redirect_uri: `${window.location.origin}/console` },
         });
         if (error) throw error;
+        if (data?.error) throw new Error(data.error);
         toast.success(language === 'fr' ? 'Search Console connecté !' : 'Search Console connected!');
-        // Clean URL
-        searchParams.delete('gsc_code');
-        setSearchParams(searchParams, { replace: true });
-        // Fetch GSC data
-        fetchGscData();
+        // Clean URL params
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('code');
+        newParams.delete('state');
+        newParams.delete('scope');
+        setSearchParams(newParams, { replace: true });
+        // Refresh profile to get gsc_access_token
+        window.location.href = '/console';
       } catch (err: any) {
         console.error('GSC callback error:', err);
         toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
-        searchParams.delete('gsc_code');
-        setSearchParams(searchParams, { replace: true });
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('code');
+        newParams.delete('state');
+        newParams.delete('scope');
+        setSearchParams(newParams, { replace: true });
       }
     })();
   }, [searchParams, user]);
