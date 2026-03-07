@@ -76,6 +76,12 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
     validation.acceptSuggestion(accepted, onSubmit);
   };
 
+  const handleIgnoreSuggestion = () => {
+    const normalized = normalizeUrl(url);
+    validation.dismissSuggestion();
+    onSubmit(normalized);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
@@ -278,6 +284,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
           onAcceptSuggestion={handleAcceptSuggestion}
           onDismissSuggestion={validation.dismissSuggestion}
           onDismissNotFound={validation.dismissNotFound}
+          onIgnoreSuggestion={handleIgnoreSuggestion}
         />
 
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">

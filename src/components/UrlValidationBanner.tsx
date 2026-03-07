@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface UrlValidationBannerProps {
   suggestedUrl: string | null;
@@ -8,6 +9,7 @@ interface UrlValidationBannerProps {
   onAcceptSuggestion: () => void;
   onDismissSuggestion: () => void;
   onDismissNotFound: () => void;
+  onIgnoreSuggestion?: () => void;
 }
 
 function UrlValidationBannerComponent({
@@ -18,8 +20,12 @@ function UrlValidationBannerComponent({
   onAcceptSuggestion,
   onDismissSuggestion,
   onDismissNotFound,
+  onIgnoreSuggestion,
 }: UrlValidationBannerProps) {
+  const { language } = useLanguage();
   if (!suggestedUrl && !urlNotFound) return null;
+
+  const ignoreLabel = language === 'fr' ? 'Ignorer' : language === 'es' ? 'Ignorar' : 'Ignore';
 
   return (
     <>
@@ -36,13 +42,23 @@ function UrlValidationBannerComponent({
               </button>
               {' ?'}
             </p>
-            <button
-              onClick={onDismissSuggestion}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
-              aria-label="Dismiss"
-            >
-              ✕
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {onIgnoreSuggestion && (
+                <button
+                  onClick={onIgnoreSuggestion}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {ignoreLabel}
+                </button>
+              )}
+              <button
+                onClick={onDismissSuggestion}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
           </div>
         </div>
       )}
