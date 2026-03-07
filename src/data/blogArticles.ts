@@ -1,4 +1,5 @@
 import crawlerHeroImage from '@/assets/blog/crawler-hero.webp';
+import paradoxeGoogleGeoHero from '@/assets/blog/paradoxe-google-geo-hero.webp';
 
 export interface BlogArticle {
   slug: string;
