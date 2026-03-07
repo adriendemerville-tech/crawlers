@@ -33,6 +33,7 @@ export interface ExpertAuditScores {
     maxScore: 30;
     hasSchemaOrg: boolean;
     schemaTypes: string[];
+    isSchemaJsGenerated?: boolean;
     hasRobotsTxt: boolean;
     robotsPermissive: boolean;
     allowsAIBots?: {
@@ -115,6 +116,7 @@ export interface JsonLdValidation {
   types: string[];
   parseErrors: string[];
   count: number;
+  isJsGenerated?: boolean;
 }
 
 export interface ExpertInsights {

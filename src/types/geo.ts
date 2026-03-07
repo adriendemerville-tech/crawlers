@@ -7,6 +7,7 @@ export interface GeoFactor {
   status: 'good' | 'warning' | 'error';
   recommendation?: string;
   details?: string;
+  isJsGenerated?: boolean;
 }
 
 export interface GeoResult {

@@ -109,6 +109,7 @@ interface HtmlAnalysis {
   wordCount: number;
   hasSchemaOrg: boolean;
   schemaTypes: string[];
+  isSchemaJsGenerated?: boolean;
   isHttps: boolean;
   hasGTM?: boolean;
   hasGA4?: boolean;
@@ -359,7 +360,23 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       }
     }
 
-    // Detect GTM / GA4 / analytics
+    // Detect if schema is JS-generated
+    const isSchemaJsGenerated = (() => {
+      const regularScripts = html.match(/<script(?![^>]*type\s*=\s*["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi) || [];
+      for (const script of regularScripts) {
+        const content = script.replace(/<script[^>]*>|<\/script>/gi, '');
+        if (
+          /application\/ld\+json/i.test(content) ||
+          (/@context.*schema\.org/i.test(content) && /JSON\.stringify|createElement|innerHTML|insertAdjacentHTML|appendChild/i.test(content)) ||
+          /structured[_-]?data|jsonLd|json_ld|schemaMarkup|schema_markup/i.test(content)
+        ) return true;
+      }
+      if (/window\.__NEXT_DATA__[\s\S]*?@context/i.test(html)) return true;
+      if (/nuxt[\s\S]*?jsonld|__NUXT__[\s\S]*?schema/i.test(html)) return true;
+      if (/gtm.*application\/ld\+json/i.test(html) || /tagmanager.*schema\.org/i.test(html)) return true;
+      return false;
+    })();
+    if (isSchemaJsGenerated) console.log('[analyzeHtml] ⚠️ Schema/JSON-LD appears to be JS-generated');
     const hasGTM = /googletagmanager\.com\/gtm\.js/i.test(html) || /GTM-[A-Z0-9]+/i.test(html);
     const hasGA4 = /googletagmanager\.com\/gtag\/js\?id=G-/i.test(html) || /gtag\s*\(\s*['"]config['"]\s*,\s*['"]G-/i.test(html);
     
@@ -611,6 +628,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       wordCount,
       hasSchemaOrg: schemaTypes.length > 0,
       schemaTypes,
+      isSchemaJsGenerated,
       isHttps: url.startsWith('https://'),
       hasGTM,
       hasGA4,
@@ -1926,7 +1944,14 @@ serve(async (req) => {
     
     // D. AI Ready (30 pts)
     let aiReadyScore = 0;
-    if (htmlAnalysis.hasSchemaOrg) aiReadyScore += 15;
+    if (htmlAnalysis.hasSchemaOrg) {
+      aiReadyScore += 15;
+      // Penalize if schema is JS-generated (crawlers can't read it)
+      if (htmlAnalysis.isSchemaJsGenerated) {
+        aiReadyScore -= 3;
+        console.log('[Expert-Audit] ⚠️ Schema is JS-generated — AI Ready score penalized (-3)');
+      }
+    }
     if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 15;
     
     // E. Security (20 pts) - Enhanced with HSTS
@@ -1974,6 +1999,7 @@ serve(async (req) => {
         maxScore: 30,
         hasSchemaOrg: htmlAnalysis.hasSchemaOrg,
         schemaTypes: htmlAnalysis.schemaTypes,
+        isSchemaJsGenerated: htmlAnalysis.isSchemaJsGenerated,
         hasRobotsTxt: robotsAnalysis.exists,
         robotsPermissive: robotsAnalysis.permissive,
         allowsAIBots: crawlersResult?.allowsAIBots,

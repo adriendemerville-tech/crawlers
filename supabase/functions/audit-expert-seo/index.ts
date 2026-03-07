@@ -63,6 +63,7 @@ interface JsonLdValidation {
   types: string[];
   parseErrors: string[];
   count: number;
+  isJsGenerated: boolean;
 }
 
 interface ExpertInsights {
@@ -546,7 +547,7 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
   console.log(`[Headings] H1: ${h1Contents.length}, H2: ${h2Contents.length}`);
   
   // === ÉTAPE 2 : Analyse JSON-LD AVANT suppression des scripts ===
-  const jsonLdValidation = analyzeJsonLd(doc);
+  const jsonLdValidation = analyzeJsonLd(doc, html);
   console.log(`[JSON-LD] Trouvé ${jsonLdValidation.count} scripts, types: ${jsonLdValidation.types.join(', ') || 'aucun'}`);
   
   // === ÉTAPE 3 : Analyse du profil de liens (DOM complet) ===
@@ -636,13 +637,38 @@ function createEmptyAnalysis(url: string): HtmlAnalysis {
 
 // ==================== EXPERT INSIGHTS FUNCTIONS ====================
 
-function analyzeJsonLd(doc: HTMLDocument): JsonLdValidation {
+function detectJsGeneratedSchema(html: string): boolean {
+  const regularScripts = html.match(/<script(?![^>]*type\s*=\s*["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi) || [];
+  for (const script of regularScripts) {
+    const content = script.replace(/<script[^>]*>|<\/script>/gi, '');
+    if (
+      /application\/ld\+json/i.test(content) ||
+      (/@context.*schema\.org/i.test(content) && /JSON\.stringify|createElement|innerHTML|insertAdjacentHTML|appendChild/i.test(content)) ||
+      /structured[_-]?data|jsonLd|json_ld|schemaMarkup|schema_markup/i.test(content)
+    ) {
+      return true;
+    }
+  }
+  const jsSchemaPatterns = [
+    /window\.__NEXT_DATA__[\s\S]*?@context/i,
+    /nuxt[\s\S]*?jsonld|__NUXT__[\s\S]*?schema/i,
+    /gtm.*application\/ld\+json/i,
+    /tagmanager.*schema\.org/i,
+  ];
+  for (const pattern of jsSchemaPatterns) {
+    if (pattern.test(html)) return true;
+  }
+  return false;
+}
+
+function analyzeJsonLd(doc: HTMLDocument, rawHtml: string): JsonLdValidation {
+  const isJsGenerated = detectJsGeneratedSchema(rawHtml);
   const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
   const types: string[] = [];
   const parseErrors: string[] = [];
   let validCount = 0;
   
-  console.log(`[JSON-LD] Analyse de ${scripts.length} balises script[type="application/ld+json"]`);
+  console.log(`[JSON-LD] Analyse de ${scripts.length} balises script[type="application/ld+json"], JS-generated: ${isJsGenerated}`);
   
   for (let i = 0; i < scripts.length; i++) {
     const script = scripts[i] as Element;
@@ -652,17 +678,12 @@ function analyzeJsonLd(doc: HTMLDocument): JsonLdValidation {
       const parsed = JSON.parse(content);
       validCount++;
       
-      // Fonction récursive pour extraire tous les @type dans des structures imbriquées
       const findTypes = (node: any): void => {
         if (!node || typeof node !== 'object') return;
-        
-        // Si c'est un tableau, parcourir chaque élément
         if (Array.isArray(node)) {
           node.forEach(item => findTypes(item));
           return;
         }
-        
-        // Extraire le @type s'il existe
         if (node['@type']) {
           if (Array.isArray(node['@type'])) {
             types.push(...node['@type']);
@@ -670,13 +691,9 @@ function analyzeJsonLd(doc: HTMLDocument): JsonLdValidation {
             types.push(node['@type']);
           }
         }
-        
-        // Traiter @graph s'il existe
         if (node['@graph'] && Array.isArray(node['@graph'])) {
           findTypes(node['@graph']);
         }
-        
-        // Parcourir récursivement les autres propriétés (sauf @graph déjà traité)
         for (const key in node) {
           if (key !== '@graph' && node[key] && typeof node[key] === 'object') {
             findTypes(node[key]);
@@ -699,7 +716,8 @@ function analyzeJsonLd(doc: HTMLDocument): JsonLdValidation {
     valid: parseErrors.length === 0 && validCount > 0,
     types: uniqueTypes,
     parseErrors,
-    count: scripts.length
+    count: scripts.length,
+    isJsGenerated
   };
 }
 
@@ -1478,7 +1496,13 @@ serve(async (req) => {
     if (htmlAnalysis.wordCount >= 500) semanticScore += 20;
     
     let aiReadyScore = 0;
-    if (htmlAnalysis.hasSchemaOrg) aiReadyScore += 15;
+    if (htmlAnalysis.hasSchemaOrg) {
+      aiReadyScore += 15;
+      if (htmlAnalysis.insights?.jsonLdValidation?.isJsGenerated) {
+        aiReadyScore -= 3;
+        console.log('[Audit-Expert-SEO] ⚠️ Schema is JS-generated — AI Ready score penalized (-3)');
+      }
+    }
     if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 15;
     
     // Bonus/penalty for broken links (affects technical score)
