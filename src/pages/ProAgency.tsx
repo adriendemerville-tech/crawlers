@@ -322,10 +322,17 @@ export default function ProAgency() {
       <Helmet>
         <title>{t.pageTitle}</title>
         <meta name="description" content={t.metaDescription} />
+        <link rel="canonical" href="https://crawlers.fr/pro-agency" />
         <meta property="og:title" content={t.pageTitle} />
         <meta property="og:description" content={t.metaDescription} />
         <meta property="og:type" content="product" />
         <meta property="og:url" content="https://crawlers.fr/pro-agency" />
+        <link rel="alternate" hrefLang="fr" href="https://crawlers.fr/pro-agency?lang=fr" />
+        <link rel="alternate" hrefLang="en" href="https://crawlers.fr/pro-agency?lang=en" />
+        <link rel="alternate" hrefLang="es" href="https://crawlers.fr/pro-agency?lang=es" />
+        <link rel="alternate" hrefLang="x-default" href="https://crawlers.fr/pro-agency" />
+        <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
       </Helmet>
 
       <Header />

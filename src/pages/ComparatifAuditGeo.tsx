@@ -256,7 +256,10 @@ export default function ComparatifAuditGeo() {
         <meta property="og:description" content="Tableau comparatif : SEO traditionnel vs GEO (Generative Engine Optimization). Comprendre pourquoi le SEO ne suffit plus pour ChatGPT, Gemini et Perplexity." />
         <meta property="og:type" content="article" />
         <meta property="og:url" content="https://crawlers.fr/comparatif-audit-geo" />
+        <link rel="alternate" hrefLang="fr" href="https://crawlers.fr/comparatif-audit-geo" />
+        <link rel="alternate" hrefLang="x-default" href="https://crawlers.fr/comparatif-audit-geo" />
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+        <script type="application/ld+json">{JSON.stringify(faqStructuredData)}</script>
       </Helmet>
 
       <div className="min-h-screen bg-background">

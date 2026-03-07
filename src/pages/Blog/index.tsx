@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -36,13 +36,45 @@ function BlogIndexComponent() {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
 
+  // ItemList schema for blog listing
+  useEffect(() => {
+    const itemListSchema = {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": t.metaTitle,
+      "description": t.metaDescription,
+      "url": "https://crawlers.fr/blog",
+      "mainEntity": {
+        "@type": "ItemList",
+        "itemListElement": blogArticles.map((article, i) => ({
+          "@type": "ListItem",
+          "position": i + 1,
+          "url": `https://crawlers.fr/blog/${article.slug}`,
+          "name": article.title[language] || article.title.fr,
+        })),
+      },
+    };
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.setAttribute('data-schema', 'blog-index');
+    script.textContent = JSON.stringify(itemListSchema);
+    document.head.appendChild(script);
+    return () => { document.querySelectorAll('script[data-schema="blog-index"]').forEach(el => el.remove()); };
+  }, [language, t]);
+
   return (
     <>
       <Helmet>
         <title>{t.metaTitle}</title>
         <meta name="description" content={t.metaDescription} />
         <link rel="canonical" href="https://crawlers.fr/blog" />
+        <meta property="og:title" content={t.metaTitle} />
+        <meta property="og:description" content={t.metaDescription} />
         <meta property="og:url" content="https://crawlers.fr/blog" />
+        <link rel="alternate" hrefLang="fr" href="https://crawlers.fr/blog?lang=fr" />
+        <link rel="alternate" hrefLang="en" href="https://crawlers.fr/blog?lang=en" />
+        <link rel="alternate" hrefLang="es" href="https://crawlers.fr/blog?lang=es" />
+        <link rel="alternate" hrefLang="x-default" href="https://crawlers.fr/blog" />
       </Helmet>
 
       <div className="min-h-screen bg-background">

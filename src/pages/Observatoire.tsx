@@ -1,3 +1,6 @@
+import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -190,6 +193,34 @@ const Observatoire = () => {
   const t = translations[language];
   const stats = useObservatoryStats();
 
+  useCanonicalHreflang('/observatoire');
+
+  const metaTitle = language === 'fr' ? "Observatoire du Web Français - Statistiques SEO en temps réel | Crawlers.fr"
+    : language === 'es' ? "Observatorio del Web - Estadísticas SEO en tiempo real | Crawlers.fr"
+    : "French Web Observatory - Real-time SEO Statistics | Crawlers.fr";
+  const metaDesc = language === 'fr' ? "Données agrégées de milliers d'audits SEO : taux d'adoption JSON-LD, HTTPS, Core Web Vitals. Statistiques en temps réel du web français."
+    : language === 'es' ? "Datos agregados de miles de auditorías SEO: adopción JSON-LD, HTTPS, Core Web Vitals. Estadísticas en tiempo real."
+    : "Aggregated data from thousands of SEO audits: JSON-LD adoption, HTTPS, Core Web Vitals. Real-time French web statistics.";
+
+  useEffect(() => {
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "Dataset",
+      "name": t.title,
+      "description": metaDesc,
+      "url": "https://crawlers.fr/observatoire",
+      "creator": { "@type": "Organization", "name": "Crawlers.fr" },
+      "temporalCoverage": "2025/..",
+      "license": "https://creativecommons.org/licenses/by-nc/4.0/",
+    };
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.setAttribute('data-schema', 'observatoire');
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
+    return () => { document.querySelectorAll('script[data-schema="observatoire"]').forEach(el => el.remove()); };
+  }, [language, t.title, metaDesc]);
+
   const seoFields = ['has_json_ld', 'has_sitemap', 'has_robots_txt', 'has_meta_description', 'has_canonical'] as const;
   const socialFields = ['has_open_graph', 'has_twitter_cards', 'has_hreflang'] as const;
   const securityFields = ['has_https', 'is_mobile_friendly', 'has_viewport_meta'] as const;
@@ -198,6 +229,13 @@ const Observatoire = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <Helmet>
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDesc} />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDesc} />
+        <meta property="og:url" content="https://crawlers.fr/observatoire" />
+      </Helmet>
       <Header />
       <main className="flex-1">
         {/* Hero */}

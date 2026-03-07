@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
@@ -257,12 +258,43 @@ export default function Tarifs() {
     }
   };
 
+  useCanonicalHreflang('/tarifs');
+
+  // Structured data for pricing
+  const offerSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": t.pageTitle,
+    "description": t.subtitle,
+    "url": "https://crawlers.fr/tarifs",
+    "mainEntity": {
+      "@type": "ItemList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "item": { "@type": "Offer", "name": "Essentiel", "price": "5.00", "priceCurrency": "EUR", "description": "10 crédits" } },
+        { "@type": "ListItem", "position": 2, "item": { "@type": "Offer", "name": "Pro", "price": "19.00", "priceCurrency": "EUR", "description": "50 crédits" } },
+        { "@type": "ListItem", "position": 3, "item": { "@type": "Offer", "name": "Premium", "price": "45.00", "priceCurrency": "EUR", "description": "150 crédits" } },
+        { "@type": "ListItem", "position": 4, "item": { "@type": "Offer", "name": "Pro Agency", "price": "49.00", "priceCurrency": "EUR", "description": "Abonnement mensuel illimité", "availability": "https://schema.org/InStock" } },
+      ]
+    }
+  };
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.setAttribute('data-schema', 'tarifs');
+    script.textContent = JSON.stringify(offerSchema);
+    document.head.appendChild(script);
+    return () => { document.querySelectorAll('script[data-schema="tarifs"]').forEach(el => el.remove()); };
+  }, [language]);
+
   return (
     <>
       <Helmet>
         <title>{t.pageTitle}</title>
         <meta name="description" content={t.subtitle} />
-        <link rel="canonical" href="https://crawlers.fr/tarifs" />
+        <meta property="og:title" content={t.pageTitle} />
+        <meta property="og:description" content={t.subtitle} />
+        <meta property="og:type" content="website" />
         <meta property="og:url" content="https://crawlers.fr/tarifs" />
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
