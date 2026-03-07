@@ -212,12 +212,22 @@ export function generateExpertReportHTML(
         </span>
       </div>`;
 
-    const miniGauge = (score: number) => `
+    const miniGauge = (score: number) => {
+      const r = 20;
+      const circ = 2 * Math.PI * r;
+      const offset = circ - (score / 100) * circ;
+      return `
       <div style="text-align: center; min-width: 52px;">
-        <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; background: ${gaugeBg(score)}; border: 3px solid ${gaugeColor(score)};">
-          <span style="font-weight: 700; font-size: 14px; color: ${gaugeColor(score)};">${score}%</span>
+        <svg width="48" height="48" viewBox="0 0 48 48" style="transform: rotate(-90deg);">
+          <circle cx="24" cy="24" r="${r}" fill="${gaugeBg(score)}" stroke="#e5e7eb" stroke-width="4" />
+          <circle cx="24" cy="24" r="${r}" fill="none" stroke="${gaugeColor(score)}" stroke-width="4" stroke-linecap="round"
+            stroke-dasharray="${circ}" stroke-dashoffset="${offset}" />
+        </svg>
+        <div style="margin-top: -36px; position: relative;">
+          <span style="font-weight: 700; font-size: 13px; color: ${gaugeColor(score)};">${score}%</span>
         </div>
       </div>`;
+    };
 
     const narrativeBloc = (title: string, color: string, bgColor: string, score: number, rows: string) => `
       <div style="background: ${bgColor}; padding: 14px 16px; border-radius: 10px; border-left: 3px solid ${color}; margin-bottom: 10px;">
