@@ -792,6 +792,7 @@ export function MyTracking() {
                       )}
                     </CardContent>
                   </Card>
+                </div>
               )}
             </div>
           )}
