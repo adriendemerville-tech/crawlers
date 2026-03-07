@@ -900,9 +900,9 @@ export function MyTracking() {
                           {/* GSC Chart */}
                           {(() => {
                             // Find the first audit date for this site
-                            const currentSiteObj = sites.find(s => s.id === selectedSite);
                             const siteStats = selectedSite ? statsMap[selectedSite] : undefined;
-                            const firstAuditDate = siteStats?.[0]?.recorded_at?.split('T')[0] || currentSiteObj?.created_at?.split('T')[0] || null;
+                            const firstAuditDate = siteStats && siteStats.length > 0 ? siteStats[0].recorded_at?.split('T')[0] : null;
+                            const hasAudit = !!firstAuditDate;
 
                             const chartRows = gscAggregatedRows.map(row => ({
                               date: gscGranularity === 'monthly' ? row.date : row.date.slice(5),
