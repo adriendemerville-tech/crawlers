@@ -18,6 +18,57 @@ export interface BlogArticle {
 const today = new Date().toISOString().split('T')[0];
 
 export const blogArticles: BlogArticle[] = [
+  // --- ARTICLE PARADOXE GOOGLE / GEO ---
+  {
+    slug: 'paradoxe-google-geo-2026',
+    type: 'pillar',
+    title: {
+      fr: '96% de part de marché, 45% de clics en moins : Le paradoxe Google et l\'avènement du GEO en 2026',
+      en: '96% Market Share, 45% Fewer Clicks: The Google Paradox and the Rise of GEO in 2026',
+      es: '96% de cuota de mercado, 45% menos clics: La paradoja Google y el auge del GEO en 2026',
+    },
+    description: {
+      fr: 'Google domine l\'infrastructure avec 96% de part de marché, mais le GEO capte 45% de l\'intention de recherche. Analyse du paradoxe et stratégies pour 2026.',
+      en: 'Google dominates infrastructure with 96% market share, but GEO captures 45% of search intent. Analysis of the paradox and strategies for 2026.',
+      es: 'Google domina la infraestructura con 96% de cuota de mercado, pero el GEO capta 45% de la intención de búsqueda. Análisis de la paradoja y estrategias para 2026.',
+    },
+    heroImage: paradoxeGoogleGeoHero,
+    heroAlt: {
+      fr: 'Dashboard analytique montrant le déclin du CTR Google face à la montée du GEO et des recherches IA en 2026',
+      en: 'Analytics dashboard showing Google CTR decline versus the rise of GEO and AI search in 2026',
+      es: 'Dashboard analítico mostrando el declive del CTR de Google frente al auge del GEO y las búsquedas IA en 2026',
+    },
+    author: 'Adrien de Volontat',
+    date: new Date().toISOString().split('T')[0],
+    summaryPoints: {
+      fr: [
+        'Google possède 96% de l\'infrastructure de recherche mais perd 45% des clics au profit des réponses IA.',
+        'Le GEO (Generative Engine Optimization) remplace progressivement le SEO classique en 2026.',
+        'Les 5 piliers pour être cité par les LLMs : JSON-LD, E-E-A-T, fraîcheur, format scannable, autorité sémantique.',
+        'L\'IA consomme 10x plus d\'énergie que la recherche classique selon l\'ADEME.',
+        'Google reste le "propriétaire du péage" grâce à Gemini, mais les règles du jeu changent.',
+      ],
+      en: [
+        'Google owns 96% of search infrastructure but loses 45% of clicks to AI-generated answers.',
+        'GEO (Generative Engine Optimization) is progressively replacing traditional SEO in 2026.',
+        'The 5 pillars for LLM citation: JSON-LD, E-E-A-T, freshness, scannable format, semantic authority.',
+        'AI consumes 10x more energy than traditional search according to ADEME.',
+        'Google remains the "toll owner" thanks to Gemini, but the rules of the game are changing.',
+      ],
+      es: [
+        'Google posee el 96% de la infraestructura de búsqueda pero pierde el 45% de los clics ante las respuestas IA.',
+        'El GEO (Generative Engine Optimization) reemplaza progresivamente al SEO clásico en 2026.',
+        'Los 5 pilares para ser citado por los LLMs: JSON-LD, E-E-A-T, frescura, formato escaneable, autoridad semántica.',
+        'La IA consume 10x más energía que la búsqueda clásica según la ADEME.',
+        'Google sigue siendo el "propietario del peaje" gracias a Gemini, pero las reglas del juego cambian.',
+      ],
+    },
+    sources: [
+      { title: 'Search Engine Land - SGE Impact', url: 'https://searchengineland.com/' },
+      { title: 'ADEME - Impact environnemental du numérique', url: 'https://www.ademe.fr/' },
+      { title: 'MIT Technology Review - LLMs', url: 'https://www.technologyreview.com/' },
+    ],
+  },
   // --- ARTICLE CRAWLER (NOUVEAU) ---
   {
     slug: 'crawler-definition-seo-geo',

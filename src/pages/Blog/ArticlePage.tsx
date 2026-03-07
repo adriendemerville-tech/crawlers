@@ -85,6 +85,11 @@ const ARTICLE_SEO_OVERRIDES: Record<string, {
     description: "Guide technique pour créer votre fichier ai-plugin.json et rendre votre site compatible avec l'écosystème ChatGPT Plugins.",
     ogTitle: "ai-plugin.json : Guide ChatGPT Plugins"
   },
+  'paradoxe-google-geo-2026': {
+    title: "96% de part de marché, 45% de clics en moins : Le paradoxe Google et l'avènement du GEO en 2026 | Crawlers.fr",
+    description: "Google domine l'infrastructure avec 96% de part de marché, mais le GEO capte 45% de l'intention de recherche. Analyse du paradoxe et stratégies pour 2026.",
+    ogTitle: "Paradoxe Google & GEO 2026"
+  },
 };
 
 const SITE_URL = 'https://crawlers.fr';
