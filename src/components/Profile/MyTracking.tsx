@@ -237,7 +237,7 @@ export function MyTracking() {
       newParams.delete('gsc_connected');
       setSearchParams(newParams, { replace: true });
       // Force refresh to pick up new token
-      if (refreshProfile) refreshProfile();
+      window.location.reload();
     } else if (gscError) {
       toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
       const newParams = new URLSearchParams(searchParams);
