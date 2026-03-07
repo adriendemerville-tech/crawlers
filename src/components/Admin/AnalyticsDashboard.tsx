@@ -217,7 +217,7 @@ export function AnalyticsDashboard() {
         expertAuditStep1: events.filter(e => e.event_type === 'expert_audit_step_1').length,
         expertAuditStep2: events.filter(e => e.event_type === 'expert_audit_step_2').length,
         expertAuditStep3: events.filter(e => e.event_type === 'expert_audit_step_3').length,
-        errorCount: events.filter(e => e.event_type === 'error').length,
+        errorCount: events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final').length,
       };
       setStats(newStats);
 
