@@ -251,7 +251,7 @@ export function MyTracking() {
     const gscError = searchParams.get('gsc_error');
     
     if (gscConnectedParam === 'true') {
-      toast.success(language === 'fr' ? 'Search Console connecté !' : 'Search Console connected!');
+      toast.success(language === 'fr' ? 'Search Console connecté !' : language === 'es' ? '¡Search Console conectado!' : 'Search Console connected!');
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('gsc_connected');
       setSearchParams(newParams, { replace: true });
