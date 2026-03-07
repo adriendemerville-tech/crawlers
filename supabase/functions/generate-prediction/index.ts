@@ -171,8 +171,8 @@ Simulate 3 scenarios over 90 days assuming all audit recommendations are impleme
 For each scenario, calculate the final monthly clicks = Brand clicks (unchanged) + predicted Non-Brand clicks.
 
 Also compute:
-- ai_cannibalization_risk: "low" if <15% of traffic is informational, "high" if >50%, else "medium"
-- estimated_revenue_impact_euro: (predicted_non_brand_clicks_realistic × estimated avg CPC for the sector in EUR)
+- ai_risk_score: integer 0-100 representing overall AI disruption risk for this site's niche. 0 = negligible AI Overviews impact, 100 = most queries fully answered by AI. Base it on the informational/transactional ratio and sector vulnerability.
+- business_impact_euro: Estimated monthly value in EUR of the realistic traffic gain. Use CPC estimation: high-intent clicks × €1.20 avg CPC + low-intent clicks × €0.25 avg CPC. Only count the NET GAIN over baseline.
 - technical_unlock_potential: estimated additional clicks/month unlocked solely by fixing the ${errorCount} technical errors (removing the indexing ceiling)
 
 ## OUTPUT — Return ONLY this JSON (no markdown fences, no commentary)
@@ -182,18 +182,25 @@ Also compute:
     "realistic": { "clicks": <integer>, "increase_pct": <number> },
     "aggressive": { "clicks": <integer>, "increase_pct": <number> }
   },
-  "market_insights": {
-    "ai_cannibalization_risk": "low"|"medium"|"high",
-    "estimated_revenue_impact_euro": <number>,
-    "technical_unlock_potential": <integer>
+  "ai_risk_score": <integer 0-100>,
+  "business_impact": {
+    "monthly_value_euro": <number>,
+    "annual_value_euro": <number>,
+    "cpc_basis": { "high_intent_cpc": <number>, "low_intent_cpc": <number> }
   },
-  "reasoning": "<2-3 sentence strategic explanation focusing on causality>"
+  "market_insights": {
+    "technical_unlock_potential": <integer>,
+    "ai_cannibalization_risk": "low"|"medium"|"high"
+  },
+  "reasoning": "<2-3 sentence strategic explanation focusing on causality — explain WHICH specific bottleneck removal drives the traffic gain>"
 }
 
 GUARDRAILS:
 - Every scenario's "clicks" MUST be ≥ ${totalClicks} (fixing errors cannot reduce traffic).
 - Brand traffic (${brandClicks}) is constant — add it unchanged to every scenario.
-- Only Non-Brand traffic is scalable.`;
+- Only Non-Brand traffic is scalable.
+- ai_risk_score MUST be an integer between 0 and 100.
+- business_impact.annual_value_euro = monthly_value_euro × 12.`;
 
     // ── Call Gemini ──
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
