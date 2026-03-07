@@ -805,34 +805,12 @@ export function MyTracking() {
                           <div className="flex flex-wrap items-center gap-2 relative z-20">
                             {/* Date mode toggle with integrated calendar */}
                             <div className="flex rounded-lg border bg-muted p-0.5 text-xs">
-                              <Popover open={sinceCalOpen} onOpenChange={setSinceCalOpen}>
-                                <PopoverTrigger asChild>
-                                  <button
-                                    className={cn("px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5", gscDateMode === 'since' && "bg-background shadow-sm font-medium")}
-                                    onClick={(e) => {
-                                      if (gscDateMode !== 'since') {
-                                        setGscDateMode('since');
-                                        e.preventDefault(); // don't toggle popover when switching mode
-                                      }
-                                    }}
-                                  >
-                                    <CalendarIcon className="h-3 w-3" />
-                                    {language === 'fr' ? 'Depuis' : 'Since'}
-                                    {gscDateMode === 'since' && (
-                                      <span className="text-muted-foreground ml-0.5">{format(gscSinceDate, 'dd/MM/yyyy')}</span>
-                                    )}
-                                  </button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start" sideOffset={4}>
-                                  <Calendar
-                                    mode="single"
-                                    selected={gscSinceDate}
-                                    onSelect={(d) => { if (d) { setGscSinceDate(d); setGscDateMode('since'); setSinceCalOpen(false); } }}
-                                    disabled={(d) => d > new Date() || d < new Date('2020-01-01')}
-                                    className={cn("p-3 pointer-events-auto")}
-                                  />
-                                </PopoverContent>
-                              </Popover>
+                              <button
+                                className={cn("px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5", gscDateMode === 'since' && "bg-background shadow-sm font-medium")}
+                                onClick={() => setGscDateMode('since')}
+                              >
+                                {language === 'fr' ? 'Depuis' : 'Since'}
+                              </button>
                               <button
                                 className={cn("px-2.5 py-1 rounded-md transition-colors", gscDateMode === 'range' && "bg-background shadow-sm font-medium")}
                                 onClick={() => setGscDateMode('range')}
@@ -840,6 +818,27 @@ export function MyTracking() {
                                 {language === 'fr' ? 'Entre' : 'Between'}
                               </button>
                             </div>
+
+                            {/* Since date picker - always visible in since mode */}
+                            {gscDateMode === 'since' && (
+                              <Popover open={sinceCalOpen} onOpenChange={setSinceCalOpen}>
+                                <PopoverTrigger asChild>
+                                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                                    <CalendarIcon className="h-3 w-3" />
+                                    {format(gscSinceDate, 'dd/MM/yyyy')}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 pointer-events-auto z-[60]" align="start" sideOffset={4}>
+                                  <Calendar
+                                    mode="single"
+                                    selected={gscSinceDate}
+                                    onSelect={(d) => { if (d) { setGscSinceDate(d); setSinceCalOpen(false); } }}
+                                    disabled={(d) => d > new Date() || d < new Date('2020-01-01')}
+                                    className={cn("p-3 pointer-events-auto")}
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            )}
 
                             {/* Date pickers for range mode */}
                             {gscDateMode === 'range' && (
@@ -851,7 +850,7 @@ export function MyTracking() {
                                       {format(gscRangeStart, 'dd/MM/yyyy')}
                                     </Button>
                                   </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0 pointer-events-auto" align="start" sideOffset={4}>
+                                  <PopoverContent className="w-auto p-0 pointer-events-auto z-[60]" align="start" sideOffset={4}>
                                     <Calendar
                                       mode="single"
                                       selected={gscRangeStart}
@@ -869,7 +868,7 @@ export function MyTracking() {
                                       {format(gscRangeEnd, 'dd/MM/yyyy')}
                                     </Button>
                                   </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0 pointer-events-auto" align="start" sideOffset={4}>
+                                  <PopoverContent className="w-auto p-0 pointer-events-auto z-[60]" align="start" sideOffset={4}>
                                     <Calendar
                                       mode="single"
                                       selected={gscRangeEnd}
