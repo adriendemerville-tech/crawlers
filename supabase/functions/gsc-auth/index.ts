@@ -10,58 +10,61 @@ const corsHeaders = {
  * Edge Function: gsc-auth
  * 
  * Handles Google Search Console OAuth2 flow:
- * - action=login: Returns OAuth2 authorization URL
- * - action=callback: Exchanges code for tokens, stores in profile
- * - action=fetch: Uses stored tokens to fetch GSC data (30 days)
+ * - POST action=login  → Returns OAuth2 authorization URL (redirect_uri = this function)
+ * - GET  (from Google) → Server-side callback: exchanges code, stores tokens, redirects to frontend
+ * - POST action=fetch  → Uses stored tokens to fetch GSC data (30 days)
  */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const { action, code, redirect_uri, site_url, user_id } = await req.json();
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
+  const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
 
-    const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
-    const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  // The canonical redirect URI registered in Google Cloud Console
+  const REDIRECT_URI = `${supabaseUrl}/functions/v1/gsc-auth`;
 
-    if (!clientId || !clientSecret) {
-      return new Response(JSON.stringify({ error: 'Google GSC credentials not configured' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  if (!clientId || !clientSecret) {
+    return new Response(JSON.stringify({ error: 'Google GSC credentials not configured' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+  // ═══════════════════════════════════════════════════════════════════
+  // GET: Server-side OAuth callback from Google
+  // Google redirects here with ?code=...&state=user_id|frontend_origin
+  // ═══════════════════════════════════════════════════════════════════
+  if (req.method === 'GET') {
+    const url = new URL(req.url);
+    const code = url.searchParams.get('code');
+    const state = url.searchParams.get('state') || '';
+    const error = url.searchParams.get('error');
+
+    // state format: "user_id|frontend_origin"
+    const [userId, frontendOrigin] = state.split('|');
+    const redirectBase = frontendOrigin || 'https://crawlers.lovable.app';
+
+    if (error) {
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `${redirectBase}/console?gsc_error=${encodeURIComponent(error)}` },
       });
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-    // === LOGIN: Generate OAuth URL ===
-    if (action === 'login') {
-      const params = new URLSearchParams({
-        client_id: clientId,
-        redirect_uri: redirect_uri || `${supabaseUrl}/functions/v1/gsc-auth`,
-        response_type: 'code',
-        scope: 'https://www.googleapis.com/auth/webmasters.readonly',
-        access_type: 'offline',
-        prompt: 'consent',
-        state: user_id || '',
-      });
-
-      return new Response(JSON.stringify({
-        auth_url: `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    if (!code || !userId) {
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `${redirectBase}/console?gsc_error=missing_code` },
       });
     }
 
-    // === CALLBACK: Exchange code for tokens ===
-    if (action === 'callback') {
-      if (!code || !user_id) {
-        return new Response(JSON.stringify({ error: 'code and user_id required' }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
+    try {
+      // Exchange code for tokens
       const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -70,13 +73,17 @@ serve(async (req) => {
           client_secret: clientSecret,
           code,
           grant_type: 'authorization_code',
-          redirect_uri: redirect_uri || `${supabaseUrl}/functions/v1/gsc-auth`,
+          redirect_uri: REDIRECT_URI,
         }),
       });
 
       if (!tokenResp.ok) {
         const errText = await tokenResp.text();
-        throw new Error(`Token exchange failed: ${errText}`);
+        console.error('Token exchange failed:', errText);
+        return new Response(null, {
+          status: 302,
+          headers: { Location: `${redirectBase}/console?gsc_error=token_exchange_failed` },
+        });
       }
 
       const tokens = await tokenResp.json();
@@ -87,9 +94,46 @@ serve(async (req) => {
         gsc_access_token: tokens.access_token,
         gsc_refresh_token: tokens.refresh_token || null,
         gsc_token_expiry: expiresAt,
-      }).eq('user_id', user_id);
+      }).eq('user_id', userId);
 
-      return new Response(JSON.stringify({ success: true }), {
+      // Redirect back to frontend with success
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `${redirectBase}/console?gsc_connected=true` },
+      });
+
+    } catch (e) {
+      console.error('GSC callback error:', e);
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `${redirectBase}/console?gsc_error=internal` },
+      });
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // POST: API calls (login, fetch)
+  // ═══════════════════════════════════════════════════════════════════
+  try {
+    const { action, site_url, user_id, frontend_origin } = await req.json();
+
+    // === LOGIN: Generate OAuth URL ===
+    if (action === 'login') {
+      // state carries user_id + frontend origin for the GET callback redirect
+      const stateValue = `${user_id || ''}|${frontend_origin || ''}`;
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: REDIRECT_URI,
+        response_type: 'code',
+        scope: 'https://www.googleapis.com/auth/webmasters.readonly',
+        access_type: 'offline',
+        prompt: 'consent',
+        state: stateValue,
+      });
+
+      return new Response(JSON.stringify({
+        auth_url: `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
