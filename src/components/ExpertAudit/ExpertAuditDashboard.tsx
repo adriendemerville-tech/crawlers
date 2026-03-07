@@ -1031,6 +1031,15 @@ export function ExpertAuditDashboard() {
               const accepted = urlValidation.suggestedUrl;
               setUrl(accepted);
               localStorage.setItem('crawlers_last_url', accepted);
+              // Persist correction decision for logged-in user
+              if (user) {
+                supabase.from('url_correction_decisions').upsert({
+                  user_id: user.id,
+                  original_url: normalizeUrl(url),
+                  corrected_url: accepted,
+                  decision: 'accepted',
+                }, { onConflict: 'user_id,original_url' }).then(() => {});
+              }
               urlValidation.acceptSuggestion(accepted, (validUrl) => {
                 if (currentStep <= 1) runTechnicalAudit(validUrl);
                 else runStrategicAudit(validUrl);
@@ -1040,6 +1049,15 @@ export function ExpertAuditDashboard() {
             onDismissNotFound={urlValidation.dismissNotFound}
             onIgnoreSuggestion={() => {
               const original = normalizeUrl(url);
+              // Persist ignore decision for logged-in user
+              if (user) {
+                supabase.from('url_correction_decisions').upsert({
+                  user_id: user.id,
+                  original_url: original,
+                  corrected_url: urlValidation.suggestedUrl,
+                  decision: 'ignored',
+                }, { onConflict: 'user_id,original_url' }).then(() => {});
+              }
               urlValidation.dismissSuggestion();
               if (currentStep <= 1) runTechnicalAudit(original);
               else runStrategicAudit(original);
