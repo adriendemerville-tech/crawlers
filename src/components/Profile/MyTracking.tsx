@@ -1018,7 +1018,16 @@ export function MyTracking() {
                                         border: '1px solid hsl(var(--border))',
                                       }} 
                                     />
-                                    <Legend />
+                                    <Legend 
+                                      formatter={(value: string) => (
+                                        <span style={{ color: 'hsl(var(--foreground))', fontSize: 12 }}>{value}</span>
+                                      )}
+                                      payload={[
+                                        { value: language === 'fr' ? 'Clics' : 'Clicks', type: 'line', color: 'hsl(var(--primary))' },
+                                        { value: 'Impressions', type: 'line', color: 'hsl(262, 83%, 58%)' },
+                                        { value: language === 'fr' ? 'Position moy.' : 'Avg. Position', type: 'line', color: 'hsl(25, 95%, 53%)' },
+                                      ]}
+                                    />
                                     {refLineX && (
                                       <ReferenceLine
                                         x={refLineX}
