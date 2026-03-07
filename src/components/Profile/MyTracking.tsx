@@ -753,7 +753,7 @@ export function MyTracking() {
                         <Search className="h-4 w-4" />
                         Google Search Console
                         {gscConnected && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/30 px-2 py-0.5 text-[10px] font-semibold text-green-700 dark:text-green-400">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-green-100 dark:bg-green-900/30 px-2 py-px text-[10px] font-semibold text-green-700 dark:text-green-400">
                             <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
                             on
                           </span>
