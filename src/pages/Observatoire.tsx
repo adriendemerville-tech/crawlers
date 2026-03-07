@@ -5,93 +5,196 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useObservatoryStats } from '@/hooks/useObservatoryStats';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Code2, Timer, AlertTriangle, TrendingUp, TrendingDown, BarChart3, Activity } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import {
+  Code2, Timer, AlertTriangle, TrendingUp, TrendingDown,
+  BarChart3, Activity, Map, FileText, Share2, Twitter,
+  Link2, Globe, ShieldCheck, Smartphone, MonitorSmartphone,
+  Box, Network, Image, ImageOff, Palette, FileCode,
+  Gauge, Zap, LayoutDashboard, MousePointerClick
+} from 'lucide-react';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
+// ─── Translations ──────────────────────────────────────────
 const translations = {
   fr: {
     title: "L'Observatoire du Web Français",
     subtitle: "Données agrégées et anonymisées issues des analyses effectuées sur Crawlers.fr. Statistiques mises à jour en temps réel à chaque nouveau scan.",
     badge: "Données en temps réel",
-    jsonLd: "Sites utilisant JSON-LD",
-    loadTime: "Temps de chargement moyen",
-    errors404: "Erreurs 404 rencontrées",
-    chartTitle: "Évolution du temps de chargement moyen",
-    chartSubtitle: "Moyenne mensuelle sur les 6 derniers mois (en ms)",
-    thisMonth: "ce mois",
     totalScans: "scans analysés",
+    seoSection: "Standards SEO",
+    socialSection: "Réseaux sociaux & i18n",
+    securitySection: "Sécurité & Mobile",
+    perfSection: "Performance",
+    assetsSection: "Ressources & Assets",
+    chartTitle: "Évolution des métriques de performance",
+    chartSubtitle: "Moyenne mensuelle sur les 6 derniers mois (en ms)",
     noData: "Les données apparaîtront ici dès les premiers scans.",
+    // Boolean KPIs
+    has_json_ld: "JSON-LD",
+    has_sitemap: "Sitemap.xml",
+    has_robots_txt: "Robots.txt",
+    has_meta_description: "Meta Description",
+    has_open_graph: "Open Graph",
+    has_twitter_cards: "Twitter Cards",
+    has_canonical: "Canonical",
+    has_hreflang: "Hreflang",
+    has_https: "HTTPS",
+    is_mobile_friendly: "Mobile-friendly",
+    has_viewport_meta: "Viewport Meta",
+    // Numeric KPIs
+    load_time_ms: "Temps de chargement",
+    error_404_count: "Erreurs 404 / site",
+    dom_size_kb: "Taille DOM",
+    total_requests: "Requêtes HTTP",
+    image_count: "Images / page",
+    images_without_alt: "Images sans Alt",
+    css_files_count: "Fichiers CSS",
+    js_files_count: "Fichiers JS",
+    ttfb_ms: "TTFB",
+    fcp_ms: "FCP",
+    lcp_ms: "LCP",
+    cls_score: "CLS (×1000)",
   },
   en: {
     title: "The French Web Observatory",
     subtitle: "Aggregated and anonymized data from analyses performed on Crawlers.fr. Statistics updated in real time with each new scan.",
     badge: "Real-time data",
-    jsonLd: "Sites using JSON-LD",
-    loadTime: "Average load time",
-    errors404: "404 errors encountered",
-    chartTitle: "Average load time evolution",
-    chartSubtitle: "Monthly average over the last 6 months (in ms)",
-    thisMonth: "this month",
     totalScans: "scans analyzed",
+    seoSection: "SEO Standards",
+    socialSection: "Social & i18n",
+    securitySection: "Security & Mobile",
+    perfSection: "Performance",
+    assetsSection: "Resources & Assets",
+    chartTitle: "Performance metrics evolution",
+    chartSubtitle: "Monthly average over the last 6 months (in ms)",
     noData: "Data will appear here after the first scans.",
+    has_json_ld: "JSON-LD", has_sitemap: "Sitemap.xml", has_robots_txt: "Robots.txt",
+    has_meta_description: "Meta Description", has_open_graph: "Open Graph",
+    has_twitter_cards: "Twitter Cards", has_canonical: "Canonical", has_hreflang: "Hreflang",
+    has_https: "HTTPS", is_mobile_friendly: "Mobile-friendly", has_viewport_meta: "Viewport Meta",
+    load_time_ms: "Load Time", error_404_count: "404 Errors / site", dom_size_kb: "DOM Size",
+    total_requests: "HTTP Requests", image_count: "Images / page", images_without_alt: "Images without Alt",
+    css_files_count: "CSS Files", js_files_count: "JS Files", ttfb_ms: "TTFB", fcp_ms: "FCP",
+    lcp_ms: "LCP", cls_score: "CLS (×1000)",
   },
   es: {
     title: "El Observatorio del Web Francés",
     subtitle: "Datos agregados y anonimizados de los análisis realizados en Crawlers.fr. Estadísticas actualizadas en tiempo real con cada nuevo escaneo.",
     badge: "Datos en tiempo real",
-    jsonLd: "Sitios con JSON-LD",
-    loadTime: "Tiempo de carga promedio",
-    errors404: "Errores 404 encontrados",
-    chartTitle: "Evolución del tiempo de carga promedio",
-    chartSubtitle: "Promedio mensual en los últimos 6 meses (en ms)",
-    thisMonth: "este mes",
     totalScans: "escaneos analizados",
+    seoSection: "Estándares SEO",
+    socialSection: "Redes sociales e i18n",
+    securitySection: "Seguridad y Móvil",
+    perfSection: "Rendimiento",
+    assetsSection: "Recursos y Assets",
+    chartTitle: "Evolución de las métricas de rendimiento",
+    chartSubtitle: "Promedio mensual en los últimos 6 meses (en ms)",
     noData: "Los datos aparecerán aquí tras los primeros escaneos.",
+    has_json_ld: "JSON-LD", has_sitemap: "Sitemap.xml", has_robots_txt: "Robots.txt",
+    has_meta_description: "Meta Description", has_open_graph: "Open Graph",
+    has_twitter_cards: "Twitter Cards", has_canonical: "Canonical", has_hreflang: "Hreflang",
+    has_https: "HTTPS", is_mobile_friendly: "Mobile-friendly", has_viewport_meta: "Viewport Meta",
+    load_time_ms: "Tiempo de carga", error_404_count: "Errores 404 / sitio", dom_size_kb: "Tamaño DOM",
+    total_requests: "Solicitudes HTTP", image_count: "Imágenes / página", images_without_alt: "Imágenes sin Alt",
+    css_files_count: "Archivos CSS", js_files_count: "Archivos JS", ttfb_ms: "TTFB", fcp_ms: "FCP",
+    lcp_ms: "LCP", cls_score: "CLS (×1000)",
   },
 };
 
+// ─── Icon & style maps ──────────────────────────────────────
+const booleanIcons: Record<string, any> = {
+  has_json_ld: Code2, has_sitemap: Map, has_robots_txt: FileText,
+  has_meta_description: FileText, has_open_graph: Share2,
+  has_twitter_cards: Twitter, has_canonical: Link2, has_hreflang: Globe,
+  has_https: ShieldCheck, is_mobile_friendly: Smartphone, has_viewport_meta: MonitorSmartphone,
+};
+
+const numericIcons: Record<string, any> = {
+  load_time_ms: Timer, error_404_count: AlertTriangle, dom_size_kb: Box,
+  total_requests: Network, image_count: Image, images_without_alt: ImageOff,
+  css_files_count: Palette, js_files_count: FileCode,
+  ttfb_ms: Zap, fcp_ms: Gauge, lcp_ms: LayoutDashboard, cls_score: MousePointerClick,
+};
+
+const numericUnits: Record<string, string> = {
+  load_time_ms: 'ms', ttfb_ms: 'ms', fcp_ms: 'ms', lcp_ms: 'ms',
+  dom_size_kb: 'KB', cls_score: '',
+  error_404_count: '', total_requests: '', image_count: '', images_without_alt: '',
+  css_files_count: '', js_files_count: '',
+};
+
+// ─── Components ──────────────────────────────────────────────
 const TrendBadge = ({ value }: { value: number }) => {
   if (value === 0) return null;
-  const isPositive = value > 0;
+  const pos = value > 0;
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-medium ${isPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
-      {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-      {isPositive ? '+' : ''}{value}%
+    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${pos ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
+      {pos ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+      {pos ? '+' : ''}{value}%
     </span>
   );
 };
 
+interface BoolCardProps { field: string; percent: number; trend: number; label: string }
+const BoolCard = ({ field, percent, trend, label }: BoolCardProps) => {
+  const Icon = booleanIcons[field] || Code2;
+  const good = percent >= 60;
+  return (
+    <Card className="shadow-sm border-border/50 bg-card hover:shadow-md transition-shadow">
+      <CardContent className="flex items-center gap-3 p-4">
+        <div className={`rounded-lg p-2 ${good ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-amber-100 dark:bg-amber-900/30'}`}>
+          <Icon className={`h-4 w-4 ${good ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-muted-foreground truncate">{label}</p>
+          <div className="flex items-end gap-1.5">
+            <span className="text-xl font-bold text-foreground">{percent}%</span>
+            <TrendBadge value={trend} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+interface NumCardProps { field: string; avg: number; trend: number; label: string }
+const NumCard = ({ field, avg, trend, label }: NumCardProps) => {
+  const Icon = numericIcons[field] || Timer;
+  const unit = numericUnits[field] || '';
+  const display = unit === 'ms' && avg >= 1000 ? `${(avg / 1000).toFixed(1)}s` : `${avg}${unit ? ' ' + unit : ''}`;
+  return (
+    <Card className="shadow-sm border-border/50 bg-card hover:shadow-md transition-shadow">
+      <CardContent className="flex items-center gap-3 p-4">
+        <div className="rounded-lg p-2 bg-violet-100 dark:bg-violet-900/30">
+          <Icon className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-muted-foreground truncate">{label}</p>
+          <div className="flex items-end gap-1.5">
+            <span className="text-xl font-bold text-foreground">{display}</span>
+            <TrendBadge value={trend} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+  <h2 className="text-lg font-semibold text-foreground mb-3 mt-8 first:mt-0">{children}</h2>
+);
+
+// ─── Page ────────────────────────────────────────────────────
 const Observatoire = () => {
   const { language } = useLanguage();
   const t = translations[language];
   const stats = useObservatoryStats();
 
-  const kpis = [
-    {
-      title: t.jsonLd,
-      value: `${stats.jsonLdPercent}%`,
-      icon: Code2,
-      trend: stats.trends.jsonLd,
-      color: 'text-violet-600 dark:text-violet-400',
-      bg: 'bg-violet-100 dark:bg-violet-900/30',
-    },
-    {
-      title: t.loadTime,
-      value: `${(stats.avgLoadTimeMs / 1000).toFixed(1)}s`,
-      icon: Timer,
-      trend: stats.trends.loadTime,
-      color: 'text-amber-600 dark:text-amber-400',
-      bg: 'bg-amber-100 dark:bg-amber-900/30',
-    },
-    {
-      title: t.errors404,
-      value: `${stats.error404Percent}%`,
-      icon: AlertTriangle,
-      trend: stats.trends.error404,
-      color: 'text-red-600 dark:text-red-400',
-      bg: 'bg-red-100 dark:bg-red-900/30',
-    },
-  ];
+  const seoFields = ['has_json_ld', 'has_sitemap', 'has_robots_txt', 'has_meta_description', 'has_canonical'] as const;
+  const socialFields = ['has_open_graph', 'has_twitter_cards', 'has_hreflang'] as const;
+  const securityFields = ['has_https', 'is_mobile_friendly', 'has_viewport_meta'] as const;
+  const perfFields = ['load_time_ms', 'ttfb_ms', 'fcp_ms', 'lcp_ms', 'cls_score'] as const;
+  const assetsFields = ['dom_size_kb', 'total_requests', 'image_count', 'images_without_alt', 'css_files_count', 'js_files_count', 'error_404_count'] as const;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -119,33 +222,58 @@ const Observatoire = () => {
         </section>
 
         {/* KPIs */}
-        <section className="container mx-auto max-w-5xl px-4 -mt-8 relative z-10">
-          <div className="grid gap-4 sm:grid-cols-3">
-            {kpis.map((kpi, i) => (
-              <Card key={i} className="shadow-lg border-border/50 bg-card">
-                <CardHeader className="flex flex-row items-center gap-3 pb-2">
-                  <div className={`rounded-lg p-2.5 ${kpi.bg}`}>
-                    <kpi.icon className={`h-5 w-5 ${kpi.color}`} />
-                  </div>
-                  <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {stats.loading ? (
-                    <Skeleton className="h-9 w-24" />
-                  ) : (
-                    <div className="flex items-end gap-2">
-                      <span className="text-3xl font-bold text-foreground">{kpi.value}</span>
-                      <TrendBadge value={kpi.trend} />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <section className="container mx-auto max-w-6xl px-4 py-10">
+          {stats.loading ? (
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
+            </div>
+          ) : (
+            <>
+              {/* SEO Standards */}
+              <SectionTitle>{t.seoSection}</SectionTitle>
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                {seoFields.map(f => (
+                  <BoolCard key={f} field={f} percent={stats.booleanKpis[f].percent} trend={stats.booleanKpis[f].trend} label={(t as any)[f]} />
+                ))}
+              </div>
+
+              {/* Social & i18n */}
+              <SectionTitle>{t.socialSection}</SectionTitle>
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {socialFields.map(f => (
+                  <BoolCard key={f} field={f} percent={stats.booleanKpis[f].percent} trend={stats.booleanKpis[f].trend} label={(t as any)[f]} />
+                ))}
+              </div>
+
+              {/* Security & Mobile */}
+              <SectionTitle>{t.securitySection}</SectionTitle>
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {securityFields.map(f => (
+                  <BoolCard key={f} field={f} percent={stats.booleanKpis[f].percent} trend={stats.booleanKpis[f].trend} label={(t as any)[f]} />
+                ))}
+              </div>
+
+              {/* Performance */}
+              <SectionTitle>{t.perfSection}</SectionTitle>
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                {perfFields.map(f => (
+                  <NumCard key={f} field={f} avg={stats.numericKpis[f].avg} trend={stats.numericKpis[f].trend} label={(t as any)[f]} />
+                ))}
+              </div>
+
+              {/* Assets */}
+              <SectionTitle>{t.assetsSection}</SectionTitle>
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                {assetsFields.map(f => (
+                  <NumCard key={f} field={f} avg={stats.numericKpis[f].avg} trend={stats.numericKpis[f].trend} label={(t as any)[f]} />
+                ))}
+              </div>
+            </>
+          )}
         </section>
 
         {/* Chart */}
-        <section className="container mx-auto max-w-5xl px-4 py-12 md:py-16">
+        <section className="container mx-auto max-w-6xl px-4 pb-12 md:pb-16">
           <Card className="shadow-lg border-border/50">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -156,18 +284,30 @@ const Observatoire = () => {
             </CardHeader>
             <CardContent>
               {stats.loading ? (
-                <Skeleton className="h-64 w-full" />
+                <Skeleton className="h-72 w-full" />
               ) : stats.monthlyData.length === 0 ? (
-                <div className="flex h-64 items-center justify-center text-muted-foreground text-sm">
+                <div className="flex h-72 items-center justify-center text-muted-foreground text-sm">
                   {t.noData}
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={320}>
                   <AreaChart data={stats.monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                     <defs>
-                      <linearGradient id="loadTimeGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <linearGradient id="gLoad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
                         <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gTtfb" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gFcp" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gLcp" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
@@ -180,15 +320,16 @@ const Observatoire = () => {
                         borderRadius: '8px',
                         color: 'hsl(var(--foreground))',
                       }}
-                      formatter={(value: number) => [`${value} ms`, 'Temps moyen']}
+                      formatter={(value: number, name: string) => {
+                        const labels: Record<string, string> = { avgLoadTime: 'Load Time', avgTtfb: 'TTFB', avgFcp: 'FCP', avgLcp: 'LCP' };
+                        return [`${value} ms`, labels[name] || name];
+                      }}
                     />
-                    <Area
-                      type="monotone"
-                      dataKey="avgLoadTime"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      fill="url(#loadTimeGradient)"
-                    />
+                    <Legend />
+                    <Area type="monotone" dataKey="avgLoadTime" name="Load Time" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#gLoad)" />
+                    <Area type="monotone" dataKey="avgTtfb" name="TTFB" stroke="#f59e0b" strokeWidth={2} fill="url(#gTtfb)" />
+                    <Area type="monotone" dataKey="avgFcp" name="FCP" stroke="#10b981" strokeWidth={2} fill="url(#gFcp)" />
+                    <Area type="monotone" dataKey="avgLcp" name="LCP" stroke="#ef4444" strokeWidth={2} fill="url(#gLcp)" />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
