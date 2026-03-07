@@ -328,6 +328,7 @@ function performSelfAudit(doc: HTMLDocument, htmlLength: number): SelfAuditResul
 // ==================== SMART FETCHER WITH JS FALLBACK ====================
 
 async function smartFetch(url: string): Promise<SmartFetchResult> {
+  assertSafeUrl(url);
   console.log('[SmartFetch] Tentative 1: Fetch statique standard...');
   
   const controller = new AbortController();
