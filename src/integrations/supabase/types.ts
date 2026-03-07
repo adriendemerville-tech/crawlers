@@ -794,28 +794,88 @@ export type Database = {
       }
       scan_results: {
         Row: {
+          cls_score: number
           created_at: string
+          css_files_count: number
+          dom_size_kb: number
           error_404_count: number
+          fcp_ms: number
+          has_canonical: boolean
+          has_hreflang: boolean
+          has_https: boolean
           has_json_ld: boolean
+          has_meta_description: boolean
+          has_open_graph: boolean
+          has_robots_txt: boolean
+          has_sitemap: boolean
+          has_twitter_cards: boolean
+          has_viewport_meta: boolean
           id: string
+          image_count: number
+          images_without_alt: number
+          is_mobile_friendly: boolean
+          js_files_count: number
+          lcp_ms: number
           load_time_ms: number
           scan_type: string
+          total_requests: number
+          ttfb_ms: number
         }
         Insert: {
+          cls_score?: number
           created_at?: string
+          css_files_count?: number
+          dom_size_kb?: number
           error_404_count?: number
+          fcp_ms?: number
+          has_canonical?: boolean
+          has_hreflang?: boolean
+          has_https?: boolean
           has_json_ld?: boolean
+          has_meta_description?: boolean
+          has_open_graph?: boolean
+          has_robots_txt?: boolean
+          has_sitemap?: boolean
+          has_twitter_cards?: boolean
+          has_viewport_meta?: boolean
           id?: string
+          image_count?: number
+          images_without_alt?: number
+          is_mobile_friendly?: boolean
+          js_files_count?: number
+          lcp_ms?: number
           load_time_ms?: number
           scan_type?: string
+          total_requests?: number
+          ttfb_ms?: number
         }
         Update: {
+          cls_score?: number
           created_at?: string
+          css_files_count?: number
+          dom_size_kb?: number
           error_404_count?: number
+          fcp_ms?: number
+          has_canonical?: boolean
+          has_hreflang?: boolean
+          has_https?: boolean
           has_json_ld?: boolean
+          has_meta_description?: boolean
+          has_open_graph?: boolean
+          has_robots_txt?: boolean
+          has_sitemap?: boolean
+          has_twitter_cards?: boolean
+          has_viewport_meta?: boolean
           id?: string
+          image_count?: number
+          images_without_alt?: number
+          is_mobile_friendly?: boolean
+          js_files_count?: number
+          lcp_ms?: number
           load_time_ms?: number
           scan_type?: string
+          total_requests?: number
+          ttfb_ms?: number
         }
         Relationships: []
       }
