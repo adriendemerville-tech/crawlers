@@ -1018,27 +1018,32 @@ export function ExpertAuditDashboard() {
         hasStrategicResult={!!strategicResult}
         onNavigateToTechnical={handleNavigateToTechnical}
         onNavigateToStrategic={handleNavigateToStrategic}
-      />
-
-      {/* URL validation banners */}
-      <UrlValidationBanner
-        suggestedUrl={urlValidation.suggestedUrl}
-        urlNotFound={urlValidation.urlNotFound}
-        suggestionPrefix={urlValidation.getSuggestionPrefix()}
-        notFoundMessage={urlValidation.getNotFoundMessage()}
-        onAcceptSuggestion={() => {
-          if (!urlValidation.suggestedUrl) return;
-          const accepted = urlValidation.suggestedUrl;
-          setUrl(accepted);
-          localStorage.setItem('crawlers_last_url', accepted);
-          urlValidation.acceptSuggestion(accepted, (validUrl) => {
-            // Determine which audit to run based on current step
-            if (currentStep <= 1) runTechnicalAudit(validUrl);
-            else runStrategicAudit(validUrl);
-          });
-        }}
-        onDismissSuggestion={urlValidation.dismissSuggestion}
-        onDismissNotFound={urlValidation.dismissNotFound}
+        validationBanner={
+          <UrlValidationBanner
+            suggestedUrl={urlValidation.suggestedUrl}
+            urlNotFound={urlValidation.urlNotFound}
+            suggestionPrefix={urlValidation.getSuggestionPrefix()}
+            notFoundMessage={urlValidation.getNotFoundMessage()}
+            onAcceptSuggestion={() => {
+              if (!urlValidation.suggestedUrl) return;
+              const accepted = urlValidation.suggestedUrl;
+              setUrl(accepted);
+              localStorage.setItem('crawlers_last_url', accepted);
+              urlValidation.acceptSuggestion(accepted, (validUrl) => {
+                if (currentStep <= 1) runTechnicalAudit(validUrl);
+                else runStrategicAudit(validUrl);
+              });
+            }}
+            onDismissSuggestion={urlValidation.dismissSuggestion}
+            onDismissNotFound={urlValidation.dismissNotFound}
+            onIgnoreSuggestion={() => {
+              const original = normalizeUrl(url);
+              urlValidation.dismissSuggestion();
+              if (currentStep <= 1) runTechnicalAudit(original);
+              else runStrategicAudit(original);
+            }}
+          />
+        }
       />
 
       {/* Loading States Container - scroll target */}

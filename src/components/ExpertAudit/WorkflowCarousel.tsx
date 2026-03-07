@@ -83,6 +83,7 @@ interface WorkflowCarouselProps {
   hasStrategicResult?: boolean;
   onNavigateToTechnical?: () => void;
   onNavigateToStrategic?: () => void;
+  validationBanner?: React.ReactNode;
 }
 
 export function WorkflowCarousel({
@@ -99,6 +100,7 @@ export function WorkflowCarousel({
   hasStrategicResult = false,
   onNavigateToTechnical,
   onNavigateToStrategic,
+  validationBanner,
 }: WorkflowCarouselProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
@@ -315,6 +317,7 @@ export function WorkflowCarousel({
               />
               <Search className="absolute right-8 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             </div>
+            {validationBanner}
           </motion.div>
         )}
       </AnimatePresence>
