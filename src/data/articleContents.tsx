@@ -1751,7 +1751,7 @@ Allow: /`}</pre>
         <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
           <h3 className="text-lg font-bold text-foreground mb-2">Is your site ready for GEO?</h3>
           <p className="text-sm text-muted-foreground mb-4">Analyze your AI visibility for free with Crawlers.AI</p>
-          <RichLink href="/audit-expert" label="Request a free GEO audit" />
+          <RichLinkCard href="/audit-expert" title="Request a free GEO audit" description="Analyze your AI visibility in a few clicks" />
         </div>
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
