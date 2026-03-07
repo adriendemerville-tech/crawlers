@@ -66,8 +66,8 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) throw new Error('LOVABLE_API_KEY is not configured');
+    const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
+    if (!openrouterKey) throw new Error('OPENROUTER_API_KEY is not configured');
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
