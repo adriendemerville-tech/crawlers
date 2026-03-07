@@ -226,6 +226,84 @@ export function MyTracking() {
       });
   }, [user]);
 
+  // Handle GSC OAuth callback
+  useEffect(() => {
+    const code = searchParams.get('gsc_code');
+    if (!code || !user) return;
+    
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('gsc-auth', {
+          body: { action: 'callback', code, user_id: user.id, redirect_uri: `${window.location.origin}/console` },
+        });
+        if (error) throw error;
+        toast.success(language === 'fr' ? 'Search Console connecté !' : 'Search Console connected!');
+        // Clean URL
+        searchParams.delete('gsc_code');
+        setSearchParams(searchParams, { replace: true });
+        // Fetch GSC data
+        fetchGscData();
+      } catch (err: any) {
+        console.error('GSC callback error:', err);
+        toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
+        searchParams.delete('gsc_code');
+        setSearchParams(searchParams, { replace: true });
+      }
+    })();
+  }, [searchParams, user]);
+
+  // Fetch GSC data when site is selected and GSC is connected
+  const fetchGscData = useCallback(async () => {
+    if (!user || !currentSiteDomain) return;
+    setGscLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('gsc-auth', {
+        body: { action: 'fetch', user_id: user.id, site_url: `https://${currentSiteDomain}` },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        if (data.error === 'GSC not connected') return;
+        throw new Error(data.error);
+      }
+      setGscData(data);
+    } catch (err: any) {
+      console.error('GSC fetch error:', err);
+    } finally {
+      setGscLoading(false);
+    }
+  }, [user, selectedSite, sites]);
+
+  const currentSiteDomain = sites.find(s => s.id === selectedSite)?.domain;
+
+  useEffect(() => {
+    if (gscConnected && currentSiteDomain) {
+      fetchGscData();
+    } else {
+      setGscData(null);
+    }
+  }, [gscConnected, currentSiteDomain, fetchGscData]);
+
+  const handleConnectGsc = async () => {
+    if (!user) return;
+    setGscConnecting(true);
+    try {
+      const redirectUri = `${window.location.origin}/console`;
+      const { data, error } = await supabase.functions.invoke('gsc-auth', {
+        body: { action: 'login', user_id: user.id, redirect_uri: redirectUri },
+      });
+      if (error) throw error;
+      if (data?.auth_url) {
+        // Open Google OAuth in same window
+        window.location.href = data.auth_url;
+      }
+    } catch (err: any) {
+      console.error('GSC login error:', err);
+      toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
+    } finally {
+      setGscConnecting(false);
+    }
+  };
+
   // Auto-refresh sites not audited in 24h — only once per login session
   useEffect(() => {
     if (!user || sites.length === 0) return;
