@@ -109,6 +109,7 @@ interface HtmlAnalysis {
   wordCount: number;
   hasSchemaOrg: boolean;
   schemaTypes: string[];
+  isSchemaJsGenerated?: boolean;
   isHttps: boolean;
   hasGTM?: boolean;
   hasGA4?: boolean;
