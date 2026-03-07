@@ -41,6 +41,7 @@ const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
 const ComparatifAuditGeo = lazy(() => import("./pages/ComparatifAuditGeo"));
 const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersSemrush"));
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
+const ProAgency = lazy(() => import("./pages/ProAgency"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
