@@ -49,7 +49,7 @@ interface DownloadAuthGateProps {
   pendingAction?: string;
 }
 
-export function DownloadAuthGate({ isOpen, onClose, onAuthenticated }: DownloadAuthGateProps) {
+export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath = '/', pendingAction = 'true' }: DownloadAuthGateProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const navigate = useNavigate();
@@ -64,14 +64,14 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated }: DownloadA
   if (!isOpen) return null;
 
   const handleSignup = () => {
-    sessionStorage.setItem('download_pending', 'true');
-    sessionStorage.setItem('download_return_path', '/');
+    sessionStorage.setItem('download_pending', pendingAction);
+    sessionStorage.setItem('download_return_path', returnPath);
     navigate('/auth?mode=signup');
   };
 
   const handleLogin = () => {
-    sessionStorage.setItem('download_pending', 'true');
-    sessionStorage.setItem('download_return_path', '/');
+    sessionStorage.setItem('download_pending', pendingAction);
+    sessionStorage.setItem('download_return_path', returnPath);
     navigate('/auth?mode=login');
   };
 
