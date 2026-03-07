@@ -1653,7 +1653,7 @@ Allow: /`}</pre>
         <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
           <h3 className="text-lg font-bold text-foreground mb-2">Votre site est-il prêt pour le GEO ?</h3>
           <p className="text-sm text-muted-foreground mb-4">Analysez gratuitement votre visibilité auprès des IA avec Crawlers.AI</p>
-          <RichLink href="/audit-expert" label="Demander un audit GEO gratuit" />
+          <RichLinkCard href="/audit-expert" title="Demander un audit GEO gratuit" description="Analysez la visibilité IA de votre site en quelques clics" />
         </div>
 
         <div className="my-6 space-y-2">
