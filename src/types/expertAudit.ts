@@ -115,6 +115,7 @@ export interface JsonLdValidation {
   types: string[];
   parseErrors: string[];
   count: number;
+  isJsGenerated?: boolean;
 }
 
 export interface ExpertInsights {
