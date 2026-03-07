@@ -46,16 +46,31 @@ function CompetitorCard({
           </div>
           <h4 className="font-semibold text-foreground flex items-center gap-2">
             {actor.name}
-            {actor.url && (
-              <a 
-                href={actor.url.startsWith('http') ? actor.url : `https://${actor.url}`} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            )}
+            {actor.url && (() => {
+              let href = actor.url.trim();
+              // Strip any leading slashes to avoid relative path issues
+              href = href.replace(/^\/+/, '');
+              // Ensure absolute URL
+              if (!href.startsWith('http://') && !href.startsWith('https://')) {
+                href = `https://${href}`;
+              }
+              try {
+                new URL(href); // validate
+                return (
+                  <a 
+                    href={href}
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                );
+              } catch {
+                return null;
+              }
+            })()}
           </h4>
           <p className="text-xs text-primary font-medium mt-1 flex items-center gap-1">
             <Shield className="h-3 w-3" />
