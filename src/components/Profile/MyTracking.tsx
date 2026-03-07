@@ -226,41 +226,25 @@ export function MyTracking() {
       });
   }, [user]);
 
-  // Handle GSC OAuth callback (Google redirects with ?code=xxx&state=user_id)
+  // Handle GSC OAuth server-side callback result (edge function redirects back with ?gsc_connected=true or ?gsc_error=...)
   useEffect(() => {
-    const code = searchParams.get('code');
-    const state = searchParams.get('state');
-    if (!code || !user) return;
-    // Only process if state matches user_id (to distinguish from other OAuth flows)
-    if (state && state !== user.id) return;
+    const gscConnectedParam = searchParams.get('gsc_connected');
+    const gscError = searchParams.get('gsc_error');
     
-    (async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('gsc-auth', {
-          body: { action: 'callback', code, user_id: user.id, redirect_uri: `${window.location.origin}/console` },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        toast.success(language === 'fr' ? 'Search Console connecté !' : 'Search Console connected!');
-        // Clean URL params
-        const newParams = new URLSearchParams(searchParams);
-        newParams.delete('code');
-        newParams.delete('state');
-        newParams.delete('scope');
-        setSearchParams(newParams, { replace: true });
-        // Refresh profile to get gsc_access_token
-        window.location.href = '/console';
-      } catch (err: any) {
-        console.error('GSC callback error:', err);
-        toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
-        const newParams = new URLSearchParams(searchParams);
-        newParams.delete('code');
-        newParams.delete('state');
-        newParams.delete('scope');
-        setSearchParams(newParams, { replace: true });
-      }
-    })();
-  }, [searchParams, user]);
+    if (gscConnectedParam === 'true') {
+      toast.success(language === 'fr' ? 'Search Console connecté !' : 'Search Console connected!');
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('gsc_connected');
+      setSearchParams(newParams, { replace: true });
+      // Force refresh to pick up new token
+      if (refreshProfile) refreshProfile();
+    } else if (gscError) {
+      toast.error(language === 'fr' ? 'Erreur de connexion Search Console' : 'Search Console connection error');
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('gsc_error');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [searchParams]);
 
   const currentSiteDomain = sites.find(s => s.id === selectedSite)?.domain;
 
