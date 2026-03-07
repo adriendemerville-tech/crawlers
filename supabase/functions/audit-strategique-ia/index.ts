@@ -1058,10 +1058,11 @@ INSTRUCTIONS CRITIQUES:
 - La prescriptive_action doit détailler une stratégie d'acquisition concrète sur CE réseau spécifique: fréquence de publication, types de contenus à créer, hooks d'engagement, et comment cette présence alimentera la citabilité IA (les LLMs comme Perplexity et SearchGPT indexent fortement Reddit, X et YouTube)
 - Le choix du réseau doit être JUSTIFIÉ par l'analyse de l'identité de marque, du public cible et du secteur d'activité détectés
 
-⚠️ DISTINCTION GOLIATH vs CONCURRENT DIRECT (CRITIQUE):
+⚠️ DISTINCTION GOLIATH vs CONCURRENT LOCAL (CRITIQUE):
 - GOLIATH (leader): Acteur DOMINANT avec présence internationale ou nationale massive, historique de +10 ans, budget marketing x10, backlinks x10, référence du secteur que tout le monde connaît (ex: Amazon, L'Occitane, Décathlon pour leurs secteurs)
-- CONCURRENT DIRECT: Entreprise de MÊME TAILLE et MÊME STADE que le site analysé. Même zone géographique, même positionnement prix, même cible client, même surface commerciale. Si le site analysé est une PME locale, le concurrent direct est aussi une PME locale, PAS un géant international.
-- Ne JAMAIS mettre un Goliath en "direct_competitor". Le concurrent direct doit être un "frère jumeau" en termes de surface commerciale.`;
+- CONCURRENT LOCAL (direct_competitor): C'est un concurrent NUMÉRIQUE LOCAL identifié dans les SERPs pour une requête localisée (ex: "plombier châteaurenard"). Il DOIT OBLIGATOIREMENT avoir un site web avec une URL valide. C'est l'entité locale qui apparaît juste au-dessus du site cible dans les résultats de recherche Google pour une requête locale. Si le site cible est premier dans les SERPs locaux, alors le concurrent local est l'entité qui apparaît en second. Le concurrent local est un acteur de la MÊME zone géographique, du MÊME secteur, avec un positionnement SERP proche.
+- Ne JAMAIS mettre un Goliath en "direct_competitor". Le concurrent local doit être un concurrent géographiquement proche, visible dans les résultats locaux, avec un site web actif.
+- Le champ "url" du direct_competitor est OBLIGATOIRE et doit être une URL valide d'un site web réel.`;
 
 }
 
