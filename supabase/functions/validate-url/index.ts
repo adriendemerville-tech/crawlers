@@ -11,7 +11,11 @@ async function checkUrl(url: string): Promise<{ ok: boolean; status: number; fin
     const tid = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(url, {
       method: 'GET',
-      headers: { 'User-Agent': UA, 'Accept': 'text/html' },
+      headers: {
+        'User-Agent': UA,
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+      },
       redirect: 'follow',
       signal: controller.signal,
     });
