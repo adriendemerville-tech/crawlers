@@ -262,6 +262,8 @@ export function MyTracking() {
     })();
   }, [searchParams, user]);
 
+  const currentSiteDomain = sites.find(s => s.id === selectedSite)?.domain;
+
   // Fetch GSC data when site is selected and GSC is connected
   const fetchGscData = useCallback(async () => {
     if (!user || !currentSiteDomain) return;
@@ -281,9 +283,7 @@ export function MyTracking() {
     } finally {
       setGscLoading(false);
     }
-  }, [user, selectedSite, sites]);
-
-  const currentSiteDomain = sites.find(s => s.id === selectedSite)?.domain;
+  }, [user, currentSiteDomain]);
 
   useEffect(() => {
     if (gscConnected && currentSiteDomain) {
