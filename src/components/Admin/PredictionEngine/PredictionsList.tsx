@@ -112,7 +112,7 @@ export function PredictionsList() {
                   <div className="flex items-center gap-3">
                     {pred ? (
                       <div className="text-right">
-                        <div className="flex items-center gap-1 text-green-600">
+                        <div className="flex items-center gap-1 text-primary">
                           <TrendingUp className="h-4 w-4" />
                           <span className="font-bold">+{pred.predicted_increase_pct.toFixed(1)}%</span>
                         </div>

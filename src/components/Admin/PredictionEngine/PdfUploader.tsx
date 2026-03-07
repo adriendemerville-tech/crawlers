@@ -135,7 +135,7 @@ export function PdfUploader({ onUploadComplete }: Props) {
         {result?.extracted_data && (
           <Card className="bg-muted/50">
             <CardContent className="pt-4 space-y-2">
-              <div className="flex items-center gap-2 text-green-600">
+              <div className="flex items-center gap-2 text-primary">
                 <CheckCircle className="h-4 w-4" />
                 <span className="font-medium">Extraction réussie</span>
               </div>
