@@ -187,6 +187,9 @@ export function MyTracking() {
   });
   const [gscRangeEnd, setGscRangeEnd] = useState<Date>(new Date());
   const [gscGranularity, setGscGranularity] = useState<GscGranularity>('daily');
+  const [sinceCalOpen, setSinceCalOpen] = useState(false);
+  const [rangeStartCalOpen, setRangeStartCalOpen] = useState(false);
+  const [rangeEndCalOpen, setRangeEndCalOpen] = useState(false);
 
   const gscStartDate = gscDateMode === 'since' ? gscSinceDate : gscRangeStart;
   const [gscTodayDate] = useState(() => new Date());
