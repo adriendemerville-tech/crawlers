@@ -223,7 +223,7 @@ export function ClientsTab() {
     });
     if (error) {
       if (error.code === '23505') {
-        toast.info(language === 'fr' ? 'Site déjà associé' : 'Site already linked');
+        toast.info(language === 'fr' ? 'Site déjà associé' : language === 'es' ? 'Sitio ya asociado' : 'Site already linked');
       } else {
         toast.error(error.message);
       }
