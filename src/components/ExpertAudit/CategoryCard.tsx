@@ -48,7 +48,7 @@ export function CategoryCard({ icon, title, score, maxScore, children, variant =
   };
 
   return (
-    <Card className={cn('overflow-hidden border bg-gradient-to-br to-transparent', styles.border, styles.gradient)}>
+    <Card className={cn('border bg-gradient-to-br to-transparent', styles.border, styles.gradient)}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold flex items-center gap-2.5">
