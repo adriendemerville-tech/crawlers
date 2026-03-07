@@ -438,8 +438,8 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
           }
         }
       } else {
-        console.log('[SmartFetch] ⚠️ BROWSERLESS_API_KEY non configurée dans les secrets - fallback JS impossible');
-        console.log('[SmartFetch] 💡 Configurez la clé API Browserless.io pour activer le rendu des SPA');
+        console.log('[SmartFetch] ⚠️ RENDERING_API_KEY non configurée dans les secrets - fallback JS impossible');
+        console.log('[SmartFetch] 💡 Configurez la clé API Browserless.io (secret RENDERING_API_KEY) pour activer le rendu des SPA');
       }
       
       // Return original with degraded reliability
