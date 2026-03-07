@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ExpertAuditResult } from '@/types/expertAudit';
-import { expertReportTranslations, generateExpertReportHTML, WhiteLabelBranding, summarizeStrategicResult } from './expertReportExport';
+import { expertReportTranslations, generateExpertReportHTML, generateExpertPDF, WhiteLabelBranding, summarizeStrategicResult } from './expertReportExport';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveReport } from '@/hooks/useSaveReport';
 

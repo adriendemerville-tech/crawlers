@@ -253,11 +253,9 @@ export default function ProAgency() {
 
   useCanonicalHreflang('/pro-agency');
 
-  const handleSubscribe = async () => {
-    if (!user) {
-      toast.error(t.ctaLoginRequired);
-      return;
-    }
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const doSubscribe = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-subscription-session');
@@ -268,6 +266,14 @@ export default function ProAgency() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubscribe = async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    await doSubscribe();
   };
 
   const faqSchema = {
