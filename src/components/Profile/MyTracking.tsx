@@ -175,6 +175,22 @@ export function MyTracking() {
   const [gscLoading, setGscLoading] = useState(false);
   const gscConnected = !!profile?.gsc_access_token;
 
+  // GSC date range & granularity
+  type GscDateMode = 'since' | 'range';
+  type GscGranularity = 'daily' | 'weekly' | 'monthly';
+  const [gscDateMode, setGscDateMode] = useState<GscDateMode>('since');
+  const [gscSinceDate, setGscSinceDate] = useState<Date>(() => {
+    const d = new Date(); d.setDate(d.getDate() - 30); return d;
+  });
+  const [gscRangeStart, setGscRangeStart] = useState<Date>(() => {
+    const d = new Date(); d.setDate(d.getDate() - 30); return d;
+  });
+  const [gscRangeEnd, setGscRangeEnd] = useState<Date>(new Date());
+  const [gscGranularity, setGscGranularity] = useState<GscGranularity>('daily');
+
+  const gscStartDate = gscDateMode === 'since' ? gscSinceDate : gscRangeStart;
+  const gscEndDate = gscDateMode === 'since' ? new Date() : gscRangeEnd;
+
   const fetchSites = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
