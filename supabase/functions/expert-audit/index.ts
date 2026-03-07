@@ -2145,31 +2145,36 @@ Réponds avec ce JSON exact:
       ).catch(err => console.error('Erreur sauvegarde registre:', err));
     }
     
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          url: normalizedUrl,
-          domain,
-          scannedAt: new Date().toISOString(),
-          totalScore,
-          maxScore: 200,
-          scores,
-          recommendations,
-          introduction,
-          rawData: {
-            psi: { categories, audits: Object.keys(audits).slice(0, 10) },
-            safeBrowsing,
-            htmlAnalysis,
-            robotsAnalysis,
-            crawlersData: crawlersResult,
-            sitemapAnalysis,
-            llmsTxtAnalysis,
-            specializedSitemaps,
-          }
+    const responseBody = {
+      success: true,
+      data: {
+        url: normalizedUrl,
+        domain,
+        scannedAt: new Date().toISOString(),
+        totalScore,
+        maxScore: 200,
+        scores,
+        recommendations,
+        introduction,
+        rawData: {
+          psi: { categories, audits: Object.keys(audits).slice(0, 10) },
+          safeBrowsing,
+          htmlAnalysis,
+          robotsAnalysis,
+          crawlersData: crawlersResult,
+          sitemapAnalysis,
+          llmsTxtAnalysis,
+          specializedSitemaps,
         }
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      }
+    };
+
+    // Store in cache (async, non-blocking) — TTL 60 min
+    setCache(ck, 'expert-audit', responseBody, 60).catch(e => console.error('[cache] write error:', e));
+
+    return new Response(
+      JSON.stringify(responseBody),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'MISS' } }
     );
     
   } catch (error) {
