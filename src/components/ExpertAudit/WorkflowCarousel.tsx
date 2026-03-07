@@ -317,6 +317,7 @@ export function WorkflowCarousel({
               />
               <Search className="absolute right-8 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             </div>
+            {validationBanner}
           </motion.div>
         )}
       </AnimatePresence>
