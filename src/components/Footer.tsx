@@ -252,10 +252,12 @@ function FooterComponent() {
                       {link.href.startsWith('/') ? (
                         <Link
                           to={link.href}
-                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                          className={`flex items-center gap-2 text-sm transition-colors ${(link as any).gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                           title={link.description}
                         >
-                          {link.href === '/tarifs' ? (
+                          {(link as any).gold ? (
+                            <Crown className="h-4 w-4 flex-shrink-0 text-amber-500" />
+                          ) : link.href === '/tarifs' ? (
                             <CreditCard className="h-4 w-4 flex-shrink-0" />
                           ) : (
                             <FileText className="h-4 w-4 flex-shrink-0" />
