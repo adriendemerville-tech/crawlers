@@ -4,43 +4,46 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
 
+const t3 = (language: string, fr: string, en: string, es: string) =>
+  language === 'fr' ? fr : language === 'es' ? es : en;
+
 function FooterComponent() {
   const { t, language } = useLanguage();
 
   const toolsLinks = [
     { 
       icon: Bot, 
-      label: language === 'fr' ? 'Analyse Bots IA' : language === 'es' ? 'Análisis Bots IA' : 'AI Bots Analysis',
+      label: t3(language, 'Analyse Bots IA', 'AI Bots Analysis', 'Análisis Bots IA'),
       href: '#crawlers',
-      description: language === 'fr' ? 'Vérifiez l\'accès des robots IA à votre site' : 'Check AI bot access to your site',
+      description: t3(language, 'Vérifiez l\'accès des robots IA à votre site', 'Check AI bot access to your site', 'Verifique el acceso de los bots IA a su sitio'),
       gold: false
     },
     { 
       icon: Globe, 
-      label: language === 'fr' ? 'Score GEO' : 'GEO Score',
+      label: t3(language, 'Score GEO', 'GEO Score', 'Score GEO'),
       href: '#geo',
-      description: language === 'fr' ? 'Optimisation pour moteurs génératifs' : 'Generative engine optimization',
+      description: t3(language, 'Optimisation pour moteurs génératifs', 'Generative engine optimization', 'Optimización para motores generativos'),
       gold: false
     },
     { 
       icon: Brain, 
-      label: language === 'fr' ? 'Visibilité LLM' : 'LLM Visibility',
+      label: t3(language, 'Visibilité LLM', 'LLM Visibility', 'Visibilidad LLM'),
       href: '#llm',
-      description: language === 'fr' ? 'Analyse de citabilité par les IA' : 'AI citation analysis',
+      description: t3(language, 'Analyse de citabilité par les IA', 'AI citation analysis', 'Análisis de citabilidad por IA'),
       gold: false
     },
     { 
       icon: Gauge, 
       label: 'PageSpeed',
       href: '#pagespeed',
-      description: language === 'fr' ? 'Performance et Core Web Vitals' : 'Performance & Core Web Vitals',
+      description: t3(language, 'Performance et Core Web Vitals', 'Performance & Core Web Vitals', 'Rendimiento y Core Web Vitals'),
       gold: false
     },
     { 
       icon: Radar, 
-      label: language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit',
+      label: t3(language, 'Audit Expert', 'Expert Audit', 'Auditoría Experta'),
       href: '/audit-expert',
-      description: language === 'fr' ? 'Audit SEO/GEO approfondi par IA' : 'In-depth AI-powered SEO/GEO audit',
+      description: t3(language, 'Audit SEO/GEO approfondi par IA', 'In-depth AI-powered SEO/GEO audit', 'Auditoría SEO/GEO en profundidad con IA'),
       gold: true,
       isRoute: true
     },
@@ -50,62 +53,62 @@ function FooterComponent() {
     { 
       label: 'FAQ', 
       href: '#faq',
-      description: language === 'fr' ? 'Questions fréquentes' : 'Frequently asked questions'
+      description: t3(language, 'Questions fréquentes', 'Frequently asked questions', 'Preguntas frecuentes')
     },
     { 
-      label: language === 'fr' ? 'Tarifs' : language === 'es' ? 'Precios' : 'Pricing',
+      label: t3(language, 'Tarifs', 'Pricing', 'Precios'),
       href: '/tarifs',
-      description: language === 'fr' ? 'Nos offres et tarifs' : 'Our offers and pricing'
+      description: t3(language, 'Nos offres et tarifs', 'Our offers and pricing', 'Nuestras ofertas y precios')
     },
     { 
-      label: language === 'fr' ? 'Lexique SEO/GEO' : language === 'es' ? 'Glosario SEO/GEO' : 'SEO/GEO Glossary',
+      label: t3(language, 'Lexique SEO/GEO', 'SEO/GEO Glossary', 'Glosario SEO/GEO'),
       href: '/lexique',
-      description: language === 'fr' ? 'Définitions des termes SEO et GEO' : 'SEO and GEO terms definitions'
+      description: t3(language, 'Définitions des termes SEO et GEO', 'SEO and GEO terms definitions', 'Definiciones de términos SEO y GEO')
     },
     { 
-      label: language === 'fr' ? 'Plugin WordPress' : 'WordPress Plugin',
+      label: t3(language, 'Plugin WordPress', 'WordPress Plugin', 'Plugin WordPress'),
       href: '/modifier-code-wordpress',
-      description: language === 'fr' ? 'Optimisez WordPress pour l\'IA sans coder' : 'Optimize WordPress for AI without coding'
+      description: t3(language, 'Optimisez WordPress pour l\'IA sans coder', 'Optimize WordPress for AI without coding', 'Optimice WordPress para la IA sin programar')
     },
     { 
       label: 'Pro Agency',
       href: '/pro-agency',
-      description: language === 'fr' ? 'Abonnement illimité pour agences SEO' : language === 'es' ? 'Suscripción ilimitada para agencias SEO' : 'Unlimited subscription for SEO agencies',
+      description: t3(language, 'Abonnement illimité pour agences SEO', 'Unlimited subscription for SEO agencies', 'Suscripción ilimitada para agencias SEO'),
       gold: true
     },
     { 
-      label: language === 'fr' ? 'Blog' : 'Blog',
+      label: 'Blog',
       href: '/blog',
-      description: language === 'fr' ? 'Articles et guides SEO/GEO' : 'SEO/GEO articles and guides'
+      description: t3(language, 'Articles et guides SEO/GEO', 'SEO/GEO articles and guides', 'Artículos y guías SEO/GEO')
     },
     { 
-      label: language === 'fr' ? 'Crawlers vs Semrush' : 'Crawlers vs Semrush',
+      label: 'Crawlers vs Semrush',
       href: '/comparatif-crawlers-semrush',
-      description: language === 'fr' ? 'Comparatif SEO/GEO avec Semrush' : 'SEO/GEO comparison with Semrush'
+      description: t3(language, 'Comparatif SEO/GEO avec Semrush', 'SEO/GEO comparison with Semrush', 'Comparación SEO/GEO con Semrush')
     },
     { 
       label: 'llms.txt', 
       href: '/llms.txt',
-      description: language === 'fr' ? 'Instructions pour les IA' : 'Instructions for AI'
+      description: t3(language, 'Instructions pour les IA', 'Instructions for AI', 'Instrucciones para la IA')
     },
     { 
       label: 'Sitemap', 
       href: '/sitemap.xml',
-      description: language === 'fr' ? 'Plan du site XML' : 'XML Sitemap'
+      description: t3(language, 'Plan du site XML', 'XML Sitemap', 'Mapa del sitio XML')
     },
   ];
 
   const legalLinks = [
     { 
-      label: language === 'fr' ? 'Mentions légales' : language === 'es' ? 'Aviso legal' : 'Legal Notice',
+      label: t3(language, 'Mentions légales', 'Legal Notice', 'Aviso legal'),
       href: '/mentions-legales'
     },
     { 
-      label: language === 'fr' ? 'Politique de confidentialité' : language === 'es' ? 'Política de privacidad' : 'Privacy Policy',
+      label: t3(language, 'Politique de confidentialité', 'Privacy Policy', 'Política de privacidad'),
       href: '/politique-confidentialite'
     },
     { 
-      label: language === 'fr' ? 'Conditions d\'utilisation' : language === 'es' ? 'Términos de uso' : 'Terms of Use',
+      label: t3(language, 'Conditions d\'utilisation', 'Terms of Use', 'Términos de uso'),
       href: '/conditions-utilisation'
     },
     { 
@@ -118,39 +121,37 @@ function FooterComponent() {
     { 
       label: 'iktracker.fr',
       href: 'https://iktracker.fr',
-      description: language === 'fr' ? 'Suivi d\'indemnités kilométriques gratuit' : 'Free mileage tracking',
+      description: t3(language, 'Suivi d\'indemnités kilométriques gratuit', 'Free mileage tracking', 'Seguimiento gratuito de kilometraje'),
       external: true,
       dofollow: true
     },
     { 
       label: 'Humanizz.fr',
       href: 'https://humanizz.fr',
-      description: language === 'fr' ? 'Apprenez à rédiger avec l\'IA' : 'Learn to write with AI',
+      description: t3(language, 'Apprenez à rédiger avec l\'IA', 'Learn to write with AI', 'Aprenda a escribir con IA'),
       external: true,
       dofollow: false
     },
     { 
       label: 'MossAI Tools',
       href: 'https://mossai.org',
-      description: language === 'fr' ? 'Outils IA pour le SEO' : 'AI tools for SEO',
+      description: t3(language, 'Outils IA pour le SEO', 'AI tools for SEO', 'Herramientas IA para SEO'),
       external: true,
       dofollow: false
     },
   ];
 
-  // Get all blog articles for resources section
   const allArticles = blogArticles;
 
   return (
     <>
-      {/* Ressources & Guides Section - Above Footer */}
       {allArticles.length > 0 && (
         <section className="border-t border-border bg-muted/20">
           <div className="mx-auto max-w-7xl px-4 py-8">
             <div className="flex items-center gap-2 mb-4">
               <BookOpen className="h-5 w-5 text-primary" />
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                {language === 'fr' ? 'Ressources & Guides' : language === 'es' ? 'Recursos y Guías' : 'Resources & Guides'}
+                {t3(language, 'Ressources & Guides', 'Resources & Guides', 'Recursos y Guías')}
               </h3>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -174,7 +175,7 @@ function FooterComponent() {
                 to="/blog"
                 className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
-                {language === 'fr' ? 'Voir tous les articles' : language === 'es' ? 'Ver todos los artículos' : 'View all articles'}
+                {t3(language, 'Voir tous les articles', 'View all articles', 'Ver todos los artículos')}
                 <span aria-hidden="true">→</span>
               </Link>
             </div>
@@ -183,21 +184,19 @@ function FooterComponent() {
       )}
 
       <footer className="border-t border-border bg-card" role="contentinfo">
-        {/* Main Footer Content */}
         <div className="mx-auto max-w-7xl px-4 py-12">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
             
-            {/* Brand & Description */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold text-foreground">Crawlers AI</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {language === 'fr' 
-                  ? 'Analysez et optimisez la visibilité de votre site web pour les moteurs de recherche IA et les LLM en 2026. Outils gratuits pour le SEO et le GEO en France et en Europe.'
-                  : language === 'es'
-                  ? 'Analice y optimice la visibilidad de su sitio web para motores de búsqueda IA y LLM en 2026. Herramientas gratuitas para SEO y GEO en España, México y Argentina.'
-                  : 'Analyze and optimize your website visibility for AI search engines and LLMs in 2026. Free tools for SEO and GEO in Great Britain and USA.'}
+                {t3(language,
+                  'Analysez et optimisez la visibilité de votre site web pour les moteurs de recherche IA et les LLM en 2026. Outils gratuits pour le SEO et le GEO en France et en Europe.',
+                  'Analyze and optimize your website visibility for AI search engines and LLMs in 2026. Free tools for SEO and GEO in Great Britain and USA.',
+                  'Analice y optimice la visibilidad de su sitio web para motores de búsqueda IA y LLM en 2026. Herramientas gratuitas para SEO y GEO en España, México y Argentina.'
+                )}
               </p>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4" />
@@ -207,10 +206,9 @@ function FooterComponent() {
               </div>
             </div>
 
-            {/* Tools */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                {language === 'fr' ? 'Nos Outils' : language === 'es' ? 'Herramientas' : 'Our Tools'}
+                {t3(language, 'Nos Outils', 'Our Tools', 'Herramientas')}
               </h3>
               <nav aria-label="Outils d'analyse">
                 <ul className="space-y-3">
@@ -243,7 +241,7 @@ function FooterComponent() {
 
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                {language === 'fr' ? 'Ressources' : language === 'es' ? 'Recursos' : 'Resources'}
+                {t3(language, 'Ressources', 'Resources', 'Recursos')}
               </h3>
               <nav aria-label="Ressources">
                 <ul className="space-y-3">
@@ -280,10 +278,9 @@ function FooterComponent() {
               </nav>
             </div>
 
-            {/* Partners */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                {language === 'fr' ? 'Découvrir aussi' : language === 'es' ? 'Descubrir también' : 'Also Discover'}
+                {t3(language, 'Découvrir aussi', 'Also Discover', 'Descubrir también')}
               </h3>
               <ul className="space-y-3">
                 {partnerLinks.map((link) => (
@@ -310,11 +307,9 @@ function FooterComponent() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
         <div className="border-t border-border bg-muted/30">
           <div className="mx-auto max-w-7xl px-4 py-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              {/* Legal Links */}
               <nav aria-label="Mentions légales" className="flex flex-wrap gap-x-6 gap-y-2">
                 {legalLinks.map((link) => (
                   <Link
@@ -328,20 +323,14 @@ function FooterComponent() {
                 ))}
               </nav>
 
-              {/* Copyright */}
               <p className="text-xs text-muted-foreground">
                 © {new Date().getFullYear()} Crawlers AI - crawlers.fr | 
-                {language === 'fr' 
-                  ? ' Tous droits réservés'
-                  : language === 'es'
-                  ? ' Todos los derechos reservados'
-                  : ' All rights reserved'}
+                {t3(language, ' Tous droits réservés', ' All rights reserved', ' Todos los derechos reservados')}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Schema.org structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
@@ -349,9 +338,11 @@ function FooterComponent() {
             "name": "Crawlers AI",
             "url": "https://crawlers.fr",
             "logo": "https://crawlers.fr/favicon.svg",
-            "description": language === 'fr' 
-              ? "Outils d'analyse SEO et GEO pour optimiser la visibilité de votre site web auprès des moteurs de recherche IA et des LLM."
-              : "SEO and GEO analysis tools to optimize your website visibility for AI search engines and LLMs.",
+            "description": t3(language,
+              "Outils d'analyse SEO et GEO pour optimiser la visibilité de votre site web auprès des moteurs de recherche IA et des LLM.",
+              "SEO and GEO analysis tools to optimize your website visibility for AI search engines and LLMs.",
+              "Herramientas de análisis SEO y GEO para optimizar la visibilidad de su sitio web en motores de búsqueda IA y LLM."
+            ),
             "contactPoint": {
               "@type": "ContactPoint",
               "email": "contact@crawlers.fr",
@@ -365,5 +356,4 @@ function FooterComponent() {
   );
 }
 
-// Memoize Footer since it rarely changes
 export const Footer = memo(FooterComponent);
