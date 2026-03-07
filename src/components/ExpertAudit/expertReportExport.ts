@@ -742,11 +742,34 @@ export function generateExpertReportHTML(
 </html>`;
 }
 
-export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technical' | 'strategic', t: ExpertReportI18n, branding?: WhiteLabelBranding) {
+export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technical' | 'strategic', t: ExpertReportI18n, branding?: WhiteLabelBranding, language: string = 'fr') {
+  if (auditMode === 'strategic') {
+    // Strategic: use the rich HTML report and trigger browser print-to-PDF
+    const htmlContent = generateExpertReportHTML(result, auditMode, t, language, branding);
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:none;';
+    document.body.appendChild(iframe);
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc || !iframe.contentWindow) {
+      document.body.removeChild(iframe);
+      return;
+    }
+    iframeDoc.open();
+    iframeDoc.write(htmlContent);
+    iframeDoc.close();
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        try { document.body.removeChild(iframe); } catch {}
+      }, 2000);
+    }, 600);
+    return;
+  }
+
+  // Technical: keep jsPDF-based generation
   const doc = new jsPDF();
   const isWhiteLabel = branding?.logoUrl || branding?.primaryColor;
 
-  // Parse brand color to RGB
   const hexToRgb = (hex: string) => {
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
@@ -762,7 +785,7 @@ export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technic
   doc.setTextColor(255, 255, 255);
   doc.text(isWhiteLabel ? '' : 'Crawlers.fr', 20, 18);
   doc.setFontSize(11);
-  doc.text(auditMode === 'technical' ? t.technicalAudit : t.strategic, 20, 28);
+  doc.text(t.technicalAudit, 20, 28);
   doc.text(result.domain, doc.internal.pageSize.width - 20, 22, { align: 'right' });
 
   // URL and date
@@ -771,251 +794,79 @@ export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technic
   doc.text(`URL: ${result.url}`, 20, 48);
   doc.text(`${t.generatedAt}: ${new Date(result.scannedAt).toLocaleString()}`, 20, 55);
 
-  if (auditMode === 'technical') {
-    // Global score
-    doc.setFontSize(28);
+  // Global score
+  doc.setFontSize(28);
+  doc.setTextColor(124, 58, 237);
+  doc.text(`${result.totalScore}/200`, 20, 78);
+  doc.setFontSize(12);
+  doc.setTextColor(0);
+  doc.text(t.score + ' Global', 75, 78);
+
+  let currentY = 90;
+
+  // Introduction narrative
+  if (result.introduction) {
+    doc.setFontSize(14);
     doc.setTextColor(124, 58, 237);
-    doc.text(`${result.totalScore}/200`, 20, 78);
-    doc.setFontSize(12);
+    doc.text(t.introduction, 20, currentY);
+    currentY += 8;
+
+    doc.setFontSize(10);
+    doc.setTextColor(60);
+
+    const presentationLines = doc.splitTextToSize(result.introduction.presentation, 170);
+    doc.text(presentationLines, 20, currentY);
+    currentY += presentationLines.length * 5 + 4;
+
+    const strengthsLines = doc.splitTextToSize(result.introduction.strengths, 170);
+    doc.text(strengthsLines, 20, currentY);
+    currentY += strengthsLines.length * 5 + 4;
+
+    const improvementLines = doc.splitTextToSize(result.introduction.improvement, 170);
+    doc.text(improvementLines, 20, currentY);
+    currentY += improvementLines.length * 5 + 10;
+  }
+
+  // Category scores table
+  const scoresData = [
+    [t.performance, `${result.scores.performance.score}/${result.scores.performance.maxScore}`],
+    [t.technical, `${result.scores.technical.score}/${result.scores.technical.maxScore}`],
+    [t.semantic, `${result.scores.semantic.score}/${result.scores.semantic.maxScore}`],
+    [t.aiReady, `${result.scores.aiReady.score}/${result.scores.aiReady.maxScore}`],
+    [t.security, `${result.scores.security.score}/${result.scores.security.maxScore}`],
+  ];
+
+  autoTable(doc, {
+    startY: currentY,
+    head: [['Catégorie', t.score]],
+    body: scoresData,
+    theme: 'striped',
+    headStyles: { fillColor: brandRgb },
+    styles: { fontSize: 10 },
+  });
+
+  // Recommendations
+  if (result.recommendations?.length > 0) {
+    const finalY = (doc as any).lastAutoTable.finalY || currentY + 50;
+    doc.setFontSize(14);
     doc.setTextColor(0);
-    doc.text(t.score + ' Global', 75, 78);
+    doc.text(t.recommendations, 20, finalY + 15);
 
-    let currentY = 90;
-
-    // Introduction narrative (3 paragraphes)
-    if (result.introduction) {
-      doc.setFontSize(14);
-      doc.setTextColor(124, 58, 237);
-      doc.text(t.introduction, 20, currentY);
-      currentY += 8;
-
-      doc.setFontSize(10);
-      doc.setTextColor(60);
-
-      const presentationLines = doc.splitTextToSize(result.introduction.presentation, 170);
-      doc.text(presentationLines, 20, currentY);
-      currentY += presentationLines.length * 5 + 4;
-
-      const strengthsLines = doc.splitTextToSize(result.introduction.strengths, 170);
-      doc.text(strengthsLines, 20, currentY);
-      currentY += strengthsLines.length * 5 + 4;
-
-      const improvementLines = doc.splitTextToSize(result.introduction.improvement, 170);
-      doc.text(improvementLines, 20, currentY);
-      currentY += improvementLines.length * 5 + 10;
-    }
-
-    // Category scores table
-    const scoresData = [
-      [t.performance, `${result.scores.performance.score}/${result.scores.performance.maxScore}`],
-      [t.technical, `${result.scores.technical.score}/${result.scores.technical.maxScore}`],
-      [t.semantic, `${result.scores.semantic.score}/${result.scores.semantic.maxScore}`],
-      [t.aiReady, `${result.scores.aiReady.score}/${result.scores.aiReady.maxScore}`],
-      [t.security, `${result.scores.security.score}/${result.scores.security.maxScore}`],
-    ];
+    const recsData = result.recommendations.slice(0, 8).map((rec) => [
+      rec.priority === 'critical' ? t.critical : rec.priority === 'important' ? t.important : t.optional,
+      rec.title,
+      rec.description.substring(0, 60) + (rec.description.length > 60 ? '...' : ''),
+    ]);
 
     autoTable(doc, {
-      startY: currentY,
-      head: [['Catégorie', t.score]],
-      body: scoresData,
-      theme: 'striped',
-      headStyles: { fillColor: brandRgb },
-      styles: { fontSize: 10 },
-    });
-
-    // Recommendations
-    if (result.recommendations?.length > 0) {
-      const finalY = (doc as any).lastAutoTable.finalY || currentY + 50;
-      doc.setFontSize(14);
-      doc.setTextColor(0);
-      doc.text(t.recommendations, 20, finalY + 15);
-
-      const recsData = result.recommendations.slice(0, 8).map((rec) => [
-        rec.priority === 'critical' ? t.critical : rec.priority === 'important' ? t.important : t.optional,
-        rec.title,
-        rec.description.substring(0, 60) + (rec.description.length > 60 ? '...' : ''),
-      ]);
-
-      autoTable(doc, {
-        startY: finalY + 20,
-        head: [['Priorité', 'Action', 'Description']],
-        body: recsData,
+      startY: finalY + 20,
+      head: [['Priorité', 'Action', 'Description']],
+      body: recsData,
       theme: 'striped',
       headStyles: { fillColor: brandRgb },
       styles: { fontSize: 9 },
-        columnStyles: { 2: { cellWidth: 70 } },
-      });
-    }
-  } else {
-    const strategic = result.strategicAnalysis;
-    const geoScore = strategic?.geo_score?.score || strategic?.overallScore || 0;
-
-    doc.setFontSize(28);
-    doc.setTextColor(5, 150, 105);
-    doc.text(`${geoScore}/100`, 20, 78);
-    doc.setFontSize(12);
-    doc.setTextColor(0);
-    doc.text(t.geoScore, 70, 78);
-
-    let currentY = 90;
-
-    // Introduction narrative
-    if (result.introduction) {
-      doc.setFontSize(14);
-      doc.setTextColor(5, 150, 105);
-      doc.text(t.introduction, 20, currentY);
-      currentY += 8;
-
-      doc.setFontSize(10);
-      doc.setTextColor(60);
-
-      const presentationLines = doc.splitTextToSize(result.introduction.presentation, 170);
-      doc.text(presentationLines, 20, currentY);
-      currentY += presentationLines.length * 5 + 4;
-
-      const strengthsLines = doc.splitTextToSize(result.introduction.strengths, 170);
-      doc.text(strengthsLines, 20, currentY);
-      currentY += strengthsLines.length * 5 + 4;
-
-      const improvementLines = doc.splitTextToSize(result.introduction.improvement, 170);
-      doc.text(improvementLines, 20, currentY);
-      currentY += improvementLines.length * 5 + 10;
-    }
-
-    // Executive summary
-    if (strategic?.executive_summary || strategic?.executiveSummary) {
-      doc.setFontSize(14);
-      doc.setTextColor(5, 150, 105);
-      doc.text(t.executiveSummary, 20, currentY);
-      currentY += 8;
-
-      doc.setFontSize(10);
-      doc.setTextColor(60);
-      const summary = strategic?.executive_summary || strategic?.executiveSummary || '';
-      const lines = doc.splitTextToSize(summary, 170);
-      doc.text(lines, 20, currentY);
-      currentY += lines.length * 5 + 10;
-    }
-
-    // Mots-clés (encadré dédié)
-    {
-      // Intentionally keep French wording here to match the product spec
-      // and avoid ambiguity across locales in exported PDFs.
-      const keywordsTitle = 'Mots clés';
-      const kp = strategic?.keyword_positioning;
-      const ms = strategic?.market_data_summary;
-
-      doc.setFontSize(14);
-      doc.setTextColor(5, 150, 105);
-      doc.text(keywordsTitle, 20, currentY);
-      currentY += 8;
-
-      doc.setFontSize(10);
-      doc.setTextColor(60);
-
-      if (ms) {
-        const summaryLine = `Volume marché/mois: ${ms.total_market_volume?.toLocaleString?.() || ms.total_market_volume || '—'} | Classés: ${ms.keywords_ranked}/${ms.keywords_analyzed} | Position moy.: ${
-          typeof ms.average_position === 'number' && ms.average_position > 0 ? `#${ms.average_position.toFixed(1)}` : '—'
-        }`;
-        const summaryLines = doc.splitTextToSize(summaryLine, 170);
-        doc.text(summaryLines, 20, currentY);
-        currentY += summaryLines.length * 5 + 6;
-      }
-
-      if (kp?.main_keywords?.length > 0) {
-        const rows = kp.main_keywords.slice(0, 10).map((kw: any) => [
-          kw.keyword || '—',
-          typeof kw.volume === 'number' ? kw.volume.toLocaleString() : String(kw.volume ?? '—'),
-          `${kw.difficulty ?? '—'}/100`,
-          typeof kw.current_rank === 'number' ? `#${kw.current_rank}` : String(kw.current_rank ?? '—'),
-        ]);
-
-        autoTable(doc, {
-          startY: currentY,
-          head: [[keywordsTitle, 'Volume', 'Diff.', 'Pos.']],
-          body: rows,
-          theme: 'striped',
-          headStyles: { fillColor: [5, 150, 105] },
-          styles: { fontSize: 9 },
-          columnStyles: {
-            0: { cellWidth: 70 },
-            1: { cellWidth: 30, halign: 'center' },
-            2: { cellWidth: 20, halign: 'center' },
-            3: { cellWidth: 20, halign: 'center' },
-          },
-        });
-
-        currentY = ((doc as any).lastAutoTable?.finalY || currentY) + 10;
-      } else {
-        const msg = 'Aucune donnée de mots-clés n\'a été fournie pour ce rapport.';
-        const msgLines = doc.splitTextToSize(msg, 170);
-        doc.text(msgLines, 20, currentY);
-        currentY += msgLines.length * 5 + 10;
-      }
-    }
-
-    // Roadmap
-    if (strategic?.strategic_roadmap && strategic.strategic_roadmap.length > 0) {
-      doc.setFontSize(14);
-      doc.setTextColor(0);
-      doc.text(t.roadmap, 20, currentY);
-
-      const roadmapData = strategic.strategic_roadmap.map((item: any) => [
-        item.priority,
-        item.action_concrete,
-        item.strategic_goal.substring(0, 50) + (item.strategic_goal.length > 50 ? '...' : ''),
-      ]);
-
-      autoTable(doc, {
-        startY: currentY + 5,
-        head: [['Priorité', 'Action', 'Objectif']],
-        body: roadmapData,
-        theme: 'striped',
-        headStyles: { fillColor: [5, 150, 105] },
-        styles: { fontSize: 9 },
-        columnStyles: { 1: { cellWidth: 70 } },
-      });
-
-      currentY = ((doc as any).lastAutoTable?.finalY || currentY) + 10;
-    }
-
-    // Executive Roadmap (premium narrative roadmap)
-    if (strategic?.executive_roadmap && strategic.executive_roadmap.length > 0) {
-      // Check if we need a new page
-      if (currentY > doc.internal.pageSize.height - 60) {
-        doc.addPage();
-        currentY = 30;
-      }
-
-      doc.setFontSize(14);
-      doc.setTextColor(5, 150, 105);
-      doc.text('Feuille de Route Exécutive', 20, currentY);
-      currentY += 8;
-
-      const execRoadmapData = strategic.executive_roadmap.map((item: any) => [
-        item.priority || '—',
-        item.title || '—',
-        item.category || '—',
-        (item.prescriptive_action || '').substring(0, 80) + ((item.prescriptive_action || '').length > 80 ? '...' : ''),
-        item.expected_roi || '—',
-      ]);
-
-      autoTable(doc, {
-        startY: currentY,
-        head: [['Priorité', 'Action', 'Catégorie', 'Prescription', 'ROI']],
-        body: execRoadmapData,
-        theme: 'striped',
-        headStyles: { fillColor: [5, 150, 105] },
-        styles: { fontSize: 8 },
-        columnStyles: {
-          0: { cellWidth: 22 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 22 },
-          3: { cellWidth: 75 },
-          4: { cellWidth: 16, halign: 'center' },
-        },
-      });
-    }
+      columnStyles: { 2: { cellWidth: 70 } },
+    });
   }
 
   // Footer on all pages
@@ -1028,7 +879,6 @@ export function generateExpertPDF(result: ExpertAuditResult, auditMode: 'technic
     doc.setFontSize(9);
     doc.setTextColor(255, 255, 255);
     if (isWhiteLabel) {
-      // No crawlers.fr mentions
       doc.text('', 20, pageHeight - 8);
     } else {
       doc.text(t.poweredBy, 20, pageHeight - 8);

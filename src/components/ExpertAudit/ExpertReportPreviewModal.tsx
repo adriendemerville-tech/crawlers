@@ -102,7 +102,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      generateExpertPDF(effectiveResult, auditMode, t, branding);
+      generateExpertPDF(effectiveResult, auditMode, t, branding, language);
       toast.success(t.pdfSuccess);
     } catch (error) {
       console.error('PDF generation error:', error);
