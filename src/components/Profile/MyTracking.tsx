@@ -302,6 +302,47 @@ export function MyTracking() {
     }
   }, [gscConnected, currentSiteDomain, fetchGscData]);
 
+  // Aggregate GSC rows by granularity
+  const gscAggregatedRows = useMemo(() => {
+    if (!gscData?.rows?.length) return [];
+    const rows = gscData.rows.map(r => ({
+      date: r.keys?.[0] || '',
+      clicks: r.clicks,
+      impressions: r.impressions,
+      position: r.position,
+    }));
+
+    if (gscGranularity === 'daily') return rows;
+
+    const buckets: Record<string, { clicks: number; impressions: number; posSum: number; count: number }> = {};
+    for (const r of rows) {
+      let key: string;
+      if (gscGranularity === 'weekly') {
+        const d = new Date(r.date);
+        const day = d.getDay();
+        const monday = new Date(d);
+        monday.setDate(d.getDate() - ((day + 6) % 7));
+        key = monday.toISOString().split('T')[0];
+      } else {
+        key = r.date.slice(0, 7); // YYYY-MM
+      }
+      if (!buckets[key]) buckets[key] = { clicks: 0, impressions: 0, posSum: 0, count: 0 };
+      buckets[key].clicks += r.clicks;
+      buckets[key].impressions += r.impressions;
+      buckets[key].posSum += r.position;
+      buckets[key].count += 1;
+    }
+    return Object.entries(buckets)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, b]) => ({
+        date,
+        clicks: b.clicks,
+        impressions: b.impressions,
+        position: parseFloat((b.posSum / b.count).toFixed(1)),
+      }));
+  }, [gscData, gscGranularity]);
+
+
   const handleConnectGsc = async () => {
     if (!user) return;
     setGscConnecting(true);
