@@ -770,7 +770,7 @@ export function MyTracking() {
                           <Plug className="h-8 w-8 mx-auto opacity-30" />
                           <p className="text-sm text-muted-foreground">
                             {language === 'fr' 
-                              ? 'Connectez votre compte Google Search Console pour visualiser vos données de performance.' 
+                              ? 'Conecte su cuenta de Google Search Console para visualizar sus datos de rendimiento.' 
                               : 'Connect your Google Search Console account to view your performance data.'}
                           </p>
                           <Button variant="outline" size="sm" className="gap-2" onClick={handleConnectGsc} disabled={gscConnecting}>
