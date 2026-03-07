@@ -33,6 +33,7 @@ export interface ExpertAuditScores {
     maxScore: 30;
     hasSchemaOrg: boolean;
     schemaTypes: string[];
+    isSchemaJsGenerated?: boolean;
     hasRobotsTxt: boolean;
     robotsPermissive: boolean;
     allowsAIBots?: {
