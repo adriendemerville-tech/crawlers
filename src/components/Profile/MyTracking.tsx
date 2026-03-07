@@ -792,7 +792,7 @@ export function MyTracking() {
                               <div className="flex items-center gap-2">
                                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                                 <span className="text-xs text-muted-foreground">
-                                  {language === 'fr' ? 'Mise à jour…' : 'Updating…'}
+                                  {language === 'fr' ? 'Mise à jour…' : language === 'es' ? 'Actualizando…' : 'Updating…'}
                                 </span>
                               </div>
                             </div>
