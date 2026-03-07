@@ -683,7 +683,115 @@ export function MyTracking() {
                       </CardContent>
                     </Card>
                   )}
-                </div>
+
+                  {/* Google Search Console Chart */}
+                  <Card className={!gscConnected ? 'border-dashed opacity-60' : ''}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <Search className="h-4 w-4" />
+                        Google Search Console
+                        {gscConnected && gscData && (
+                          <Badge variant="secondary" className="text-xs font-normal ml-auto">
+                            {gscData.date_range.start} → {gscData.date_range.end}
+                          </Badge>
+                        )}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {!gscConnected ? (
+                        <div className="py-8 text-center space-y-3">
+                          <Plug className="h-8 w-8 mx-auto opacity-30" />
+                          <p className="text-sm text-muted-foreground">
+                            {language === 'fr' 
+                              ? 'Connectez votre compte Google Search Console pour visualiser vos données de performance.' 
+                              : 'Connect your Google Search Console account to view your performance data.'}
+                          </p>
+                          <Button variant="outline" size="sm" className="gap-2" onClick={handleConnectGsc} disabled={gscConnecting}>
+                            {gscConnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plug className="h-4 w-4" />}
+                            {language === 'fr' ? 'Connecter Search Console' : 'Connect Search Console'}
+                          </Button>
+                        </div>
+                      ) : gscLoading ? (
+                        <div className="py-8 text-center">
+                          <Loader2 className="h-8 w-8 mx-auto animate-spin text-primary" />
+                          <p className="text-sm text-muted-foreground mt-3">
+                            {language === 'fr' ? 'Chargement des données...' : 'Loading data...'}
+                          </p>
+                        </div>
+                      ) : gscData && gscData.rows.length > 0 ? (
+                        <div className="space-y-4">
+                          {/* GSC KPI summary */}
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="rounded-lg border bg-card p-3 space-y-1">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <MousePointerClick className="h-3 w-3" />
+                                {language === 'fr' ? 'Clics' : 'Clicks'}
+                              </div>
+                              <p className="text-lg font-semibold text-primary">{gscData.total_clicks.toLocaleString()}</p>
+                            </div>
+                            <div className="rounded-lg border bg-card p-3 space-y-1">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Eye className="h-3 w-3" />
+                                Impressions
+                              </div>
+                              <p className="text-lg font-semibold" style={{ color: 'hsl(262, 83%, 58%)' }}>{gscData.total_impressions.toLocaleString()}</p>
+                            </div>
+                            <div className="rounded-lg border bg-card p-3 space-y-1">
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <TrendingUp className="h-3 w-3" />
+                                {language === 'fr' ? 'Position moy.' : 'Avg. position'}
+                              </div>
+                              <p className="text-lg font-semibold">{gscData.avg_position.toFixed(1)}</p>
+                            </div>
+                          </div>
+
+                          {/* GSC Chart - mimics Search Console style */}
+                          <div className="h-72">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <ComposedChart data={gscData.rows.map(row => ({
+                                date: row.keys?.[0]?.slice(5) || '',
+                                clicks: row.clicks,
+                                impressions: row.impressions,
+                                position: parseFloat(row.position?.toFixed(1) || '0'),
+                              }))} margin={{ left: 0, right: 40, top: 5, bottom: 5 }}>
+                                <defs>
+                                  <linearGradient id="gscClicksGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                  </linearGradient>
+                                  <linearGradient id="gscImpressionsGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0.2} />
+                                    <stop offset="95%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0} />
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                <XAxis dataKey="date" className="text-xs" interval="preserveStartEnd" tick={{ fontSize: 10 }} />
+                                <YAxis yAxisId="left" className="text-xs" tick={{ fontSize: 10 }} />
+                                <YAxis yAxisId="right" orientation="right" className="text-xs" tick={{ fontSize: 10 }} reversed domain={[0, 'auto']} />
+                                <Tooltip 
+                                  contentStyle={{ 
+                                    borderRadius: '8px', 
+                                    fontSize: '12px',
+                                    backgroundColor: 'hsl(var(--background))',
+                                    border: '1px solid hsl(var(--border))',
+                                  }} 
+                                />
+                                <Legend />
+                                <Area yAxisId="left" type="monotone" dataKey="clicks" name={language === 'fr' ? 'Clics' : 'Clicks'} stroke="hsl(var(--primary))" fill="url(#gscClicksGradient)" strokeWidth={2} />
+                                <Area yAxisId="left" type="monotone" dataKey="impressions" name="Impressions" stroke="hsl(262, 83%, 58%)" fill="url(#gscImpressionsGradient)" strokeWidth={2} />
+                                <Line yAxisId="right" type="monotone" dataKey="position" name={language === 'fr' ? 'Position moy.' : 'Avg. Position'} stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={false} strokeDasharray="4 2" />
+                              </ComposedChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-8 text-center text-muted-foreground text-sm">
+                          <Search className="h-8 w-8 mx-auto mb-3 opacity-30" />
+                          <p>{language === 'fr' ? 'Aucune donnée Search Console disponible pour ce site.' : 'No Search Console data available for this site.'}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
               )}
             </div>
           )}
