@@ -671,6 +671,11 @@ Deno.serve(async (req) => {
       if (structuredData.isValid) {
         structuredScore = 15;
         structuredDetails = t.details.foundTypes(structuredData.types.join(', '));
+        // Penalize if JS-generated (robots can't read JS-injected schema)
+        if (structuredData.isJsGenerated) {
+          structuredScore = Math.max(0, structuredScore - 3);
+          console.log('[GEO-AUDIT] ⚠️ JSON-LD detected but JS-generated — score penalized (-3)');
+        }
       } else {
         // JSON-LD présent mais invalide = score partiel
         structuredScore = 5;
@@ -690,7 +695,8 @@ Deno.serve(async (req) => {
           ? `Corrigez les erreurs JSON-LD: ${structuredData.parseErrors[0]}`
           : t.factors.structuredData.recommendation
         : undefined,
-      details: structuredDetails
+      details: structuredDetails,
+      isJsGenerated: structuredData.isJsGenerated
     });
 
     // Factor 4: Content Structure (15 points)
