@@ -347,7 +347,7 @@ export function ClientsTab() {
                         />
                         <CommandList>
                           <CommandEmpty>{t.noSites}</CommandEmpty>
-                          <CommandGroup heading={language === 'fr' ? 'Sites trackés' : 'Tracked sites'}>
+                          <CommandGroup heading={language === 'fr' ? 'Sites trackés' : language === 'es' ? 'Sitios rastreados' : 'Tracked sites'}>
                             {getAvailableSites(client.id).map(site => (
                               <CommandItem
                                 key={site.id}
