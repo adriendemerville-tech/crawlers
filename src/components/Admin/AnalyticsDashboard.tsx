@@ -217,7 +217,7 @@ export function AnalyticsDashboard() {
         expertAuditStep1: events.filter(e => e.event_type === 'expert_audit_step_1').length,
         expertAuditStep2: events.filter(e => e.event_type === 'expert_audit_step_2').length,
         expertAuditStep3: events.filter(e => e.event_type === 'expert_audit_step_3').length,
-        errorCount: events.filter(e => e.event_type === 'error').length,
+        errorCount: events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final').length,
       };
       setStats(newStats);
 
@@ -317,7 +317,7 @@ export function AnalyticsDashboard() {
       setAnalyzedUrls(urlsData || []);
 
       // Fetch error events with user emails
-      const errorEventsRaw = events.filter(e => e.event_type === 'error');
+      const errorEventsRaw = events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final');
       
       // Get unique user_ids from error events
       const errorUserIds = [...new Set(errorEventsRaw
@@ -343,14 +343,17 @@ export function AnalyticsDashboard() {
       // Build error events with enriched data
       const enrichedErrors: ErrorEvent[] = errorEventsRaw.map(e => {
         const eventData = e.event_data as Record<string, unknown> | null;
+        const isScanError = e.event_type === 'scan_error' || e.event_type === 'scan_error_final';
         return {
           id: crypto.randomUUID(),
           created_at: e.created_at,
           url: e.url,
           user_id: e.user_id,
           user_email: e.user_id ? userEmailMap[e.user_id] || null : null,
-          function_name: (eventData?.function_name as string) || (eventData?.source as string) || null,
-          error_message: (eventData?.error_message as string) || (eventData?.message as string) || null,
+          function_name: isScanError
+            ? `scan:${(eventData?.tab as string) || 'unknown'}`
+            : (eventData?.function_name as string) || (eventData?.source as string) || null,
+          error_message: (eventData?.message as string) || (eventData?.error_message as string) || null,
           error_response: (eventData?.error_response as string) || (eventData?.response as string) || (eventData?.details as string) || null,
         };
       });
