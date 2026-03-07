@@ -47,6 +47,38 @@ export type Database = {
         }
         Relationships: []
       }
+      actual_results: {
+        Row: {
+          accuracy_gap: number | null
+          id: string
+          prediction_id: string
+          real_traffic_after_90_days: number
+          recorded_at: string
+        }
+        Insert: {
+          accuracy_gap?: number | null
+          id?: string
+          prediction_id: string
+          real_traffic_after_90_days: number
+          recorded_at?: string
+        }
+        Update: {
+          accuracy_gap?: number | null
+          id?: string
+          prediction_id?: string
+          real_traffic_after_90_days?: number
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actual_results_prediction_id_fkey"
+            columns: ["prediction_id"]
+            isOneToOne: false
+            referencedRelation: "predictions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_dashboard_config: {
         Row: {
           card_order: Json
@@ -563,6 +595,83 @@ export type Database = {
         }
         Relationships: []
       }
+      pdf_audits: {
+        Row: {
+          client_id: string
+          created_at: string
+          error_message: string | null
+          extracted_data: Json | null
+          file_path: string
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          error_message?: string | null
+          extracted_data?: Json | null
+          file_path: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          error_message?: string | null
+          extracted_data?: Json | null
+          file_path?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      predictions: {
+        Row: {
+          audit_id: string
+          baseline_data: Json | null
+          baseline_traffic: number
+          client_id: string
+          created_at: string
+          id: string
+          predicted_increase_pct: number
+          predicted_traffic: number
+          prediction_details: Json | null
+        }
+        Insert: {
+          audit_id: string
+          baseline_data?: Json | null
+          baseline_traffic?: number
+          client_id: string
+          created_at?: string
+          id?: string
+          predicted_increase_pct?: number
+          predicted_traffic?: number
+          prediction_details?: Json | null
+        }
+        Update: {
+          audit_id?: string
+          baseline_data?: Json | null
+          baseline_traffic?: number
+          client_id?: string
+          created_at?: string
+          id?: string
+          predicted_increase_pct?: number
+          predicted_traffic?: number
+          prediction_details?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "predictions_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "pdf_audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           agency_brand_name: string | null
@@ -580,6 +689,10 @@ export type Database = {
           credits_balance: number
           email: string
           first_name: string
+          gsc_access_token: string | null
+          gsc_refresh_token: string | null
+          gsc_site_url: string | null
+          gsc_token_expiry: string | null
           id: string
           last_name: string
           plan_type: string
@@ -606,6 +719,10 @@ export type Database = {
           credits_balance?: number
           email: string
           first_name: string
+          gsc_access_token?: string | null
+          gsc_refresh_token?: string | null
+          gsc_site_url?: string | null
+          gsc_token_expiry?: string | null
           id?: string
           last_name: string
           plan_type?: string
@@ -632,6 +749,10 @@ export type Database = {
           credits_balance?: number
           email?: string
           first_name?: string
+          gsc_access_token?: string | null
+          gsc_refresh_token?: string | null
+          gsc_site_url?: string | null
+          gsc_token_expiry?: string | null
           id?: string
           last_name?: string
           plan_type?: string
@@ -1067,6 +1188,30 @@ export type Database = {
           },
         ]
       }
+      system_metrics: {
+        Row: {
+          current_reliability_score: number
+          id: string
+          total_audits_processed: number
+          total_predictions_made: number
+          updated_at: string
+        }
+        Insert: {
+          current_reliability_score?: number
+          id?: string
+          total_audits_processed?: number
+          total_predictions_made?: number
+          updated_at?: string
+        }
+        Update: {
+          current_reliability_score?: number
+          id?: string
+          total_audits_processed?: number
+          total_predictions_made?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tracked_sites: {
         Row: {
           api_key: string
@@ -1219,6 +1364,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      recalculate_reliability: { Args: never; Returns: undefined }
       use_credit:
         | { Args: { p_description?: string; p_user_id: string }; Returns: Json }
         | {
