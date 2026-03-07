@@ -13,6 +13,7 @@ import {
   Code, AlertTriangle, CheckCircle2, ArrowRight, Sparkles, Globe,
   FileCode, Puzzle, Link2, BarChart3, Lock, Gauge
 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import heroImage from '@/assets/blog/wordpress-plugin-hero.webp';
 
 const SITE_URL = 'https://crawlers.fr';
@@ -231,6 +232,23 @@ const ModifierCodeWordPress = () => {
           </div>
         </section>
 
+        {/* ═══════════════════ SCANNER WORDPRESS ═══════════════════ */}
+        <section className="py-16 bg-background">
+          <div className="container mx-auto px-4 max-w-2xl">
+            <Separator className="mb-12 bg-violet-500/20" />
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold tracking-tight mb-3">
+                Votre site est-il sous WordPress ?
+              </h2>
+              <p className="text-muted-foreground">
+                Entrez une URL pour détecter instantanément si le site utilise WordPress.
+              </p>
+            </div>
+            <WordPressScanner />
+            <Separator className="mt-12 bg-violet-500/20" />
+          </div>
+        </section>
+
         {/* ═══════════════════ PROBLÉMATIQUE ═══════════════════ */}
         <section className="py-20 bg-background">
           <div className="container mx-auto px-4 max-w-4xl">
@@ -439,20 +457,6 @@ const ModifierCodeWordPress = () => {
           </div>
         </section>
 
-        {/* ═══════════════════ SCANNER WORDPRESS ═══════════════════ */}
-        <section className="py-20 bg-muted/30">
-          <div className="container mx-auto px-4 max-w-2xl">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold tracking-tight mb-3">
-                Votre site est-il sous WordPress ?
-              </h2>
-              <p className="text-muted-foreground">
-                Entrez une URL pour détecter instantanément si le site utilise WordPress.
-              </p>
-            </div>
-            <WordPressScanner />
-          </div>
-        </section>
 
         {/* ═══════════════════ FAQ ═══════════════════ */}
         <section className="py-20 bg-background">
