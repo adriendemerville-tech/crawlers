@@ -1944,7 +1944,14 @@ serve(async (req) => {
     
     // D. AI Ready (30 pts)
     let aiReadyScore = 0;
-    if (htmlAnalysis.hasSchemaOrg) aiReadyScore += 15;
+    if (htmlAnalysis.hasSchemaOrg) {
+      aiReadyScore += 15;
+      // Penalize if schema is JS-generated (crawlers can't read it)
+      if (htmlAnalysis.isSchemaJsGenerated) {
+        aiReadyScore -= 3;
+        console.log('[Expert-Audit] ⚠️ Schema is JS-generated — AI Ready score penalized (-3)');
+      }
+    }
     if (robotsAnalysis.exists && robotsAnalysis.permissive) aiReadyScore += 15;
     
     // E. Security (20 pts) - Enhanced with HSTS
