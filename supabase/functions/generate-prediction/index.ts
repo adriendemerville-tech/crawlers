@@ -386,6 +386,51 @@ serve(async (req) => {
     // ── Post-processing: validate & correct ──
     prediction = validateAndCorrect(prediction, seg, anchors);
 
+    // ── Consistency Rule: ±2% of first prediction for same domain ──
+    const siteDomain = ext.domain || root || '';
+    let anchorPrediction: number | null = null;
+    let consistencyClamped = false;
+
+    if (siteDomain) {
+      const { data: priorPreds } = await supabase
+        .from('predictions')
+        .select('predicted_traffic, prediction_details')
+        .eq('domain', siteDomain)
+        .eq('client_id', client_id)
+        .order('created_at', { ascending: true })
+        .limit(1);
+
+      if (priorPreds && priorPreds.length > 0) {
+        anchorPrediction = priorPreds[0].predicted_traffic;
+        const lowerBound = Math.round(anchorPrediction * 0.98);
+        const upperBound = Math.round(anchorPrediction * 1.02);
+        const currentRealistic = prediction.scenarios.realistic.clicks;
+
+        if (currentRealistic < lowerBound || currentRealistic > upperBound) {
+          // Clamp to ±2% of the anchor prediction
+          const clamped = Math.max(lowerBound, Math.min(upperBound, currentRealistic));
+          prediction.scenarios.realistic.clicks = clamped;
+          prediction.scenarios.realistic.increase_pct = pct(clamped, seg.totalClicks);
+          // Re-derive pessimistic/aggressive from clamped realistic
+          const pessClamped = Math.max(seg.totalClicks, Math.round(clamped * 0.7));
+          const aggrClamped = Math.round(clamped * 1.4);
+          prediction.scenarios.pessimistic = { clicks: pessClamped, increase_pct: pct(pessClamped, seg.totalClicks) };
+          prediction.scenarios.aggressive = { clicks: aggrClamped, increase_pct: pct(aggrClamped, seg.totalClicks) };
+          // Re-propagate ROI
+          const netGain = clamped - seg.totalClicks;
+          if (netGain > 0 && seg.nonBrandClicks > 0) {
+            const hiRatio = seg.highIntentClicks / seg.nonBrandClicks;
+            const loRatio = seg.lowIntentClicks / seg.nonBrandClicks;
+            const hiCpc = prediction.business_impact?.cpc_basis?.high_intent_cpc ?? 1.20;
+            const loCpc = prediction.business_impact?.cpc_basis?.low_intent_cpc ?? 0.25;
+            const mv = Math.round((netGain * hiRatio * hiCpc + netGain * loRatio * loCpc) * 100) / 100;
+            prediction.business_impact = { monthly_value_euro: mv, annual_value_euro: Math.round(mv * 12 * 100) / 100, cpc_basis: { high_intent_cpc: hiCpc, low_intent_cpc: loCpc } };
+          }
+          consistencyClamped = true;
+        }
+      }
+    }
+
     // ── Inject auditable metadata ──
     const aiRealisticRaw = JSON.parse(cleaned).scenarios?.realistic?.clicks ?? null;
     prediction._meta = {
@@ -405,6 +450,9 @@ serve(async (req) => {
       realistic_ceiling: anchors.realisticCeiling,
       potential_position_gain: anchors.potentialPositionGain,
       ai_raw_realistic_clicks: aiRealisticRaw,
+      // Consistency tracking
+      consistency_anchor: anchorPrediction,
+      consistency_clamped: consistencyClamped,
     };
 
     // ── Persist ──
@@ -416,6 +464,7 @@ serve(async (req) => {
       .insert({
         audit_id,
         client_id,
+        domain: siteDomain || null,
         predicted_increase_pct: realisticPct,
         predicted_traffic: realisticClicks,
         baseline_traffic: seg.totalClicks,
