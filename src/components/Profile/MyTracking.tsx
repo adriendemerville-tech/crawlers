@@ -779,6 +779,99 @@ export function MyTracking() {
                         </div>
                       ) : gscData && gscData.rows.length > 0 ? (
                         <div className="space-y-4">
+                          {/* Date controls */}
+                          <div className="flex flex-wrap items-center gap-2">
+                            {/* Date mode toggle */}
+                            <div className="flex rounded-lg border bg-muted p-0.5 text-xs">
+                              <button
+                                className={cn("px-2.5 py-1 rounded-md transition-colors", gscDateMode === 'since' && "bg-background shadow-sm font-medium")}
+                                onClick={() => setGscDateMode('since')}
+                              >
+                                {language === 'fr' ? 'Depuis' : 'Since'}
+                              </button>
+                              <button
+                                className={cn("px-2.5 py-1 rounded-md transition-colors", gscDateMode === 'range' && "bg-background shadow-sm font-medium")}
+                                onClick={() => setGscDateMode('range')}
+                              >
+                                {language === 'fr' ? 'Entre' : 'Between'}
+                              </button>
+                            </div>
+
+                            {/* Date pickers */}
+                            {gscDateMode === 'since' ? (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                                    <CalendarIcon className="h-3 w-3" />
+                                    {format(gscSinceDate, 'dd/MM/yyyy')}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={gscSinceDate}
+                                    onSelect={(d) => d && setGscSinceDate(d)}
+                                    disabled={(d) => d > new Date() || d < new Date('2020-01-01')}
+                                    className={cn("p-3 pointer-events-auto")}
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            ) : (
+                              <>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                                      <CalendarIcon className="h-3 w-3" />
+                                      {format(gscRangeStart, 'dd/MM/yyyy')}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={gscRangeStart}
+                                      onSelect={(d) => d && setGscRangeStart(d)}
+                                      disabled={(d) => d > gscRangeEnd || d < new Date('2020-01-01')}
+                                      className={cn("p-3 pointer-events-auto")}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                <span className="text-xs text-muted-foreground">→</span>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                                      <CalendarIcon className="h-3 w-3" />
+                                      {format(gscRangeEnd, 'dd/MM/yyyy')}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={gscRangeEnd}
+                                      onSelect={(d) => d && setGscRangeEnd(d)}
+                                      disabled={(d) => d > new Date() || d < gscRangeStart}
+                                      className={cn("p-3 pointer-events-auto")}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </>
+                            )}
+
+                            {/* Granularity toggle */}
+                            <div className="flex rounded-lg border bg-muted p-0.5 text-xs ml-auto">
+                              {(['daily', 'weekly', 'monthly'] as const).map((g) => (
+                                <button
+                                  key={g}
+                                  className={cn("px-2 py-1 rounded-md transition-colors", gscGranularity === g && "bg-background shadow-sm font-medium")}
+                                  onClick={() => setGscGranularity(g)}
+                                >
+                                  {g === 'daily' ? (language === 'fr' ? 'Jour' : 'Day') 
+                                    : g === 'weekly' ? (language === 'fr' ? 'Sem.' : 'Week')
+                                    : (language === 'fr' ? 'Mois' : 'Month')}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
                           {/* GSC KPI summary */}
                           <div className="grid grid-cols-3 gap-3">
                             <div className="rounded-lg border bg-card p-3 space-y-1">
@@ -793,7 +886,7 @@ export function MyTracking() {
                                 <Eye className="h-3 w-3" />
                                 Impressions
                               </div>
-                              <p className="text-lg font-semibold" style={{ color: 'hsl(262, 83%, 58%)' }}>{gscData.total_impressions.toLocaleString()}</p>
+                              <p className="text-lg font-semibold text-accent-foreground">{gscData.total_impressions.toLocaleString()}</p>
                             </div>
                             <div className="rounded-lg border bg-card p-3 space-y-1">
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -804,14 +897,14 @@ export function MyTracking() {
                             </div>
                           </div>
 
-                          {/* GSC Chart - mimics Search Console style */}
+                          {/* GSC Chart */}
                           <div className="h-72">
                             <ResponsiveContainer width="100%" height="100%">
-                              <ComposedChart data={gscData.rows.map(row => ({
-                                date: row.keys?.[0]?.slice(5) || '',
+                              <ComposedChart data={gscAggregatedRows.map(row => ({
+                                date: gscGranularity === 'monthly' ? row.date : row.date.slice(5),
                                 clicks: row.clicks,
                                 impressions: row.impressions,
-                                position: parseFloat(row.position?.toFixed(1) || '0'),
+                                position: typeof row.position === 'number' ? parseFloat(row.position.toFixed(1)) : 0,
                               }))} margin={{ left: 0, right: 40, top: 5, bottom: 5 }}>
                                 <defs>
                                   <linearGradient id="gscClicksGradient" x1="0" y1="0" x2="0" y2="1">
