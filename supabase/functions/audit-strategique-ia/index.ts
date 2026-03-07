@@ -535,6 +535,137 @@ async function checkRankings(
 }
 
 /**
+ * Détecte le concurrent local via une requête SERP localisée (ex: "plombier châteaurenard").
+ * Retourne le premier résultat organique local différent du domaine cible, avec un site web.
+ * Si le domaine cible est 1er local, retourne le 2ème local.
+ */
+async function findLocalCompetitor(
+  domain: string,
+  sector: string,
+  locationCode: number,
+  pageContentContext: string
+): Promise<{ name: string; url: string; rank: number } | null> {
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
+
+  // Extraire la ville depuis le pageContentContext ou le domaine
+  // On essaie d'identifier la localisation depuis les métadonnées de la page
+  let city = '';
+  
+  // Chercher une ville dans le contexte de page
+  const cityPatterns = [
+    /(?:à|a|en|sur)\s+([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)/g,
+    /([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)\s*(?:\d{5})/g,
+  ];
+  
+  if (pageContentContext) {
+    for (const pattern of cityPatterns) {
+      const match = pattern.exec(pageContentContext);
+      if (match?.[1] && match[1].length > 2 && match[1].length < 30) {
+        city = match[1];
+        break;
+      }
+    }
+  }
+
+  // Construire la requête localisée
+  const localQuery = city 
+    ? `${sector} ${city}` 
+    : sector;
+  
+  console.log(`🏙️ Recherche concurrent local: "${localQuery}"`);
+
+  try {
+    const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
+      method: 'POST',
+      headers: {
+        'Authorization': getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([{
+        keyword: localQuery,
+        location_code: locationCode,
+        language_code: 'fr',
+        depth: 20,
+        se_domain: 'google.fr',
+      }]),
+    });
+
+    if (!response.ok) {
+      console.error('❌ Erreur API SERP local:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    const items = data.tasks?.[0]?.result?.[0]?.items;
+    if (!items || !Array.isArray(items)) return null;
+
+    const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
+    
+    // Filtrer uniquement les résultats organiques avec un domaine
+    const organicResults = items.filter((item: any) => 
+      item.type === 'organic' && item.domain && item.url
+    );
+
+    // Trouver la position du domaine cible
+    const targetIdx = organicResults.findIndex((item: any) => {
+      const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
+      return itemDomain.includes(cleanDomain) || cleanDomain.includes(itemDomain);
+    });
+
+    let competitor: any = null;
+
+    if (targetIdx === -1) {
+      // Le domaine cible n'est pas dans les SERPs → prendre le 1er résultat local (différent du target)
+      competitor = organicResults.find((item: any) => {
+        const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
+        return !itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain);
+      });
+    } else if (targetIdx === 0) {
+      // Le domaine cible est 1er → prendre le 2ème résultat (1er concurrent local en dessous)
+      competitor = organicResults.find((item: any, idx: number) => {
+        if (idx <= targetIdx) return false;
+        const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
+        return !itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain);
+      });
+    } else {
+      // Le domaine cible n'est pas 1er → prendre le concurrent juste AU-DESSUS dans les SERPs
+      for (let i = targetIdx - 1; i >= 0; i--) {
+        const item = organicResults[i];
+        const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
+        if (!itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain)) {
+          competitor = item;
+          break;
+        }
+      }
+      // Fallback: prendre le premier résultat différent
+      if (!competitor) {
+        competitor = organicResults.find((item: any) => {
+          const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
+          return !itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain);
+        });
+      }
+    }
+
+    if (competitor) {
+      const result = {
+        name: competitor.title?.split(' - ')[0]?.split(' | ')[0]?.trim() || competitor.domain,
+        url: competitor.url,
+        rank: competitor.rank_absolute || competitor.rank_group || 0,
+      };
+      console.log(`✅ Concurrent local trouvé: "${result.name}" (${result.url}) en position ${result.rank}`);
+      console.log(`   Domaine cible "${domain}" en position ${targetIdx >= 0 ? targetIdx + 1 : 'non classé'} pour "${localQuery}"`);
+      return result;
+    }
+
+    console.log('⚠️ Aucun concurrent local trouvé dans les SERPs');
+    return null;
+  } catch (error) {
+    console.error('❌ Erreur recherche concurrent local:', error);
+    return null;
+  }
+}
+
+/**
  * Fonction principale pour récupérer les données de marché DataForSEO
  */
 async function fetchMarketData(domain: string): Promise<MarketData | null> {
@@ -773,10 +904,10 @@ GÉNÈRE UN RAPPORT JSON PREMIUM avec cette structure exacte:
       "analysis": "Analyse CONCISE de la position dominante (MAX 330 caractères) - acteur avec présence massive, budget marketing considérable, référence historique du secteur"
     },
     "direct_competitor": {
-      "name": "Nom du concurrent direct (MÊME taille/surface que le site analysé)",
-      "url": "URL du site",
-      "authority_factor": "Parité d'offre et de surface commerciale détectée",
-      "analysis": "Analyse comparative CONCISE (MAX 330 caractères) - entreprise avec surface commerciale SIMILAIRE, même zone géographique, même positionnement prix"
+      "name": "Nom du concurrent local (DOIT avoir un site web, identifié via les SERPs localisés)",
+      "url": "URL OBLIGATOIRE du site du concurrent local",
+      "authority_factor": "Proximité SERP locale et parité d'offre détectée",
+      "analysis": "Analyse comparative CONCISE (MAX 330 caractères) - concurrent numérique local positionné juste au-dessus ou en-dessous dans les SERPS localisés, même zone géographique, même cible client"
     },
     "challenger": {
       "name": "Nom du challenger (acteur innovant/disruptif)",
@@ -927,10 +1058,11 @@ INSTRUCTIONS CRITIQUES:
 - La prescriptive_action doit détailler une stratégie d'acquisition concrète sur CE réseau spécifique: fréquence de publication, types de contenus à créer, hooks d'engagement, et comment cette présence alimentera la citabilité IA (les LLMs comme Perplexity et SearchGPT indexent fortement Reddit, X et YouTube)
 - Le choix du réseau doit être JUSTIFIÉ par l'analyse de l'identité de marque, du public cible et du secteur d'activité détectés
 
-⚠️ DISTINCTION GOLIATH vs CONCURRENT DIRECT (CRITIQUE):
+⚠️ DISTINCTION GOLIATH vs CONCURRENT LOCAL (CRITIQUE):
 - GOLIATH (leader): Acteur DOMINANT avec présence internationale ou nationale massive, historique de +10 ans, budget marketing x10, backlinks x10, référence du secteur que tout le monde connaît (ex: Amazon, L'Occitane, Décathlon pour leurs secteurs)
-- CONCURRENT DIRECT: Entreprise de MÊME TAILLE et MÊME STADE que le site analysé. Même zone géographique, même positionnement prix, même cible client, même surface commerciale. Si le site analysé est une PME locale, le concurrent direct est aussi une PME locale, PAS un géant international.
-- Ne JAMAIS mettre un Goliath en "direct_competitor". Le concurrent direct doit être un "frère jumeau" en termes de surface commerciale.`;
+- CONCURRENT LOCAL (direct_competitor): C'est un concurrent NUMÉRIQUE LOCAL identifié dans les SERPs pour une requête localisée (ex: "plombier châteaurenard"). Il DOIT OBLIGATOIREMENT avoir un site web avec une URL valide. C'est l'entité locale qui apparaît juste au-dessus du site cible dans les résultats de recherche Google pour une requête locale. Si le site cible est premier dans les SERPs locaux, alors le concurrent local est l'entité qui apparaît en second. Le concurrent local est un acteur de la MÊME zone géographique, du MÊME secteur, avec un positionnement SERP proche.
+- Ne JAMAIS mettre un Goliath en "direct_competitor". Le concurrent local doit être un concurrent géographiquement proche, visible dans les résultats locaux, avec un site web actif.
+- Le champ "url" du direct_competitor est OBLIGATOIRE et doit être une URL valide d'un site web réel.`;
 
 }
 
@@ -1068,8 +1200,22 @@ IMPORTANT: Utilise ces informations RÉELLES pour identifier précisément le co
       console.log('⚠️ DataForSEO non disponible, l\'audit utilisera uniquement le LLM');
     }
 
-     // ==================== ÉTAPE 1b: APPELER CHECK-LLM POUR VISIBILITÉ LLM ====================
-     console.log('\n🤖 ÉTAPE 1b: Appel de check-llm pour analyse de visibilité LLM...');
+    // ==================== ÉTAPE 1b: RECHERCHE CONCURRENT LOCAL VIA SERP ====================
+    console.log('\n🏙️ ÉTAPE 1b: Recherche du concurrent local via SERP...');
+    let localCompetitorData: { name: string; url: string; rank: number } | null = null;
+    
+    try {
+      const context = await detectBusinessContext(domain);
+      const location = await getLocationCode(context.location);
+      if (location) {
+        localCompetitorData = await findLocalCompetitor(domain, context.sector, location.code, pageContentContext);
+      }
+    } catch (lcError) {
+      console.error('❌ Erreur recherche concurrent local:', lcError);
+    }
+
+     // ==================== ÉTAPE 1c: APPELER CHECK-LLM POUR VISIBILITÉ LLM ====================
+     console.log('\n🤖 ÉTAPE 1c: Appel de check-llm pour analyse de visibilité LLM...');
      let llmVisibilityData = null;
      
      try {
@@ -1121,6 +1267,30 @@ Dans TOUTES tes réponses (introduction, requêtes cibles, recommandations, road
 
 `;
     userPrompt = brandNameInstruction + userPrompt;
+    
+    // Injecter les données du concurrent local réel si disponible
+    if (localCompetitorData) {
+      const localCompetitorInstruction = `
+═══════════════════════════════════════════════════════════════
+🏙️ CONCURRENT LOCAL RÉEL IDENTIFIÉ VIA SERP GOOGLE (DONNÉES FACTUELLES)
+═══════════════════════════════════════════════════════════════
+
+Un concurrent local a été identifié via une recherche Google localisée. Tu DOIS utiliser ces informations pour le champ "direct_competitor" dans competitive_landscape:
+
+- NOM: "${localCompetitorData.name}"
+- URL: "${localCompetitorData.url}"
+- POSITION SERP: ${localCompetitorData.rank}
+
+INSTRUCTIONS:
+1. Utilise EXACTEMENT ce concurrent comme "direct_competitor" dans competitive_landscape
+2. L'URL est OBLIGATOIRE et doit être "${localCompetitorData.url}"
+3. Analyse son facteur d'autorité et son positionnement par rapport au site cible
+4. Ce concurrent est un acteur numérique LOCAL, positionné dans les SERPs pour des requêtes géolocalisées
+
+`;
+      userPrompt = localCompetitorInstruction + userPrompt;
+    }
+
     
     if (hallucinationCorrections) {
       console.log('📝 Corrections hallucination détectées - ajout au prompt...');
