@@ -180,9 +180,7 @@ export function MyTracking() {
   type GscGranularity = 'daily' | 'weekly' | 'monthly';
   const [gscDateMode, setGscDateMode] = useState<GscDateMode>('since');
   const [gscSinceDate, setGscSinceDate] = useState<Date>(() => new Date('2026-01-01'));
-  const [gscRangeStart, setGscRangeStart] = useState<Date>(() => {
-    const d = new Date(); d.setDate(d.getDate() - 30); return d;
-  });
+  const [gscRangeStart, setGscRangeStart] = useState<Date>(() => new Date('2026-01-01'));
   const [gscRangeEnd, setGscRangeEnd] = useState<Date>(new Date());
   const [gscGranularity, setGscGranularity] = useState<GscGranularity>('daily');
   const [sinceCalOpen, setSinceCalOpen] = useState(false);
