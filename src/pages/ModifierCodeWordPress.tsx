@@ -13,6 +13,7 @@ import {
   Code, AlertTriangle, CheckCircle2, ArrowRight, Sparkles, Globe,
   FileCode, Puzzle, Link2, BarChart3, Lock, Gauge
 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import heroImage from '@/assets/blog/wordpress-plugin-hero.webp';
 
 const SITE_URL = 'https://crawlers.fr';
