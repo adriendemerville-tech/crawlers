@@ -782,7 +782,7 @@ export function MyTracking() {
                         <div className="flex items-center justify-center gap-2 py-10">
                           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                           <span className="text-xs text-muted-foreground">
-                            {language === 'fr' ? 'Chargement…' : 'Loading…'}
+                            {language === 'fr' ? 'Chargement…' : language === 'es' ? 'Cargando…' : 'Loading…'}
                           </span>
                         </div>
                       ) : gscData && gscData.rows.length > 0 ? (
