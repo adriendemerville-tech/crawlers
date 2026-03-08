@@ -64,8 +64,8 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
       </div>
 
       {/* Animated "Analyse de [site]..." text */}
-      <div className="flex items-center gap-1 text-xl font-semibold text-foreground">
-        <span>Analyse {siteName ? `de ${siteName}` : ''}</span>
+      <div className="flex items-center gap-1 text-xl font-semibold text-foreground max-w-[90vw] px-4">
+        <span className="truncate min-w-0">Analyse {siteName ? `de ${siteName}` : ''}</span>
         <span className="inline-flex">
           <motion.span
             animate={{ opacity: [0, 1, 0] }}
