@@ -7,6 +7,7 @@ import {
   XCircle, Brain, Shield, TrendingUp, ExternalLink, Instagram
 } from 'lucide-react';
 import { SocialSignals, SocialProofSource } from '@/types/expertAudit';
+import { MethodologyPopover } from './MethodologyPopover';
 
 interface SocialSignalsCardProps {
   signals: SocialSignals;
