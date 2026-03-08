@@ -141,6 +141,7 @@ export function StrategicRoadmapCard({ roadmap }: StrategicRoadmapCardProps) {
               </motion.div>
             );
           })}
+          <MethodologyPopover variant="executive_roadmap" />
         </CardContent>
       </Card>
     </motion.div>

@@ -147,6 +147,7 @@ export function BrandIdentityCard({ brandIdentity, marketPositioning }: BrandIde
               )}
             </div>
           )}
+          <MethodologyPopover variant="brand_authority" />
         </CardContent>
       </Card>
     </motion.div>

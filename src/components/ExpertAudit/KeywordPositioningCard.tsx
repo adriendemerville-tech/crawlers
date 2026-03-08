@@ -357,6 +357,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
               </ul>
             </div>
           )}
+          <MethodologyPopover variant="keyword_positioning" />
         </CardContent>
       </Card>
     </motion.div>

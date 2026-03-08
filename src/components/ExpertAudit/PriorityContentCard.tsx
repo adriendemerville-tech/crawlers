@@ -191,6 +191,7 @@ export function PriorityContentCard({ domain }: PriorityContentCardProps) {
             </div>
           </div>
         ))}
+        <MethodologyPopover variant="priority_content" />
       </CardContent>
     </Card>
   );
