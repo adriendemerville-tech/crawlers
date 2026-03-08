@@ -1191,6 +1191,7 @@ export function ExpertAuditDashboard() {
                     </div>
                     <ScoreGauge200 score={result.totalScore} />
                   </div>
+                  <MethodologyPopover variant="global_score" />
                 </CardContent>
               </Card>
 
