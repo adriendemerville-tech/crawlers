@@ -76,7 +76,7 @@ export const expertReportTranslations = {
   es: {
     title: 'Informe de Auditoría Experta',
     download: 'Descargar .pdf',
-    share: 'Compartir',
+    share: 'Enlace temporal',
     print: 'Imprimir',
     generating: 'Generando...',
     sharing: 'Creando enlace...',

@@ -203,10 +203,12 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
             >
               {isSharing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
+              ) : copied && shareUrl ? (
+                <Check className="h-4 w-4 text-green-500" />
               ) : (
-                <Share2 className="h-4 w-4" />
+                <Link2 className="h-4 w-4" />
               )}
-              {isSharing ? t.sharing : t.share}
+              {isSharing ? t.sharing : copied && shareUrl ? t.copied : t.share}
             </Button>
             <Button
               onClick={onClose}
