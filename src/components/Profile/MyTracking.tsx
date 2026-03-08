@@ -867,7 +867,7 @@ export function MyTracking() {
                               {(['daily', 'weekly', 'monthly'] as const).map((g) => (
                                 <button
                                   key={g}
-                                  className={cn("px-2.5 py-1.5 rounded-md transition-colors", gscGranularity === g && "bg-background shadow-sm font-medium")}
+                                  className={cn("px-3 py-2 rounded-md transition-colors", gscGranularity === g && "bg-background shadow-sm font-medium")}
                                   onClick={() => setGscGranularity(g)}
                                 >
                                   {g === 'daily' ? (language === 'fr' ? 'Jour' : language === 'es' ? 'Día' : 'Day') 
