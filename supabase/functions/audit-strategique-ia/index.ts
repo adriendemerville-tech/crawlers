@@ -706,7 +706,9 @@ Deno.serve(async (req) => {
 
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
     const domain = new URL(normalizedUrl).hostname;
-    const domainSlug = domain.split('.')[0];
+    // Skip www prefix when extracting domain slug for brand name
+    const domainWithoutWww = domain.replace(/^www\./, '');
+    const domainSlug = domainWithoutWww.split('.')[0];
     const humanBrandName = extractedBrandName || humanizeBrandName(domainSlug);
     console.log(`🏷️ Marque finale: "${humanBrandName}" (${extractedBrandName ? 'HTML' : 'slug'})`);
 
