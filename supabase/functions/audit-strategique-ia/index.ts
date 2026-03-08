@@ -587,6 +587,14 @@ INSTRUCTIONS CRITIQUES:
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
 - PROFILS SOCIAUX: Dans proof_sources, inclus MAXIMUM 2 profils avec profile_url. Si plus de 2 profils identifiés, sélectionne les 2 ayant le plus d'abonnés pondéré par la fraîcheur de leur dernière publication (un profil actif avec moins d'abonnés prime sur un profil inactif avec plus d'abonnés). Fournis l'URL complète et le profile_name. Analyse explicitement l'incarnation humaine (fondateur, dirigeant) et son impact E-E-A-T. Les autres plateformes peuvent apparaître sans profile_url.
+- SCORING E-E-A-T RIGOUREUX: Le eeat_score (0-10) doit refléter la RÉALITÉ observable. Grille stricte:
+  * 0-2: Aucune incarnation humaine identifiable, aucune mention de la marque sur le web, pas de profils sociaux actifs, pas de contenu signé, pas de Knowledge Graph
+  * 3-4: Incarnation faible (page "à propos" sans nom), mentions rares, profils sociaux inactifs ou absents
+  * 5-6: Incarnation partielle (fondateur identifié mais peu visible), quelques mentions tierces, 1 profil social actif
+  * 7-8: Incarnation forte (fondateur reconnu dans son secteur, profils actifs, articles signés, mentions régulières)
+  * 9-10: Autorité établie (thought leader reconnu, citations fréquentes par des tiers, Knowledge Graph présent)
+  Un site sans incarnation humaine, sans occurrence tierce sur le web et sans profils sociaux actifs NE PEUT PAS dépasser 2/10. Sois honnête et factuel.
+- founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable sur le site ou le web. Ne PAS inventer.
 - JSON pur, sans virgules traînantes`;
 }
 
