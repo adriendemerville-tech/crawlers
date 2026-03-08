@@ -198,8 +198,8 @@ export function WorkflowCarousel({
 
   // Card dimensions for sliding calculation
   // Mobile: 255px (340px - 25%), Desktop: 380px
-  const CARD_WIDTH = isMobile ? 255 : 380;
-  const GAP = isMobile ? 16 : 24; // gap-4 on mobile, gap-6 on desktop
+  const CARD_WIDTH = isMobile ? 290 : 380;
+  const GAP = isMobile ? 16 : 24;
   const SLIDE_DISTANCE = CARD_WIDTH + GAP;
 
   // Swipe threshold for mobile/tablet
