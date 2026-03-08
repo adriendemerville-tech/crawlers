@@ -779,17 +779,19 @@ INSTRUCTIONS CRITIQUES:
 - SCORING E-E-A-T EVIDENCE-BASED: Le eeat_score (0-10) doit être fondé sur les PREUVES OBSERVABLES fournies dans "SIGNAUX E-E-A-T DÉTECTÉS". 
    MÉTHODOLOGIE: Commence par compter les signaux factuels détectés, puis enrichis avec tes connaissances pré-entraînées sur la marque (si elle est suffisamment connue).
    
+   ⚠️ RÉALITÉ DU MARCHÉ: La plupart des entreprises n'ont PAS d'incarnation humaine (pas de fondateur identifiable, pas de Person en JSON-LD). C'est NORMAL. Le E-E-A-T est une donnée NOUVELLE que très peu de sites implémentent. Ne pénalise pas excessivement l'absence d'incarnation.
+   
    SIGNAUX TECHNIQUES (vérifiés par le crawler — haute fiabilité):
    +1pt: Author déclaré en JSON-LD (hasAuthorInJsonLd=OUI)
    +1pt: Person ou ProfilePage en JSON-LD (hasPerson ou hasProfilePage=OUI)
    +1pt: sameAs vers Wikidata (hasWikidataSameAs=OUI) — signal fort d'autorité institutionnelle
+   +1pt: Organization déclarée en JSON-LD avec données structurées complètes
    +0.5pt: sameAs présent sans Wikidata (hasSameAs=OUI)
    +0.5pt: Bios auteur dans le HTML (hasAuthorBio=OUI)
-   +0.5pt: Profils LinkedIn personnels (/in/) détectés — incarnation humaine vérifiée
    +0.5pt: Page LinkedIn entreprise (/company/) détectée — entité de marque
+   +0.5pt: Profils LinkedIn personnels (/in/) détectés — incarnation humaine (BONUS, pas obligatoire)
    +0.5pt: Citations d'experts / blockquotes détectées
    +0.5pt: Études de cas / témoignages détectés
-   +0.5pt: Organization déclarée en JSON-LD
    Base technique max: ~7 points à partir des signaux crawlés
    
    SIGNAUX INFÉRÉS (connaissances pré-entraînées — fiabilité variable):
@@ -801,14 +803,16 @@ INSTRUCTIONS CRITIQUES:
    - Tu NE PEUX PAS vérifier le nombre d'abonnés d'un réseau social → ne prétends JAMAIS connaître ce chiffre
    - Tu NE PEUX PAS vérifier si un GMB existe → ne l'affirme que pour des marques notoirement connues
    - Tu NE PEUX PAS vérifier la fraîcheur des publications sociales → ne juge pas l'activité récente
+   - Instagram n'est PAS obligatoire. Ne recommande un réseau que s'il est pertinent pour le secteur d'activité.
    - Dans "analysis" du thought_leadership, DISTINGUE EXPLICITEMENT: "Signaux vérifiés sur le site: [liste]" vs "Signaux estimés (connaissances pré-entraînées): [liste]"
    
-   PLAFONDS:
+   PLAFONDS (ajustés — incarnation NON obligatoire):
    - Sans AUCUN signal technique détecté (tout à NON): max 3/10 (basé uniquement sur la notoriété inférée)
-   - Avec signaux techniques mais sans incarnation humaine (pas de Person/Author/profil personnel): max 6/10
-   - Avec incarnation + signaux techniques solides: 7-8/10
+   - Avec signaux techniques (Organization, sameAs, etc.) SANS incarnation humaine: max 7/10 (c'est le cas normal)
+   - Avec incarnation (Person/Author/profil personnel) + signaux techniques: 7-9/10
    - 9-10/10: réservé aux marques à autorité institutionnelle vérifiable (Wikidata sameAs, OU marque de référence que tu peux attester avec certitude)
-- founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable dans les signaux E-E-A-T crawlés ni dans tes connaissances. Ne PAS inventer.
+- founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable dans les signaux E-E-A-T crawlés ni dans tes connaissances. Ne PAS inventer. C'est le cas le plus fréquent.
+- PRÉSENCE SOCIALE: Analyse uniquement les plateformes PERTINENTES pour le secteur. Ne force pas la présence sur Instagram si ce n'est pas pertinent. Les proof_sources doivent refléter la réalité: si un réseau est absent et non pertinent, indique presence_level: "absent" sans le traiter comme un défaut.
 - JSON pur, sans virgules traînantes`;
 }
 
