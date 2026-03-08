@@ -225,18 +225,15 @@ function detectBusinessContext(domain: string): BusinessContext {
 
 function extractKeywordsFromMetadata(pageContentContext: string): string[] {
   const extracted: string[] = [];
-  // Extract title, h1, description from the context string
   const titleMatch = pageContentContext.match(/Titre="([^"?]+)/);
   const h1Match = pageContentContext.match(/H1="([^"?]+)/);
   const descMatch = pageContentContext.match(/Desc="([^"?]+)/);
   
   const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
   
-  // Common French stop words to filter out
-  const stopWords = new Set(['le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux','il','elle','ce','cette','qui','que','son','sa','ses','se','ne','pas','avec','dans','ou','plus','vous','votre','vos','nous','notre','nos','leur','leurs','mon','ma','mes','ton','ta','tes','si','mais','car','donc','ni','comme','entre','chez','vers','très','aussi','bien','encore','tout','tous','même','autre','autres','quel','quelle','quels','quelles','chaque','quelque','certains','plusieurs','aucun','tel','telle','tels','telles']);
+  const stopWords = new Set(['le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux','il','elle','ce','cette','qui','que','son','sa','ses','se','ne','pas','avec','dans','ou','plus','vous','votre','vos','nous','notre','nos','leur','leurs','mon','ma','mes','ton','ta','tes','si','mais','car','donc','ni','comme','entre','chez','vers','très','aussi','bien','encore','tout','tous','même','autre','autres','quel','quelle','quels','quelles','chaque','quelque','certains','plusieurs','aucun','tel','telle','tels','telles','gratuit','gratuite','meilleur','meilleure','site','web','page','accueil','www','http','https','calcul','calculer','outil','service','solution','application','app','logiciel','plateforme']);
   
   for (const text of texts) {
-    // Extract meaningful 2-3 word phrases
     const cleaned = text.toLowerCase()
       .replace(/[|–—·:]/g, ' ')
       .replace(/[^\wàâäéèêëïîôùûüÿçœæ\s-]/g, '')
@@ -245,39 +242,45 @@ function extractKeywordsFromMetadata(pageContentContext: string): string[] {
     
     const words = cleaned.split(' ').filter(w => w.length > 2 && !stopWords.has(w));
     
-    // Add individual significant words and bigrams
-    for (const word of words) {
-      if (word.length >= 3) extracted.push(word);
+    // Prioritize bigrams and trigrams (market-intent phrases)
+    for (let i = 0; i < words.length - 2; i++) {
+      extracted.push(`${words[i]} ${words[i + 1]} ${words[i + 2]}`);
     }
     for (let i = 0; i < words.length - 1; i++) {
       extracted.push(`${words[i]} ${words[i + 1]}`);
     }
+    // Individual words only if long enough to be meaningful
+    for (const word of words) {
+      if (word.length >= 5) extracted.push(word);
+    }
   }
   
-  // Deduplicate
-  return [...new Set(extracted)].slice(0, 10);
+  return [...new Set(extracted)].slice(0, 12);
 }
 
 function generateSeedKeywords(brandName: string, sector: string, pageContentContext: string = ''): string[] {
-  const cleanBrand = brandName.toLowerCase().trim();
-  const keywords = [
-    cleanBrand, `${cleanBrand} avis`,
-  ];
-  if (sector.toLowerCase() !== cleanBrand) {
-    keywords.push(sector, `meilleur ${sector}`);
-  }
+  const keywords: string[] = [];
   
-  // Enrich with page metadata keywords (title, h1, description)
+  // Start with market-intent keywords from page metadata (highest priority)
   if (pageContentContext) {
     const metaKeywords = extractKeywordsFromMetadata(pageContentContext);
     for (const mk of metaKeywords) {
-      if (!keywords.includes(mk) && mk !== cleanBrand) {
+      if (mk.length > 4 && !keywords.includes(mk)) {
         keywords.push(mk);
       }
     }
   }
   
-  return keywords.filter(kw => kw.length > 2 && !kw.includes('undefined')).slice(0, 10);
+  // Add sector-based queries if different from brand
+  const cleanBrand = brandName.toLowerCase().trim();
+  if (sector.toLowerCase() !== cleanBrand && sector.length > 3) {
+    if (!keywords.some(k => k.includes(sector))) keywords.push(sector);
+  }
+  
+  // Brand terms at the end (low priority — useful for branded volume only)
+  if (!keywords.includes(cleanBrand)) keywords.push(cleanBrand);
+  
+  return keywords.filter(kw => kw.length > 3 && !kw.includes('undefined')).slice(0, 10);
 }
 
 async function fetchKeywordData(
