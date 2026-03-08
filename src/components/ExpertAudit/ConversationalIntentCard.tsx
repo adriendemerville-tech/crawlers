@@ -1,30 +1,43 @@
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircleQuestion, ArrowRight, Sparkles } from 'lucide-react';
+import { MessageCircleQuestion, ArrowRight, Sparkles, Info } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { StrategicAnalysis } from '@/types/expertAudit';
 
 interface ConversationalIntentCardProps {
   analysis: StrategicAnalysis;
 }
 
-// Examples of classic → conversational rewrites
-const rewriteExamples = [
+// Fallback generic examples (only used if LLM didn't provide any)
+const fallbackExamples = [
   { before: 'Optimisation SEO', after: 'Comment optimiser son SEO en 2026 ?' },
   { before: 'Stratégie de contenu', after: 'Quelle stratégie de contenu adopter pour être cité par l\'IA ?' },
-  { before: 'Marketing digital', after: 'Comment le marketing digital évolue-t-il avec l\'IA générative ?' },
-  { before: 'Analyse concurrentielle', after: 'Comment analyser ses concurrents face aux moteurs IA ?' },
 ];
 
 export function ConversationalIntentCard({ analysis }: ConversationalIntentCardProps) {
-  // Derive a conversational score from available data
-  const geoFormats = analysis.geo_readiness?.ai_favored_formats;
-  const hasFaq = geoFormats?.has_faq ?? false;
-  const formatScore = geoFormats?.format_score ?? 30;
-
-  // Simulate a ratio: classic vs question-based headings
-  const conversationalRatio = Math.min(100, Math.round(formatScore * 0.8 + (hasFaq ? 15 : 0)));
+  // Try to get conversational_intent data from the raw strategic analysis
+  const rawIntent = (analysis as any)?.conversational_intent;
+  
+  // Use LLM-provided data if available
+  const conversationalRatio = rawIntent?.ratio ?? (() => {
+    const geoFormats = analysis.geo_readiness?.ai_favored_formats;
+    const hasFaq = geoFormats?.has_faq ?? false;
+    const formatScore = geoFormats?.format_score ?? 30;
+    return Math.min(100, Math.round(formatScore * 0.8 + (hasFaq ? 15 : 0)));
+  })();
+  
   const genericPercent = 100 - conversationalRatio;
+  const intentAnalysis = rawIntent?.analysis || '';
+  
+  // Build rewrite examples from LLM-provided examples
+  const llmExamples: string[] = rawIntent?.examples || [];
+  const rewriteExamples = llmExamples.length > 0
+    ? llmExamples.slice(0, 5).map((ex: string) => ({
+        before: ex.replace(/\s*\?.*$/, '').split(' ').slice(0, 4).join(' '),
+        after: ex,
+      }))
+    : fallbackExamples;
 
   // Score ring
   const size = 120;
@@ -94,9 +107,13 @@ export function ConversationalIntentCard({ analysis }: ConversationalIntentCardP
             {/* Impact text */}
             <div className="flex-1 space-y-2">
               <p className="text-sm leading-relaxed text-foreground">
-                Les IA répondent à des <span className="font-semibold">questions</span>, pas à des mots-clés.{' '}
-                <span className="font-bold text-warning">{genericPercent}%</span> de vos titres sont trop génériques pour
-                déclencher une recommandation IA.
+                {intentAnalysis || (
+                  <>
+                    Les IA répondent à des <span className="font-semibold">questions</span>, pas à des mots-clés.{' '}
+                    <span className="font-bold text-warning">{genericPercent}%</span> de vos titres sont trop génériques pour
+                    déclencher une recommandation IA.
+                  </>
+                )}
               </p>
               <div className="flex gap-3 text-xs">
                 <div className="rounded-md bg-muted/50 px-3 py-1.5">
@@ -114,7 +131,7 @@ export function ConversationalIntentCard({ analysis }: ConversationalIntentCardP
           {/* Before/After rewrite list */}
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Avant / Après — Reformulations conversationnelles
+              {llmExamples.length > 0 ? 'Reformulations adaptées à votre activité' : 'Avant / Après — Reformulations conversationnelles'}
             </p>
             <div className="space-y-2">
               {rewriteExamples.map((ex, i) => (
@@ -125,12 +142,38 @@ export function ConversationalIntentCard({ analysis }: ConversationalIntentCardP
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + i * 0.1 }}
                 >
-                  <span className="text-muted-foreground line-through flex-shrink-0 max-w-[35%] truncate">{ex.before}</span>
-                  <ArrowRight className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span className="font-medium text-foreground">{ex.after}</span>
+                  {llmExamples.length > 0 ? (
+                    <span className="font-medium text-foreground">{ex.after}</span>
+                  ) : (
+                    <>
+                      <span className="text-muted-foreground line-through flex-shrink-0 max-w-[35%] truncate">{ex.before}</span>
+                      <ArrowRight className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span className="font-medium text-foreground">{ex.after}</span>
+                    </>
+                  )}
                 </motion.div>
               ))}
             </div>
+          </div>
+
+          {/* Methodology button */}
+          <div className="flex justify-end pt-1">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+                  <Info className="h-3 w-3" />
+                  Méthodologie
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                side="top"
+                align="end"
+                sideOffset={8}
+                className="w-72 p-3 text-xs leading-relaxed text-foreground/90 backdrop-blur-xl bg-background/80 border border-border/50 shadow-xl rounded-lg"
+              >
+                Mesure le ratio de titres et contenus formulés en questions naturelles vs mots-clés classiques. Un score élevé signifie que votre contenu est prêt à être cité par les réponses IA conversationnelles (ChatGPT, Perplexity, Claude).
+              </PopoverContent>
+            </Popover>
           </div>
         </CardContent>
       </Card>
