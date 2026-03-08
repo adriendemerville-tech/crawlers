@@ -40,6 +40,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
       setBalance(data?.credits_balance || 0);
       setPlanType((data as any)?.plan_type || 'free');
       setSubscriptionStatus((data as any)?.subscription_status || null);
+      setSubscriptionExpiresAt((data as any)?.subscription_expires_at || null);
     } catch (error) {
       console.error('Error fetching credits balance:', error);
       setBalance(0);
