@@ -1182,15 +1182,24 @@ export function ExpertAuditDashboard() {
                         {result.url} <ExternalLink className="h-3 w-3" />
                       </a>
                       <div className="mt-4 space-y-1">
-                        <p className="text-sm text-muted-foreground">Score Global</p>
-                        <p className="text-lg">
-                          {result.totalScore < 100 && <span className="text-destructive font-medium">{t.toImprove}</span>}
-                          {result.totalScore >= 100 && result.totalScore < 150 && <span className="text-warning font-medium">{t.correct}</span>}
-                          {result.totalScore >= 150 && <span className="text-success font-medium">{t.excellent}</span>}
-                        </p>
+                      <p className="text-sm text-muted-foreground">Score Global</p>
+                      {/* Recompute total from sub-scores for consistency */}
+                      {(() => {
+                        const computedTotal = result.scores.performance.score + result.scores.technical.score + result.scores.semantic.score + result.scores.aiReady.score + result.scores.security.score;
+                        const displayScore = computedTotal;
+                        return (
+                          <>
+                            <p className="text-lg">
+                              {displayScore < 100 && <span className="text-destructive font-medium">{t.toImprove}</span>}
+                              {displayScore >= 100 && displayScore < 150 && <span className="text-warning font-medium">{t.correct}</span>}
+                              {displayScore >= 150 && <span className="text-success font-medium">{t.excellent}</span>}
+                            </p>
+                          </>
+                        );
+                      })()}
                       </div>
                     </div>
-                    <ScoreGauge200 score={result.totalScore} />
+                    <ScoreGauge200 score={result.scores.performance.score + result.scores.technical.score + result.scores.semantic.score + result.scores.aiReady.score + result.scores.security.score} />
                   </div>
                   <MethodologyPopover variant="global_score" />
                 </CardContent>
