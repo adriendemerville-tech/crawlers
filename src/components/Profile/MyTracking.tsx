@@ -936,7 +936,7 @@ export function MyTracking() {
                             }
 
                             return (
-                              <div className="h-[24.5rem] w-[108%] -ml-[3%]">
+                              <div className="h-[24.5rem] w-[108%] -ml-[2%]">
                                 <ResponsiveContainer width="100%" height="100%">
                                   <ComposedChart data={chartRows} margin={{ left: 0, right: 40, top: 5, bottom: 5 }}>
                                     <defs>
@@ -1008,7 +1008,7 @@ export function MyTracking() {
                                     />
                                     <Legend 
                                       formatter={(value: string) => (
-                                        <span style={{ color: 'hsl(var(--foreground))', fontSize: 12 }}>{value}</span>
+                                        <span style={{ color: 'hsl(var(--foreground))', fontSize: 14 }}>{value}</span>
                                       )}
                                       payload={[
                                         { value: language === 'fr' ? 'Clics' : 'Clicks', type: 'line', color: 'hsl(var(--primary))' },
