@@ -339,6 +339,26 @@ export default function Auth() {
             ) : (
               <Form {...signupForm}>
                 <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+                  {showExistsBanner && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 p-3"
+                    >
+                      <AlertCircle className="h-4 w-4 text-warning shrink-0" />
+                      <p className="text-sm text-foreground flex-1">
+                        Déjà inscrit, voulez-vous vous{' '}
+                        <button
+                          type="button"
+                          onClick={handleSwitchToLogin}
+                          className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                        >
+                          connecter
+                        </button>
+                        {' '}?
+                      </p>
+                    </motion.div>
+                  )}
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={signupForm.control}
