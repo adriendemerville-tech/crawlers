@@ -179,9 +179,9 @@ export function MyTracking() {
   type GscDateMode = 'since' | 'range';
   type GscGranularity = 'daily' | 'weekly' | 'monthly';
   const [gscDateMode, setGscDateMode] = useState<GscDateMode>('since');
-  const [gscSinceDate, setGscSinceDate] = useState<Date>(() => new Date('2026-01-01'));
-  const [gscRangeStart, setGscRangeStart] = useState<Date>(() => new Date('2026-01-01'));
-  const [gscRangeEnd, setGscRangeEnd] = useState<Date>(new Date());
+  const [gscSinceDate, setGscSinceDate] = useState<Date>(() => new Date(2026, 0, 1));
+  const [gscRangeStart, setGscRangeStart] = useState<Date>(() => new Date(2026, 0, 1));
+  const [gscRangeEnd, setGscRangeEnd] = useState<Date>(() => new Date());
   const [gscGranularity, setGscGranularity] = useState<GscGranularity>('daily');
 
   const gscStartDate = gscDateMode === 'since' ? gscSinceDate : gscRangeStart;
@@ -816,12 +816,14 @@ export function MyTracking() {
                             {gscDateMode === 'since' && (
                               <input
                                 type="date"
-                                value={gscSinceDate.toISOString().split('T')[0]}
+                                value={format(gscSinceDate, 'yyyy-MM-dd')}
                                 min="2020-01-01"
-                                max={new Date().toISOString().split('T')[0]}
+                                max={format(new Date(), 'yyyy-MM-dd')}
                                 onChange={(e) => {
-                                  const d = new Date(e.target.value + 'T00:00:00');
-                                  if (!isNaN(d.getTime())) setGscSinceDate(d);
+                                  if (!e.target.value) return;
+                                  const [y, m, d] = e.target.value.split('-').map(Number);
+                                  const date = new Date(y, m - 1, d);
+                                  if (!isNaN(date.getTime())) setGscSinceDate(date);
                                 }}
                                 className="h-7 text-xs px-2 rounded-md border border-input bg-background text-foreground cursor-pointer"
                               />
@@ -832,24 +834,28 @@ export function MyTracking() {
                               <>
                                 <input
                                   type="date"
-                                  value={gscRangeStart.toISOString().split('T')[0]}
+                                  value={format(gscRangeStart, 'yyyy-MM-dd')}
                                   min="2020-01-01"
-                                  max={gscRangeEnd.toISOString().split('T')[0]}
+                                  max={format(gscRangeEnd, 'yyyy-MM-dd')}
                                   onChange={(e) => {
-                                    const d = new Date(e.target.value + 'T00:00:00');
-                                    if (!isNaN(d.getTime())) setGscRangeStart(d);
+                                    if (!e.target.value) return;
+                                    const [y, m, d] = e.target.value.split('-').map(Number);
+                                    const date = new Date(y, m - 1, d);
+                                    if (!isNaN(date.getTime())) setGscRangeStart(date);
                                   }}
                                   className="h-7 text-xs px-2 rounded-md border border-input bg-background text-foreground cursor-pointer"
                                 />
                                 <span className="text-xs text-muted-foreground">→</span>
                                 <input
                                   type="date"
-                                  value={gscRangeEnd.toISOString().split('T')[0]}
-                                  min={gscRangeStart.toISOString().split('T')[0]}
-                                  max={new Date().toISOString().split('T')[0]}
+                                  value={format(gscRangeEnd, 'yyyy-MM-dd')}
+                                  min={format(gscRangeStart, 'yyyy-MM-dd')}
+                                  max={format(new Date(), 'yyyy-MM-dd')}
                                   onChange={(e) => {
-                                    const d = new Date(e.target.value + 'T00:00:00');
-                                    if (!isNaN(d.getTime())) setGscRangeEnd(d);
+                                    if (!e.target.value) return;
+                                    const [y, m, d] = e.target.value.split('-').map(Number);
+                                    const date = new Date(y, m - 1, d);
+                                    if (!isNaN(date.getTime())) setGscRangeEnd(date);
                                   }}
                                   className="h-7 text-xs px-2 rounded-md border border-input bg-background text-foreground cursor-pointer"
                                 />
