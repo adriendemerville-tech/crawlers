@@ -41,7 +41,7 @@ export const expertReportTranslations = {
   en: {
     title: 'Expert Audit Report',
     download: 'Download .pdf',
-    share: 'Share',
+    share: 'Temporary link',
     print: 'Print',
     generating: 'Generating...',
     sharing: 'Creating link...',
