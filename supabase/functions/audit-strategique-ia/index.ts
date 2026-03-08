@@ -162,9 +162,15 @@ function resolveBrandName(signals: BrandSignal[], domain: string, url: string): 
   // Group signals by normalized value
   const groups = new Map<string, { totalWeight: number; bestValue: string; sources: string[] }>();
   for (const sig of signals) {
-    const norm = normalize(sig.value);
+    const rawVal = sig.value.trim();
+    // CRITICAL: Skip values that are clearly taglines/descriptions, not brand names
+    // A real brand name is almost never longer than 40 characters
+    if (rawVal.length > 40) {
+      console.log(`⏭️ Brand detection: skipping too-long signal "${rawVal.substring(0, 50)}..." from ${sig.source}`);
+      continue;
+    }
+    const norm = normalize(rawVal);
     if (!norm || norm.length < 2) continue;
-    // Skip if the value is just the domain slug repeated (not informative)
     const existing = groups.get(norm);
     if (existing) {
       existing.totalWeight += sig.weight;
