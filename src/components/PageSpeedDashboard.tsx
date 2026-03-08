@@ -232,10 +232,10 @@ export function PageSpeedDashboard({ result, isLoading, strategy, onStrategyChan
             />
             <MetricCard
               icon={Clock}
-              label={t.pagespeed.tbt}
+              label={tbtLabel}
               value={scores.tbt}
-              description={t.pagespeed.tbtDesc}
-              score={getMetricScore('tbt', scores.tbt)}
+              description={tbtDesc}
+              score={getMetricScore(isFieldData ? 'inp' : 'tbt', scores.tbt)}
             />
             <MetricCard
               icon={Gauge}
@@ -246,10 +246,10 @@ export function PageSpeedDashboard({ result, isLoading, strategy, onStrategyChan
             />
             <MetricCard
               icon={MousePointer}
-              label={t.pagespeed.tti}
+              label={ttiLabel}
               value={scores.tti}
-              description={t.pagespeed.ttiDesc}
-              score={getMetricScore('tti', scores.tti)}
+              description={ttiDesc}
+              score={getMetricScore(isFieldData ? 'ttfb' : 'tti', scores.tti)}
             />
           </div>
         </div>
