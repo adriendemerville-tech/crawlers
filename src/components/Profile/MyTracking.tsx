@@ -799,13 +799,13 @@ export function MyTracking() {
                             {/* Date mode toggle */}
                             <div className="flex rounded-lg border bg-muted p-0.5 text-sm">
                               <button
-                                className={cn("px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5", gscDateMode === 'since' && "bg-background shadow-sm font-medium")}
+                                className={cn("px-3.5 py-2 rounded-md transition-colors flex items-center gap-1.5", gscDateMode === 'since' && "bg-background shadow-sm font-medium")}
                                 onClick={() => setGscDateMode('since')}
                               >
                                 {language === 'fr' ? 'Depuis' : language === 'es' ? 'Desde' : 'Since'}
                               </button>
                               <button
-                                className={cn("px-3 py-1.5 rounded-md transition-colors", gscDateMode === 'range' && "bg-background shadow-sm font-medium")}
+                                className={cn("px-3.5 py-2 rounded-md transition-colors", gscDateMode === 'range' && "bg-background shadow-sm font-medium")}
                                 onClick={() => setGscDateMode('range')}
                               >
                                 {language === 'fr' ? 'Entre' : language === 'es' ? 'Entre' : 'Between'}
