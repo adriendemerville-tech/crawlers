@@ -590,11 +590,16 @@ export function WorkflowCarousel({
                               <Check className="h-4 w-4" />
                               {t.complete}
                             </div>
-                            {/* Click to view report indicator - only on non-active completed cards */}
-                            {!isActive && (step.id === 1 ? hasTechnicalResult : step.id === 2 ? hasStrategicResult : false) && (
+                            {/* Click to view report indicator */}
+                            {(step.id === 1 ? hasTechnicalResult : step.id === 2 ? hasStrategicResult : false) && (
                               <Badge 
                                 variant="outline" 
                                 className="gap-1.5 text-xs cursor-pointer border-primary/30 text-primary hover:bg-primary/10 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (step.id === 1 && onNavigateToTechnical) onNavigateToTechnical();
+                                  else if (step.id === 2 && onNavigateToStrategic) onNavigateToStrategic();
+                                }}
                               >
                                 <Eye className="h-3 w-3" />
                                 {t.viewReport}
