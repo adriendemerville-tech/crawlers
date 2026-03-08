@@ -139,9 +139,10 @@ function performSelfAudit(doc: ReturnType<DOMParser['parseFromString']>, htmlLen
 function detectSPAMarkers(doc: ReturnType<DOMParser['parseFromString']>): { isSPA: boolean; hasSSR: boolean; framework?: string } {
   if (!doc) return { isSPA: false, hasSSR: false };
 
-  // Recherche des conteneurs SPA vides
-  const rootDiv = doc.querySelector('#root') || doc.querySelector('#app') || doc.querySelector('#__next');
-  const hasEmptyRoot = rootDiv && (rootDiv.textContent?.trim().length || 0) < 50;
+  // Recherche des conteneurs SPA vides (broader ID check)
+  const rootDiv = doc.querySelector('#root') || doc.querySelector('#app') || doc.querySelector('#__next') || doc.querySelector('#__nuxt') || doc.querySelector('[data-reactroot]') || doc.querySelector('[id*="react"]') || doc.querySelector('[id*="app-root"]');
+  const rootTextLen = rootDiv ? (rootDiv.textContent?.trim().length || 0) : -1;
+  const hasEmptyRoot = rootDiv && rootTextLen < 50;
 
   // Détection des frameworks via scripts et attributs
   const scripts = doc.querySelectorAll('script');
@@ -149,21 +150,28 @@ function detectSPAMarkers(doc: ReturnType<DOMParser['parseFromString']>): { isSP
   let hasVue = false;
   let hasNext = false;
   let hasNuxt = false;
+  let hasAngular = false;
 
   scripts.forEach((script: Element) => {
     const src = script.getAttribute('src') || '';
     const content = script.textContent || '';
     
-    if (src.includes('react') || content.includes('__REACT')) hasReact = true;
-    if (src.includes('vue') || content.includes('__VUE')) hasVue = true;
+    if (src.includes('react') || content.includes('__REACT') || content.includes('React.createElement') || content.includes('ReactDOM')) hasReact = true;
+    if (src.includes('vue') || content.includes('__VUE') || content.includes('Vue.createApp')) hasVue = true;
     if (src.includes('_next') || content.includes('__NEXT_DATA__')) hasNext = true;
     if (src.includes('nuxt') || content.includes('__NUXT__')) hasNuxt = true;
+    if (src.includes('angular') || content.includes('ng-version')) hasAngular = true;
   });
+
+  // Also check for data-reactroot attribute on body children
+  if (!hasReact && doc.querySelector('[data-reactroot]')) hasReact = true;
+  // Check for Angular app-root
+  if (!hasAngular && doc.querySelector('app-root')) hasAngular = true;
 
   // Vérification du SSR via __NEXT_DATA__ ou __NUXT__
   const nextDataScript = doc.querySelector('script#__NEXT_DATA__');
   const nuxtScript = Array.from(scripts).find((s: Element) => s.textContent?.includes('__NUXT__'));
-  const hasSSRContent = rootDiv && (rootDiv.textContent?.trim().length || 0) > 100;
+  const hasSSRContent = rootDiv && rootTextLen > 100;
   const hasSSR: boolean = !!(nextDataScript || nuxtScript || hasSSRContent);
 
   let framework: string | undefined;
@@ -171,8 +179,9 @@ function detectSPAMarkers(doc: ReturnType<DOMParser['parseFromString']>): { isSP
   else if (hasNuxt) framework = 'Nuxt';
   else if (hasReact) framework = 'React';
   else if (hasVue) framework = 'Vue';
+  else if (hasAngular) framework = 'Angular';
 
-  const isSPA = (hasReact || hasVue) && hasEmptyRoot && !hasSSR;
+  const isSPA = (hasReact || hasVue || hasAngular) && (hasEmptyRoot || rootTextLen < 200) && !hasSSR;
 
   return { isSPA, hasSSR, framework };
 }
@@ -539,14 +548,23 @@ Deno.serve(async (req) => {
         const textOnly = bodyContent
           .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
           .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+          .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
           .replace(/<[^>]+>/g, ' ')
           .replace(/\s+/g, ' ')
           .trim();
-        const hasSPAMarker = /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<\/div>/i.test(pageHtml)
-          || /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<noscript/i.test(pageHtml);
+        const hasSPAMarker = /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>/i.test(pageHtml)
+          || /data-reactroot/i.test(pageHtml)
+          || /<app-root/i.test(pageHtml);
         
-        if ((textOnly.length < 200 && pageHtml.length > 1000) || (hasSPAMarker && textOnly.length < 500)) {
-          console.log(`[GEO-AUDIT] SPA detected (${textOnly.length} chars text, ${pageHtml.length} chars HTML). Trying JS rendering...`);
+        // More aggressive detection: large HTML with very little visible text
+        const htmlToTextRatio = textOnly.length / pageHtml.length;
+        const needsRendering = 
+          (textOnly.length < 200 && pageHtml.length > 1000) || 
+          (hasSPAMarker && textOnly.length < 500) ||
+          (pageHtml.length > 5000 && htmlToTextRatio < 0.02); // Less than 2% text = likely SPA/JS-heavy
+        
+        if (needsRendering) {
+          console.log(`[GEO-AUDIT] SPA/JS-heavy detected (${textOnly.length} chars text, ${pageHtml.length} chars HTML, ratio: ${htmlToTextRatio.toFixed(3)}). Trying JS rendering...`);
           
           const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
           if (RENDERING_KEY) {
@@ -618,7 +636,7 @@ Deno.serve(async (req) => {
 
     // IMPORTANT: Même pour les SPA, on continue l'analyse avec les données disponibles
     // (robots.txt, meta tags dans le head, etc.) mais on ajuste le score final
-    const isSPAWithLimitedContent = !selfAudit.isReliable && selfAudit.reliabilityScore < 0.3;
+    let isSPAWithLimitedContent = !selfAudit.isReliable && selfAudit.reliabilityScore < 0.3;
 
     // =========================================================================
     // ÉTAPE 2 : ANALYSE COMPLÈTE
@@ -630,6 +648,14 @@ Deno.serve(async (req) => {
     const spaInfo = detectSPAMarkers(doc);
     const ogResult = analyzeOpenGraph(doc);
     const hasSitemap = checkSitemap(robotsTxt);
+
+    // POST-ANALYSIS HEURISTIC: Si le contenu analysé est quasi-vide malgré un HTML volumineux,
+    // c'est un SPA/JS-heavy qui n'a pas été rendu correctement — appliquer scoring neutre
+    if (!isSPAWithLimitedContent && contentResult.wordCount < 20 && pageHtml.length > 5000 && !usedRendering) {
+      console.log(`[GEO-AUDIT] ⚠️ Post-analysis: content empty (${contentResult.wordCount} words) despite large HTML (${pageHtml.length}). Forcing SPA neutral scoring.`);
+      isSPAWithLimitedContent = true;
+    }
+
 
     const factors: GeoFactor[] = [];
 
@@ -649,20 +675,21 @@ Deno.serve(async (req) => {
     });
 
     // Factor 2: Meta Description (15 points)
-    const metaDescScore = metaResult.hasDescription ? 15 : 0;
+    // For SPA without rendering, meta may be injected by JS — give neutral score
+    const metaDescScore = metaResult.hasDescription ? 15 : (isSPAWithLimitedContent ? 8 : 0);
     factors.push({
       id: 'meta-description',
       name: t.factors.metaDescription.name,
       description: t.factors.metaDescription.description,
       score: metaDescScore,
       maxScore: 15,
-      status: metaDescScore === 15 ? 'good' : 'error',
+      status: metaDescScore === 15 ? 'good' : (isSPAWithLimitedContent && !metaResult.hasDescription) ? 'warning' : (metaDescScore > 0 ? 'warning' : 'error'),
       recommendation: !metaResult.hasDescription 
-        ? t.factors.metaDescription.recommendation
+        ? (isSPAWithLimitedContent ? 'SPA détecté — la meta description peut être injectée par JavaScript. Vérifiez le rendu côté serveur (SSR).' : t.factors.metaDescription.recommendation)
         : undefined,
       details: metaResult.description 
         ? `"${metaResult.description.substring(0, 60)}..."` 
-        : t.details.noMetaDescription
+        : (isSPAWithLimitedContent ? '⚠️ SPA détecté — analyse limitée sans rendu JS' : t.details.noMetaDescription)
     });
 
     // Factor 3: Structured Data (15 points) - VALIDATION STRICTE
@@ -673,16 +700,18 @@ Deno.serve(async (req) => {
       if (structuredData.isValid) {
         structuredScore = 15;
         structuredDetails = t.details.foundTypes(structuredData.types.join(', '));
-        // Penalize if JS-generated (robots can't read JS-injected schema)
         if (structuredData.isJsGenerated) {
           structuredScore = Math.max(0, structuredScore - 3);
           console.log('[GEO-AUDIT] ⚠️ JSON-LD detected but JS-generated — score penalized (-3)');
         }
       } else {
-        // JSON-LD présent mais invalide = score partiel
         structuredScore = 5;
         structuredDetails = `JSON-LD détecté mais ${structuredData.parseErrors.length} erreur(s) de parsing. Types trouvés: ${structuredData.types.join(', ') || 'aucun'}`;
       }
+    } else if (isSPAWithLimitedContent) {
+      // SPA sans rendu : on ne peut pas savoir si JSON-LD est injecté par JS
+      structuredScore = 8;
+      structuredDetails = '⚠️ SPA détecté — les données structurées peuvent être injectées par JavaScript';
     }
 
     factors.push({
@@ -693,9 +722,11 @@ Deno.serve(async (req) => {
       maxScore: 15,
       status: structuredScore === 15 ? 'good' : structuredScore > 0 ? 'warning' : 'error',
       recommendation: structuredScore < 15 
-        ? structuredData.parseErrors.length > 0 
-          ? `Corrigez les erreurs JSON-LD: ${structuredData.parseErrors[0]}`
-          : t.factors.structuredData.recommendation
+        ? (isSPAWithLimitedContent && !structuredData.hasJsonLd
+          ? 'SPA détecté — vérifiez que vos données structurées sont accessibles sans JavaScript (SSR recommandé).'
+          : structuredData.parseErrors.length > 0 
+            ? `Corrigez les erreurs JSON-LD: ${structuredData.parseErrors[0]}`
+            : t.factors.structuredData.recommendation)
         : undefined,
       details: structuredDetails,
       isJsGenerated: structuredData.isJsGenerated
@@ -790,9 +821,16 @@ Deno.serve(async (req) => {
     if (ogResult.hasOg) ogScore += 5;
     if (ogResult.hasTwitter) ogScore += 5;
     
+    // SPA neutral scoring for social meta
+    if (isSPAWithLimitedContent && ogScore === 0) {
+      ogScore = 5;
+    }
+    
     let ogRecommendation: string | undefined;
     if (!ogResult.hasOg && !ogResult.hasTwitter) {
-      ogRecommendation = t.factors.socialMeta.addBoth;
+      ogRecommendation = isSPAWithLimitedContent 
+        ? 'SPA détecté — les balises Open Graph peuvent être injectées par JavaScript. Vérifiez le rendu SSR.'
+        : t.factors.socialMeta.addBoth;
     } else if (!ogResult.hasOg) {
       ogRecommendation = t.factors.socialMeta.addOg;
     } else if (!ogResult.hasTwitter) {
@@ -807,7 +845,9 @@ Deno.serve(async (req) => {
       maxScore: 10,
       status: ogScore >= 8 ? 'good' : ogScore >= 5 ? 'warning' : 'error',
       recommendation: ogRecommendation,
-      details: `OG: ${ogResult.hasOg ? '✓' : '✗'} | Twitter: ${ogResult.hasTwitter ? '✓' : '✗'}`
+      details: isSPAWithLimitedContent && !ogResult.hasOg && !ogResult.hasTwitter
+        ? '⚠️ SPA détecté — analyse limitée sans rendu JS'
+        : `OG: ${ogResult.hasOg ? '✓' : '✗'} | Twitter: ${ogResult.hasTwitter ? '✓' : '✗'}`
     });
 
     // Factor 7: Sitemap (10 points)
@@ -826,7 +866,7 @@ Deno.serve(async (req) => {
     });
 
     // Factor 8: Canonical URL (5 points)
-    const canonicalScore = metaResult.hasCanonical ? 5 : 0;
+    const canonicalScore = metaResult.hasCanonical ? 5 : (isSPAWithLimitedContent ? 3 : 0);
     let canonicalDetails = t.factors.canonical.noCanonical;
     if (metaResult.hasCanonical) {
       canonicalDetails = metaResult.canonicalUrl 
