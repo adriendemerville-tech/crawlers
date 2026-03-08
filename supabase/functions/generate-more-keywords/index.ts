@@ -283,7 +283,7 @@ async function checkNewRankings(
     try {
       const tasks = batchKws.map(kw => ({
         keyword: kw.keyword, location_code: locationCode, language_code: 'fr',
-        depth: 100, se_domain: 'google.fr',
+        depth: 50, se_domain: 'google.fr',
       }));
       
       const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
