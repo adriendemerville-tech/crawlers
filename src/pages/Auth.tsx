@@ -110,6 +110,7 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showExistsBanner, setShowExistsBanner] = useState(false);
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
