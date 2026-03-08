@@ -155,7 +155,10 @@ export function MarketIntelligenceCard({ intelligence }: MarketIntelligenceCardP
                 <div className="p-4 rounded-lg bg-muted/50 border border-border">
                   <p className="text-xs text-muted-foreground mb-2">Thèmes Prioritaires à Renforcer</p>
                   <div className="space-y-2">
-                    {intelligence.semantic_gap.priority_themes?.slice(0, 4).map((theme, index) => (
+                    {(intelligence.semantic_gap.priority_themes && intelligence.semantic_gap.priority_themes.length > 0
+                      ? intelligence.semantic_gap.priority_themes
+                      : generateFallbackThemes(intelligence)
+                    ).slice(0, 4).map((theme, index) => (
                       <div 
                         key={index}
                         className="flex items-center gap-2 text-sm"
