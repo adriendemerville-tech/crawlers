@@ -123,7 +123,8 @@ interface BusinessContext {
 
 function humanizeBrandName(slug: string): string {
   if (!slug || slug.length < 1) return slug;
-  return slug.charAt(0).toUpperCase() + slug.slice(1);
+  // Replace hyphens with spaces and capitalize each word
+  return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function sanitizeBrandNameInResponse(obj: any, domainSlug: string, humanName: string): any {
@@ -526,7 +527,7 @@ GÉNÈRE UN JSON avec cette structure:
 "competitive_landscape":{"leader":{"name":"...","authority_factor":"...","dominance_analysis":"..."},"direct_competitor":{"name":"...","url":"URL VALIDE OBLIGATOIRE","parity_analysis":"...","authority_factor":"..."},"challenger":{"name":"...","disruption_factor":"...","threat_analysis":"..."},"inspiration_source":{"name":"...","benchmark_quality":"...","adaptation_strategy":"..."}},
 "geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":["..."],"weaknesses":["..."],"recommendations":["..."]},
 "llm_visibility":{"citation_probability":0-100,"knowledge_graph_presence":"strong|moderate|weak|absent","analysis":"...","test_queries":[{"query":"...","purpose":"...","target_llms":["ChatGPT","Claude","Perplexity"]}]},
-"conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["..."],"recommendations":["..."]},
+"conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["OBLIGATOIRE: 3-5 reformulations en QUESTIONS NATURELLES directement liées au business/produits/services du site analysé. Ex pour un e-commerce de matériaux: 'Quel isolant naturel choisir pour une maison ancienne ?'. Ne PAS donner d'exemples génériques."],"recommendations":["..."]},
 "zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
 "priority_content":{"missing_pages":[{"title":"...","rationale":"...","target_keywords":["..."],"expected_impact":"high|medium|low"}],"content_upgrades":[{"page":"...","current_issue":"...","upgrade_strategy":"..."}]},
 "keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"..."}],"quick_wins":[{"keyword":"...","current_rank":0,"volume":0,"action":"..."}],"content_gaps":[{"keyword":"...","volume":0,"priority":"high|medium|low","action":"..."}],"opportunities":["..."],"competitive_gaps":["..."],"recommendations":["..."]},
@@ -706,7 +707,9 @@ Deno.serve(async (req) => {
 
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
     const domain = new URL(normalizedUrl).hostname;
-    const domainSlug = domain.split('.')[0];
+    // Skip www prefix when extracting domain slug for brand name
+    const domainWithoutWww = domain.replace(/^www\./, '');
+    const domainSlug = domainWithoutWww.split('.')[0];
     const humanBrandName = extractedBrandName || humanizeBrandName(domainSlug);
     console.log(`🏷️ Marque finale: "${humanBrandName}" (${extractedBrandName ? 'HTML' : 'slug'})`);
 
