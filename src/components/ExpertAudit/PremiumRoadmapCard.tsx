@@ -7,6 +7,7 @@ import {
   ChevronRight, DollarSign
 } from 'lucide-react';
 import { PremiumRoadmapItem } from '@/types/expertAudit';
+import { MethodologyPopover } from './MethodologyPopover';
 
 interface PremiumRoadmapCardProps {
   roadmap: PremiumRoadmapItem[];
