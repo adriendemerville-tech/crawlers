@@ -455,7 +455,7 @@ async function checkRankings(
     }
     
     // Add remaining keywords without SERP check
-    for (let i = 7; i < keywords.length; i++) {
+    for (let i = 10; i < keywords.length; i++) {
       results.push({ keyword: keywords[i].keyword, volume: keywords[i].volume, difficulty: keywords[i].difficulty, is_ranked: false, current_rank: 'Non vérifié' });
     }
     
