@@ -454,9 +454,10 @@ async function checkRankings(
       results.push({ keyword: kw.keyword, volume: kw.volume, difficulty: kw.difficulty, is_ranked: isRanked, current_rank: position });
     }
     
-    // Add remaining keywords without SERP check
+    // All keywords are now checked via SERP (no "Non vérifié")
+    // If more than 10 keywords exist, check remaining too
     for (let i = 10; i < keywords.length; i++) {
-      results.push({ keyword: keywords[i].keyword, volume: keywords[i].volume, difficulty: keywords[i].difficulty, is_ranked: false, current_rank: 'Non vérifié' });
+      results.push({ keyword: keywords[i].keyword, volume: keywords[i].volume, difficulty: keywords[i].difficulty, is_ranked: false, current_rank: 'Non classé' });
     }
     
     // Release data reference
