@@ -149,6 +149,8 @@ export function generateExpertReportHTML(
 
   if (auditMode === 'technical') {
     const scores = result.scores;
+    // Recompute totalScore from sub-scores to guarantee consistency
+    const computedTotal = scores.performance.score + scores.technical.score + scores.semantic.score + scores.aiReady.score + scores.security.score;
     const insights = result.insights;
     const crawlersData = result.rawData?.crawlersData;
     const jsonLd = insights?.jsonLdValidation;
