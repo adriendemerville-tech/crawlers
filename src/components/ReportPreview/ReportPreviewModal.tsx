@@ -12,7 +12,6 @@ import { GeoResult } from '@/types/geo';
 import { LLMAnalysisResult } from '@/types/llm';
 import { PageSpeedResult } from '@/types/pagespeed';
 import { generateReportHTML, WhiteLabelBranding } from './reportHtmlGenerator';
-import { generatePDF } from './pdfGenerator';
 
 type ReportType = 'crawlers' | 'geo' | 'llm' | 'pagespeed' | 'full';
 
