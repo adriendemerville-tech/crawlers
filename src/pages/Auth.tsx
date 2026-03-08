@@ -190,20 +190,29 @@ export default function Auth() {
 
   const handleSignup = async (data: { email: string; password: string; firstName: string; lastName: string }) => {
     setIsLoading(true);
+    setShowExistsBanner(false);
     const { error } = await signUpWithEmail(data.email, data.password, data.firstName, data.lastName);
     setIsLoading(false);
 
     if (error) {
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
-        toast.error(t.userExists);
+        setShowExistsBanner(true);
       } else {
         toast.error(t.signupError);
       }
     } else {
-      // Track signup completion
       trackAnalyticsEvent('signup_complete');
       toast.success(t.signupSuccess);
-      // Navigation handled by useEffect when user state updates
+    }
+  };
+
+  const handleSwitchToLogin = () => {
+    setShowExistsBanner(false);
+    setIsLogin(true);
+    // Pre-fill login email from signup form
+    const signupEmail = signupForm.getValues('email');
+    if (signupEmail) {
+      loginForm.setValue('email', signupEmail);
     }
   };
 
