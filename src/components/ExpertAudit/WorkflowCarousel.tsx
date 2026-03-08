@@ -375,10 +375,11 @@ export function WorkflowCarousel({
                   return 0.92; // Slightly larger scale for side cards (was 0.88)
                 };
 
-                // Calculate blur intensity - reduced for clickable cards
+                // Calculate blur intensity - no blur on mobile, subtle on desktop
                 const getBlurAmount = () => {
                   if (isActive) return 0;
-                  if (isNext || isPrevious) return 0.5; // Very subtle blur for clickable cards
+                  if (isMobile) return 0; // No blur on mobile
+                  if (isNext || isPrevious) return 0.5;
                   return 1.5;
                 };
 
