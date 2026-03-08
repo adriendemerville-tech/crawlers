@@ -198,8 +198,8 @@ export function WorkflowCarousel({
 
   // Card dimensions for sliding calculation
   // Mobile: 255px (340px - 25%), Desktop: 380px
-  const CARD_WIDTH = isMobile ? 255 : 380;
-  const GAP = isMobile ? 16 : 24; // gap-4 on mobile, gap-6 on desktop
+  const CARD_WIDTH = isMobile ? 290 : 380;
+  const GAP = isMobile ? 16 : 24;
   const SLIDE_DISTANCE = CARD_WIDTH + GAP;
 
   // Swipe threshold for mobile/tablet
@@ -590,11 +590,16 @@ export function WorkflowCarousel({
                               <Check className="h-4 w-4" />
                               {t.complete}
                             </div>
-                            {/* Click to view report indicator - only on non-active completed cards */}
-                            {!isActive && (step.id === 1 ? hasTechnicalResult : step.id === 2 ? hasStrategicResult : false) && (
+                            {/* Click to view report indicator */}
+                            {(step.id === 1 ? hasTechnicalResult : step.id === 2 ? hasStrategicResult : false) && (
                               <Badge 
                                 variant="outline" 
                                 className="gap-1.5 text-xs cursor-pointer border-primary/30 text-primary hover:bg-primary/10 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (step.id === 1 && onNavigateToTechnical) onNavigateToTechnical();
+                                  else if (step.id === 2 && onNavigateToStrategic) onNavigateToStrategic();
+                                }}
                               >
                                 <Eye className="h-3 w-3" />
                                 {t.viewReport}
