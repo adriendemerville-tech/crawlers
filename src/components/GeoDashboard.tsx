@@ -3,7 +3,7 @@ import { GeoScoreGauge } from './GeoScoreGauge';
 import { GeoFactorCard } from './GeoFactorCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card } from '@/components/ui/card';
-import { Sparkles, ExternalLink, Clock } from 'lucide-react';
+import { Sparkles, ExternalLink, Clock, AlertTriangle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { HelpButton } from './HelpButton';
 
