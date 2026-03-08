@@ -110,11 +110,11 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
     }
   };
 
-  // Combine original + additional keywords for display
+  // Combine original + additional keywords, sorted by volume descending
   const allMainKeywords = [
     ...(positioning.main_keywords || []),
     ...additionalKeywords,
-  ];
+  ].sort((a, b) => b.volume - a.volume);
 
   return (
     <motion.div
@@ -222,10 +222,12 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                         </td>
                         <td className="text-center px-3 py-2">
                           <Badge 
-                            variant={getRankBadgeVariant(kw.current_rank)}
-                            className={getRankColor(kw.current_rank)}
+                            variant={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankBadgeVariant(kw.current_rank) : 'outline'}
+                            className={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankColor(kw.current_rank) : 'text-muted-foreground'}
                           >
-                            {typeof kw.current_rank === 'number' ? `#${kw.current_rank}` : kw.current_rank}
+                            {typeof kw.current_rank === 'number' 
+                              ? (kw.current_rank <= 50 ? `#${kw.current_rank}` : '50+')
+                              : kw.current_rank === 'Non classé' ? '50+' : kw.current_rank}
                           </Badge>
                         </td>
                       </tr>
