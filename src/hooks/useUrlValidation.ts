@@ -3,6 +3,37 @@ import { supabase } from '@/integrations/supabase/client';
 
 // ─── Normalization ───────────────────────────────────────────
 
+// Tracking/ad parameters to strip from URLs
+const TRACKING_PARAMS = new Set([
+  'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'utm_id',
+  'gclid', 'gclsrc', 'gad_source', 'gad_campaignid', 'gbraid', 'wbraid',
+  'fbclid', 'fb_action_ids', 'fb_action_types', 'fb_source', 'fb_ref',
+  'msclkid', 'twclid', 'li_fat_id', 'mc_cid', 'mc_eid',
+  'dclid', '_ga', '_gl', '_hsenc', '_hsmi', 'hsa_cam', 'hsa_grp', 'hsa_mt', 'hsa_src', 'hsa_ad', 'hsa_acc', 'hsa_net', 'hsa_ver', 'hsa_la', 'hsa_ol', 'hsa_kw',
+  'ref', 'ref_', 'referrer', 'source',
+]);
+
+function stripTrackingParams(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const keysToDelete: string[] = [];
+    parsed.searchParams.forEach((_, key) => {
+      if (TRACKING_PARAMS.has(key.toLowerCase())) {
+        keysToDelete.push(key);
+      }
+    });
+    for (const key of keysToDelete) {
+      parsed.searchParams.delete(key);
+    }
+    // Remove trailing '?' if no params left
+    let result = parsed.toString();
+    if (result.endsWith('?')) result = result.slice(0, -1);
+    return result;
+  } catch {
+    return url;
+  }
+}
+
 export function normalizeUrl(input: string): string {
   let normalized = input.trim();
   if (!normalized) return '';
@@ -12,7 +43,9 @@ export function normalizeUrl(input: string): string {
   withoutProtocol = withoutProtocol.replace(/\s+/g, '-');
   withoutProtocol = withoutProtocol.replace(/\.{2,}/g, '.');
   withoutProtocol = withoutProtocol.replace(/\.(\/)/, '$1').replace(/\.$/, '');
-  return `https://${withoutProtocol}`;
+  const fullUrl = `https://${withoutProtocol}`;
+  // Strip tracking/ad parameters (gclid, utm_*, fbclid, etc.)
+  return stripTrackingParams(fullUrl);
 }
 
 // ─── Typo candidate generator ──────────────────────────────
