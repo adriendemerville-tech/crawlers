@@ -191,6 +191,7 @@ export function TechnicalNarrativeSection({ result }: TechnicalNarrativeSectionP
   const contentDensity = insights?.contentDensity;
   const linkProfile = insights?.linkProfile;
   const semanticConsistency = insights?.semanticConsistency;
+  const misplacedHeadTags: string[] = (rawData?.htmlAnalysis as any)?.misplacedHeadTags || [];
 
   // ── Compute bloc scores ──
   const bloc1Items = [
