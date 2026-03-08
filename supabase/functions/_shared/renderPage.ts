@@ -1,0 +1,170 @@
+/**
+ * Shared utility for fetching and rendering web pages.
+ * Handles SPA/CSR detection and Browserless JS rendering fallback.
+ */
+
+const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+export interface RenderResult {
+  html: string;
+  usedRendering: boolean;
+  isSPA: boolean;
+  textLength: number;
+  framework?: string;
+}
+
+/**
+ * Extracts visible text from HTML (strips scripts, styles, noscript, tags).
+ */
+function extractVisibleText(html: string): string {
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  const bodyContent = bodyMatch ? bodyMatch[1] : html;
+  return bodyContent
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Detects SPA framework markers in HTML.
+ */
+function detectSPAMarkers(html: string): { isSPA: boolean; framework?: string } {
+  const hasSPAMarker =
+    /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>/i.test(html) ||
+    /data-reactroot/i.test(html) ||
+    /<app-root/i.test(html);
+
+  let framework: string | undefined;
+  if (/__NEXT_DATA__/i.test(html)) framework = 'Next.js';
+  else if (/__NUXT__/i.test(html)) framework = 'Nuxt';
+  else if (/data-reactroot|__REACT|ReactDOM/i.test(html)) framework = 'React';
+  else if (/__VUE__|Vue\.createApp/i.test(html)) framework = 'Vue';
+  else if (/ng-version|<app-root/i.test(html)) framework = 'Angular';
+
+  return { isSPA: hasSPAMarker || !!framework, framework };
+}
+
+/**
+ * Determines if the page needs JS rendering based on content analysis.
+ */
+function needsJSRendering(html: string, visibleText: string): boolean {
+  const htmlToTextRatio = visibleText.length / html.length;
+
+  return (
+    // Very little text despite large HTML
+    (visibleText.length < 200 && html.length > 1000) ||
+    // SPA marker with low text
+    (detectSPAMarkers(html).isSPA && visibleText.length < 500) ||
+    // Less than 2% text ratio (JS-heavy pages)
+    (html.length > 5000 && htmlToTextRatio < 0.02)
+  );
+}
+
+/**
+ * Attempts to render a page using Browserless.io.
+ * Returns rendered HTML or null on failure.
+ */
+async function renderWithBrowserless(url: string, renderingKey: string): Promise<string | null> {
+  try {
+    const renderUrl = `https://chrome.browserless.io/content?token=${renderingKey}`;
+    const response = await fetch(renderUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        rejectResourceTypes: ['image', 'media', 'font'],
+        waitFor: 3000,
+        gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
+        userAgent: BROWSER_UA,
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (response.ok) {
+      const renderedHtml = await response.text();
+      return renderedHtml;
+    } else {
+      console.log(`[renderPage] ⚠️ Browserless error: ${response.status}`);
+      return null;
+    }
+  } catch (err) {
+    console.log('[renderPage] ⚠️ Browserless failed:', err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/**
+ * Fetches a page with automatic SPA/CSR detection and JS rendering fallback.
+ * 
+ * @param url - The URL to fetch
+ * @param options - Optional configuration
+ * @returns RenderResult with the (possibly rendered) HTML
+ */
+export async function fetchAndRenderPage(
+  url: string,
+  options?: {
+    userAgent?: string;
+    timeout?: number;
+    forceRender?: boolean;
+  }
+): Promise<RenderResult> {
+  const ua = options?.userAgent || BROWSER_UA;
+  const timeout = options?.timeout || 10000;
+
+  // Step 1: Fetch raw HTML
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  const response = await fetch(url, {
+    signal: controller.signal,
+    headers: {
+      'User-Agent': ua,
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    },
+    redirect: 'follow',
+  });
+
+  clearTimeout(timeoutId);
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  let html = await response.text();
+  let usedRendering = false;
+
+  // Step 2: Analyze content for SPA/CSR detection
+  const visibleText = extractVisibleText(html);
+  const spaInfo = detectSPAMarkers(html);
+  const shouldRender = options?.forceRender || needsJSRendering(html, visibleText);
+
+  if (shouldRender) {
+    console.log(`[renderPage] SPA/CSR detected (${visibleText.length} chars text, ${html.length} chars HTML, framework: ${spaInfo.framework || 'unknown'}). Trying JS rendering...`);
+
+    const renderingKey = Deno.env.get('RENDERING_API_KEY');
+    if (renderingKey) {
+      const rendered = await renderWithBrowserless(url, renderingKey);
+      if (rendered && rendered.length > html.length) {
+        console.log(`[renderPage] ✅ JS rendering success (${rendered.length} chars vs ${html.length} static)`);
+        html = rendered;
+        usedRendering = true;
+      }
+    } else {
+      console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured');
+    }
+  }
+
+  // Step 3: Re-analyze after potential rendering
+  const finalText = extractVisibleText(html);
+
+  return {
+    html,
+    usedRendering,
+    isSPA: spaInfo.isSPA && !usedRendering, // If rendered successfully, treat as normal
+    textLength: finalText.length,
+    framework: spaInfo.framework,
+  };
+}
