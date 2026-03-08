@@ -551,6 +551,76 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
   }
 }
 
+// ==================== FOUNDER DISCOVERY VIA SERP ====================
+
+interface FounderInfo {
+  name: string | null;
+  profileUrl: string | null;
+  platform: string | null;
+  isInfluencer: boolean;
+}
+
+async function searchFounderProfile(domain: string): Promise<FounderInfo> {
+  const result: FounderInfo = { name: null, profileUrl: null, platform: null, isInfluencer: false };
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return result;
+  
+  const domainClean = domain.replace(/^www\./, '');
+  
+  try {
+    console.log(`👤 Searching founder for ${domainClean}...`);
+    
+    const queries = [
+      { q: `"${domainClean}" fondateur OR CEO OR founder site:linkedin.com/in`, platform: 'linkedin' },
+      { q: `"${domainClean}" fondateur OR CEO OR founder site:instagram.com`, platform: 'instagram' },
+      { q: `"${domainClean}" fondateur OR CEO OR founder site:youtube.com`, platform: 'youtube' },
+    ];
+    
+    const searchPromises = queries.map(async ({ q, platform }) => {
+      try {
+        const resp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
+          method: 'POST',
+          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify([{ keyword: q, location_code: 2250, language_code: 'fr', depth: 5 }]),
+          signal: AbortSignal.timeout(8000),
+        });
+        if (!resp.ok) { await resp.text(); return null; }
+        const data = await resp.json();
+        const items = data.tasks?.[0]?.result?.[0]?.items || [];
+        const organic = items.find((i: any) => i.type === 'organic' && i.url);
+        if (organic) {
+          let name = organic.title?.split(/\s*[-–|]\s*/)?.[0]?.trim() || null;
+          if (name) name = name.replace(/\s*\(.*\)/, '').replace(/\s*@.*/, '').trim();
+          return { name, url: organic.url, platform, title: organic.title };
+        }
+        return null;
+      } catch { return null; }
+    });
+    
+    const results = (await Promise.all(searchPromises)).filter(Boolean);
+    
+    if (results.length === 0) {
+      console.log('👤 No founder profile found via SERP');
+      return result;
+    }
+    
+    const best = results.find(r => r!.platform === 'linkedin') || results[0]!;
+    result.name = best!.name;
+    result.profileUrl = best!.url;
+    result.platform = best!.platform;
+    result.isInfluencer = results.length >= 1;
+    
+    console.log(`👤 Founder found: ${result.name} on ${result.platform} → ${result.profileUrl}`);
+    if (results.length >= 2) {
+      console.log(`👤 Multi-platform: ${results.map(r => r!.platform).join(', ')}`);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('👤 Founder search error:', error);
+    return result;
+  }
+}
+
 // ==================== LLM PROMPT (compact) ====================
 
 const SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé Brand Authority & GEO. Rapport premium niveau cabinet de conseil.
