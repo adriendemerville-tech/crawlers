@@ -524,7 +524,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
   }
   
   try {
-    const seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext);
+    const seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext, domain);
     console.log('🌱 Mots-clés seed:', seedKeywords);
     
     const keywordData = await fetchKeywordData(seedKeywords, context.locationCode);
