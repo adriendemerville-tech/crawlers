@@ -1207,18 +1207,22 @@ Deno.serve(async (req) => {
     };
 
     // ==================== FETCH PAGE METADATA (lightweight) ====================
-    const { context: pageContentContext, brandName: extractedBrandName, eeatSignals } = await extractPageMetadata(url);
+    const { context: pageContentContext, brandSignals, eeatSignals } = await extractPageMetadata(url);
 
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
     const domain = new URL(normalizedUrl).hostname;
-    // Skip www prefix when extracting domain slug for brand name
     const domainWithoutWww = domain.replace(/^www\./, '');
     const domainSlug = domainWithoutWww.split('.')[0];
-    const humanBrandName = extractedBrandName || humanizeBrandName(domainSlug);
-    console.log(`🏷️ Marque finale: "${humanBrandName}" (${extractedBrandName ? 'HTML' : 'slug'})`);
+    
+    // ==================== PROBABILISTIC BRAND NAME RESOLUTION ====================
+    const { name: resolvedEntityName, confidence: brandConfidence } = resolveBrandName(brandSignals, domain, url);
+    const isConfidentBrand = brandConfidence >= 0.95;
+    // humanBrandName is used for sanitization (slug → readable) in non-introduction sections
+    const humanBrandName = isConfidentBrand ? resolvedEntityName : humanizeBrandName(domainSlug);
+    console.log(`🎯 Entité résolue: "${resolvedEntityName}" (confiance: ${(brandConfidence * 100).toFixed(1)}%, ${isConfidentBrand ? 'NOM DÉTECTÉ' : 'FALLBACK URL'})`);
 
     console.log('═══════════════════════════════════════════════════════════════');
-    console.log(`🚀 AUDIT STRATÉGIQUE pour: ${domain} (${humanBrandName})`);
+    console.log(`🚀 AUDIT STRATÉGIQUE pour: ${domain} (${resolvedEntityName})`);
 
     // ==================== SINGLE context detection (no duplicate API calls) ====================
     const context = detectBusinessContext(domain);
