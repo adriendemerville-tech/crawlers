@@ -203,16 +203,61 @@ function detectBusinessContext(domain: string): BusinessContext {
   return { sector, location: locationInfo.name, brandName, locationCode: locationInfo.code };
 }
 
-function generateSeedKeywords(brandName: string, sector: string): string[] {
+function extractKeywordsFromMetadata(pageContentContext: string): string[] {
+  const extracted: string[] = [];
+  // Extract title, h1, description from the context string
+  const titleMatch = pageContentContext.match(/Titre="([^"?]+)/);
+  const h1Match = pageContentContext.match(/H1="([^"?]+)/);
+  const descMatch = pageContentContext.match(/Desc="([^"?]+)/);
+  
+  const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
+  
+  // Common French stop words to filter out
+  const stopWords = new Set(['le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux','il','elle','ce','cette','qui','que','son','sa','ses','se','ne','pas','avec','dans','ou','plus','vous','votre','vos','nous','notre','nos','leur','leurs','mon','ma','mes','ton','ta','tes','si','mais','car','donc','ni','comme','entre','chez','vers','très','aussi','bien','encore','tout','tous','même','autre','autres','quel','quelle','quels','quelles','chaque','quelque','certains','plusieurs','aucun','tel','telle','tels','telles']);
+  
+  for (const text of texts) {
+    // Extract meaningful 2-3 word phrases
+    const cleaned = text.toLowerCase()
+      .replace(/[|–—·:]/g, ' ')
+      .replace(/[^\wàâäéèêëïîôùûüÿçœæ\s-]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    const words = cleaned.split(' ').filter(w => w.length > 2 && !stopWords.has(w));
+    
+    // Add individual significant words and bigrams
+    for (const word of words) {
+      if (word.length >= 3) extracted.push(word);
+    }
+    for (let i = 0; i < words.length - 1; i++) {
+      extracted.push(`${words[i]} ${words[i + 1]}`);
+    }
+  }
+  
+  // Deduplicate
+  return [...new Set(extracted)].slice(0, 10);
+}
+
+function generateSeedKeywords(brandName: string, sector: string, pageContentContext: string = ''): string[] {
   const cleanBrand = brandName.toLowerCase().trim();
   const keywords = [
-    cleanBrand, `${cleanBrand} avis`, `${cleanBrand} boutique`,
-    `${cleanBrand} produits`, `acheter ${cleanBrand}`,
+    cleanBrand, `${cleanBrand} avis`,
   ];
   if (sector.toLowerCase() !== cleanBrand) {
-    keywords.push(sector, `${sector} en ligne`, `meilleur ${sector}`);
+    keywords.push(sector, `meilleur ${sector}`);
   }
-  return keywords.filter(kw => kw.length > 2 && !kw.includes('undefined'));
+  
+  // Enrich with page metadata keywords (title, h1, description)
+  if (pageContentContext) {
+    const metaKeywords = extractKeywordsFromMetadata(pageContentContext);
+    for (const mk of metaKeywords) {
+      if (!keywords.includes(mk) && mk !== cleanBrand) {
+        keywords.push(mk);
+      }
+    }
+  }
+  
+  return keywords.filter(kw => kw.length > 2 && !kw.includes('undefined')).slice(0, 10);
 }
 
 async function fetchKeywordData(
