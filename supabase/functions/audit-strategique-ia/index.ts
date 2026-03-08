@@ -1053,15 +1053,25 @@ Deno.serve(async (req) => {
     console.log('\n📊 ÉTAPE 1: DataForSEO...');
     const marketData = await fetchMarketData(domain, context, pageContentContext);
 
-    // ==================== ÉTAPE 1b: CONCURRENT LOCAL ====================
-    console.log('\n🏙️ ÉTAPE 1b: Concurrent local...');
+    // ==================== ÉTAPE 1b: CONCURRENT LOCAL + FOUNDER (parallel) ====================
+    console.log('\n🏙️ ÉTAPE 1b: Concurrent local + Founder discovery...');
     let localCompetitorData: { name: string; url: string; rank: number } | null = null;
-    if (context.locationCode) {
-      try {
-        localCompetitorData = await findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext);
-      } catch (e) {
-        console.error('❌ Concurrent local:', e);
-      }
+    let founderInfo: FounderInfo = { name: null, profileUrl: null, platform: null, isInfluencer: false };
+    
+    // Run in parallel
+    const [localCompResult, founderResult] = await Promise.allSettled([
+      context.locationCode ? findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext) : Promise.resolve(null),
+      searchFounderProfile(domain),
+    ]);
+    
+    if (localCompResult.status === 'fulfilled' && localCompResult.value) {
+      localCompetitorData = localCompResult.value;
+    } else if (localCompResult.status === 'rejected') {
+      console.error('❌ Concurrent local:', localCompResult.reason);
+    }
+    
+    if (founderResult.status === 'fulfilled' && founderResult.value) {
+      founderInfo = founderResult.value;
     }
 
     // ==================== ÉTAPE 1c: CHECK-LLM (skip if toolsData already has LLM data) ====================
