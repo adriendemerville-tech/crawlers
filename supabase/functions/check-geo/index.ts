@@ -821,9 +821,16 @@ Deno.serve(async (req) => {
     if (ogResult.hasOg) ogScore += 5;
     if (ogResult.hasTwitter) ogScore += 5;
     
+    // SPA neutral scoring for social meta
+    if (isSPAWithLimitedContent && ogScore === 0) {
+      ogScore = 5;
+    }
+    
     let ogRecommendation: string | undefined;
     if (!ogResult.hasOg && !ogResult.hasTwitter) {
-      ogRecommendation = t.factors.socialMeta.addBoth;
+      ogRecommendation = isSPAWithLimitedContent 
+        ? 'SPA détecté — les balises Open Graph peuvent être injectées par JavaScript. Vérifiez le rendu SSR.'
+        : t.factors.socialMeta.addBoth;
     } else if (!ogResult.hasOg) {
       ogRecommendation = t.factors.socialMeta.addOg;
     } else if (!ogResult.hasTwitter) {
@@ -838,7 +845,9 @@ Deno.serve(async (req) => {
       maxScore: 10,
       status: ogScore >= 8 ? 'good' : ogScore >= 5 ? 'warning' : 'error',
       recommendation: ogRecommendation,
-      details: `OG: ${ogResult.hasOg ? '✓' : '✗'} | Twitter: ${ogResult.hasTwitter ? '✓' : '✗'}`
+      details: isSPAWithLimitedContent && !ogResult.hasOg && !ogResult.hasTwitter
+        ? '⚠️ SPA détecté — analyse limitée sans rendu JS'
+        : `OG: ${ogResult.hasOg ? '✓' : '✗'} | Twitter: ${ogResult.hasTwitter ? '✓' : '✗'}`
     });
 
     // Factor 7: Sitemap (10 points)
