@@ -367,7 +367,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     }
 
     // Get Last-Modified HTTP header
-    const lastModifiedHeader = response.headers.get('Last-Modified');
+    const lastModifiedHeader = headResponse?.headers.get('Last-Modified') || null;
 
     // Determine most recent date signal
     const dateSignals: string[] = [
