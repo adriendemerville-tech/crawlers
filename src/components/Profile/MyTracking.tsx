@@ -852,8 +852,10 @@ export function MyTracking() {
                                     <Calendar
                                       mode="single"
                                       selected={gscRangeStart}
+                                      defaultMonth={gscRangeStart}
                                       onSelect={(d) => { if (d) { setGscRangeStart(d); setRangeStartCalOpen(false); } }}
                                       disabled={(d) => d > gscRangeEnd || d < new Date('2020-01-01')}
+                                      initialFocus
                                       className={cn("p-3 pointer-events-auto")}
                                     />
                                   </PopoverContent>
