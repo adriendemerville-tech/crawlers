@@ -927,7 +927,7 @@ Deno.serve(async (req) => {
     };
 
     // ==================== FETCH PAGE METADATA (lightweight) ====================
-    const { context: pageContentContext, brandName: extractedBrandName } = await extractPageMetadata(url);
+    const { context: pageContentContext, brandName: extractedBrandName, eeatSignals } = await extractPageMetadata(url);
 
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
     const domain = new URL(normalizedUrl).hostname;
