@@ -636,7 +636,25 @@ Deno.serve(async (req) => {
 
     // IMPORTANT: Même pour les SPA, on continue l'analyse avec les données disponibles
     // (robots.txt, meta tags dans le head, etc.) mais on ajuste le score final
-    const isSPAWithLimitedContent = !selfAudit.isReliable && selfAudit.reliabilityScore < 0.3;
+    let isSPAWithLimitedContent = !selfAudit.isReliable && selfAudit.reliabilityScore < 0.3;
+
+    // =========================================================================
+    // ÉTAPE 2 : ANALYSE COMPLÈTE
+    // =========================================================================
+    const aiBotsResult = checkAIBotsAllowed(robotsTxt);
+    const metaResult = analyzeMetaTags(doc);
+    const structuredData = analyzeStructuredData(doc, pageHtml);
+    const contentResult = analyzeContent(doc);
+    const spaInfo = detectSPAMarkers(doc);
+    const ogResult = analyzeOpenGraph(doc);
+    const hasSitemap = checkSitemap(robotsTxt);
+
+    // POST-ANALYSIS HEURISTIC: Si le contenu analysé est quasi-vide malgré un HTML volumineux,
+    // c'est un SPA/JS-heavy qui n'a pas été rendu correctement — appliquer scoring neutre
+    if (!isSPAWithLimitedContent && contentResult.wordCount < 20 && pageHtml.length > 5000 && !usedRendering) {
+      console.log(`[GEO-AUDIT] ⚠️ Post-analysis: content empty (${contentResult.wordCount} words) despite large HTML (${pageHtml.length}). Forcing SPA neutral scoring.`);
+      isSPAWithLimitedContent = true;
+    }
 
     // =========================================================================
     // ÉTAPE 2 : ANALYSE COMPLÈTE
