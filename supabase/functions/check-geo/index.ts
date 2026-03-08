@@ -700,16 +700,18 @@ Deno.serve(async (req) => {
       if (structuredData.isValid) {
         structuredScore = 15;
         structuredDetails = t.details.foundTypes(structuredData.types.join(', '));
-        // Penalize if JS-generated (robots can't read JS-injected schema)
         if (structuredData.isJsGenerated) {
           structuredScore = Math.max(0, structuredScore - 3);
           console.log('[GEO-AUDIT] ⚠️ JSON-LD detected but JS-generated — score penalized (-3)');
         }
       } else {
-        // JSON-LD présent mais invalide = score partiel
         structuredScore = 5;
         structuredDetails = `JSON-LD détecté mais ${structuredData.parseErrors.length} erreur(s) de parsing. Types trouvés: ${structuredData.types.join(', ') || 'aucun'}`;
       }
+    } else if (isSPAWithLimitedContent) {
+      // SPA sans rendu : on ne peut pas savoir si JSON-LD est injecté par JS
+      structuredScore = 8;
+      structuredDetails = '⚠️ SPA détecté — les données structurées peuvent être injectées par JavaScript';
     }
 
     factors.push({
@@ -720,9 +722,11 @@ Deno.serve(async (req) => {
       maxScore: 15,
       status: structuredScore === 15 ? 'good' : structuredScore > 0 ? 'warning' : 'error',
       recommendation: structuredScore < 15 
-        ? structuredData.parseErrors.length > 0 
-          ? `Corrigez les erreurs JSON-LD: ${structuredData.parseErrors[0]}`
-          : t.factors.structuredData.recommendation
+        ? (isSPAWithLimitedContent && !structuredData.hasJsonLd
+          ? 'SPA détecté — vérifiez que vos données structurées sont accessibles sans JavaScript (SSR recommandé).'
+          : structuredData.parseErrors.length > 0 
+            ? `Corrigez les erreurs JSON-LD: ${structuredData.parseErrors[0]}`
+            : t.factors.structuredData.recommendation)
         : undefined,
       details: structuredDetails,
       isJsGenerated: structuredData.isJsGenerated
