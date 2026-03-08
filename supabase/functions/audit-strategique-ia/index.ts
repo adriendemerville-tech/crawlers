@@ -223,7 +223,7 @@ function detectBusinessContext(domain: string): BusinessContext {
   return { sector, location: locationInfo.name, brandName, locationCode: locationInfo.code };
 }
 
-function extractKeywordsFromMetadata(pageContentContext: string): string[] {
+function extractKeywordsFromMetadata(pageContentContext: string, domain: string = ''): string[] {
   const extracted: string[] = [];
   const titleMatch = pageContentContext.match(/Titre="([^"?]+)/);
   const h1Match = pageContentContext.match(/H1="([^"?]+)/);
@@ -233,6 +233,18 @@ function extractKeywordsFromMetadata(pageContentContext: string): string[] {
   
   const stopWords = new Set(['le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux','il','elle','ce','cette','qui','que','son','sa','ses','se','ne','pas','avec','dans','ou','plus','vous','votre','vos','nous','notre','nos','leur','leurs','mon','ma','mes','ton','ta','tes','si','mais','car','donc','ni','comme','entre','chez','vers','très','aussi','bien','encore','tout','tous','même','autre','autres','quel','quelle','quels','quelles','chaque','quelque','certains','plusieurs','aucun','tel','telle','tels','telles','gratuit','gratuite','meilleur','meilleure','site','web','page','accueil','www','http','https','calcul','calculer','outil','service','solution','application','app','logiciel','plateforme']);
   
+  // Build a set of domain-derived slugs to filter out (e.g. "limova", "limovaai")
+  const domainSlugs = new Set<string>();
+  if (domain) {
+    const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
+    const parts = cleanDomain.split('.');
+    for (const part of parts) {
+      if (part.length > 2) domainSlugs.add(part);
+    }
+    domainSlugs.add(cleanDomain.replace(/\./g, ''));
+    if (parts.length > 0) domainSlugs.add(parts[0]);
+  }
+  
   for (const text of texts) {
     const cleaned = text.toLowerCase()
       .replace(/[|–—·:]/g, ' ')
@@ -240,7 +252,9 @@ function extractKeywordsFromMetadata(pageContentContext: string): string[] {
       .replace(/\s+/g, ' ')
       .trim();
     
-    const words = cleaned.split(' ').filter(w => w.length > 2 && !stopWords.has(w));
+    const words = cleaned.split(' ').filter(w => 
+      w.length > 2 && !stopWords.has(w) && !domainSlugs.has(w)
+    );
     
     // Prioritize bigrams and trigrams (market-intent phrases)
     for (let i = 0; i < words.length - 2; i++) {
@@ -258,12 +272,12 @@ function extractKeywordsFromMetadata(pageContentContext: string): string[] {
   return [...new Set(extracted)].slice(0, 12);
 }
 
-function generateSeedKeywords(brandName: string, sector: string, pageContentContext: string = ''): string[] {
+function generateSeedKeywords(brandName: string, sector: string, pageContentContext: string = '', domain: string = ''): string[] {
   const keywords: string[] = [];
   
   // Start with market-intent keywords from page metadata (highest priority)
   if (pageContentContext) {
-    const metaKeywords = extractKeywordsFromMetadata(pageContentContext);
+    const metaKeywords = extractKeywordsFromMetadata(pageContentContext, domain);
     for (const mk of metaKeywords) {
       if (mk.length > 4 && !keywords.includes(mk)) {
         keywords.push(mk);
@@ -510,7 +524,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
   }
   
   try {
-    const seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext);
+    const seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext, domain);
     console.log('🌱 Mots-clés seed:', seedKeywords);
     
     const keywordData = await fetchKeywordData(seedKeywords, context.locationCode);
