@@ -620,8 +620,9 @@ Deno.serve(async (req) => {
     }
     
     // If search query is provided and we don't have enough results, fetch supplementary articles
-    if (searchQuery && results.length < TARGET_ARTICLE_COUNT) {
-      const neededCount = TARGET_ARTICLE_COUNT - results.length;
+    const MIN_SEARCH_RESULTS = 5;
+    if (searchQuery && results.length < Math.max(MIN_SEARCH_RESULTS, TARGET_ARTICLE_COUNT)) {
+      const neededCount = Math.max(MIN_SEARCH_RESULTS, TARGET_ARTICLE_COUNT) - results.length;
       console.log(`Only ${results.length} articles found for "${searchQuery}", fetching ${neededCount} more...`);
       
       const supplementaryArticles = await fetchSupplementaryArticles(
