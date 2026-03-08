@@ -911,9 +911,9 @@ INSTRUCTIONS CRITIQUES:
 
 // ==================== EXTRACT PAGE METADATA (lightweight) ====================
 
-async function extractPageMetadata(url: string): Promise<{ context: string; brandName: string; eeatSignals: EEATSignals }> {
+async function extractPageMetadata(url: string): Promise<{ context: string; brandSignals: BrandSignal[]; eeatSignals: EEATSignals }> {
   let pageContentContext = '';
-  let extractedBrandName = '';
+  const brandSignals: BrandSignal[] = [];
   const eeatSignals: EEATSignals = {
     hasAuthorBio: false, authorBioCount: 0,
     hasSocialLinks: false, hasLinkedInLinks: false,
@@ -939,7 +939,7 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     
     if (!pageResp.ok) {
       await pageResp.text();
-      return { context: '', brandName: '', eeatSignals };
+      return { context: '', brandSignals: [], eeatSignals };
     }
     
     let html = await pageResp.text();
@@ -1029,7 +1029,8 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     eeatSignals.linkedInLinksCount = liUrls.length;
     eeatSignals.hasLinkedInLinks = liUrls.length > 0;
     
-    // 3. JSON-LD analysis
+    // 3. JSON-LD analysis + brand signal extraction
+    let jsonLdOrgName = '';
     const schemaMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
     for (const block of schemaMatches) {
       try {
@@ -1039,7 +1040,12 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
           if (!node || typeof node !== 'object' || depth > 5) return;
           if (Array.isArray(node)) { node.forEach(n => checkNode(n, depth + 1)); return; }
           const nodeType = String(node['@type'] || '').toLowerCase();
-          if (nodeType.includes('organization')) eeatSignals.hasOrganization = true;
+          if (nodeType.includes('organization')) {
+            eeatSignals.hasOrganization = true;
+            if (node.name && typeof node.name === 'string' && !jsonLdOrgName) {
+              jsonLdOrgName = node.name.trim();
+            }
+          }
           if (nodeType.includes('person')) eeatSignals.hasPerson = true;
           if (nodeType.includes('profilepage')) eeatSignals.hasProfilePage = true;
           if (node.author || nodeType === 'author') eeatSignals.hasAuthorInJsonLd = true;
@@ -1090,30 +1096,66 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     html = (headMatch2 ? `<head>${headMatch2[1]}</head>` : '') + 
            (h1Match2 ? `<body><h1>${h1Match2[1]}</h1></body>` : '');
     
-    // Extract brand name + metadata
+    // ═══ COLLECT ALL 5 BRAND SIGNALS ═══
     const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*?)["']/i)
       || html.match(/<meta\s+content=["']([^"']*?)["']\s+name=["']description["']/i);
     const ogSiteNameMatch = html.match(/<meta\s+property=["']og:site_name["']\s+content=["']([^"']*?)["']/i);
-    const jsonLdNameMatch = html.match(/"@type"\s*:\s*"Organization"[\s\S]*?"name"\s*:\s*"([^"]+)"/i)
-      || html.match(/"name"\s*:\s*"([^"]+)"[\s\S]*?"@type"\s*:\s*"Organization"/i);
     const appNameMatch = html.match(/<meta\s+name=["']application-name["']\s+content=["']([^"']*?)["']/i);
     
-    if (ogSiteNameMatch?.[1]?.trim()) extractedBrandName = ogSiteNameMatch[1].trim();
-    else if (jsonLdNameMatch?.[1]?.trim()) extractedBrandName = jsonLdNameMatch[1].trim();
-    else if (appNameMatch?.[1]?.trim()) extractedBrandName = appNameMatch[1].trim();
-    else if (titleMatch?.[1]) {
+    // Signal 1: JSON-LD Organization.name (weight 35)
+    if (jsonLdOrgName) {
+      brandSignals.push({ source: 'jsonld', value: jsonLdOrgName, weight: 35 });
+    }
+    
+    // Signal 2: og:site_name (weight 30)
+    if (ogSiteNameMatch?.[1]?.trim()) {
+      brandSignals.push({ source: 'og:site_name', value: ogSiteNameMatch[1].trim(), weight: 30 });
+    }
+    
+    // Signal 3: application-name (weight 15)
+    if (appNameMatch?.[1]?.trim()) {
+      brandSignals.push({ source: 'application-name', value: appNameMatch[1].trim(), weight: 15 });
+    }
+    
+    // Signal 4: <title> extraction — brand part after separator (weight 10)
+    if (titleMatch?.[1]) {
       const titleText = titleMatch[1].replace(/<[^>]+>/g, '').trim();
       for (const sep of [' | ', ' - ', ' — ', ' – ', ' :: ', ' · ']) {
         if (titleText.includes(sep)) {
           const candidate = titleText.split(sep).pop()?.trim() || '';
-          if (candidate.length >= 2 && candidate.length <= 50) extractedBrandName = candidate;
+          if (candidate.length >= 2 && candidate.length <= 50) {
+            brandSignals.push({ source: 'title', value: candidate, weight: 10 });
+          }
           break;
         }
       }
     }
     
-    if (extractedBrandName) console.log(`🏷️ Marque HTML: "${extractedBrandName}"`);
+    // Signal 5: Web App Manifest name (weight 10) — fetch in parallel
+    try {
+      const baseUrl = new URL(normalizedUrl);
+      // Check common manifest paths
+      const manifestLink = html.match(/<link[^>]*rel=["']manifest["'][^>]*href=["']([^"']+)["']/i);
+      const manifestPath = manifestLink?.[1] || '/site.webmanifest';
+      const manifestUrl = new URL(manifestPath, baseUrl.origin).href;
+      
+      const manifestResp = await fetch(manifestUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        signal: AbortSignal.timeout(3000),
+      });
+      if (manifestResp.ok) {
+        const manifestData = await manifestResp.json();
+        const mName = (manifestData.name || manifestData.short_name || '').trim();
+        if (mName && mName.length >= 2 && mName.length <= 60) {
+          brandSignals.push({ source: 'manifest', value: mName, weight: 10 });
+        }
+      } else {
+        await manifestResp.text();
+      }
+    } catch { /* manifest not available — that's fine */ }
+    
+    console.log(`🏷️ Brand signals: ${brandSignals.map(s => `${s.source}="${s.value}"(w${s.weight})`).join(', ') || 'none'}`);
     
     const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
     const metaDesc = metaDescMatch?.[1]?.trim() || '';
@@ -1131,7 +1173,7 @@ Utilise ces informations pour identifier le core business.`;
     console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
   }
   
-  return { context: pageContentContext, brandName: extractedBrandName, eeatSignals };
+  return { context: pageContentContext, brandSignals, eeatSignals };
 }
 
 // ==================== MAIN HANDLER ====================
