@@ -69,12 +69,16 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
     try {
       const existingKeywords = positioning.main_keywords || [];
       
+      // Build site context from existing keywords for contextual filtering
+      const siteContext = existingKeywords.map(k => k.keyword).join(' ');
+      
       const { data, error } = await supabase.functions.invoke('generate-more-keywords', {
         body: {
           domain,
           existingKeywords,
-          brandName: null, // Let the function extract it
-          locationCode: 2250, // France by default
+          brandName: null,
+          locationCode: 2250,
+          siteContext,
         },
       });
 
