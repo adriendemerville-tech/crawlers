@@ -166,6 +166,8 @@ interface HtmlAnalysis {
   // Case studies
   hasCaseStudies?: boolean;
   caseStudySignals?: number;
+  // Misplaced structural tags (outside <head>)
+  misplacedHeadTags?: string[];
 }
 
 interface RobotsAnalysis {
