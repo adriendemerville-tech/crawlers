@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FileText, UserPlus, LogIn, X, FolderCheck, ClipboardList, Code2, PiggyBank } from 'lucide-react';
+import { FileText, UserPlus, LogIn, X, BarChart3, Compass, Briefcase, BookOpen, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -9,33 +9,33 @@ const translations = {
   fr: {
     title: 'Téléchargez vos rapports',
     subtitle: 'Connectez-vous pour accéder à tous vos outils SEO.',
-    benefit1: 'Retrouvez tous vos rapports',
-    benefit2: 'Vos plans d\'action',
-    benefit3: 'Vos codes correctifs',
-    tagline1: 'Devenez autonome sur le SEO',
-    tagline2: 'Faites des économies',
+    benefit1: 'Suivi des statistiques',
+    benefit2: 'Conseils 360°',
+    benefit3: 'Fonctions dédiées aux Pros',
+    tagline1: 'Autonomie',
+    tagline2: 'Pédagogie',
     signup: 'S\'inscrire gratuitement',
     login: 'Se connecter',
   },
   en: {
     title: 'Download your reports',
     subtitle: 'Log in to access all your SEO tools.',
-    benefit1: 'Find all your reports',
-    benefit2: 'Your action plans',
-    benefit3: 'Your corrective codes',
-    tagline1: 'Become SEO autonomous',
-    tagline2: 'Save money',
+    benefit1: 'Statistics tracking',
+    benefit2: '360° advice',
+    benefit3: 'Pro-dedicated features',
+    tagline1: 'Autonomy',
+    tagline2: 'Education',
     signup: 'Sign up for free',
     login: 'Log in',
   },
   es: {
     title: 'Descarga tus informes',
     subtitle: 'Inicia sesión para acceder a todas tus herramientas SEO.',
-    benefit1: 'Encuentra todos tus informes',
-    benefit2: 'Tus planes de acción',
-    benefit3: 'Tus códigos correctivos',
-    tagline1: 'Sé autónomo en SEO',
-    tagline2: 'Ahorra dinero',
+    benefit1: 'Seguimiento de estadísticas',
+    benefit2: 'Consejos 360°',
+    benefit3: 'Funciones dedicadas a Pros',
+    tagline1: 'Autonomía',
+    tagline2: 'Pedagogía',
     signup: 'Registrarse gratis',
     login: 'Iniciar sesión',
   },
