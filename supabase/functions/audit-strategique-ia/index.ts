@@ -277,7 +277,7 @@ function generateSeedKeywords(brandName: string, sector: string, pageContentCont
   
   // Start with market-intent keywords from page metadata (highest priority)
   if (pageContentContext) {
-    const metaKeywords = extractKeywordsFromMetadata(pageContentContext);
+    const metaKeywords = extractKeywordsFromMetadata(pageContentContext, domain);
     for (const mk of metaKeywords) {
       if (mk.length > 4 && !keywords.includes(mk)) {
         keywords.push(mk);
