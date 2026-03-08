@@ -216,8 +216,8 @@ function resolveBrandName(signals: BrandSignal[], domain: string, url: string): 
   if (best.sources.length >= 3) confidence = Math.min(1, confidence + 0.15);
   else if (best.sources.length >= 2) confidence = Math.min(1, confidence + 0.08);
 
-  // Penalty: if the detected name is just the domain slug, it's less informative
-  if (normalize(best.bestValue) === domainSlug) confidence *= 0.7;
+  // Bonus: if the detected name matches the domain slug, it's a strong confirmation
+  if (normalize(best.bestValue) === domainSlug) confidence = Math.min(1, confidence + 0.05);
 
   // Ensure proper capitalization
   let finalName = best.bestValue.trim();
