@@ -995,7 +995,7 @@ export function MyTracking() {
                                       )}
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                                    <XAxis dataKey="date" className="text-xs" interval="preserveStartEnd" tick={{ fontSize: 10 }} />
+                                    <XAxis dataKey="date" className="text-xs" interval="preserveStartEnd" tick={false} />
                                     <YAxis yAxisId="left" className="text-xs" tick={{ fontSize: 10 }} />
                                     <YAxis yAxisId="right" orientation="right" className="text-xs" tick={{ fontSize: 10 }} reversed domain={[0, 'auto']} />
                                     <Tooltip 
