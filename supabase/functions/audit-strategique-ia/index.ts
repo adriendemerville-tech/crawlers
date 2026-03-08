@@ -704,7 +704,7 @@ INSTRUCTION: Cite "${founderInfo.name}" nommément dans thought_leadership.analy
   return `Analyse du site "${domain}" (${url}).
 ⚠️ RAPPEL: Le nom de l'entité à utiliser dans TOUT le rapport est "${domain}". Ne jamais inventer un autre nom.
 ${pageContentContext}
-${eeatSection}
+${eeatSection}${founderSection}
 ${marketSection}
 CRAWLERS:${JSON.stringify(toolsData.crawlers)}
 GEO:${JSON.stringify(toolsData.geo)}
