@@ -866,7 +866,7 @@ Deno.serve(async (req) => {
     });
 
     // Factor 8: Canonical URL (5 points)
-    const canonicalScore = metaResult.hasCanonical ? 5 : 0;
+    const canonicalScore = metaResult.hasCanonical ? 5 : (isSPAWithLimitedContent ? 3 : 0);
     let canonicalDetails = t.factors.canonical.noCanonical;
     if (metaResult.hasCanonical) {
       canonicalDetails = metaResult.canonicalUrl 
