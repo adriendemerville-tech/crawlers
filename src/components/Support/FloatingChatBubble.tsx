@@ -14,6 +14,10 @@ export function FloatingChatBubble() {
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
   const [unreadCount, setUnreadCount] = useState(0);
+  const isMobile = useIsMobile();
+
+  // Hide on mobile
+  if (isMobile) return null;
 
   // Fetch unread messages count
   useEffect(() => {
