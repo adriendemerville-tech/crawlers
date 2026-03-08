@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +7,8 @@ export default function SharedReportRedirect() {
   const { shareId } = useParams();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const [htmlContent, setHtmlContent] = useState<string | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     const run = async () => {
@@ -34,8 +36,13 @@ export default function SharedReportRedirect() {
         });
         if (error) throw error;
         if (!data?.success) throw new Error(data?.error || 'Invalid link');
+
+        // Fetch the HTML content from the signed URL
         const signedUrl = data.signedUrl as string;
-        window.location.replace(signedUrl);
+        const response = await fetch(signedUrl);
+        if (!response.ok) throw new Error('Failed to load report');
+        const html = await response.text();
+        setHtmlContent(html);
       } catch (e: any) {
         console.error(e);
         setError(e?.message || 'Lien invalide');
@@ -49,6 +56,18 @@ export default function SharedReportRedirect() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <p className="text-muted-foreground">{error}</p>
       </div>
+    );
+  }
+
+  if (htmlContent) {
+    return (
+      <iframe
+        ref={iframeRef}
+        srcDoc={htmlContent}
+        title="Rapport partagé"
+        className="w-full min-h-screen border-none"
+        style={{ width: '100%', height: '100vh', border: 'none' }}
+      />
     );
   }
 
