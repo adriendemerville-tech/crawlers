@@ -755,6 +755,12 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('fr');
 
+  // Dynamically update <html lang> so crawlers detect the active language
+  useEffect(() => {
+    const langMap: Record<Language, string> = { fr: 'fr', en: 'en', es: 'es' };
+    document.documentElement.lang = langMap[language];
+  }, [language]);
+
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t: translations[language] }}>
       {children}

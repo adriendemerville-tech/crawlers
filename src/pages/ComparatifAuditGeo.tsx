@@ -1,6 +1,8 @@
 import { useState, useMemo, lazy, Suspense, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Header } from "@/components/Header";
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";

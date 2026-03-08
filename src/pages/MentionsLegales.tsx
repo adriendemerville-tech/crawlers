@@ -1,6 +1,8 @@
+import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -9,6 +11,7 @@ const t3 = (language: string, fr: string, en: string, es: string) =>
 
 const MentionsLegales = () => {
   const { language } = useLanguage();
+  useCanonicalHreflang('/mentions-legales');
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
