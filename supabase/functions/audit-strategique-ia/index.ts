@@ -997,7 +997,7 @@ Deno.serve(async (req) => {
     // ==================== ÉTAPE 2: LLM ANALYSIS ====================
     console.log('\n🤖 ÉTAPE 2: Analyse LLM...');
     
-    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext);
+    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals);
     
     // Inject brand name instruction (compact)
     userPrompt = `⚠️ NOM ENTREPRISE: "${humanBrandName}" (pas "${domainSlug}"). Utilise TOUJOURS "${humanBrandName}".\n` + userPrompt;
