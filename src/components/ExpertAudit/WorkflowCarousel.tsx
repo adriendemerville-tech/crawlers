@@ -324,11 +324,11 @@ export function WorkflowCarousel({
 
       {/* Carousel Container */}
       <div className="relative py-8">
-        {/* Left fade mask - gradient blur from center to left */}
-        <div className="absolute left-0 top-0 bottom-0 w-40 z-10 pointer-events-none bg-gradient-to-r from-background via-background/80 to-transparent" />
+        {/* Left fade mask - gradient blur from center to left (hidden on mobile) */}
+        <div className="absolute left-0 top-0 bottom-0 w-40 z-10 pointer-events-none bg-gradient-to-r from-background via-background/80 to-transparent hidden sm:block" />
         
-        {/* Right fade mask - gradient blur from center to right */}
-        <div className="absolute right-0 top-0 bottom-0 w-40 z-10 pointer-events-none bg-gradient-to-l from-background via-background/80 to-transparent" />
+        {/* Right fade mask - gradient blur from center to right (hidden on mobile) */}
+        <div className="absolute right-0 top-0 bottom-0 w-40 z-10 pointer-events-none bg-gradient-to-l from-background via-background/80 to-transparent hidden sm:block" />
 
         {/* Carousel Viewport - centered with proper padding */}
         <div className="overflow-x-clip touch-pan-y">
@@ -375,10 +375,11 @@ export function WorkflowCarousel({
                   return 0.92; // Slightly larger scale for side cards (was 0.88)
                 };
 
-                // Calculate blur intensity - reduced for clickable cards
+                // Calculate blur intensity - no blur on mobile, subtle on desktop
                 const getBlurAmount = () => {
                   if (isActive) return 0;
-                  if (isNext || isPrevious) return 0.5; // Very subtle blur for clickable cards
+                  if (isMobile) return 0; // No blur on mobile
+                  if (isNext || isPrevious) return 0.5;
                   return 1.5;
                 };
 
@@ -421,7 +422,7 @@ export function WorkflowCarousel({
                     }}
                     onClick={handleCardClick}
                     className={cn(
-                      "flex-shrink-0 w-[255px] sm:w-[380px] relative z-20",
+                      "flex-shrink-0 w-[290px] sm:w-[380px] relative z-20",
                       !isActive && !shouldHide && "cursor-pointer hover:scale-[0.94] transition-transform duration-300"
                     )}
                     style={{
