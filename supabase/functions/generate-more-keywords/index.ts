@@ -221,31 +221,19 @@ async function checkNewRankings(
 ): Promise<KeywordItem[]> {
   const results: KeywordItem[] = [];
   const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
+  const EXCLUDED_TYPES = new Set(['paid', 'ads']);
   
-  const RANKABLE_TYPES = new Set([
-    'organic', 'featured_snippet', 'local_pack', 'knowledge_graph',
-    'top_stories', 'video', 'image', 'twitter', 'app',
-    'multi_carousel', 'ai_overview',
-  ]);
-  
-  // Check rankings for top 8 keywords
   const keywordsToCheck = keywords.slice(0, 8);
   
   try {
     const tasks = keywordsToCheck.map(kw => ({
-      keyword: kw.keyword,
-      location_code: locationCode,
-      language_code: 'fr',
-      depth: 30,
-      se_domain: 'google.fr',
+      keyword: kw.keyword, location_code: locationCode, language_code: 'fr',
+      depth: 50, se_domain: 'google.fr',
     }));
     
     const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
       method: 'POST',
-      headers: {
-        'Authorization': getAuthHeader(),
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify(tasks),
     });
 
@@ -255,34 +243,37 @@ async function checkNewRankings(
       for (let i = 0; i < keywordsToCheck.length; i++) {
         const kw = keywordsToCheck[i];
         const taskResult = data.tasks?.[i]?.result?.[0];
-        
         let position: number | string = 'Non classé';
         
         if (taskResult?.items) {
           for (const item of taskResult.items) {
+            if (EXCLUDED_TYPES.has(item.type)) continue;
             const itemDomain = (item.domain || '').toLowerCase().replace(/^www\./, '');
             const itemUrl = (item.url || '').toLowerCase();
-            
             const domainMatch = itemDomain && (
               itemDomain === cleanDomain ||
               itemDomain.endsWith('.' + cleanDomain) ||
               cleanDomain.endsWith('.' + itemDomain)
             );
-            const urlMatch = itemUrl.includes(cleanDomain);
-            
-            if ((domainMatch || urlMatch) && RANKABLE_TYPES.has(item.type)) {
+            if (domainMatch || itemUrl.includes(cleanDomain)) {
               position = item.rank_absolute || item.rank_group || 1;
               break;
+            }
+            // Check nested items
+            if (item.items && Array.isArray(item.items)) {
+              for (const sub of item.items) {
+                const subDomain = (sub.domain || '').toLowerCase().replace(/^www\./, '');
+                if (subDomain === cleanDomain || (sub.url || '').toLowerCase().includes(cleanDomain)) {
+                  position = item.rank_absolute || item.rank_group || 1;
+                  break;
+                }
+              }
+              if (position !== 'Non classé') break;
             }
           }
         }
         
-        results.push({
-          keyword: kw.keyword,
-          volume: kw.volume,
-          difficulty: kw.difficulty,
-          current_rank: position,
-        });
+        results.push({ keyword: kw.keyword, volume: kw.volume, difficulty: kw.difficulty, current_rank: position });
       }
     } else {
       await response.text();
