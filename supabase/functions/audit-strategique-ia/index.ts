@@ -123,7 +123,8 @@ interface BusinessContext {
 
 function humanizeBrandName(slug: string): string {
   if (!slug || slug.length < 1) return slug;
-  return slug.charAt(0).toUpperCase() + slug.slice(1);
+  // Replace hyphens with spaces and capitalize each word
+  return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function sanitizeBrandNameInResponse(obj: any, domainSlug: string, humanName: string): any {
