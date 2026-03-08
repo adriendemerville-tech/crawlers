@@ -9,6 +9,21 @@ import {
 import { MarketIntelligence } from '@/types/expertAudit';
 import { MethodologyPopover } from './MethodologyPopover';
 
+function generateFallbackThemes(intelligence: MarketIntelligence): string[] {
+  const themes: string[] = [];
+  if (intelligence.semantic_gap?.gap_analysis) {
+    // Extract key phrases from gap_analysis
+    const analysis = intelligence.semantic_gap.gap_analysis;
+    themes.push(`Renforcer la couverture sémantique (écart de ${intelligence.semantic_gap.gap_distance || (intelligence.semantic_gap.leader_position - intelligence.semantic_gap.current_position)} points)`);
+  }
+  if (intelligence.sophistication?.emotional_levers?.length) {
+    themes.push(`Exploiter les leviers émotionnels : ${intelligence.sophistication.emotional_levers.slice(0, 2).join(', ')}`);
+  }
+  themes.push('Contenu structuré FAQ / How-To pour intentions conversationnelles');
+  themes.push('Pages piliers thématiques avec Schema.org Article');
+  return themes.slice(0, 4);
+}
+
 interface MarketIntelligenceCardProps {
   intelligence: MarketIntelligence;
 }
