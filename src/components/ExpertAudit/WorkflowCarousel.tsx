@@ -590,21 +590,37 @@ export function WorkflowCarousel({
                               <Check className="h-4 w-4" />
                               {t.complete}
                             </div>
-                            {/* Click to view report indicator */}
-                            {(step.id === 1 ? hasTechnicalResult : step.id === 2 ? hasStrategicResult : false) && (
-                              <Badge 
-                                variant="outline" 
-                                className="gap-1.5 text-xs cursor-pointer border-primary/30 text-primary hover:bg-primary/10 transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (step.id === 1 && onNavigateToTechnical) onNavigateToTechnical();
-                                  else if (step.id === 2 && onNavigateToStrategic) onNavigateToStrategic();
-                                }}
-                              >
-                                <Eye className="h-3 w-3" />
-                                {t.viewReport}
-                              </Badge>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {/* Click to view report indicator */}
+                              {(step.id === 1 ? hasTechnicalResult : step.id === 2 ? hasStrategicResult : false) && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="gap-1.5 text-xs cursor-pointer border-primary/30 text-primary hover:bg-primary/10 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (step.id === 1 && onNavigateToTechnical) onNavigateToTechnical();
+                                    else if (step.id === 2 && onNavigateToStrategic) onNavigateToStrategic();
+                                  }}
+                                >
+                                  <Eye className="h-3 w-3" />
+                                  {t.viewReport}
+                                </Badge>
+                              )}
+                              {/* Re-run button */}
+                              {isActive && (step.id === 1 || step.id === 2) && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="gap-1.5 text-xs cursor-pointer border-muted-foreground/30 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStepAction(step.id);
+                                  }}
+                                >
+                                  <RotateCcw className="h-3 w-3" />
+                                  Relancer
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         )}
                       </CardContent>
