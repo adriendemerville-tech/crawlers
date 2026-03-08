@@ -6,7 +6,7 @@ export const expertReportTranslations = {
   fr: {
     title: "Rapport d'Audit Expert",
     download: 'Télécharger .pdf',
-    share: 'Partager',
+    share: 'Lien temporaire',
     print: 'Imprimer',
     generating: 'Génération...',
     sharing: 'Création du lien...',
