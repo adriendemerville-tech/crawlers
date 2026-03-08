@@ -551,6 +551,76 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
   }
 }
 
+// ==================== FOUNDER DISCOVERY VIA SERP ====================
+
+interface FounderInfo {
+  name: string | null;
+  profileUrl: string | null;
+  platform: string | null;
+  isInfluencer: boolean;
+}
+
+async function searchFounderProfile(domain: string): Promise<FounderInfo> {
+  const result: FounderInfo = { name: null, profileUrl: null, platform: null, isInfluencer: false };
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return result;
+  
+  const domainClean = domain.replace(/^www\./, '');
+  
+  try {
+    console.log(`👤 Searching founder for ${domainClean}...`);
+    
+    const queries = [
+      { q: `"${domainClean}" fondateur OR CEO OR founder site:linkedin.com/in`, platform: 'linkedin' },
+      { q: `"${domainClean}" fondateur OR CEO OR founder site:instagram.com`, platform: 'instagram' },
+      { q: `"${domainClean}" fondateur OR CEO OR founder site:youtube.com`, platform: 'youtube' },
+    ];
+    
+    const searchPromises = queries.map(async ({ q, platform }) => {
+      try {
+        const resp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
+          method: 'POST',
+          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify([{ keyword: q, location_code: 2250, language_code: 'fr', depth: 5 }]),
+          signal: AbortSignal.timeout(8000),
+        });
+        if (!resp.ok) { await resp.text(); return null; }
+        const data = await resp.json();
+        const items = data.tasks?.[0]?.result?.[0]?.items || [];
+        const organic = items.find((i: any) => i.type === 'organic' && i.url);
+        if (organic) {
+          let name = organic.title?.split(/\s*[-–|]\s*/)?.[0]?.trim() || null;
+          if (name) name = name.replace(/\s*\(.*\)/, '').replace(/\s*@.*/, '').trim();
+          return { name, url: organic.url, platform, title: organic.title };
+        }
+        return null;
+      } catch { return null; }
+    });
+    
+    const results = (await Promise.all(searchPromises)).filter(Boolean);
+    
+    if (results.length === 0) {
+      console.log('👤 No founder profile found via SERP');
+      return result;
+    }
+    
+    const best = results.find(r => r!.platform === 'linkedin') || results[0]!;
+    result.name = best!.name;
+    result.profileUrl = best!.url;
+    result.platform = best!.platform;
+    result.isInfluencer = results.length >= 1;
+    
+    console.log(`👤 Founder found: ${result.name} on ${result.platform} → ${result.profileUrl}`);
+    if (results.length >= 2) {
+      console.log(`👤 Multi-platform: ${results.map(r => r!.platform).join(', ')}`);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('👤 Founder search error:', error);
+    return result;
+  }
+}
+
 // ==================== LLM PROMPT (compact) ====================
 
 const SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé Brand Authority & GEO. Rapport premium niveau cabinet de conseil.
@@ -571,7 +641,7 @@ F. FRAÎCHEUR & IA: 17.Fraîcheur contenus 18.Complexité Schema.org 19.Formats 
 G. E-E-A-T: 22.Signaux E-E-A-T 23.Densité données 24.Knowledge Graph 25.Études de cas
 H. MONITORING: 26.Monitoring LLM (GA4 referrers IA) 27.Fichier llms.txt`;
 
-function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals): string {
+function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo): string {
   let marketSection = '';
   
   if (marketData) {
@@ -619,11 +689,22 @@ Manquants: ${missing.length > 0 ? missing.map(kw => `"${kw.keyword}"(${kw.volume
     eeatSection = lines.join('\n');
   }
 
+  // Inject founder info from SERP discovery
+  let founderSection = '';
+  if (founderInfo?.name) {
+    founderSection = `\n👤 FONDATEUR/DIRIGEANT IDENTIFIÉ (via recherche SERP — donnée vérifiée):
+- Nom: ${founderInfo.name}
+- Plateforme principale: ${founderInfo.platform || 'inconnue'}
+- URL profil vérifié: ${founderInfo.profileUrl || 'non trouvé'}
+- Présence sociale: ${founderInfo.isInfluencer ? 'OUI — actif sur les réseaux' : 'NON — pas de présence sociale notable'}
+INSTRUCTION: Cite "${founderInfo.name}" nommément dans thought_leadership.analysis et si pertinent dans l'introduction.${founderInfo.profileUrl ? ` Utilise EXACTEMENT cette URL: ${founderInfo.profileUrl} comme profile_url dans le proof_source correspondant à la plateforme "${founderInfo.platform}".` : ' Ce dirigeant n\'a pas de profil social influent — mentionne-le dans l\'analyse SANS profile_url.'}`;
+  }
+
   // Compact JSON serialization (no pretty-print to save memory)
   return `Analyse du site "${domain}" (${url}).
 ⚠️ RAPPEL: Le nom de l'entité à utiliser dans TOUT le rapport est "${domain}". Ne jamais inventer un autre nom.
 ${pageContentContext}
-${eeatSection}
+${eeatSection}${founderSection}
 ${marketSection}
 CRAWLERS:${JSON.stringify(toolsData.crawlers)}
 GEO:${JSON.stringify(toolsData.geo)}
@@ -972,15 +1053,25 @@ Deno.serve(async (req) => {
     console.log('\n📊 ÉTAPE 1: DataForSEO...');
     const marketData = await fetchMarketData(domain, context, pageContentContext);
 
-    // ==================== ÉTAPE 1b: CONCURRENT LOCAL ====================
-    console.log('\n🏙️ ÉTAPE 1b: Concurrent local...');
+    // ==================== ÉTAPE 1b: CONCURRENT LOCAL + FOUNDER (parallel) ====================
+    console.log('\n🏙️ ÉTAPE 1b: Concurrent local + Founder discovery...');
     let localCompetitorData: { name: string; url: string; rank: number } | null = null;
-    if (context.locationCode) {
-      try {
-        localCompetitorData = await findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext);
-      } catch (e) {
-        console.error('❌ Concurrent local:', e);
-      }
+    let founderInfo: FounderInfo = { name: null, profileUrl: null, platform: null, isInfluencer: false };
+    
+    // Run in parallel
+    const [localCompResult, founderResult] = await Promise.allSettled([
+      context.locationCode ? findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext) : Promise.resolve(null),
+      searchFounderProfile(domain),
+    ]);
+    
+    if (localCompResult.status === 'fulfilled' && localCompResult.value) {
+      localCompetitorData = localCompResult.value;
+    } else if (localCompResult.status === 'rejected') {
+      console.error('❌ Concurrent local:', localCompResult.reason);
+    }
+    
+    if (founderResult.status === 'fulfilled' && founderResult.value) {
+      founderInfo = founderResult.value;
     }
 
     // ==================== ÉTAPE 1c: CHECK-LLM (skip if toolsData already has LLM data) ====================
@@ -1022,7 +1113,7 @@ Deno.serve(async (req) => {
     // ==================== ÉTAPE 2: LLM ANALYSIS ====================
     console.log('\n🤖 ÉTAPE 2: Analyse LLM...');
     
-    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals);
+    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo);
     
     // Inject brand name instruction (compact)
     userPrompt = `⚠️ NOM ENTREPRISE: "${humanBrandName}" (pas "${domainSlug}"). Utilise TOUJOURS "${humanBrandName}".\n` + userPrompt;
@@ -1119,6 +1210,10 @@ Deno.serve(async (req) => {
       const detectedUrlsSet = new Set(
         (eeatSignals.detectedSocialUrls || []).map((u: string) => u.toLowerCase().replace(/\/$/, ''))
       );
+      // Also whitelist founder profile URL from SERP discovery
+      if (founderInfo?.profileUrl) {
+        detectedUrlsSet.add(founderInfo.profileUrl.toLowerCase().replace(/\/$/, ''));
+      }
       console.log(`🔗 Validating social URLs against ${detectedUrlsSet.size} detected URLs:`, [...detectedUrlsSet]);
       
       for (const source of parsedAnalysis.social_signals.proof_sources) {
