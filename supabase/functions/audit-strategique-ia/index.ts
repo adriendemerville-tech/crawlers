@@ -139,11 +139,103 @@ interface BusinessContext {
   locationCode: number | null;
 }
 
-// ==================== BRAND NAME HUMANIZATION ====================
+// ==================== PROBABILISTIC BRAND NAME DETECTION ====================
+
+interface BrandSignal {
+  source: string;
+  value: string;
+  weight: number;
+}
+
+/**
+ * Probabilistic algorithm to detect the real brand/company name from 5 HTML signals + domain.
+ * Returns { name, confidence }. If confidence >= 0.95, name is the detected brand (capitalized).
+ * Otherwise, name falls back to the target URL.
+ */
+function resolveBrandName(signals: BrandSignal[], domain: string, url: string): { name: string; confidence: number } {
+  if (signals.length === 0) return { name: url, confidence: 0 };
+
+  // Normalize for comparison
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-zàâäéèêëïîôùûüÿçœæ0-9]/g, '').trim();
+  const domainSlug = normalize(domain.replace(/^www\./, '').split('.')[0]);
+
+  // Group signals by normalized value
+  const groups = new Map<string, { totalWeight: number; bestValue: string; sources: string[] }>();
+  for (const sig of signals) {
+    const norm = normalize(sig.value);
+    if (!norm || norm.length < 2) continue;
+    // Skip if the value is just the domain slug repeated (not informative)
+    const existing = groups.get(norm);
+    if (existing) {
+      existing.totalWeight += sig.weight;
+      existing.sources.push(sig.source);
+      // Keep the version with best capitalization (longest original form)
+      if (sig.value.length >= existing.bestValue.length) existing.bestValue = sig.value;
+    } else {
+      groups.set(norm, { totalWeight: sig.weight, bestValue: sig.value, sources: [sig.source] });
+    }
+  }
+
+  if (groups.size === 0) return { name: url, confidence: 0 };
+
+  // Also check for near-matches (one group contains the other)
+  const groupKeys = [...groups.keys()];
+  for (let i = 0; i < groupKeys.length; i++) {
+    for (let j = i + 1; j < groupKeys.length; j++) {
+      const a = groupKeys[i], b = groupKeys[j];
+      if (a.includes(b) || b.includes(a)) {
+        const ga = groups.get(a)!, gb = groups.get(b)!;
+        // Merge into the shorter one (more likely the brand name)
+        const shorter = a.length <= b.length ? a : b;
+        const longer = shorter === a ? b : a;
+        const merged = groups.get(shorter)!;
+        const other = groups.get(longer)!;
+        merged.totalWeight += other.totalWeight;
+        merged.sources.push(...other.sources);
+        if (other.bestValue.length < merged.bestValue.length || other.sources.length > merged.sources.length) {
+          // Keep shorter branded name if it looks cleaner
+        }
+        groups.delete(longer);
+      }
+    }
+  }
+
+  // Find the best group
+  const totalWeight = signals.reduce((sum, s) => sum + s.weight, 0);
+  let best = { norm: '', totalWeight: 0, bestValue: '', sources: [] as string[] };
+  for (const [norm, g] of groups) {
+    if (g.totalWeight > best.totalWeight) {
+      best = { norm, ...g };
+    }
+  }
+
+  // Calculate confidence
+  let confidence = best.totalWeight / totalWeight;
+
+  // Bonus: multiple independent sources agreeing boosts confidence
+  if (best.sources.length >= 3) confidence = Math.min(1, confidence + 0.15);
+  else if (best.sources.length >= 2) confidence = Math.min(1, confidence + 0.08);
+
+  // Penalty: if the detected name is just the domain slug, it's less informative
+  if (normalize(best.bestValue) === domainSlug) confidence *= 0.7;
+
+  // Ensure proper capitalization
+  let finalName = best.bestValue.trim();
+  // If all lowercase, capitalize first letter of each word
+  if (finalName === finalName.toLowerCase() && finalName.length > 1) {
+    finalName = finalName.replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  console.log(`🎯 Brand detection: "${finalName}" (confidence: ${(confidence * 100).toFixed(1)}%, sources: ${best.sources.join(',')})`);
+
+  if (confidence >= 0.95) {
+    return { name: finalName, confidence };
+  }
+  return { name: url, confidence };
+}
 
 function humanizeBrandName(slug: string): string {
   if (!slug || slug.length < 1) return slug;
-  // Replace hyphens with spaces and capitalize each word
   return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
@@ -664,8 +756,6 @@ const SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé Brand Autho
 
 POSTURE: Analytique, souverain, prescriptif. Jargon expert (Entité sémantique, Topical Authority, E-E-A-T, Gap de citabilité). Recommandations NARRATIVES: chaque action = paragraphe rédigé 4-5 phrases.
 
-⚠️ RÈGLE ABSOLUE — NOM DE L'ENTITÉ: Tu DOIS désigner le site analysé EXCLUSIVEMENT par son NOM DE DOMAINE tel qu'il apparaît dans le prompt utilisateur (ex: "limova.ai", "example.com"). Tu ne dois JAMAIS inventer, déduire ou halluciner un nom de marque, un nom commercial ou une description générique (ex: "L'assistant IA", "La plateforme", "Le site"). Si tu ne connais pas le nom commercial, utilise le domaine tel quel.
-
 DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS. Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (non classé, volume>200).
 
 13 MODULES D'ANALYSE:
@@ -739,7 +829,7 @@ INSTRUCTION: Cite "${founderInfo.name}" nommément dans thought_leadership.analy
 
   // Compact JSON serialization (no pretty-print to save memory)
   return `Analyse du site "${url}" (domaine: ${domain}).
-⚠️ RAPPEL: Dans l'introduction, utilise TOUJOURS l'URL cible "${url}" pour désigner le site. Ne jamais inventer un nom de marque ni utiliser un nom dérivé du domaine.
+${pageContentContext}
 ${pageContentContext}
 ${eeatSection}${founderSection}
 ${marketSection}
@@ -819,9 +909,9 @@ INSTRUCTIONS CRITIQUES:
 
 // ==================== EXTRACT PAGE METADATA (lightweight) ====================
 
-async function extractPageMetadata(url: string): Promise<{ context: string; brandName: string; eeatSignals: EEATSignals }> {
+async function extractPageMetadata(url: string): Promise<{ context: string; brandSignals: BrandSignal[]; eeatSignals: EEATSignals }> {
   let pageContentContext = '';
-  let extractedBrandName = '';
+  const brandSignals: BrandSignal[] = [];
   const eeatSignals: EEATSignals = {
     hasAuthorBio: false, authorBioCount: 0,
     hasSocialLinks: false, hasLinkedInLinks: false,
@@ -847,7 +937,7 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     
     if (!pageResp.ok) {
       await pageResp.text();
-      return { context: '', brandName: '', eeatSignals };
+      return { context: '', brandSignals: [], eeatSignals };
     }
     
     let html = await pageResp.text();
@@ -937,7 +1027,8 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     eeatSignals.linkedInLinksCount = liUrls.length;
     eeatSignals.hasLinkedInLinks = liUrls.length > 0;
     
-    // 3. JSON-LD analysis
+    // 3. JSON-LD analysis + brand signal extraction
+    let jsonLdOrgName = '';
     const schemaMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
     for (const block of schemaMatches) {
       try {
@@ -947,7 +1038,12 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
           if (!node || typeof node !== 'object' || depth > 5) return;
           if (Array.isArray(node)) { node.forEach(n => checkNode(n, depth + 1)); return; }
           const nodeType = String(node['@type'] || '').toLowerCase();
-          if (nodeType.includes('organization')) eeatSignals.hasOrganization = true;
+          if (nodeType.includes('organization')) {
+            eeatSignals.hasOrganization = true;
+            if (node.name && typeof node.name === 'string' && !jsonLdOrgName) {
+              jsonLdOrgName = node.name.trim();
+            }
+          }
           if (nodeType.includes('person')) eeatSignals.hasPerson = true;
           if (nodeType.includes('profilepage')) eeatSignals.hasProfilePage = true;
           if (node.author || nodeType === 'author') eeatSignals.hasAuthorInJsonLd = true;
@@ -998,30 +1094,66 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     html = (headMatch2 ? `<head>${headMatch2[1]}</head>` : '') + 
            (h1Match2 ? `<body><h1>${h1Match2[1]}</h1></body>` : '');
     
-    // Extract brand name + metadata
+    // ═══ COLLECT ALL 5 BRAND SIGNALS ═══
     const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*?)["']/i)
       || html.match(/<meta\s+content=["']([^"']*?)["']\s+name=["']description["']/i);
     const ogSiteNameMatch = html.match(/<meta\s+property=["']og:site_name["']\s+content=["']([^"']*?)["']/i);
-    const jsonLdNameMatch = html.match(/"@type"\s*:\s*"Organization"[\s\S]*?"name"\s*:\s*"([^"]+)"/i)
-      || html.match(/"name"\s*:\s*"([^"]+)"[\s\S]*?"@type"\s*:\s*"Organization"/i);
     const appNameMatch = html.match(/<meta\s+name=["']application-name["']\s+content=["']([^"']*?)["']/i);
     
-    if (ogSiteNameMatch?.[1]?.trim()) extractedBrandName = ogSiteNameMatch[1].trim();
-    else if (jsonLdNameMatch?.[1]?.trim()) extractedBrandName = jsonLdNameMatch[1].trim();
-    else if (appNameMatch?.[1]?.trim()) extractedBrandName = appNameMatch[1].trim();
-    else if (titleMatch?.[1]) {
+    // Signal 1: JSON-LD Organization.name (weight 35)
+    if (jsonLdOrgName) {
+      brandSignals.push({ source: 'jsonld', value: jsonLdOrgName, weight: 35 });
+    }
+    
+    // Signal 2: og:site_name (weight 30)
+    if (ogSiteNameMatch?.[1]?.trim()) {
+      brandSignals.push({ source: 'og:site_name', value: ogSiteNameMatch[1].trim(), weight: 30 });
+    }
+    
+    // Signal 3: application-name (weight 15)
+    if (appNameMatch?.[1]?.trim()) {
+      brandSignals.push({ source: 'application-name', value: appNameMatch[1].trim(), weight: 15 });
+    }
+    
+    // Signal 4: <title> extraction — brand part after separator (weight 10)
+    if (titleMatch?.[1]) {
       const titleText = titleMatch[1].replace(/<[^>]+>/g, '').trim();
       for (const sep of [' | ', ' - ', ' — ', ' – ', ' :: ', ' · ']) {
         if (titleText.includes(sep)) {
           const candidate = titleText.split(sep).pop()?.trim() || '';
-          if (candidate.length >= 2 && candidate.length <= 50) extractedBrandName = candidate;
+          if (candidate.length >= 2 && candidate.length <= 50) {
+            brandSignals.push({ source: 'title', value: candidate, weight: 10 });
+          }
           break;
         }
       }
     }
     
-    if (extractedBrandName) console.log(`🏷️ Marque HTML: "${extractedBrandName}"`);
+    // Signal 5: Web App Manifest name (weight 10) — fetch in parallel
+    try {
+      const baseUrl = new URL(normalizedUrl);
+      // Check common manifest paths
+      const manifestLink = html.match(/<link[^>]*rel=["']manifest["'][^>]*href=["']([^"']+)["']/i);
+      const manifestPath = manifestLink?.[1] || '/site.webmanifest';
+      const manifestUrl = new URL(manifestPath, baseUrl.origin).href;
+      
+      const manifestResp = await fetch(manifestUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        signal: AbortSignal.timeout(3000),
+      });
+      if (manifestResp.ok) {
+        const manifestData = await manifestResp.json();
+        const mName = (manifestData.name || manifestData.short_name || '').trim();
+        if (mName && mName.length >= 2 && mName.length <= 60) {
+          brandSignals.push({ source: 'manifest', value: mName, weight: 10 });
+        }
+      } else {
+        await manifestResp.text();
+      }
+    } catch { /* manifest not available — that's fine */ }
+    
+    console.log(`🏷️ Brand signals: ${brandSignals.map(s => `${s.source}="${s.value}"(w${s.weight})`).join(', ') || 'none'}`);
     
     const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
     const metaDesc = metaDescMatch?.[1]?.trim() || '';
@@ -1039,7 +1171,7 @@ Utilise ces informations pour identifier le core business.`;
     console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
   }
   
-  return { context: pageContentContext, brandName: extractedBrandName, eeatSignals };
+  return { context: pageContentContext, brandSignals, eeatSignals };
 }
 
 // ==================== MAIN HANDLER ====================
@@ -1075,18 +1207,22 @@ Deno.serve(async (req) => {
     };
 
     // ==================== FETCH PAGE METADATA (lightweight) ====================
-    const { context: pageContentContext, brandName: extractedBrandName, eeatSignals } = await extractPageMetadata(url);
+    const { context: pageContentContext, brandSignals, eeatSignals } = await extractPageMetadata(url);
 
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
     const domain = new URL(normalizedUrl).hostname;
-    // Skip www prefix when extracting domain slug for brand name
     const domainWithoutWww = domain.replace(/^www\./, '');
     const domainSlug = domainWithoutWww.split('.')[0];
-    const humanBrandName = extractedBrandName || humanizeBrandName(domainSlug);
-    console.log(`🏷️ Marque finale: "${humanBrandName}" (${extractedBrandName ? 'HTML' : 'slug'})`);
+    
+    // ==================== PROBABILISTIC BRAND NAME RESOLUTION ====================
+    const { name: resolvedEntityName, confidence: brandConfidence } = resolveBrandName(brandSignals, domain, url);
+    const isConfidentBrand = brandConfidence >= 0.95;
+    // humanBrandName is used for sanitization (slug → readable) in non-introduction sections
+    const humanBrandName = isConfidentBrand ? resolvedEntityName : humanizeBrandName(domainSlug);
+    console.log(`🎯 Entité résolue: "${resolvedEntityName}" (confiance: ${(brandConfidence * 100).toFixed(1)}%, ${isConfidentBrand ? 'NOM DÉTECTÉ' : 'FALLBACK URL'})`);
 
     console.log('═══════════════════════════════════════════════════════════════');
-    console.log(`🚀 AUDIT STRATÉGIQUE pour: ${domain} (${humanBrandName})`);
+    console.log(`🚀 AUDIT STRATÉGIQUE pour: ${domain} (${resolvedEntityName})`);
 
     // ==================== SINGLE context detection (no duplicate API calls) ====================
     const context = detectBusinessContext(domain);
@@ -1157,8 +1293,8 @@ Deno.serve(async (req) => {
     
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo);
     
-    // Inject URL-based identity for introduction (brand name only for competitive landscape)
-    userPrompt = `⚠️ INTRODUCTION: Désigne TOUJOURS le site par son URL "${url}" (domaine: ${domain}). Ne jamais utiliser un nom de marque inventé dans l'introduction.\n⚠️ AUTRES SECTIONS: Le nom de marque "${humanBrandName}" peut être utilisé dans les sections hors introduction.\n` + userPrompt;
+    // Inject resolved entity name for the LLM
+    userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport (introduction incluse).\n` + userPrompt;
     
     if (localCompetitorData) {
       userPrompt = `🏙️ CONCURRENT LOCAL SERP: "${localCompetitorData.name}" URL:${localCompetitorData.url} Position:${localCompetitorData.rank}. Utilise comme direct_competitor.\n` + userPrompt;
