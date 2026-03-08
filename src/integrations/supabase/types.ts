@@ -550,6 +550,54 @@ export type Database = {
         }
         Relationships: []
       }
+      cto_agent_logs: {
+        Row: {
+          analysis_summary: string
+          audit_id: string | null
+          change_diff_pct: number | null
+          confidence_score: number
+          created_at: string
+          decision: string
+          function_analyzed: string
+          id: string
+          metadata: Json | null
+          prompt_version_after: number | null
+          prompt_version_before: number | null
+          proposed_change: string | null
+          self_critique: string
+        }
+        Insert: {
+          analysis_summary: string
+          audit_id?: string | null
+          change_diff_pct?: number | null
+          confidence_score?: number
+          created_at?: string
+          decision?: string
+          function_analyzed: string
+          id?: string
+          metadata?: Json | null
+          prompt_version_after?: number | null
+          prompt_version_before?: number | null
+          proposed_change?: string | null
+          self_critique: string
+        }
+        Update: {
+          analysis_summary?: string
+          audit_id?: string | null
+          change_diff_pct?: number | null
+          confidence_score?: number
+          created_at?: string
+          decision?: string
+          function_analyzed?: string
+          id?: string
+          metadata?: Json | null
+          prompt_version_after?: number | null
+          prompt_version_before?: number | null
+          proposed_change?: string | null
+          self_critique?: string
+        }
+        Relationships: []
+      }
       hallucination_corrections: {
         Row: {
           analysis_narrative: string | null
@@ -795,6 +843,42 @@ export type Database = {
           subscription_status?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      prompt_registry: {
+        Row: {
+          created_at: string
+          created_by: string
+          function_name: string
+          id: string
+          is_champion: boolean
+          metadata: Json | null
+          prompt_key: string
+          prompt_text: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          function_name: string
+          id?: string
+          is_champion?: boolean
+          metadata?: Json | null
+          prompt_key?: string
+          prompt_text: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          function_name?: string
+          id?: string
+          is_champion?: boolean
+          metadata?: Json | null
+          prompt_key?: string
+          prompt_text?: string
+          version?: number
         }
         Relationships: []
       }
@@ -1220,6 +1304,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_config: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
       }
       system_metrics: {
         Row: {
