@@ -204,7 +204,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
               {isSharing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : copied && shareUrl ? (
-                <Check className="h-4 w-4 text-green-500" />
+                <Check className="h-4 w-4 text-success" />
               ) : (
                 <Link2 className="h-4 w-4" />
               )}
