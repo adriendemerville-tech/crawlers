@@ -105,6 +105,8 @@ export function FloatingChatBubble() {
     }
   };
 
+  if (isMobile) return null;
+
   return (
     <>
       {/* Chat Window - lazy loaded */}
