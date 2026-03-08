@@ -543,6 +543,8 @@ const SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé Brand Autho
 
 POSTURE: Analytique, souverain, prescriptif. Jargon expert (Entité sémantique, Topical Authority, E-E-A-T, Gap de citabilité). Recommandations NARRATIVES: chaque action = paragraphe rédigé 4-5 phrases.
 
+⚠️ RÈGLE ABSOLUE — NOM DE L'ENTITÉ: Tu DOIS désigner le site analysé EXCLUSIVEMENT par son NOM DE DOMAINE tel qu'il apparaît dans le prompt utilisateur (ex: "limova.ai", "example.com"). Tu ne dois JAMAIS inventer, déduire ou halluciner un nom de marque, un nom commercial ou une description générique (ex: "L'assistant IA", "La plateforme", "Le site"). Si tu ne connais pas le nom commercial, utilise le domaine tel quel.
+
 DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS. Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (non classé, volume>200).
 
 13 MODULES D'ANALYSE:
@@ -604,7 +606,8 @@ Manquants: ${missing.length > 0 ? missing.map(kw => `"${kw.keyword}"(${kw.volume
   }
 
   // Compact JSON serialization (no pretty-print to save memory)
-  return `Analyse "${domain}" (${url}):
+  return `Analyse du site "${domain}" (${url}).
+⚠️ RAPPEL: Le nom de l'entité à utiliser dans TOUT le rapport est "${domain}". Ne jamais inventer un autre nom.
 ${pageContentContext}
 ${eeatSection}
 ${marketSection}
