@@ -770,6 +770,7 @@ INSTRUCTIONS CRITIQUES:
 - executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
+- ⚠️ RÈGLE ABSOLUE CONCURRENT DIRECT: Le "direct_competitor" NE PEUT JAMAIS être le même domaine que le site analysé ("${domain}"). Il doit OBLIGATOIREMENT s'agir d'un AUTRE nom de domaine, positionné plus haut dans les SERPs, avec le même core business ou une fonctionnalité équivalente. Si les données SERP fournissent un concurrent, utilise-le. Sinon, identifie un acteur réel du même secteur.
 - PROFILS SOCIAUX — RÈGLE ABSOLUE ANTI-HALLUCINATION:
    • Les SEULES URLs autorisées dans "profile_url" sont celles EXACTEMENT listées dans "URLs sociales trouvées" des SIGNAUX E-E-A-T ci-dessus.
    • Tu ne dois JAMAIS inventer, deviner ou construire une URL de profil social. Si tu n'as pas vu l'URL exacte dans les données crawler, mets profile_url: null.
