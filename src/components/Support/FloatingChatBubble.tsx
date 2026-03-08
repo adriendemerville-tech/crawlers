@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ export function FloatingChatBubble() {
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
   const [unreadCount, setUnreadCount] = useState(0);
+  const isMobile = useIsMobile();
 
   // Fetch unread messages count
   useEffect(() => {
@@ -102,6 +104,8 @@ export function FloatingChatBubble() {
       setUnreadCount(0);
     }
   };
+
+  if (isMobile) return null;
 
   return (
     <>
