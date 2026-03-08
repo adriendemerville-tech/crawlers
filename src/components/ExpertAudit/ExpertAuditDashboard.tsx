@@ -28,6 +28,7 @@ import { WorkflowCarousel } from './WorkflowCarousel';
 import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
 import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { AIBotsCard } from './AIBotsCard';
+import { MethodologyPopover } from './MethodologyPopover';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
