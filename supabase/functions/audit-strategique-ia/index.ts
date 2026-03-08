@@ -591,13 +591,13 @@ INSTRUCTIONS CRITIQUES:
   A) INCARNATION HUMAINE (poids fort): profil personnel LinkedIn/X/Instagram d'un fondateur/dirigeant identifié, articles signés, interventions publiques → c'est le cœur de l'E-E-A-T
   B) ENTITÉ DE MARQUE (poids modéré): page entreprise LinkedIn, page Facebook, compte Instagram business, fiche Google Business Profile (avis clients, NAP cohérent, photos) → valide l'existence et la confiance mais PAS l'expertise humaine
   C) MENTIONS TIERCES (poids modéré): citations par des médias, backlinks éditoriaux, présence Knowledge Graph
-  Grille stricte:
-  * 0-2: Aucune incarnation humaine, aucune page entreprise active, aucune mention tierce, pas de fiche Google Business Profile
-  * 3-4: Pas d'incarnation humaine MAIS présence d'entité (page entreprise active OU fiche Google Business Profile avec avis), mentions rares
-  * 5-6: Incarnation partielle (fondateur identifié mais peu visible) + entité de marque établie (GMB avec avis, page entreprise active)
-  * 7-8: Incarnation forte (fondateur reconnu, profils personnels actifs) + entité solide (GMB bien noté, pages entreprise actives, mentions régulières)
-  * 9-10: Autorité établie (thought leader reconnu, citations fréquentes par des tiers, Knowledge Graph présent, GMB 4.5+★)
-  Un site sans incarnation humaine NE PEUT PAS dépasser 4/10 même avec une fiche GMB et des pages entreprise. Sois honnête et factuel.
+   Grille équilibrée:
+   * 0-2: Aucun signal détectable (ni incarnation humaine, ni page entreprise, ni GMB, ni mention tierce)
+   * 3-4: Entité de marque minimale (page entreprise OU fiche GMB sans avis notables), aucune incarnation humaine
+   * 5-6: Entité de marque solide SANS incarnation humaine (GMB bien noté avec avis, page entreprise active, mentions tierces) OU incarnation humaine partielle (fondateur identifié mais peu visible) avec entité faible
+   * 7-8: Incarnation humaine forte (fondateur reconnu, profils personnels actifs) + entité solide (GMB bien noté, pages entreprise actives, mentions régulières)
+   * 9-10: Autorité établie (thought leader reconnu, citations fréquentes par des tiers, Knowledge Graph présent, GMB 4.5+★)
+   Un site sans incarnation humaine peut atteindre 6/10 maximum s'il a une entité de marque très solide (GMB actif + pages entreprise + avis + mentions). Au-delà de 6, l'incarnation humaine est indispensable. Sois honnête et factuel.
 - founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable sur le site ou le web. Ne PAS inventer.
 - JSON pur, sans virgules traînantes`;
 }
