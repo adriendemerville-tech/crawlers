@@ -196,6 +196,16 @@ export function PageSpeedDashboard({ result, isLoading, strategy, onStrategyChan
         <div className="rounded-xl border border-border bg-card p-6 card-shadow">
           <h3 className="mb-4 text-lg font-semibold text-foreground flex items-center gap-2">
             {t.pagespeed.coreWebVitals}
+            {isFieldData && (
+              <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                ● Données terrain (CrUX)
+              </span>
+            )}
+            {!isFieldData && (
+              <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                ◉ Données labo (Lighthouse)
+              </span>
+            )}
             <HelpButton term="core-web-vitals" size="md" />
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
