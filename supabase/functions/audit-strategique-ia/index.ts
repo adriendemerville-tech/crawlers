@@ -1540,6 +1540,42 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ═══ POST-PROCESS: Validate competitor URLs are accessible ═══
+    if (parsedAnalysis.competitive_landscape) {
+      const roles2 = ['leader', 'direct_competitor', 'challenger', 'inspiration_source'] as const;
+      await Promise.all(roles2.map(async (role) => {
+        const actor = parsedAnalysis.competitive_landscape[role];
+        if (!actor?.url) return;
+        let href = actor.url.trim().replace(/^\/+/, '');
+        if (!href.startsWith('http://') && !href.startsWith('https://')) {
+          href = `https://${href}`;
+        }
+        try {
+          new URL(href); // syntax check
+          const ctrl = new AbortController();
+          const tid = setTimeout(() => ctrl.abort(), 6000);
+          const res = await fetch(href, {
+            method: 'HEAD',
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+            redirect: 'follow',
+            signal: ctrl.signal,
+          });
+          clearTimeout(tid);
+          if (res.ok || res.status === 403) {
+            // Update to final URL after redirects
+            actor.url = res.url || href;
+            console.log(`✅ ${role} URL valid: ${actor.url}`);
+          } else {
+            console.log(`❌ ${role} URL returned ${res.status} — removing`);
+            actor.url = null;
+          }
+        } catch (e: any) {
+          console.log(`❌ ${role} URL unreachable (${e.message}) — removing`);
+          actor.url = null;
+        }
+      }));
+    }
+
     // ═══ POST-PROCESS: Remove self from introduction.competitors[] ═══
     if (parsedAnalysis.introduction?.competitors && Array.isArray(parsedAnalysis.introduction.competitors)) {
       parsedAnalysis.introduction.competitors = parsedAnalysis.introduction.competitors.filter((c: string) => {
