@@ -828,8 +828,10 @@ export function MyTracking() {
                                   <Calendar
                                     mode="single"
                                     selected={gscSinceDate}
+                                    defaultMonth={gscSinceDate}
                                     onSelect={(d) => { if (d) { setGscSinceDate(d); setSinceCalOpen(false); } }}
                                     disabled={(d) => d > new Date() || d < new Date('2020-01-01')}
+                                    initialFocus
                                     className={cn("p-3 pointer-events-auto")}
                                   />
                                 </PopoverContent>
@@ -850,8 +852,10 @@ export function MyTracking() {
                                     <Calendar
                                       mode="single"
                                       selected={gscRangeStart}
+                                      defaultMonth={gscRangeStart}
                                       onSelect={(d) => { if (d) { setGscRangeStart(d); setRangeStartCalOpen(false); } }}
                                       disabled={(d) => d > gscRangeEnd || d < new Date('2020-01-01')}
+                                      initialFocus
                                       className={cn("p-3 pointer-events-auto")}
                                     />
                                   </PopoverContent>
@@ -868,8 +872,10 @@ export function MyTracking() {
                                     <Calendar
                                       mode="single"
                                       selected={gscRangeEnd}
+                                      defaultMonth={gscRangeEnd}
                                       onSelect={(d) => { if (d) { setGscRangeEnd(d); setRangeEndCalOpen(false); } }}
                                       disabled={(d) => d > new Date() || d < gscRangeStart}
+                                      initialFocus
                                       className={cn("p-3 pointer-events-auto")}
                                     />
                                   </PopoverContent>
