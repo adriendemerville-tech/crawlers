@@ -48,18 +48,34 @@ function detectSPAMarkers(html: string): { isSPA: boolean; framework?: string } 
 }
 
 /**
+ * Checks if key SEO tags are missing from raw HTML (they may be hydrated client-side).
+ */
+function isMissingSEOTags(html: string): boolean {
+  const hasCanonical = /<link[^>]+rel=["']canonical["'][^>]*>/i.test(html);
+  const hasMetaDesc = /<meta[^>]+name=["']description["'][^>]+content=["'][^"']+["']/i.test(html);
+  const hasOgTitle = /<meta[^>]+property=["']og:title["'][^>]*>/i.test(html);
+  // Missing at least 2 of 3 core SEO signals
+  const missingCount = [hasCanonical, hasMetaDesc, hasOgTitle].filter(v => !v).length;
+  return missingCount >= 2;
+}
+
+/**
  * Determines if the page needs JS rendering based on content analysis.
  */
 function needsJSRendering(html: string, visibleText: string): boolean {
   const htmlToTextRatio = visibleText.length / html.length;
+  const spaInfo = detectSPAMarkers(html);
 
   return (
     // Very little text despite large HTML
     (visibleText.length < 200 && html.length > 1000) ||
     // SPA marker with low text
-    (detectSPAMarkers(html).isSPA && visibleText.length < 500) ||
+    (spaInfo.isSPA && visibleText.length < 500) ||
     // Less than 2% text ratio (JS-heavy pages)
-    (html.length > 5000 && htmlToTextRatio < 0.02)
+    (html.length > 5000 && htmlToTextRatio < 0.02) ||
+    // Framework detected (Nuxt, Next, etc.) but key SEO tags missing from raw HTML
+    // These are likely hydrated client-side
+    (!!spaInfo.framework && isMissingSEOTags(html))
   );
 }
 
