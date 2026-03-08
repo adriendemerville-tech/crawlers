@@ -162,9 +162,7 @@ async function fetchSupplementaryArticles(
       }
     }
     
-    // Lower relevance score requirement for supplementary (broader search)
-    const score = calculateRelevanceScore(combinedText);
-    articlesWithScore.push({ item, score });
+    articlesWithScore.push({ item, score: adjustedScore });
   }
   
   // Sort by score and take what we need
