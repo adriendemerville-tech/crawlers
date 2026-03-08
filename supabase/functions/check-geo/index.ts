@@ -837,6 +837,15 @@ Deno.serve(async (req) => {
 
     console.log(`[GEO-AUDIT] Score: ${rawTotalScore}/100 (adjusted: ${adjustedScore}, reliability: ${selfAudit.reliabilityScore})`);
 
+    // ═══ MISPLACED STRUCTURAL TAGS DETECTION ═══
+    const misplacedHeadTags: string[] = [];
+    const bodyEl = doc.querySelector('body');
+    if (bodyEl) {
+      if (bodyEl.querySelector('link[rel="canonical"]')) misplacedHeadTags.push('canonical');
+      if (bodyEl.querySelector('meta[name="robots"]')) misplacedHeadTags.push('robots');
+      if (bodyEl.querySelector('link[hreflang]')) misplacedHeadTags.push('hreflang');
+    }
+
     const result: AuditResult = {
       success: true,
       reliabilityScore: selfAudit.reliabilityScore,
@@ -855,7 +864,8 @@ Deno.serve(async (req) => {
           textLength: doc.body?.textContent?.trim().length || 0,
           reliabilityScore: selfAudit.reliabilityScore,
           selfAuditPassed: selfAudit.isReliable
-        }
+        },
+        misplacedHeadTags,
       }
     };
 
