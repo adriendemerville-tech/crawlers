@@ -179,9 +179,9 @@ export function MyTracking() {
   type GscDateMode = 'since' | 'range';
   type GscGranularity = 'daily' | 'weekly' | 'monthly';
   const [gscDateMode, setGscDateMode] = useState<GscDateMode>('since');
-  const [gscSinceDate, setGscSinceDate] = useState<Date>(() => new Date('2026-01-01'));
-  const [gscRangeStart, setGscRangeStart] = useState<Date>(() => new Date('2026-01-01'));
-  const [gscRangeEnd, setGscRangeEnd] = useState<Date>(new Date());
+  const [gscSinceDate, setGscSinceDate] = useState<Date>(() => new Date(2026, 0, 1));
+  const [gscRangeStart, setGscRangeStart] = useState<Date>(() => new Date(2026, 0, 1));
+  const [gscRangeEnd, setGscRangeEnd] = useState<Date>(() => new Date());
   const [gscGranularity, setGscGranularity] = useState<GscGranularity>('daily');
 
   const gscStartDate = gscDateMode === 'since' ? gscSinceDate : gscRangeStart;
