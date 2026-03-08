@@ -1,6 +1,7 @@
 import { DOMParser, Element } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
 import { getGeoTranslations, parseLanguage, type Language } from '../_shared/translations.ts';
 import { assertSafeUrl } from '../_shared/ssrf.ts';
+import { fetchAndRenderPage } from '../_shared/renderPage.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
