@@ -141,9 +141,14 @@ export function InsightEducationalPanel({ type, data }: InsightEducationalPanelP
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <span>En savoir plus :</span>
                 <HelpButton term={content.lexiqueTerm} size="sm" />
-                <span className="text-primary hover:underline">
+                <a
+                  href={`/lexique#${content.lexiqueTerm}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline cursor-pointer"
+                >
                   Voir le lexique
-                </span>
+                </a>
               </div>
             </div>
           )}
