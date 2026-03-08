@@ -819,6 +819,8 @@ const SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé Brand Autho
 
 POSTURE: Analytique, souverain, prescriptif. Jargon expert (Entité sémantique, Topical Authority, E-E-A-T, Gap de citabilité). Recommandations NARRATIVES: chaque action = paragraphe rédigé 4-5 phrases.
 
+RÈGLE ABSOLUE ANTI-AUTO-CITATION: Le site analysé ne doit JAMAIS apparaître comme son propre concurrent (leader, direct_competitor, challenger, inspiration_source). Ne cite JAMAIS le domaine analysé ni son nom de marque dans competitive_landscape ni dans introduction.competitors[]. Tous les acteurs doivent être des entités DISTINCTES du site audité.
+
 DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS. Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (non classé, volume>200).
 
 13 MODULES D'ANALYSE:
@@ -1446,31 +1448,63 @@ Deno.serve(async (req) => {
     // Sanitize brand name
     parsedAnalysis = sanitizeBrandNameInResponse(parsedAnalysis, domainSlug, humanBrandName);
 
-    // ═══ POST-PROCESS: Validate direct_competitor is not the same as target domain ═══
+    // ═══ POST-PROCESS: Validate ALL competitive actors are not the target domain ═══
     const cleanTargetDomain = domain.replace(/^www\./, '').toLowerCase();
-    if (parsedAnalysis.competitive_landscape?.direct_competitor) {
-      const dc = parsedAnalysis.competitive_landscape.direct_competitor;
-      const dcDomain = (() => {
+    const brandNameLower = resolvedEntityName.toLowerCase().replace(/\..*$/, ''); // "limova.ai" → "limova"
+    const domainSlugLower = domainSlug.toLowerCase(); // "limova"
+    
+    function isSelfReference(actor: any): boolean {
+      if (!actor) return false;
+      // Check URL match
+      const actorDomain = (() => {
         try {
-          const u = dc.url?.startsWith('http') ? dc.url : `https://${dc.url || ''}`;
+          const u = actor.url?.startsWith('http') ? actor.url : `https://${actor.url || ''}`;
           return new URL(u).hostname.replace(/^www\./, '').toLowerCase();
-        } catch { return (dc.name || '').toLowerCase(); }
+        } catch { return ''; }
       })();
-      if (dcDomain === cleanTargetDomain || dcDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(dcDomain)) {
-        console.log(`⚠️ direct_competitor "${dc.name}" matches target domain — replacing with local competitor or clearing`);
-        if (localCompetitorData) {
-          parsedAnalysis.competitive_landscape.direct_competitor = {
-            name: localCompetitorData.name,
-            url: localCompetitorData.url,
-            authority_factor: dc.authority_factor || 'Concurrent SERP local',
-            analysis: dc.analysis || `Concurrent identifié via les résultats de recherche locaux, positionné #${localCompetitorData.rank}.`,
-          };
-        } else {
-          parsedAnalysis.competitive_landscape.direct_competitor.name = 'Non identifié';
-          parsedAnalysis.competitive_landscape.direct_competitor.url = null;
-          parsedAnalysis.competitive_landscape.direct_competitor.analysis = 'Aucun concurrent direct distinct identifié dans les SERPs locaux.';
+      if (actorDomain && (actorDomain === cleanTargetDomain || actorDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(actorDomain))) {
+        return true;
+      }
+      // Check name match (e.g. "Limova.ai", "Limova", "limova")
+      const nameLower = (actor.name || '').toLowerCase().replace(/\s+/g, '');
+      if (nameLower === cleanTargetDomain || nameLower === brandNameLower || nameLower === domainSlugLower ||
+          nameLower.includes(domainSlugLower) || domainSlugLower.includes(nameLower)) {
+        return true;
+      }
+      return false;
+    }
+
+    if (parsedAnalysis.competitive_landscape) {
+      const roles = ['leader', 'direct_competitor', 'challenger', 'inspiration_source'] as const;
+      for (const role of roles) {
+        const actor = parsedAnalysis.competitive_landscape[role];
+        if (actor && isSelfReference(actor)) {
+          console.log(`⚠️ ${role} "${actor.name}" is self-reference — replacing`);
+          if (role === 'direct_competitor' && localCompetitorData) {
+            parsedAnalysis.competitive_landscape[role] = {
+              name: localCompetitorData.name,
+              url: localCompetitorData.url,
+              authority_factor: actor.authority_factor || 'Concurrent SERP local',
+              analysis: `Concurrent identifié via les résultats de recherche locaux, positionné #${localCompetitorData.rank}.`,
+            };
+          } else {
+            parsedAnalysis.competitive_landscape[role].name = 'Non identifié';
+            parsedAnalysis.competitive_landscape[role].url = null;
+            parsedAnalysis.competitive_landscape[role].analysis = `Auto-référence détectée et supprimée. Acteur non identifié pour le rôle "${role}".`;
+          }
         }
       }
+    }
+
+    // ═══ POST-PROCESS: Remove self from introduction.competitors[] ═══
+    if (parsedAnalysis.introduction?.competitors && Array.isArray(parsedAnalysis.introduction.competitors)) {
+      parsedAnalysis.introduction.competitors = parsedAnalysis.introduction.competitors.filter((c: string) => {
+        const cLower = c.toLowerCase().replace(/\s+/g, '');
+        const isSelf = cLower === cleanTargetDomain || cLower === brandNameLower || cLower === domainSlugLower ||
+                       cLower.includes(domainSlugLower) || domainSlugLower.includes(cLower);
+        if (isSelf) console.log(`⚠️ Removing self-reference "${c}" from introduction.competitors`);
+        return !isSelf;
+      });
     }
 
     // ═══ POST-PROCESS: Validate social URLs against crawler-detected ones ═══
