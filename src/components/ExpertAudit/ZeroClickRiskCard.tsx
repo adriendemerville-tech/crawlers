@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ShieldAlert, Zap, AlertTriangle, CheckCircle2, Shield } from 'lucide-react';
 import { StrategicAnalysis } from '@/types/expertAudit';
+import { MethodologyPopover } from './MethodologyPopover';
 import { toast } from 'sonner';
 
 interface ZeroClickRiskCardProps {
