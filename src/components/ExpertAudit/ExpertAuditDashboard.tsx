@@ -41,6 +41,17 @@ import { useSaveReport } from '@/hooks/useSaveReport';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { summarizeStrategicResult } from './expertReportExport';
 
+// Fire-and-forget: trigger CTO Agent asynchronously after audit
+function triggerCtoAgent(auditResult: any, auditType: string, url: string, domain: string) {
+  supabase.functions.invoke('agent-cto', {
+    body: { auditResult, auditType, url, domain }
+  }).then(res => {
+    if (res.data?.success) {
+      console.log(`[CTO-Agent] ${res.data.decision} (v${res.data.version})`);
+    }
+  }).catch(() => { /* silent */ });
+}
+
 function formatMs(ms: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
   return `${Math.round(ms)}ms`;
