@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FileText, UserPlus, LogIn, X, FolderCheck, ClipboardList, Code2, PiggyBank } from 'lucide-react';
+import { FileText, UserPlus, LogIn, X, BarChart3, Compass, Briefcase, BookOpen, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -9,33 +9,33 @@ const translations = {
   fr: {
     title: 'Téléchargez vos rapports',
     subtitle: 'Connectez-vous pour accéder à tous vos outils SEO.',
-    benefit1: 'Retrouvez tous vos rapports',
-    benefit2: 'Vos plans d\'action',
-    benefit3: 'Vos codes correctifs',
-    tagline1: 'Devenez autonome sur le SEO',
-    tagline2: 'Faites des économies',
+    benefit1: 'Suivi des statistiques',
+    benefit2: 'Conseils 360°',
+    benefit3: 'Fonctions dédiées aux Pros',
+    tagline1: 'Autonomie',
+    tagline2: 'Pédagogie',
     signup: 'S\'inscrire gratuitement',
     login: 'Se connecter',
   },
   en: {
     title: 'Download your reports',
     subtitle: 'Log in to access all your SEO tools.',
-    benefit1: 'Find all your reports',
-    benefit2: 'Your action plans',
-    benefit3: 'Your corrective codes',
-    tagline1: 'Become SEO autonomous',
-    tagline2: 'Save money',
+    benefit1: 'Statistics tracking',
+    benefit2: '360° advice',
+    benefit3: 'Pro-dedicated features',
+    tagline1: 'Autonomy',
+    tagline2: 'Education',
     signup: 'Sign up for free',
     login: 'Log in',
   },
   es: {
     title: 'Descarga tus informes',
     subtitle: 'Inicia sesión para acceder a todas tus herramientas SEO.',
-    benefit1: 'Encuentra todos tus informes',
-    benefit2: 'Tus planes de acción',
-    benefit3: 'Tus códigos correctivos',
-    tagline1: 'Sé autónomo en SEO',
-    tagline2: 'Ahorra dinero',
+    benefit1: 'Seguimiento de estadísticas',
+    benefit2: 'Consejos 360°',
+    benefit3: 'Funciones dedicadas a Pros',
+    tagline1: 'Autonomía',
+    tagline2: 'Pedagogía',
     signup: 'Registrarse gratis',
     login: 'Iniciar sesión',
   },
@@ -118,16 +118,8 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
           </p>
         </div>
 
-        {/* Benefits with marketing copy */}
+        {/* Benefits list */}
         <div className="px-8 py-4 space-y-3">
-          {/* Main marketing message */}
-          <div className="bg-muted/50 rounded-xl p-4 mb-4">
-            <p className="text-sm text-foreground leading-relaxed">
-              <span className="font-medium">{t.benefit1}</span>, {t.benefit2.toLowerCase()} et vos <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">codes</code> correctifs.
-            </p>
-          </div>
-
-          {/* Benefits list */}
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -135,7 +127,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             className="flex items-center gap-3"
           >
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <FolderCheck className="w-4 h-4 text-primary" />
+              <BarChart3 className="w-4 h-4 text-primary" />
             </div>
             <span className="text-sm text-foreground">{t.benefit1}</span>
           </motion.div>
@@ -147,7 +139,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             className="flex items-center gap-3"
           >
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <ClipboardList className="w-4 h-4 text-primary" />
+              <Compass className="w-4 h-4 text-primary" />
             </div>
             <span className="text-sm text-foreground">{t.benefit2}</span>
           </motion.div>
@@ -159,11 +151,9 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             className="flex items-center gap-3"
           >
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Code2 className="w-4 h-4 text-primary" />
+              <Briefcase className="w-4 h-4 text-primary" />
             </div>
-            <span className="text-sm text-foreground">
-              Vos <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">codes</code> correctifs
-            </span>
+            <span className="text-sm text-foreground">{t.benefit3}</span>
           </motion.div>
         </div>
 
@@ -176,7 +166,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
               transition={{ delay: 0.5 }}
               className="flex items-center gap-2 text-primary font-medium"
             >
-              <span>✨</span>
+              <Sparkles className="w-4 h-4" />
               <span>{t.tagline1}</span>
             </motion.div>
             <motion.div
@@ -185,7 +175,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
               transition={{ delay: 0.6 }}
               className="flex items-center gap-2 text-success font-medium"
             >
-              <PiggyBank className="w-4 h-4" />
+              <BookOpen className="w-4 h-4" />
               <span>{t.tagline2}</span>
             </motion.div>
           </div>
