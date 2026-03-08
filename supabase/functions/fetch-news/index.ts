@@ -149,10 +149,10 @@ async function fetchSupplementaryArticles(
     const combinedText = `${item.title} ${item.description || ''}`;
     const lowerCombined = combinedText.toLowerCase();
     
-    // Must contain original search term
-    if (!lowerCombined.includes(searchTerm.toLowerCase())) {
-      continue;
-    }
+    // Boost score if contains search term, but don't exclude
+    const containsSearch = lowerCombined.includes(searchTerm.toLowerCase());
+    const baseScore = calculateRelevanceScore(combinedText);
+    const adjustedScore = containsSearch ? baseScore + 20 : baseScore;
     
     // Apply category filter if provided
     if (category && category !== 'ALL') {
