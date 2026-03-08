@@ -96,6 +96,26 @@ interface ToolsData {
   pagespeed: any;
 }
 
+interface EEATSignals {
+  hasAuthorBio: boolean;
+  authorBioCount: number;
+  hasSocialLinks: boolean;
+  hasLinkedInLinks: boolean;
+  socialLinksCount: number;
+  linkedInLinksCount: number;
+  linkedInUrls: string[];
+  hasSameAs: boolean;
+  hasWikidataSameAs: boolean;
+  hasAuthorInJsonLd: boolean;
+  hasProfilePage: boolean;
+  hasPerson: boolean;
+  hasOrganization: boolean;
+  hasCaseStudies: boolean;
+  caseStudySignals: number;
+  hasExpertCitations: boolean;
+  detectedSocialUrls: string[];
+}
+
 interface KeywordData {
   keyword: string;
   volume: number;
