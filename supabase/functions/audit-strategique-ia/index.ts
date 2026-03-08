@@ -27,12 +27,8 @@ async function saveStrategicRecommendationsToRegistry(
     });
     
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      console.log('⚠️ Utilisateur non authentifié - registre stratégique non mis à jour');
-      return;
-    }
+    if (userError || !user) return;
     
-    // Supprimer les anciennes recommandations stratégiques pour ce domaine
     await supabase
       .from('audit_recommendations_registry')
       .delete()
@@ -42,18 +38,11 @@ async function saveStrategicRecommendationsToRegistry(
     
     const registryEntries: any[] = [];
     
-    // Extraire les recommandations de l'executive_roadmap
     if (parsedAnalysis.executive_roadmap && Array.isArray(parsedAnalysis.executive_roadmap)) {
       parsedAnalysis.executive_roadmap.forEach((item: any, idx: number) => {
-        const priorityMap: Record<string, string> = {
-          'Prioritaire': 'critical',
-          'Important': 'important',
-          'Opportunité': 'optional'
-        };
+        const priorityMap: Record<string, string> = { 'Prioritaire': 'critical', 'Important': 'important', 'Opportunité': 'optional' };
         registryEntries.push({
-          user_id: user.id,
-          domain,
-          url,
+          user_id: user.id, domain, url,
           audit_type: 'strategic',
           recommendation_id: `roadmap_${idx}`,
           title: item.title || `Recommandation ${idx + 1}`,
@@ -61,28 +50,17 @@ async function saveStrategicRecommendationsToRegistry(
           category: item.category?.toLowerCase() || 'contenu',
           priority: priorityMap[item.priority] || 'important',
           fix_type: null,
-          fix_data: { 
-            expected_roi: item.expected_roi,
-            category: item.category,
-            full_action: item.prescriptive_action
-          },
-          prompt_summary: generateStrategicPromptSummary(
-            item.title || `Recommandation ${idx + 1}`,
-            item.prescriptive_action || '',
-            item.priority || 'Important'
-          ),
+          fix_data: { expected_roi: item.expected_roi, category: item.category, full_action: item.prescriptive_action },
+          prompt_summary: generateStrategicPromptSummary(item.title || `Recommandation ${idx + 1}`, item.prescriptive_action || '', item.priority || 'Important'),
           is_resolved: false,
         });
       });
     }
     
-    // Extraire les recommandations de keyword_positioning
     if (parsedAnalysis.keyword_positioning?.recommendations && Array.isArray(parsedAnalysis.keyword_positioning.recommendations)) {
       parsedAnalysis.keyword_positioning.recommendations.forEach((rec: string, idx: number) => {
         registryEntries.push({
-          user_id: user.id,
-          domain,
-          url,
+          user_id: user.id, domain, url,
           audit_type: 'strategic',
           recommendation_id: `kw_rec_${idx}`,
           title: `SEO Keywords #${idx + 1}`,
@@ -101,15 +79,11 @@ async function saveStrategicRecommendationsToRegistry(
       const { error: insertError } = await supabase
         .from('audit_recommendations_registry')
         .insert(registryEntries);
-      
-      if (insertError) {
-        console.error('❌ Erreur sauvegarde registre stratégique:', insertError);
-      } else {
-        console.log(`✅ ${registryEntries.length} recommandations stratégiques sauvegardées dans le registre`);
-      }
+      if (insertError) console.error('❌ Registre stratégique:', insertError);
+      else console.log(`✅ ${registryEntries.length} recommandations sauvegardées`);
     }
   } catch (error) {
-    console.error('❌ Erreur lors de la sauvegarde du registre stratégique:', error);
+    console.error('❌ Erreur registre:', error);
   }
 }
 
@@ -138,36 +112,28 @@ interface MarketData {
   fetch_timestamp: string;
 }
 
+interface BusinessContext {
+  sector: string;
+  location: string;
+  brandName: string;
+  locationCode: number | null;
+}
+
 // ==================== BRAND NAME HUMANIZATION ====================
 
-/**
- * Humanise un slug de domaine en nom d'entreprise lisible.
- * Ex: "lesdebarrasseursdelextreme" → "Les Débarrasseurs de l'Extrême"
- * Utilise une segmentation par particules françaises + heuristiques.
- */
 function humanizeBrandName(slug: string): string {
   if (!slug || slug.length < 1) return slug;
-  // Nom de l'entité = nom de domaine tel quel, première lettre en majuscule
-  // Ex: "loccitane" → "Loccitane", "mon-site" → "Mon-site"
   return slug.charAt(0).toUpperCase() + slug.slice(1);
 }
 
-
-/**
- * Post-traite la réponse pour remplacer les slugs de domaine
- * par le nom d'entreprise humanisé dans tous les textes.
- */
 function sanitizeBrandNameInResponse(obj: any, domainSlug: string, humanName: string): any {
   if (!obj || !domainSlug || !humanName || domainSlug === humanName) return obj;
-
   const slugLower = domainSlug.toLowerCase();
-
   function replaceInString(str: string): string {
     if (!str || typeof str !== 'string') return str;
     const regex = new RegExp(slugLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
     return str.replace(regex, humanName);
   }
-
   function walk(node: any): any {
     if (typeof node === 'string') return replaceInString(node);
     if (Array.isArray(node)) return node.map(walk);
@@ -178,7 +144,6 @@ function sanitizeBrandNameInResponse(obj: any, domainSlug: string, humanName: st
     }
     return node;
   }
-
   return walk(obj);
 }
 
@@ -188,192 +153,88 @@ const DATAFORSEO_LOGIN = Deno.env.get('DATAFORSEO_LOGIN');
 const DATAFORSEO_PASSWORD = Deno.env.get('DATAFORSEO_PASSWORD');
 
 function getAuthHeader(): string {
-  const credentials = btoa(`${DATAFORSEO_LOGIN}:${DATAFORSEO_PASSWORD}`);
-  return `Basic ${credentials}`;
+  return `Basic ${btoa(`${DATAFORSEO_LOGIN}:${DATAFORSEO_PASSWORD}`)}`;
 }
 
+// Well-known location codes to avoid downloading the full list
+const KNOWN_LOCATIONS: Record<string, { code: number; name: string }> = {
+  'france': { code: 2250, name: 'France' },
+  'belgium': { code: 2056, name: 'Belgium' },
+  'switzerland': { code: 2756, name: 'Switzerland' },
+  'canada': { code: 2124, name: 'Canada' },
+  'luxembourg': { code: 2442, name: 'Luxembourg' },
+  'germany': { code: 2276, name: 'Germany' },
+  'spain': { code: 2724, name: 'Spain' },
+  'italy': { code: 2380, name: 'Italy' },
+  'united kingdom': { code: 2826, name: 'United Kingdom' },
+  'united states': { code: 2840, name: 'United States' },
+};
+
 /**
- * Détecte le secteur d'activité et la zone géographique à partir du domaine
+ * Détecte le contexte business ET le location code en une seule passe.
+ * Évite de re-télécharger la liste des locations DataForSEO.
  */
-async function detectBusinessContext(domain: string, htmlContent?: string): Promise<{ sector: string; location: string; brandName: string }> {
-  // Extraction basique depuis le domaine
+function detectBusinessContext(domain: string): BusinessContext {
   const domainParts = domain.toLowerCase().split('.');
   const tld = domainParts[domainParts.length - 1];
   
-  // Détection de la zone géographique par TLD
   const tldToLocation: Record<string, string> = {
-    'fr': 'France',
-    'be': 'Belgium',
-    'ch': 'Switzerland',
-    'ca': 'Canada',
-    'lu': 'Luxembourg',
-    'de': 'Germany',
-    'es': 'Spain',
-    'it': 'Italy',
-    'uk': 'United Kingdom',
-    'co.uk': 'United Kingdom',
-    'com': 'France', // Default pour .com
+    'fr': 'france', 'be': 'belgium', 'ch': 'switzerland', 'ca': 'canada',
+    'lu': 'luxembourg', 'de': 'germany', 'es': 'spain', 'it': 'italy',
+    'uk': 'united kingdom', 'co.uk': 'united kingdom', 'com': 'france',
   };
   
-  const location = tldToLocation[tld] || 'France';
+  const locationKey = tldToLocation[tld] || 'france';
+  const locationInfo = KNOWN_LOCATIONS[locationKey] || KNOWN_LOCATIONS['france'];
   
-  // Extraction du nom de marque (plus intelligent)
-  // Gère les sous-domaines comme fr.loccitane.com, www.example.com
-  let brandName = '';
-  let sector = '';
-  
-  // Trouver le domaine principal (pas le TLD, pas les préfixes comme www, fr, en)
   const prefixes = ['www', 'fr', 'en', 'de', 'es', 'it', 'us', 'uk', 'shop', 'store', 'm', 'mobile'];
   const significantParts = domainParts.filter(part => 
-    !prefixes.includes(part) && 
-    part.length > 2 && 
+    !prefixes.includes(part) && part.length > 2 && 
     !['com', 'fr', 'net', 'org', 'io', 'co', 'be', 'ch', 'de', 'es', 'it', 'uk'].includes(part)
   );
   
-  if (significantParts.length > 0) {
-    const rawSlug = significantParts[0];
-    brandName = humanizeBrandName(rawSlug);
-    sector = rawSlug.replace(/-/g, ' ');
-  } else {
-    const rawSlug = domainParts[0];
-    brandName = humanizeBrandName(rawSlug);
-    sector = rawSlug.replace(/-/g, ' ');
-  }
+  const rawSlug = significantParts.length > 0 ? significantParts[0] : domainParts[0];
+  const brandName = humanizeBrandName(rawSlug);
+  const sector = rawSlug.replace(/-/g, ' ');
   
-  console.log(`📋 Marque extraite (humanisée): "${brandName}", secteur initial: "${sector}"`);
+  console.log(`📋 Contexte: marque="${brandName}", secteur="${sector}", location="${locationInfo.name}" (code: ${locationInfo.code})`);
   
-  return { sector, location, brandName };
+  return { sector, location: locationInfo.name, brandName, locationCode: locationInfo.code };
 }
 
-/**
- * Récupère le location_code DataForSEO
- */
-async function getLocationCode(location: string): Promise<{ code: number; name: string } | null> {
-  console.log(`🔍 Recherche du location_code pour: "${location}"`);
-  
-  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
-    console.log('⚠️ DataForSEO credentials not configured');
-    return null;
-  }
-  
-  try {
-    const response = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/locations', {
-      method: 'GET',
-      headers: {
-        'Authorization': getAuthHeader(),
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      console.error('❌ Erreur API locations:', response.status);
-      return null;
-    }
-
-    const data = await response.json();
-    
-    if (data.status_code !== 20000 || !data.tasks?.[0]?.result) {
-      console.error('❌ Pas de résultats pour les locations');
-      return null;
-    }
-
-    const locations = data.tasks[0].result;
-    const searchTerm = location.toLowerCase().trim();
-    
-    // Recherche exacte d'abord
-    let match = locations.find((loc: any) => 
-      loc.location_name?.toLowerCase() === searchTerm
-    );
-    
-    // Recherche partielle si pas de match exact
-    if (!match) {
-      match = locations.find((loc: any) => 
-        loc.location_name?.toLowerCase().includes(searchTerm) ||
-        searchTerm.includes(loc.location_name?.toLowerCase())
-      );
-    }
-    
-    // Fallback: France
-    if (!match) {
-      match = locations.find((loc: any) => loc.location_code === 2250);
-      console.log('⚠️ Location non trouvée, utilisation de France par défaut');
-    }
-    
-    if (match) {
-      console.log(`✅ Location trouvée: ${match.location_name} (code: ${match.location_code})`);
-      return { code: match.location_code, name: match.location_name };
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('❌ Erreur lors de la recherche de location:', error);
-    return null;
-  }
-}
-
-/**
- * Génère des mots-clés seed basés sur le nom de marque et secteur détecté
- */
 function generateSeedKeywords(brandName: string, sector: string): string[] {
-  // Nettoyer le nom de marque
   const cleanBrand = brandName.toLowerCase().trim();
-  
-  // Générer des variations pertinentes
   const keywords = [
-    cleanBrand,                              // "loccitane"
-    `${cleanBrand} avis`,                    // "loccitane avis"
-    `${cleanBrand} boutique`,               // "loccitane boutique"
-    `${cleanBrand} produits`,               // "loccitane produits"
-    `acheter ${cleanBrand}`,                // "acheter loccitane"
+    cleanBrand, `${cleanBrand} avis`, `${cleanBrand} boutique`,
+    `${cleanBrand} produits`, `acheter ${cleanBrand}`,
   ];
-  
-  // Ajouter le secteur s'il est différent du nom de marque
   if (sector.toLowerCase() !== cleanBrand) {
-    keywords.push(
-      sector,
-      `${sector} en ligne`,
-      `meilleur ${sector}`,
-    );
+    keywords.push(sector, `${sector} en ligne`, `meilleur ${sector}`);
   }
-  
   return keywords.filter(kw => kw.length > 2 && !kw.includes('undefined'));
 }
 
-/**
- * Récupère les mots-clés et volumes via DataForSEO
- */
 async function fetchKeywordData(
-  seedKeywords: string[],
-  locationCode: number
+  seedKeywords: string[], locationCode: number
 ): Promise<{ keyword: string; volume: number; difficulty: number }[]> {
-  console.log(`📊 Récupération des données mots-clés pour location: ${locationCode}`);
-  
+  console.log(`📊 Récupération mots-clés pour location: ${locationCode}`);
   const allKeywords: { keyword: string; volume: number; difficulty: number }[] = [];
   
   try {
-    // Méthode 1: Google Ads Keywords For Keywords
     const response = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live', {
       method: 'POST',
-      headers: {
-        'Authorization': getAuthHeader(),
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify([{
         keywords: seedKeywords.slice(0, 5),
-        location_code: locationCode,
-        language_code: 'fr',
-        sort_by: 'search_volume',
-        include_adult_keywords: false,
+        location_code: locationCode, language_code: 'fr',
+        sort_by: 'search_volume', include_adult_keywords: false,
       }]),
     });
 
     if (response.ok) {
       const data = await response.json();
-      
       if (data.status_code === 20000 && data.tasks?.[0]?.result) {
-        const items = data.tasks[0].result;
-        
-        for (const item of items) {
+        for (const item of data.tasks[0].result) {
           if (item.keyword && item.search_volume > 0) {
             allKeywords.push({
               keyword: item.keyword,
@@ -382,100 +243,73 @@ async function fetchKeywordData(
             });
           }
         }
-        
-        console.log(`✅ ${allKeywords.length} mots-clés récupérés via Google Ads API`);
+        console.log(`✅ ${allKeywords.length} mots-clés via Google Ads API`);
       }
+    } else {
+      await response.text(); // consume body
     }
     
-    // Si pas assez de résultats, essayer search_volume comme fallback
     if (allKeywords.length < 10) {
-      console.log('🔄 Fallback: utilisation de search_volume...');
-      
+      console.log('🔄 Fallback: search_volume...');
       const volumeResponse = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live', {
         method: 'POST',
-        headers: {
-          'Authorization': getAuthHeader(),
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify([{
-          keywords: seedKeywords,
-          location_code: locationCode,
-          language_code: 'fr',
+          keywords: seedKeywords, location_code: locationCode, language_code: 'fr',
         }]),
       });
 
       if (volumeResponse.ok) {
         const volumeData = await volumeResponse.json();
-        
         if (volumeData.status_code === 20000 && volumeData.tasks?.[0]?.result) {
           for (const item of volumeData.tasks[0].result) {
-            if (item.keyword && item.search_volume > 0) {
-              // Éviter les doublons
-              if (!allKeywords.find(kw => kw.keyword.toLowerCase() === item.keyword.toLowerCase())) {
-                allKeywords.push({
-                  keyword: item.keyword,
-                  volume: item.search_volume || 0,
-                  difficulty: item.competition ? Math.round(item.competition * 100) : 30,
-                });
-              }
+            if (item.keyword && item.search_volume > 0 &&
+                !allKeywords.find(kw => kw.keyword.toLowerCase() === item.keyword.toLowerCase())) {
+              allKeywords.push({
+                keyword: item.keyword,
+                volume: item.search_volume || 0,
+                difficulty: item.competition ? Math.round(item.competition * 100) : 30,
+              });
             }
           }
         }
+      } else {
+        await volumeResponse.text(); // consume body
       }
     }
-    
   } catch (error) {
-    console.error('❌ Erreur lors de la récupération des mots-clés:', error);
+    console.error('❌ Erreur mots-clés:', error);
   }
   
-  // Trier par volume et limiter
-  return allKeywords
-    .sort((a, b) => b.volume - a.volume)
-    .slice(0, 20);
+  return allKeywords.sort((a, b) => b.volume - a.volume).slice(0, 15); // Reduced from 20 to 15
 }
 
-/**
- * Vérifie le positionnement du domaine sur les SERP
- */
 async function checkRankings(
   keywords: { keyword: string; volume: number; difficulty: number }[],
-  domain: string,
-  locationCode: number
+  domain: string, locationCode: number
 ): Promise<KeywordData[]> {
-  console.log(`📈 Vérification du positionnement pour ${domain}`);
-  
+  console.log(`📈 Vérification positionnement pour ${domain}`);
   const results: KeywordData[] = [];
   const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
   
-  // Limiter à 10 mots-clés pour éviter les coûts excessifs
-  const keywordsToCheck = keywords.slice(0, 10);
+  // Limit to 7 keywords to reduce memory (was 10)
+  const keywordsToCheck = keywords.slice(0, 7);
   
   try {
     const tasks = keywordsToCheck.map(kw => ({
-      keyword: kw.keyword,
-      location_code: locationCode,
-      language_code: 'fr',
-      depth: 30,
-      se_domain: 'google.fr',
+      keyword: kw.keyword, location_code: locationCode, language_code: 'fr',
+      depth: 20, se_domain: 'google.fr', // Reduced depth from 30 to 20
     }));
     
     const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
       method: 'POST',
-      headers: {
-        'Authorization': getAuthHeader(),
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify(tasks),
     });
 
     if (!response.ok) {
-      console.error('❌ Erreur API SERP:', response.status);
-      // Retourner les mots-clés sans position
-      return keywords.map(kw => ({
-        ...kw,
-        is_ranked: false,
-        current_rank: 'Non classé',
-      }));
+      await response.text(); // consume body
+      return keywords.map(kw => ({ ...kw, is_ranked: false, current_rank: 'Non classé' }));
     }
 
     const data = await response.json();
@@ -483,7 +317,6 @@ async function checkRankings(
     for (let i = 0; i < keywordsToCheck.length; i++) {
       const kw = keywordsToCheck[i];
       const taskResult = data.tasks?.[i]?.result?.[0];
-      
       let position: number | string = 'Non classé';
       let isRanked = false;
       
@@ -499,65 +332,35 @@ async function checkRankings(
           }
         }
       }
-      
-      results.push({
-        keyword: kw.keyword,
-        volume: kw.volume,
-        difficulty: kw.difficulty,
-        is_ranked: isRanked,
-        current_rank: position,
-      });
+      results.push({ keyword: kw.keyword, volume: kw.volume, difficulty: kw.difficulty, is_ranked: isRanked, current_rank: position });
     }
     
-    // Ajouter les mots-clés restants sans vérification SERP
-    for (let i = 10; i < keywords.length; i++) {
-      results.push({
-        keyword: keywords[i].keyword,
-        volume: keywords[i].volume,
-        difficulty: keywords[i].difficulty,
-        is_ranked: false,
-        current_rank: 'Non vérifié',
-      });
+    // Add remaining keywords without SERP check
+    for (let i = 7; i < keywords.length; i++) {
+      results.push({ keyword: keywords[i].keyword, volume: keywords[i].volume, difficulty: keywords[i].difficulty, is_ranked: false, current_rank: 'Non vérifié' });
     }
     
-    console.log(`✅ Positionnement vérifié: ${results.filter(r => r.is_ranked).length}/${results.length} classés`);
-    
+    // Release data reference
+    console.log(`✅ Positionnement: ${results.filter(r => r.is_ranked).length}/${results.length} classés`);
   } catch (error) {
-    console.error('❌ Erreur lors du check SERP:', error);
-    return keywords.map(kw => ({
-      ...kw,
-      is_ranked: false,
-      current_rank: 'Non classé',
-    }));
+    console.error('❌ Erreur SERP:', error);
+    return keywords.map(kw => ({ ...kw, is_ranked: false, current_rank: 'Non classé' }));
   }
   
   return results;
 }
 
-/**
- * Détecte le concurrent local via une requête SERP localisée (ex: "plombier châteaurenard").
- * Retourne le premier résultat organique local différent du domaine cible, avec un site web.
- * Si le domaine cible est 1er local, retourne le 2ème local.
- */
 async function findLocalCompetitor(
-  domain: string,
-  sector: string,
-  locationCode: number,
-  pageContentContext: string
+  domain: string, sector: string, locationCode: number, pageContentContext: string
 ): Promise<{ name: string; url: string; rank: number } | null> {
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
 
-  // Extraire la ville depuis le pageContentContext ou le domaine
-  // On essaie d'identifier la localisation depuis les métadonnées de la page
   let city = '';
-  
-  // Chercher une ville dans le contexte de page
-  const cityPatterns = [
-    /(?:à|a|en|sur)\s+([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)/g,
-    /([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)\s*(?:\d{5})/g,
-  ];
-  
   if (pageContentContext) {
+    const cityPatterns = [
+      /(?:à|a|en|sur)\s+([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)/g,
+      /([A-ZÀ-Ü][a-zà-ü]+(?:[-\s][A-ZÀ-Ü][a-zà-ü]+)*)\s*(?:\d{5})/g,
+    ];
     for (const pattern of cityPatterns) {
       const match = pattern.exec(pageContentContext);
       if (match?.[1] && match[1].length > 2 && match[1].length < 30) {
@@ -567,31 +370,21 @@ async function findLocalCompetitor(
     }
   }
 
-  // Construire la requête localisée
-  const localQuery = city 
-    ? `${sector} ${city}` 
-    : sector;
-  
+  const localQuery = city ? `${sector} ${city}` : sector;
   console.log(`🏙️ Recherche concurrent local: "${localQuery}"`);
 
   try {
     const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
       method: 'POST',
-      headers: {
-        'Authorization': getAuthHeader(),
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify([{
-        keyword: localQuery,
-        location_code: locationCode,
-        language_code: 'fr',
-        depth: 20,
-        se_domain: 'google.fr',
+        keyword: localQuery, location_code: locationCode, language_code: 'fr',
+        depth: 15, se_domain: 'google.fr', // Reduced depth from 20 to 15
       }]),
     });
 
     if (!response.ok) {
-      console.error('❌ Erreur API SERP local:', response.status);
+      await response.text();
       return null;
     }
 
@@ -600,50 +393,27 @@ async function findLocalCompetitor(
     if (!items || !Array.isArray(items)) return null;
 
     const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
-    
-    // Filtrer uniquement les résultats organiques avec un domaine
-    const organicResults = items.filter((item: any) => 
-      item.type === 'organic' && item.domain && item.url
-    );
-
-    // Trouver la position du domaine cible
+    const organicResults = items.filter((item: any) => item.type === 'organic' && item.domain && item.url);
     const targetIdx = organicResults.findIndex((item: any) => {
-      const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
-      return itemDomain.includes(cleanDomain) || cleanDomain.includes(itemDomain);
+      const d = item.domain.toLowerCase().replace(/^www\./, '');
+      return d.includes(cleanDomain) || cleanDomain.includes(d);
     });
 
     let competitor: any = null;
+    const isDifferent = (item: any) => {
+      const d = item.domain.toLowerCase().replace(/^www\./, '');
+      return !d.includes(cleanDomain) && !cleanDomain.includes(d);
+    };
 
     if (targetIdx === -1) {
-      // Le domaine cible n'est pas dans les SERPs → prendre le 1er résultat local (différent du target)
-      competitor = organicResults.find((item: any) => {
-        const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
-        return !itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain);
-      });
+      competitor = organicResults.find(isDifferent);
     } else if (targetIdx === 0) {
-      // Le domaine cible est 1er → prendre le 2ème résultat (1er concurrent local en dessous)
-      competitor = organicResults.find((item: any, idx: number) => {
-        if (idx <= targetIdx) return false;
-        const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
-        return !itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain);
-      });
+      competitor = organicResults.find((item: any, idx: number) => idx > targetIdx && isDifferent(item));
     } else {
-      // Le domaine cible n'est pas 1er → prendre le concurrent juste AU-DESSUS dans les SERPs
       for (let i = targetIdx - 1; i >= 0; i--) {
-        const item = organicResults[i];
-        const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
-        if (!itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain)) {
-          competitor = item;
-          break;
-        }
+        if (isDifferent(organicResults[i])) { competitor = organicResults[i]; break; }
       }
-      // Fallback: prendre le premier résultat différent
-      if (!competitor) {
-        competitor = organicResults.find((item: any) => {
-          const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
-          return !itemDomain.includes(cleanDomain) && !cleanDomain.includes(itemDomain);
-        });
-      }
+      if (!competitor) competitor = organicResults.find(isDifferent);
     }
 
     if (competitor) {
@@ -652,418 +422,251 @@ async function findLocalCompetitor(
         url: competitor.url,
         rank: competitor.rank_absolute || competitor.rank_group || 0,
       };
-      console.log(`✅ Concurrent local trouvé: "${result.name}" (${result.url}) en position ${result.rank}`);
-      console.log(`   Domaine cible "${domain}" en position ${targetIdx >= 0 ? targetIdx + 1 : 'non classé'} pour "${localQuery}"`);
+      console.log(`✅ Concurrent local: "${result.name}" position ${result.rank}`);
       return result;
     }
-
-    console.log('⚠️ Aucun concurrent local trouvé dans les SERPs');
     return null;
   } catch (error) {
-    console.error('❌ Erreur recherche concurrent local:', error);
+    console.error('❌ Erreur concurrent local:', error);
     return null;
   }
 }
 
-/**
- * Fonction principale pour récupérer les données de marché DataForSEO
- */
-async function fetchMarketData(domain: string): Promise<MarketData | null> {
-  console.log('🚀 Démarrage de la collecte DataForSEO pour:', domain);
+async function fetchMarketData(domain: string, context: BusinessContext): Promise<MarketData | null> {
+  console.log('🚀 Collecte DataForSEO pour:', domain);
   
-  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
-    console.log('⚠️ DataForSEO non configuré - utilisation du fallback LLM uniquement');
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD || !context.locationCode) {
+    console.log('⚠️ DataForSEO non disponible');
     return null;
   }
   
   try {
-    // 1. Détecter le contexte business
-    const context = await detectBusinessContext(domain);
-    console.log(`📋 Contexte détecté: marque="${context.brandName}", secteur="${context.sector}", location="${context.location}"`);
-    
-    // 2. Obtenir le location_code
-    const location = await getLocationCode(context.location);
-    if (!location) {
-      console.error('❌ Impossible de déterminer la location');
-      return null;
-    }
-    
-    // 3. Générer les mots-clés seed basés sur le nom de marque
     const seedKeywords = generateSeedKeywords(context.brandName, context.sector);
     console.log('🌱 Mots-clés seed:', seedKeywords);
     
-    // 4. Récupérer les données mots-clés
-    const keywordData = await fetchKeywordData(seedKeywords, location.code);
-    
+    const keywordData = await fetchKeywordData(seedKeywords, context.locationCode);
     if (keywordData.length === 0) {
       console.log('⚠️ Aucun mot-clé trouvé');
       return null;
     }
     
-    // 5. Vérifier le positionnement
-    const rankedKeywords = await checkRankings(keywordData, domain, location.code);
-    
-    // 6. Calculer le volume total
+    const rankedKeywords = await checkRankings(keywordData, domain, context.locationCode);
     const totalVolume = rankedKeywords.reduce((sum, kw) => sum + kw.volume, 0);
     
-    const marketData: MarketData = {
-      location_used: location.name,
+    console.log(`✅ Données: ${rankedKeywords.length} mots-clés, volume: ${totalVolume}`);
+    
+    return {
+      location_used: context.location,
       total_market_volume: totalVolume,
       top_keywords: rankedKeywords,
       data_source: 'dataforseo',
       fetch_timestamp: new Date().toISOString(),
     };
-    
-    console.log(`✅ Données de marché collectées: ${rankedKeywords.length} mots-clés, volume total: ${totalVolume}`);
-    
-    return marketData;
-    
   } catch (error) {
-    console.error('❌ Erreur lors de la collecte DataForSEO:', error);
+    console.error('❌ Erreur DataForSEO:', error);
     return null;
   }
 }
 
-// ==================== LLM PROMPTS ====================
+// ==================== LLM PROMPT (compact) ====================
 
-const SYSTEM_PROMPT = `RÔLE: Tu es un Senior Digital Strategist spécialisé en Brand Authority et Generative Engine Optimization (GEO). Tu produis un rapport d'expertise haute fidélité de niveau cabinet de conseil premium.
+const SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé Brand Authority & GEO. Rapport premium niveau cabinet de conseil.
 
-POSTURE ÉDITORIALE:
-- Ton: Analytique, souverain et hautement prescriptif
-- Utilise un jargon expert (Entité sémantique, Topical Authority, E-E-A-T holistique, Gap de citabilité)
-- Les recommandations doivent être NARRATIVES: chaque action est un paragraphe rédigé (4-5 phrases) expliquant la manœuvre stratégique
+POSTURE: Analytique, souverain, prescriptif. Jargon expert (Entité sémantique, Topical Authority, E-E-A-T, Gap de citabilité). Recommandations NARRATIVES: chaque action = paragraphe rédigé 4-5 phrases.
 
-IMPORTANT - DONNÉES DE MARCHÉ RÉELLES:
-Tu recevras des DONNÉES DE MARCHÉ RÉELLES provenant de DataForSEO. Ces données contiennent:
-- Les volumes de recherche RÉELS des mots-clés du secteur
-- La difficulté de positionnement (Keyword Difficulty) 
-- Le positionnement ACTUEL du site cible sur chaque mot-clé
-- Le volume de marché total
+DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS. Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (non classé, volume>200).
 
-TU DOIS IMPÉRATIVEMENT:
-1. Utiliser ces données pour formuler des recommandations PRÉCISES et CHIFFRÉES
-2. Identifier les "Quick Wins" (mots-clés position 11-20 avec volume > 100)
-3. Signaler les "Contenus manquants" (mots-clés à fort volume où le site n'est pas classé)
-4. Proposer des stratégies basées sur les DONNÉES RÉELLES, pas des suppositions
-
-LES 13 MODULES D'ANALYSE OBLIGATOIRES:
-
-A. ÉCOSYSTÈME CONCURRENTIEL
-1. Market Leader (Goliath): Identifie l'acteur dominant et son facteur d'autorité
-2. Concurrent Direct: Analyse de la parité d'offre
-3. Challenger: L'acteur qui bouscule le segment
-4. Source d'Inspiration: Benchmark qualitatif hors-secteur (UX/IA Ready)
-
-B. AUTORITÉ SOCIALE & HUMAINE (Signaux Off-Site)
-5. Preuve Sociale Source: Analyse de la présence organique sur Reddit, X et LinkedIn (crucial pour Perplexity/SearchGPT)
-6. Thought Leadership (E-E-A-T): Évaluation de l'autorité du fondateur/expert en tant qu'entité
-7. Sentiment & Polarité: Vibration de la réputation et protection contre les hallucinations négatives des LLM
-
-C. EXPERTISE STRATÉGIQUE & PSYCHOLOGIQUE
-8. Score GEO (Citabilité 2026): Aptitude du site à servir de source aux moteurs génératifs
-9. Matrice de Gap Sémantique: Distance précise à combler pour détrôner le leader
-10. Psychologie de Conversion: Niveau de sophistication du marché (1-5) et leviers émotionnels dominants
-
-D. POSITIONNEMENT MOTS CLÉS (BASÉ SUR DONNÉES RÉELLES DATAFORSEO)
-11. Mots Clés Principaux: Les 5 mots clés stratégiques AVEC leurs volumes et difficultés réels
-12. Opportunités de Positionnement: Quick Wins identifiés dans les données
-13. Gaps Concurrentiels: Mots clés à fort volume où le site n'est pas classé
-
-E. FONDATIONS TECHNIQUES & SÉMANTIQUES
-14. Accessibilité Bots IA: Facilité de lecture pour les agents autonomes + lisibilité du contenu SANS exécution JavaScript (contenu statique vs rendu JS)
-15. Infrastructure Performance: Impact de la vitesse sur la rétention IA/Humaine
-16. Cohérence Sémantique: Alignement du message Title/H1
-
-F. FRAÎCHEUR & FORMATS IA
-17. Fraîcheur des contenus: Y a-t-il des contenus mis à jour récemment (< 30 jours)? Les pages produits sont-elles à jour en 2026? Signaux dateModified/datePublished détectés?
-18. Complexité des données structurées: Profondeur d'imbrication Schema.org, utilisation de @graph, nombre de champs - les IA identifient les sources riches en données structurées complexes. Valide la présence des entités Organization, Product, Article, Review.
-19. Formats IA-Ready: Présence de résumé TL;DR en haut de page, tableaux comparatifs, listes à puces, sections FAQ couplées avec FAQPage Schema
-20. First-Party Data: Le contenu est-il basé sur des données propriétaires exclusives (études internes, benchmarks maison, statistiques clients) ou du contenu recyclé? Les IA valorisent les sources primaires.
-21. Changelog de Marque: Existe-t-il un historique structuré des informations clés (CEO, siège, dates de création, jalons) permettant aux IA de ne PAS halluciner sur des faits de la marque?
-
-G. AUTORITÉ & CRÉDIBILITÉ (E-E-A-T & Knowledge Graph)
-22. Signaux E-E-A-T: Présence de bios d'auteurs, citations d'experts nommés, blockquotes avec attribution. Évaluation de la crédibilité humaine du contenu.
-23. Densité de données: Évaluation de la richesse factuelle (statistiques, pourcentages, métriques de résultats, études citées). Les IA citent les contenus riches en données.
-24. Knowledge Graph Readiness: L'entité de la marque correspond-elle à un Knowledge Panel existant? Présence de citations externes de haute autorité? Liens sameAs vers Wikidata, Wikipedia? Profils LinkedIn d'équipe détectés?
-25. Études de cas & Social Proof: Détection de case studies avec métriques de résultats (ROI, avant/après), témoignages clients chiffrés, liens vers profils sociaux (LinkedIn surtout) validant la crédibilité humaine.
-
-H. MONITORING & INFRASTRUCTURE IA
-26. Monitoring LLM: Le site a-t-il configuré le suivi du trafic provenant des LLM dans GA4? Détection des referrers IA (chatgpt.com, perplexity.ai, claude.ai). Le reporting inclut-il une dimension "IA Traffic"?
-27. Fichier llms.txt: Présence et qualité du fichier /llms.txt pour guider les agents IA sur l'identité et les capacités de l'entité.`;
+13 MODULES D'ANALYSE:
+A. ÉCOSYSTÈME: 1.Market Leader 2.Concurrent Direct 3.Challenger 4.Source d'Inspiration
+B. AUTORITÉ SOCIALE: 5.Preuve Sociale (Reddit,X,LinkedIn) 6.Thought Leadership E-E-A-T 7.Sentiment & Polarité
+C. EXPERTISE: 8.Score GEO Citabilité 9.Matrice Gap Sémantique 10.Psychologie Conversion
+D. MOTS CLÉS: 11.5 Principaux avec volumes réels 12.Opportunités 13.Gaps Concurrentiels
+E. TECHNIQUE: 14.Accessibilité Bots IA 15.Performance 16.Cohérence Sémantique
+F. FRAÎCHEUR & IA: 17.Fraîcheur contenus 18.Complexité Schema.org 19.Formats IA-Ready 20.First-Party Data 21.Changelog Marque
+G. E-E-A-T: 22.Signaux E-E-A-T 23.Densité données 24.Knowledge Graph 25.Études de cas
+H. MONITORING: 26.Monitoring LLM (GA4 referrers IA) 27.Fichier llms.txt`;
 
 function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = ''): string {
-  let marketDataSection = '';
+  let marketSection = '';
   
   if (marketData) {
-    const keywordsList = marketData.top_keywords.map(kw => 
-      `  - "${kw.keyword}": ${kw.volume} recherches/mois, difficulté ${kw.difficulty}/100, position: ${kw.current_rank}`
-    ).join('\n');
+    const kwList = marketData.top_keywords.map(kw => 
+      `"${kw.keyword}":${kw.volume}vol,diff${kw.difficulty},pos:${kw.current_rank}`
+    ).join('; ');
     
-    const rankedCount = marketData.top_keywords.filter(kw => kw.is_ranked).length;
     const quickWins = marketData.top_keywords.filter(kw => 
       typeof kw.current_rank === 'number' && kw.current_rank >= 11 && kw.current_rank <= 20 && kw.volume > 100
     );
-    const missingContent = marketData.top_keywords.filter(kw => 
-      !kw.is_ranked && kw.volume > 200
-    );
+    const missing = marketData.top_keywords.filter(kw => !kw.is_ranked && kw.volume > 200);
     
-    marketDataSection = `
-═══════════════════════════════════════════════════════════════
-📊 DONNÉES DE MARCHÉ RÉELLES (Source: DataForSEO)
-═══════════════════════════════════════════════════════════════
-
-Zone géographique: ${marketData.location_used}
-Volume de marché total: ${marketData.total_market_volume.toLocaleString()} recherches/mois
-Mots-clés analysés: ${marketData.top_keywords.length}
-Mots-clés classés: ${rankedCount}/${marketData.top_keywords.length}
-
-LISTE DES MOTS-CLÉS (triés par volume):
-${keywordsList}
-
-🎯 QUICK WINS IDENTIFIÉS (Position 11-20, Volume > 100):
-${quickWins.length > 0 ? quickWins.map(kw => `  - "${kw.keyword}" en position ${kw.current_rank} (${kw.volume} vol.)`).join('\n') : '  Aucun quick win identifié'}
-
-⚠️ CONTENUS MANQUANTS (Non classé, Volume > 200):
-${missingContent.length > 0 ? missingContent.map(kw => `  - "${kw.keyword}" (${kw.volume} recherches/mois)`).join('\n') : '  Aucun contenu manquant critique'}
-
-═══════════════════════════════════════════════════════════════
+    marketSection = `
+📊 DONNÉES MARCHÉ (DataForSEO) - Zone: ${marketData.location_used}, Volume total: ${marketData.total_market_volume}
+Mots-clés: ${kwList}
+Quick Wins: ${quickWins.length > 0 ? quickWins.map(kw => `"${kw.keyword}" pos${kw.current_rank}(${kw.volume}vol)`).join(', ') : 'Aucun'}
+Manquants: ${missing.length > 0 ? missing.map(kw => `"${kw.keyword}"(${kw.volume}vol)`).join(', ') : 'Aucun'}
 `;
   } else {
-    marketDataSection = `
-⚠️ DONNÉES DE MARCHÉ: Non disponibles (DataForSEO non configuré)
-→ Base tes recommandations sur ton analyse du secteur et les données techniques disponibles.
-`;
+    marketSection = `⚠️ DataForSEO non disponible - base-toi sur ton analyse du secteur.\n`;
   }
 
-  return `Analyse le domaine "${domain}" (${url}) avec les données suivantes:
+  // Compact JSON serialization (no pretty-print to save memory)
+  return `Analyse "${domain}" (${url}):
 ${pageContentContext}
-${marketDataSection}
+${marketSection}
+CRAWLERS:${JSON.stringify(toolsData.crawlers)}
+GEO:${JSON.stringify(toolsData.geo)}
+LLM:${JSON.stringify(toolsData.llm)}
+PAGESPEED:${JSON.stringify(toolsData.pagespeed)}
 
-DONNÉES CRAWLERS (Accessibilité bots IA):
-${JSON.stringify(toolsData.crawlers, null, 2)}
-
-DONNÉES GEO (Score d'optimisation moteurs génératifs):
-${JSON.stringify(toolsData.geo, null, 2)}
-
-DONNÉES LLM (Visibilité dans les LLMs):
-${JSON.stringify(toolsData.llm, null, 2)}
-
-DONNÉES PAGESPEED (Performance technique):
-${JSON.stringify(toolsData.pagespeed, null, 2)}
-
-GÉNÈRE UN RAPPORT JSON PREMIUM avec cette structure exacte:
-
-{
-  "introduction": {
-    "presentation": "Paragraphe 1 (4-5 phrases): Qui est ce site? Core business, secteur d'activité, zone géographique, ancienneté estimée, publics cibles.",
-    "strengths": "Paragraphe 2 (4-5 phrases): Forces détectées - un atout technique + un atout sémantique dans le contexte concurrentiel.",
-    "improvement": "Paragraphe 3 (4-5 phrases): Point d'amélioration prioritaire, conséquence technique/SEO/GEO, importance concurrentielle.",
-    "competitors": ["Nom Leader", "Nom Concurrent Direct", "Nom Challenger"]
-  },
-  "brand_authority": {
-    "dna_analysis": "Analyse approfondie de l'ADN de marque et du positionnement perçu",
-    "thought_leadership_score": 0-100,
-    "entity_strength": "dominant|established|emerging|unknown"
-  },
-  "social_signals": {
-    "proof_sources": [
-      {"platform": "reddit|x|linkedin|youtube", "presence_level": "strong|moderate|weak|absent", "analysis": "Analyse de la présence"}
-    ],
-    "thought_leadership": {
-      "founder_authority": "high|moderate|low|unknown",
-      "entity_recognition": "Comment le fondateur/expert est-il reconnu?",
-      "eeat_score": 0-10,
-      "analysis": "Analyse E-E-A-T complète"
-    },
-    "sentiment": {
-      "overall_polarity": "positive|mostly_positive|neutral|mixed|negative",
-      "hallucination_risk": "low|medium|high",
-      "reputation_vibration": "Analyse de la vibration réputationnelle"
-    }
-  },
-  "market_intelligence": {
-    "sophistication": {
-      "level": 1-5,
-      "description": "Description du niveau de sophistication du marché",
-      "emotional_levers": ["Levier émotionnel 1", "Levier 2", "Levier 3"]
-    },
-    "semantic_gap": {
-      "current_position": 0-100,
-      "leader_position": 0-100,
-      "gap_distance": 0-100,
-      "priority_themes": ["Thème 1", "Thème 2", "Thème 3"],
-      "closing_strategy": "Stratégie pour combler le gap sémantique"
-    },
-    "positioning_verdict": "Verdict final sur le positionnement marché"
-  },
-  "competitive_landscape": {
-    "leader": {
-      "name": "Nom du leader (Goliath - acteur DOMINANT du marché)",
-      "url": "URL du site",
-      "authority_factor": "Facteur d'autorité principal (backlinks massifs, présence internationale, notoriété historique)",
-      "analysis": "Analyse CONCISE de la position dominante (MAX 330 caractères) - acteur avec présence massive, budget marketing considérable, référence historique du secteur"
-    },
-    "direct_competitor": {
-      "name": "Nom du concurrent local (DOIT avoir un site web, identifié via les SERPs localisés)",
-      "url": "URL OBLIGATOIRE du site du concurrent local",
-      "authority_factor": "Proximité SERP locale et parité d'offre détectée",
-      "analysis": "Analyse comparative CONCISE (MAX 330 caractères) - concurrent numérique local positionné juste au-dessus ou en-dessous dans les SERPS localisés, même zone géographique, même cible client"
-    },
-    "challenger": {
-      "name": "Nom du challenger (acteur innovant/disruptif)",
-      "url": "URL du site",
-      "authority_factor": "Facteur de disruption",
-      "analysis": "Analyse CONCISE de l'approche disruptive (MAX 330 caractères)"
-    },
-    "inspiration_source": {
-      "name": "Nom de la source d'inspiration (hors-secteur)",
-      "url": "URL du site",
-      "authority_factor": "Best practice à adopter",
-      "analysis": "Pourquoi c'est un modèle à suivre (MAX 330 caractères)"
-    }
-  },
-  "geo_readiness": {
-    "citability_score": 0-100,
-    "semantic_gap_analysis": {
-      "current_position": 0-100,
-      "leader_position": 0-100,
-      "gap_distance": 0-100,
-      "priority_themes": ["Thème sémantique 1", "Thème 2"],
-      "closing_strategy": "Stratégie de closing"
-    },
-    "ai_accessibility_score": 0-100,
-    "performance_impact": "Impact de la performance sur la citabilité IA",
-    "semantic_coherence": {
-      "title_h1_alignment": 0-100,
-      "verdict": "Verdict sur la cohérence sémantique Title/H1"
-    },
-    "content_freshness": {
-      "has_recent_content": true/false,
-      "last_update_days": 0,
-      "verdict": "Verdict sur la fraîcheur: frais (<30j) / acceptable (30-90j) / vieillissant (90-365j) / obsolète (>365j) / inconnu",
-      "recommendation": "Recommandation spécifique pour la fraîcheur"
-    },
-    "js_dependency": {
-      "is_js_dependent": true/false,
-      "static_readability_score": 0-100,
-      "verdict": "Le contenu principal est-il lisible sans JS par les bots IA basiques?"
-    },
-    "structured_data_depth": {
-      "complexity_score": 0-100,
-      "nesting_depth": 0,
-      "uses_graph": true/false,
-      "verdict": "Évaluation de la richesse des données structurées pour identification comme source IA"
-    },
-    "ai_favored_formats": {
-      "has_tldr": true/false,
-      "has_tables": true/false,
-      "has_lists": true/false,
-      "has_faq": true/false,
-      "format_score": 0-100,
-      "missing_formats": ["format manquant 1"],
-      "verdict": "Évaluation de la présence des formats privilégiés par les IA génératives"
-    },
-    "eeat_signals": {
-      "has_author_bios": true/false,
-      "has_expert_citations": true/false,
-      "data_density_score": 0-100,
-      "has_case_studies": true/false,
-      "verdict": "Évaluation des signaux E-E-A-T détectés"
-    },
-    "knowledge_graph_readiness": {
-      "has_social_links": true/false,
-      "has_linkedin_profiles": true/false,
-      "has_wikidata_sameas": true/false,
-      "entity_recognizability_score": 0-100,
-      "verdict": "L'entité est-elle identifiable par les Knowledge Graphs et les IA?"
-    },
-    "first_party_data": {
-      "has_proprietary_data": true/false,
-      "data_sources": ["Type de donnée propriétaire détectée"],
-      "verdict": "Le contenu repose-t-il sur des données exclusives ou du contenu recyclé?"
-    },
-    "brand_changelog": {
-      "has_structured_history": true/false,
-      "key_facts_visible": true/false,
-      "hallucination_risk": "low|medium|high",
-      "verdict": "Les informations clés de la marque sont-elles structurées pour éviter les hallucinations IA?"
-    },
-    "llm_monitoring": {
-      "has_ga4_llm_tracking": true/false,
-      "recommended_setup": "Configuration recommandée pour tracker le trafic LLM dans GA4",
-      "verdict": "Le site est-il équipé pour mesurer le trafic provenant des IA?"
-    }
-  },
-  "keyword_positioning": {
-    "main_keywords": [
-      {"keyword": "Mot clé 1", "volume": 1000, "difficulty": 45, "current_rank": 5},
-      {"keyword": "Mot clé 2", "volume": 800, "difficulty": 60, "current_rank": "Non classé"},
-      {"keyword": "Mot clé 3", "volume": 500, "difficulty": 30, "current_rank": 12},
-      {"keyword": "Mot clé 4", "volume": 300, "difficulty": 25, "current_rank": 3},
-      {"keyword": "Mot clé 5", "volume": 200, "difficulty": 55, "current_rank": "Non classé"}
-    ],
-    "quick_wins": [
-      {"keyword": "mot-clé", "current_rank": 15, "volume": 500, "action": "Action recommandée"}
-    ],
-    "content_gaps": [
-      {"keyword": "mot-clé manquant", "volume": 800, "priority": "high|medium|low", "action": "Créer une page dédiée"}
-    ],
-    "opportunities": [
-      "Opportunité de positionnement 1 (phrase descriptive avec chiffres)",
-      "Opportunité de positionnement 2",
-      "Opportunité de positionnement 3"
-    ],
-    "competitive_gaps": [
-      "Gap concurrentiel identifié 1",
-      "Gap concurrentiel 2"
-    ],
-    "recommendations": [
-      "Recommandation stratégique 1 pour améliorer le positionnement",
-      "Recommandation 2",
-      "Recommandation 3"
-    ]
-  },
-  "market_data_summary": {
-    "total_market_volume": 0,
-    "keywords_ranked": 0,
-    "keywords_analyzed": 0,
-    "average_position": 0,
-    "data_source": "dataforseo|fallback"
-  },
-  "executive_roadmap": [
-    {
-      "title": "Titre de l'initiative stratégique",
-      "prescriptive_action": "Paragraphe NARRATIF de 4-5 phrases décrivant en détail l'implémentation stratégique. Cette action doit être prescriptive et opérationnelle, expliquant le COMMENT avec précision. Inclure les étapes clés et les points d'attention. Ne pas être générique.",
-      "strategic_rationale": "Explication de l'impact sur le CA, l'autorité de marque ou la citabilité IA",
-      "expected_roi": "High|Medium|Low",
-      "category": "Identité|Contenu|Autorité|Social|Technique",
-      "priority": "Prioritaire|Important|Opportunité"
-    }
-  ],
-  "executive_summary": "Synthèse exécutive de 3-4 phrases pour le CEO/CMO",
-  "overallScore": 0-100
-}
+GÉNÈRE UN JSON avec cette structure:
+{"introduction":{"presentation":"4-5 phrases","strengths":"4-5 phrases","improvement":"4-5 phrases","competitors":["Leader","Concurrent","Challenger"]},
+"brand_authority":{"dna_analysis":"...","thought_leadership_score":0-100,"entity_strength":"dominant|established|emerging|unknown"},
+"social_signals":{"proof_sources":[{"platform":"reddit|x|linkedin|youtube","presence_level":"strong|moderate|weak|absent","analysis":"..."}],"thought_leadership":{"founder_authority":"high|moderate|low|unknown","entity_recognition":"...","eeat_score":0-10,"analysis":"..."},"sentiment":{"overall_polarity":"positive|mostly_positive|neutral|mixed|negative","hallucination_risk":"low|medium|high","reputation_vibration":"..."}},
+"market_intelligence":{"sophistication":{"level":1-5,"description":"...","emotional_levers":["1","2","3"]},"semantic_gap":{"current_position":0-100,"leader_position":0-100,"gap_analysis":"...","closing_strategy":"..."}},
+"competitive_landscape":{"leader":{"name":"...","authority_factor":"...","dominance_analysis":"..."},"direct_competitor":{"name":"...","url":"URL VALIDE OBLIGATOIRE","parity_analysis":"...","authority_factor":"..."},"challenger":{"name":"...","disruption_factor":"...","threat_analysis":"..."},"inspiration_source":{"name":"...","benchmark_quality":"...","adaptation_strategy":"..."}},
+"geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":["..."],"weaknesses":["..."],"recommendations":["..."]},
+"llm_visibility":{"citation_probability":0-100,"knowledge_graph_presence":"strong|moderate|weak|absent","analysis":"...","test_queries":[{"query":"...","purpose":"...","target_llms":["ChatGPT","Claude","Perplexity"]}]},
+"conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["..."],"recommendations":["..."]},
+"zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
+"priority_content":{"missing_pages":[{"title":"...","rationale":"...","target_keywords":["..."],"expected_impact":"high|medium|low"}],"content_upgrades":[{"page":"...","current_issue":"...","upgrade_strategy":"..."}]},
+"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"..."}],"quick_wins":[{"keyword":"...","current_rank":0,"volume":0,"action":"..."}],"content_gaps":[{"keyword":"...","volume":0,"priority":"high|medium|low","action":"..."}],"opportunities":["..."],"competitive_gaps":["..."],"recommendations":["..."]},
+"market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
+"executive_roadmap":[{"title":"...","prescriptive_action":"Paragraphe 4-5 phrases","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Identité|Contenu|Autorité|Social|Technique","priority":"Prioritaire|Important|Opportunité"}],
+"executive_summary":"3-4 phrases pour CEO/CMO",
+"overallScore":0-100}
 
 INSTRUCTIONS CRITIQUES:
-- UTILISE LES DONNÉES DE MARCHÉ RÉELLES pour keyword_positioning et market_data_summary
-- Les main_keywords doivent refléter les données DataForSEO reçues (volumes, difficultés, positions réels)
-- Ne jamais inventer d'URLs de concurrents irréelles, utilise des acteurs RÉELS du marché
-- L'executive_roadmap doit contenir MINIMUM 6 recommandations narratives BASÉES SUR LES DONNÉES
-- Chaque prescriptive_action doit être un paragraphe complet (4-5 phrases), pas une phrase courte
-- Le JSON doit être pur, sans virgules traînantes, prêt pour JSON.parse()
+- UTILISE LES DONNÉES RÉELLES pour keyword_positioning et market_data_summary
+- executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
+- Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
+- GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
+- JSON pur, sans virgules traînantes`;
+}
 
-⚠️ RECOMMANDATION SOCIAL MÉDIA OBLIGATOIRE DANS L'EXECUTIVE ROADMAP:
-- L'executive_roadmap DOIT TOUJOURS contenir AU MOINS UNE recommandation avec category "Social"
-- Cette recommandation doit identifier LE réseau social le plus adapté à l'identité de marque du site analysé (LinkedIn pour B2B/expertise, Instagram pour lifestyle/visuel, TikTok pour jeune audience/e-commerce, X pour tech/opinion, YouTube pour tutoriels/démonstration, Reddit pour niches techniques)
-- La prescriptive_action doit détailler une stratégie d'acquisition concrète sur CE réseau spécifique: fréquence de publication, types de contenus à créer, hooks d'engagement, et comment cette présence alimentera la citabilité IA (les LLMs comme Perplexity et SearchGPT indexent fortement Reddit, X et YouTube)
-- Le choix du réseau doit être JUSTIFIÉ par l'analyse de l'identité de marque, du public cible et du secteur d'activité détectés
+// ==================== EXTRACT PAGE METADATA (lightweight) ====================
 
-⚠️ DISTINCTION GOLIATH vs CONCURRENT LOCAL (CRITIQUE):
-- GOLIATH (leader): Acteur DOMINANT avec présence internationale ou nationale massive, historique de +10 ans, budget marketing x10, backlinks x10, référence du secteur que tout le monde connaît (ex: Amazon, L'Occitane, Décathlon pour leurs secteurs)
-- CONCURRENT LOCAL (direct_competitor): C'est un concurrent NUMÉRIQUE LOCAL identifié dans les SERPs pour une requête localisée (ex: "plombier châteaurenard"). Il DOIT OBLIGATOIREMENT avoir un site web avec une URL valide. C'est l'entité locale qui apparaît juste au-dessus du site cible dans les résultats de recherche Google pour une requête locale. Si le site cible est premier dans les SERPs locaux, alors le concurrent local est l'entité qui apparaît en second. Le concurrent local est un acteur de la MÊME zone géographique, du MÊME secteur, avec un positionnement SERP proche.
-- Ne JAMAIS mettre un Goliath en "direct_competitor". Le concurrent local doit être un concurrent géographiquement proche, visible dans les résultats locaux, avec un site web actif.
-- Le champ "url" du direct_competitor est OBLIGATOIRE et doit être une URL valide d'un site web réel.`;
-
+async function extractPageMetadata(url: string): Promise<{ context: string; brandName: string }> {
+  let pageContentContext = '';
+  let extractedBrandName = '';
+  
+  try {
+    const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
+    console.log('📄 Fetching page metadata...');
+    const pageResp = await fetch(normalizedUrl, {
+      headers: { 
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html',
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(8000),
+    });
+    
+    if (!pageResp.ok) {
+      await pageResp.text(); // consume
+      return { context: '', brandName: '' };
+    }
+    
+    let html = await pageResp.text();
+    
+    // SPA detection — only fetch rendered version if really needed
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    const bodyContent = bodyMatch ? bodyMatch[1] : '';
+    const textOnly = bodyContent
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    
+    if (textOnly.length < 200 && html.length > 1000) {
+      console.log(`📄 SPA detected (${textOnly.length} chars). Trying JS rendering...`);
+      const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
+      if (RENDERING_KEY) {
+        try {
+          const renderResponse = await fetch(`https://chrome.browserless.io/content?token=${RENDERING_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url: normalizedUrl,
+              rejectResourceTypes: ['image', 'media', 'font', 'stylesheet'],
+              waitFor: 2000, // Reduced from 3000
+              gotoOptions: { waitUntil: 'networkidle2', timeout: 15000 }, // Reduced from 25000
+              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            }),
+            signal: AbortSignal.timeout(20000), // Reduced from 30000
+          });
+          
+          if (renderResponse.ok) {
+            const renderedHtml = await renderResponse.text();
+            if (renderedHtml.length > html.length) {
+              // Only keep the head section to save memory, we only need metadata
+              const headMatch = renderedHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+              const h1Match = renderedHtml.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+              // Replace html with a minimal version containing only what we need
+              html = (headMatch ? `<head>${headMatch[1]}</head>` : '') + 
+                     (h1Match ? `<body><h1>${h1Match[1]}</h1></body>` : '');
+              console.log(`📄 ✅ JS rendering success, kept metadata only`);
+            }
+          } else {
+            console.log(`📄 ⚠️ Rendering error: ${renderResponse.status}`);
+            await renderResponse.text(); // consume
+          }
+        } catch (renderErr) {
+          console.log('📄 ⚠️ Rendering failed:', renderErr instanceof Error ? renderErr.message : renderErr);
+        }
+      }
+    } else {
+      // For non-SPA sites, only keep <head> + first <h1> to reduce memory
+      const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+      const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+      html = (headMatch ? `<head>${headMatch[1]}</head>` : '') + 
+             (h1Match ? `<body><h1>${h1Match[1]}</h1></body>` : '');
+    }
+    
+    // Extract metadata from the (now minimal) HTML
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*?)["']/i)
+      || html.match(/<meta\s+content=["']([^"']*?)["']\s+name=["']description["']/i);
+    const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+    const ogSiteNameMatch = html.match(/<meta\s+property=["']og:site_name["']\s+content=["']([^"']*?)["']/i);
+    const jsonLdMatch = html.match(/"@type"\s*:\s*"Organization"[\s\S]*?"name"\s*:\s*"([^"]+)"/i)
+      || html.match(/"name"\s*:\s*"([^"]+)"[\s\S]*?"@type"\s*:\s*"Organization"/i);
+    const appNameMatch = html.match(/<meta\s+name=["']application-name["']\s+content=["']([^"']*?)["']/i);
+    
+    if (ogSiteNameMatch?.[1]?.trim()) extractedBrandName = ogSiteNameMatch[1].trim();
+    else if (jsonLdMatch?.[1]?.trim()) extractedBrandName = jsonLdMatch[1].trim();
+    else if (appNameMatch?.[1]?.trim()) extractedBrandName = appNameMatch[1].trim();
+    else if (titleMatch?.[1]) {
+      const titleText = titleMatch[1].replace(/<[^>]+>/g, '').trim();
+      for (const sep of [' | ', ' - ', ' — ', ' – ', ' :: ', ' · ']) {
+        if (titleText.includes(sep)) {
+          const candidate = titleText.split(sep).pop()?.trim() || '';
+          if (candidate.length >= 2 && candidate.length <= 50) extractedBrandName = candidate;
+          break;
+        }
+      }
+    }
+    
+    if (extractedBrandName) console.log(`🏷️ Marque HTML: "${extractedBrandName}"`);
+    
+    const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
+    const metaDesc = metaDescMatch?.[1]?.trim() || '';
+    const h1 = h1Match?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
+    
+    if (title || metaDesc || h1) {
+      pageContentContext = `
+CONTENU PAGE: Titre="${title||'?'}", Desc="${(metaDesc||'?').substring(0,200)}", H1="${h1||'?'}"
+Utilise ces informations pour identifier le core business.`;
+      console.log(`✅ Metadata: title="${title.substring(0,50)}", h1="${h1.substring(0,50)}"`);
+    }
+    
+    // Release html reference
+    html = '';
+  } catch (e) {
+    console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
+  }
+  
+  return { context: pageContentContext, brandName: extractedBrandName };
 }
 
 // ==================== MAIN HANDLER ====================
@@ -1085,313 +688,116 @@ Deno.serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY not configured');
       return new Response(
         JSON.stringify({ success: false, error: 'AI service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Use empty toolsData if not provided (standalone strategic audit)
     const effectiveToolsData: ToolsData = toolsData || {
-      crawlers: { note: 'Données non disponibles - audit stratégique autonome' },
-      geo: { note: 'Données non disponibles - audit stratégique autonome' },
-      llm: { note: 'Données non disponibles - audit stratégique autonome' },
-      pagespeed: { note: 'Données non disponibles - audit stratégique autonome' },
+      crawlers: { note: 'Non disponible' },
+      geo: { note: 'Non disponible' },
+      llm: { note: 'Non disponible' },
+      pagespeed: { note: 'Non disponible' },
     };
 
-    // ==================== FETCH PAGE CONTENT FOR CORE BUSINESS UNDERSTANDING ====================
-    let pageContentContext = '';
-    let extractedBrandName = '';
-    try {
-      const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
-      console.log('📄 Fetching page content for core business detection...');
-      const pageResp = await fetch(normalizedUrl, {
-        headers: { 
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        },
-        redirect: 'follow',
-        signal: AbortSignal.timeout(8000),
-      });
-      if (pageResp.ok) {
-        let html = await pageResp.text();
-        
-        // SPA detection: if body is mostly empty, try JS rendering
-        const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-        const bodyContent = bodyMatch ? bodyMatch[1] : html;
-        const textOnly = bodyContent
-          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-          .replace(/<[^>]+>/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-        const hasSPAMarker = /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<\/div>/i.test(html)
-          || /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<noscript/i.test(html);
-        
-        if ((textOnly.length < 200 && html.length > 1000) || (hasSPAMarker && textOnly.length < 500)) {
-          console.log(`📄 SPA detected (${textOnly.length} chars text). Trying JS rendering...`);
-          
-          const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
-          if (RENDERING_KEY) {
-            try {
-              const renderUrl = `https://chrome.browserless.io/content?token=${RENDERING_KEY}`;
-              const renderResponse = await fetch(renderUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  url: normalizedUrl,
-                  rejectResourceTypes: ['image', 'media', 'font'],
-                  waitFor: 3000,
-                  gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
-                  userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                }),
-                signal: AbortSignal.timeout(30000),
-              });
-              
-              if (renderResponse.ok) {
-                const renderedHtml = await renderResponse.text();
-                if (renderedHtml.length > html.length) {
-                  console.log(`📄 ✅ JS rendering success (${renderedHtml.length} chars vs ${html.length} static)`);
-                  html = renderedHtml;
-                }
-              } else {
-                console.log(`📄 ⚠️ Rendering API error: ${renderResponse.status}`);
-              }
-            } catch (renderErr) {
-              console.log('📄 ⚠️ Rendering fallback failed:', renderErr instanceof Error ? renderErr.message : renderErr);
-            }
-          }
-        }
-        const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-        const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*?)["']/i)
-          || html.match(/<meta\s+content=["']([^"']*?)["']\s+name=["']description["']/i);
-        const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-        const ogTitleMatch = html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']*?)["']/i);
-        const ogDescMatch = html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']*?)["']/i);
-        
-        // Extract brand name from HTML metadata (most reliable sources first)
-        const ogSiteNameMatch = html.match(/<meta\s+property=["']og:site_name["']\s+content=["']([^"']*?)["']/i);
-        const jsonLdMatch = html.match(/"@type"\s*:\s*"Organization"[\s\S]*?"name"\s*:\s*"([^"]+)"/i)
-          || html.match(/"name"\s*:\s*"([^"]+)"[\s\S]*?"@type"\s*:\s*"Organization"/i);
-        const appNameMatch = html.match(/<meta\s+name=["']application-name["']\s+content=["']([^"']*?)["']/i);
-        
-        // Priority: og:site_name > JSON-LD Organization.name > application-name > title before separator
-        if (ogSiteNameMatch?.[1]?.trim()) {
-          extractedBrandName = ogSiteNameMatch[1].trim();
-        } else if (jsonLdMatch?.[1]?.trim()) {
-          extractedBrandName = jsonLdMatch[1].trim();
-        } else if (appNameMatch?.[1]?.trim()) {
-          extractedBrandName = appNameMatch[1].trim();
-        } else if (titleMatch?.[1]) {
-          // Extract brand from title: "Page Name | Brand" or "Page Name - Brand"
-          const titleText = titleMatch[1].replace(/<[^>]+>/g, '').trim();
-          const separators = [' | ', ' - ', ' — ', ' – ', ' :: ', ' · '];
-          for (const sep of separators) {
-            if (titleText.includes(sep)) {
-              const parts = titleText.split(sep);
-              // Brand is usually the last part
-              const candidate = parts[parts.length - 1].trim();
-              if (candidate.length >= 2 && candidate.length <= 50) {
-                extractedBrandName = candidate;
-              }
-              break;
-            }
-          }
-        }
-        
-        if (extractedBrandName) {
-          console.log(`🏷️ Nom de marque extrait du HTML: "${extractedBrandName}"`);
-        }
-        
-        const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
-        const metaDesc = metaDescMatch?.[1]?.trim() || '';
-        const h1 = h1Match?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
-        const ogTitle = ogTitleMatch?.[1]?.trim() || '';
-        const ogDesc = ogDescMatch?.[1]?.trim() || '';
-        
-        if (title || metaDesc || h1) {
-          pageContentContext = `
-CONTENU RÉEL DE LA PAGE (source fiable pour comprendre le core business):
-- Titre de la page: "${title || 'non détecté'}"
-- Meta description: "${metaDesc || ogDesc || 'non détectée'}"
-- Titre H1: "${h1 || 'non détecté'}"
-${ogTitle && ogTitle !== title ? `- OG Title: "${ogTitle}"` : ''}
+    // ==================== FETCH PAGE METADATA (lightweight) ====================
+    const { context: pageContentContext, brandName: extractedBrandName } = await extractPageMetadata(url);
 
-IMPORTANT: Utilise ces informations RÉELLES pour identifier précisément le core business, le secteur d'activité et la proposition de valeur du site. Ne te base PAS uniquement sur le nom de domaine.
-`;
-          console.log(`✅ Page content extracted: title="${title.substring(0, 60)}", h1="${h1.substring(0, 60)}"`);
-        }
-      }
-    } catch (e) {
-      console.log('⚠️ Could not fetch page content for context:', e instanceof Error ? e.message : e);
-    }
-
-    // Extract domain from URL
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
     const domain = new URL(normalizedUrl).hostname;
-
-    // Humanize brand name: prefer HTML-extracted name, fallback to domain slug
     const domainSlug = domain.split('.')[0];
     const humanBrandName = extractedBrandName || humanizeBrandName(domainSlug);
-    console.log(`🏷️ Nom de marque final: "${humanBrandName}" (source: ${extractedBrandName ? 'HTML metadata' : 'domain slug'})`);
+    console.log(`🏷️ Marque finale: "${humanBrandName}" (${extractedBrandName ? 'HTML' : 'slug'})`);
 
     console.log('═══════════════════════════════════════════════════════════════');
-    console.log('🚀 AUDIT STRATÉGIQUE IA PREMIUM pour:', domain, `(${humanBrandName})`);
-    console.log('═══════════════════════════════════════════════════════════════');
+    console.log(`🚀 AUDIT STRATÉGIQUE pour: ${domain} (${humanBrandName})`);
 
-    // ==================== ÉTAPE 1: COLLECTER LES DONNÉES DATAFORSEO ====================
-    console.log('\n📊 ÉTAPE 1: Collecte des données de marché DataForSEO...');
-    const marketData = await fetchMarketData(domain);
-    
-    if (marketData) {
-      console.log(`✅ Données de marché collectées: ${marketData.top_keywords.length} mots-clés`);
-    } else {
-      console.log('⚠️ DataForSEO non disponible, l\'audit utilisera uniquement le LLM');
-    }
+    // ==================== SINGLE context detection (no duplicate API calls) ====================
+    const context = detectBusinessContext(domain);
 
-    // ==================== ÉTAPE 1b: RECHERCHE CONCURRENT LOCAL VIA SERP ====================
-    console.log('\n🏙️ ÉTAPE 1b: Recherche du concurrent local via SERP...');
+    // ==================== ÉTAPE 1: DATAFORSEO (uses cached context) ====================
+    console.log('\n📊 ÉTAPE 1: DataForSEO...');
+    const marketData = await fetchMarketData(domain, context);
+
+    // ==================== ÉTAPE 1b: CONCURRENT LOCAL ====================
+    console.log('\n🏙️ ÉTAPE 1b: Concurrent local...');
     let localCompetitorData: { name: string; url: string; rank: number } | null = null;
-    
-    try {
-      const context = await detectBusinessContext(domain);
-      const location = await getLocationCode(context.location);
-      if (location) {
-        localCompetitorData = await findLocalCompetitor(domain, context.sector, location.code, pageContentContext);
+    if (context.locationCode) {
+      try {
+        localCompetitorData = await findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext);
+      } catch (e) {
+        console.error('❌ Concurrent local:', e);
       }
-    } catch (lcError) {
-      console.error('❌ Erreur recherche concurrent local:', lcError);
     }
 
-     // ==================== ÉTAPE 1c: APPELER CHECK-LLM POUR VISIBILITÉ LLM ====================
-     console.log('\n🤖 ÉTAPE 1c: Appel de check-llm pour analyse de visibilité LLM...');
-     let llmVisibilityData = null;
-     
-     try {
-       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-       
-       if (supabaseUrl && supabaseAnonKey) {
-         const llmResponse = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
-           method: 'POST',
-           headers: {
-             'Authorization': `Bearer ${supabaseAnonKey}`,
-             'Content-Type': 'application/json',
-           },
-           body: JSON.stringify({ url, lang: 'fr' }),
-         });
-         
-         if (llmResponse.ok) {
-           const llmResult = await llmResponse.json();
-           if (llmResult.success && llmResult.data) {
-             llmVisibilityData = llmResult.data;
-             console.log(`✅ Visibilité LLM analysée: score ${llmVisibilityData.overallScore}/100, ${llmVisibilityData.citationRate?.cited}/${llmVisibilityData.citationRate?.total} citations`);
-             
-             // Enrichir effectiveToolsData avec les données LLM réelles
-             effectiveToolsData.llm = llmVisibilityData;
-           } else {
-             console.log('⚠️ Réponse check-llm invalide:', llmResult.error);
-           }
-         } else {
-           console.log('⚠️ Erreur appel check-llm:', llmResponse.status);
-         }
-       } else {
-         console.log('⚠️ Variables Supabase manquantes pour appel check-llm');
-       }
-     } catch (llmError) {
-       console.error('❌ Erreur lors de l\'appel check-llm:', llmError);
-     }
- 
-    // ==================== ÉTAPE 2: GÉNÉRER L'ANALYSE LLM ====================
-    console.log('\n🤖 ÉTAPE 2: Génération de l\'analyse LLM avec données enrichies...');
+    // ==================== ÉTAPE 1c: CHECK-LLM (skip if toolsData already has LLM data) ====================
+    if (!toolsData?.llm || toolsData.llm.note) {
+      console.log('\n🤖 ÉTAPE 1c: check-llm...');
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+        const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+        
+        if (supabaseUrl && supabaseAnonKey) {
+          const llmResponse = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url, lang: 'fr' }),
+            signal: AbortSignal.timeout(30000), // 30s timeout for sub-function
+          });
+          
+          if (llmResponse.ok) {
+            const llmResult = await llmResponse.json();
+            if (llmResult.success && llmResult.data) {
+              effectiveToolsData.llm = llmResult.data;
+              console.log(`✅ LLM: score ${llmResult.data.overallScore}/100`);
+            }
+          } else {
+            await llmResponse.text(); // consume
+            console.log('⚠️ check-llm error:', llmResponse.status);
+          }
+        }
+      } catch (e) {
+        console.error('❌ check-llm:', e);
+      }
+    } else {
+      console.log('✅ LLM data already provided, skipping check-llm call');
+    }
+
+    // ==================== ÉTAPE 2: LLM ANALYSIS ====================
+    console.log('\n🤖 ÉTAPE 2: Analyse LLM...');
     
-    // Build prompt with hallucination corrections as priority weights if provided
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext);
     
-    // Injecter le nom de marque humanisé dans le prompt
-    const brandNameInstruction = `
-⚠️ NOM DE L'ENTREPRISE (CRITIQUE - NE PAS CONFONDRE AVEC L'URL):
-Le domaine est "${domain}" mais le NOM RÉEL de l'entreprise est "${humanBrandName}".
-Dans TOUTES tes réponses (introduction, requêtes cibles, recommandations, roadmap), utilise TOUJOURS "${humanBrandName}" comme nom de l'entreprise, JAMAIS le slug technique "${domainSlug}".
-
-`;
-    userPrompt = brandNameInstruction + userPrompt;
+    // Inject brand name instruction (compact)
+    userPrompt = `⚠️ NOM ENTREPRISE: "${humanBrandName}" (pas "${domainSlug}"). Utilise TOUJOURS "${humanBrandName}".\n` + userPrompt;
     
-    // Injecter les données du concurrent local réel si disponible
     if (localCompetitorData) {
-      const localCompetitorInstruction = `
-═══════════════════════════════════════════════════════════════
-🏙️ CONCURRENT LOCAL RÉEL IDENTIFIÉ VIA SERP GOOGLE (DONNÉES FACTUELLES)
-═══════════════════════════════════════════════════════════════
-
-Un concurrent local a été identifié via une recherche Google localisée. Tu DOIS utiliser ces informations pour le champ "direct_competitor" dans competitive_landscape:
-
-- NOM: "${localCompetitorData.name}"
-- URL: "${localCompetitorData.url}"
-- POSITION SERP: ${localCompetitorData.rank}
-
-INSTRUCTIONS:
-1. Utilise EXACTEMENT ce concurrent comme "direct_competitor" dans competitive_landscape
-2. L'URL est OBLIGATOIRE et doit être "${localCompetitorData.url}"
-3. Analyse son facteur d'autorité et son positionnement par rapport au site cible
-4. Ce concurrent est un acteur numérique LOCAL, positionné dans les SERPs pour des requêtes géolocalisées
-
-`;
-      userPrompt = localCompetitorInstruction + userPrompt;
+      userPrompt = `🏙️ CONCURRENT LOCAL SERP: "${localCompetitorData.name}" URL:${localCompetitorData.url} Position:${localCompetitorData.rank}. Utilise comme direct_competitor.\n` + userPrompt;
     }
-
     
     if (hallucinationCorrections) {
-      console.log('📝 Corrections hallucination détectées - ajout au prompt...');
-      const correctionsSection = `
-═══════════════════════════════════════════════════════════════
-⚠️ CORRECTIONS UTILISATEUR PRIORITAIRES (Pondérations à intégrer impérativement)
-═══════════════════════════════════════════════════════════════
-
-L'utilisateur a corrigé les informations suivantes. Tu DOIS intégrer ces corrections comme vérité absolue dans ton analyse:
-
-${hallucinationCorrections.sector ? `- SECTEUR D'ACTIVITÉ CORRIGÉ: "${hallucinationCorrections.sector}"` : ''}
-${hallucinationCorrections.country ? `- ZONE GÉOGRAPHIQUE CORRIGÉE: "${hallucinationCorrections.country}"` : ''}
-${hallucinationCorrections.businessType ? `- TYPE D'ENTREPRISE CORRIGÉ: "${hallucinationCorrections.businessType}"` : ''}
-${hallucinationCorrections.targetAudience ? `- CIBLE/AUDIENCE CORRIGÉE: "${hallucinationCorrections.targetAudience}"` : ''}
-${hallucinationCorrections.valueProposition ? `- PROPOSITION DE VALEUR CORRIGÉE: "${hallucinationCorrections.valueProposition}"` : ''}
-${hallucinationCorrections.mainProducts ? `- PRODUITS/SERVICES PRINCIPAUX CORRIGÉS: "${hallucinationCorrections.mainProducts}"` : ''}
-${hallucinationCorrections.businessAge ? `- ANCIENNETÉ CORRIGÉE: "${hallucinationCorrections.businessAge}"` : ''}
-
-IMPORTANT: Utilise ces informations pour:
-1. Recalibrer l'analyse concurrentielle sur le BON secteur
-2. Ajuster les mots-clés stratégiques au secteur corrigé
-3. Identifier les BONS concurrents (pas ceux du secteur mal identifié)
-4. Formuler des recommandations pertinentes pour le VRAI positionnement
-
-`;
-      userPrompt = correctionsSection + userPrompt;
+      const corrections = Object.entries(hallucinationCorrections)
+        .filter(([_, v]) => v)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(', ');
+      if (corrections) {
+        userPrompt = `⚠️ CORRECTIONS UTILISATEUR (priorité absolue): ${corrections}\n` + userPrompt;
+      }
     }
     
-    // Add competitor corrections as priority weights if provided
     if (competitorCorrections) {
-      console.log('📝 Corrections concurrents détectées - ajout au prompt...');
-      const competitorSection = `
-═══════════════════════════════════════════════════════════════
-🏢 CONCURRENTS CORRIGÉS PAR L'UTILISATEUR (Priorité absolue)
-═══════════════════════════════════════════════════════════════
-
-L'utilisateur a corrigé l'écosystème concurrentiel. Tu DOIS utiliser ces concurrents dans ton analyse:
-
-${competitorCorrections.leader?.name ? `- LEADER (Goliath): "${competitorCorrections.leader.name}" ${competitorCorrections.leader.url ? `(${competitorCorrections.leader.url})` : ''}` : ''}
-${competitorCorrections.direct_competitor?.name ? `- CONCURRENT DIRECT: "${competitorCorrections.direct_competitor.name}" ${competitorCorrections.direct_competitor.url ? `(${competitorCorrections.direct_competitor.url})` : ''}` : ''}
-${competitorCorrections.challenger?.name ? `- CHALLENGER: "${competitorCorrections.challenger.name}" ${competitorCorrections.challenger.url ? `(${competitorCorrections.challenger.url})` : ''}` : ''}
-${competitorCorrections.inspiration_source?.name ? `- SOURCE D'INSPIRATION: "${competitorCorrections.inspiration_source.name}" ${competitorCorrections.inspiration_source.url ? `(${competitorCorrections.inspiration_source.url})` : ''}` : ''}
-
-IMPORTANT: 
-1. Utilise EXACTEMENT ces noms et domaines dans la section "competitive_landscape"
-2. Réanalyse les facteurs d'autorité et analyses pour ces nouveaux concurrents
-3. Adapte les recommandations stratégiques en fonction de ces vrais concurrents
-4. Met à jour les content_gaps et quick_wins selon ce paysage concurrentiel corrigé
-
-`;
-      userPrompt = competitorSection + userPrompt;
+      const cc = competitorCorrections;
+      const parts: string[] = [];
+      if (cc.leader?.name) parts.push(`Leader:"${cc.leader.name}"${cc.leader.url ? `(${cc.leader.url})` : ''}`);
+      if (cc.direct_competitor?.name) parts.push(`Concurrent:"${cc.direct_competitor.name}"${cc.direct_competitor.url ? `(${cc.direct_competitor.url})` : ''}`);
+      if (cc.challenger?.name) parts.push(`Challenger:"${cc.challenger.name}"`);
+      if (parts.length > 0) {
+        userPrompt = `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n` + userPrompt;
+      }
     }
     
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -1401,7 +807,7 @@ IMPORTANT:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: userPrompt }
@@ -1412,141 +818,79 @@ IMPORTANT:
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ success: false, error: 'Rate limit exceeded. Please try again later.' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ success: false, error: 'Rate limit exceeded.' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ success: false, error: 'AI credits exhausted. Please add credits.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ success: false, error: 'AI credits exhausted.' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
-      return new Response(
-        JSON.stringify({ success: false, error: 'AI analysis failed' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.error('AI error:', response.status, errorText.substring(0, 200));
+      return new Response(JSON.stringify({ success: false, error: 'AI analysis failed' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const aiResponse = await response.json();
     const content = aiResponse.choices?.[0]?.message?.content;
-
-    // Track token usage
-    trackTokenUsage('audit-strategique-ia', 'google/gemini-2.5-pro', aiResponse.usage, url);
+    trackTokenUsage('audit-strategique-ia', 'google/gemini-2.5-flash', aiResponse.usage, url);
 
     if (!content) {
-      console.error('No content in AI response');
-      return new Response(
-        JSON.stringify({ success: false, error: 'Empty AI response' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ success: false, error: 'Empty AI response' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // ==================== ÉTAPE 3: PARSER LA RÉPONSE JSON ====================
-    console.log('\n📝 ÉTAPE 3: Parsing de la réponse LLM...');
-    
+    // ==================== PARSE JSON ====================
+    console.log('\n📝 Parsing...');
     let parsedAnalysis;
     try {
       let jsonContent = content;
-      
-      // Extract JSON from markdown code blocks
-      if (content.includes('```json')) {
-        jsonContent = content.split('```json')[1].split('```')[0].trim();
-      } else if (content.includes('```')) {
-        jsonContent = content.split('```')[1].split('```')[0].trim();
-      }
-      
-      // Fix common JSON issues from AI responses
-      jsonContent = jsonContent
-        .replace(/,\s*}/g, '}')
-        .replace(/,\s*]/g, ']')
-        .replace(/[\r\n]+/g, ' ')
-        .replace(/\s+/g, ' ');
-      
+      if (content.includes('```json')) jsonContent = content.split('```json')[1].split('```')[0].trim();
+      else if (content.includes('```')) jsonContent = content.split('```')[1].split('```')[0].trim();
+      jsonContent = jsonContent.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
       parsedAnalysis = JSON.parse(jsonContent);
-    } catch (e) {
-      console.error('Failed to parse AI response as JSON:', e);
-      console.log('Raw content:', content.substring(0, 500));
-      
-      // Aggressive fallback
+    } catch {
       try {
         const firstBrace = content.indexOf('{');
         const lastBrace = content.lastIndexOf('}');
-        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        if (firstBrace !== -1 && lastBrace > firstBrace) {
           let jsonContent = content.substring(firstBrace, lastBrace + 1);
-          jsonContent = jsonContent
-            .replace(/,(\s*[\}\]])/g, '$1')
-            .replace(/[\r\n]+/g, ' ')
-            .replace(/\s+/g, ' ');
+          jsonContent = jsonContent.replace(/,(\s*[\}\]])/g, '$1');
           parsedAnalysis = JSON.parse(jsonContent);
-          console.log('Successfully parsed with aggressive cleanup');
-        } else {
-          throw new Error('No JSON object found in response');
-        }
-      } catch (e2) {
-        console.error('Fallback parsing also failed:', e2);
-        return new Response(
-          JSON.stringify({ success: false, error: 'Failed to parse AI analysis' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        } else throw new Error('No JSON found');
+      } catch {
+        return new Response(JSON.stringify({ success: false, error: 'Failed to parse AI analysis' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
     }
 
-    // ==================== ÉTAPE 3b: SANITIZE BRAND NAME IN RESPONSE ====================
-    console.log('\n🏷️ ÉTAPE 3b: Nettoyage du nom de marque dans la réponse...');
+    // Sanitize brand name
     parsedAnalysis = sanitizeBrandNameInResponse(parsedAnalysis, domainSlug, humanBrandName);
 
-    // ==================== ÉTAPE 4: ENRICHIR AVEC LES DONNÉES BRUTES ====================
     const result = {
       success: true,
       data: {
-        url,
-        domain,
+        url, domain,
         scannedAt: new Date().toISOString(),
         ...parsedAnalysis,
-        // Ajouter les données brutes DataForSEO pour référence
         raw_market_data: marketData,
-        toolsData,
-         // Ajouter les données de visibilité LLM brutes
-         llm_visibility_raw: llmVisibilityData,
+        toolsData: null, // Don't echo back the full toolsData to save response size
+        llm_visibility_raw: effectiveToolsData.llm,
       }
     };
 
-    console.log('\n═══════════════════════════════════════════════════════════════');
-    console.log('✅ AUDIT STRATÉGIQUE IA PREMIUM TERMINÉ');
-    console.log(`   - Mots-clés analysés: ${marketData?.top_keywords.length || 0}`);
-    console.log(`   - Volume de marché: ${marketData?.total_market_volume.toLocaleString() || 'N/A'}`);
-    console.log('═══════════════════════════════════════════════════════════════');
+    console.log('✅ AUDIT TERMINÉ');
 
-    // ==================== ÉTAPE 5: SAUVEGARDER DANS LE REGISTRE ====================
+    // Save to registry (fire and forget)
     const authHeader = req.headers.get('Authorization') || '';
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-    
     if (authHeader && supabaseUrl && supabaseKey) {
-      saveStrategicRecommendationsToRegistry(
-        supabaseUrl,
-        supabaseKey,
-        authHeader,
-        domain,
-        url,
-        parsedAnalysis
-      ).catch(err => console.error('Erreur sauvegarde registre stratégique:', err));
+      saveStrategicRecommendationsToRegistry(supabaseUrl, supabaseKey, authHeader, domain, url, parsedAnalysis)
+        .catch(err => console.error('Registre:', err));
     }
 
-    return new Response(
-      JSON.stringify(result),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
     console.error('Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to generate audit';
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Failed to generate audit' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
