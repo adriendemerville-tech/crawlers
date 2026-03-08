@@ -82,6 +82,31 @@ function needsJSRendering(html: string, visibleText: string): boolean {
  * Attempts to render a page using Browserless.io.
  * Returns rendered HTML or null on failure.
  */
+async function logBrowserlessError(statusCode: number, errorMessage: string, url: string): Promise<void> {
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (!supabaseUrl || !serviceKey) return;
+
+    await fetch(`${supabaseUrl}/rest/v1/analytics_events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': serviceKey,
+        'Authorization': `Bearer ${serviceKey}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        event_type: 'browserless_error',
+        target_url: url,
+        event_data: { status_code: statusCode, error: errorMessage },
+      }),
+    });
+  } catch (_) {
+    // Silent — don't break the main flow for logging
+  }
+}
+
 async function renderWithBrowserless(url: string, renderingKey: string): Promise<string | null> {
   try {
     const renderUrl = `https://chrome.browserless.io/content?token=${renderingKey}`;
@@ -103,10 +128,13 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
       return renderedHtml;
     } else {
       console.log(`[renderPage] ⚠️ Browserless error: ${response.status}`);
+      await logBrowserlessError(response.status, `HTTP ${response.status}`, url);
       return null;
     }
   } catch (err) {
-    console.log('[renderPage] ⚠️ Browserless failed:', err instanceof Error ? err.message : err);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.log('[renderPage] ⚠️ Browserless failed:', msg);
+    await logBrowserlessError(0, msg, url);
     return null;
   }
 }

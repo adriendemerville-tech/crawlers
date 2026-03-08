@@ -5,10 +5,12 @@ import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { PredictionsDashboard } from './PredictionEngine';
+import { BrowserlessAlert } from './BrowserlessAlert';
 
 export function AdminDashboard() {
   return (
     <div className="space-y-6">
+      <BrowserlessAlert />
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-primary/10">
           <Shield className="h-6 w-6 text-primary" />
