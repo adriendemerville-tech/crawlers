@@ -738,8 +738,8 @@ INSTRUCTION: Cite "${founderInfo.name}" nommément dans thought_leadership.analy
   }
 
   // Compact JSON serialization (no pretty-print to save memory)
-  return `Analyse du site "${domain}" (${url}).
-⚠️ RAPPEL: Le nom de l'entité à utiliser dans TOUT le rapport est "${domain}". Ne jamais inventer un autre nom.
+  return `Analyse du site "${url}" (domaine: ${domain}).
+⚠️ RAPPEL: Dans l'introduction, utilise TOUJOURS l'URL cible "${url}" pour désigner le site. Ne jamais inventer un nom de marque ni utiliser un nom dérivé du domaine.
 ${pageContentContext}
 ${eeatSection}${founderSection}
 ${marketSection}
@@ -770,6 +770,7 @@ INSTRUCTIONS CRITIQUES:
 - executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
+- ⚠️ RÈGLE ABSOLUE CONCURRENT DIRECT: Le "direct_competitor" NE PEUT JAMAIS être le même domaine que le site analysé ("${domain}"). Il doit OBLIGATOIREMENT s'agir d'un AUTRE nom de domaine, positionné plus haut dans les SERPs, avec le même core business ou une fonctionnalité équivalente. Si les données SERP fournissent un concurrent, utilise-le. Sinon, identifie un acteur réel du même secteur.
 - PROFILS SOCIAUX — RÈGLE ABSOLUE ANTI-HALLUCINATION:
    • Les SEULES URLs autorisées dans "profile_url" sont celles EXACTEMENT listées dans "URLs sociales trouvées" des SIGNAUX E-E-A-T ci-dessus.
    • Tu ne dois JAMAIS inventer, deviner ou construire une URL de profil social. Si tu n'as pas vu l'URL exacte dans les données crawler, mets profile_url: null.
@@ -1156,8 +1157,8 @@ Deno.serve(async (req) => {
     
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo);
     
-    // Inject brand name instruction (compact)
-    userPrompt = `⚠️ NOM ENTREPRISE: "${humanBrandName}" (pas "${domainSlug}"). Utilise TOUJOURS "${humanBrandName}".\n` + userPrompt;
+    // Inject URL-based identity for introduction (brand name only for competitive landscape)
+    userPrompt = `⚠️ INTRODUCTION: Désigne TOUJOURS le site par son URL "${url}" (domaine: ${domain}). Ne jamais utiliser un nom de marque inventé dans l'introduction.\n⚠️ AUTRES SECTIONS: Le nom de marque "${humanBrandName}" peut être utilisé dans les sections hors introduction.\n` + userPrompt;
     
     if (localCompetitorData) {
       userPrompt = `🏙️ CONCURRENT LOCAL SERP: "${localCompetitorData.name}" URL:${localCompetitorData.url} Position:${localCompetitorData.rank}. Utilise comme direct_competitor.\n` + userPrompt;
@@ -1245,6 +1246,33 @@ Deno.serve(async (req) => {
 
     // Sanitize brand name
     parsedAnalysis = sanitizeBrandNameInResponse(parsedAnalysis, domainSlug, humanBrandName);
+
+    // ═══ POST-PROCESS: Validate direct_competitor is not the same as target domain ═══
+    const cleanTargetDomain = domain.replace(/^www\./, '').toLowerCase();
+    if (parsedAnalysis.competitive_landscape?.direct_competitor) {
+      const dc = parsedAnalysis.competitive_landscape.direct_competitor;
+      const dcDomain = (() => {
+        try {
+          const u = dc.url?.startsWith('http') ? dc.url : `https://${dc.url || ''}`;
+          return new URL(u).hostname.replace(/^www\./, '').toLowerCase();
+        } catch { return (dc.name || '').toLowerCase(); }
+      })();
+      if (dcDomain === cleanTargetDomain || dcDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(dcDomain)) {
+        console.log(`⚠️ direct_competitor "${dc.name}" matches target domain — replacing with local competitor or clearing`);
+        if (localCompetitorData) {
+          parsedAnalysis.competitive_landscape.direct_competitor = {
+            name: localCompetitorData.name,
+            url: localCompetitorData.url,
+            authority_factor: dc.authority_factor || 'Concurrent SERP local',
+            analysis: dc.analysis || `Concurrent identifié via les résultats de recherche locaux, positionné #${localCompetitorData.rank}.`,
+          };
+        } else {
+          parsedAnalysis.competitive_landscape.direct_competitor.name = 'Non identifié';
+          parsedAnalysis.competitive_landscape.direct_competitor.url = null;
+          parsedAnalysis.competitive_landscape.direct_competitor.analysis = 'Aucun concurrent direct distinct identifié dans les SERPs locaux.';
+        }
+      }
+    }
 
     // ═══ POST-PROCESS: Validate social URLs against crawler-detected ones ═══
     if (parsedAnalysis.social_signals?.proof_sources && Array.isArray(parsedAnalysis.social_signals.proof_sources)) {
