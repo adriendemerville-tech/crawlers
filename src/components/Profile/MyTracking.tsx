@@ -799,13 +799,13 @@ export function MyTracking() {
                             {/* Date mode toggle */}
                             <div className="flex rounded-lg border bg-muted p-0.5 text-sm">
                               <button
-                                className={cn("px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5", gscDateMode === 'since' && "bg-background shadow-sm font-medium")}
+                                className={cn("px-3.5 py-2 rounded-md transition-colors flex items-center gap-1.5", gscDateMode === 'since' && "bg-background shadow-sm font-medium")}
                                 onClick={() => setGscDateMode('since')}
                               >
                                 {language === 'fr' ? 'Depuis' : language === 'es' ? 'Desde' : 'Since'}
                               </button>
                               <button
-                                className={cn("px-3 py-1.5 rounded-md transition-colors", gscDateMode === 'range' && "bg-background shadow-sm font-medium")}
+                                className={cn("px-3.5 py-2 rounded-md transition-colors", gscDateMode === 'range' && "bg-background shadow-sm font-medium")}
                                 onClick={() => setGscDateMode('range')}
                               >
                                 {language === 'fr' ? 'Entre' : language === 'es' ? 'Entre' : 'Between'}
@@ -825,7 +825,7 @@ export function MyTracking() {
                                   const date = new Date(y, m - 1, d);
                                   if (!isNaN(date.getTime())) setGscSinceDate(date);
                                 }}
-                                className="h-9 text-sm px-3 rounded-md border border-input bg-background text-foreground cursor-pointer"
+                                className="h-10 text-sm px-3.5 rounded-md border border-input bg-background text-foreground cursor-pointer"
                               />
                             )}
 
@@ -843,7 +843,7 @@ export function MyTracking() {
                                     const date = new Date(y, m - 1, d);
                                     if (!isNaN(date.getTime())) setGscRangeStart(date);
                                   }}
-                                  className="h-9 text-sm px-3 rounded-md border border-input bg-background text-foreground cursor-pointer"
+                                  className="h-10 text-sm px-3.5 rounded-md border border-input bg-background text-foreground cursor-pointer"
                                 />
                                 <span className="text-sm text-muted-foreground">→</span>
                                 <input
@@ -857,7 +857,7 @@ export function MyTracking() {
                                     const date = new Date(y, m - 1, d);
                                     if (!isNaN(date.getTime())) setGscRangeEnd(date);
                                   }}
-                                  className="h-9 text-sm px-3 rounded-md border border-input bg-background text-foreground cursor-pointer"
+                                  className="h-10 text-sm px-3.5 rounded-md border border-input bg-background text-foreground cursor-pointer"
                                 />
                               </>
                             )}
@@ -867,7 +867,7 @@ export function MyTracking() {
                               {(['daily', 'weekly', 'monthly'] as const).map((g) => (
                                 <button
                                   key={g}
-                                  className={cn("px-2.5 py-1.5 rounded-md transition-colors", gscGranularity === g && "bg-background shadow-sm font-medium")}
+                                  className={cn("px-3 py-2 rounded-md transition-colors", gscGranularity === g && "bg-background shadow-sm font-medium")}
                                   onClick={() => setGscGranularity(g)}
                                 >
                                   {g === 'daily' ? (language === 'fr' ? 'Jour' : language === 'es' ? 'Día' : 'Day') 
