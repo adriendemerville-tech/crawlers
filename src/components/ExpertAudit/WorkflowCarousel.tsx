@@ -422,7 +422,7 @@ export function WorkflowCarousel({
                     }}
                     onClick={handleCardClick}
                     className={cn(
-                      "flex-shrink-0 w-[255px] sm:w-[380px] relative z-20",
+                      "flex-shrink-0 w-[290px] sm:w-[380px] relative z-20",
                       !isActive && !shouldHide && "cursor-pointer hover:scale-[0.94] transition-transform duration-300"
                     )}
                     style={{
