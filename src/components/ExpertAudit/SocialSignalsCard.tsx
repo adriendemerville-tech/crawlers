@@ -97,19 +97,21 @@ export function SocialSignalsCard({ signals }: SocialSignalsCardProps) {
                 <MessageCircle className="h-3 w-3" />
                 Preuve Sociale par Plateforme
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {signals.proof_sources.map((source, index) => (
                   <div 
                     key={index}
-                    className="p-3 rounded-lg bg-muted/50 border border-border"
+                    className="p-4 rounded-lg bg-muted/50 border border-border"
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <PlatformIcon platform={source.platform} />
                       <span className="text-sm font-medium">
                         <PlatformLabel platform={source.platform} />
                       </span>
+                      <div className="ml-auto">
+                        <PresenceBadge level={source.presence_level} />
+                      </div>
                     </div>
-                    <PresenceBadge level={source.presence_level} />
                     
                     {/* Profile link */}
                     {source.profile_url && (
@@ -117,7 +119,7 @@ export function SocialSignalsCard({ signals }: SocialSignalsCardProps) {
                         href={source.profile_url} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="mt-2 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 hover:underline transition-colors"
+                        className="mt-1 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 hover:underline transition-colors"
                       >
                         <ExternalLink className="h-3 w-3 flex-shrink-0" />
                         <span className="truncate">
@@ -127,8 +129,8 @@ export function SocialSignalsCard({ signals }: SocialSignalsCardProps) {
                     )}
                     
                     {source.analysis && (
-                      <p className="text-xs text-muted-foreground mt-2 line-clamp-3">
-                        {source.analysis}
+                      <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                        {source.analysis.length > 280 ? source.analysis.slice(0, 280) + '…' : source.analysis}
                       </p>
                     )}
                   </div>
