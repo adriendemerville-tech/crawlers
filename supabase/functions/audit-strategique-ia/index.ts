@@ -1286,7 +1286,7 @@ Deno.serve(async (req) => {
     console.log(`🚀 AUDIT STRATÉGIQUE pour: ${domain} (${resolvedEntityName})`);
 
     // ==================== SINGLE context detection (no duplicate API calls) ====================
-    const context = detectBusinessContext(domain);
+    const context = detectBusinessContext(domain, pageContentContext);
 
     // ==================== ÉTAPE 1: DATAFORSEO (uses cached context) ====================
     console.log('\n📊 ÉTAPE 1: DataForSEO...');
