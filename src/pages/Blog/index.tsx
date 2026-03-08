@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Calendar, ArrowRight, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { blogArticles } from '@/data/blogArticles';
