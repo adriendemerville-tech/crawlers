@@ -178,7 +178,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.6 }}
               className="flex items-center gap-2 text-primary font-medium"
             >
               <Sparkles className="w-4 h-4" />
@@ -187,7 +187,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.7 }}
               className="flex items-center gap-2 text-success font-medium"
             >
               <BookOpen className="w-4 h-4" />
