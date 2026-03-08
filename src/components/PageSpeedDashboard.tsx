@@ -141,6 +141,13 @@ export function PageSpeedDashboard({ result, isLoading, strategy, onStrategyChan
   if (!result) return null;
 
   const { scores } = result;
+  const isFieldData = result.dataSource === 'field';
+
+  // Adapt labels for field vs lab data
+  const tbtLabel = isFieldData ? 'INP' : t.pagespeed.tbt;
+  const tbtDesc = isFieldData ? 'Interaction to Next Paint — réactivité réelle mesurée chez les utilisateurs' : t.pagespeed.tbtDesc;
+  const ttiLabel = isFieldData ? 'TTFB' : t.pagespeed.tti;
+  const ttiDesc = isFieldData ? 'Time to First Byte — temps de réponse serveur mesuré en conditions réelles' : t.pagespeed.ttiDesc;
 
   return (
     <section className="px-4 pb-12">
