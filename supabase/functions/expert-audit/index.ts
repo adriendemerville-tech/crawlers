@@ -698,6 +698,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasAuthorInJsonLd: false,
       hasCaseStudies: false,
       caseStudySignals: 0,
+      misplacedHeadTags: [],
     };
   }
 }
