@@ -46,7 +46,7 @@ export function CtoAgentDashboard() {
         setEnabled((configRes.data as any).value?.enabled === true);
       }
       if (logsRes.data) {
-        setLogs(logsRes.data as AgentLog[]);
+        setLogs((logsRes.data as unknown as AgentLog[]) || []);
       }
     } catch (e) {
       console.error('Error fetching CTO agent data:', e);
