@@ -24,11 +24,11 @@ const variantStyles = {
 };
 
 const methodologyTexts: Record<string, string> = {
-  performance: "Score basé sur l'agrégation des Core Web Vitals (LCP, CLS, TBT) pondérés par l'importance du mobile-first en 2026.",
-  technical: "Analyse de la structure Hn, du balisage Schema.org et de la conformité aux standards W3C (Pondération : 50 pts).",
-  semantic: "Calcul de la densité lexicale et de l'adéquation aux intentions de recherche via analyse vectorielle propriétaire (Pondération : 60 pts).",
-  ai: "Mesure de l'accessibilité pour les User-Agents IA, présence du fichier llms.txt et score de citabilité sur les moteurs génératifs GPT/Claude/Gemini.",
-  security: "Audit des protocoles SSL, détection de malwares et vérification du statut Safe Browsing.",
+  performance: "Crawlers récupère les Core Web Vitals (LCP, FCP, CLS, TTFB) via l'API PageSpeed Insights de Google, puis pondère chaque métrique selon son impact sur le classement mobile-first.",
+  technical: "Crawlers analyse le HTML brut de la page : structure des balises Hn, présence de Schema.org (JSON-LD), attributs alt des images, poids DOM et nombre de requêtes HTTP. Chaque critère est vérifié par parsing direct.",
+  semantic: "Crawlers extrait le contenu textuel, calcule le ratio texte/HTML, vérifie la cohérence Title ↔ H1 ↔ Meta Description, et détecte les formats structurés (FAQ, tableaux, listes) favorisés par les moteurs de réponse IA.",
+  ai: "Crawlers interroge le fichier robots.txt pour chaque User-Agent IA connu (GPTBot, Google-Extended, etc.), vérifie la présence d'un fichier llms.txt, et teste l'accessibilité réelle de la page par les crawlers IA.",
+  security: "Crawlers vérifie le certificat SSL, la redirection HTTP→HTTPS, les en-têtes de sécurité (HSTS, X-Frame-Options, CSP) et le statut du domaine dans les listes de navigation sécurisée.",
 };
 
 export function CategoryCard({ icon, title, score, maxScore, children, variant = 'performance' }: CategoryCardProps) {
@@ -84,7 +84,8 @@ export function CategoryCard({ icon, title, score, maxScore, children, variant =
               side="top"
               align="end"
               sideOffset={8}
-              className="w-72 p-3 text-xs leading-relaxed text-foreground/90 backdrop-blur-xl bg-background/80 border border-border/50 shadow-xl rounded-lg"
+              collisionPadding={16}
+              className="w-72 p-3 text-xs leading-relaxed text-foreground/90 backdrop-blur-xl bg-background/80 border border-border/50 shadow-xl rounded-lg z-50"
             >
               {methodologyTexts[variant]}
             </PopoverContent>
