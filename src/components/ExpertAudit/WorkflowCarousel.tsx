@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, Target, Code, Search, Check, Eye, Lock } from 'lucide-react';
+import { BarChart3, Target, Code, Search, Check, Eye, Lock, RotateCcw } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -549,7 +549,7 @@ export function WorkflowCarousel({
                                 isCompleted
                               }
                               className={cn(
-                                "w-full h-14 text-base font-medium transition-all duration-300",
+                                "w-full h-14 text-sm sm:text-base font-medium transition-all duration-300 px-3",
                                 "shadow-[2px_4px_12px_rgba(0,0,0,0.15)]",
                                 isCompleted && "bg-success hover:bg-success/90",
                                 isLocked && "cursor-not-allowed",
@@ -590,21 +590,37 @@ export function WorkflowCarousel({
                               <Check className="h-4 w-4" />
                               {t.complete}
                             </div>
-                            {/* Click to view report indicator */}
-                            {(step.id === 1 ? hasTechnicalResult : step.id === 2 ? hasStrategicResult : false) && (
-                              <Badge 
-                                variant="outline" 
-                                className="gap-1.5 text-xs cursor-pointer border-primary/30 text-primary hover:bg-primary/10 transition-colors"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (step.id === 1 && onNavigateToTechnical) onNavigateToTechnical();
-                                  else if (step.id === 2 && onNavigateToStrategic) onNavigateToStrategic();
-                                }}
-                              >
-                                <Eye className="h-3 w-3" />
-                                {t.viewReport}
-                              </Badge>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {/* Click to view report indicator */}
+                              {(step.id === 1 ? hasTechnicalResult : step.id === 2 ? hasStrategicResult : false) && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="gap-1.5 text-xs cursor-pointer border-primary/30 text-primary hover:bg-primary/10 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (step.id === 1 && onNavigateToTechnical) onNavigateToTechnical();
+                                    else if (step.id === 2 && onNavigateToStrategic) onNavigateToStrategic();
+                                  }}
+                                >
+                                  <Eye className="h-3 w-3" />
+                                  {t.viewReport}
+                                </Badge>
+                              )}
+                              {/* Re-run button */}
+                              {isActive && (step.id === 1 || step.id === 2) && (
+                                <Badge 
+                                  variant="outline" 
+                                  className="gap-1.5 text-xs cursor-pointer border-muted-foreground/30 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStepAction(step.id);
+                                  }}
+                                >
+                                  <RotateCcw className="h-3 w-3" />
+                                  Relancer
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         )}
                       </CardContent>
