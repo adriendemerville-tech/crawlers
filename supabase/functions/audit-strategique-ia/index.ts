@@ -625,9 +625,19 @@ INSTRUCTIONS CRITIQUES:
 
 // ==================== EXTRACT PAGE METADATA (lightweight) ====================
 
-async function extractPageMetadata(url: string): Promise<{ context: string; brandName: string }> {
+async function extractPageMetadata(url: string): Promise<{ context: string; brandName: string; eeatSignals: EEATSignals }> {
   let pageContentContext = '';
   let extractedBrandName = '';
+  const eeatSignals: EEATSignals = {
+    hasAuthorBio: false, authorBioCount: 0,
+    hasSocialLinks: false, hasLinkedInLinks: false,
+    socialLinksCount: 0, linkedInLinksCount: 0, linkedInUrls: [],
+    hasSameAs: false, hasWikidataSameAs: false,
+    hasAuthorInJsonLd: false, hasProfilePage: false,
+    hasPerson: false, hasOrganization: false,
+    hasCaseStudies: false, caseStudySignals: 0,
+    hasExpertCitations: false, detectedSocialUrls: [],
+  };
   
   try {
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
@@ -642,13 +652,13 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     });
     
     if (!pageResp.ok) {
-      await pageResp.text(); // consume
-      return { context: '', brandName: '' };
+      await pageResp.text();
+      return { context: '', brandName: '', eeatSignals };
     }
     
     let html = await pageResp.text();
     
-    // SPA detection — only fetch rendered version if really needed
+    // SPA detection
     const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
     const bodyContent = bodyMatch ? bodyMatch[1] : '';
     const textOnly = bodyContent
@@ -669,52 +679,142 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
             body: JSON.stringify({
               url: normalizedUrl,
               rejectResourceTypes: ['image', 'media', 'font', 'stylesheet'],
-              waitFor: 2000, // Reduced from 3000
-              gotoOptions: { waitUntil: 'networkidle2', timeout: 15000 }, // Reduced from 25000
+              waitFor: 2000,
+              gotoOptions: { waitUntil: 'networkidle2', timeout: 15000 },
               userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             }),
-            signal: AbortSignal.timeout(20000), // Reduced from 30000
+            signal: AbortSignal.timeout(20000),
           });
           
           if (renderResponse.ok) {
             const renderedHtml = await renderResponse.text();
             if (renderedHtml.length > html.length) {
-              // Only keep the head section to save memory, we only need metadata
-              const headMatch = renderedHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-              const h1Match = renderedHtml.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-              // Replace html with a minimal version containing only what we need
-              html = (headMatch ? `<head>${headMatch[1]}</head>` : '') + 
-                     (h1Match ? `<body><h1>${h1Match[1]}</h1></body>` : '');
-              console.log(`📄 ✅ JS rendering success, kept metadata only`);
+              html = renderedHtml;
+              console.log(`📄 ✅ JS rendering success`);
             }
           } else {
             console.log(`📄 ⚠️ Rendering error: ${renderResponse.status}`);
-            await renderResponse.text(); // consume
+            await renderResponse.text();
           }
         } catch (renderErr) {
           console.log('📄 ⚠️ Rendering failed:', renderErr instanceof Error ? renderErr.message : renderErr);
         }
       }
-    } else {
-      // For non-SPA sites, only keep <head> + first <h1> to reduce memory
-      const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-      const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-      html = (headMatch ? `<head>${headMatch[1]}</head>` : '') + 
-             (h1Match ? `<body><h1>${h1Match[1]}</h1></body>` : '');
     }
     
-    // Extract metadata from the (now minimal) HTML
+    // ═══ EXTRACT E-E-A-T SIGNALS BEFORE STRIPPING HTML ═══
+    console.log('🔍 Extracting E-E-A-T signals from HTML...');
+    
+    // 1. Author bios
+    const authorPatterns = [
+      /rel=["']author["']/gi,
+      /class=["'][^"']*\bauthor\b[^"']*["']/gi,
+      /itemprop=["']author["']/gi,
+    ];
+    let abCount = 0;
+    for (const p of authorPatterns) abCount += (html.match(p) || []).length;
+    eeatSignals.hasAuthorBio = abCount > 0;
+    eeatSignals.authorBioCount = abCount;
+    
+    // 2. Social links detection (extract actual URLs)
+    const socialUrlPatterns = [
+      /href=["'](https?:\/\/(?:www\.)?linkedin\.com\/(?:in|company)\/[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?x\.com\/[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?twitter\.com\/[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?instagram\.com\/[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?youtube\.com\/(?:@|channel\/|c\/)[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?facebook\.com\/[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?tiktok\.com\/@[^"'#?\s]*)/gi,
+    ];
+    const detectedUrls = new Set<string>();
+    const liUrls: string[] = [];
+    for (const p of socialUrlPatterns) {
+      let m;
+      while ((m = p.exec(html)) !== null) {
+        const u = m[1].replace(/\/$/, '');
+        detectedUrls.add(u);
+        if (/linkedin\.com/i.test(u)) liUrls.push(u);
+      }
+    }
+    eeatSignals.detectedSocialUrls = [...detectedUrls].slice(0, 20);
+    eeatSignals.socialLinksCount = detectedUrls.size;
+    eeatSignals.hasSocialLinks = detectedUrls.size > 0;
+    eeatSignals.linkedInUrls = liUrls.slice(0, 5);
+    eeatSignals.linkedInLinksCount = liUrls.length;
+    eeatSignals.hasLinkedInLinks = liUrls.length > 0;
+    
+    // 3. JSON-LD analysis
+    const schemaMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+    for (const block of schemaMatches) {
+      try {
+        const jsonStr = block.replace(/<\/?script[^>]*>/gi, '');
+        const parsed = JSON.parse(jsonStr);
+        const checkNode = (node: any, depth = 0) => {
+          if (!node || typeof node !== 'object' || depth > 5) return;
+          if (Array.isArray(node)) { node.forEach(n => checkNode(n, depth + 1)); return; }
+          const nodeType = String(node['@type'] || '').toLowerCase();
+          if (nodeType.includes('organization')) eeatSignals.hasOrganization = true;
+          if (nodeType.includes('person')) eeatSignals.hasPerson = true;
+          if (nodeType.includes('profilepage')) eeatSignals.hasProfilePage = true;
+          if (node.author || nodeType === 'author') eeatSignals.hasAuthorInJsonLd = true;
+          if (node.sameAs) {
+            eeatSignals.hasSameAs = true;
+            const sameAsArr = Array.isArray(node.sameAs) ? node.sameAs : [node.sameAs];
+            for (const s of sameAsArr) {
+              if (typeof s === 'string') {
+                if (/wikidata\.org/i.test(s)) eeatSignals.hasWikidataSameAs = true;
+                if (/linkedin|twitter|x\.com|instagram|youtube|facebook|tiktok/i.test(s)) {
+                  detectedUrls.add(s.replace(/\/$/, ''));
+                }
+              }
+            }
+          }
+          for (const key of Object.keys(node)) {
+            if (typeof node[key] === 'object') checkNode(node[key], depth + 1);
+          }
+        };
+        checkNode(parsed);
+      } catch { /* skip */ }
+    }
+    eeatSignals.detectedSocialUrls = [...detectedUrls].slice(0, 20);
+    eeatSignals.socialLinksCount = detectedUrls.size;
+    
+    // 4. Expert citations
+    const citPatterns = [
+      /selon\s+(?:le|la|les|un|une)\s+(?:expert|spécialiste|étude|rapport|dr\.|prof)/gi,
+      /according\s+to/gi,
+      /<blockquote/gi,
+    ];
+    let citCount = 0;
+    for (const p of citPatterns) citCount += (html.match(p) || []).length;
+    eeatSignals.hasExpertCitations = citCount > 0;
+    
+    // 5. Case studies
+    const csPatterns = [/(?:cas\s+client|étude\s+de\s+cas|case\s+stud|témoignage|success\s+stor)/gi];
+    let csCount = 0;
+    for (const p of csPatterns) csCount += (html.match(p) || []).length;
+    eeatSignals.hasCaseStudies = csCount > 0;
+    eeatSignals.caseStudySignals = csCount;
+    
+    console.log(`🔍 E-E-A-T: author=${eeatSignals.authorBioCount}, social=${eeatSignals.socialLinksCount}, sameAs=${eeatSignals.hasSameAs}, wikidata=${eeatSignals.hasWikidataSameAs}, person=${eeatSignals.hasPerson}, linkedIn=${eeatSignals.linkedInLinksCount}, org=${eeatSignals.hasOrganization}`);
+    
+    // ═══ NOW strip HTML to metadata only ═══
+    const headMatch2 = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+    const h1Match2 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+    html = (headMatch2 ? `<head>${headMatch2[1]}</head>` : '') + 
+           (h1Match2 ? `<body><h1>${h1Match2[1]}</h1></body>` : '');
+    
+    // Extract brand name + metadata
     const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*?)["']/i)
       || html.match(/<meta\s+content=["']([^"']*?)["']\s+name=["']description["']/i);
-    const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
     const ogSiteNameMatch = html.match(/<meta\s+property=["']og:site_name["']\s+content=["']([^"']*?)["']/i);
-    const jsonLdMatch = html.match(/"@type"\s*:\s*"Organization"[\s\S]*?"name"\s*:\s*"([^"]+)"/i)
+    const jsonLdNameMatch = html.match(/"@type"\s*:\s*"Organization"[\s\S]*?"name"\s*:\s*"([^"]+)"/i)
       || html.match(/"name"\s*:\s*"([^"]+)"[\s\S]*?"@type"\s*:\s*"Organization"/i);
     const appNameMatch = html.match(/<meta\s+name=["']application-name["']\s+content=["']([^"']*?)["']/i);
     
     if (ogSiteNameMatch?.[1]?.trim()) extractedBrandName = ogSiteNameMatch[1].trim();
-    else if (jsonLdMatch?.[1]?.trim()) extractedBrandName = jsonLdMatch[1].trim();
+    else if (jsonLdNameMatch?.[1]?.trim()) extractedBrandName = jsonLdNameMatch[1].trim();
     else if (appNameMatch?.[1]?.trim()) extractedBrandName = appNameMatch[1].trim();
     else if (titleMatch?.[1]) {
       const titleText = titleMatch[1].replace(/<[^>]+>/g, '').trim();
@@ -731,7 +831,7 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     
     const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
     const metaDesc = metaDescMatch?.[1]?.trim() || '';
-    const h1 = h1Match?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
+    const h1 = h1Match2?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
     
     if (title || metaDesc || h1) {
       pageContentContext = `
@@ -740,13 +840,12 @@ Utilise ces informations pour identifier le core business.`;
       console.log(`✅ Metadata: title="${title.substring(0,50)}", h1="${h1.substring(0,50)}"`);
     }
     
-    // Release html reference
     html = '';
   } catch (e) {
     console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
   }
   
-  return { context: pageContentContext, brandName: extractedBrandName };
+  return { context: pageContentContext, brandName: extractedBrandName, eeatSignals };
 }
 
 // ==================== MAIN HANDLER ====================
