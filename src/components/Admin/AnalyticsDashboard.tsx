@@ -817,15 +817,25 @@ export function AnalyticsDashboard() {
               </CardTitle>
               <CardDescription>Sites testés par les utilisateurs</CardDescription>
             </div>
-            {analyzedUrls.length > 10 && (
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowAllUrls(!showAllUrls)}
+                onClick={() => fetchAnalytics(true)}
+                disabled={isRefreshing}
               >
-                {showAllUrls ? 'Voir moins' : `Voir tout (${analyzedUrlsCount})`}
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
-            )}
+              {analyzedUrls.length > 10 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAllUrls(!showAllUrls)}
+                >
+                  {showAllUrls ? 'Voir moins' : `Voir tout (${analyzedUrlsCount})`}
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
