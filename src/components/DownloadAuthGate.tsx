@@ -32,10 +32,11 @@ const translations = {
   },
   es: {
     title: 'Descarga tus informes',
-    subtitle: 'Inicia sesión para acceder a todas tus herramientas SEO.',
+    subtitle: 'Inicia sesión para acceder a todas tus herramientas SEO / GEO.',
     benefit1: 'Seguimiento de estadísticas',
     benefit2: 'Consejos 360°',
     benefit3: 'Funciones dedicadas a Pros',
+    benefit4: 'Auditoría completa → planes de acción → código correctivo',
     tagline1: 'Autonomía',
     tagline2: 'Pedagogía',
     signup: 'Registrarse gratis',
