@@ -174,8 +174,9 @@ serve(async (req) => {
       console.log('✅ CrUX field data available — prioritizing real-user metrics');
       dataSource = 'field';
       finalResult = {
-        // CrUX performance (derived from overall_category)
-        performance: crux.metrics.performance,
+        // Always use Lighthouse performance score (granular 0-100, varies by strategy)
+        // CrUX overall_category only gives 3 buckets (FAST/AVERAGE/SLOW) — too coarse
+        performance: lighthouseResult.performance,
         // Category scores only exist in Lighthouse
         accessibility: lighthouseResult.accessibility,
         bestPractices: lighthouseResult.bestPractices,
