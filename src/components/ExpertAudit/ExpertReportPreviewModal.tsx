@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Download, Share2, Loader2, Check, Copy, Printer, X } from 'lucide-react';
+import { Download, Link2, Loader2, Check, Copy, Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -203,10 +203,12 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
             >
               {isSharing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
+              ) : copied && shareUrl ? (
+                <Check className="h-4 w-4 text-success" />
               ) : (
-                <Share2 className="h-4 w-4" />
+                <Link2 className="h-4 w-4" />
               )}
-              {isSharing ? t.sharing : t.share}
+              {isSharing ? t.sharing : copied && shareUrl ? t.copied : t.share}
             </Button>
             <Button
               onClick={onClose}

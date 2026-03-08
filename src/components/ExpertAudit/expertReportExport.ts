@@ -6,7 +6,7 @@ export const expertReportTranslations = {
   fr: {
     title: "Rapport d'Audit Expert",
     download: 'Télécharger .pdf',
-    share: 'Partager',
+    share: 'Lien temporaire',
     print: 'Imprimer',
     generating: 'Génération...',
     sharing: 'Création du lien...',
@@ -41,7 +41,7 @@ export const expertReportTranslations = {
   en: {
     title: 'Expert Audit Report',
     download: 'Download .pdf',
-    share: 'Share',
+    share: 'Temporary link',
     print: 'Print',
     generating: 'Generating...',
     sharing: 'Creating link...',
@@ -76,7 +76,7 @@ export const expertReportTranslations = {
   es: {
     title: 'Informe de Auditoría Experta',
     download: 'Descargar .pdf',
-    share: 'Compartir',
+    share: 'Enlace temporal',
     print: 'Imprimir',
     generating: 'Generando...',
     sharing: 'Creando enlace...',
