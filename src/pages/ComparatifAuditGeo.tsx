@@ -126,6 +126,8 @@ const CREDIT_PRICE = 0.50;
  ] as const;
  
 export default function ComparatifAuditGeo() {
+  const { language } = useLanguage();
+  useCanonicalHreflang('/comparatif-audit-geo');
   const [pageRange, setPageRange] = useState<PageRange>("less20");
   const [selectedServices, setSelectedServices] = useState<string[]>(["technical"]);
   const [urgency, setUrgency] = useState<number[]>([1]);

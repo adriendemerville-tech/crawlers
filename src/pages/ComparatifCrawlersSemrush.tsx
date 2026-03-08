@@ -107,6 +107,9 @@ function forceMetaTags() {
 }
 
 const ComparatifCrawlersSemrush = () => {
+  const { language } = useLanguage();
+  useCanonicalHreflang('/comparatif-crawlers-semrush');
+  
   // Force SEO metadata on mount to override index.html defaults
   useEffect(() => {
     forceMetaTags();
