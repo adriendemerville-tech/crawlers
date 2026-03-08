@@ -290,10 +290,61 @@ const KNOWN_LOCATIONS: Record<string, { code: number; name: string }> = {
 };
 
 /**
- * Détecte le contexte business ET le location code en une seule passe.
- * Évite de re-télécharger la liste des locations DataForSEO.
+ * Extracts the REAL core business description from page metadata.
+ * This is THE most important variable: what does this company actually do?
  */
-function detectBusinessContext(domain: string): BusinessContext {
+function extractCoreBusiness(pageContentContext: string): string {
+  if (!pageContentContext) return '';
+  
+  const titleMatch = pageContentContext.match(/Titre="([^"?]+)/);
+  const h1Match = pageContentContext.match(/H1="([^"?]+)/);
+  const descMatch = pageContentContext.match(/Desc="([^"?]+)/);
+  
+  const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
+  if (texts.length === 0) return '';
+  
+  const stopWords = new Set([
+    'le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux',
+    'il','elle','ce','cette','qui','que','son','sa','ses','se','ne','pas','avec','dans','ou',
+    'plus','vous','votre','vos','nous','notre','nos','leur','leurs','mon','ma','mes','ton','ta','tes',
+    'si','mais','car','donc','ni','comme','entre','chez','vers','très','aussi','bien','encore',
+    'tout','tous','même','autre','autres','chaque','quelque',
+    'gratuit','gratuite','meilleur','meilleure','site','web','page','accueil','www','http','https',
+    'the','and','for','with','your','our','from','that','this','are','was','will','can','has','have',
+    'bienvenue','welcome','home','officiel','official',
+  ]);
+  
+  // Extract meaningful bigrams from ALL text sources (best for business intent)
+  const bigrams: string[] = [];
+  const allWords: string[] = [];
+  for (const text of texts) {
+    const cleaned = text.toLowerCase()
+      .replace(/[|–—·:,\.!?]/g, ' ')
+      .replace(/[^\wàâäéèêëïîôùûüÿçœæ\s'-]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const words = cleaned.split(' ').filter(w => w.length > 1 && !stopWords.has(w));
+    allWords.push(...words);
+    for (let i = 0; i < words.length - 1; i++) {
+      bigrams.push(`${words[i]} ${words[i + 1]}`);
+    }
+  }
+  
+  // The core business = unique meaningful words combined
+  const uniqueWords = [...new Set(allWords)];
+  const coreBusiness = uniqueWords.slice(0, 8).join(' ');
+  
+  console.log(`🎯 Core business: "${coreBusiness}"`);
+  console.log(`🎯 Key bigrams: ${bigrams.slice(0, 5).join(', ')}`);
+  
+  return coreBusiness;
+}
+
+/**
+ * Détecte le contexte business ET le location code.
+ * CRITICAL: Le secteur est dérivé du CONTENU de la page, pas du domaine.
+ */
+function detectBusinessContext(domain: string, pageContentContext: string = ''): BusinessContext {
   const domainParts = domain.toLowerCase().split('.');
   const tld = domainParts[domainParts.length - 1];
   
@@ -301,6 +352,7 @@ function detectBusinessContext(domain: string): BusinessContext {
     'fr': 'france', 'be': 'belgium', 'ch': 'switzerland', 'ca': 'canada',
     'lu': 'luxembourg', 'de': 'germany', 'es': 'spain', 'it': 'italy',
     'uk': 'united kingdom', 'co.uk': 'united kingdom', 'com': 'france',
+    'ai': 'france', 'io': 'france', 'dev': 'france', 'app': 'france',
   };
   
   const locationKey = tldToLocation[tld] || 'france';
@@ -309,12 +361,15 @@ function detectBusinessContext(domain: string): BusinessContext {
   const prefixes = ['www', 'fr', 'en', 'de', 'es', 'it', 'us', 'uk', 'shop', 'store', 'm', 'mobile'];
   const significantParts = domainParts.filter(part => 
     !prefixes.includes(part) && part.length > 2 && 
-    !['com', 'fr', 'net', 'org', 'io', 'co', 'be', 'ch', 'de', 'es', 'it', 'uk'].includes(part)
+    !['com', 'fr', 'net', 'org', 'io', 'co', 'be', 'ch', 'de', 'es', 'it', 'uk', 'ai', 'dev', 'app'].includes(part)
   );
   
   const rawSlug = significantParts.length > 0 ? significantParts[0] : domainParts[0];
   const brandName = humanizeBrandName(rawSlug);
-  const sector = rawSlug.replace(/-/g, ' ');
+  
+  // CRITICAL: Derive sector from PAGE CONTENT, not from domain slug
+  const coreBusiness = extractCoreBusiness(pageContentContext);
+  const sector = coreBusiness || rawSlug.replace(/-/g, ' ');
   
   console.log(`📋 Contexte: marque="${brandName}", secteur="${sector}", location="${locationInfo.name}" (code: ${locationInfo.code})`);
   
