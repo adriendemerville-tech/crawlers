@@ -428,8 +428,48 @@ function extractKeywordsFromMetadata(pageContentContext: string, domain: string 
 function generateSeedKeywords(brandName: string, sector: string, pageContentContext: string = '', domain: string = ''): string[] {
   const keywords: string[] = [];
   
-  // Start with market-intent keywords from page metadata (highest priority)
+  // CRITICAL: Extract the core business phrase and ensure it's the TOP seed keyword
   if (pageContentContext) {
+    const coreBusiness = extractCoreBusiness(pageContentContext);
+    // Extract the most meaningful bigram as the core business keyword
+    const titleMatch = pageContentContext.match(/Titre="([^"?]+)/);
+    const h1Match = pageContentContext.match(/H1="([^"?]+)/);
+    const descMatch = pageContentContext.match(/Desc="([^"?]+)/);
+    const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
+    
+    // Find the best core-business bigram (the "what we do" phrase)
+    const businessStopWords = new Set(['le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux','il','elle','ce','cette','qui','que','son','sa','ses','se','ne','pas','avec','dans','ou','plus','vous','votre','vos','nous','notre','nos','leur','leurs','si','mais','car','donc','ni','comme','entre','chez','vers','très','aussi','bien','encore','tout','tous','même','autre','autres','gratuit','gratuite','meilleur','meilleure','site','web','page','accueil','www','http','https','bienvenue','welcome','home','officiel','official','the','and','for','with','your','our','from','that','this','are','was','will','can','has','have']);
+    
+    // Build domain slugs to exclude
+    const domainSlugs = new Set<string>();
+    if (domain) {
+      const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
+      for (const part of cleanDomain.split('.')) {
+        if (part.length > 2) domainSlugs.add(part);
+      }
+    }
+    
+    const coreBigrams: string[] = [];
+    for (const text of texts) {
+      const cleaned = text.toLowerCase()
+        .replace(/[|–—·:,\.!?]/g, ' ')
+        .replace(/[^\wàâäéèêëïîôùûüÿçœæ\s'-]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const words = cleaned.split(' ').filter(w => w.length > 1 && !businessStopWords.has(w) && !domainSlugs.has(w));
+      for (let i = 0; i < words.length - 1; i++) {
+        coreBigrams.push(`${words[i]} ${words[i + 1]}`);
+      }
+    }
+    
+    // Add core bigrams FIRST (these are the "what we do" phrases)
+    for (const bg of coreBigrams.slice(0, 3)) {
+      if (bg.length > 4 && !keywords.includes(bg)) {
+        keywords.push(bg);
+      }
+    }
+    
+    // Then add remaining metadata keywords
     const metaKeywords = extractKeywordsFromMetadata(pageContentContext, domain);
     for (const mk of metaKeywords) {
       if (mk.length > 4 && !keywords.includes(mk)) {
@@ -446,6 +486,8 @@ function generateSeedKeywords(brandName: string, sector: string, pageContentCont
   
   // Brand terms at the end (low priority — useful for branded volume only)
   if (!keywords.includes(cleanBrand)) keywords.push(cleanBrand);
+  
+  console.log(`🔑 Seed keywords (core business first): ${keywords.slice(0, 5).join(', ')}`);
   
   return keywords.filter(kw => kw.length > 3 && !kw.includes('undefined')).slice(0, 10);
 }
@@ -866,6 +908,8 @@ RÈGLE ABSOLUE ANTI-AUTO-CITATION: Le site analysé ne doit JAMAIS apparaître c
 RÈGLE CONCURRENT DIRECT: Le direct_competitor DOIT être un vrai concurrent produit/service avec le MÊME core business ou une feature proche. INTERDIT: médias (Forbes, Le Monde...), annuaires (Capterra, G2...), marketplaces (Amazon...), réseaux sociaux, Wikipedia. Le concurrent direct doit être une entreprise qui vend un produit/service similaire au site analysé, dans la même zone géographique si local.
 
 RÈGLE SOURCE D'INSPIRATION: L'inspiration_source DOIT avoir le même core business que le site cible OU être un nouvel entrant novateur et reconnu sur un business directement lié. C'est une entreprise innovante qui repousse les standards du secteur. INTERDIT: médias, annuaires, marketplaces, réseaux sociaux, Wikipedia, plateformes généralistes. Exemples: pour un outil IA SEO → Claude Code, OpenClaw, Cursor ; pour un e-commerce bio → La Fourche, Kazidomi. L'inspiration doit être un acteur admiré du même écosystème métier.
+
+RÈGLE MOTS-CLÉS STRATÉGIQUES: La liste de mots-clés DOIT OBLIGATOIREMENT contenir au moins une requête directement liée au core business du site. Ex: pour un agent IA → "agent IA", "agent IA entreprise", "automatisation IA TPE" ; pour un plombier → "plombier Paris", "dépannage plomberie". Si aucun mot-clé core business n'apparaît dans les données DataForSEO, AJOUTE-LE manuellement avec volume estimé et rank "non classé".
 
 DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS. Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (non classé, volume>200).
 
