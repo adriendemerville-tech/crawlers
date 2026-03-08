@@ -266,7 +266,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     }).catch(() => null);
     
     // ═══ HSTS DETECTION ═══
-    const hstsHeader = response.headers.get('Strict-Transport-Security');
+    const hstsHeader = headResponse?.headers.get('Strict-Transport-Security') || null;
     const hasHSTS = !!hstsHeader;
 
     // Extract title
