@@ -160,7 +160,7 @@ export function SolutionSection() {
               variant="outline"
               size="lg"
               onClick={() => navigate('/audit-expert')}
-              className="relative z-10 gap-1.5 group font-mono font-thin border-2 border-violet-500/50 hover:border-violet-500 hover:bg-violet-500/5 bg-violet-500/5 text-foreground transition-all duration-300 shadow-[0_3px_8px_rgba(0,0,0,0.12)]"
+              className="relative z-10 gap-1.5 group font-mono font-thin border-2 border-violet-500/50 hover:border-violet-500 hover:bg-violet-500/5 bg-violet-500/5 text-foreground transition-all duration-300 shadow-[0_3px_8px_rgba(0,0,0,0.12)] max-w-[calc(100vw-3rem)] flex-wrap h-auto py-3 whitespace-normal"
             >
               <span className="text-violet-400">&lt;</span>
               <span className="text-pink-500">button</span>
