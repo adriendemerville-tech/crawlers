@@ -829,7 +829,7 @@ INSTRUCTION: Cite "${founderInfo.name}" nommément dans thought_leadership.analy
 
   // Compact JSON serialization (no pretty-print to save memory)
   return `Analyse du site "${url}" (domaine: ${domain}).
-⚠️ RAPPEL: Dans l'introduction, utilise TOUJOURS l'URL cible "${url}" pour désigner le site. Ne jamais inventer un nom de marque ni utiliser un nom dérivé du domaine.
+${pageContentContext}
 ${pageContentContext}
 ${eeatSection}${founderSection}
 ${marketSection}
