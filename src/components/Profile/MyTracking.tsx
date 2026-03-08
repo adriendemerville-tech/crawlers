@@ -815,71 +815,47 @@ export function MyTracking() {
                               </button>
                             </div>
 
-                            {/* Since date picker - always visible in since mode */}
+                            {/* Since date picker - native input for reliability */}
                             {gscDateMode === 'since' && (
-                              <Popover open={sinceCalOpen} onOpenChange={setSinceCalOpen}>
-                                <PopoverTrigger asChild>
-                                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
-                                    <CalendarIcon className="h-3 w-3" />
-                                    {format(gscSinceDate, 'dd/MM/yyyy')}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 pointer-events-auto z-[60]" align="start" sideOffset={4}>
-                                  <Calendar
-                                    mode="single"
-                                    selected={gscSinceDate}
-                                    defaultMonth={gscSinceDate}
-                                    onSelect={(d) => { if (d) { setGscSinceDate(d); setSinceCalOpen(false); } }}
-                                    disabled={(d) => d > new Date() || d < new Date('2020-01-01')}
-                                    initialFocus
-                                    className={cn("p-3 pointer-events-auto")}
-                                  />
-                                </PopoverContent>
-                              </Popover>
+                              <input
+                                type="date"
+                                value={gscSinceDate.toISOString().split('T')[0]}
+                                min="2020-01-01"
+                                max={new Date().toISOString().split('T')[0]}
+                                onChange={(e) => {
+                                  const d = new Date(e.target.value + 'T00:00:00');
+                                  if (!isNaN(d.getTime())) setGscSinceDate(d);
+                                }}
+                                className="h-7 text-xs px-2 rounded-md border border-input bg-background text-foreground cursor-pointer"
+                              />
                             )}
 
                             {/* Date pickers for range mode */}
                             {gscDateMode === 'range' && (
                               <>
-                                <Popover open={rangeStartCalOpen} onOpenChange={setRangeStartCalOpen}>
-                                  <PopoverTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
-                                      <CalendarIcon className="h-3 w-3" />
-                                      {format(gscRangeStart, 'dd/MM/yyyy')}
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0 pointer-events-auto z-[60]" align="start" sideOffset={4}>
-                                    <Calendar
-                                      mode="single"
-                                      selected={gscRangeStart}
-                                      defaultMonth={gscRangeStart}
-                                      onSelect={(d) => { if (d) { setGscRangeStart(d); setRangeStartCalOpen(false); } }}
-                                      disabled={(d) => d > gscRangeEnd || d < new Date('2020-01-01')}
-                                      initialFocus
-                                      className={cn("p-3 pointer-events-auto")}
-                                    />
-                                  </PopoverContent>
-                                </Popover>
+                                <input
+                                  type="date"
+                                  value={gscRangeStart.toISOString().split('T')[0]}
+                                  min="2020-01-01"
+                                  max={gscRangeEnd.toISOString().split('T')[0]}
+                                  onChange={(e) => {
+                                    const d = new Date(e.target.value + 'T00:00:00');
+                                    if (!isNaN(d.getTime())) setGscRangeStart(d);
+                                  }}
+                                  className="h-7 text-xs px-2 rounded-md border border-input bg-background text-foreground cursor-pointer"
+                                />
                                 <span className="text-xs text-muted-foreground">→</span>
-                                <Popover open={rangeEndCalOpen} onOpenChange={setRangeEndCalOpen}>
-                                  <PopoverTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
-                                      <CalendarIcon className="h-3 w-3" />
-                                      {format(gscRangeEnd, 'dd/MM/yyyy')}
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0 pointer-events-auto z-[60]" align="start" sideOffset={4}>
-                                    <Calendar
-                                      mode="single"
-                                      selected={gscRangeEnd}
-                                      defaultMonth={gscRangeEnd}
-                                      onSelect={(d) => { if (d) { setGscRangeEnd(d); setRangeEndCalOpen(false); } }}
-                                      disabled={(d) => d > new Date() || d < gscRangeStart}
-                                      initialFocus
-                                      className={cn("p-3 pointer-events-auto")}
-                                    />
-                                  </PopoverContent>
-                                </Popover>
+                                <input
+                                  type="date"
+                                  value={gscRangeEnd.toISOString().split('T')[0]}
+                                  min={gscRangeStart.toISOString().split('T')[0]}
+                                  max={new Date().toISOString().split('T')[0]}
+                                  onChange={(e) => {
+                                    const d = new Date(e.target.value + 'T00:00:00');
+                                    if (!isNaN(d.getTime())) setGscRangeEnd(d);
+                                  }}
+                                  className="h-7 text-xs px-2 rounded-md border border-input bg-background text-foreground cursor-pointer"
+                                />
                               </>
                             )}
 
