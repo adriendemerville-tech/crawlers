@@ -139,11 +139,103 @@ interface BusinessContext {
   locationCode: number | null;
 }
 
-// ==================== BRAND NAME HUMANIZATION ====================
+// ==================== PROBABILISTIC BRAND NAME DETECTION ====================
+
+interface BrandSignal {
+  source: string;
+  value: string;
+  weight: number;
+}
+
+/**
+ * Probabilistic algorithm to detect the real brand/company name from 5 HTML signals + domain.
+ * Returns { name, confidence }. If confidence >= 0.95, name is the detected brand (capitalized).
+ * Otherwise, name falls back to the target URL.
+ */
+function resolveBrandName(signals: BrandSignal[], domain: string, url: string): { name: string; confidence: number } {
+  if (signals.length === 0) return { name: url, confidence: 0 };
+
+  // Normalize for comparison
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-zàâäéèêëïîôùûüÿçœæ0-9]/g, '').trim();
+  const domainSlug = normalize(domain.replace(/^www\./, '').split('.')[0]);
+
+  // Group signals by normalized value
+  const groups = new Map<string, { totalWeight: number; bestValue: string; sources: string[] }>();
+  for (const sig of signals) {
+    const norm = normalize(sig.value);
+    if (!norm || norm.length < 2) continue;
+    // Skip if the value is just the domain slug repeated (not informative)
+    const existing = groups.get(norm);
+    if (existing) {
+      existing.totalWeight += sig.weight;
+      existing.sources.push(sig.source);
+      // Keep the version with best capitalization (longest original form)
+      if (sig.value.length >= existing.bestValue.length) existing.bestValue = sig.value;
+    } else {
+      groups.set(norm, { totalWeight: sig.weight, bestValue: sig.value, sources: [sig.source] });
+    }
+  }
+
+  if (groups.size === 0) return { name: url, confidence: 0 };
+
+  // Also check for near-matches (one group contains the other)
+  const groupKeys = [...groups.keys()];
+  for (let i = 0; i < groupKeys.length; i++) {
+    for (let j = i + 1; j < groupKeys.length; j++) {
+      const a = groupKeys[i], b = groupKeys[j];
+      if (a.includes(b) || b.includes(a)) {
+        const ga = groups.get(a)!, gb = groups.get(b)!;
+        // Merge into the shorter one (more likely the brand name)
+        const shorter = a.length <= b.length ? a : b;
+        const longer = shorter === a ? b : a;
+        const merged = groups.get(shorter)!;
+        const other = groups.get(longer)!;
+        merged.totalWeight += other.totalWeight;
+        merged.sources.push(...other.sources);
+        if (other.bestValue.length < merged.bestValue.length || other.sources.length > merged.sources.length) {
+          // Keep shorter branded name if it looks cleaner
+        }
+        groups.delete(longer);
+      }
+    }
+  }
+
+  // Find the best group
+  const totalWeight = signals.reduce((sum, s) => sum + s.weight, 0);
+  let best = { norm: '', totalWeight: 0, bestValue: '', sources: [] as string[] };
+  for (const [norm, g] of groups) {
+    if (g.totalWeight > best.totalWeight) {
+      best = { norm, ...g };
+    }
+  }
+
+  // Calculate confidence
+  let confidence = best.totalWeight / totalWeight;
+
+  // Bonus: multiple independent sources agreeing boosts confidence
+  if (best.sources.length >= 3) confidence = Math.min(1, confidence + 0.15);
+  else if (best.sources.length >= 2) confidence = Math.min(1, confidence + 0.08);
+
+  // Penalty: if the detected name is just the domain slug, it's less informative
+  if (normalize(best.bestValue) === domainSlug) confidence *= 0.7;
+
+  // Ensure proper capitalization
+  let finalName = best.bestValue.trim();
+  // If all lowercase, capitalize first letter of each word
+  if (finalName === finalName.toLowerCase() && finalName.length > 1) {
+    finalName = finalName.replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  console.log(`🎯 Brand detection: "${finalName}" (confidence: ${(confidence * 100).toFixed(1)}%, sources: ${best.sources.join(',')})`);
+
+  if (confidence >= 0.95) {
+    return { name: finalName, confidence };
+  }
+  return { name: url, confidence };
+}
 
 function humanizeBrandName(slug: string): string {
   if (!slug || slug.length < 1) return slug;
-  // Replace hyphens with spaces and capitalize each word
   return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
