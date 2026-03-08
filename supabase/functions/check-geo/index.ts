@@ -675,20 +675,21 @@ Deno.serve(async (req) => {
     });
 
     // Factor 2: Meta Description (15 points)
-    const metaDescScore = metaResult.hasDescription ? 15 : 0;
+    // For SPA without rendering, meta may be injected by JS — give neutral score
+    const metaDescScore = metaResult.hasDescription ? 15 : (isSPAWithLimitedContent ? 8 : 0);
     factors.push({
       id: 'meta-description',
       name: t.factors.metaDescription.name,
       description: t.factors.metaDescription.description,
       score: metaDescScore,
       maxScore: 15,
-      status: metaDescScore === 15 ? 'good' : 'error',
+      status: metaDescScore === 15 ? 'good' : (isSPAWithLimitedContent && !metaResult.hasDescription) ? 'warning' : (metaDescScore > 0 ? 'warning' : 'error'),
       recommendation: !metaResult.hasDescription 
-        ? t.factors.metaDescription.recommendation
+        ? (isSPAWithLimitedContent ? 'SPA détecté — la meta description peut être injectée par JavaScript. Vérifiez le rendu côté serveur (SSR).' : t.factors.metaDescription.recommendation)
         : undefined,
       details: metaResult.description 
         ? `"${metaResult.description.substring(0, 60)}..."` 
-        : t.details.noMetaDescription
+        : (isSPAWithLimitedContent ? '⚠️ SPA détecté — analyse limitée sans rendu JS' : t.details.noMetaDescription)
     });
 
     // Factor 3: Structured Data (15 points) - VALIDATION STRICTE
