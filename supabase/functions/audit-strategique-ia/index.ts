@@ -96,6 +96,26 @@ interface ToolsData {
   pagespeed: any;
 }
 
+interface EEATSignals {
+  hasAuthorBio: boolean;
+  authorBioCount: number;
+  hasSocialLinks: boolean;
+  hasLinkedInLinks: boolean;
+  socialLinksCount: number;
+  linkedInLinksCount: number;
+  linkedInUrls: string[];
+  hasSameAs: boolean;
+  hasWikidataSameAs: boolean;
+  hasAuthorInJsonLd: boolean;
+  hasProfilePage: boolean;
+  hasPerson: boolean;
+  hasOrganization: boolean;
+  hasCaseStudies: boolean;
+  caseStudySignals: number;
+  hasExpertCitations: boolean;
+  detectedSocialUrls: string[];
+}
+
 interface KeywordData {
   keyword: string;
   volume: number;
@@ -532,7 +552,7 @@ F. FRAÎCHEUR & IA: 17.Fraîcheur contenus 18.Complexité Schema.org 19.Formats 
 G. E-E-A-T: 22.Signaux E-E-A-T 23.Densité données 24.Knowledge Graph 25.Études de cas
 H. MONITORING: 26.Monitoring LLM (GA4 referrers IA) 27.Fichier llms.txt`;
 
-function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = ''): string {
+function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals): string {
   let marketSection = '';
   
   if (marketData) {
@@ -555,9 +575,35 @@ Manquants: ${missing.length > 0 ? missing.map(kw => `"${kw.keyword}"(${kw.volume
     marketSection = `⚠️ DataForSEO non disponible - base-toi sur ton analyse du secteur.\n`;
   }
 
+  // Build E-E-A-T evidence section from crawled HTML signals
+  let eeatSection = '';
+  if (eeatSignals) {
+    const lines: string[] = ['🔍 SIGNAUX E-E-A-T DÉTECTÉS SUR LE SITE (données factuelles du crawler):'];
+    lines.push(`- Bios auteur détectées dans le HTML: ${eeatSignals.hasAuthorBio ? `OUI (${eeatSignals.authorBioCount} occurrences)` : 'NON'}`);
+    lines.push(`- Author déclaré en JSON-LD: ${eeatSignals.hasAuthorInJsonLd ? 'OUI' : 'NON'}`);
+    lines.push(`- Entité Person en JSON-LD: ${eeatSignals.hasPerson ? 'OUI' : 'NON'}`);
+    lines.push(`- ProfilePage en JSON-LD: ${eeatSignals.hasProfilePage ? 'OUI' : 'NON'}`);
+    lines.push(`- Organization en JSON-LD: ${eeatSignals.hasOrganization ? 'OUI' : 'NON'}`);
+    lines.push(`- sameAs (liens entités externes): ${eeatSignals.hasSameAs ? 'OUI' : 'NON'}`);
+    lines.push(`- sameAs vers Wikidata: ${eeatSignals.hasWikidataSameAs ? 'OUI ← signal fort d\'autorité institutionnelle' : 'NON'}`);
+    lines.push(`- Liens sociaux détectés dans le HTML: ${eeatSignals.socialLinksCount} lien(s)`);
+    if (eeatSignals.detectedSocialUrls.length > 0) {
+      lines.push(`  URLs sociales trouvées: ${eeatSignals.detectedSocialUrls.slice(0, 10).join(', ')}`);
+      // Distinguish personal LinkedIn profiles from company pages
+      const personalLI = eeatSignals.linkedInUrls.filter(u => /linkedin\.com\/in\//i.test(u));
+      const companyLI = eeatSignals.linkedInUrls.filter(u => /linkedin\.com\/company\//i.test(u));
+      if (personalLI.length > 0) lines.push(`  └─ Profils LinkedIn PERSONNELS (incarnation humaine): ${personalLI.join(', ')}`);
+      if (companyLI.length > 0) lines.push(`  └─ Pages LinkedIn ENTREPRISE (entité de marque): ${companyLI.join(', ')}`);
+    }
+    lines.push(`- Citations d'experts / blockquotes: ${eeatSignals.hasExpertCitations ? 'OUI' : 'NON'}`);
+    lines.push(`- Études de cas / témoignages: ${eeatSignals.hasCaseStudies ? `OUI (${eeatSignals.caseStudySignals} signaux)` : 'NON'}`);
+    eeatSection = lines.join('\n');
+  }
+
   // Compact JSON serialization (no pretty-print to save memory)
   return `Analyse "${domain}" (${url}):
 ${pageContentContext}
+${eeatSection}
 ${marketSection}
 CRAWLERS:${JSON.stringify(toolsData.crawlers)}
 GEO:${JSON.stringify(toolsData.geo)}
@@ -586,28 +632,58 @@ INSTRUCTIONS CRITIQUES:
 - executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
-- PROFILS SOCIAUX: Dans proof_sources, inclus MAXIMUM 2 profils avec profile_url (les 2 plus forts: abonnés pondérés par fraîcheur de dernière publication). Fournis l'URL complète et le profile_name. Si d'autres profils existent au-delà des 2 principaux, ajoute dans le champ "analysis" du thought_leadership une phrase de synthèse structurée ainsi: "[Prénom1] et [Prénom2] sont les incarnations les plus fortes de la marque sur les réseaux sociaux. On dénombre par ailleurs X profils d'engagement et de puissance intermédiaires sur [nom du/des réseau(x)] et X autres profils de faible intensité sur [nom du/des réseau(x)]." Adapte cette phrase au nombre réel de profils détectés. Si un seul profil fort existe, adapte au singulier. Les plateformes restantes apparaissent dans proof_sources sans profile_url.
-- SCORING E-E-A-T RIGOUREUX: Le eeat_score (0-10) doit refléter la RÉALITÉ observable. Distingue 3 types de signaux:
-   A) INCARNATION HUMAINE: profil personnel LinkedIn/X/Instagram d'un fondateur/dirigeant identifié, articles signés, interventions publiques, experts internes identifiés qui signent du contenu
-   B) ENTITÉ DE MARQUE: page entreprise LinkedIn, page Facebook, compte Instagram business, fiche Google Business Profile (avis clients, NAP cohérent, photos), certifications, brevets
-   C) AUTORITÉ INSTITUTIONNELLE: présence Knowledge Graph Google, page Wikipedia/Wikidata, couverture presse régulière, citations par des médias, backlinks éditoriaux
-   RÈGLE CLÉ: Plus l'entité est forte et reconnue institutionnellement, moins l'incarnation individuelle est nécessaire. L'expertise peut être incarnée par des experts internes identifiés (nutritionnistes, ingénieurs, designers qui signent du contenu) et pas uniquement par le fondateur.
-   Grille progressive:
-   * 0-2: Aucun signal détectable (ni incarnation, ni entité, ni autorité institutionnelle)
-   * 3-4: Entité de marque minimale (page entreprise OU fiche GMB basique), pas d'autorité institutionnelle
-   * 5-6: Entité de marque solide (GMB bien noté, pages actives, mentions tierces) SANS incarnation humaine, OU incarnation partielle avec entité faible
-   * 7-8: Incarnation forte (fondateur/experts reconnus, profils actifs) + entité solide, OU entité à forte autorité institutionnelle (Knowledge Graph + presse régulière) même sans incarnation visible du dirigeant
-   * 9-10: Autorité institutionnelle dominante (Wikipedia, Knowledge Graph riche, couverture médiatique massive, marque de référence dans son secteur) — possible même si le dirigeant est discret, car l'expertise est incarnée par la marque elle-même et/ou ses experts internes
-   Sois honnête et factuel. Ne surestime pas: une PME locale sans incarnation ni autorité institutionnelle ne dépasse pas 6/10.
-- founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable sur le site ou le web. Ne PAS inventer.
+- PROFILS SOCIAUX: Dans proof_sources, UTILISE EN PRIORITÉ les URLs sociales détectées dans les "SIGNAUX E-E-A-T" ci-dessus (données factuelles du crawler). Ne fournis profile_url QUE pour des URLs que tu as vues dans les données. Inclus MAXIMUM 2 profils avec profile_url. Les plateformes restantes apparaissent sans profile_url. Si d'autres profils existent au-delà des 2 principaux, ajoute dans "analysis" du thought_leadership une synthèse narrative.
+- SCORING E-E-A-T EVIDENCE-BASED: Le eeat_score (0-10) doit être fondé sur les PREUVES OBSERVABLES fournies dans "SIGNAUX E-E-A-T DÉTECTÉS". 
+   MÉTHODOLOGIE: Commence par compter les signaux factuels détectés, puis enrichis avec tes connaissances pré-entraînées sur la marque (si elle est suffisamment connue).
+   
+   SIGNAUX TECHNIQUES (vérifiés par le crawler — haute fiabilité):
+   +1pt: Author déclaré en JSON-LD (hasAuthorInJsonLd=OUI)
+   +1pt: Person ou ProfilePage en JSON-LD (hasPerson ou hasProfilePage=OUI)
+   +1pt: sameAs vers Wikidata (hasWikidataSameAs=OUI) — signal fort d'autorité institutionnelle
+   +0.5pt: sameAs présent sans Wikidata (hasSameAs=OUI)
+   +0.5pt: Bios auteur dans le HTML (hasAuthorBio=OUI)
+   +0.5pt: Profils LinkedIn personnels (/in/) détectés — incarnation humaine vérifiée
+   +0.5pt: Page LinkedIn entreprise (/company/) détectée — entité de marque
+   +0.5pt: Citations d'experts / blockquotes détectées
+   +0.5pt: Études de cas / témoignages détectés
+   +0.5pt: Organization déclarée en JSON-LD
+   Base technique max: ~7 points à partir des signaux crawlés
+   
+   SIGNAUX INFÉRÉS (connaissances pré-entraînées — fiabilité variable):
+   +1-3pts: Marque connue nationalement/internationalement (Wikipedia, Knowledge Graph Google, couverture presse)
+   +0.5-1pt: GMB actif avec avis (si la marque est suffisamment connue pour que tu le saches)
+   ATTENTION: Si tu n'es PAS CERTAIN qu'une information est vraie, NE L'AJOUTE PAS au score. Mieux vaut sous-estimer que halluciner.
+   
+   HONNÊTETÉ RADICALE:
+   - Tu NE PEUX PAS vérifier le nombre d'abonnés d'un réseau social → ne prétends JAMAIS connaître ce chiffre
+   - Tu NE PEUX PAS vérifier si un GMB existe → ne l'affirme que pour des marques notoirement connues
+   - Tu NE PEUX PAS vérifier la fraîcheur des publications sociales → ne juge pas l'activité récente
+   - Dans "analysis" du thought_leadership, DISTINGUE EXPLICITEMENT: "Signaux vérifiés sur le site: [liste]" vs "Signaux estimés (connaissances pré-entraînées): [liste]"
+   
+   PLAFONDS:
+   - Sans AUCUN signal technique détecté (tout à NON): max 3/10 (basé uniquement sur la notoriété inférée)
+   - Avec signaux techniques mais sans incarnation humaine (pas de Person/Author/profil personnel): max 6/10
+   - Avec incarnation + signaux techniques solides: 7-8/10
+   - 9-10/10: réservé aux marques à autorité institutionnelle vérifiable (Wikidata sameAs, OU marque de référence que tu peux attester avec certitude)
+- founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable dans les signaux E-E-A-T crawlés ni dans tes connaissances. Ne PAS inventer.
 - JSON pur, sans virgules traînantes`;
 }
 
 // ==================== EXTRACT PAGE METADATA (lightweight) ====================
 
-async function extractPageMetadata(url: string): Promise<{ context: string; brandName: string }> {
+async function extractPageMetadata(url: string): Promise<{ context: string; brandName: string; eeatSignals: EEATSignals }> {
   let pageContentContext = '';
   let extractedBrandName = '';
+  const eeatSignals: EEATSignals = {
+    hasAuthorBio: false, authorBioCount: 0,
+    hasSocialLinks: false, hasLinkedInLinks: false,
+    socialLinksCount: 0, linkedInLinksCount: 0, linkedInUrls: [],
+    hasSameAs: false, hasWikidataSameAs: false,
+    hasAuthorInJsonLd: false, hasProfilePage: false,
+    hasPerson: false, hasOrganization: false,
+    hasCaseStudies: false, caseStudySignals: 0,
+    hasExpertCitations: false, detectedSocialUrls: [],
+  };
   
   try {
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
@@ -622,13 +698,13 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     });
     
     if (!pageResp.ok) {
-      await pageResp.text(); // consume
-      return { context: '', brandName: '' };
+      await pageResp.text();
+      return { context: '', brandName: '', eeatSignals };
     }
     
     let html = await pageResp.text();
     
-    // SPA detection — only fetch rendered version if really needed
+    // SPA detection
     const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
     const bodyContent = bodyMatch ? bodyMatch[1] : '';
     const textOnly = bodyContent
@@ -649,52 +725,142 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
             body: JSON.stringify({
               url: normalizedUrl,
               rejectResourceTypes: ['image', 'media', 'font', 'stylesheet'],
-              waitFor: 2000, // Reduced from 3000
-              gotoOptions: { waitUntil: 'networkidle2', timeout: 15000 }, // Reduced from 25000
+              waitFor: 2000,
+              gotoOptions: { waitUntil: 'networkidle2', timeout: 15000 },
               userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             }),
-            signal: AbortSignal.timeout(20000), // Reduced from 30000
+            signal: AbortSignal.timeout(20000),
           });
           
           if (renderResponse.ok) {
             const renderedHtml = await renderResponse.text();
             if (renderedHtml.length > html.length) {
-              // Only keep the head section to save memory, we only need metadata
-              const headMatch = renderedHtml.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-              const h1Match = renderedHtml.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-              // Replace html with a minimal version containing only what we need
-              html = (headMatch ? `<head>${headMatch[1]}</head>` : '') + 
-                     (h1Match ? `<body><h1>${h1Match[1]}</h1></body>` : '');
-              console.log(`📄 ✅ JS rendering success, kept metadata only`);
+              html = renderedHtml;
+              console.log(`📄 ✅ JS rendering success`);
             }
           } else {
             console.log(`📄 ⚠️ Rendering error: ${renderResponse.status}`);
-            await renderResponse.text(); // consume
+            await renderResponse.text();
           }
         } catch (renderErr) {
           console.log('📄 ⚠️ Rendering failed:', renderErr instanceof Error ? renderErr.message : renderErr);
         }
       }
-    } else {
-      // For non-SPA sites, only keep <head> + first <h1> to reduce memory
-      const headMatch = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-      const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-      html = (headMatch ? `<head>${headMatch[1]}</head>` : '') + 
-             (h1Match ? `<body><h1>${h1Match[1]}</h1></body>` : '');
     }
     
-    // Extract metadata from the (now minimal) HTML
+    // ═══ EXTRACT E-E-A-T SIGNALS BEFORE STRIPPING HTML ═══
+    console.log('🔍 Extracting E-E-A-T signals from HTML...');
+    
+    // 1. Author bios
+    const authorPatterns = [
+      /rel=["']author["']/gi,
+      /class=["'][^"']*\bauthor\b[^"']*["']/gi,
+      /itemprop=["']author["']/gi,
+    ];
+    let abCount = 0;
+    for (const p of authorPatterns) abCount += (html.match(p) || []).length;
+    eeatSignals.hasAuthorBio = abCount > 0;
+    eeatSignals.authorBioCount = abCount;
+    
+    // 2. Social links detection (extract actual URLs)
+    const socialUrlPatterns = [
+      /href=["'](https?:\/\/(?:www\.)?linkedin\.com\/(?:in|company)\/[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?x\.com\/[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?twitter\.com\/[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?instagram\.com\/[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?youtube\.com\/(?:@|channel\/|c\/)[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?facebook\.com\/[^"'#?\s]*)/gi,
+      /href=["'](https?:\/\/(?:www\.)?tiktok\.com\/@[^"'#?\s]*)/gi,
+    ];
+    const detectedUrls = new Set<string>();
+    const liUrls: string[] = [];
+    for (const p of socialUrlPatterns) {
+      let m;
+      while ((m = p.exec(html)) !== null) {
+        const u = m[1].replace(/\/$/, '');
+        detectedUrls.add(u);
+        if (/linkedin\.com/i.test(u)) liUrls.push(u);
+      }
+    }
+    eeatSignals.detectedSocialUrls = [...detectedUrls].slice(0, 20);
+    eeatSignals.socialLinksCount = detectedUrls.size;
+    eeatSignals.hasSocialLinks = detectedUrls.size > 0;
+    eeatSignals.linkedInUrls = liUrls.slice(0, 5);
+    eeatSignals.linkedInLinksCount = liUrls.length;
+    eeatSignals.hasLinkedInLinks = liUrls.length > 0;
+    
+    // 3. JSON-LD analysis
+    const schemaMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi) || [];
+    for (const block of schemaMatches) {
+      try {
+        const jsonStr = block.replace(/<\/?script[^>]*>/gi, '');
+        const parsed = JSON.parse(jsonStr);
+        const checkNode = (node: any, depth = 0) => {
+          if (!node || typeof node !== 'object' || depth > 5) return;
+          if (Array.isArray(node)) { node.forEach(n => checkNode(n, depth + 1)); return; }
+          const nodeType = String(node['@type'] || '').toLowerCase();
+          if (nodeType.includes('organization')) eeatSignals.hasOrganization = true;
+          if (nodeType.includes('person')) eeatSignals.hasPerson = true;
+          if (nodeType.includes('profilepage')) eeatSignals.hasProfilePage = true;
+          if (node.author || nodeType === 'author') eeatSignals.hasAuthorInJsonLd = true;
+          if (node.sameAs) {
+            eeatSignals.hasSameAs = true;
+            const sameAsArr = Array.isArray(node.sameAs) ? node.sameAs : [node.sameAs];
+            for (const s of sameAsArr) {
+              if (typeof s === 'string') {
+                if (/wikidata\.org/i.test(s)) eeatSignals.hasWikidataSameAs = true;
+                if (/linkedin|twitter|x\.com|instagram|youtube|facebook|tiktok/i.test(s)) {
+                  detectedUrls.add(s.replace(/\/$/, ''));
+                }
+              }
+            }
+          }
+          for (const key of Object.keys(node)) {
+            if (typeof node[key] === 'object') checkNode(node[key], depth + 1);
+          }
+        };
+        checkNode(parsed);
+      } catch { /* skip */ }
+    }
+    eeatSignals.detectedSocialUrls = [...detectedUrls].slice(0, 20);
+    eeatSignals.socialLinksCount = detectedUrls.size;
+    
+    // 4. Expert citations
+    const citPatterns = [
+      /selon\s+(?:le|la|les|un|une)\s+(?:expert|spécialiste|étude|rapport|dr\.|prof)/gi,
+      /according\s+to/gi,
+      /<blockquote/gi,
+    ];
+    let citCount = 0;
+    for (const p of citPatterns) citCount += (html.match(p) || []).length;
+    eeatSignals.hasExpertCitations = citCount > 0;
+    
+    // 5. Case studies
+    const csPatterns = [/(?:cas\s+client|étude\s+de\s+cas|case\s+stud|témoignage|success\s+stor)/gi];
+    let csCount = 0;
+    for (const p of csPatterns) csCount += (html.match(p) || []).length;
+    eeatSignals.hasCaseStudies = csCount > 0;
+    eeatSignals.caseStudySignals = csCount;
+    
+    console.log(`🔍 E-E-A-T: author=${eeatSignals.authorBioCount}, social=${eeatSignals.socialLinksCount}, sameAs=${eeatSignals.hasSameAs}, wikidata=${eeatSignals.hasWikidataSameAs}, person=${eeatSignals.hasPerson}, linkedIn=${eeatSignals.linkedInLinksCount}, org=${eeatSignals.hasOrganization}`);
+    
+    // ═══ NOW strip HTML to metadata only ═══
+    const headMatch2 = html.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
+    const h1Match2 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+    html = (headMatch2 ? `<head>${headMatch2[1]}</head>` : '') + 
+           (h1Match2 ? `<body><h1>${h1Match2[1]}</h1></body>` : '');
+    
+    // Extract brand name + metadata
     const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
     const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*?)["']/i)
       || html.match(/<meta\s+content=["']([^"']*?)["']\s+name=["']description["']/i);
-    const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
     const ogSiteNameMatch = html.match(/<meta\s+property=["']og:site_name["']\s+content=["']([^"']*?)["']/i);
-    const jsonLdMatch = html.match(/"@type"\s*:\s*"Organization"[\s\S]*?"name"\s*:\s*"([^"]+)"/i)
+    const jsonLdNameMatch = html.match(/"@type"\s*:\s*"Organization"[\s\S]*?"name"\s*:\s*"([^"]+)"/i)
       || html.match(/"name"\s*:\s*"([^"]+)"[\s\S]*?"@type"\s*:\s*"Organization"/i);
     const appNameMatch = html.match(/<meta\s+name=["']application-name["']\s+content=["']([^"']*?)["']/i);
     
     if (ogSiteNameMatch?.[1]?.trim()) extractedBrandName = ogSiteNameMatch[1].trim();
-    else if (jsonLdMatch?.[1]?.trim()) extractedBrandName = jsonLdMatch[1].trim();
+    else if (jsonLdNameMatch?.[1]?.trim()) extractedBrandName = jsonLdNameMatch[1].trim();
     else if (appNameMatch?.[1]?.trim()) extractedBrandName = appNameMatch[1].trim();
     else if (titleMatch?.[1]) {
       const titleText = titleMatch[1].replace(/<[^>]+>/g, '').trim();
@@ -711,7 +877,7 @@ async function extractPageMetadata(url: string): Promise<{ context: string; bran
     
     const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
     const metaDesc = metaDescMatch?.[1]?.trim() || '';
-    const h1 = h1Match?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
+    const h1 = h1Match2?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
     
     if (title || metaDesc || h1) {
       pageContentContext = `
@@ -720,13 +886,12 @@ Utilise ces informations pour identifier le core business.`;
       console.log(`✅ Metadata: title="${title.substring(0,50)}", h1="${h1.substring(0,50)}"`);
     }
     
-    // Release html reference
     html = '';
   } catch (e) {
     console.log('⚠️ Page fetch failed:', e instanceof Error ? e.message : e);
   }
   
-  return { context: pageContentContext, brandName: extractedBrandName };
+  return { context: pageContentContext, brandName: extractedBrandName, eeatSignals };
 }
 
 // ==================== MAIN HANDLER ====================
@@ -762,7 +927,7 @@ Deno.serve(async (req) => {
     };
 
     // ==================== FETCH PAGE METADATA (lightweight) ====================
-    const { context: pageContentContext, brandName: extractedBrandName } = await extractPageMetadata(url);
+    const { context: pageContentContext, brandName: extractedBrandName, eeatSignals } = await extractPageMetadata(url);
 
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
     const domain = new URL(normalizedUrl).hostname;
@@ -832,7 +997,7 @@ Deno.serve(async (req) => {
     // ==================== ÉTAPE 2: LLM ANALYSIS ====================
     console.log('\n🤖 ÉTAPE 2: Analyse LLM...');
     
-    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext);
+    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals);
     
     // Inject brand name instruction (compact)
     userPrompt = `⚠️ NOM ENTREPRISE: "${humanBrandName}" (pas "${domainSlug}"). Utilise TOUJOURS "${humanBrandName}".\n` + userPrompt;
