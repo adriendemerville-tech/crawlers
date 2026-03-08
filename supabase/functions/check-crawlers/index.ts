@@ -165,22 +165,31 @@ Deno.serve(async (req) => {
       console.log('Failed to fetch robots.txt:', e);
     }
 
-    // Fetch the actual page
+    // Fetch the actual page with JS rendering fallback for SPAs
     let pageHtml: string | null = null;
-    let httpStatus = 0;
+    let httpStatus = 200;
+    let usedRendering = false;
     try {
-      const pageResponse = await fetch(normalizedUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AIBotChecker/1.0)' },
-        redirect: 'follow'
+      const renderResult = await fetchAndRenderPage(normalizedUrl, {
+        userAgent: 'Mozilla/5.0 (compatible; AIBotChecker/1.0)',
+        timeout: 10000,
       });
-      httpStatus = pageResponse.status;
-      if (pageResponse.ok) {
-        pageHtml = await pageResponse.text();
-        console.log('Page fetched, length:', pageHtml.length);
-      }
+      pageHtml = renderResult.html;
+      usedRendering = renderResult.usedRendering;
+      console.log(`Page fetched, length: ${pageHtml.length}${usedRendering ? ' (JS rendered)' : ''}`);
     } catch (e) {
       console.log('Failed to fetch page:', e);
-      httpStatus = 0;
+      // Try to get HTTP status from a simple HEAD request
+      try {
+        const headResponse = await fetch(normalizedUrl, {
+          method: 'HEAD',
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AIBotChecker/1.0)' },
+          redirect: 'follow',
+        });
+        httpStatus = headResponse.status;
+      } catch {
+        httpStatus = 0;
+      }
     }
 
     // Check each bot
