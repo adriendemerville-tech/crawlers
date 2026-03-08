@@ -49,6 +49,7 @@ interface AuditResult {
       reliabilityScore: number;
       selfAuditPassed: boolean;
     };
+    misplacedHeadTags?: string[];
   };
   blockingError?: string;
 }
