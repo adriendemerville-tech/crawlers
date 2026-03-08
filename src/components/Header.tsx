@@ -331,7 +331,17 @@ export function Header() {
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
-                <DropdownMenu open={isProfileOpen} onOpenChange={(open) => { if (open) setIsProfileOpen(true); }}>
+                <DropdownMenu open={isProfileOpen} onOpenChange={(open) => {
+                  if (open) {
+                    if (closeTimeoutRef.current) {
+                      clearTimeout(closeTimeoutRef.current);
+                      closeTimeoutRef.current = null;
+                    }
+                    setIsProfileOpen(true);
+                  } else {
+                    // Only close via our timeout logic, not Radix's internal close
+                  }
+                }}>
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="ghost" 
@@ -347,12 +357,20 @@ export function Header() {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
+                  {/* Invisible bridge to prevent gap flicker */}
+                  {isProfileOpen && (
+                    <div 
+                      className="absolute top-full right-0 h-2 w-48"
+                      onMouseEnter={handleMouseEnter}
+                    />
+                  )}
                   <DropdownMenuContent 
-                    className="w-72 bg-popover border border-border shadow-lg animate-none data-[state=open]:animate-none data-[state=closed]:animate-none" 
-                    align="end" 
-                    forceMount
+                    className="w-72 bg-popover border border-border shadow-lg" 
+                    align="end"
+                    sideOffset={2}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
+                    onCloseAutoFocus={(e) => e.preventDefault()}
                   >
                     {/* Console subtitle */}
                     <div className="px-3 py-2">
