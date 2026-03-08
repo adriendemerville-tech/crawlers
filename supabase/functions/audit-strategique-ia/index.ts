@@ -1210,6 +1210,10 @@ Deno.serve(async (req) => {
       const detectedUrlsSet = new Set(
         (eeatSignals.detectedSocialUrls || []).map((u: string) => u.toLowerCase().replace(/\/$/, ''))
       );
+      // Also whitelist founder profile URL from SERP discovery
+      if (founderInfo?.profileUrl) {
+        detectedUrlsSet.add(founderInfo.profileUrl.toLowerCase().replace(/\/$/, ''));
+      }
       console.log(`🔗 Validating social URLs against ${detectedUrlsSet.size} detected URLs:`, [...detectedUrlsSet]);
       
       for (const source of parsedAnalysis.social_signals.proof_sources) {
