@@ -822,10 +822,9 @@ export function ExpertAuditDashboard() {
       // Auto-retry once silently instead of showing error toast
       try {
         console.log('Strategic audit: auto-retrying...');
-        const { data: retryData, error: retryError } = await supabase.functions.invoke('audit-strategique-ia', {
-          body: { url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null }
+        const retryData = await invokeWithTimeout('audit-strategique-ia', {
+          url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null
         });
-        if (retryError) throw retryError;
         if (!retryData?.success) throw new Error(retryData?.error || 'Retry failed');
 
         const keywordPositioning = retryData?.data?.keyword_positioning ?? retryData?.data?.keywordPositioning ?? null;
