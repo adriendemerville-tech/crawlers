@@ -243,9 +243,10 @@ async function resolveWorkingUrl(baseUrl: string): Promise<{ url: string; resolv
       // Récupérer l'URL finale après redirections
       const finalUrl = response.url || variant;
       
-      if (response.ok || response.status === 405) {
+      if (response.ok || response.status === 405 || response.status === 403) {
         // 405 = Method Not Allowed (some sites block HEAD but allow GET)
-        console.log(`[URL-Resolver] ✅ Found working URL: ${finalUrl}`);
+        // 403 = Forbidden (WAF/Cloudflare but site is real — will try GET in smartFetch)
+        console.log(`[URL-Resolver] ✅ Found working URL: ${finalUrl} (status: ${response.status})`);
         return { url: finalUrl, resolved: true };
       }
     } catch (e) {
