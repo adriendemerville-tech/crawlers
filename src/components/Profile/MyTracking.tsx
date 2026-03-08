@@ -843,7 +843,7 @@ export function MyTracking() {
                                     const date = new Date(y, m - 1, d);
                                     if (!isNaN(date.getTime())) setGscRangeStart(date);
                                   }}
-                                  className="h-9 text-sm px-3 rounded-md border border-input bg-background text-foreground cursor-pointer"
+                                  className="h-10 text-sm px-3.5 rounded-md border border-input bg-background text-foreground cursor-pointer"
                                 />
                                 <span className="text-sm text-muted-foreground">→</span>
                                 <input
