@@ -548,14 +548,23 @@ Deno.serve(async (req) => {
         const textOnly = bodyContent
           .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
           .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+          .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
           .replace(/<[^>]+>/g, ' ')
           .replace(/\s+/g, ' ')
           .trim();
-        const hasSPAMarker = /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<\/div>/i.test(pageHtml)
-          || /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>\s*<noscript/i.test(pageHtml);
+        const hasSPAMarker = /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>/i.test(pageHtml)
+          || /data-reactroot/i.test(pageHtml)
+          || /<app-root/i.test(pageHtml);
         
-        if ((textOnly.length < 200 && pageHtml.length > 1000) || (hasSPAMarker && textOnly.length < 500)) {
-          console.log(`[GEO-AUDIT] SPA detected (${textOnly.length} chars text, ${pageHtml.length} chars HTML). Trying JS rendering...`);
+        // More aggressive detection: large HTML with very little visible text
+        const htmlToTextRatio = textOnly.length / pageHtml.length;
+        const needsRendering = 
+          (textOnly.length < 200 && pageHtml.length > 1000) || 
+          (hasSPAMarker && textOnly.length < 500) ||
+          (pageHtml.length > 5000 && htmlToTextRatio < 0.02); // Less than 2% text = likely SPA/JS-heavy
+        
+        if (needsRendering) {
+          console.log(`[GEO-AUDIT] SPA/JS-heavy detected (${textOnly.length} chars text, ${pageHtml.length} chars HTML, ratio: ${htmlToTextRatio.toFixed(3)}). Trying JS rendering...`);
           
           const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
           if (RENDERING_KEY) {
