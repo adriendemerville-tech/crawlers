@@ -118,16 +118,8 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
           </p>
         </div>
 
-        {/* Benefits with marketing copy */}
+        {/* Benefits list */}
         <div className="px-8 py-4 space-y-3">
-          {/* Main marketing message */}
-          <div className="bg-muted/50 rounded-xl p-4 mb-4">
-            <p className="text-sm text-foreground leading-relaxed">
-              <span className="font-medium">{t.benefit1}</span>, {t.benefit2.toLowerCase()} et vos <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">codes</code> correctifs.
-            </p>
-          </div>
-
-          {/* Benefits list */}
           <motion.div
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
@@ -135,7 +127,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             className="flex items-center gap-3"
           >
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <FolderCheck className="w-4 h-4 text-primary" />
+              <BarChart3 className="w-4 h-4 text-primary" />
             </div>
             <span className="text-sm text-foreground">{t.benefit1}</span>
           </motion.div>
@@ -147,7 +139,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             className="flex items-center gap-3"
           >
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <ClipboardList className="w-4 h-4 text-primary" />
+              <Compass className="w-4 h-4 text-primary" />
             </div>
             <span className="text-sm text-foreground">{t.benefit2}</span>
           </motion.div>
@@ -159,11 +151,9 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             className="flex items-center gap-3"
           >
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Code2 className="w-4 h-4 text-primary" />
+              <Briefcase className="w-4 h-4 text-primary" />
             </div>
-            <span className="text-sm text-foreground">
-              Vos <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">codes</code> correctifs
-            </span>
+            <span className="text-sm text-foreground">{t.benefit3}</span>
           </motion.div>
         </div>
 
@@ -176,7 +166,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
               transition={{ delay: 0.5 }}
               className="flex items-center gap-2 text-primary font-medium"
             >
-              <span>✨</span>
+              <Sparkles className="w-4 h-4" />
               <span>{t.tagline1}</span>
             </motion.div>
             <motion.div
@@ -185,7 +175,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
               transition={{ delay: 0.6 }}
               className="flex items-center gap-2 text-success font-medium"
             >
-              <PiggyBank className="w-4 h-4" />
+              <BookOpen className="w-4 h-4" />
               <span>{t.tagline2}</span>
             </motion.div>
           </div>
