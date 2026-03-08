@@ -113,7 +113,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  const isAgencyPro = planType === 'agency_pro' && (subscriptionStatus === 'active' || subscriptionStatus === 'canceling');
+  const isAgencyPro = planType === 'agency_pro' && (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') && (!subscriptionExpiresAt || new Date(subscriptionExpiresAt) > new Date());
 
   return (
     <CreditsContext.Provider value={{ balance, loading, planType, subscriptionStatus, isAgencyPro, refreshBalance, useCredit }}>
