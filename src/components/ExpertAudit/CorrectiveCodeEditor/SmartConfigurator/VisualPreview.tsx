@@ -266,6 +266,14 @@ export function VisualPreview({ fixes, siteUrl }: VisualPreviewProps) {
         throw new Error('Le proxy a retourné un contenu vide.');
       }
 
+      // Inject error handler early in <head> to suppress SPA framework crashes (Next.js, etc.)
+      const errorHandler = `<script>window.onerror=function(){return true};window.addEventListener('error',function(e){e.preventDefault();e.stopPropagation();return true},true);window.addEventListener('unhandledrejection',function(e){e.preventDefault();},true);<\/script>`;
+      if (/<head[^>]*>/i.test(html)) {
+        html = html.replace(/<head[^>]*>/i, `$&\n${errorHandler}`);
+      } else {
+        html = errorHandler + html;
+      }
+
       // Inject our preview script before </body>
       if (previewScript) {
         const scriptTag = `<script>${previewScript}<\/script>`;
