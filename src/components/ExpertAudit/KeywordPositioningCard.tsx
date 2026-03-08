@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MethodologyPopover } from './MethodologyPopover';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -356,6 +357,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
               </ul>
             </div>
           )}
+          <MethodologyPopover variant="keyword_positioning" />
         </CardContent>
       </Card>
     </motion.div>

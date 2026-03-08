@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { MethodologyPopover } from './MethodologyPopover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -140,6 +141,7 @@ export function StrategicRoadmapCard({ roadmap }: StrategicRoadmapCardProps) {
               </motion.div>
             );
           })}
+          <MethodologyPopover variant="executive_roadmap" />
         </CardContent>
       </Card>
     </motion.div>
