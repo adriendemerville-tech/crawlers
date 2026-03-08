@@ -1247,6 +1247,33 @@ Deno.serve(async (req) => {
     // Sanitize brand name
     parsedAnalysis = sanitizeBrandNameInResponse(parsedAnalysis, domainSlug, humanBrandName);
 
+    // ═══ POST-PROCESS: Validate direct_competitor is not the same as target domain ═══
+    const cleanTargetDomain = domain.replace(/^www\./, '').toLowerCase();
+    if (parsedAnalysis.competitive_landscape?.direct_competitor) {
+      const dc = parsedAnalysis.competitive_landscape.direct_competitor;
+      const dcDomain = (() => {
+        try {
+          const u = dc.url?.startsWith('http') ? dc.url : `https://${dc.url || ''}`;
+          return new URL(u).hostname.replace(/^www\./, '').toLowerCase();
+        } catch { return (dc.name || '').toLowerCase(); }
+      })();
+      if (dcDomain === cleanTargetDomain || dcDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(dcDomain)) {
+        console.log(`⚠️ direct_competitor "${dc.name}" matches target domain — replacing with local competitor or clearing`);
+        if (localCompetitorData) {
+          parsedAnalysis.competitive_landscape.direct_competitor = {
+            name: localCompetitorData.name,
+            url: localCompetitorData.url,
+            authority_factor: dc.authority_factor || 'Concurrent SERP local',
+            analysis: dc.analysis || `Concurrent identifié via les résultats de recherche locaux, positionné #${localCompetitorData.rank}.`,
+          };
+        } else {
+          parsedAnalysis.competitive_landscape.direct_competitor.name = 'Non identifié';
+          parsedAnalysis.competitive_landscape.direct_competitor.url = null;
+          parsedAnalysis.competitive_landscape.direct_competitor.analysis = 'Aucun concurrent direct distinct identifié dans les SERPs locaux.';
+        }
+      }
+    }
+
     // ═══ POST-PROCESS: Validate social URLs against crawler-detected ones ═══
     if (parsedAnalysis.social_signals?.proof_sources && Array.isArray(parsedAnalysis.social_signals.proof_sources)) {
       const detectedUrlsSet = new Set(
