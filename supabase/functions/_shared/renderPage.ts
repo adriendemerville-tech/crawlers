@@ -53,10 +53,9 @@ function detectSPAMarkers(html: string): { isSPA: boolean; framework?: string } 
 function isMissingSEOTags(html: string): boolean {
   const hasCanonical = /<link[^>]+rel=["']canonical["'][^>]*>/i.test(html);
   const hasMetaDesc = /<meta[^>]+name=["']description["'][^>]+content=["'][^"']+["']/i.test(html);
-  const hasOgTitle = /<meta[^>]+property=["']og:title["'][^>]*>/i.test(html);
-  // Missing at least 2 of 3 core SEO signals
-  const missingCount = [hasCanonical, hasMetaDesc, hasOgTitle].filter(v => !v).length;
-  return missingCount >= 2;
+  const hasJsonLd = /<script[^>]+type=["']application\/ld\+json["'][^>]*>/i.test(html);
+  // Trigger if canonical OR JSON-LD is missing (commonly hydrated client-side on Nuxt/Next)
+  return !hasCanonical || !hasJsonLd;
 }
 
 /**
