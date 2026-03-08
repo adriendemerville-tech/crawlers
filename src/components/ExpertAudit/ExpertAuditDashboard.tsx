@@ -41,6 +41,17 @@ import { useSaveReport } from '@/hooks/useSaveReport';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { summarizeStrategicResult } from './expertReportExport';
 
+// Fire-and-forget: trigger CTO Agent asynchronously after audit
+function triggerCtoAgent(auditResult: any, auditType: string, url: string, domain: string) {
+  supabase.functions.invoke('agent-cto', {
+    body: { auditResult, auditType, url, domain }
+  }).then(res => {
+    if (res.data?.success) {
+      console.log(`[CTO-Agent] ${res.data.decision} (v${res.data.version})`);
+    }
+  }).catch(() => { /* silent */ });
+}
+
 function formatMs(ms: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
   return `${Math.round(ms)}ms`;
@@ -632,6 +643,9 @@ export function ExpertAuditDashboard() {
         
         // Track step 1 completion
         trackAnalyticsEvent('expert_audit_step_1', { targetUrl: normalizedUrl });
+        
+        // Fire-and-forget: CTO Agent analysis
+        triggerCtoAgent(auditResult, 'technical', normalizedUrl, auditResult.domain || '');
 
         const reliabilityInfo = auditResult.meta?.reliabilityScore 
           ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
@@ -805,6 +819,8 @@ export function ExpertAuditDashboard() {
       setResult(strategicData);
       setStrategicResult(strategicData);
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+      // Fire-and-forget: CTO Agent analysis
+      triggerCtoAgent(strategicData, 'strategic', normalizedUrl, new URL(normalizedUrl).hostname);
       // Clear any previous hallucination diagnosis since we re-analyzed
       setHallucinationDiagnosis(null);
       
