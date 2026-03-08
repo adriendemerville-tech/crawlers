@@ -92,6 +92,32 @@ export function GeoDashboard({ result, isLoading }: GeoDashboardProps) {
           </p>
         </div>
 
+        {/* Misplaced head tags alert */}
+        {result.misplacedHeadTags && result.misplacedHeadTags.length > 0 && (
+          <Card className="mb-6 border-warning/40 bg-warning/5 p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/10">
+                <AlertTriangle className="h-4 w-4 text-warning" />
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-foreground">
+                  Balise mal placée (hors du &lt;head&gt;)
+                </h4>
+                <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                  {result.misplacedHeadTags.length > 1 ? 'Ces balises sont' : 'Cette balise est'} actuellement dans le &lt;body&gt;. Google l'ignore à cet emplacement, ce qui rend l'instruction inefficace et peut indiquer une erreur d'intégration ou une injection HTML.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {result.misplacedHeadTags.map(tag => (
+                    <span key={tag} className="inline-flex items-center rounded-md bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
+                      &lt;{tag}&gt;
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Factor cards */}
         <div className="grid gap-4 sm:grid-cols-2">
           {result.factors.map((factor, index) => (
