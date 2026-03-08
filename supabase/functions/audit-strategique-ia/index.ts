@@ -382,8 +382,8 @@ async function checkRankings(
     'multi_carousel', 'ai_overview',
   ]);
   
-  // Limit to 7 keywords to reduce memory
-  const keywordsToCheck = keywords.slice(0, 7);
+  // Check top 10 keywords by volume for reliable average position
+  const keywordsToCheck = keywords.slice(0, 10);
   
   try {
     const tasks = keywordsToCheck.map(kw => ({
