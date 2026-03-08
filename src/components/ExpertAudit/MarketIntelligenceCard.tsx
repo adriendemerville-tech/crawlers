@@ -9,6 +9,20 @@ import {
 import { MarketIntelligence } from '@/types/expertAudit';
 import { MethodologyPopover } from './MethodologyPopover';
 
+function generateFallbackThemes(intelligence: MarketIntelligence): string[] {
+  const themes: string[] = [];
+  const gap = intelligence.semantic_gap;
+  if (gap) {
+    themes.push(`Renforcer la couverture sémantique (écart de ${gap.gap_distance || (gap.leader_position - gap.current_position)} points)`);
+  }
+  if (intelligence.sophistication?.emotional_levers?.length) {
+    themes.push(`Exploiter les leviers émotionnels : ${intelligence.sophistication.emotional_levers.slice(0, 2).join(', ')}`);
+  }
+  themes.push('Contenu structuré FAQ / How-To pour intentions conversationnelles');
+  themes.push('Pages piliers thématiques avec Schema.org Article');
+  return themes.slice(0, 4);
+}
+
 interface MarketIntelligenceCardProps {
   intelligence: MarketIntelligence;
 }
@@ -155,7 +169,10 @@ export function MarketIntelligenceCard({ intelligence }: MarketIntelligenceCardP
                 <div className="p-4 rounded-lg bg-muted/50 border border-border">
                   <p className="text-xs text-muted-foreground mb-2">Thèmes Prioritaires à Renforcer</p>
                   <div className="space-y-2">
-                    {intelligence.semantic_gap.priority_themes?.slice(0, 4).map((theme, index) => (
+                    {(intelligence.semantic_gap.priority_themes && intelligence.semantic_gap.priority_themes.length > 0
+                      ? intelligence.semantic_gap.priority_themes
+                      : generateFallbackThemes(intelligence)
+                    ).slice(0, 4).map((theme, index) => (
                       <div 
                         key={index}
                         className="flex items-center gap-2 text-sm"
