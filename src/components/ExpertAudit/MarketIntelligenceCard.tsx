@@ -7,6 +7,7 @@ import {
   ChevronRight, Lightbulb, BarChart3
 } from 'lucide-react';
 import { MarketIntelligence } from '@/types/expertAudit';
+import { MethodologyPopover } from './MethodologyPopover';
 
 interface MarketIntelligenceCardProps {
   intelligence: MarketIntelligence;
@@ -196,6 +197,7 @@ export function MarketIntelligenceCard({ intelligence }: MarketIntelligenceCardP
               </div>
             </div>
           )}
+          <MethodologyPopover variant="market_intelligence" />
         </CardContent>
       </Card>
     </motion.div>

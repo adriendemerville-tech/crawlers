@@ -6,6 +6,7 @@
    Sparkles, AlertTriangle, CheckCircle2, XCircle, MessageSquare
  } from 'lucide-react';
  import { LLMVisibilityRaw } from '@/types/expertAudit';
+ import { MethodologyPopover } from './MethodologyPopover';
  
  interface LLMVisibilityCardProps {
    data: LLMVisibilityRaw;
@@ -145,6 +146,7 @@
              </div>
            </div>
          )}
+       <MethodologyPopover variant="llm_visibility" />
        </CardContent>
      </Card>
    );

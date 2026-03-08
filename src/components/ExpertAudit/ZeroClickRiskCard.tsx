@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ShieldAlert, Zap, AlertTriangle, CheckCircle2, Shield } from 'lucide-react';
 import { StrategicAnalysis } from '@/types/expertAudit';
+import { MethodologyPopover } from './MethodologyPopover';
 import { toast } from 'sonner';
 
 interface ZeroClickRiskCardProps {
@@ -191,6 +192,7 @@ export function ZeroClickRiskCard({ analysis, domain }: ZeroClickRiskCardProps) 
               Générer une stratégie de contournement E-E-A-T
             </Button>
           )}
+          <MethodologyPopover variant="zero_click_risk" />
         </CardContent>
       </Card>
     </motion.div>

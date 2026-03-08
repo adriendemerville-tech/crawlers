@@ -7,6 +7,7 @@ import {
   ChevronRight, DollarSign
 } from 'lucide-react';
 import { PremiumRoadmapItem } from '@/types/expertAudit';
+import { MethodologyPopover } from './MethodologyPopover';
 
 interface PremiumRoadmapCardProps {
   roadmap: PremiumRoadmapItem[];
@@ -169,6 +170,7 @@ export function PremiumRoadmapCard({ roadmap }: PremiumRoadmapCardProps) {
               </motion.div>
             );
           })}
+          <MethodologyPopover variant="executive_roadmap" />
         </CardContent>
       </Card>
     </motion.div>
