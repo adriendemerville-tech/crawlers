@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FileText, UserPlus, LogIn, X, BarChart3, Compass, Briefcase, BookOpen, Sparkles } from 'lucide-react';
+import { FileText, UserPlus, LogIn, X, BarChart3, Compass, Briefcase, BookOpen, Sparkles, Code, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
@@ -8,10 +8,11 @@ import { useAuth } from '@/contexts/AuthContext';
 const translations = {
   fr: {
     title: 'Téléchargez vos rapports',
-    subtitle: 'Connectez-vous pour accéder à tous vos outils SEO.',
+    subtitle: 'Connectez-vous pour accéder à tous vos outils SEO / GEO.',
     benefit1: 'Suivi des statistiques',
     benefit2: 'Conseils 360°',
     benefit3: 'Fonctions dédiées aux Pros',
+    benefit4: 'Audit complet → plans d\'action → code correctif',
     tagline1: 'Autonomie',
     tagline2: 'Pédagogie',
     signup: 'S\'inscrire gratuitement',
@@ -19,10 +20,11 @@ const translations = {
   },
   en: {
     title: 'Download your reports',
-    subtitle: 'Log in to access all your SEO tools.',
+    subtitle: 'Log in to access all your SEO / GEO tools.',
     benefit1: 'Statistics tracking',
     benefit2: '360° advice',
     benefit3: 'Pro-dedicated features',
+    benefit4: 'Full audit → action plans → corrective code',
     tagline1: 'Autonomy',
     tagline2: 'Education',
     signup: 'Sign up for free',
@@ -30,10 +32,11 @@ const translations = {
   },
   es: {
     title: 'Descarga tus informes',
-    subtitle: 'Inicia sesión para acceder a todas tus herramientas SEO.',
+    subtitle: 'Inicia sesión para acceder a todas tus herramientas SEO / GEO.',
     benefit1: 'Seguimiento de estadísticas',
     benefit2: 'Consejos 360°',
     benefit3: 'Funciones dedicadas a Pros',
+    benefit4: 'Auditoría completa → planes de acción → código correctivo',
     tagline1: 'Autonomía',
     tagline2: 'Pedagogía',
     signup: 'Registrarse gratis',
@@ -155,6 +158,18 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             </div>
             <span className="text-sm text-foreground">{t.benefit3}</span>
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-center gap-3"
+          >
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Code className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-sm text-foreground">{t.benefit4}</span>
+          </motion.div>
         </div>
 
         {/* Taglines */}
@@ -163,7 +178,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.6 }}
               className="flex items-center gap-2 text-primary font-medium"
             >
               <Sparkles className="w-4 h-4" />
@@ -172,7 +187,7 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.7 }}
               className="flex items-center gap-2 text-success font-medium"
             >
               <BookOpen className="w-4 h-4" />
