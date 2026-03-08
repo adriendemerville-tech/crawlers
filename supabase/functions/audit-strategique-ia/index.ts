@@ -586,6 +586,7 @@ INSTRUCTIONS CRITIQUES:
 - executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
+- PROFILS SOCIAUX: Pour chaque plateforme dans proof_sources, si tu identifies un profil réel (fondateur sur LinkedIn, compte X/Twitter, chaîne YouTube, compte Instagram), fournis l'URL complète dans "profile_url" et le nom du profil dans "profile_name". Analyse explicitement l'incarnation humaine (fondateur, dirigeant, porte-parole) et son impact sur l'E-E-A-T.
 - JSON pur, sans virgules traînantes`;
 }
 
