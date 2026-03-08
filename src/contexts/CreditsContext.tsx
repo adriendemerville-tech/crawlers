@@ -19,6 +19,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   const [balance, setBalance] = useState(0);
   const [planType, setPlanType] = useState('free');
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchBalance = useCallback(async () => {
@@ -31,7 +32,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('credits_balance, plan_type, subscription_status')
+        .select('credits_balance, plan_type, subscription_status, subscription_expires_at')
         .eq('user_id', user.id)
         .single();
 
@@ -39,6 +40,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
       setBalance(data?.credits_balance || 0);
       setPlanType((data as any)?.plan_type || 'free');
       setSubscriptionStatus((data as any)?.subscription_status || null);
+      setSubscriptionExpiresAt((data as any)?.subscription_expires_at || null);
     } catch (error) {
       console.error('Error fetching credits balance:', error);
       setBalance(0);
@@ -111,7 +113,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  const isAgencyPro = planType === 'agency_pro' && (subscriptionStatus === 'active' || subscriptionStatus === 'canceling');
+  const isAgencyPro = planType === 'agency_pro' && (subscriptionStatus === 'active' || subscriptionStatus === 'canceling') && (!subscriptionExpiresAt || new Date(subscriptionExpiresAt) > new Date());
 
   return (
     <CreditsContext.Provider value={{ balance, loading, planType, subscriptionStatus, isAgencyPro, refreshBalance, useCredit }}>

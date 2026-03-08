@@ -729,6 +729,7 @@ export type Database = {
           referral_code: string | null
           referred_by: string | null
           stripe_subscription_id: string | null
+          subscription_expires_at: string | null
           subscription_status: string | null
           updated_at: string
           user_id: string
@@ -759,6 +760,7 @@ export type Database = {
           referral_code?: string | null
           referred_by?: string | null
           stripe_subscription_id?: string | null
+          subscription_expires_at?: string | null
           subscription_status?: string | null
           updated_at?: string
           user_id: string
@@ -789,6 +791,7 @@ export type Database = {
           referral_code?: string | null
           referred_by?: string | null
           stripe_subscription_id?: string | null
+          subscription_expires_at?: string | null
           subscription_status?: string | null
           updated_at?: string
           user_id?: string
