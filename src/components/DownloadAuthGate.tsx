@@ -20,10 +20,11 @@ const translations = {
   },
   en: {
     title: 'Download your reports',
-    subtitle: 'Log in to access all your SEO tools.',
+    subtitle: 'Log in to access all your SEO / GEO tools.',
     benefit1: 'Statistics tracking',
     benefit2: '360° advice',
     benefit3: 'Pro-dedicated features',
+    benefit4: 'Full audit → action plans → corrective code',
     tagline1: 'Autonomy',
     tagline2: 'Education',
     signup: 'Sign up for free',
