@@ -867,6 +867,8 @@ RÈGLE CONCURRENT DIRECT: Le direct_competitor DOIT être un vrai concurrent pro
 
 RÈGLE SOURCE D'INSPIRATION: L'inspiration_source DOIT avoir le même core business que le site cible OU être un nouvel entrant novateur et reconnu sur un business directement lié. C'est une entreprise innovante qui repousse les standards du secteur. INTERDIT: médias, annuaires, marketplaces, réseaux sociaux, Wikipedia, plateformes généralistes. Exemples: pour un outil IA SEO → Claude Code, OpenClaw, Cursor ; pour un e-commerce bio → La Fourche, Kazidomi. L'inspiration doit être un acteur admiré du même écosystème métier.
 
+RÈGLE MOTS-CLÉS STRATÉGIQUES: La liste de mots-clés DOIT OBLIGATOIREMENT contenir au moins une requête directement liée au core business du site. Ex: pour un agent IA → "agent IA", "agent IA entreprise", "automatisation IA TPE" ; pour un plombier → "plombier Paris", "dépannage plomberie". Si aucun mot-clé core business n'apparaît dans les données DataForSEO, AJOUTE-LE manuellement avec volume estimé et rank "non classé".
+
 DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS. Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (non classé, volume>200).
 
 13 MODULES D'ANALYSE:
