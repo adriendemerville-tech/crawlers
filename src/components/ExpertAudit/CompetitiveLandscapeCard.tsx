@@ -8,6 +8,7 @@ import {
   ExternalLink, Shield, TrendingUp, Pencil
 } from 'lucide-react';
 import { CompetitiveLandscape, CompetitorActor } from '@/types/expertAudit';
+import { MethodologyPopover } from './MethodologyPopover';
 import { CompetitorCorrectionModal, CompetitorCorrections } from './CompetitorCorrectionModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 
