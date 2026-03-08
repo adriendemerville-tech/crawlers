@@ -169,8 +169,9 @@ export function ConversationalIntentCard({ analysis }: ConversationalIntentCardP
                 side="top"
                 align="end"
                 sideOffset={8}
-                collisionPadding={16}
-                className="w-72 p-3 text-xs leading-relaxed text-foreground/90 backdrop-blur-xl bg-background/80 border border-border/50 shadow-xl rounded-lg z-50"
+                collisionPadding={24}
+                sticky="always"
+                className="w-72 max-h-[50vh] overflow-y-auto p-3 text-xs leading-relaxed text-foreground/90 backdrop-blur-xl bg-background/80 border border-border/50 shadow-xl rounded-lg z-[100]"
               >
                 Crawlers analyse les balises Title et H1-H3 de la page, identifie celles formulées en questions naturelles (qui, quoi, comment, pourquoi…), et calcule le ratio par rapport aux titres classiques à mots-clés. Un score élevé signifie que le contenu est structuré pour être repris dans les réponses conversationnelles.
               </PopoverContent>

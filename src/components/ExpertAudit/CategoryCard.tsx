@@ -84,8 +84,9 @@ export function CategoryCard({ icon, title, score, maxScore, children, variant =
               side="top"
               align="end"
               sideOffset={8}
-              collisionPadding={16}
-              className="w-72 p-3 text-xs leading-relaxed text-foreground/90 backdrop-blur-xl bg-background/80 border border-border/50 shadow-xl rounded-lg z-50"
+              collisionPadding={24}
+              sticky="always"
+              className="w-72 max-h-[50vh] overflow-y-auto p-3 text-xs leading-relaxed text-foreground/90 backdrop-blur-xl bg-background/80 border border-border/50 shadow-xl rounded-lg z-[100]"
             >
               {methodologyTexts[variant]}
             </PopoverContent>
