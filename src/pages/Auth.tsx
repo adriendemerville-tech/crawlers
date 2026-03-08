@@ -369,7 +369,7 @@ export default function Auth() {
                         <FormControl>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input {...field} type="email" className="pl-10" placeholder="email@example.com" />
+                            <Input {...field} type="email" className="pl-10 caret-primary" autoFocus placeholder="email@example.com" />
                           </div>
                         </FormControl>
                         <FormMessage />
