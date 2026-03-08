@@ -728,7 +728,6 @@ export function ExpertAuditDashboard() {
         competitorCorrections: competitorCorrections || null
       });
 
-      if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Strategic audit failed');
 
       // Keyword module normalization (support minor naming variations)
