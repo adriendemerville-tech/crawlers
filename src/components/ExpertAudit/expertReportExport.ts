@@ -255,7 +255,7 @@ export function generateExpertReportHTML(
     content = `
       <div style="text-align: center; margin-bottom: 28px;">
         <div style="display: inline-block; padding: 22px 44px; background: linear-gradient(135deg, #7c3aed, #2563eb); border-radius: 18px; margin-bottom: 14px;">
-          <div style="font-size: 48px; font-weight: bold; color: white;">${result.totalScore}/200</div>
+          <div style="font-size: 48px; font-weight: bold; color: white;">${computedTotal}/200</div>
           <div style="color: rgba(255,255,255,0.9); font-size: 14px;">${t.score} Global</div>
         </div>
       </div>
