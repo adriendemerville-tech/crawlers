@@ -375,13 +375,20 @@ async function checkRankings(
   const results: KeywordData[] = [];
   const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
   
-  // Limit to 7 keywords to reduce memory (was 10)
+  // Types SERP qui indiquent une présence réelle dans les résultats Google
+  const RANKABLE_TYPES = new Set([
+    'organic', 'featured_snippet', 'local_pack', 'knowledge_graph',
+    'top_stories', 'video', 'image', 'twitter', 'app',
+    'multi_carousel', 'ai_overview',
+  ]);
+  
+  // Limit to 7 keywords to reduce memory
   const keywordsToCheck = keywords.slice(0, 7);
   
   try {
     const tasks = keywordsToCheck.map(kw => ({
       keyword: kw.keyword, location_code: locationCode, language_code: 'fr',
-      depth: 20, se_domain: 'google.fr', // Reduced depth from 30 to 20
+      depth: 30, se_domain: 'google.fr',
     }));
     
     const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
@@ -391,7 +398,7 @@ async function checkRankings(
     });
 
     if (!response.ok) {
-      await response.text(); // consume body
+      await response.text();
       return keywords.map(kw => ({ ...kw, is_ranked: false, current_rank: 'Non classé' }));
     }
 
@@ -405,14 +412,43 @@ async function checkRankings(
       
       if (taskResult?.items) {
         for (const item of taskResult.items) {
-          if (item.type === 'organic' && item.domain) {
-            const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
-            if (itemDomain.includes(cleanDomain) || cleanDomain.includes(itemDomain)) {
-              position = item.rank_absolute || item.rank_group || 1;
-              isRanked = true;
-              break;
-            }
+          // Check domain from multiple fields for reliability
+          const itemDomain = (item.domain || '').toLowerCase().replace(/^www\./, '');
+          const itemUrl = (item.url || '').toLowerCase();
+          
+          // Match against domain field OR url field
+          const domainMatch = itemDomain && (
+            itemDomain === cleanDomain ||
+            itemDomain.endsWith('.' + cleanDomain) ||
+            cleanDomain.endsWith('.' + itemDomain)
+          );
+          const urlMatch = itemUrl.includes(cleanDomain);
+          
+          if ((domainMatch || urlMatch) && RANKABLE_TYPES.has(item.type)) {
+            position = item.rank_absolute || item.rank_group || 1;
+            isRanked = true;
+            console.log(`🎯 ${kw.keyword}: ${cleanDomain} trouvé en position ${position} (type: ${item.type}, domain: ${itemDomain})`);
+            break;
           }
+          
+          // Also check nested items (e.g., items inside carousels or packs)
+          if (item.items && Array.isArray(item.items)) {
+            for (const subItem of item.items) {
+              const subDomain = (subItem.domain || '').toLowerCase().replace(/^www\./, '');
+              const subUrl = (subItem.url || '').toLowerCase();
+              if ((subDomain === cleanDomain || subUrl.includes(cleanDomain))) {
+                position = item.rank_absolute || item.rank_group || 1;
+                isRanked = true;
+                console.log(`🎯 ${kw.keyword}: ${cleanDomain} trouvé en sous-item position ${position} (type: ${item.type})`);
+                break;
+              }
+            }
+            if (isRanked) break;
+          }
+        }
+        
+        if (!isRanked) {
+          console.log(`❌ ${kw.keyword}: ${cleanDomain} non trouvé dans ${taskResult.items.length} résultats SERP`);
         }
       }
       results.push({ keyword: kw.keyword, volume: kw.volume, difficulty: kw.difficulty, is_ranked: isRanked, current_rank: position });
