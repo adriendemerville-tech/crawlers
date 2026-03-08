@@ -1578,7 +1578,7 @@ Deno.serve(async (req) => {
 
     const aiResponse = await response.json();
     const content = aiResponse.choices?.[0]?.message?.content;
-    trackTokenUsage('audit-strategique-ia', 'google/gemini-2.5-flash', aiResponse.usage, url);
+    trackTokenUsage('audit-strategique-ia', 'google/gemini-2.5-pro', aiResponse.usage, url);
 
     if (!content) {
       return new Response(JSON.stringify({ success: false, error: 'Empty AI response' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
