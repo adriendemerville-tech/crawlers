@@ -623,6 +623,34 @@ async function checkRankings(
   return results;
 }
 
+// Domains that are NEVER real product competitors (media, directories, aggregators)
+const NON_COMPETITOR_DOMAINS = new Set([
+  'forbes.com', 'forbes.fr', 'lemonde.fr', 'lefigaro.fr', 'bfmtv.com', 'lesechos.fr',
+  'wikipedia.org', 'fr.wikipedia.org', 'en.wikipedia.org',
+  'youtube.com', 'facebook.com', 'instagram.com', 'twitter.com', 'x.com', 'linkedin.com', 'reddit.com', 'tiktok.com', 'pinterest.com',
+  'amazon.com', 'amazon.fr', 'ebay.fr', 'ebay.com', 'aliexpress.com', 'cdiscount.com',
+  'trustpilot.com', 'glassdoor.fr', 'glassdoor.com', 'indeed.fr', 'indeed.com',
+  'capterra.fr', 'capterra.com', 'g2.com', 'getapp.com', 'appvizer.fr', 'appvizer.com',
+  'societe.com', 'pappers.fr', 'pagesjaunes.fr', 'yelp.fr', 'yelp.com',
+  'journaldunet.com', 'journaldunet.fr', 'commentcamarche.net', 'linternaute.com',
+  'medium.com', 'substack.com', 'hubspot.com', 'hubspot.fr', 'salesforce.com',
+  'crunchbase.com', 'wellfound.com', 'producthunt.com',
+  'google.com', 'google.fr', 'apple.com', 'microsoft.com', 'github.com',
+]);
+
+function isNonCompetitorDomain(domain: string): boolean {
+  const clean = domain.replace(/^www\./, '').toLowerCase();
+  // Exact match
+  if (NON_COMPETITOR_DOMAINS.has(clean)) return true;
+  // Subdomain match (e.g. "fr.wikipedia.org" → "wikipedia.org")
+  const parts = clean.split('.');
+  if (parts.length > 2) {
+    const root = parts.slice(-2).join('.');
+    if (NON_COMPETITOR_DOMAINS.has(root)) return true;
+  }
+  return false;
+}
+
 async function findLocalCompetitor(
   domain: string, sector: string, locationCode: number, pageContentContext: string
 ): Promise<{ name: string; url: string; rank: number } | null> {
@@ -643,7 +671,7 @@ async function findLocalCompetitor(
     }
   }
 
-  // Use first 2-3 meaningful words from sector for a focused SERP query (sector now comes from page content)
+  // Use first 2-3 meaningful words from sector for a focused SERP query
   const sectorWords = sector.split(' ').filter(w => w.length > 2).slice(0, 3).join(' ');
   const localQuery = city ? `${sectorWords} ${city}` : sectorWords;
   console.log(`🏙️ Recherche concurrent local: "${localQuery}"`);
@@ -654,7 +682,7 @@ async function findLocalCompetitor(
       headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify([{
         keyword: localQuery, location_code: locationCode, language_code: 'fr',
-        depth: 15, se_domain: 'google.fr', // Reduced depth from 20 to 15
+        depth: 20, se_domain: 'google.fr',
       }]),
     });
 
@@ -669,26 +697,39 @@ async function findLocalCompetitor(
 
     const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
     const organicResults = items.filter((item: any) => item.type === 'organic' && item.domain && item.url);
+    
+    // A valid competitor must: (1) not be the target, (2) not be a media/directory/aggregator
+    const isValidCompetitor = (item: any) => {
+      const d = item.domain.toLowerCase().replace(/^www\./, '');
+      if (d.includes(cleanDomain) || cleanDomain.includes(d)) return false; // self
+      if (isNonCompetitorDomain(d)) return false; // media/directory
+      return true;
+    };
+
     const targetIdx = organicResults.findIndex((item: any) => {
       const d = item.domain.toLowerCase().replace(/^www\./, '');
       return d.includes(cleanDomain) || cleanDomain.includes(d);
     });
 
     let competitor: any = null;
-    const isDifferent = (item: any) => {
-      const d = item.domain.toLowerCase().replace(/^www\./, '');
-      return !d.includes(cleanDomain) && !cleanDomain.includes(d);
-    };
 
     if (targetIdx === -1) {
-      competitor = organicResults.find(isDifferent);
+      // Target not found in SERP — take first valid competitor
+      competitor = organicResults.find(isValidCompetitor);
     } else if (targetIdx === 0) {
-      competitor = organicResults.find((item: any, idx: number) => idx > targetIdx && isDifferent(item));
+      // Target is #1 — take next valid competitor
+      competitor = organicResults.find((item: any, idx: number) => idx > targetIdx && isValidCompetitor(item));
     } else {
+      // Target is ranked — find closest valid competitor above
       for (let i = targetIdx - 1; i >= 0; i--) {
-        if (isDifferent(organicResults[i])) { competitor = organicResults[i]; break; }
+        if (isValidCompetitor(organicResults[i])) { competitor = organicResults[i]; break; }
       }
-      if (!competitor) competitor = organicResults.find(isDifferent);
+      // Fallback: closest below
+      if (!competitor) {
+        for (let i = targetIdx + 1; i < organicResults.length; i++) {
+          if (isValidCompetitor(organicResults[i])) { competitor = organicResults[i]; break; }
+        }
+      }
     }
 
     if (competitor) {
@@ -697,9 +738,10 @@ async function findLocalCompetitor(
         url: competitor.url,
         rank: competitor.rank_absolute || competitor.rank_group || 0,
       };
-      console.log(`✅ Concurrent local: "${result.name}" position ${result.rank}`);
+      console.log(`✅ Concurrent local: "${result.name}" position ${result.rank} (domain: ${competitor.domain})`);
       return result;
     }
+    console.log('⚠️ Aucun concurrent valide trouvé dans les SERPs');
     return null;
   } catch (error) {
     console.error('❌ Erreur concurrent local:', error);
@@ -820,6 +862,8 @@ const SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé Brand Autho
 POSTURE: Analytique, souverain, prescriptif. Jargon expert (Entité sémantique, Topical Authority, E-E-A-T, Gap de citabilité). Recommandations NARRATIVES: chaque action = paragraphe rédigé 4-5 phrases.
 
 RÈGLE ABSOLUE ANTI-AUTO-CITATION: Le site analysé ne doit JAMAIS apparaître comme son propre concurrent (leader, direct_competitor, challenger, inspiration_source). Ne cite JAMAIS le domaine analysé ni son nom de marque dans competitive_landscape ni dans introduction.competitors[]. Tous les acteurs doivent être des entités DISTINCTES du site audité.
+
+RÈGLE CONCURRENT DIRECT: Le direct_competitor DOIT être un vrai concurrent produit/service avec le MÊME core business ou une feature proche. INTERDIT: médias (Forbes, Le Monde...), annuaires (Capterra, G2...), marketplaces (Amazon...), réseaux sociaux, Wikipedia. Le concurrent direct doit être une entreprise qui vend un produit/service similaire au site analysé, dans la même zone géographique si local.
 
 DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS. Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (non classé, volume>200).
 
