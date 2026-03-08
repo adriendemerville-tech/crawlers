@@ -2092,7 +2092,7 @@ Réponds avec ce JSON exact:
           const content = aiData.choices?.[0]?.message?.content;
 
           // Track token usage
-          trackTokenUsage('expert-audit', 'google/gemini-3-flash-preview', aiData.usage, normalizedUrl);
+          trackTokenUsage('expert-audit', 'google/gemini-2.5-flash', aiData.usage, normalizedUrl);
 
           if (content) {
             let jsonContent = content;
