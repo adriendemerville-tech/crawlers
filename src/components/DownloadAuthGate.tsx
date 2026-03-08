@@ -190,15 +190,6 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             <UserPlus className="w-4 h-4" />
             {t.signup}
           </Button>
-          
-          <Button 
-            onClick={handleLogin}
-            variant="outline"
-            className="w-full h-12 text-base font-medium gap-2"
-          >
-            <LogIn className="w-4 h-4" />
-            {t.login}
-          </Button>
         </div>
       </motion.div>
     </motion.div>
