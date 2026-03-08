@@ -656,16 +656,6 @@ Deno.serve(async (req) => {
       isSPAWithLimitedContent = true;
     }
 
-    // =========================================================================
-    // ÉTAPE 2 : ANALYSE COMPLÈTE
-    // =========================================================================
-    const aiBotsResult = checkAIBotsAllowed(robotsTxt);
-    const metaResult = analyzeMetaTags(doc);
-    const structuredData = analyzeStructuredData(doc, pageHtml);
-    const contentResult = analyzeContent(doc);
-    const spaInfo = detectSPAMarkers(doc);
-    const ogResult = analyzeOpenGraph(doc);
-    const hasSitemap = checkSitemap(robotsTxt);
 
     const factors: GeoFactor[] = [];
 
