@@ -936,7 +936,7 @@ export function MyTracking() {
                             }
 
                             return (
-                              <div className="h-[22rem]">
+                              <div className="h-[24.5rem] w-[108%] -ml-[4%]">
                                 <ResponsiveContainer width="100%" height="100%">
                                   <ComposedChart data={chartRows} margin={{ left: 0, right: 40, top: 5, bottom: 5 }}>
                                     <defs>
