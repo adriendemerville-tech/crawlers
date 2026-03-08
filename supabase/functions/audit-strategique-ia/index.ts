@@ -567,7 +567,7 @@ PAGESPEED:${JSON.stringify(toolsData.pagespeed)}
 GÉNÈRE UN JSON avec cette structure:
 {"introduction":{"presentation":"4-5 phrases","strengths":"4-5 phrases","improvement":"4-5 phrases","competitors":["Leader","Concurrent","Challenger"]},
 "brand_authority":{"dna_analysis":"...","thought_leadership_score":0-100,"entity_strength":"dominant|established|emerging|unknown"},
-"social_signals":{"proof_sources":[{"platform":"reddit|x|linkedin|youtube","presence_level":"strong|moderate|weak|absent","analysis":"..."}],"thought_leadership":{"founder_authority":"high|moderate|low|unknown","entity_recognition":"...","eeat_score":0-10,"analysis":"..."},"sentiment":{"overall_polarity":"positive|mostly_positive|neutral|mixed|negative","hallucination_risk":"low|medium|high","reputation_vibration":"..."}},
+"social_signals":{"proof_sources":[{"platform":"reddit|x|linkedin|youtube|instagram","presence_level":"strong|moderate|weak|absent","analysis":"...","profile_url":"URL COMPLÈTE du profil social détecté (ex: https://linkedin.com/in/..., https://x.com/..., https://instagram.com/...) ou null si inconnu","profile_name":"Nom du profil/personne identifié ou null"}],"thought_leadership":{"founder_authority":"high|moderate|low|unknown","entity_recognition":"...","eeat_score":0-10,"analysis":"..."},"sentiment":{"overall_polarity":"positive|mostly_positive|neutral|mixed|negative","hallucination_risk":"low|medium|high","reputation_vibration":"..."}},
 "market_intelligence":{"sophistication":{"level":1-5,"description":"...","emotional_levers":["1","2","3"]},"semantic_gap":{"current_position":0-100,"leader_position":0-100,"gap_analysis":"...","closing_strategy":"..."}},
 "competitive_landscape":{"leader":{"name":"...","authority_factor":"...","dominance_analysis":"..."},"direct_competitor":{"name":"...","url":"URL VALIDE OBLIGATOIRE","parity_analysis":"...","authority_factor":"..."},"challenger":{"name":"...","disruption_factor":"...","threat_analysis":"..."},"inspiration_source":{"name":"...","benchmark_quality":"...","adaptation_strategy":"..."}},
 "geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":["..."],"weaknesses":["..."],"recommendations":["..."]},
@@ -586,6 +586,7 @@ INSTRUCTIONS CRITIQUES:
 - executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
+- PROFILS SOCIAUX: Pour chaque plateforme dans proof_sources, si tu identifies un profil réel (fondateur sur LinkedIn, compte X/Twitter, chaîne YouTube, compte Instagram), fournis l'URL complète dans "profile_url" et le nom du profil dans "profile_name". Analyse explicitement l'incarnation humaine (fondateur, dirigeant, porte-parole) et son impact sur l'E-E-A-T.
 - JSON pur, sans virgules traînantes`;
 }
 

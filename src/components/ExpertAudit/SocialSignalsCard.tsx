@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Users, MessageCircle, Linkedin, Twitter, 
   Youtube, AlertTriangle, CheckCircle2, 
-  XCircle, Brain, Shield, TrendingUp
+  XCircle, Brain, Shield, TrendingUp, ExternalLink, Instagram
 } from 'lucide-react';
 import { SocialSignals, SocialProofSource } from '@/types/expertAudit';
 
@@ -18,6 +18,7 @@ function PlatformIcon({ platform }: { platform: string }) {
     case 'x': return <Twitter className="h-4 w-4 text-sky-500" />;
     case 'linkedin': return <Linkedin className="h-4 w-4 text-blue-600" />;
     case 'youtube': return <Youtube className="h-4 w-4 text-red-500" />;
+    case 'instagram': return <Instagram className="h-4 w-4 text-pink-500" />;
     default: return <Users className="h-4 w-4 text-muted-foreground" />;
   }
 }
@@ -31,6 +32,17 @@ function PresenceBadge({ level }: { level: string }) {
   };
   const c = config[level as keyof typeof config] || config.absent;
   return <Badge variant="outline" className={`text-xs ${c.color}`}>{c.label}</Badge>;
+}
+
+function PlatformLabel({ platform }: { platform: string }) {
+  const labels: Record<string, string> = {
+    reddit: 'Reddit',
+    x: 'X (Twitter)',
+    linkedin: 'LinkedIn',
+    youtube: 'YouTube',
+    instagram: 'Instagram',
+  };
+  return <>{labels[platform] || platform}</>;
 }
 
 export function SocialSignalsCard({ signals }: SocialSignalsCardProps) {
@@ -84,7 +96,7 @@ export function SocialSignalsCard({ signals }: SocialSignalsCardProps) {
                 <MessageCircle className="h-3 w-3" />
                 Preuve Sociale par Plateforme
               </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 {signals.proof_sources.map((source, index) => (
                   <div 
                     key={index}
@@ -92,11 +104,29 @@ export function SocialSignalsCard({ signals }: SocialSignalsCardProps) {
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <PlatformIcon platform={source.platform} />
-                      <span className="text-sm font-medium capitalize">{source.platform}</span>
+                      <span className="text-sm font-medium">
+                        <PlatformLabel platform={source.platform} />
+                      </span>
                     </div>
                     <PresenceBadge level={source.presence_level} />
+                    
+                    {/* Profile link */}
+                    {source.profile_url && (
+                      <a 
+                        href={source.profile_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="mt-2 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 hover:underline transition-colors"
+                      >
+                        <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">
+                          {source.profile_name || 'Voir le profil'}
+                        </span>
+                      </a>
+                    )}
+                    
                     {source.analysis && (
-                      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                      <p className="text-xs text-muted-foreground mt-2 line-clamp-3">
                         {source.analysis}
                       </p>
                     )}

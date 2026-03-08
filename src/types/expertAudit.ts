@@ -171,9 +171,11 @@ export interface CompetitiveLandscape {
 
 // NEW: Social & Human Authority (Off-Site Signals)
 export interface SocialProofSource {
-  platform: 'reddit' | 'x' | 'linkedin' | 'youtube' | 'other';
+  platform: 'reddit' | 'x' | 'linkedin' | 'youtube' | 'instagram' | 'other';
   presence_level: 'strong' | 'moderate' | 'weak' | 'absent';
   analysis: string;
+  profile_url?: string;
+  profile_name?: string;
 }
 
 export interface ThoughtLeadership {
