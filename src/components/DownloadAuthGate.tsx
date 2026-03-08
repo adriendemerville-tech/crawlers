@@ -158,6 +158,18 @@ export function DownloadAuthGate({ isOpen, onClose, onAuthenticated, returnPath 
             </div>
             <span className="text-sm text-foreground">{t.benefit3}</span>
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-center gap-3"
+          >
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Code className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-sm text-foreground">{t.benefit4}</span>
+          </motion.div>
         </div>
 
         {/* Taglines */}
