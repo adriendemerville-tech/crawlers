@@ -1114,6 +1114,30 @@ Deno.serve(async (req) => {
     // Sanitize brand name
     parsedAnalysis = sanitizeBrandNameInResponse(parsedAnalysis, domainSlug, humanBrandName);
 
+    // ═══ POST-PROCESS: Validate social URLs against crawler-detected ones ═══
+    if (parsedAnalysis.social_signals?.proof_sources && Array.isArray(parsedAnalysis.social_signals.proof_sources)) {
+      const detectedUrlsSet = new Set(
+        (metadata.eeatSignals.detectedSocialUrls || []).map((u: string) => u.toLowerCase().replace(/\/$/, ''))
+      );
+      console.log(`🔗 Validating social URLs against ${detectedUrlsSet.size} detected URLs:`, [...detectedUrlsSet]);
+      
+      for (const source of parsedAnalysis.social_signals.proof_sources) {
+        if (source.profile_url) {
+          const normalized = source.profile_url.toLowerCase().replace(/\/$/, '');
+          // Check if this URL (or a close match) was actually detected by the crawler
+          const isValid = [...detectedUrlsSet].some(detected => 
+            normalized.includes(detected) || detected.includes(normalized) ||
+            // Allow matching by path segment (e.g. /in/yoan-drahy matches detected /in/yoan-drahy)
+            normalized.split('/').slice(-1)[0] === detected.split('/').slice(-1)[0]
+          );
+          if (!isValid) {
+            console.log(`⚠️ Removing hallucinated social URL: ${source.profile_url} (not in detected set)`);
+            source.profile_url = null;
+          }
+        }
+      }
+    }
+
     const result = {
       success: true,
       data: {
