@@ -680,6 +680,40 @@ export function ExpertAuditDashboard() {
     });
   };
 
+  // Helper to invoke edge function with extended timeout (120s) for heavy audits
+  const invokeWithTimeout = async (fnName: string, body: any, timeoutMs = 120000) => {
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fnName}`;
+    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    const session = (await supabase.auth.getSession()).data.session;
+    const authToken = session?.access_token || anonKey;
+    
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    
+    try {
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': anonKey,
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(text || `Function returned ${resp.status}`);
+      }
+      return await resp.json();
+    } catch (e: any) {
+      clearTimeout(timer);
+      if (e.name === 'AbortError') throw new Error('La requête a expiré (timeout). Réessayez.');
+      throw e;
+    }
+  };
+
   const runStrategicAudit = async (validatedUrl: string, hallucinationCorrections?: any, competitorCorrections?: any) => {
     const normalizedUrl = validatedUrl;
     setAuditMode('strategic');
@@ -687,18 +721,13 @@ export function ExpertAuditDashboard() {
     setResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('audit-strategique-ia', {
-        body: { 
-          url: normalizedUrl, 
-          toolsData: null,
-          // Pass hallucination corrections as priority weights for re-analysis
-          hallucinationCorrections: hallucinationCorrections || null,
-          // Pass competitor corrections as priority weights for re-analysis
-          competitorCorrections: competitorCorrections || null
-        }
+      const data = await invokeWithTimeout('audit-strategique-ia', { 
+        url: normalizedUrl, 
+        toolsData: null,
+        hallucinationCorrections: hallucinationCorrections || null,
+        competitorCorrections: competitorCorrections || null
       });
 
-      if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Strategic audit failed');
 
       // Keyword module normalization (support minor naming variations)
@@ -793,10 +822,9 @@ export function ExpertAuditDashboard() {
       // Auto-retry once silently instead of showing error toast
       try {
         console.log('Strategic audit: auto-retrying...');
-        const { data: retryData, error: retryError } = await supabase.functions.invoke('audit-strategique-ia', {
-          body: { url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null }
+        const retryData = await invokeWithTimeout('audit-strategique-ia', {
+          url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null
         });
-        if (retryError) throw retryError;
         if (!retryData?.success) throw new Error(retryData?.error || 'Retry failed');
 
         const keywordPositioning = retryData?.data?.keyword_positioning ?? retryData?.data?.keywordPositioning ?? null;
