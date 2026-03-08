@@ -1,18 +1,17 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, FileText, BarChart3, MessageCircle, Shield, Brain } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { PredictionsDashboard } from './PredictionEngine';
 import { BrowserlessAlert } from './BrowserlessAlert';
-import { CtoAgentToggle } from './CtoAgentToggle';
+import { CtoAgentDashboard } from './CtoAgentDashboard';
 
 export function AdminDashboard() {
   return (
     <div className="space-y-6">
       <BrowserlessAlert />
-      <CtoAgentToggle />
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-primary/10">
           <Shield className="h-6 w-6 text-primary" />
@@ -41,6 +40,10 @@ export function AdminDashboard() {
             <Brain className="h-4 w-4" />
             <span className="hidden sm:inline">Prédictions</span>
           </TabsTrigger>
+          <TabsTrigger value="cto-agent" className="flex-1 gap-2">
+            <Bot className="h-4 w-4" />
+            <span className="hidden sm:inline">Agent CTO</span>
+          </TabsTrigger>
           <TabsTrigger value="support" className="flex-1 gap-2">
             <MessageCircle className="h-4 w-4" />
             <span className="hidden sm:inline">SAV</span>
@@ -61,6 +64,10 @@ export function AdminDashboard() {
 
         <TabsContent value="predictions">
           <PredictionsDashboard />
+        </TabsContent>
+
+        <TabsContent value="cto-agent">
+          <CtoAgentDashboard />
         </TabsContent>
 
         <TabsContent value="support">
