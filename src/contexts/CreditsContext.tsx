@@ -31,7 +31,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('credits_balance, plan_type, subscription_status')
+        .select('credits_balance, plan_type, subscription_status, subscription_expires_at')
         .eq('user_id', user.id)
         .single();
 
