@@ -324,11 +324,11 @@ export function WorkflowCarousel({
 
       {/* Carousel Container */}
       <div className="relative py-8">
-        {/* Left fade mask - gradient blur from center to left */}
-        <div className="absolute left-0 top-0 bottom-0 w-40 z-10 pointer-events-none bg-gradient-to-r from-background via-background/80 to-transparent" />
+        {/* Left fade mask - gradient blur from center to left (hidden on mobile) */}
+        <div className="absolute left-0 top-0 bottom-0 w-40 z-10 pointer-events-none bg-gradient-to-r from-background via-background/80 to-transparent hidden sm:block" />
         
-        {/* Right fade mask - gradient blur from center to right */}
-        <div className="absolute right-0 top-0 bottom-0 w-40 z-10 pointer-events-none bg-gradient-to-l from-background via-background/80 to-transparent" />
+        {/* Right fade mask - gradient blur from center to right (hidden on mobile) */}
+        <div className="absolute right-0 top-0 bottom-0 w-40 z-10 pointer-events-none bg-gradient-to-l from-background via-background/80 to-transparent hidden sm:block" />
 
         {/* Carousel Viewport - centered with proper padding */}
         <div className="overflow-x-clip touch-pan-y">
