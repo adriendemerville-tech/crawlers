@@ -1,6 +1,8 @@
+import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { ArrowLeft, Shield, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -9,9 +11,19 @@ const t3 = (language: string, fr: string, en: string, es: string) =>
 
 const RGPD = () => {
   const { language } = useLanguage();
+  useCanonicalHreflang('/rgpd');
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <Helmet>
+        <html lang={language} />
+        <title>{t3(language, 'RGPD - Protection des données | Crawlers.fr', 'GDPR - Data Protection | Crawlers.fr', 'RGPD - Protección de datos | Crawlers.fr')}</title>
+        <meta name="description" content={t3(language, 'Conformité RGPD et protection des données personnelles sur Crawlers.fr', 'GDPR compliance and personal data protection on Crawlers.fr', 'Cumplimiento RGPD y protección de datos personales en Crawlers.fr')} />
+        <meta property="og:locale" content={language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'} />
+        <meta property="og:locale:alternate" content="fr_FR" />
+        <meta property="og:locale:alternate" content="en_US" />
+        <meta property="og:locale:alternate" content="es_ES" />
+      </Helmet>
       <Header />
       <main className="flex-1 py-12">
         <div className="container mx-auto max-w-4xl px-4">

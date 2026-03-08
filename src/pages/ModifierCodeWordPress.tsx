@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { WordPressScanner } from '@/components/WordPressScanner';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -109,6 +111,8 @@ const FAQ_ITEMS = [
 ];
 
 const ModifierCodeWordPress = () => {
+  const { language } = useLanguage();
+  useCanonicalHreflang('/modifier-code-wordpress');
   useEffect(() => {
     forceMetaTags();
   }, []);
