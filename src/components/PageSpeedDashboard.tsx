@@ -69,8 +69,22 @@ function getMetricScore(metricName: string, value: string): number {
       if (ms <= 7300) return 75;
       return 40;
     }
+    case 'inp': {
+      // INP (field): < 200ms = bon, < 500ms = moyen, >= 500ms = mauvais
+      const ms = parseTimeToMs(value);
+      if (ms <= 200) return 95;
+      if (ms <= 500) return 75;
+      return 40;
+    }
+    case 'ttfb': {
+      // TTFB (field): < 800ms = bon, < 1800ms = moyen, >= 1800ms = mauvais
+      const ms = parseTimeToMs(value);
+      if (ms <= 800) return 95;
+      if (ms <= 1800) return 75;
+      return 40;
+    }
     default:
-      return 75; // Valeur neutre par défaut
+      return 75;
   }
 }
 
