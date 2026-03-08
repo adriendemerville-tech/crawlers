@@ -1117,7 +1117,7 @@ Deno.serve(async (req) => {
     // ═══ POST-PROCESS: Validate social URLs against crawler-detected ones ═══
     if (parsedAnalysis.social_signals?.proof_sources && Array.isArray(parsedAnalysis.social_signals.proof_sources)) {
       const detectedUrlsSet = new Set(
-        (metadata.eeatSignals.detectedSocialUrls || []).map((u: string) => u.toLowerCase().replace(/\/$/, ''))
+        (eeatSignals.detectedSocialUrls || []).map((u: string) => u.toLowerCase().replace(/\/$/, ''))
       );
       console.log(`🔗 Validating social URLs against ${detectedUrlsSet.size} detected URLs:`, [...detectedUrlsSet]);
       
