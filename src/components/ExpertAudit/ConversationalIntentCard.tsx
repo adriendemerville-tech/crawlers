@@ -169,9 +169,10 @@ export function ConversationalIntentCard({ analysis }: ConversationalIntentCardP
                 side="top"
                 align="end"
                 sideOffset={8}
-                className="w-72 p-3 text-xs leading-relaxed text-foreground/90 backdrop-blur-xl bg-background/80 border border-border/50 shadow-xl rounded-lg"
+                collisionPadding={16}
+                className="w-72 p-3 text-xs leading-relaxed text-foreground/90 backdrop-blur-xl bg-background/80 border border-border/50 shadow-xl rounded-lg z-50"
               >
-                Mesure le ratio de titres et contenus formulés en questions naturelles vs mots-clés classiques. Un score élevé signifie que votre contenu est prêt à être cité par les réponses IA conversationnelles (ChatGPT, Perplexity, Claude).
+                Crawlers analyse les balises Title et H1-H3 de la page, identifie celles formulées en questions naturelles (qui, quoi, comment, pourquoi…), et calcule le ratio par rapport aux titres classiques à mots-clés. Un score élevé signifie que le contenu est structuré pour être repris dans les réponses conversationnelles.
               </PopoverContent>
             </Popover>
           </div>
