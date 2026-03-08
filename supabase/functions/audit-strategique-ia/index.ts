@@ -382,8 +382,8 @@ async function checkRankings(
     'multi_carousel', 'ai_overview',
   ]);
   
-  // Limit to 7 keywords to reduce memory
-  const keywordsToCheck = keywords.slice(0, 7);
+  // Check top 10 keywords by volume for reliable average position
+  const keywordsToCheck = keywords.slice(0, 10);
   
   try {
     const tasks = keywordsToCheck.map(kw => ({
@@ -455,7 +455,7 @@ async function checkRankings(
     }
     
     // Add remaining keywords without SERP check
-    for (let i = 7; i < keywords.length; i++) {
+    for (let i = 10; i < keywords.length; i++) {
       results.push({ keyword: keywords[i].keyword, volume: keywords[i].volume, difficulty: keywords[i].difficulty, is_ranked: false, current_rank: 'Non vérifié' });
     }
     
