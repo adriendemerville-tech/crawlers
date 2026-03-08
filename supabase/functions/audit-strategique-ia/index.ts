@@ -588,16 +588,17 @@ INSTRUCTIONS CRITIQUES:
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
 - PROFILS SOCIAUX: Dans proof_sources, inclus MAXIMUM 2 profils avec profile_url (les 2 plus forts: abonnés pondérés par fraîcheur de dernière publication). Fournis l'URL complète et le profile_name. Si d'autres profils existent au-delà des 2 principaux, ajoute dans le champ "analysis" du thought_leadership une phrase de synthèse structurée ainsi: "[Prénom1] et [Prénom2] sont les incarnations les plus fortes de la marque sur les réseaux sociaux. On dénombre par ailleurs X profils d'engagement et de puissance intermédiaires sur [nom du/des réseau(x)] et X autres profils de faible intensité sur [nom du/des réseau(x)]." Adapte cette phrase au nombre réel de profils détectés. Si un seul profil fort existe, adapte au singulier. Les plateformes restantes apparaissent dans proof_sources sans profile_url.
 - SCORING E-E-A-T RIGOUREUX: Le eeat_score (0-10) doit refléter la RÉALITÉ observable. Distingue 3 types de signaux:
-  A) INCARNATION HUMAINE (poids fort): profil personnel LinkedIn/X/Instagram d'un fondateur/dirigeant identifié, articles signés, interventions publiques → c'est le cœur de l'E-E-A-T
-  B) ENTITÉ DE MARQUE (poids modéré): page entreprise LinkedIn, page Facebook, compte Instagram business, fiche Google Business Profile (avis clients, NAP cohérent, photos) → valide l'existence et la confiance mais PAS l'expertise humaine
-  C) MENTIONS TIERCES (poids modéré): citations par des médias, backlinks éditoriaux, présence Knowledge Graph
-   Grille équilibrée:
-   * 0-2: Aucun signal détectable (ni incarnation humaine, ni page entreprise, ni GMB, ni mention tierce)
-   * 3-4: Entité de marque minimale (page entreprise OU fiche GMB sans avis notables), aucune incarnation humaine
-   * 5-6: Entité de marque solide SANS incarnation humaine (GMB bien noté avec avis, page entreprise active, mentions tierces) OU incarnation humaine partielle (fondateur identifié mais peu visible) avec entité faible
-   * 7-8: Incarnation humaine forte (fondateur reconnu, profils personnels actifs) + entité solide (GMB bien noté, pages entreprise actives, mentions régulières)
-   * 9-10: Autorité établie (thought leader reconnu, citations fréquentes par des tiers, Knowledge Graph présent, GMB 4.5+★)
-   Un site sans incarnation humaine peut atteindre 6/10 maximum s'il a une entité de marque très solide (GMB actif + pages entreprise + avis + mentions). Au-delà de 6, l'incarnation humaine est indispensable. Sois honnête et factuel.
+   A) INCARNATION HUMAINE: profil personnel LinkedIn/X/Instagram d'un fondateur/dirigeant identifié, articles signés, interventions publiques, experts internes identifiés qui signent du contenu
+   B) ENTITÉ DE MARQUE: page entreprise LinkedIn, page Facebook, compte Instagram business, fiche Google Business Profile (avis clients, NAP cohérent, photos), certifications, brevets
+   C) AUTORITÉ INSTITUTIONNELLE: présence Knowledge Graph Google, page Wikipedia/Wikidata, couverture presse régulière, citations par des médias, backlinks éditoriaux
+   RÈGLE CLÉ: Plus l'entité est forte et reconnue institutionnellement, moins l'incarnation individuelle est nécessaire. L'expertise peut être incarnée par des experts internes identifiés (nutritionnistes, ingénieurs, designers qui signent du contenu) et pas uniquement par le fondateur.
+   Grille progressive:
+   * 0-2: Aucun signal détectable (ni incarnation, ni entité, ni autorité institutionnelle)
+   * 3-4: Entité de marque minimale (page entreprise OU fiche GMB basique), pas d'autorité institutionnelle
+   * 5-6: Entité de marque solide (GMB bien noté, pages actives, mentions tierces) SANS incarnation humaine, OU incarnation partielle avec entité faible
+   * 7-8: Incarnation forte (fondateur/experts reconnus, profils actifs) + entité solide, OU entité à forte autorité institutionnelle (Knowledge Graph + presse régulière) même sans incarnation visible du dirigeant
+   * 9-10: Autorité institutionnelle dominante (Wikipedia, Knowledge Graph riche, couverture médiatique massive, marque de référence dans son secteur) — possible même si le dirigeant est discret, car l'expertise est incarnée par la marque elle-même et/ou ses experts internes
+   Sois honnête et factuel. Ne surestime pas: une PME locale sans incarnation ni autorité institutionnelle ne dépasse pas 6/10.
 - founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable sur le site ou le web. Ne PAS inventer.
 - JSON pur, sans virgules traînantes`;
 }
