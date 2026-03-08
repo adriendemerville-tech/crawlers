@@ -865,6 +865,8 @@ RÈGLE ABSOLUE ANTI-AUTO-CITATION: Le site analysé ne doit JAMAIS apparaître c
 
 RÈGLE CONCURRENT DIRECT: Le direct_competitor DOIT être un vrai concurrent produit/service avec le MÊME core business ou une feature proche. INTERDIT: médias (Forbes, Le Monde...), annuaires (Capterra, G2...), marketplaces (Amazon...), réseaux sociaux, Wikipedia. Le concurrent direct doit être une entreprise qui vend un produit/service similaire au site analysé, dans la même zone géographique si local.
 
+RÈGLE SOURCE D'INSPIRATION: L'inspiration_source DOIT avoir le même core business que le site cible OU être un nouvel entrant novateur et reconnu sur un business directement lié. C'est une entreprise innovante qui repousse les standards du secteur. INTERDIT: médias, annuaires, marketplaces, réseaux sociaux, Wikipedia, plateformes généralistes. Exemples: pour un outil IA SEO → Claude Code, OpenClaw, Cursor ; pour un e-commerce bio → La Fourche, Kazidomi. L'inspiration doit être un acteur admiré du même écosystème métier.
+
 DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS. Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (non classé, volume>200).
 
 13 MODULES D'ANALYSE:
