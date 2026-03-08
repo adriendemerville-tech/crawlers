@@ -606,7 +606,8 @@ Manquants: ${missing.length > 0 ? missing.map(kw => `"${kw.keyword}"(${kw.volume
   }
 
   // Compact JSON serialization (no pretty-print to save memory)
-  return `Analyse "${domain}" (${url}):
+  return `Analyse du site "${domain}" (${url}).
+⚠️ RAPPEL: Le nom de l'entité à utiliser dans TOUT le rapport est "${domain}". Ne jamais inventer un autre nom.
 ${pageContentContext}
 ${eeatSection}
 ${marketSection}
