@@ -819,6 +819,8 @@ export function ExpertAuditDashboard() {
       setResult(strategicData);
       setStrategicResult(strategicData);
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+      // Fire-and-forget: CTO Agent analysis
+      triggerCtoAgent(strategicData, 'strategic', normalizedUrl, domain);
       // Clear any previous hallucination diagnosis since we re-analyzed
       setHallucinationDiagnosis(null);
       
