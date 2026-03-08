@@ -607,48 +607,60 @@ export function ExpertAuditDashboard() {
     trackAnalyticsEvent('expert_audit_launched', { targetUrl: normalizedUrl });
     storeAnalyzedUrl(normalizedUrl);
 
-    try {
-      const { data, error } = await supabase.functions.invoke('audit-expert-seo', {
-        body: { url: normalizedUrl }
-      });
+    const attemptAudit = async (attempt: number): Promise<void> => {
+      try {
+        const { data, error } = await supabase.functions.invoke('audit-expert-seo', {
+          body: { url: normalizedUrl }
+        });
 
-      if (error) throw new Error(error.message);
-      if (!data.success) {
-        if (data.error === 'RENDERING_REQUIRED') {
-          throw new Error(`Rendu JavaScript requis: ${data.message || 'Site SPA non accessible sans navigateur'}`);
+        if (error) throw new Error(error.message);
+        if (!data.success) {
+          if (data.error === 'RENDERING_REQUIRED') {
+            throw new Error(`Rendu JavaScript requis: ${data.message || 'Site SPA non accessible sans navigateur'}`);
+          }
+          throw new Error(data.error || 'Audit failed');
         }
-        throw new Error(data.error || 'Audit failed');
+
+        const auditResult = data.data as ExpertAuditResult;
+        if (auditResult.meta?.scannedAt && !auditResult.scannedAt) {
+          auditResult.scannedAt = auditResult.meta.scannedAt;
+        }
+        setResult(auditResult);
+        setTechnicalResult(auditResult);
+        setCompletedSteps(prev => [...prev.filter(s => s !== 1), 1]);
+        
+        // Track step 1 completion
+        trackAnalyticsEvent('expert_audit_step_1', { targetUrl: normalizedUrl });
+
+        const reliabilityInfo = auditResult.meta?.reliabilityScore 
+          ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
+          : '';
+
+        toast({
+          title: t.auditComplete,
+          description: `${t.globalScore} : ${data.data.totalScore}/200${reliabilityInfo}`,
+        });
+      } catch (error) {
+        console.error(`Audit error (attempt ${attempt}):`, error);
+        trackAnalyticsEvent('error', { eventData: { type: 'technical_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
+        
+        // Silent retry on first failure
+        if (attempt < 2) {
+          console.log('[TechnicalAudit] Relance silencieuse...');
+          await new Promise(r => setTimeout(r, 2000));
+          return attemptAudit(attempt + 1);
+        }
+        
+        // After retry, show subtle non-destructive toast
+        toast({
+          title: 'Erreur de chargement',
+          description: 'L\'analyse n\'a pas pu aboutir. Veuillez réessayer.',
+        });
       }
+    };
 
-      const auditResult = data.data as ExpertAuditResult;
-      if (auditResult.meta?.scannedAt && !auditResult.scannedAt) {
-        auditResult.scannedAt = auditResult.meta.scannedAt;
-      }
-      setResult(auditResult);
-      setTechnicalResult(auditResult);
-      setCompletedSteps(prev => [...prev.filter(s => s !== 1), 1]);
-      
-      // Track step 1 completion
-      trackAnalyticsEvent('expert_audit_step_1', { targetUrl: normalizedUrl });
-      
-      // Site tracking is now manual via TrackSiteButton
-
-      const reliabilityInfo = auditResult.meta?.reliabilityScore 
-        ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
-        : '';
-
-      toast({
-        title: t.auditComplete,
-        description: `${t.globalScore} : ${data.data.totalScore}/200${reliabilityInfo}`,
-      });
-    } catch (error) {
-      console.error('Audit error:', error);
-      trackAnalyticsEvent('error', { eventData: { type: 'technical_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
-      toast({
-        title: t.error,
-        description: error instanceof Error ? error.message : t.auditFailed,
-        variant: 'destructive',
-      });
+    try {
+      await attemptAudit(1);
     } finally {
       setIsLoading(false);
     }
