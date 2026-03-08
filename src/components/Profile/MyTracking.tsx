@@ -1008,7 +1008,7 @@ export function MyTracking() {
                                     />
                                     <Legend 
                                       formatter={(value: string) => (
-                                        <span style={{ color: 'hsl(var(--foreground))', fontSize: 14 }}>{value}</span>
+                                        <span style={{ color: 'hsl(var(--foreground))', fontSize: 25 }}>{value}</span>
                                       )}
                                       payload={[
                                         { value: language === 'fr' ? 'Clics' : 'Clicks', type: 'line', color: 'hsl(var(--primary))' },
