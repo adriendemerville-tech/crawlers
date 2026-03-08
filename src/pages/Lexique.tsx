@@ -290,6 +290,7 @@ const pageContent = {
 
 export default function Lexique() {
   const { language } = useLanguage();
+  useCanonicalHreflang('/lexique');
   const content = pageContent[language];
   const terms = glossaryTerms[language] || glossaryTerms.fr;
   

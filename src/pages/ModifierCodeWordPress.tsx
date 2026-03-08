@@ -111,6 +111,8 @@ const FAQ_ITEMS = [
 ];
 
 const ModifierCodeWordPress = () => {
+  const { language } = useLanguage();
+  useCanonicalHreflang('/modifier-code-wordpress');
   useEffect(() => {
     forceMetaTags();
   }, []);

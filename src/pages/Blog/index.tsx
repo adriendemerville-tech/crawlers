@@ -35,6 +35,7 @@ const translations = {
 
 function BlogIndexComponent() {
   const { language } = useLanguage();
+  useCanonicalHreflang('/blog');
   const t = translations[language] || translations.fr;
 
   // ItemList schema for blog listing
