@@ -478,7 +478,7 @@ async function findLocalCompetitor(
   }
 }
 
-async function fetchMarketData(domain: string, context: BusinessContext): Promise<MarketData | null> {
+async function fetchMarketData(domain: string, context: BusinessContext, pageContentContext: string = ''): Promise<MarketData | null> {
   console.log('🚀 Collecte DataForSEO pour:', domain);
   
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD || !context.locationCode) {
