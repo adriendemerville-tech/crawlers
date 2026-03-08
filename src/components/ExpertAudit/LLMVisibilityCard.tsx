@@ -146,6 +146,7 @@
              </div>
            </div>
          )}
+       <MethodologyPopover variant="llm_visibility" />
        </CardContent>
      </Card>
    );

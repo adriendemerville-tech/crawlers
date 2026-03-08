@@ -211,6 +211,7 @@ export function SocialSignalsCard({ signals }: SocialSignalsCardProps) {
               </div>
             </div>
           )}
+          <MethodologyPopover variant="social_signals" />
         </CardContent>
       </Card>
     </motion.div>

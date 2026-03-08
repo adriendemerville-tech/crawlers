@@ -166,7 +166,8 @@ export function CompetitiveLandscapeCard({
               icon={Sparkles}
               accentColor="border-emerald-500/40"
             />
-          </CardContent>
+          <MethodologyPopover variant="competitive_landscape" />
+        </CardContent>
         </Card>
       </motion.div>
 

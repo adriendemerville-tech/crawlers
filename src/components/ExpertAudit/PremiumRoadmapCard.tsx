@@ -170,6 +170,7 @@ export function PremiumRoadmapCard({ roadmap }: PremiumRoadmapCardProps) {
               </motion.div>
             );
           })}
+          <MethodologyPopover variant="executive_roadmap" />
         </CardContent>
       </Card>
     </motion.div>

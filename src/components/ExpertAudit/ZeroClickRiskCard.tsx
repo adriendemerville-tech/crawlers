@@ -192,6 +192,7 @@ export function ZeroClickRiskCard({ analysis, domain }: ZeroClickRiskCardProps) 
               Générer une stratégie de contournement E-E-A-T
             </Button>
           )}
+          <MethodologyPopover variant="zero_click_risk" />
         </CardContent>
       </Card>
     </motion.div>

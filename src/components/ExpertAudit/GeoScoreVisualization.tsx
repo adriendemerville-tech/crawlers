@@ -105,6 +105,7 @@ export function GeoScoreVisualization({ geoScore }: GeoScoreVisualizationProps) 
               </p>
             </div>
           </div>
+          <MethodologyPopover variant="geo_score" />
         </CardContent>
       </Card>
     </motion.div>

@@ -197,6 +197,7 @@ export function MarketIntelligenceCard({ intelligence }: MarketIntelligenceCardP
               </div>
             </div>
           )}
+          <MethodologyPopover variant="market_intelligence" />
         </CardContent>
       </Card>
     </motion.div>
