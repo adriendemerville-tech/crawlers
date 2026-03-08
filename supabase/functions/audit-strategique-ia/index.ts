@@ -791,6 +791,74 @@ async function findLocalCompetitor(
   }
 }
 
+/**
+ * Strategic relevance sort: the first keyword should be the most relevant
+ * "core business + target audience/segment" combination, not just highest volume.
+ */
+function sortByStrategicRelevance(
+  keywords: KeywordData[],
+  seedKeywords: string[],
+  pageContentContext: string
+): KeywordData[] {
+  if (keywords.length === 0) return keywords;
+
+  const stopWords = new Set([
+    'le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux',
+    'avec','dans','ou','plus','vous','votre','nos','notre','nous','si','mais','car',
+    'the','and','for','with','your','our','from','that','this',
+  ]);
+
+  const titleMatch = pageContentContext.match(/Titre="([^"?]+)/);
+  const h1Match = pageContentContext.match(/H1="([^"?]+)/);
+  const descMatch = pageContentContext.match(/Desc="([^"?]+)/);
+  const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
+  
+  const coreTerms: string[] = [];
+  for (const text of texts) {
+    const words = text.toLowerCase()
+      .replace(/[|–—·:,\.!?]/g, ' ')
+      .replace(/[^\wàâäéèêëïîôùûüÿçœæ\s'-]/g, '')
+      .split(/\s+/)
+      .filter(w => w.length > 2 && !stopWords.has(w));
+    coreTerms.push(...words);
+  }
+  const uniqueCoreTerms = [...new Set(coreTerms)];
+
+  const topSeeds = seedKeywords.slice(0, 3).map(s => s.toLowerCase());
+  const maxVolume = Math.max(...keywords.map(kw => kw.volume), 1);
+
+  const scored = keywords.map(kw => {
+    const kwLower = kw.keyword.toLowerCase();
+    const volumeScore = kw.volume / maxVolume;
+    
+    const matchingCoreTerms = uniqueCoreTerms.filter(t => kwLower.includes(t)).length;
+    const coreMatchScore = uniqueCoreTerms.length > 0
+      ? Math.min(matchingCoreTerms / Math.min(uniqueCoreTerms.length, 3), 1)
+      : 0;
+    
+    let seedScore = 0;
+    for (let i = 0; i < topSeeds.length; i++) {
+      if (kwLower.includes(topSeeds[i]) || topSeeds[i].includes(kwLower)) {
+        seedScore = Math.max(seedScore, 1 - (i * 0.3));
+      }
+    }
+    
+    const wordCount = kwLower.split(/\s+/).length;
+    const specificityBonus = wordCount >= 2 ? 0.15 : 0;
+
+    // Core business relevance dominates, volume is secondary
+    const finalScore = (coreMatchScore * 0.45) + (seedScore * 0.25) + (volumeScore * 0.2) + specificityBonus;
+    
+    return { kw, finalScore, coreMatchScore, seedScore };
+  });
+
+  scored.sort((a, b) => b.finalScore - a.finalScore);
+  
+  console.log(`🏆 Top 3 strategic keywords: ${scored.slice(0, 3).map(s => `"${s.kw.keyword}" (relevance: ${(s.finalScore * 100).toFixed(0)}%, core: ${(s.coreMatchScore * 100).toFixed(0)}%, seed: ${(s.seedScore * 100).toFixed(0)}%)`).join(' | ')}`);
+  
+  return scored.map(s => s.kw);
+}
+
 async function fetchMarketData(domain: string, context: BusinessContext, pageContentContext: string = ''): Promise<MarketData | null> {
   console.log('🚀 Collecte DataForSEO pour:', domain);
   
@@ -810,14 +878,18 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
     }
     
     const rankedKeywords = await checkRankings(keywordData, domain, context.locationCode);
-    const totalVolume = rankedKeywords.reduce((sum, kw) => sum + kw.volume, 0);
     
-    console.log(`✅ Données: ${rankedKeywords.length} mots-clés, volume: ${totalVolume}`);
+    // STRATEGIC SORT: first keyword = most relevant for core business + target
+    const strategicKeywords = sortByStrategicRelevance(rankedKeywords, seedKeywords, pageContentContext);
+    
+    const totalVolume = strategicKeywords.reduce((sum, kw) => sum + kw.volume, 0);
+    
+    console.log(`✅ Données: ${strategicKeywords.length} mots-clés, volume: ${totalVolume}`);
     
     return {
       location_used: context.location,
       total_market_volume: totalVolume,
-      top_keywords: rankedKeywords,
+      top_keywords: strategicKeywords,
       data_source: 'dataforseo',
       fetch_timestamp: new Date().toISOString(),
     };
