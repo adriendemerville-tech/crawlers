@@ -643,6 +643,9 @@ export function ExpertAuditDashboard() {
         
         // Track step 1 completion
         trackAnalyticsEvent('expert_audit_step_1', { targetUrl: normalizedUrl });
+        
+        // Fire-and-forget: CTO Agent analysis
+        triggerCtoAgent(auditResult, 'technical', normalizedUrl, auditResult.domain || '');
 
         const reliabilityInfo = auditResult.meta?.reliabilityScore 
           ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
