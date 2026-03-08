@@ -635,6 +635,16 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasAuthorInJsonLd,
       hasCaseStudies,
       caseStudySignals,
+      // ═══ MISPLACED STRUCTURAL TAGS DETECTION ═══
+      misplacedHeadTags: (() => {
+        const misplaced: string[] = [];
+        const bodyMatch2 = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+        const bodyContent = bodyMatch2 ? bodyMatch2[1] : '';
+        if (/<link[^>]*rel=["']canonical["'][^>]*>/i.test(bodyContent)) misplaced.push('canonical');
+        if (/<meta[^>]*name=["']robots["'][^>]*>/i.test(bodyContent)) misplaced.push('robots');
+        if (/<link[^>]*hreflang[^>]*>/i.test(bodyContent)) misplaced.push('hreflang');
+        return misplaced;
+      })(),
     };
   } catch (error) {
     console.error('HTML analysis failed:', error);
