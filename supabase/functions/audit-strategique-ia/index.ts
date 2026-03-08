@@ -575,9 +575,35 @@ Manquants: ${missing.length > 0 ? missing.map(kw => `"${kw.keyword}"(${kw.volume
     marketSection = `⚠️ DataForSEO non disponible - base-toi sur ton analyse du secteur.\n`;
   }
 
+  // Build E-E-A-T evidence section from crawled HTML signals
+  let eeatSection = '';
+  if (eeatSignals) {
+    const lines: string[] = ['🔍 SIGNAUX E-E-A-T DÉTECTÉS SUR LE SITE (données factuelles du crawler):'];
+    lines.push(`- Bios auteur détectées dans le HTML: ${eeatSignals.hasAuthorBio ? `OUI (${eeatSignals.authorBioCount} occurrences)` : 'NON'}`);
+    lines.push(`- Author déclaré en JSON-LD: ${eeatSignals.hasAuthorInJsonLd ? 'OUI' : 'NON'}`);
+    lines.push(`- Entité Person en JSON-LD: ${eeatSignals.hasPerson ? 'OUI' : 'NON'}`);
+    lines.push(`- ProfilePage en JSON-LD: ${eeatSignals.hasProfilePage ? 'OUI' : 'NON'}`);
+    lines.push(`- Organization en JSON-LD: ${eeatSignals.hasOrganization ? 'OUI' : 'NON'}`);
+    lines.push(`- sameAs (liens entités externes): ${eeatSignals.hasSameAs ? 'OUI' : 'NON'}`);
+    lines.push(`- sameAs vers Wikidata: ${eeatSignals.hasWikidataSameAs ? 'OUI ← signal fort d\'autorité institutionnelle' : 'NON'}`);
+    lines.push(`- Liens sociaux détectés dans le HTML: ${eeatSignals.socialLinksCount} lien(s)`);
+    if (eeatSignals.detectedSocialUrls.length > 0) {
+      lines.push(`  URLs sociales trouvées: ${eeatSignals.detectedSocialUrls.slice(0, 10).join(', ')}`);
+      // Distinguish personal LinkedIn profiles from company pages
+      const personalLI = eeatSignals.linkedInUrls.filter(u => /linkedin\.com\/in\//i.test(u));
+      const companyLI = eeatSignals.linkedInUrls.filter(u => /linkedin\.com\/company\//i.test(u));
+      if (personalLI.length > 0) lines.push(`  └─ Profils LinkedIn PERSONNELS (incarnation humaine): ${personalLI.join(', ')}`);
+      if (companyLI.length > 0) lines.push(`  └─ Pages LinkedIn ENTREPRISE (entité de marque): ${companyLI.join(', ')}`);
+    }
+    lines.push(`- Citations d'experts / blockquotes: ${eeatSignals.hasExpertCitations ? 'OUI' : 'NON'}`);
+    lines.push(`- Études de cas / témoignages: ${eeatSignals.hasCaseStudies ? `OUI (${eeatSignals.caseStudySignals} signaux)` : 'NON'}`);
+    eeatSection = lines.join('\n');
+  }
+
   // Compact JSON serialization (no pretty-print to save memory)
   return `Analyse "${domain}" (${url}):
 ${pageContentContext}
+${eeatSection}
 ${marketSection}
 CRAWLERS:${JSON.stringify(toolsData.crawlers)}
 GEO:${JSON.stringify(toolsData.geo)}
