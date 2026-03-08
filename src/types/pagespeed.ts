@@ -15,5 +15,6 @@ export interface PageSpeedResult {
   url: string;
   strategy: 'mobile' | 'desktop';
   scores: PageSpeedScores;
+  dataSource?: 'field' | 'lab';
   scannedAt: string;
 }

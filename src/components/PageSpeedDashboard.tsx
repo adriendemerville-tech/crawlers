@@ -69,8 +69,22 @@ function getMetricScore(metricName: string, value: string): number {
       if (ms <= 7300) return 75;
       return 40;
     }
+    case 'inp': {
+      // INP (field): < 200ms = bon, < 500ms = moyen, >= 500ms = mauvais
+      const ms = parseTimeToMs(value);
+      if (ms <= 200) return 95;
+      if (ms <= 500) return 75;
+      return 40;
+    }
+    case 'ttfb': {
+      // TTFB (field): < 800ms = bon, < 1800ms = moyen, >= 1800ms = mauvais
+      const ms = parseTimeToMs(value);
+      if (ms <= 800) return 95;
+      if (ms <= 1800) return 75;
+      return 40;
+    }
     default:
-      return 75; // Valeur neutre par défaut
+      return 75;
   }
 }
 
@@ -141,6 +155,13 @@ export function PageSpeedDashboard({ result, isLoading, strategy, onStrategyChan
   if (!result) return null;
 
   const { scores } = result;
+  const isFieldData = result.dataSource === 'field';
+
+  // Adapt labels for field vs lab data
+  const tbtLabel = isFieldData ? 'INP' : t.pagespeed.tbt;
+  const tbtDesc = isFieldData ? 'Interaction to Next Paint — réactivité réelle mesurée chez les utilisateurs' : t.pagespeed.tbtDesc;
+  const ttiLabel = isFieldData ? 'TTFB' : t.pagespeed.tti;
+  const ttiDesc = isFieldData ? 'Time to First Byte — temps de réponse serveur mesuré en conditions réelles' : t.pagespeed.ttiDesc;
 
   return (
     <section className="px-4 pb-12">
@@ -189,6 +210,16 @@ export function PageSpeedDashboard({ result, isLoading, strategy, onStrategyChan
         <div className="rounded-xl border border-border bg-card p-6 card-shadow">
           <h3 className="mb-4 text-lg font-semibold text-foreground flex items-center gap-2">
             {t.pagespeed.coreWebVitals}
+            {isFieldData && (
+              <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+                ● Données terrain (CrUX)
+              </span>
+            )}
+            {!isFieldData && (
+              <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                ◉ Données labo (Lighthouse)
+              </span>
+            )}
             <HelpButton term="core-web-vitals" size="md" />
           </h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -215,10 +246,10 @@ export function PageSpeedDashboard({ result, isLoading, strategy, onStrategyChan
             />
             <MetricCard
               icon={Clock}
-              label={t.pagespeed.tbt}
+              label={tbtLabel}
               value={scores.tbt}
-              description={t.pagespeed.tbtDesc}
-              score={getMetricScore('tbt', scores.tbt)}
+              description={tbtDesc}
+              score={getMetricScore(isFieldData ? 'inp' : 'tbt', scores.tbt)}
             />
             <MetricCard
               icon={Gauge}
@@ -229,10 +260,10 @@ export function PageSpeedDashboard({ result, isLoading, strategy, onStrategyChan
             />
             <MetricCard
               icon={MousePointer}
-              label={t.pagespeed.tti}
+              label={ttiLabel}
               value={scores.tti}
-              description={t.pagespeed.ttiDesc}
-              score={getMetricScore('tti', scores.tti)}
+              description={ttiDesc}
+              score={getMetricScore(isFieldData ? 'ttfb' : 'tti', scores.tti)}
             />
           </div>
         </div>
