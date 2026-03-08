@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Globe, TrendingUp } from 'lucide-react';
 import { GeoScore } from '@/types/expertAudit';
+import { MethodologyPopover } from './MethodologyPopover';
 
 interface GeoScoreVisualizationProps {
   geoScore: GeoScore;
