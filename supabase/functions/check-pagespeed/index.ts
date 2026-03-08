@@ -52,8 +52,14 @@ serve(async (req) => {
     const normalizedUrl = normalizeUrl(url);
     console.log('Checking PageSpeed for:', normalizedUrl, 'Strategy:', strategy);
 
-    // Clé API directe
-    const apiKey = "AIzaSyALHaypJWTqbt8K1klhQkYeLPRBjaOs2hc";
+    const apiKey = Deno.env.get("GOOGLE_PAGESPEED_API_KEY");
+    if (!apiKey) {
+      console.error("GOOGLE_PAGESPEED_API_KEY not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: 'PageSpeed API key not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Construction de l'URL pour Google PageSpeed Insights
     const googleApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`;
