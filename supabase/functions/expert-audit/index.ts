@@ -166,6 +166,8 @@ interface HtmlAnalysis {
   // Case studies
   hasCaseStudies?: boolean;
   caseStudySignals?: number;
+  // Misplaced structural tags (outside <head>)
+  misplacedHeadTags?: string[];
 }
 
 interface RobotsAnalysis {
@@ -633,6 +635,16 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasAuthorInJsonLd,
       hasCaseStudies,
       caseStudySignals,
+      // ═══ MISPLACED STRUCTURAL TAGS DETECTION ═══
+      misplacedHeadTags: (() => {
+        const misplaced: string[] = [];
+        const bodyMatch2 = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+        const bodyContent = bodyMatch2 ? bodyMatch2[1] : '';
+        if (/<link[^>]*rel=["']canonical["'][^>]*>/i.test(bodyContent)) misplaced.push('canonical');
+        if (/<meta[^>]*name=["']robots["'][^>]*>/i.test(bodyContent)) misplaced.push('robots');
+        if (/<link[^>]*hreflang[^>]*>/i.test(bodyContent)) misplaced.push('hreflang');
+        return misplaced;
+      })(),
     };
   } catch (error) {
     console.error('HTML analysis failed:', error);
@@ -686,6 +698,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasAuthorInJsonLd: false,
       hasCaseStudies: false,
       caseStudySignals: 0,
+      misplacedHeadTags: [],
     };
   }
 }
@@ -1833,6 +1846,29 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
         "Implémenter ProfilePage Schema pour les pages auteur dédiées",
         "Lier l'auteur à son profil LinkedIn et/ou Google Scholar via sameAs",
         "Ajouter jobTitle, worksFor et knowsAbout pour renforcer l'expertise"
+      ]
+    });
+  }
+
+  // ═══ MISPLACED STRUCTURAL TAGS ═══
+  if (htmlAnalysis.misplacedHeadTags && htmlAnalysis.misplacedHeadTags.length > 0) {
+    recommendations.push({
+      id: 'misplaced-head-tags',
+      priority: 'important',
+      category: 'technique',
+      icon: '🟠',
+      title: 'Balise mal placée (hors du <head>)',
+      description: `${htmlAnalysis.misplacedHeadTags.length > 1 ? 'Ces balises sont' : 'Cette balise est'} actuellement dans le <body>. Google l'ignore à cet emplacement, ce qui rend l'instruction inefficace et peut indiquer une erreur d'intégration ou une injection HTML. Balises concernées : ${htmlAnalysis.misplacedHeadTags.join(', ')}.`,
+      weaknesses: [
+        ...htmlAnalysis.misplacedHeadTags.map(tag => `Balise <${tag}> détectée dans le <body> au lieu du <head>`),
+        "Google ignore les balises structurelles hors du <head>",
+        "L'instruction SEO est totalement inefficace à cet emplacement",
+        "Peut indiquer un plugin ou CMS qui injecte mal les balises"
+      ],
+      fixes: [
+        ...htmlAnalysis.misplacedHeadTags.map(tag => `Déplacer la balise <${tag}> dans la section <head> du document`),
+        "Vérifier les plugins/thèmes qui injectent ces balises",
+        "Utiliser un validateur HTML (validator.w3.org) pour vérifier la structure du document"
       ]
     });
   }

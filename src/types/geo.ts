@@ -15,4 +15,5 @@ export interface GeoResult {
   totalScore: number;
   factors: GeoFactor[];
   scannedAt: string;
+  misplacedHeadTags?: string[];
 }
