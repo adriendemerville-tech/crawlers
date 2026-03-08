@@ -174,12 +174,54 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
             </div>
           )}
 
+          {/* Top 5 Most Searched Keywords Summary */}
+          {allMainKeywords.length > 0 && (() => {
+            const top5 = allMainKeywords.slice(0, 5);
+            const rankedTop5 = top5.filter(k => typeof k.current_rank === 'number' && k.current_rank <= 50);
+            const avgRank = rankedTop5.length > 0
+              ? (rankedTop5.reduce((sum, k) => sum + (k.current_rank as number), 0) / rankedTop5.length)
+              : null;
+
+            return (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-primary" aria-hidden="true" />
+                  Top 5 requêtes les plus cherchées
+                  {avgRank !== null && (
+                    <Badge variant="secondary" className="ml-auto text-xs">
+                      Ranking moyen : #{avgRank.toFixed(1)}
+                    </Badge>
+                  )}
+                </h3>
+                <div className="grid gap-2 md:grid-cols-5">
+                  {top5.map((kw, idx) => (
+                    <div key={idx} className="p-3 rounded-lg border bg-card text-center space-y-1">
+                      <p className="text-xs font-medium text-foreground truncate" title={kw.keyword}>
+                        {kw.keyword}
+                      </p>
+                      <p className="text-lg font-bold text-primary">{kw.volume.toLocaleString()}</p>
+                      <p className="text-[10px] text-muted-foreground">rech./mois</p>
+                      <Badge
+                        variant={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankBadgeVariant(kw.current_rank) : 'outline'}
+                        className={`text-xs ${typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankColor(kw.current_rank) : 'text-muted-foreground'}`}
+                      >
+                        {typeof kw.current_rank === 'number'
+                          ? (kw.current_rank <= 50 ? `#${kw.current_rank}` : '50+')
+                          : '50+'}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Main Keywords Table */}
           {allMainKeywords.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-primary" aria-hidden="true" />
-                Mots-Clés Stratégiques
+                <Search className="h-4 w-4 text-primary" aria-hidden="true" />
+                Tous les mots-clés stratégiques
               </h3>
               <div className="rounded-lg border overflow-hidden">
                 <table className="w-full text-sm">
