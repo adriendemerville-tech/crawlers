@@ -766,7 +766,7 @@ Deno.serve(async (req) => {
 
     // ==================== ÉTAPE 1: DATAFORSEO (uses cached context) ====================
     console.log('\n📊 ÉTAPE 1: DataForSEO...');
-    const marketData = await fetchMarketData(domain, context);
+    const marketData = await fetchMarketData(domain, context, pageContentContext);
 
     // ==================== ÉTAPE 1b: CONCURRENT LOCAL ====================
     console.log('\n🏙️ ÉTAPE 1b: Concurrent local...');
