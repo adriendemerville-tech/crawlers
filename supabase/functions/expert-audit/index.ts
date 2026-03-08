@@ -1850,6 +1850,29 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
     });
   }
 
+  // ═══ MISPLACED STRUCTURAL TAGS ═══
+  if (htmlAnalysis.misplacedHeadTags && htmlAnalysis.misplacedHeadTags.length > 0) {
+    recommendations.push({
+      id: 'misplaced-head-tags',
+      priority: 'important',
+      category: 'technique',
+      icon: '🟠',
+      title: 'Balise mal placée (hors du <head>)',
+      description: `${htmlAnalysis.misplacedHeadTags.length > 1 ? 'Ces balises sont' : 'Cette balise est'} actuellement dans le <body>. Google l'ignore à cet emplacement, ce qui rend l'instruction inefficace et peut indiquer une erreur d'intégration ou une injection HTML. Balises concernées : ${htmlAnalysis.misplacedHeadTags.join(', ')}.`,
+      weaknesses: [
+        ...htmlAnalysis.misplacedHeadTags.map(tag => `Balise <${tag}> détectée dans le <body> au lieu du <head>`),
+        "Google ignore les balises structurelles hors du <head>",
+        "L'instruction SEO est totalement inefficace à cet emplacement",
+        "Peut indiquer un plugin ou CMS qui injecte mal les balises"
+      ],
+      fixes: [
+        ...htmlAnalysis.misplacedHeadTags.map(tag => `Déplacer la balise <${tag}> dans la section <head> du document`),
+        "Vérifier les plugins/thèmes qui injectent ces balises",
+        "Utiliser un validateur HTML (validator.w3.org) pour vérifier la structure du document"
+      ]
+    });
+  }
+
   // Sort by priority
   const priorityOrder = { critical: 0, important: 1, optional: 2 };
   recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
