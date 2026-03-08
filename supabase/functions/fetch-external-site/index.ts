@@ -102,6 +102,7 @@ Deno.serve(async (req) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               url: finalUrl,
+              rejectResourceTypes: ['image', 'stylesheet', 'font', 'media'],
               waitFor: 3000,
               gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
               userAgent: MODERN_USER_AGENT,

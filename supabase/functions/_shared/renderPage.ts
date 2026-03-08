@@ -90,7 +90,7 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url,
-        rejectResourceTypes: ['image', 'media', 'font'],
+        rejectResourceTypes: ['image', 'stylesheet', 'font', 'media'],
         waitFor: 3000,
         gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
         userAgent: BROWSER_UA,
