@@ -19,6 +19,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
   const [balance, setBalance] = useState(0);
   const [planType, setPlanType] = useState('free');
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchBalance = useCallback(async () => {
