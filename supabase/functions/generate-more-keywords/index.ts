@@ -222,6 +222,12 @@ async function checkNewRankings(
   const results: KeywordItem[] = [];
   const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
   
+  const RANKABLE_TYPES = new Set([
+    'organic', 'featured_snippet', 'local_pack', 'knowledge_graph',
+    'top_stories', 'video', 'image', 'twitter', 'app',
+    'multi_carousel', 'ai_overview',
+  ]);
+  
   // Check rankings for top 8 keywords
   const keywordsToCheck = keywords.slice(0, 8);
   
@@ -254,12 +260,19 @@ async function checkNewRankings(
         
         if (taskResult?.items) {
           for (const item of taskResult.items) {
-            if (item.type === 'organic' && item.domain) {
-              const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
-              if (itemDomain.includes(cleanDomain) || cleanDomain.includes(itemDomain)) {
-                position = item.rank_absolute || item.rank_group || 1;
-                break;
-              }
+            const itemDomain = (item.domain || '').toLowerCase().replace(/^www\./, '');
+            const itemUrl = (item.url || '').toLowerCase();
+            
+            const domainMatch = itemDomain && (
+              itemDomain === cleanDomain ||
+              itemDomain.endsWith('.' + cleanDomain) ||
+              cleanDomain.endsWith('.' + itemDomain)
+            );
+            const urlMatch = itemUrl.includes(cleanDomain);
+            
+            if ((domainMatch || urlMatch) && RANKABLE_TYPES.has(item.type)) {
+              position = item.rank_absolute || item.rank_group || 1;
+              break;
             }
           }
         }
@@ -271,6 +284,8 @@ async function checkNewRankings(
           current_rank: position,
         });
       }
+    } else {
+      await response.text();
     }
     
     // Add remaining keywords without SERP check
