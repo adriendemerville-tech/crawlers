@@ -643,7 +643,9 @@ async function findLocalCompetitor(
     }
   }
 
-  const localQuery = city ? `${sector} ${city}` : sector;
+  // Use first 2-3 meaningful words from sector for a focused SERP query (sector now comes from page content)
+  const sectorWords = sector.split(' ').filter(w => w.length > 2).slice(0, 3).join(' ');
+  const localQuery = city ? `${sectorWords} ${city}` : sectorWords;
   console.log(`🏙️ Recherche concurrent local: "${localQuery}"`);
 
   try {
