@@ -435,11 +435,13 @@ serve(async (req: Request) => {
     // Encode as Uint8Array so Supabase respects the contentType header
     const htmlBytes = new TextEncoder().encode(html);
 
-    // Upload to storage
+    // Upload to storage — use Blob to set exact MIME without charset suffix
+    const htmlBlob = new Blob([htmlBytes], { type: 'text/html' });
+
     const { error: uploadError } = await supabase.storage
       .from('shared-reports')
-      .upload(fileName, htmlBytes, {
-        contentType: 'text/html; charset=utf-8',
+      .upload(fileName, htmlBlob, {
+        contentType: 'text/html',
         upsert: false,
       });
 
