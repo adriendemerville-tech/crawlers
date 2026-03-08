@@ -272,7 +272,7 @@ function extractKeywordsFromMetadata(pageContentContext: string, domain: string 
   return [...new Set(extracted)].slice(0, 12);
 }
 
-function generateSeedKeywords(brandName: string, sector: string, pageContentContext: string = ''): string[] {
+function generateSeedKeywords(brandName: string, sector: string, pageContentContext: string = '', domain: string = ''): string[] {
   const keywords: string[] = [];
   
   // Start with market-intent keywords from page metadata (highest priority)
