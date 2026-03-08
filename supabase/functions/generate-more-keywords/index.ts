@@ -99,29 +99,30 @@ function extractBrandFromDomain(domain: string): string {
 function generateMoreSeedKeywords(brandName: string, existingKeywords: string[]): string[] {
   const brand = brandName.toLowerCase().trim();
   
-  // Generate diverse variations
+  // Generate diverse variations: mix brand + market-intent queries
   const variations = [
-    `${brand} prix`,
-    `${brand} promotion`,
-    `${brand} livraison`,
-    `${brand} france`,
-    `${brand} en ligne`,
-    `${brand} pas cher`,
-    `${brand} soldes`,
-    `${brand} comparatif`,
+    `${brand} avis`,
     `${brand} alternative`,
-    `${brand} concurrent`,
+    `${brand} comparatif`,
+    `${brand} prix`,
     `${brand} test`,
-    `${brand} qualité`,
-    `${brand} nouveautés`,
-    `${brand} catalogue`,
-    `${brand} service client`,
     `meilleur ${brand}`,
-    `où acheter ${brand}`,
-    `code promo ${brand}`,
-    `${brand} avis clients`,
-    `${brand} recommandation`,
+    `${brand} vs`,
+    `${brand} gratuit`,
+    `${brand} fonctionnalités`,
+    `${brand} tutoriel`,
   ];
+  
+  // Also add broader market keywords from existing ones (e.g., if "agents IA" exists, try "outils agents IA")
+  const broadeners = ['meilleur', 'comparatif', 'outil', 'logiciel', 'plateforme'];
+  for (const existing of existingKeywords.slice(0, 3)) {
+    if (existing && existing.length > 3 && !existing.includes(brand)) {
+      for (const prefix of broadeners.slice(0, 2)) {
+        const variant = `${prefix} ${existing}`;
+        if (!existingKeywords.includes(variant)) variations.push(variant);
+      }
+    }
+  }
   
   // Filter out existing keywords
   return variations.filter(v => 
@@ -221,6 +222,12 @@ async function checkNewRankings(
   const results: KeywordItem[] = [];
   const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
   
+  const RANKABLE_TYPES = new Set([
+    'organic', 'featured_snippet', 'local_pack', 'knowledge_graph',
+    'top_stories', 'video', 'image', 'twitter', 'app',
+    'multi_carousel', 'ai_overview',
+  ]);
+  
   // Check rankings for top 8 keywords
   const keywordsToCheck = keywords.slice(0, 8);
   
@@ -253,12 +260,19 @@ async function checkNewRankings(
         
         if (taskResult?.items) {
           for (const item of taskResult.items) {
-            if (item.type === 'organic' && item.domain) {
-              const itemDomain = item.domain.toLowerCase().replace(/^www\./, '');
-              if (itemDomain.includes(cleanDomain) || cleanDomain.includes(itemDomain)) {
-                position = item.rank_absolute || item.rank_group || 1;
-                break;
-              }
+            const itemDomain = (item.domain || '').toLowerCase().replace(/^www\./, '');
+            const itemUrl = (item.url || '').toLowerCase();
+            
+            const domainMatch = itemDomain && (
+              itemDomain === cleanDomain ||
+              itemDomain.endsWith('.' + cleanDomain) ||
+              cleanDomain.endsWith('.' + itemDomain)
+            );
+            const urlMatch = itemUrl.includes(cleanDomain);
+            
+            if ((domainMatch || urlMatch) && RANKABLE_TYPES.has(item.type)) {
+              position = item.rank_absolute || item.rank_group || 1;
+              break;
             }
           }
         }
@@ -270,6 +284,8 @@ async function checkNewRankings(
           current_rank: position,
         });
       }
+    } else {
+      await response.text();
     }
     
     // Add remaining keywords without SERP check
