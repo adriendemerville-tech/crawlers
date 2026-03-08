@@ -1156,8 +1156,8 @@ Deno.serve(async (req) => {
     
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo);
     
-    // Inject brand name instruction (compact)
-    userPrompt = `⚠️ NOM ENTREPRISE: "${humanBrandName}" (pas "${domainSlug}"). Utilise TOUJOURS "${humanBrandName}".\n` + userPrompt;
+    // Inject URL-based identity for introduction (brand name only for competitive landscape)
+    userPrompt = `⚠️ INTRODUCTION: Désigne TOUJOURS le site par son URL "${url}" (domaine: ${domain}). Ne jamais utiliser un nom de marque inventé dans l'introduction.\n⚠️ AUTRES SECTIONS: Le nom de marque "${humanBrandName}" peut être utilisé dans les sections hors introduction.\n` + userPrompt;
     
     if (localCompetitorData) {
       userPrompt = `🏙️ CONCURRENT LOCAL SERP: "${localCompetitorData.name}" URL:${localCompetitorData.url} Position:${localCompetitorData.rank}. Utilise comme direct_competitor.\n` + userPrompt;
