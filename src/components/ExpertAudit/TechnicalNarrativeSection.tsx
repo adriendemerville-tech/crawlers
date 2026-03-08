@@ -230,6 +230,43 @@ export function TechnicalNarrativeSection({ result }: TechnicalNarrativeSectionP
         <h3 className="text-lg font-semibold text-foreground">{t.sectionTitle}</h3>
       </div>
 
+      {/* ═══ MISPLACED HEAD TAGS ALERT ═══ */}
+      {misplacedHeadTags.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+        >
+          <Card className="border border-warning/40 bg-warning/5">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/10">
+                  <AlertTriangle className="h-4 w-4 text-warning" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-semibold text-foreground">
+                      Balise mal placée (hors du &lt;head&gt;)
+                    </h4>
+                    <Badge variant="outline" className="border-warning/30 text-warning text-[10px]">Modérée</Badge>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+                    {misplacedHeadTags.length > 1 ? 'Ces balises sont' : 'Cette balise est'} actuellement dans le &lt;body&gt;. Google l'ignore à cet emplacement, ce qui rend l'instruction inefficace et peut indiquer une erreur d'intégration ou une injection HTML.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {misplacedHeadTags.map(tag => (
+                      <span key={tag} className="inline-flex items-center rounded-md bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
+                        &lt;{tag}&gt;
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* ═══ BLOC 1: Porte d'Entrée ═══ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
