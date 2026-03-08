@@ -110,11 +110,11 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
     }
   };
 
-  // Combine original + additional keywords for display
+  // Combine original + additional keywords, sorted by volume descending
   const allMainKeywords = [
     ...(positioning.main_keywords || []),
     ...additionalKeywords,
-  ];
+  ].sort((a, b) => b.volume - a.volume);
 
   return (
     <motion.div
