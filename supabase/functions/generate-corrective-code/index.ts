@@ -258,7 +258,7 @@ async function adaptSolutionWithAI(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: 'google/gemini-2.5-pro',
         messages: [
           { role: 'system', content: `Tu es un expert JavaScript spécialisé en correctifs SEO/web. Tu ADAPTES un snippet existant éprouvé aux spécificités d'un site cible. Ne change que les sélecteurs CSS, IDs, noms de domaine et données spécifiques. Conserve la logique intacte. Réponds UNIQUEMENT avec le code JavaScript adapté, sans markdown.` },
           { role: 'user', content: `Adapte ce correctif "${fixLabel}" pour le site "${siteName}" (${siteUrl}):\n\n${existingSnippet}\n\nRemplace les références génériques par les spécificités du site cible. Garde la structure et la logique identiques.` }
