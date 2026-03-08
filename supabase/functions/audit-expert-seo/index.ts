@@ -1317,11 +1317,11 @@ async function generateNarrativeIntroduction(
         messages: [
           { 
             role: 'system', 
-            content: `Tu es un consultant SEO senior. Tu dois générer une introduction structurée en 3 paragraphes pour un audit technique SEO Expert. Réponds UNIQUEMENT en JSON valide.`
+            content: `Tu es un consultant SEO senior. Tu dois générer une introduction structurée en 3 paragraphes pour un audit technique SEO Expert. RÈGLE ABSOLUE: Tu DOIS désigner le site analysé EXCLUSIVEMENT par son NOM DE DOMAINE fourni dans le prompt. Ne jamais inventer, déduire ou halluciner un nom de marque ou une description générique. Réponds UNIQUEMENT en JSON valide.`
           },
           { 
             role: 'user', 
-            content: `Analyse pour ${domain} (${url}):
+            content: `Analyse pour le site "${domain}" (${url}). ⚠️ Le nom à utiliser dans le texte est "${domain}", jamais un autre nom.
 
 DONNÉES TECHNIQUES:
 - Score total: ${totalScore}/200 (Fiabilité audit: ${Math.round(meta.reliabilityScore * 100)}%)
