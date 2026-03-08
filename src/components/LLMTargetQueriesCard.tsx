@@ -294,6 +294,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
             </Button>
           </div>
         )}
+        <MethodologyPopover variant="target_queries" />
       </CardContent>
 
       {/* Correction Modal */}
