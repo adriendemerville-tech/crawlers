@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -110,6 +110,7 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showExistsBanner, setShowExistsBanner] = useState(false);
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -189,20 +190,29 @@ export default function Auth() {
 
   const handleSignup = async (data: { email: string; password: string; firstName: string; lastName: string }) => {
     setIsLoading(true);
+    setShowExistsBanner(false);
     const { error } = await signUpWithEmail(data.email, data.password, data.firstName, data.lastName);
     setIsLoading(false);
 
     if (error) {
       if (error.message.includes('already registered') || error.message.includes('already exists')) {
-        toast.error(t.userExists);
+        setShowExistsBanner(true);
       } else {
         toast.error(t.signupError);
       }
     } else {
-      // Track signup completion
       trackAnalyticsEvent('signup_complete');
       toast.success(t.signupSuccess);
-      // Navigation handled by useEffect when user state updates
+    }
+  };
+
+  const handleSwitchToLogin = () => {
+    setShowExistsBanner(false);
+    setIsLogin(true);
+    // Pre-fill login email from signup form
+    const signupEmail = signupForm.getValues('email');
+    if (signupEmail) {
+      loginForm.setValue('email', signupEmail);
     }
   };
 
@@ -329,6 +339,26 @@ export default function Auth() {
             ) : (
               <Form {...signupForm}>
                 <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+                  {showExistsBanner && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 p-3"
+                    >
+                      <AlertCircle className="h-4 w-4 text-warning shrink-0" />
+                      <p className="text-sm text-foreground flex-1">
+                        Déjà inscrit, voulez-vous vous{' '}
+                        <button
+                          type="button"
+                          onClick={handleSwitchToLogin}
+                          className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                        >
+                          connecter
+                        </button>
+                        {' '}?
+                      </p>
+                    </motion.div>
+                  )}
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={signupForm.control}
