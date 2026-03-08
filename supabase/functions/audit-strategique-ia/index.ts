@@ -632,20 +632,40 @@ INSTRUCTIONS CRITIQUES:
 - executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
-- PROFILS SOCIAUX: Dans proof_sources, inclus MAXIMUM 2 profils avec profile_url (les 2 plus forts: abonnés pondérés par fraîcheur de dernière publication). Fournis l'URL complète et le profile_name. Si d'autres profils existent au-delà des 2 principaux, ajoute dans le champ "analysis" du thought_leadership une phrase de synthèse structurée ainsi: "[Prénom1] et [Prénom2] sont les incarnations les plus fortes de la marque sur les réseaux sociaux. On dénombre par ailleurs X profils d'engagement et de puissance intermédiaires sur [nom du/des réseau(x)] et X autres profils de faible intensité sur [nom du/des réseau(x)]." Adapte cette phrase au nombre réel de profils détectés. Si un seul profil fort existe, adapte au singulier. Les plateformes restantes apparaissent dans proof_sources sans profile_url.
-- SCORING E-E-A-T RIGOUREUX: Le eeat_score (0-10) doit refléter la RÉALITÉ observable. Distingue 3 types de signaux:
-   A) INCARNATION HUMAINE: profil personnel LinkedIn/X/Instagram d'un fondateur/dirigeant identifié, articles signés, interventions publiques, experts internes identifiés qui signent du contenu
-   B) ENTITÉ DE MARQUE: page entreprise LinkedIn, page Facebook, compte Instagram business, fiche Google Business Profile (avis clients, NAP cohérent, photos), certifications, brevets
-   C) AUTORITÉ INSTITUTIONNELLE: présence Knowledge Graph Google, page Wikipedia/Wikidata, couverture presse régulière, citations par des médias, backlinks éditoriaux
-   RÈGLE CLÉ: Plus l'entité est forte et reconnue institutionnellement, moins l'incarnation individuelle est nécessaire. L'expertise peut être incarnée par des experts internes identifiés (nutritionnistes, ingénieurs, designers qui signent du contenu) et pas uniquement par le fondateur.
-   Grille progressive:
-   * 0-2: Aucun signal détectable (ni incarnation, ni entité, ni autorité institutionnelle)
-   * 3-4: Entité de marque minimale (page entreprise OU fiche GMB basique), pas d'autorité institutionnelle
-   * 5-6: Entité de marque solide (GMB bien noté, pages actives, mentions tierces) SANS incarnation humaine, OU incarnation partielle avec entité faible
-   * 7-8: Incarnation forte (fondateur/experts reconnus, profils actifs) + entité solide, OU entité à forte autorité institutionnelle (Knowledge Graph + presse régulière) même sans incarnation visible du dirigeant
-   * 9-10: Autorité institutionnelle dominante (Wikipedia, Knowledge Graph riche, couverture médiatique massive, marque de référence dans son secteur) — possible même si le dirigeant est discret, car l'expertise est incarnée par la marque elle-même et/ou ses experts internes
-   Sois honnête et factuel. Ne surestime pas: une PME locale sans incarnation ni autorité institutionnelle ne dépasse pas 6/10.
-- founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable sur le site ou le web. Ne PAS inventer.
+- PROFILS SOCIAUX: Dans proof_sources, UTILISE EN PRIORITÉ les URLs sociales détectées dans les "SIGNAUX E-E-A-T" ci-dessus (données factuelles du crawler). Ne fournis profile_url QUE pour des URLs que tu as vues dans les données. Inclus MAXIMUM 2 profils avec profile_url. Les plateformes restantes apparaissent sans profile_url. Si d'autres profils existent au-delà des 2 principaux, ajoute dans "analysis" du thought_leadership une synthèse narrative.
+- SCORING E-E-A-T EVIDENCE-BASED: Le eeat_score (0-10) doit être fondé sur les PREUVES OBSERVABLES fournies dans "SIGNAUX E-E-A-T DÉTECTÉS". 
+   MÉTHODOLOGIE: Commence par compter les signaux factuels détectés, puis enrichis avec tes connaissances pré-entraînées sur la marque (si elle est suffisamment connue).
+   
+   SIGNAUX TECHNIQUES (vérifiés par le crawler — haute fiabilité):
+   +1pt: Author déclaré en JSON-LD (hasAuthorInJsonLd=OUI)
+   +1pt: Person ou ProfilePage en JSON-LD (hasPerson ou hasProfilePage=OUI)
+   +1pt: sameAs vers Wikidata (hasWikidataSameAs=OUI) — signal fort d'autorité institutionnelle
+   +0.5pt: sameAs présent sans Wikidata (hasSameAs=OUI)
+   +0.5pt: Bios auteur dans le HTML (hasAuthorBio=OUI)
+   +0.5pt: Profils LinkedIn personnels (/in/) détectés — incarnation humaine vérifiée
+   +0.5pt: Page LinkedIn entreprise (/company/) détectée — entité de marque
+   +0.5pt: Citations d'experts / blockquotes détectées
+   +0.5pt: Études de cas / témoignages détectés
+   +0.5pt: Organization déclarée en JSON-LD
+   Base technique max: ~7 points à partir des signaux crawlés
+   
+   SIGNAUX INFÉRÉS (connaissances pré-entraînées — fiabilité variable):
+   +1-3pts: Marque connue nationalement/internationalement (Wikipedia, Knowledge Graph Google, couverture presse)
+   +0.5-1pt: GMB actif avec avis (si la marque est suffisamment connue pour que tu le saches)
+   ATTENTION: Si tu n'es PAS CERTAIN qu'une information est vraie, NE L'AJOUTE PAS au score. Mieux vaut sous-estimer que halluciner.
+   
+   HONNÊTETÉ RADICALE:
+   - Tu NE PEUX PAS vérifier le nombre d'abonnés d'un réseau social → ne prétends JAMAIS connaître ce chiffre
+   - Tu NE PEUX PAS vérifier si un GMB existe → ne l'affirme que pour des marques notoirement connues
+   - Tu NE PEUX PAS vérifier la fraîcheur des publications sociales → ne juge pas l'activité récente
+   - Dans "analysis" du thought_leadership, DISTINGUE EXPLICITEMENT: "Signaux vérifiés sur le site: [liste]" vs "Signaux estimés (connaissances pré-entraînées): [liste]"
+   
+   PLAFONDS:
+   - Sans AUCUN signal technique détecté (tout à NON): max 3/10 (basé uniquement sur la notoriété inférée)
+   - Avec signaux techniques mais sans incarnation humaine (pas de Person/Author/profil personnel): max 6/10
+   - Avec incarnation + signaux techniques solides: 7-8/10
+   - 9-10/10: réservé aux marques à autorité institutionnelle vérifiable (Wikidata sameAs, OU marque de référence que tu peux attester avec certitude)
+- founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable dans les signaux E-E-A-T crawlés ni dans tes connaissances. Ne PAS inventer.
 - JSON pur, sans virgules traînantes`;
 }
 
