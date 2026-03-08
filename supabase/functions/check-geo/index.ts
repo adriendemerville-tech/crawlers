@@ -139,9 +139,10 @@ function performSelfAudit(doc: ReturnType<DOMParser['parseFromString']>, htmlLen
 function detectSPAMarkers(doc: ReturnType<DOMParser['parseFromString']>): { isSPA: boolean; hasSSR: boolean; framework?: string } {
   if (!doc) return { isSPA: false, hasSSR: false };
 
-  // Recherche des conteneurs SPA vides
-  const rootDiv = doc.querySelector('#root') || doc.querySelector('#app') || doc.querySelector('#__next');
-  const hasEmptyRoot = rootDiv && (rootDiv.textContent?.trim().length || 0) < 50;
+  // Recherche des conteneurs SPA vides (broader ID check)
+  const rootDiv = doc.querySelector('#root') || doc.querySelector('#app') || doc.querySelector('#__next') || doc.querySelector('#__nuxt') || doc.querySelector('[data-reactroot]') || doc.querySelector('[id*="react"]') || doc.querySelector('[id*="app-root"]');
+  const rootTextLen = rootDiv ? (rootDiv.textContent?.trim().length || 0) : -1;
+  const hasEmptyRoot = rootDiv && rootTextLen < 50;
 
   // Détection des frameworks via scripts et attributs
   const scripts = doc.querySelectorAll('script');
@@ -149,21 +150,28 @@ function detectSPAMarkers(doc: ReturnType<DOMParser['parseFromString']>): { isSP
   let hasVue = false;
   let hasNext = false;
   let hasNuxt = false;
+  let hasAngular = false;
 
   scripts.forEach((script: Element) => {
     const src = script.getAttribute('src') || '';
     const content = script.textContent || '';
     
-    if (src.includes('react') || content.includes('__REACT')) hasReact = true;
-    if (src.includes('vue') || content.includes('__VUE')) hasVue = true;
+    if (src.includes('react') || content.includes('__REACT') || content.includes('React.createElement') || content.includes('ReactDOM')) hasReact = true;
+    if (src.includes('vue') || content.includes('__VUE') || content.includes('Vue.createApp')) hasVue = true;
     if (src.includes('_next') || content.includes('__NEXT_DATA__')) hasNext = true;
     if (src.includes('nuxt') || content.includes('__NUXT__')) hasNuxt = true;
+    if (src.includes('angular') || content.includes('ng-version')) hasAngular = true;
   });
+
+  // Also check for data-reactroot attribute on body children
+  if (!hasReact && doc.querySelector('[data-reactroot]')) hasReact = true;
+  // Check for Angular app-root
+  if (!hasAngular && doc.querySelector('app-root')) hasAngular = true;
 
   // Vérification du SSR via __NEXT_DATA__ ou __NUXT__
   const nextDataScript = doc.querySelector('script#__NEXT_DATA__');
   const nuxtScript = Array.from(scripts).find((s: Element) => s.textContent?.includes('__NUXT__'));
-  const hasSSRContent = rootDiv && (rootDiv.textContent?.trim().length || 0) > 100;
+  const hasSSRContent = rootDiv && rootTextLen > 100;
   const hasSSR: boolean = !!(nextDataScript || nuxtScript || hasSSRContent);
 
   let framework: string | undefined;
@@ -171,8 +179,9 @@ function detectSPAMarkers(doc: ReturnType<DOMParser['parseFromString']>): { isSP
   else if (hasNuxt) framework = 'Nuxt';
   else if (hasReact) framework = 'React';
   else if (hasVue) framework = 'Vue';
+  else if (hasAngular) framework = 'Angular';
 
-  const isSPA = (hasReact || hasVue) && hasEmptyRoot && !hasSSR;
+  const isSPA = (hasReact || hasVue || hasAngular) && (hasEmptyRoot || rootTextLen < 200) && !hasSSR;
 
   return { isSPA, hasSSR, framework };
 }
