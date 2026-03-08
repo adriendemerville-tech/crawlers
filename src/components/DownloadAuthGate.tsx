@@ -8,10 +8,11 @@ import { useAuth } from '@/contexts/AuthContext';
 const translations = {
   fr: {
     title: 'Téléchargez vos rapports',
-    subtitle: 'Connectez-vous pour accéder à tous vos outils SEO.',
+    subtitle: 'Connectez-vous pour accéder à tous vos outils SEO / GEO.',
     benefit1: 'Suivi des statistiques',
     benefit2: 'Conseils 360°',
     benefit3: 'Fonctions dédiées aux Pros',
+    benefit4: 'Audit complet → plans d\'action → code correctif',
     tagline1: 'Autonomie',
     tagline2: 'Pédagogie',
     signup: 'S\'inscrire gratuitement',
