@@ -652,7 +652,12 @@ INSTRUCTIONS CRITIQUES:
 - executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
-- PROFILS SOCIAUX: Dans proof_sources, UTILISE EN PRIORITÉ les URLs sociales détectées dans les "SIGNAUX E-E-A-T" ci-dessus (données factuelles du crawler). Ne fournis profile_url QUE pour des URLs que tu as vues dans les données. Inclus MAXIMUM 2 profils avec profile_url. Les plateformes restantes apparaissent sans profile_url. Si d'autres profils existent au-delà des 2 principaux, ajoute dans "analysis" du thought_leadership une synthèse narrative.
+- PROFILS SOCIAUX — RÈGLE ABSOLUE ANTI-HALLUCINATION:
+   • Les SEULES URLs autorisées dans "profile_url" sont celles EXACTEMENT listées dans "URLs sociales trouvées" des SIGNAUX E-E-A-T ci-dessus.
+   • Tu ne dois JAMAIS inventer, deviner ou construire une URL de profil social. Si tu n'as pas vu l'URL exacte dans les données crawler, mets profile_url: null.
+   • COPIE-COLLE les URLs telles quelles depuis les signaux E-E-A-T. Ne modifie pas un seul caractère.
+   • Inclus MAXIMUM 2 profils avec profile_url (uniquement parmi les URLs détectées). Les autres plateformes: profile_url: null.
+- IDENTIFICATION DU FONDATEUR/DIRIGEANT: Si tu connais avec CERTITUDE le nom du fondateur ou dirigeant principal de l'entité (grâce à tes connaissances pré-entraînées), cite-le nommément dans thought_leadership.analysis et/ou dans l'introduction. Indique son profil LinkedIn UNIQUEMENT s'il figure dans les URLs détectées. Si tu n'es pas certain de l'identité, écris "fondateur non identifié".
 - SCORING E-E-A-T EVIDENCE-BASED: Le eeat_score (0-10) doit être fondé sur les PREUVES OBSERVABLES fournies dans "SIGNAUX E-E-A-T DÉTECTÉS". 
    MÉTHODOLOGIE: Commence par compter les signaux factuels détectés, puis enrichis avec tes connaissances pré-entraînées sur la marque (si elle est suffisamment connue).
    
@@ -1108,6 +1113,30 @@ Deno.serve(async (req) => {
 
     // Sanitize brand name
     parsedAnalysis = sanitizeBrandNameInResponse(parsedAnalysis, domainSlug, humanBrandName);
+
+    // ═══ POST-PROCESS: Validate social URLs against crawler-detected ones ═══
+    if (parsedAnalysis.social_signals?.proof_sources && Array.isArray(parsedAnalysis.social_signals.proof_sources)) {
+      const detectedUrlsSet = new Set(
+        (eeatSignals.detectedSocialUrls || []).map((u: string) => u.toLowerCase().replace(/\/$/, ''))
+      );
+      console.log(`🔗 Validating social URLs against ${detectedUrlsSet.size} detected URLs:`, [...detectedUrlsSet]);
+      
+      for (const source of parsedAnalysis.social_signals.proof_sources) {
+        if (source.profile_url) {
+          const normalized = source.profile_url.toLowerCase().replace(/\/$/, '');
+          // Check if this URL (or a close match) was actually detected by the crawler
+          const isValid = [...detectedUrlsSet].some(detected => 
+            normalized.includes(detected) || detected.includes(normalized) ||
+            // Allow matching by path segment (e.g. /in/yoan-drahy matches detected /in/yoan-drahy)
+            normalized.split('/').slice(-1)[0] === detected.split('/').slice(-1)[0]
+          );
+          if (!isValid) {
+            console.log(`⚠️ Removing hallucinated social URL: ${source.profile_url} (not in detected set)`);
+            source.profile_url = null;
+          }
+        }
+      }
+    }
 
     const result = {
       success: true,
