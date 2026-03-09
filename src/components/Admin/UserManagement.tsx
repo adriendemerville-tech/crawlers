@@ -221,7 +221,7 @@ export function UserManagement() {
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
+                    <TableRow key={user.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setKpiUser(user); setKpiModalOpen(true); }}>
                       <TableCell className="font-medium">
                         {user.first_name} {user.last_name}
                       </TableCell>
