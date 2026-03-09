@@ -10,6 +10,7 @@ import { expertReportTranslations, generateExpertReportHTML, WhiteLabelBranding,
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveReport } from '@/hooks/useSaveReport';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAdmin } from '@/hooks/useAdmin';
 
 interface ExpertReportPreviewModalProps {
   isOpen: boolean;
