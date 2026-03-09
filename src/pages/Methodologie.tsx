@@ -32,6 +32,7 @@ interface RecoCategory {
 
 export default function Methodologie() {
   const { language } = useLanguage();
+  useCanonicalHreflang('/methodologie');
 
   const auditCategories: AuditCategory[] = [
     {
