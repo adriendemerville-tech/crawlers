@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { MethodologyPopover } from './MethodologyPopover';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   Target, TrendingUp, TrendingDown, Zap, 
   AlertTriangle, Lightbulb, Trophy,
-  BarChart3, Search, Plus, Loader2
+  BarChart3, Search, Loader2, Layers, Compass,
+  ChevronDown, ChevronUp, BrainCircuit
 } from 'lucide-react';
-import { KeywordPositioning, CompetitiveLandscape, MarketDataSummary, KeywordItem } from '@/types/expertAudit';
+import { KeywordPositioning, CompetitiveLandscape, MarketDataSummary, KeywordItem, KeywordStrategicAnalysis } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -43,11 +44,157 @@ function getPriorityColor(priority: 'high' | 'medium' | 'low'): string {
   }
 }
 
+function getBusinessValueColor(value: string): string {
+  switch (value) {
+    case 'High': return 'text-success border-success/30 bg-success/10';
+    case 'Medium': return 'text-warning border-warning/30 bg-warning/10';
+    case 'Low': return 'text-muted-foreground border-muted bg-muted/10';
+    default: return 'text-muted-foreground border-muted bg-muted/10';
+  }
+}
+
+function getIntentIcon(intent: string): string {
+  if (intent.toLowerCase().includes('transaction')) return '💰';
+  if (intent.toLowerCase().includes('décision')) return '🤔';
+  if (intent.toLowerCase().includes('informat')) return '📚';
+  if (intent.toLowerCase().includes('navigat')) return '🧭';
+  return '🔍';
+}
+
+function StrategicAnalysisRow({ analysis }: { analysis: KeywordStrategicAnalysis }) {
+  return (
+    <div className="px-3 py-2 bg-muted/30 border-t border-dashed border-border/50 space-y-2">
+      <div className="flex flex-wrap gap-2 items-center">
+        <Badge variant="outline" className="text-xs gap-1">
+          {getIntentIcon(analysis.intent)} {analysis.intent}
+        </Badge>
+        <Badge variant="outline" className={`text-xs ${getBusinessValueColor(analysis.business_value)}`}>
+          Valeur: {analysis.business_value}
+        </Badge>
+      </div>
+      {analysis.pain_point && (
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Problème utilisateur:</span> {analysis.pain_point}
+        </p>
+      )}
+      {analysis.recommended_action && (
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium text-primary">Action:</span> {analysis.recommended_action}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ExplorationCard({ 
+  title, 
+  icon: Icon, 
+  keywords, 
+  isLoading 
+}: { 
+  title: string; 
+  icon: React.ElementType;
+  keywords: KeywordItem[]; 
+  isLoading: boolean;
+}) {
+  const [expandedKw, setExpandedKw] = useState<number | null>(null);
+
+  if (isLoading) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardContent className="py-8 flex flex-col items-center gap-3">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Exploration en cours...</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  if (keywords.length === 0) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Icon className="h-5 w-5 text-primary" />
+            {title}
+            <Badge variant="secondary" className="ml-auto text-xs">
+              {keywords.length} mots-clés
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="text-left px-3 py-2 font-medium">Mot-clé</th>
+                  <th className="text-center px-3 py-2 font-medium">Volume</th>
+                  <th className="text-center px-3 py-2 font-medium">Difficulté</th>
+                  <th className="text-center px-3 py-2 font-medium">Position</th>
+                  <th className="w-8"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {keywords.map((kw, idx) => (
+                  <tr key={idx} className="border-t border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => setExpandedKw(expandedKw === idx ? null : idx)}>
+                    <td className="px-3 py-2 font-medium text-foreground">{kw.keyword}</td>
+                    <td className="text-center px-3 py-2 text-muted-foreground">{kw.volume.toLocaleString()}</td>
+                    <td className="text-center px-3 py-2">
+                      <Badge variant="outline" className={`text-xs ${
+                        kw.difficulty <= 30 ? 'text-success border-success/30' :
+                        kw.difficulty <= 60 ? 'text-warning border-warning/30' :
+                        'text-destructive border-destructive/30'
+                      }`}>
+                        {kw.difficulty}/100
+                      </Badge>
+                    </td>
+                    <td className="text-center px-3 py-2">
+                      <Badge
+                        variant={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankBadgeVariant(kw.current_rank) : 'outline'}
+                        className={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankColor(kw.current_rank) : 'text-muted-foreground'}
+                      >
+                        {typeof kw.current_rank === 'number'
+                          ? (kw.current_rank <= 50 ? `#${kw.current_rank}` : '50+')
+                          : kw.current_rank === 'Non classé' ? '50+' : kw.current_rank}
+                      </Badge>
+                    </td>
+                    <td className="px-1 py-2">
+                      {kw.strategic_analysis && (
+                        expandedKw === idx 
+                          ? <ChevronUp className="h-3 w-3 text-muted-foreground" />
+                          : <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {/* Expanded strategic analysis */}
+            {expandedKw !== null && keywords[expandedKw]?.strategic_analysis && (
+              <StrategicAnalysisRow analysis={keywords[expandedKw].strategic_analysis!} />
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
 export function KeywordPositioningCard({ positioning, marketSummary, competitors, domain }: KeywordPositioningCardProps) {
   const { toast } = useToast();
-  const [additionalKeywords, setAdditionalKeywords] = useState<KeywordItem[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasLoadedMore, setHasLoadedMore] = useState(false);
+  const [expandedKw, setExpandedKw] = useState<number | null>(null);
+  const [verticalResults, setVerticalResults] = useState<KeywordItem[]>([]);
+  const [horizontalResults, setHorizontalResults] = useState<KeywordItem[]>([]);
+  const [isLoadingVertical, setIsLoadingVertical] = useState(false);
+  const [isLoadingHorizontal, setIsLoadingHorizontal] = useState(false);
 
   const competitorNames = competitors ? [
     competitors.leader?.name,
@@ -55,355 +202,362 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
     competitors.challenger?.name,
   ].filter(Boolean) : [];
 
-  const handleLoadMoreKeywords = async () => {
+  const handleExplore = async (mode: 'vertical' | 'horizontal') => {
     if (!domain) {
-      toast({
-        title: 'Erreur',
-        description: 'Domaine non disponible pour la recherche',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', description: 'Domaine non disponible', variant: 'destructive' });
       return;
     }
 
-    setIsLoadingMore(true);
+    const setLoading = mode === 'vertical' ? setIsLoadingVertical : setIsLoadingHorizontal;
+    const setResults = mode === 'vertical' ? setVerticalResults : setHorizontalResults;
+
+    setLoading(true);
 
     try {
       const existingKeywords = positioning.main_keywords || [];
-      
-      // Build site context from existing keywords for contextual filtering
       const siteContext = existingKeywords.map(k => k.keyword).join(' ');
-      
+
       const { data, error } = await supabase.functions.invoke('generate-more-keywords', {
-        body: {
-          domain,
-          existingKeywords,
-          brandName: null,
-          locationCode: 2250,
-          siteContext,
-        },
+        body: { domain, existingKeywords, brandName: null, locationCode: 2250, siteContext, mode },
       });
 
       if (error) throw error;
 
       if (data?.keywords && data.keywords.length > 0) {
-        setAdditionalKeywords(data.keywords);
-        setHasLoadedMore(true);
+        setResults(data.keywords);
         toast({
-          title: 'Mots-clés générés',
-          description: `${data.keywords.length} nouveaux mots-clés ajoutés`,
+          title: mode === 'vertical' ? 'Exploration en profondeur' : 'Leviers connexes',
+          description: `${data.keywords.length} opportunités identifiées`,
         });
       } else {
-        toast({
-          title: 'Aucun nouveau mot-clé',
-          description: 'Pas de mots-clés supplémentaires trouvés',
-        });
+        toast({ title: 'Aucun résultat', description: 'Pas de nouvelles opportunités trouvées' });
       }
     } catch (error) {
-      console.error('Error loading more keywords:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger plus de mots-clés',
-        variant: 'destructive',
-      });
+      console.error('Explore error:', error);
+      toast({ title: 'Erreur', description: "Impossible d'explorer", variant: 'destructive' });
     } finally {
-      setIsLoadingMore(false);
+      setLoading(false);
     }
   };
 
-  // Combine original + additional keywords, sorted by volume descending
-  const allMainKeywords = [
-    ...(positioning.main_keywords || []),
-    ...additionalKeywords,
-  ].sort((a, b) => b.volume - a.volume);
+  const mainKeywords = positioning.main_keywords || [];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
-    >
-      <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Search className="h-5 w-5 text-primary" />
-            Mots clés
-            {marketSummary?.data_source === 'dataforseo' && (
-              <Badge variant="outline" className="ml-auto text-xs text-primary border-primary/50">
-                Données DataForSEO
-              </Badge>
+    <div className="space-y-4">
+      {/* Main Keywords Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Search className="h-5 w-5 text-primary" />
+              Mots clés
+              {marketSummary?.data_source === 'dataforseo' && (
+                <Badge variant="outline" className="ml-auto text-xs text-primary border-primary/50">
+                  Données DataForSEO + IA
+                </Badge>
+              )}
+            </CardTitle>
+            {competitorNames.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Analyse comparative vs {competitorNames.join(', ')}
+              </p>
             )}
-          </CardTitle>
-          {competitorNames.length > 0 && (
-            <p className="text-sm text-muted-foreground mt-1">
-              Analyse comparative vs {competitorNames.join(', ')}
-            </p>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Market Summary Stats */}
-          {marketSummary && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="p-3 rounded-lg bg-muted/50 text-center">
-              <BarChart3 className="h-4 w-4 text-primary mx-auto mb-1" />
-                <p className="text-lg font-bold text-foreground">
-                  {marketSummary.total_market_volume.toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground">Volume marché/mois</p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Market Summary Stats */}
+            {marketSummary && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="p-3 rounded-lg bg-muted/50 text-center">
+                  <BarChart3 className="h-4 w-4 text-primary mx-auto mb-1" />
+                  <p className="text-lg font-bold text-foreground">{marketSummary.total_market_volume.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">Volume marché/mois</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50 text-center">
+                  <Target className="h-4 w-4 text-primary mx-auto mb-1" />
+                  <p className="text-lg font-bold text-foreground">{marketSummary.keywords_ranked}/{marketSummary.keywords_analyzed}</p>
+                  <p className="text-xs text-muted-foreground">Mots-clés classés</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50 text-center">
+                  <TrendingUp className="h-4 w-4 text-success mx-auto mb-1" />
+                  <p className="text-lg font-bold text-foreground">
+                    {marketSummary.average_position > 0 ? `#${marketSummary.average_position.toFixed(1)}` : 'N/A'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Position moyenne</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/50 text-center">
+                  <Zap className="h-4 w-4 text-warning mx-auto mb-1" />
+                  <p className="text-lg font-bold text-foreground">{positioning.quick_wins?.length || 0}</p>
+                  <p className="text-xs text-muted-foreground">Quick Wins</p>
+                </div>
               </div>
-              <div className="p-3 rounded-lg bg-muted/50 text-center">
-                <Target className="h-4 w-4 text-primary mx-auto mb-1" />
-                <p className="text-lg font-bold text-foreground">
-                  {marketSummary.keywords_ranked}/{marketSummary.keywords_analyzed}
-                </p>
-                <p className="text-xs text-muted-foreground">Mots-clés classés</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50 text-center">
-                <TrendingUp className="h-4 w-4 text-success mx-auto mb-1" />
-                <p className="text-lg font-bold text-foreground">
-                  {marketSummary.average_position > 0 ? `#${marketSummary.average_position.toFixed(1)}` : 'N/A'}
-                </p>
-                <p className="text-xs text-muted-foreground">Position moyenne</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50 text-center">
-                <Zap className="h-4 w-4 text-warning mx-auto mb-1" />
-                <p className="text-lg font-bold text-foreground">
-                  {positioning.quick_wins?.length || 0}
-                </p>
-                <p className="text-xs text-muted-foreground">Quick Wins</p>
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* Top 5 Most Searched Keywords Summary */}
-          {allMainKeywords.length > 0 && (() => {
-            const top5 = allMainKeywords.slice(0, 5);
-            const rankedTop5 = top5.filter(k => typeof k.current_rank === 'number' && k.current_rank <= 50);
-            const avgRank = rankedTop5.length > 0
-              ? (rankedTop5.reduce((sum, k) => sum + (k.current_rank as number), 0) / rankedTop5.length)
-              : null;
+            {/* Top 5 Summary */}
+            {mainKeywords.length > 0 && (() => {
+              const top5 = mainKeywords.slice(0, 5);
+              const rankedTop5 = top5.filter(k => typeof k.current_rank === 'number' && k.current_rank <= 50);
+              const avgRank = rankedTop5.length > 0
+                ? (rankedTop5.reduce((sum, k) => sum + (k.current_rank as number), 0) / rankedTop5.length)
+                : null;
 
-            return (
+              return (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Trophy className="h-4 w-4 text-primary" aria-hidden="true" />
+                    Top 5 opportunités stratégiques
+                    {avgRank !== null && (
+                      <Badge variant="secondary" className="ml-auto text-xs">
+                        Ranking moyen : #{avgRank.toFixed(1)}
+                      </Badge>
+                    )}
+                  </h3>
+                  <div className="grid gap-2 md:grid-cols-5">
+                    {top5.map((kw, idx) => (
+                      <div key={idx} className="p-3 rounded-lg border bg-card text-center space-y-1">
+                        <p className="text-xs font-medium text-foreground truncate" title={kw.keyword}>{kw.keyword}</p>
+                        <p className="text-lg font-bold text-primary">{kw.volume.toLocaleString()}</p>
+                        <p className="text-[10px] text-muted-foreground">rech./mois</p>
+                        <Badge
+                          variant={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankBadgeVariant(kw.current_rank) : 'outline'}
+                          className={`text-xs ${typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankColor(kw.current_rank) : 'text-muted-foreground'}`}
+                        >
+                          {typeof kw.current_rank === 'number' ? (kw.current_rank <= 50 ? `#${kw.current_rank}` : '50+') : '50+'}
+                        </Badge>
+                        {kw.strategic_analysis && (
+                          <div className="mt-1">
+                            <Badge variant="outline" className={`text-[10px] ${getBusinessValueColor(kw.strategic_analysis.business_value)}`}>
+                              {getIntentIcon(kw.strategic_analysis.intent)} {kw.strategic_analysis.business_value}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Main Keywords Table with Strategic Analysis */}
+            {mainKeywords.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-primary" aria-hidden="true" />
-                  Top 5 requêtes les plus cherchées
-                  {avgRank !== null && (
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                      Ranking moyen : #{avgRank.toFixed(1)}
-                    </Badge>
-                  )}
+                  <BrainCircuit className="h-4 w-4 text-primary" aria-hidden="true" />
+                  Analyse stratégique des mots-clés
+                  <span className="text-xs text-muted-foreground font-normal ml-1">(cliquez pour détails)</span>
                 </h3>
-                <div className="grid gap-2 md:grid-cols-5">
-                  {top5.map((kw, idx) => (
-                    <div key={idx} className="p-3 rounded-lg border bg-card text-center space-y-1">
-                      <p className="text-xs font-medium text-foreground truncate" title={kw.keyword}>
-                        {kw.keyword}
-                      </p>
-                      <p className="text-lg font-bold text-primary">{kw.volume.toLocaleString()}</p>
-                      <p className="text-[10px] text-muted-foreground">rech./mois</p>
-                      <Badge
-                        variant={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankBadgeVariant(kw.current_rank) : 'outline'}
-                        className={`text-xs ${typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankColor(kw.current_rank) : 'text-muted-foreground'}`}
-                      >
-                        {typeof kw.current_rank === 'number'
-                          ? (kw.current_rank <= 50 ? `#${kw.current_rank}` : '50+')
-                          : '50+'}
-                      </Badge>
+                <div className="rounded-lg border overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-medium">Mot-clé</th>
+                        <th className="text-center px-3 py-2 font-medium">Volume</th>
+                        <th className="text-center px-3 py-2 font-medium">Difficulté</th>
+                        <th className="text-center px-3 py-2 font-medium">Position</th>
+                        <th className="w-8"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mainKeywords.map((kw, idx) => (
+                        <>
+                          <tr 
+                            key={`row-${idx}`}
+                            className={`border-t border-border/50 hover:bg-muted/30 ${kw.strategic_analysis ? 'cursor-pointer' : ''}`}
+                            onClick={() => kw.strategic_analysis && setExpandedKw(expandedKw === idx ? null : idx)}
+                          >
+                            <td className="px-3 py-2 font-medium text-foreground">
+                              {kw.keyword}
+                              {kw.strategic_analysis && (
+                                <Badge variant="outline" className={`ml-2 text-[10px] ${getBusinessValueColor(kw.strategic_analysis.business_value)}`}>
+                                  {getIntentIcon(kw.strategic_analysis.intent)} {kw.strategic_analysis.intent}
+                                </Badge>
+                              )}
+                            </td>
+                            <td className="text-center px-3 py-2 text-muted-foreground">{kw.volume.toLocaleString()}</td>
+                            <td className="text-center px-3 py-2">
+                              <Badge variant="outline" className={`text-xs ${
+                                kw.difficulty <= 30 ? 'text-success border-success/30' :
+                                kw.difficulty <= 60 ? 'text-warning border-warning/30' :
+                                'text-destructive border-destructive/30'
+                              }`}>
+                                {kw.difficulty}/100
+                              </Badge>
+                            </td>
+                            <td className="text-center px-3 py-2">
+                              <Badge 
+                                variant={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankBadgeVariant(kw.current_rank) : 'outline'}
+                                className={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankColor(kw.current_rank) : 'text-muted-foreground'}
+                              >
+                                {typeof kw.current_rank === 'number' 
+                                  ? (kw.current_rank <= 50 ? `#${kw.current_rank}` : '50+')
+                                  : kw.current_rank === 'Non classé' ? '50+' : kw.current_rank}
+                              </Badge>
+                            </td>
+                            <td className="px-1 py-2">
+                              {kw.strategic_analysis && (
+                                expandedKw === idx 
+                                  ? <ChevronUp className="h-3 w-3 text-muted-foreground" />
+                                  : <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                              )}
+                            </td>
+                          </tr>
+                          {expandedKw === idx && kw.strategic_analysis && (
+                            <tr key={`detail-${idx}`}>
+                              <td colSpan={5} className="p-0">
+                                <StrategicAnalysisRow analysis={kw.strategic_analysis} />
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Exploration Buttons */}
+                {domain && (
+                  <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleExplore('vertical')}
+                      disabled={isLoadingVertical || verticalResults.length > 0}
+                      className="gap-2 flex-1"
+                    >
+                      {isLoadingVertical ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Exploration...</>
+                      ) : (
+                        <><Layers className="h-4 w-4" /> Explorer la profondeur</>
+                      )}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleExplore('horizontal')}
+                      disabled={isLoadingHorizontal || horizontalResults.length > 0}
+                      className="gap-2 flex-1"
+                    >
+                      {isLoadingHorizontal ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Exploration...</>
+                      ) : (
+                        <><Compass className="h-4 w-4" /> Chercher des leviers connexes</>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Quick Wins */}
+            {positioning.quick_wins && positioning.quick_wins.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-warning" aria-hidden="true" />
+                  Quick Wins (Position 11-20)
+                </h3>
+                <div className="grid gap-2 md:grid-cols-2">
+                  {positioning.quick_wins.map((qw, idx) => (
+                    <div key={idx} className="p-3 rounded-lg border border-warning/30 bg-warning/5">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-foreground">"{qw.keyword}"</span>
+                        <Badge variant="outline" className="text-warning border-warning/50">#{qw.current_rank}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-1">{qw.volume.toLocaleString()} recherches/mois</p>
+                      <p className="text-xs text-foreground">{qw.action}</p>
                     </div>
                   ))}
                 </div>
               </div>
-            );
-          })()}
+            )}
 
-          {/* Main Keywords Table */}
-          {allMainKeywords.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Search className="h-4 w-4 text-primary" aria-hidden="true" />
-                Tous les mots-clés stratégiques
-              </h3>
-              <div className="rounded-lg border overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="text-left px-3 py-2 font-medium">Mot-clé</th>
-                      <th className="text-center px-3 py-2 font-medium">Volume</th>
-                      <th className="text-center px-3 py-2 font-medium">Difficulté</th>
-                      <th className="text-center px-3 py-2 font-medium">Position</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {allMainKeywords.slice(0, hasLoadedMore ? 20 : 8).map((kw, idx) => (
-                      <tr 
-                        key={idx} 
-                        className={`border-t border-border/50 hover:bg-muted/30 ${
-                          idx >= (positioning.main_keywords?.length || 0) ? 'bg-primary/5' : ''
-                        }`}
-                      >
-                        <td className="px-3 py-2 font-medium text-foreground">
-                          {kw.keyword}
-                          {idx >= (positioning.main_keywords?.length || 0) && (
-                            <Badge variant="outline" className="ml-2 text-[10px] text-primary">Nouveau</Badge>
-                          )}
-                        </td>
-                        <td className="text-center px-3 py-2 text-muted-foreground">
-                          {kw.volume.toLocaleString()}
-                        </td>
-                        <td className="text-center px-3 py-2">
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs ${
-                              kw.difficulty <= 30 ? 'text-success border-success/30' :
-                              kw.difficulty <= 60 ? 'text-warning border-warning/30' :
-                              'text-destructive border-destructive/30'
-                            }`}
-                          >
-                            {kw.difficulty}/100
+            {/* Content Gaps */}
+            {positioning.content_gaps && positioning.content_gaps.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-destructive" aria-hidden="true" />
+                  Contenus Manquants (vs Concurrence)
+                </h3>
+                <div className="space-y-2">
+                  {positioning.content_gaps.map((gap, idx) => (
+                    <div key={idx} className={`p-3 rounded-lg border ${getPriorityColor(gap.priority)} bg-card`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-foreground">"{gap.keyword}"</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">{gap.volume.toLocaleString()} vol.</Badge>
+                          <Badge variant="outline" className={`text-xs ${getPriorityColor(gap.priority)}`}>
+                            {gap.priority === 'high' ? 'Priorité haute' : gap.priority === 'medium' ? 'Priorité moyenne' : 'Opportunité'}
                           </Badge>
-                        </td>
-                        <td className="text-center px-3 py-2">
-                          <Badge 
-                            variant={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankBadgeVariant(kw.current_rank) : 'outline'}
-                            className={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankColor(kw.current_rank) : 'text-muted-foreground'}
-                          >
-                            {typeof kw.current_rank === 'number' 
-                              ? (kw.current_rank <= 50 ? `#${kw.current_rank}` : '50+')
-                              : kw.current_rank === 'Non classé' ? '50+' : kw.current_rank}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {/* Load More Button */}
-              {!hasLoadedMore && domain && (
-                <div className="flex justify-center mt-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleLoadMoreKeywords}
-                    disabled={isLoadingMore}
-                    className="gap-2"
-                  >
-                    {isLoadingMore ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Génération...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="h-4 w-4" />
-                        + de mots-clés
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Quick Wins */}
-          {positioning.quick_wins && positioning.quick_wins.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Zap className="h-4 w-4 text-warning" aria-hidden="true" />
-                Quick Wins (Position 11-20)
-              </h3>
-              <div className="grid gap-2 md:grid-cols-2">
-                {positioning.quick_wins.map((qw, idx) => (
-                  <div key={idx} className="p-3 rounded-lg border border-warning/30 bg-warning/5">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-foreground">"{qw.keyword}"</span>
-                      <Badge variant="outline" className="text-warning border-warning/50">
-                        #{qw.current_rank}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-1">
-                      {qw.volume.toLocaleString()} recherches/mois
-                    </p>
-                    <p className="text-xs text-foreground">{qw.action}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Content Gaps */}
-          {positioning.content_gaps && positioning.content_gaps.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-destructive" aria-hidden="true" />
-                Contenus Manquants (vs Concurrence)
-              </h3>
-              <div className="space-y-2">
-                {positioning.content_gaps.map((gap, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`p-3 rounded-lg border ${getPriorityColor(gap.priority)} bg-card`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-foreground">"{gap.keyword}"</span>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">
-                          {gap.volume.toLocaleString()} vol.
-                        </Badge>
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs ${getPriorityColor(gap.priority)}`}
-                        >
-                          {gap.priority === 'high' ? 'Priorité haute' : 
-                           gap.priority === 'medium' ? 'Priorité moyenne' : 'Opportunité'}
-                        </Badge>
+                        </div>
                       </div>
+                      <p className="text-xs text-muted-foreground">{gap.action}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">{gap.action}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Competitive Gaps */}
-          {positioning.competitive_gaps && positioning.competitive_gaps.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <TrendingDown className="h-4 w-4 text-warning" aria-hidden="true" />
-                Gaps Concurrentiels
-              </h3>
-              <ul className="space-y-2">
-                {positioning.competitive_gaps.map((gap, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <span className="text-warning shrink-0">•</span>
-                    <span>{gap}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+            {/* Competitive Gaps */}
+            {positioning.competitive_gaps && positioning.competitive_gaps.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <TrendingDown className="h-4 w-4 text-warning" aria-hidden="true" />
+                  Gaps Concurrentiels
+                </h3>
+                <ul className="space-y-2">
+                  {positioning.competitive_gaps.map((gap, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <span className="text-warning shrink-0">•</span>
+                      <span>{gap}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-          {/* Recommendations */}
-          {positioning.recommendations && positioning.recommendations.length > 0 && (
-            <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-                <Lightbulb className="h-4 w-4 text-primary" aria-hidden="true" />
-                Recommandations Stratégiques
-              </h3>
-              <ul className="space-y-2">
-                {positioning.recommendations.map((rec, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
-                    <span className="text-primary shrink-0 font-bold">{idx + 1}.</span>
-                    <span>{rec}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          <MethodologyPopover variant="keyword_positioning" />
-        </CardContent>
-      </Card>
-    </motion.div>
+            {/* Recommendations */}
+            {positioning.recommendations && positioning.recommendations.length > 0 && (
+              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                  <Lightbulb className="h-4 w-4 text-primary" aria-hidden="true" />
+                  Recommandations Stratégiques
+                </h3>
+                <ul className="space-y-2">
+                  {positioning.recommendations.map((rec, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-foreground">
+                      <span className="text-primary shrink-0 font-bold">{idx + 1}.</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <MethodologyPopover variant="keyword_positioning" />
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Exploration Cards — rendered below the main card */}
+      <AnimatePresence>
+        {(isLoadingVertical || verticalResults.length > 0) && (
+          <ExplorationCard
+            title="🔬 Exploration en profondeur (niches métier)"
+            icon={Layers}
+            keywords={verticalResults}
+            isLoading={isLoadingVertical}
+          />
+        )}
+        {(isLoadingHorizontal || horizontalResults.length > 0) && (
+          <ExplorationCard
+            title="🧭 Leviers connexes (chemins de traverse)"
+            icon={Compass}
+            keywords={horizontalResults}
+            isLoading={isLoadingHorizontal}
+          />
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

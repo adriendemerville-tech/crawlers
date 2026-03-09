@@ -492,6 +492,112 @@ function generateSeedKeywords(brandName: string, sector: string, pageContentCont
   return keywords.filter(kw => kw.length > 3 && !kw.includes('undefined')).slice(0, 10);
 }
 
+// ==================== AI-DRIVEN SEED GENERATION ====================
+
+async function generateSeedsWithAI(
+  url: string,
+  pageContentContext: string,
+  brandName: string,
+  mode: 'initial' | 'vertical' | 'horizontal' = 'initial',
+  feedback?: string
+): Promise<string[]> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    console.log('⚠️ No AI key for seed generation, falling back to metadata extraction');
+    return [];
+  }
+
+  const modeInstructions: Record<string, string> = {
+    initial: "Services principaux + intentions d'achat/conversion. Ex: 'devis rénovation salle de bain', 'plombier urgence Paris', 'logiciel facturation auto-entrepreneur'.",
+    vertical: "Sous-catégories techniques, longue traîne, conversion locale. Creuse en PROFONDEUR les niches métier spécifiques. Ex: 'isolation thermique par l'extérieur prix', 'raccordement cuivre multicouche'.",
+    horizontal: "Étapes AMONT du parcours client (financement, permis, diagnostic, comparatif) et besoins CONNEXES. Trouve des chemins de traverse. Ex: 'aide financement rénovation énergétique', 'permis de construire extension maison'.",
+  };
+
+  const prompt = `Tu es un Senior SEO Strategist spécialisé en recherche de mots-clés à forte intention.
+
+ANALYSE cette page web:
+URL: ${url}
+${pageContentContext}
+
+RÈGLE D'OR ABSOLUE: NE CITE JAMAIS le nom de la marque "${brandName}" ni aucune variante dans tes mots-clés. Les mots-clés doivent être 100% GÉNÉRIQUES.
+
+MODE: ${mode.toUpperCase()}
+${modeInstructions[mode]}
+${feedback ? `\n⚠️ FEEDBACK: Les seeds précédents ont donné de mauvais résultats (volume trop faible ou hors-sujet). ${feedback}. Reformule avec des expressions plus recherchées et plus spécifiques.` : ''}
+
+INSTRUCTIONS:
+1. Identifie le CORE BUSINESS exact de cette entreprise
+2. Génère exactement 15 mots-clés que des clients potentiels taperaient dans Google
+3. Chaque mot-clé = expression de 2-5 mots à forte intention commerciale ou informationnelle
+4. Privilégie les requêtes transactionnelles ("devis X", "prix X", "X pas cher") et décisionnelles ("meilleur X", "comparatif X", "avis X")
+5. Inclus au moins 3 requêtes longue traîne (4-5 mots)
+
+Réponds UNIQUEMENT avec un JSON: {"core_business": "description courte", "seeds": ["mot clé 1", "mot clé 2", ...]}`;
+
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.5,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) {
+      console.log(`⚠️ AI seed generation failed: ${response.status}`);
+      await response.text();
+      return [];
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    trackTokenUsage('generate-seeds', 'google/gemini-2.5-flash-lite', data.usage, url);
+
+    let seeds: string[] = [];
+    try {
+      let jsonStr = content;
+      if (content.includes('```json')) jsonStr = content.split('```json')[1].split('```')[0].trim();
+      else if (content.includes('```')) jsonStr = content.split('```')[1].split('```')[0].trim();
+      jsonStr = jsonStr.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+      const parsed = JSON.parse(jsonStr);
+      seeds = (parsed.seeds || parsed.keywords || []).filter((s: string) => typeof s === 'string' && s.length > 3);
+      if (parsed.core_business) console.log(`🎯 AI Core Business: "${parsed.core_business}"`);
+    } catch {
+      const match = content.match(/\[([^\]]+)\]/);
+      if (match) {
+        seeds = match[1].split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, '')).filter((s: string) => s.length > 3);
+      }
+    }
+
+    // Filter out brand name
+    const brandLower = brandName.toLowerCase();
+    const domainSlug = brandLower.replace(/\s+/g, '');
+    seeds = seeds.filter(s => {
+      const sLower = s.toLowerCase();
+      return !sLower.includes(brandLower) && !sLower.includes(domainSlug);
+    });
+
+    console.log(`🤖 AI seeds (${mode}): ${seeds.slice(0, 8).join(', ')}... (${seeds.length} total)`);
+    return seeds.slice(0, 15);
+  } catch (error) {
+    console.error('❌ AI seed generation error:', error);
+    return [];
+  }
+}
+
+function checkDataQuality(keywords: { keyword: string; volume: number; difficulty: number }[]): boolean {
+  if (keywords.length < 3) return false;
+  const avgVolume = keywords.reduce((sum, kw) => sum + kw.volume, 0) / keywords.length;
+  if (avgVolume < 100) return false;
+  return true;
+}
+
 async function fetchKeywordData(
   seedKeywords: string[], locationCode: number
 ): Promise<{ keyword: string; volume: number; difficulty: number }[]> {
@@ -908,7 +1014,7 @@ function sortByStrategicRelevance(
   return scored.map(s => s.kw);
 }
 
-async function fetchMarketData(domain: string, context: BusinessContext, pageContentContext: string = ''): Promise<MarketData | null> {
+async function fetchMarketData(domain: string, context: BusinessContext, pageContentContext: string = '', url: string = ''): Promise<MarketData | null> {
   console.log('🚀 Collecte DataForSEO pour:', domain);
   
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD || !context.locationCode) {
@@ -917,23 +1023,61 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
   }
   
   try {
-    const seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext, domain);
-    console.log('🌱 Mots-clés seed:', seedKeywords);
+    // ═══ PHASE 1: AI-Driven Seed Generation ═══
+    let seedKeywords: string[] = [];
+    const effectiveUrl = url || `https://${domain}`;
     
-    const keywordData = await fetchKeywordData(seedKeywords, context.locationCode);
+    const aiSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial');
+    
+    if (aiSeeds.length >= 5) {
+      seedKeywords = aiSeeds;
+      console.log(`✅ AI-driven seeds: ${seedKeywords.length} keywords`);
+    } else {
+      // Fallback to metadata extraction
+      console.log('⚠️ AI seeds insufficient, falling back to metadata extraction');
+      seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext, domain);
+    }
+    
+    console.log('🌱 Seeds finaux:', seedKeywords.slice(0, 8).join(', '));
+    
+    // ═══ PHASE 2: DataForSEO API Call ═══
+    let keywordData = await fetchKeywordData(seedKeywords, context.locationCode);
+    
+    // ═══ PHASE 3: Validation Loop (retry once if poor quality) ═══
+    if (!checkDataQuality(keywordData) && aiSeeds.length > 0) {
+      console.log('🔄 Data quality check failed — retrying with refined seeds...');
+      const avgVol = keywordData.length > 0 
+        ? (keywordData.reduce((s, k) => s + k.volume, 0) / keywordData.length).toFixed(0)
+        : '0';
+      const feedback = `Volume moyen: ${avgVol}. Seulement ${keywordData.length} résultats. Utilise des expressions plus populaires et mainstream.`;
+      
+      const refinedSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial', feedback);
+      
+      if (refinedSeeds.length >= 5) {
+        const refinedData = await fetchKeywordData(refinedSeeds, context.locationCode);
+        if (refinedData.length > keywordData.length || 
+            (refinedData.length > 0 && refinedData.reduce((s, k) => s + k.volume, 0) > keywordData.reduce((s, k) => s + k.volume, 0))) {
+          keywordData = refinedData;
+          seedKeywords = refinedSeeds;
+          console.log(`✅ Refined seeds produced better results: ${keywordData.length} keywords`);
+        }
+      }
+    }
+    
     if (keywordData.length === 0) {
       console.log('⚠️ Aucun mot-clé trouvé');
       return null;
     }
     
+    // ═══ PHASE 4: Ranking Check ═══
     const rankedKeywords = await checkRankings(keywordData, domain, context.locationCode);
     
     // STRATEGIC SORT: first keyword = most relevant for core business + target
     const strategicKeywords = sortByStrategicRelevance(rankedKeywords, seedKeywords, pageContentContext);
     
-    // GUARANTEE MINIMUM 5 KEYWORDS: If DataForSEO returned fewer, supplement with seed keywords
+    // GUARANTEE MINIMUM 5 KEYWORDS
     if (strategicKeywords.length < 5) {
-      console.log(`⚠️ Only ${strategicKeywords.length} keywords from DataForSEO — supplementing with seeds`);
+      console.log(`⚠️ Only ${strategicKeywords.length} keywords — supplementing with seeds`);
       const existingLower = new Set(strategicKeywords.map(kw => kw.keyword.toLowerCase()));
       for (const seed of seedKeywords) {
         if (strategicKeywords.length >= 5) break;
@@ -941,7 +1085,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
           existingLower.add(seed.toLowerCase());
           strategicKeywords.push({
             keyword: seed,
-            volume: 0, // Unknown volume — will signal AI to estimate
+            volume: 0,
             difficulty: 0,
             is_ranked: false,
             current_rank: 'Non classé',
@@ -1145,7 +1289,7 @@ GÉNÈRE UN JSON avec cette structure:
 "conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["OBLIGATOIRE: 3-5 reformulations en QUESTIONS NATURELLES directement liées au business/produits/services du site analysé. Ex pour un e-commerce de matériaux: 'Quel isolant naturel choisir pour une maison ancienne ?'. Ne PAS donner d'exemples génériques."],"recommendations":["..."]},
 "zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
 "priority_content":{"missing_pages":[{"title":"...","rationale":"...","target_keywords":["..."],"expected_impact":"high|medium|low"}],"content_upgrades":[{"page":"...","current_issue":"...","upgrade_strategy":"..."}]},
-"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"..."}],"quick_wins":[{"keyword":"...","current_rank":0,"volume":0,"action":"..."}],"content_gaps":[{"keyword":"...","volume":0,"priority":"high|medium|low","action":"..."}],"opportunities":["..."],"competitive_gaps":["..."],"recommendations":["..."]},
+"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"Transactionnel|Informatif|Décisionnel|Navigationnel","business_value":"High|Medium|Low","pain_point":"Quel problème l'utilisateur cherche-t-il à résoudre ?","recommended_action":"Action concrète pour se positionner"}}],"quick_wins":[{"keyword":"...","current_rank":0,"volume":0,"action":"..."}],"content_gaps":[{"keyword":"...","volume":0,"priority":"high|medium|low","action":"..."}],"opportunities":["..."],"competitive_gaps":["..."],"recommendations":["..."]},
 "market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
 "executive_roadmap":[{"title":"...","prescriptive_action":"Paragraphe 4-5 phrases","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Identité|Contenu|Autorité|Social|Technique","priority":"Prioritaire|Important|Opportunité"}],
 "executive_summary":"3-4 phrases pour CEO/CMO",
@@ -1153,7 +1297,9 @@ GÉNÈRE UN JSON avec cette structure:
 
 INSTRUCTIONS CRITIQUES:
 - UTILISE LES DONNÉES RÉELLES pour keyword_positioning et market_data_summary
-- keyword_positioning.main_keywords: MINIMUM 5 mots-clés OBLIGATOIRES. Si les données DataForSEO contiennent moins de 5 résultats ou des volumes à 0, COMPLÈTE avec des mots-clés pertinents pour le core business du site avec des volumes estimés et rank "Non classé". Un site a TOUJOURS au moins 5 mots-clés stratégiques liés à son activité.
+- keyword_positioning.main_keywords: MINIMUM 5 mots-clés OBLIGATOIRES. Chaque mot-clé DOIT avoir un objet "strategic_analysis" avec intent, business_value, pain_point et recommended_action. Si les données DataForSEO contiennent moins de 5 résultats ou des volumes à 0, COMPLÈTE avec des mots-clés pertinents pour le core business avec volumes estimés et rank "Non classé". Un site a TOUJOURS au moins 5 mots-clés stratégiques.
+- INTERDICTION d'inclure le nom de marque dans les mots-clés main_keywords. Les mots-clés doivent être 100% génériques (ex: "agent IA entreprise" et non "Limova agent IA").
+- Pour chaque mot-clé, l'analyse stratégique doit expliquer POURQUOI ce mot-clé rapporte de l'argent (business_value) et quel PROBLÈME l'utilisateur cherche à résoudre (pain_point).
 - executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
@@ -1526,7 +1672,7 @@ Deno.serve(async (req) => {
 
     // ==================== ÉTAPE 1: DATAFORSEO (uses cached context) ====================
     console.log('\n📊 ÉTAPE 1: DataForSEO...');
-    const marketData = await fetchMarketData(domain, context, pageContentContext);
+    const marketData = await fetchMarketData(domain, context, pageContentContext, url);
 
     // ==================== ÉTAPE 1b: CONCURRENT LOCAL + FOUNDER (parallel) ====================
     console.log('\n🏙️ ÉTAPE 1b: Concurrent local + Founder discovery...');
