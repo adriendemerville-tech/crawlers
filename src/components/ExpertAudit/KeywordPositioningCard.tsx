@@ -53,12 +53,12 @@ function getBusinessValueColor(value: string): string {
   }
 }
 
-function getIntentIcon(intent: string): string {
-  if (intent.toLowerCase().includes('transaction')) return '💰';
-  if (intent.toLowerCase().includes('décision')) return '🤔';
-  if (intent.toLowerCase().includes('informat')) return '📚';
-  if (intent.toLowerCase().includes('navigat')) return '🧭';
-  return '🔍';
+function getIntentColor(intent: string): string {
+  if (intent.toLowerCase().includes('transaction')) return 'text-success border-success/30 bg-success/10';
+  if (intent.toLowerCase().includes('décision') || intent.toLowerCase().includes('decision')) return 'text-primary border-primary/30 bg-primary/10';
+  if (intent.toLowerCase().includes('informat')) return 'text-warning border-warning/30 bg-warning/10';
+  if (intent.toLowerCase().includes('navigat')) return 'text-muted-foreground border-muted bg-muted/10';
+  return 'text-muted-foreground border-muted bg-muted/10';
 }
 
 function StrategicAnalysisRow({ analysis }: { analysis: KeywordStrategicAnalysis }) {
