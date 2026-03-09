@@ -101,7 +101,7 @@ export function PatienceCards({ isActive }: PatienceCardsProps) {
               <div className="flex items-center gap-2 mb-2">
                 <Newspaper className="h-4 w-4 text-white/90 shrink-0" />
                 <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">
-                  Actu SEO/GEO
+                  Actu SEO/GEO 🔥
                 </span>
               </div>
               <p className="text-[13px] leading-relaxed text-white/95">
@@ -141,7 +141,7 @@ export function PatienceCards({ isActive }: PatienceCardsProps) {
               <div className="flex items-center gap-2 mb-2">
                 <Lightbulb className="h-4 w-4 text-white/90 shrink-0" />
                 <span className="text-xs font-semibold text-white/90 uppercase tracking-wider">
-                  Astuce Pro
+                  Astuce Experte 💡
                 </span>
               </div>
               <p className="text-[13px] leading-relaxed text-white/95">
