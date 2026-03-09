@@ -68,7 +68,7 @@ const translations = {
       { name: 'Pro', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
       { name: 'Premium', credits: 150, price: 45, pricePerCredit: 0.30, savings: '40%' },
     ],
-    linkedinOffer: '50 crédits offerts si vous publiez une synthèse de votre rapport Crawlers.AI sur LinkedIn !',
+    linkedinOffer: '50 crédits offerts si vous publiez une synthèse de votre rapport Crawlers.fr sur LinkedIn !',
     getStarted: 'Commencer gratuitement',
     perCredit: '/ crédit',
     agencyTitle: 'Pro Agency',
