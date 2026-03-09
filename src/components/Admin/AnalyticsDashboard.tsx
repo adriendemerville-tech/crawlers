@@ -63,6 +63,7 @@ interface TokenUsageStats {
   totalEstimatedCost: number;
   dataforseoCalls: number;
   openrouterCalls: number;
+  browserlessCalls: number;
   byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
 }
 
@@ -156,6 +157,7 @@ export function AnalyticsDashboard() {
     totalEstimatedCost: 0,
     dataforseoCalls: 0,
     openrouterCalls: 0,
+    browserlessCalls: 0,
     byApiService: {},
   });
 
@@ -274,6 +276,7 @@ export function AnalyticsDashboard() {
       const byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }> = {};
       let dataforseoCalls = 0;
       let openrouterCalls = 0;
+      let browserlessCalls = 0;
       
       paidApiEvents.forEach(e => {
         const data = e.event_data as Record<string, unknown> | null;
@@ -286,6 +289,7 @@ export function AnalyticsDashboard() {
           
           if (service === 'dataforseo') dataforseoCalls++;
           if (service === 'openrouter') openrouterCalls++;
+          if (service === 'browserless') browserlessCalls++;
         }
       });
 
@@ -300,6 +304,7 @@ export function AnalyticsDashboard() {
         totalEstimatedCost,
         dataforseoCalls,
         openrouterCalls,
+        browserlessCalls,
         byApiService,
       });
 
@@ -616,6 +621,14 @@ export function AnalyticsDashboard() {
               </p>
               <p className="text-lg font-bold text-violet-600 dark:text-violet-400">
                 {tokenUsage.openrouterCalls.toLocaleString('fr-FR')}
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-teal-500/10 border border-teal-500/20">
+              <p className="text-xs text-teal-700 dark:text-teal-400 font-medium flex items-center gap-1">
+                <Globe className="h-3 w-3" /> Browserless
+              </p>
+              <p className="text-lg font-bold text-teal-600 dark:text-teal-400">
+                {tokenUsage.browserlessCalls.toLocaleString('fr-FR')}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">

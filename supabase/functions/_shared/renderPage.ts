@@ -2,6 +2,7 @@
  * Shared utility for fetching and rendering web pages.
  * Handles SPA/CSR detection and Browserless JS rendering fallback.
  */
+import { trackPaidApiCall } from './tokenTracker.ts';
 
 const BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
@@ -109,15 +110,16 @@ async function logBrowserlessError(statusCode: number, errorMessage: string, url
 
 async function renderWithBrowserless(url: string, renderingKey: string): Promise<string | null> {
   try {
-    const renderUrl = `https://chrome.browserless.io/content?token=${renderingKey}`;
+    const renderUrl = `https://production-sfo.browserless.io/content?token=${renderingKey}`;
     const response = await fetch(renderUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url,
         rejectResourceTypes: ['image', 'stylesheet', 'font', 'media'],
+        setJavaScriptEnabled: true,
         waitFor: 3000,
-        gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
+        gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
         userAgent: BROWSER_UA,
       }),
       signal: AbortSignal.timeout(30000),
@@ -125,6 +127,8 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
 
     if (response.ok) {
       const renderedHtml = await response.text();
+      // Track Browserless API call
+      await trackPaidApiCall('renderPage', 'browserless', '/content', url).catch(() => {});
       return renderedHtml;
     } else {
       console.log(`[renderPage] ⚠️ Browserless error: ${response.status}`);
