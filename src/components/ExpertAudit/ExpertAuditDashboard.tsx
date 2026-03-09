@@ -168,6 +168,7 @@ export function ExpertAuditDashboard() {
   const [result, setResult] = useState<ExpertAuditResult | null>(null);
   const [technicalResult, setTechnicalResult] = useState<ExpertAuditResult | null>(null);
   const [strategicResult, setStrategicResult] = useState<ExpertAuditResult | null>(null);
+  const [strategicCachedContext, setStrategicCachedContext] = useState<any>(null);
   const [preSummarizedResult, setPreSummarizedResult] = useState<ExpertAuditResult | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
