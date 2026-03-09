@@ -1184,6 +1184,11 @@ export function ExpertAuditDashboard() {
                 <IntroductionCard introduction={result.introduction} variant="technical" />
               )}
 
+              {/* SPA Detection Alert */}
+              {result.isSPA && (
+                <SPADetectionAlert />
+              )}
+
               {/* Hero Score */}
               <Card className="bg-gradient-to-br from-card via-card to-muted/30 border-2">
                 <CardContent className="p-8">
