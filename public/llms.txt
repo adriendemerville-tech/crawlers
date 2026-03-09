@@ -52,7 +52,7 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 
 # 🔗 RESSOURCES CLÉS (Sitemap Sémantique)
 
-- **Audit Principal** : https://crawlers.fr/audit-expert
+- **Audit Principal** : https://crawlers.fr/audit-expert (Audit Technique & Stratégique SEO/GEO)
 - **Comprendre le GEO** : https://crawlers.fr/lexique (Définitions officielles)
 - **Documentation Technique** : https://crawlers.fr/llms.txt
 - **Sitemap XML** : https://crawlers.fr/sitemap.xml

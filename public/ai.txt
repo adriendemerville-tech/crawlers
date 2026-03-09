@@ -87,7 +87,7 @@ Patches prêts à l'emploi :
 
 # PAGES PRINCIPALES
 Homepage (outils gratuits): https://crawlers.fr/
-Audit Expert: https://crawlers.fr/audit-expert
+Audit Expert (Check-up technique & stratégique): https://crawlers.fr/audit-expert
 Lexique SEO/GEO/IA: https://crawlers.fr/lexique
 Tarifs: https://crawlers.fr/tarifs
 

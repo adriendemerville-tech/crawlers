@@ -125,7 +125,7 @@ const translations = {
   },
   es: {
     badge: 'Auditoría Experta SEO & GEO',
-    title: 'Auditoría SEO & GEO gratis — Score de 200 puntos',
+    title: 'Auditoría técnica y estratégica — Check-up completo de tu SEO/GEO',
     subtitlePart1: 'Mide tu visibilidad Google + IA generativa en menos de 2 min.',
     subtitlePart2: 'Desarrollo del',
     subtitleCode: 'código correctivo',

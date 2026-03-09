@@ -124,7 +124,7 @@ const ExpertAudit = () => {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-          { "@type": "ListItem", "position": 2, "name": "Audit Expert SEO & GEO", "item": "https://crawlers.fr/audit-expert" }
+          { "@type": "ListItem", "position": 2, "name": "Audit Technique & Stratégique SEO/GEO", "item": "https://crawlers.fr/audit-expert" }
         ]
       }
     };
