@@ -1803,6 +1803,28 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ═══ POST-PROCESS: Guarantee minimum 5 main_keywords ═══
+    if (parsedAnalysis.keyword_positioning?.main_keywords) {
+      const mainKw = parsedAnalysis.keyword_positioning.main_keywords;
+      if (mainKw.length < 5 && marketData?.top_keywords) {
+        console.log(`⚠️ Only ${mainKw.length} main_keywords from AI — supplementing from market data`);
+        const existingLower = new Set(mainKw.map((kw: any) => (kw.keyword || '').toLowerCase()));
+        for (const mkw of marketData.top_keywords) {
+          if (mainKw.length >= 5) break;
+          if (!existingLower.has(mkw.keyword.toLowerCase())) {
+            existingLower.add(mkw.keyword.toLowerCase());
+            mainKw.push({
+              keyword: mkw.keyword,
+              volume: mkw.volume,
+              difficulty: mkw.difficulty,
+              current_rank: mkw.current_rank || 'Non classé',
+            });
+          }
+        }
+        console.log(`✅ main_keywords after supplement: ${mainKw.length}`);
+      }
+    }
+
     const result = {
       success: true,
       data: {
