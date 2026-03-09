@@ -1546,7 +1546,7 @@ export function SmartConfigurator({
               </div>
               <div className="flex items-start gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
-                <p>Installez le plugin <strong className="text-foreground">Crawlers.AI</strong> sur votre site WordPress.</p>
+                <p>Installez le plugin <strong className="text-foreground">Crawlers.fr</strong> sur votre site WordPress.</p>
               </div>
               <div className="flex items-start gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">3</span>

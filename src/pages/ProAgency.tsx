@@ -304,9 +304,9 @@ export default function ProAgency() {
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
-    "name": "Crawlers.AI Pro Agency",
+    "name": "Crawlers.fr Pro Agency",
     "description": t.metaDescription,
-    "brand": { "@type": "Brand", "name": "Crawlers.AI" },
+    "brand": { "@type": "Brand", "name": "Crawlers.fr" },
     "offers": {
       "@type": "Offer",
       "price": "49.00",
