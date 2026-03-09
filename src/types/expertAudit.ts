@@ -327,6 +327,22 @@ export interface MarketDataSummary {
   data_source: 'dataforseo' | 'fallback';
 }
 
+export interface RankingOverview {
+  total_ranked_keywords: number;
+  average_position_global: number;
+  average_position_top10: number;
+  distribution: {
+    top3: number;
+    top10: number;
+    top20: number;
+    top50: number;
+    top100: number;
+    beyond100: number;
+  };
+  top_keywords: { keyword: string; position: number; volume: number; url: string }[];
+  etv: number;
+}
+
 export interface ContentFreshness {
   has_recent_content: boolean;
   last_update_days: number;
@@ -412,6 +428,7 @@ export interface StrategicAnalysis {
   // NEW: Keyword Positioning (DataForSEO based)
   keyword_positioning?: KeywordPositioning;
   market_data_summary?: MarketDataSummary;
+  ranking_overview?: RankingOverview;
   
   // Legacy format (backward compatibility)
   brand_identity?: BrandIdentity;

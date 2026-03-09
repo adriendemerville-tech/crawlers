@@ -55,6 +55,7 @@ export function KeywordModuleSection({ analysis, domain }: Props) {
       marketSummary={marketSummary} 
       competitors={competitors}
       domain={domain}
+      rankingOverview={analysis.ranking_overview}
     />
   );
 }
