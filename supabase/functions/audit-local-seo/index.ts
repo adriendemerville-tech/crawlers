@@ -54,6 +54,7 @@ async function getLocationCode(zoneGeographique: string): Promise<{ code: number
       return null;
     }
 
+    trackPaidApiCall('audit-local-seo', 'dataforseo', 'locations');
     const data = await response.json();
     
     if (data.status_code !== 20000 || !data.tasks?.[0]?.result) {
