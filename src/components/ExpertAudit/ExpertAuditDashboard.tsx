@@ -828,6 +828,12 @@ export function ExpertAuditDashboard() {
           hallucinationCorrections: hallucinationCorrections || null,
            // NEW: Raw LLM visibility data from check-llm
            llm_visibility_raw: data.data.llm_visibility_raw || null,
+           // NEW: 5 Strategic Metrics 2026
+           quotability: data.data.quotability || null,
+           summary_resilience: data.data.summary_resilience || null,
+           lexical_footprint: data.data.lexical_footprint || null,
+           expertise_sentiment: data.data.expertise_sentiment || null,
+           red_team: data.data.red_team || null,
         },
       };
 
