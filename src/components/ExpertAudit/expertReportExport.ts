@@ -507,7 +507,7 @@ export function generateExpertReportHTML(
 
     // Helper for section cards
     const sectionCard = (title: string, color: string, bgGradient: string, innerHtml: string, lightTitle = false) => `
-      <div style="background: ${bgGradient}; padding: 20px; border-radius: 12px; margin-bottom: 16px; border-left: 4px solid ${color};">
+      <div style="background: ${bgGradient}; padding: 20px; border-radius: 12px; margin-bottom: 16px; border-left: 4px solid ${color}; break-inside: avoid; page-break-inside: avoid;">
         <div style="font-size: 15px; color: ${color}; margin: 0 0 12px 0; font-weight: ${lightTitle ? '500' : '700'};">${title}</div>
         ${innerHtml}
       </div>
