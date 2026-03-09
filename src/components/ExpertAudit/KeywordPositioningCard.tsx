@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Target, TrendingUp, TrendingDown, Zap, 
-  AlertTriangle, Lightbulb, Trophy, Gem,
+  AlertTriangle, Lightbulb, Trophy,
   BarChart3, Search, Loader2, Layers, Compass,
   ChevronDown, ChevronUp, BrainCircuit
 } from 'lucide-react';
@@ -67,8 +67,7 @@ function NuggetBadge() {
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant="outline" className="ml-2 text-[10px] border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 cursor-help">
-            <Gem className="h-3 w-3" />
+          <Badge variant="outline" className="ml-2 text-[10px] border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 cursor-help">
             Pépite
           </Badge>
         </TooltipTrigger>
@@ -263,7 +262,9 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
     }
   };
 
-  const mainKeywords = positioning.main_keywords || [];
+  const regularKeywords = (positioning.main_keywords || []).filter(kw => !kw.is_nugget);
+  const nuggetKeywords = (positioning.main_keywords || []).filter(kw => kw.is_nugget).slice(0, 2);
+  const mainKeywords = [...regularKeywords, ...nuggetKeywords];
 
   return (
     <div className="space-y-4">
@@ -321,7 +322,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
 
             {/* Top 5 Summary */}
             {mainKeywords.length > 0 && (() => {
-              const top5 = mainKeywords.slice(0, 5);
+              const top5 = regularKeywords.slice(0, 5);
               const rankedTop5 = top5.filter(k => typeof k.current_rank === 'number' && k.current_rank <= 50);
               const avgRank = rankedTop5.length > 0
                 ? (rankedTop5.reduce((sum, k) => sum + (k.current_rank as number), 0) / rankedTop5.length)
@@ -396,8 +397,19 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                       </tr>
                     </thead>
                     <tbody>
-                      {mainKeywords.map((kw, idx) => (
+                      {mainKeywords.map((kw, idx) => {
+                        const isFirstNugget = kw.is_nugget && (idx === 0 || !mainKeywords[idx - 1]?.is_nugget);
+                        return (
                         <>
+                          {isFirstNugget && (
+                            <tr key="nugget-sep">
+                              <td colSpan={5} className="px-3 py-2 bg-muted/30">
+                                <div className="border-t border-muted-foreground/20 pt-2 text-[11px] text-muted-foreground font-medium">
+                                  Vertical / Expertise — Opportunités de niche
+                                </div>
+                              </td>
+                            </tr>
+                          )}
                           <tr 
                             key={`row-${idx}`}
                             className={`border-t border-border/50 hover:bg-muted/30 ${kw.strategic_analysis ? 'cursor-pointer' : ''}`}
@@ -448,7 +460,8 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                             </tr>
                           )}
                         </>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
