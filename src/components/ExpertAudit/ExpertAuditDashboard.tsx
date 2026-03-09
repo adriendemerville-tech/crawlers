@@ -61,9 +61,9 @@ type AuditMode = 'technical' | 'strategic' | null;
 
 const translations = {
   fr: {
-    badge: 'Audit Expert SEO & IA',
-    title: 'Analysez votre site en profondeur',
-    subtitlePart1: 'Analyse 360° de votre SEO et de votre GEO en moins de 10 min.',
+    badge: 'Audit Expert SEO & GEO',
+    title: 'Audit SEO & GEO gratuit — Score sur 200 points',
+    subtitlePart1: 'Mesurez votre visibilité Google + IA générative en moins de 2 min.',
     subtitlePart2: 'Développement et injection du',
     subtitleCode: 'code correctif',
     subtitlePart3: 'adapté à vos besoins.',
