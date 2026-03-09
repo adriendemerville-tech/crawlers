@@ -397,6 +397,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                           >
                             <td className="px-3 py-2 font-medium text-foreground">
                               {kw.keyword}
+                              {kw.is_nugget && <NuggetBadge />}
                               {kw.strategic_analysis && (
                                 <Badge variant="outline" className={`ml-2 text-[10px] ${getIntentColor(kw.strategic_analysis.intent)}`}>
                                   {kw.strategic_analysis.intent}
