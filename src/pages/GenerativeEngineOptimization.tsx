@@ -50,6 +50,8 @@ const GenerativeEngineOptimization = () => {
     }
   };
 
+  const publishDate = '2026-03-09';
+
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
