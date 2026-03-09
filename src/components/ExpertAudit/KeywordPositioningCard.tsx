@@ -349,6 +349,13 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                   Analyse stratégique des mots-clés
                   <span className="text-xs text-muted-foreground font-normal ml-1">(cliquez pour détails)</span>
                 </h3>
+                {/* Légende des couleurs */}
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-success" /> Transactionnelle</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-primary" /> Décisionnelle</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-warning" /> Informationnelle</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-muted-foreground" /> Navigationnelle</span>
+                </div>
                 <div className="rounded-lg border overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-muted/50">
