@@ -329,8 +329,8 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                         </Badge>
                         {kw.strategic_analysis && (
                           <div className="mt-1">
-                            <Badge variant="outline" className={`text-[10px] ${getBusinessValueColor(kw.strategic_analysis.business_value)}`}>
-                              {getIntentIcon(kw.strategic_analysis.intent)} {kw.strategic_analysis.business_value}
+                            <Badge variant="outline" className={`text-[10px] ${getIntentColor(kw.strategic_analysis.intent)}`}>
+                              {kw.strategic_analysis.intent}
                             </Badge>
                           </div>
                         )}
