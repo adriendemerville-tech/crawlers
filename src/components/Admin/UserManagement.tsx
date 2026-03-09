@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle } from 'lucide-react';
+import { UserKpiModal } from './UserKpiModal';
 
 interface UserProfile {
   id: string;
@@ -17,6 +18,7 @@ interface UserProfile {
   last_name: string;
   email: string;
   credits_balance: number;
+  plan_type: string;
   created_at: string;
   updated_at: string;
 }
@@ -30,6 +32,8 @@ export function UserManagement() {
   const [creditDialogOpen, setCreditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [kpiUser, setKpiUser] = useState<UserProfile | null>(null);
+  const [kpiModalOpen, setKpiModalOpen] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -218,7 +222,7 @@ export function UserManagement() {
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
+                    <TableRow key={user.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setKpiUser(user); setKpiModalOpen(true); }}>
                       <TableCell className="font-medium">
                         {user.first_name} {user.last_name}
                       </TableCell>
@@ -232,7 +236,7 @@ export function UserManagement() {
                         {new Date(user.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                           <Dialog open={creditDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                             setCreditDialogOpen(open);
                             if (open) setSelectedUser(user);
@@ -342,6 +346,8 @@ export function UserManagement() {
           </div>
         )}
       </CardContent>
+
+      <UserKpiModal user={kpiUser} open={kpiModalOpen} onOpenChange={setKpiModalOpen} />
     </Card>
   );
 }
