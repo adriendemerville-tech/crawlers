@@ -274,6 +274,20 @@ const ComparatifCrawlersSemrush = () => {
       semrushWin: false
     },
     {
+      criteria: "Marque Blanche (White Label)",
+      crawlers: "Oui (logo, couleurs, rapports personnalisés)",
+      semrush: "Non (branding Semrush imposé)",
+      crawlersWin: true,
+      semrushWin: false
+    },
+    {
+      criteria: "Dashboard Agence multi-clients",
+      crawlers: "Oui (gestion clients, dossiers, suivi)",
+      semrush: "Oui (Client Manager, add-on payant)",
+      crawlersWin: null,
+      semrushWin: null
+    },
+    {
       criteria: "Analyse concurrentielle",
       crawlers: "Limitée (focus visibilité IA)",
       semrush: "Avancée (trafic, mots-clés, pubs)",
