@@ -337,6 +337,7 @@ async function fetchAdditionalKeywords(
     });
 
     if (response.ok) {
+      trackPaidApiCall('generate-more-keywords', 'dataforseo', 'keywords_for_keywords');
       const data = await response.json();
       if (data.status_code === 20000 && data.tasks?.[0]?.result) {
         for (const item of data.tasks[0].result) {
