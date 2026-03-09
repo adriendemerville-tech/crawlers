@@ -89,9 +89,9 @@ const translations = {
     or: 'ou',
   },
   en: {
-    pageTitle: 'Pricing - Crawlers.AI',
+    pageTitle: 'Pricing & How It Works | Crawlers.fr',
     title: 'Pricing & How It Works',
-    subtitle: 'Discover how Crawlers.AI works and our different offers',
+    subtitle: 'Discover how Crawlers.fr works and our different offers',
     freeSection: 'Free Tools',
     freeDescription: 'Accessible to everyone, no signup required',
     freeTools: [
