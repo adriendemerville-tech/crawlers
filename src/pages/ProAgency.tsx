@@ -21,8 +21,8 @@ import {
 
 const translations = {
   fr: {
-    pageTitle: 'Pro Agency - Abonnement SEO & GEO illimité | Crawlers.AI',
-    metaDescription: 'Découvrez l\'offre Pro Agency de Crawlers.AI : rapports SEO/GEO illimités, codes correctifs illimités, marque blanche et multi-comptes pour agences et freelances SEO. 49€/mois.',
+    pageTitle: 'Pro Agency - Abonnement SEO & GEO illimité | Crawlers.fr',
+    metaDescription: 'Découvrez l\'offre Pro Agency de Crawlers.fr : rapports SEO/GEO illimités, codes correctifs illimités, marque blanche et multi-comptes pour agences et freelances SEO. 49€/mois.',
     heroTitle: 'Passez au niveau supérieur',
     heroTitleAccent: 'avec Pro Agency',
     heroSubtitle: 'L\'abonnement tout-en-un pour les professionnels du SEO et du GEO qui veulent scaler leur activité sans limites.',
@@ -98,7 +98,7 @@ const translations = {
       },
     ],
     // Testimonial / Social proof
-    socialProofTitle: 'Rejoignez les professionnels qui optimisent avec Crawlers.AI',
+    socialProofTitle: 'Rejoignez les professionnels qui optimisent avec Crawlers.fr',
     socialProofText: 'Des agences SEO en France et en Europe utilisent déjà Pro Agency pour gagner du temps et impressionner leurs clients.',
     // FAQ
     faqTitle: 'Questions fréquentes sur Pro Agency',
@@ -109,7 +109,7 @@ const translations = {
       },
       {
         q: 'Qu\'est-ce que la marque blanche exactement ?',
-        a: 'Vous pouvez personnaliser vos rapports avec votre propre logo, vos couleurs et vos coordonnées. Vos clients ne verront jamais la marque Crawlers.AI.',
+        a: 'Vous pouvez personnaliser vos rapports avec votre propre logo, vos couleurs et vos coordonnées. Vos clients ne verront jamais la marque Crawlers.fr.',
       },
       {
         q: 'Les 3 comptes sont-ils des comptes indépendants ?',
@@ -126,8 +126,8 @@ const translations = {
     seePricing: 'Voir tous les tarifs',
   },
   en: {
-    pageTitle: 'Pro Agency - Unlimited SEO & GEO Subscription | Crawlers.AI',
-    metaDescription: 'Discover Crawlers.AI Pro Agency: unlimited SEO/GEO reports, unlimited corrective code, white label and multi-accounts for agencies and freelancers. €49/month.',
+    pageTitle: 'Pro Agency - Unlimited SEO & GEO Subscription | Crawlers.fr',
+    metaDescription: 'Discover Crawlers.fr Pro Agency: unlimited SEO/GEO reports, unlimited corrective code, white label and multi-accounts for agencies and freelancers. €49/month.',
     heroTitle: 'Take your business to the next level',
     heroTitleAccent: 'with Pro Agency',
     heroSubtitle: 'The all-in-one subscription for SEO and GEO professionals who want to scale without limits.',
@@ -166,12 +166,12 @@ const translations = {
       { title: 'Freelance Consultants', description: 'Offer premium GEO and SEO audits to your clients without software investment.' },
       { title: 'Marketing Teams', description: 'Centralize SEO/GEO analysis of all your domains in a unified console.' },
     ],
-    socialProofTitle: 'Join professionals optimizing with Crawlers.AI',
+    socialProofTitle: 'Join professionals optimizing with Crawlers.fr',
     socialProofText: 'SEO agencies in Europe already use Pro Agency to save time and impress their clients.',
     faqTitle: 'Frequently asked questions about Pro Agency',
     faqs: [
       { q: 'Can I cancel at any time?', a: 'Yes, you can cancel anytime. You keep access until the end of your current billing period.' },
-      { q: 'What exactly is white label?', a: 'You can customize reports with your own logo, colors and contact details. Your clients will never see the Crawlers.AI brand.' },
+      { q: 'What exactly is white label?', a: 'You can customize reports with your own logo, colors and contact details. Your clients will never see the Crawlers.fr brand.' },
       { q: 'Are the 3 accounts independent?', a: 'Yes, each team member has their own login. The main account manages permissions from the console.' },
       { q: 'Is there a minimum commitment?', a: 'No, the subscription has no commitment. You pay monthly and can stop whenever you want.' },
     ],
@@ -181,8 +181,8 @@ const translations = {
     seePricing: 'See all pricing',
   },
   es: {
-    pageTitle: 'Pro Agency - Suscripción SEO y GEO ilimitada | Crawlers.AI',
-    metaDescription: 'Descubre la oferta Pro Agency de Crawlers.AI: informes SEO/GEO ilimitados, código correctivo ilimitado, marca blanca y multi-cuentas para agencias. 49€/mes.',
+    pageTitle: 'Pro Agency - Suscripción SEO y GEO ilimitada | Crawlers.fr',
+    metaDescription: 'Descubre la oferta Pro Agency de Crawlers.fr: informes SEO/GEO ilimitados, código correctivo ilimitado, marca blanca y multi-cuentas para agencias. 49€/mes.',
     heroTitle: 'Lleva tu negocio al siguiente nivel',
     heroTitleAccent: 'con Pro Agency',
     heroSubtitle: 'La suscripción todo-en-uno para profesionales del SEO y GEO que quieren escalar sin límites.',
@@ -221,12 +221,12 @@ const translations = {
       { title: 'Consultores Freelance', description: 'Ofrece auditorías GEO y SEO premium a tus clientes sin inversión en software.' },
       { title: 'Equipos de Marketing', description: 'Centraliza el análisis SEO/GEO de todos tus dominios en una consola unificada.' },
     ],
-    socialProofTitle: 'Únete a los profesionales que optimizan con Crawlers.AI',
+    socialProofTitle: 'Únete a los profesionales que optimizan con Crawlers.fr',
     socialProofText: 'Agencias SEO en Europa ya usan Pro Agency para ahorrar tiempo e impresionar a sus clientes.',
     faqTitle: 'Preguntas frecuentes sobre Pro Agency',
     faqs: [
       { q: '¿Puedo cancelar en cualquier momento?', a: 'Sí, puedes cancelar cuando quieras. Conservas el acceso hasta el final de tu período de facturación.' },
-      { q: '¿Qué es exactamente la marca blanca?', a: 'Puedes personalizar los informes con tu logo, colores y datos de contacto. Tus clientes nunca verán la marca Crawlers.AI.' },
+      { q: '¿Qué es exactamente la marca blanca?', a: 'Puedes personalizar los informes con tu logo, colores y datos de contacto. Tus clientes nunca verán la marca Crawlers.fr.' },
       { q: '¿Las 3 cuentas son independientes?', a: 'Sí, cada colaborador tiene su propio acceso. La cuenta principal gestiona los permisos desde la consola.' },
       { q: '¿Hay un compromiso mínimo?', a: 'No, la suscripción es sin compromiso. Pagas mensualmente y puedes parar cuando quieras.' },
     ],
@@ -304,9 +304,9 @@ export default function ProAgency() {
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
-    "name": "Crawlers.AI Pro Agency",
+    "name": "Crawlers.fr Pro Agency",
     "description": t.metaDescription,
-    "brand": { "@type": "Brand", "name": "Crawlers.AI" },
+    "brand": { "@type": "Brand", "name": "Crawlers.fr" },
     "offers": {
       "@type": "Offer",
       "price": "49.00",

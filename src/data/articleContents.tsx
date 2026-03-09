@@ -1652,7 +1652,7 @@ Allow: /`}</pre>
 
         <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
           <h3 className="text-lg font-bold text-foreground mb-2">Votre site est-il prêt pour le GEO ?</h3>
-          <p className="text-sm text-muted-foreground mb-4">Analysez gratuitement votre visibilité auprès des IA avec Crawlers.AI</p>
+          <p className="text-sm text-muted-foreground mb-4">Analysez gratuitement votre visibilité auprès des IA avec Crawlers.fr</p>
           <RichLinkCard href="/audit-expert" title="Demander un audit GEO gratuit" description="Analysez la visibilité IA de votre site en quelques clics" />
         </div>
 
@@ -1750,7 +1750,7 @@ Allow: /`}</pre>
 
         <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
           <h3 className="text-lg font-bold text-foreground mb-2">Is your site ready for GEO?</h3>
-          <p className="text-sm text-muted-foreground mb-4">Analyze your AI visibility for free with Crawlers.AI</p>
+          <p className="text-sm text-muted-foreground mb-4">Analyze your AI visibility for free with Crawlers.fr</p>
           <RichLinkCard href="/audit-expert" title="Request a free GEO audit" description="Analyze your AI visibility in a few clicks" />
         </div>
 
@@ -1829,7 +1829,7 @@ Allow: /`}</pre>
 
         <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
           <h3 className="text-lg font-bold text-foreground mb-2">¿Tu sitio está listo para el GEO?</h3>
-          <p className="text-sm text-muted-foreground mb-4">Analiza gratis tu visibilidad ante las IA con Crawlers.AI</p>
+          <p className="text-sm text-muted-foreground mb-4">Analiza gratis tu visibilidad ante las IA con Crawlers.fr</p>
           <RichLinkCard href="/audit-expert" title="Solicitar auditoría GEO gratuita" description="Analiza la visibilidad IA de tu sitio en pocos clics" />
         </div>
 

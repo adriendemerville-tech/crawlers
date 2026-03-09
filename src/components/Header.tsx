@@ -149,7 +149,7 @@ export function Header() {
           {isAuditExpertPage ? (
             // Back button + robot logo on audit-expert page
             <div className="flex items-center gap-2">
-              <a href="/" className="flex items-center" aria-label="Crawlers.AI - Accueil">
+              <a href="/" className="flex items-center" aria-label="Crawlers.fr - Accueil">
                 <svg className="h-9 w-9" viewBox="0 0 48 48" aria-hidden="true">
                   <defs>
                     <linearGradient id="headerBgGradientAudit" x1="100%" y1="0%" x2="0%" y2="100%">
@@ -184,7 +184,7 @@ export function Header() {
           ) : (
             // Logo + Language selector on other pages
             <>
-              <a href="/" className="flex items-center gap-2" aria-label="Crawlers.AI - Accueil">
+              <a href="/" className="flex items-center gap-2" aria-label="Crawlers.fr - Accueil">
                 <svg className="h-9 w-9" viewBox="0 0 48 48" aria-hidden="true">
                   <defs>
                     <linearGradient id="headerBgGradient" x1="100%" y1="0%" x2="0%" y2="100%">

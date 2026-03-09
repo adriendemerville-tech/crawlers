@@ -20,9 +20,9 @@ import {
 
 const translations = {
   fr: {
-    pageTitle: 'Tarifs - Crawlers.AI',
+    pageTitle: 'Tarifs et Fonctionnement | Crawlers.fr',
     title: 'Tarifs et Fonctionnement',
-    subtitle: 'Découvrez comment fonctionne Crawlers.AI et nos différentes offres',
+    subtitle: 'Découvrez comment fonctionne Crawlers.fr et nos différentes offres',
     freeSection: 'Outils Gratuits',
     freeDescription: 'Accessibles à tous, sans inscription',
     freeTools: [
@@ -68,7 +68,7 @@ const translations = {
       { name: 'Pro', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
       { name: 'Premium', credits: 150, price: 45, pricePerCredit: 0.30, savings: '40%' },
     ],
-    linkedinOffer: '50 crédits offerts si vous publiez une synthèse de votre rapport Crawlers.AI sur LinkedIn !',
+    linkedinOffer: '50 crédits offerts si vous publiez une synthèse de votre rapport Crawlers.fr sur LinkedIn !',
     getStarted: 'Commencer gratuitement',
     perCredit: '/ crédit',
     agencyTitle: 'Pro Agency',
@@ -89,9 +89,9 @@ const translations = {
     or: 'ou',
   },
   en: {
-    pageTitle: 'Pricing - Crawlers.AI',
+    pageTitle: 'Pricing & How It Works | Crawlers.fr',
     title: 'Pricing & How It Works',
-    subtitle: 'Discover how Crawlers.AI works and our different offers',
+    subtitle: 'Discover how Crawlers.fr works and our different offers',
     freeSection: 'Free Tools',
     freeDescription: 'Accessible to everyone, no signup required',
     freeTools: [
@@ -137,7 +137,7 @@ const translations = {
       { name: 'Pro', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
       { name: 'Premium', credits: 150, price: 45, pricePerCredit: 0.30, savings: '40%' },
     ],
-    linkedinOffer: '50 free credits if you share a summary of your Crawlers.AI report on LinkedIn!',
+    linkedinOffer: '50 free credits if you share a summary of your Crawlers.fr report on LinkedIn!',
     getStarted: 'Get started for free',
     perCredit: '/ credit',
     agencyTitle: 'Pro Agency',
@@ -158,9 +158,9 @@ const translations = {
     or: 'or',
   },
   es: {
-    pageTitle: 'Precios - Crawlers.AI',
+    pageTitle: 'Precios y Funcionamiento | Crawlers.fr',
     title: 'Precios y Funcionamiento',
-    subtitle: 'Descubre cómo funciona Crawlers.AI y nuestras diferentes ofertas',
+    subtitle: 'Descubre cómo funciona Crawlers.fr y nuestras diferentes ofertas',
     freeSection: 'Herramientas Gratuitas',
     freeDescription: 'Accesibles para todos, sin registro',
     freeTools: [
@@ -206,7 +206,7 @@ const translations = {
       { name: 'Pro', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
       { name: 'Premium', credits: 150, price: 45, pricePerCredit: 0.30, savings: '40%' },
     ],
-    linkedinOffer: '¡50 créditos gratis si publicas un resumen de tu informe Crawlers.AI en LinkedIn!',
+    linkedinOffer: '¡50 créditos gratis si publicas un resumen de tu informe Crawlers.fr en LinkedIn!',
     getStarted: 'Comenzar gratis',
     perCredit: '/ crédito',
     agencyTitle: 'Pro Agency',
