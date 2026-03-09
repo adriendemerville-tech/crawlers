@@ -51,6 +51,12 @@ const contentData = {
       "Optimisation du robots.txt pour autoriser les crawlers IA (GPTBot, ClaudeBot, PerplexityBot)",
       "Développement de l'autorité d'entité via Wikidata, presse et écosystème web"
     ],
+
+    seoGeoTitle: "SEO et GEO : deux stratégies complémentaires en 2026",
+    seoGeoText: "Le référencement naturel (SEO) et l'optimisation pour les moteurs génératifs (GEO) ne sont pas des approches concurrentes — elles se renforcent mutuellement. Un socle technique solide (HTTPS, Core Web Vitals, balisage HTML propre) facilite à la fois l'indexation Google et le crawling par GPTBot, ClaudeBot ou PerplexityBot. De même, un contenu sémantiquement riche avec des données structurées JSON-LD améliore votre positionnement classique tout en augmentant votre taux de citation par les LLM.",
+    
+    codeTitle: "Du diagnostic au code correctif en un clic",
+    codeText: "Contrairement aux outils d'audit traditionnels qui se limitent à lister des erreurs, Crawlers.fr génère un code correctif personnalisé (JSON-LD, balises meta, robots.txt) directement injectable dans votre CMS. Chaque recommandation est priorisée par impact SEO et GEO, et le code est adapté à votre stack technique — WordPress, Shopify, ou site custom. Vous passez du diagnostic à l'action sans intervention développeur.",
     
     ctaTitle: "Analysez votre site gratuitement",
     ctaText: "Obtenez votre Score SEO 200 en quelques secondes et découvrez vos opportunités d'amélioration pour dominer l'écosystème Search & IA de 2026."

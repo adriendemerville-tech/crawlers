@@ -123,9 +123,9 @@ const translations = {
     newAudit: 'New Audit',
   },
   es: {
-    badge: 'Auditoría Experta SEO e IA',
-    title: 'Analiza tu sitio en profundidad',
-    subtitlePart1: 'Análisis 360° de tu SEO y GEO en menos de 10 min.',
+    badge: 'Auditoría Experta SEO & GEO',
+    title: 'Auditoría SEO & GEO gratis — Score de 200 puntos',
+    subtitlePart1: 'Mide tu visibilidad Google + IA generativa en menos de 2 min.',
     subtitlePart2: 'Desarrollo del',
     subtitleCode: 'código correctivo',
     subtitlePart3: 'adaptado a tus necesidades.',
