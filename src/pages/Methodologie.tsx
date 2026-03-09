@@ -392,6 +392,39 @@ export default function Methodologie() {
           </div>
         </section>
 
+        {/* CTA */}
+        <section className="py-12 px-4 bg-gradient-to-b from-background to-primary/5">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-2xl font-bold text-foreground mb-4">
+              {t3(language,
+                'Testez cette méthodologie sur votre site',
+                'Test This Methodology on Your Site',
+                'Pruebe esta metodología en su sitio'
+              )}
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              {t3(language,
+                'Lancez un audit gratuit en 30 secondes. Aucune carte bancaire requise.',
+                'Launch a free audit in 30 seconds. No credit card required.',
+                'Lance una auditoría gratuita en 30 segundos. Sin tarjeta de crédito.'
+              )}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button asChild size="lg" variant="hero">
+                <Link to="/audit-expert">
+                  {t3(language, 'Lancer mon audit gratuit', 'Launch My Free Audit', 'Lanzar mi auditoría gratuita')}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link to="/tarifs">
+                  {t3(language, 'Voir les tarifs', 'View Pricing', 'Ver precios')}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
         {/* Disclaimer */}
         <section className="py-8 px-4 bg-muted/20 border-t border-border">
           <div className="mx-auto max-w-3xl text-center">
@@ -401,6 +434,9 @@ export default function Methodologie() {
                 'The algorithms, weightings and calculation methods used by Crawlers.fr are proprietary and not disclosed. This page presents only the analysis scope, not the scoring methodology.',
                 'Los algoritmos, ponderaciones y métodos de cálculo utilizados por Crawlers.fr son propietarios y no se divulgan. Esta página presenta solo el alcance del análisis, no la metodología de puntuación.'
               )}
+            </p>
+            <p className="text-xs text-muted-foreground mt-3">
+              {t3(language, 'Dernière mise à jour : Mars 2026', 'Last updated: March 2026', 'Última actualización: Marzo 2026')}
             </p>
           </div>
         </section>
