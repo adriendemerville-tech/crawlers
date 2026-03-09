@@ -670,6 +670,45 @@ export type Database = {
         }
         Relationships: []
       }
+      patience_cards: {
+        Row: {
+          card_type: string
+          category: string
+          content: string
+          created_at: string
+          expires_at: string
+          freshness_score: number
+          id: string
+          is_active: boolean
+          language: string
+          relevance_score: number
+        }
+        Insert: {
+          card_type: string
+          category?: string
+          content: string
+          created_at?: string
+          expires_at?: string
+          freshness_score?: number
+          id?: string
+          is_active?: boolean
+          language?: string
+          relevance_score?: number
+        }
+        Update: {
+          card_type?: string
+          category?: string
+          content?: string
+          created_at?: string
+          expires_at?: string
+          freshness_score?: number
+          id?: string
+          is_active?: boolean
+          language?: string
+          relevance_score?: number
+        }
+        Relationships: []
+      }
       pdf_audits: {
         Row: {
           client_id: string
