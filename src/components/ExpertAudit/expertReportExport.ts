@@ -628,7 +628,7 @@ export function generateExpertReportHTML(
         return `
           <h3 style="font-size: 18px; color: #1f2937; margin: 24px 0 16px 0;">${language === 'fr' ? 'Feuille de Route Exécutive' : language === 'es' ? 'Hoja de Ruta Ejecutiva' : 'Executive Roadmap'}</h3>
           ${(strategic.executive_roadmap as any[]).slice(0, 4).map((item: any, i: number) => `
-            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 12px;">
+            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid;">
               <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span style="font-size: 13px; font-weight: 700; color: white; background: #6366f1; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">${i + 1}</span>
                 <strong style="color: #0f172a; font-size: 15px;">${item.title || ''}</strong>
