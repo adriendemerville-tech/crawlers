@@ -748,6 +748,7 @@ async function checkRankings(
       await response.text();
       return keywords.map(kw => ({ ...kw, is_ranked: false, current_rank: 'Non classé' }));
     }
+    trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'serp/organic');
 
     const data = await response.json();
     
