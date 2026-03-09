@@ -94,16 +94,6 @@ function FooterComponent() {
       href: '/comparatif-crawlers-semrush',
       description: t3(language, 'Comparatif SEO/GEO avec Semrush', 'SEO/GEO comparison with Semrush', 'Comparación SEO/GEO con Semrush')
     },
-    { 
-      label: 'llms.txt', 
-      href: '/llms.txt',
-      description: t3(language, 'Instructions pour les IA', 'Instructions for AI', 'Instrucciones para la IA')
-    },
-    { 
-      label: 'Sitemap', 
-      href: '/sitemap.xml',
-      description: t3(language, 'Plan du site XML', 'XML Sitemap', 'Mapa del sitio XML')
-    },
   ];
 
   const legalLinks = [
