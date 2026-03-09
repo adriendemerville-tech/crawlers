@@ -1795,9 +1795,12 @@ Deno.serve(async (req) => {
     // ==================== SINGLE context detection (no duplicate API calls) ====================
     const context = detectBusinessContext(domain, pageContentContext);
 
-    // ==================== ÉTAPE 1: DATAFORSEO (uses cached context) ====================
+    // ==================== ÉTAPE 1: DATAFORSEO + RANKED KEYWORDS (parallel) ====================
     console.log('\n📊 ÉTAPE 1: DataForSEO...');
-    const marketData = await fetchMarketData(domain, context, pageContentContext, url);
+    const [marketData, rankingOverview] = await Promise.all([
+      fetchMarketData(domain, context, pageContentContext, url),
+      context.locationCode ? fetchRankedKeywords(domain, context.locationCode) : Promise.resolve(null),
+    ]);
 
     // ==================== ÉTAPE 1b: CONCURRENT LOCAL + FOUNDER (parallel) ====================
     console.log('\n🏙️ ÉTAPE 1b: Concurrent local + Founder discovery...');
