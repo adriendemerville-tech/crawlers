@@ -30,6 +30,15 @@ export const getReportStyles = () => `
     line-height: 1.5;
   }
   
+  @media print {
+    body {
+      padding: 0;
+    }
+    @page {
+      margin: 20mm 10mm;
+    }
+  }
+  
   .container { max-width: 1152px; margin: 0 auto; }
   
   /* Header branding */
