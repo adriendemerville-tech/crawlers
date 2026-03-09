@@ -608,7 +608,7 @@ async function fetchKeywordData(
   
   const addUnique = (kw: { keyword: string; volume: number; difficulty: number }) => {
     const lower = kw.keyword.toLowerCase();
-    if (!seenLower.has(lower) && kw.volume > 0) {
+    if (!seenLower.has(lower) && kw.volume >= 0) {
       seenLower.add(lower);
       allKeywords.push(kw);
     }
