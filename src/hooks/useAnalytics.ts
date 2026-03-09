@@ -101,15 +101,14 @@ export async function storeAnalyzedUrl(url: string) {
   try {
     const domain = new URL(url).hostname;
     
-    // Check if URL already exists
+    // Upsert: insert or increment count on conflict
     const { data: existing } = await supabase
       .from('analyzed_urls')
       .select('id, analysis_count')
       .eq('url', url)
       .maybeSingle();
-    
+
     if (existing) {
-      // Update existing: increment count + refresh timestamp
       await supabase
         .from('analyzed_urls')
         .update({
@@ -118,15 +117,14 @@ export async function storeAnalyzedUrl(url: string) {
         })
         .eq('id', existing.id);
     } else {
-      // Insert new entry
       await supabase
         .from('analyzed_urls')
-        .insert({
+        .upsert({
           url,
           domain,
           analysis_count: 1,
           last_analyzed_at: new Date().toISOString(),
-        });
+        }, { onConflict: 'url' });
     }
   } catch (error) {
     console.error('Failed to store analyzed URL:', error);
