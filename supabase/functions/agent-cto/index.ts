@@ -67,6 +67,7 @@ async function callClaude(systemPrompt: string, userPrompt: string): Promise<{ c
     input: data.usage?.prompt_tokens || 0,
     output: data.usage?.completion_tokens || 0,
   };
+  trackPaidApiCall('agent-cto', 'openrouter', 'anthropic/claude-3.5-sonnet');
   return { content, tokens };
 }
 

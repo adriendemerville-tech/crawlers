@@ -16,7 +16,8 @@ import {
   ExternalLink,
   RefreshCw,
   Cpu,
-  Zap
+  Zap,
+  Brain
 } from 'lucide-react';
 import { 
   LineChart, 

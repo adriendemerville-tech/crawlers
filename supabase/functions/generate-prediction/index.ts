@@ -437,6 +437,7 @@ serve(async (req) => {
     const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
     await trackTokenUsage('generate-prediction', 'anthropic/claude-3.5-sonnet', aiData.usage);
+    trackPaidApiCall('generate-prediction', 'openrouter', 'anthropic/claude-3.5-sonnet');
 
     let prediction: any;
     try { prediction = JSON.parse(cleaned); }

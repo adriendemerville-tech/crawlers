@@ -166,6 +166,7 @@ async function queryLLM(
 
     // Track token usage
     trackTokenUsage('check-llm', model, data.usage, domain);
+    trackPaidApiCall('check-llm', 'openrouter', model, domain);
 
     if (!content) {
       throw new Error('No content in response');

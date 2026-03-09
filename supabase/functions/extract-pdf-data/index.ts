@@ -229,6 +229,7 @@ Retourne UNIQUEMENT ce JSON (pas de blocs markdown, pas de texte autour) :
     const rawContent = aiData.choices?.[0]?.message?.content || '';
 
     await trackTokenUsage('extract-pdf-data', 'anthropic/claude-3.5-sonnet', aiData.usage, targetDomain);
+    trackPaidApiCall('extract-pdf-data', 'openrouter', 'anthropic/claude-3.5-sonnet', targetDomain);
 
     // 7. Parse JSON
     const jsonMatch = rawContent.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
