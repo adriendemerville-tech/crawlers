@@ -601,6 +601,22 @@ export function AnalyticsDashboard() {
               </p>
               <p className="text-lg font-semibold">{tokenUsage.paidApiCalls.toLocaleString('fr-FR')}</p>
             </div>
+            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <p className="text-xs text-blue-700 dark:text-blue-400 font-medium flex items-center gap-1">
+                <Search className="h-3 w-3" /> DataForSEO
+              </p>
+              <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                {tokenUsage.dataforseoCalls.toLocaleString('fr-FR')}
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+              <p className="text-xs text-violet-700 dark:text-violet-400 font-medium flex items-center gap-1">
+                <Brain className="h-3 w-3" /> OpenRouter
+              </p>
+              <p className="text-lg font-bold text-violet-600 dark:text-violet-400">
+                {tokenUsage.openrouterCalls.toLocaleString('fr-FR')}
+              </p>
+            </div>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">Coût estimé total</p>
               <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
@@ -608,6 +624,33 @@ export function AnalyticsDashboard() {
               </p>
             </div>
           </div>
+
+          {/* Per-API-service breakdown */}
+          {Object.keys(tokenUsage.byApiService).length > 0 && (
+            <div className="space-y-2 mb-4">
+              <p className="text-xs font-medium text-muted-foreground">Détail par service API externe</p>
+              {Object.entries(tokenUsage.byApiService)
+                .sort(([, a], [, b]) => b.calls - a.calls)
+                .map(([service, data]) => (
+                  <div key={service} className="p-2.5 rounded-lg bg-muted/30 border border-border/50">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold capitalize">{service}</span>
+                      <span className="text-xs font-medium text-muted-foreground">{data.calls} appels</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {Object.entries(data.byEndpoint)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 5)
+                        .map(([endpoint, count]) => (
+                          <span key={endpoint} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                            {endpoint.split('/').pop()} ×{count}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
 
           {/* Per-model breakdown */}
           {Object.keys(tokenUsage.byModel).length > 0 && (
