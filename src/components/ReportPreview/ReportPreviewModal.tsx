@@ -327,34 +327,37 @@ export function ReportPreviewModal({
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col p-0 [&>button]:hidden" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
         {/* Header with actions */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card w-full shrink-0">
-          <h2 className="text-lg font-semibold shrink-0">{t.title}</h2>
-          <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-border bg-card w-full shrink-0">
+          {!isMobile && <h2 className="text-lg font-semibold shrink-0">{t.title}</h2>}
+          <div className="flex items-center gap-2 md:gap-3 ml-auto">
             <Button
               onClick={handleDownloadPDF}
               disabled={isGeneratingPDF}
-              className="gap-2 bg-primary hover:bg-primary/90"
+              size={isMobile ? 'icon' : 'default'}
+              className={isMobile ? 'bg-primary hover:bg-primary/90' : 'gap-2 bg-primary hover:bg-primary/90'}
             >
               {isGeneratingPDF ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              {isGeneratingPDF ? t.generating : t.download}
+              {!isMobile && (isGeneratingPDF ? t.generating : t.download)}
             </Button>
             <Button
               onClick={handlePrint}
               variant="outline"
-              className="gap-2"
+              size={isMobile ? 'icon' : 'default'}
+              className={isMobile ? '' : 'gap-2'}
             >
               <Printer className="h-4 w-4" />
-              {language === 'fr' ? 'Imprimer' : language === 'es' ? 'Imprimir' : 'Print'}
+              {!isMobile && (language === 'fr' ? 'Imprimer' : language === 'es' ? 'Imprimir' : 'Print')}
             </Button>
             <Button
               onClick={handleCopyLink}
               disabled={isCopying}
               variant="outline"
-              className="gap-2"
+              size={isMobile ? 'icon' : 'default'}
+              className={isMobile ? '' : 'gap-2'}
             >
               {isCopying ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -363,26 +366,27 @@ export function ReportPreviewModal({
               ) : (
                 <Copy className="h-4 w-4" />
               )}
-              {copied ? t.copied : t.copyLink}
+              {!isMobile && (copied ? t.copied : t.copyLink)}
             </Button>
             <Button
               onClick={handleShare}
               disabled={isEmailing}
               variant="outline"
-              className="gap-2"
+              size={isMobile ? 'icon' : 'default'}
+              className={isMobile ? '' : 'gap-2'}
             >
               {isEmailing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Share2 className="h-4 w-4" />
               )}
-              {t.share}
+              {!isMobile && t.share}
             </Button>
             <Button
               onClick={onClose}
               variant="ghost"
               size="icon"
-              className="ml-2"
+              className="ml-1 md:ml-2"
             >
               <X className="h-5 w-5" />
             </Button>
