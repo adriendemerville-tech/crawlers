@@ -106,6 +106,7 @@ const App = () => (
                           <Route path="/observatoire" element={<Observatoire />} />
                           <Route path="/faq" element={<Faq />} />
                           <Route path="/methodologie" element={<Methodologie />} />
+                          <Route path="/cgvu" element={<CGVU />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>

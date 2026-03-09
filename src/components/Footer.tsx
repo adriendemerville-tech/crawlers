@@ -112,6 +112,10 @@ function FooterComponent() {
       href: '/mentions-legales'
     },
     { 
+      label: 'CGVU',
+      href: '/cgvu'
+    },
+    { 
       label: t3(language, 'Politique de confidentialité', 'Privacy Policy', 'Política de privacidad'),
       href: '/politique-confidentialite'
     },

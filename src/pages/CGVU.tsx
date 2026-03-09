@@ -1,0 +1,335 @@
+import { Helmet } from 'react-helmet-async';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const sections = [
+  { id: 'objet', title: '1. Objet du Service' },
+  { id: 'acceptation', title: '2. Acceptation des CGVU' },
+  { id: 'description', title: '3. Description du Service' },
+  { id: 'garantie', title: '4. Absence de Garantie de Résultat' },
+  { id: 'code', title: '5. Responsabilité sur l\'Implémentation du Code' },
+  { id: 'credits', title: '6. Système de Crédits' },
+  { id: 'abonnement', title: '7. Abonnement Pro Agency' },
+  { id: 'whitelabel', title: '8. Offre Marque Blanche (White Label)' },
+  { id: 'pi', title: '9. Propriété Intellectuelle' },
+  { id: 'donnees', title: '10. Données de Crawl & Analyse' },
+  { id: 'rgpd', title: '11. RGPD & Données Personnelles' },
+  { id: 'disponibilite', title: '12. Disponibilité du Service' },
+  { id: 'modification', title: '13. Modification des CGVU' },
+  { id: 'litiges', title: '14. Droit Applicable & Litiges' },
+];
+
+const CGVU = () => {
+  useCanonicalHreflang('/cgvu');
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <Helmet>
+        <html lang="fr" />
+        <title>Conditions Générales de Vente et d'Utilisation | Crawlers.fr</title>
+        <meta name="description" content="CGVU de Crawlers.fr – Conditions générales de vente et d'utilisation de la plateforme d'audit SEO/GEO et de crédits d'analyse IA." />
+        <link rel="canonical" href="https://crawlers.fr/cgvu" />
+      </Helmet>
+      <Header />
+      <main className="flex-1 py-12">
+        <div className="container mx-auto max-w-4xl px-4">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour à l'accueil
+          </Link>
+
+          <article className="prose prose-gray dark:prose-invert max-w-none">
+            <h1 className="text-3xl font-bold text-foreground mb-4">
+              Conditions Générales de Vente et d'Utilisation (CGVU)
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              Applicables à l'ensemble des services proposés sur <strong>crawlers.fr</strong>
+            </p>
+
+            {/* Sommaire */}
+            <nav className="rounded-lg border border-border bg-muted/30 p-6 mb-10" aria-label="Sommaire">
+              <h2 className="text-lg font-semibold text-foreground mt-0 mb-4">Sommaire</h2>
+              <ol className="list-decimal list-inside space-y-2 text-sm">
+                {sections.map((s) => (
+                  <li key={s.id}>
+                    <a href={`#${s.id}`} className="text-primary hover:underline">
+                      {s.title.replace(/^\d+\.\s/, '')}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+
+            {/* Article 1 */}
+            <section id="objet">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">1. Objet du Service</h2>
+              <p>
+                Le site <strong>crawlers.fr</strong> (ci-après « la Plateforme ») édité par <strong>Crawlers AI</strong> (ci-après « l'Éditeur »), propose un ensemble d'outils d'analyse et d'optimisation de la visibilité des sites web pour les moteurs de recherche classiques (SEO) et les moteurs de recherche génératifs (GEO — Generative Engine Optimization).
+              </p>
+              <p>Les services comprennent notamment :</p>
+              <ul>
+                <li>L'analyse de l'accessibilité du site aux robots IA (crawlability) ;</li>
+                <li>Le calcul d'un score GEO (optimisation pour les moteurs génératifs) ;</li>
+                <li>L'analyse de la visibilité auprès des LLM (ChatGPT, Perplexity, Claude, etc.) ;</li>
+                <li>L'audit de performance technique (Core Web Vitals, PageSpeed) sur mobile et desktop ;</li>
+                <li>L'audit stratégique approfondi (EEAT, positionnement concurrentiel, analyse sémantique) ;</li>
+                <li>L'analyse de mots-clés, requêtes cibles et contenu prioritaire ;</li>
+                <li>La génération de code correctif personnalisé (JSON-LD, balises meta, robots.txt, llms.txt) ;</li>
+                <li>Le suivi de l'évolution technique via un tableau de bord et l'intégration Google Search Console ;</li>
+                <li>La génération de rapports exportables (PDF) et de plans d'action.</li>
+              </ul>
+            </section>
+
+            {/* Article 2 */}
+            <section id="acceptation">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">2. Acceptation des CGVU</h2>
+              <p>
+                L'utilisation de la Plateforme implique l'acceptation pleine et entière des présentes Conditions Générales de Vente et d'Utilisation. Toute inscription ou tout achat de crédits ou d'abonnement vaut acceptation sans réserve des présentes CGVU.
+              </p>
+              <p>
+                L'Éditeur se réserve le droit de modifier les présentes CGVU à tout moment. Les utilisateurs seront informés de toute modification substantielle par notification sur la Plateforme ou par email. La poursuite de l'utilisation du service après notification vaut acceptation des nouvelles conditions.
+              </p>
+            </section>
+
+            {/* Article 3 */}
+            <section id="description">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">3. Description du Service</h2>
+              <p>
+                Crawlers.fr fournit des <strong>outils d'analyse automatisée</strong> et des <strong>recommandations techniques</strong> générées par intelligence artificielle. Le service est accessible via un système de crédits à l'unité ou par abonnement mensuel.
+              </p>
+              <p>L'offre se décline comme suit :</p>
+              <ul>
+                <li><strong>Audit Flash gratuit</strong> (0 €) : analyse de base SEO/GEO avec rapport synthétique ;</li>
+                <li><strong>Pack Essentiel</strong> (5 €) : 10 crédits d'analyse ;</li>
+                <li><strong>Pack Pro</strong> (19 €) : 50 crédits d'analyse ;</li>
+                <li><strong>Pack Premium</strong> (45 €) : 150 crédits d'analyse ;</li>
+                <li><strong>Abonnement Pro Agency</strong> (50 €/mois) : accès illimité, marque blanche, dashboard agence dédié, export de rapports personnalisés.</li>
+              </ul>
+            </section>
+
+            {/* Article 4 */}
+            <section id="garantie">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">4. Absence de Garantie de Résultat</h2>
+              <p>
+                Crawlers.fr fournit des outils d'analyse et des recommandations techniques à caractère informatif. <strong>L'Éditeur ne peut en aucun cas garantir :</strong>
+              </p>
+              <ul>
+                <li>Une position spécifique dans les résultats des moteurs de recherche classiques (Google, Bing, etc.) ;</li>
+                <li>Une citation ou une mention par les intelligences artificielles génératives (ChatGPT, Perplexity, Claude, Gemini, etc.) ;</li>
+                <li>Une augmentation du trafic organique ou de la visibilité en ligne.</li>
+              </ul>
+              <p>
+                Les algorithmes de classement et de citation sont la propriété exclusive de tiers (Google LLC, OpenAI, Anthropic, etc.) et sont susceptibles de modifications unilatérales sans préavis. L'Éditeur ne saurait être tenu responsable des décisions algorithmiques de ces tiers.
+              </p>
+              <p>
+                Les scores, indicateurs et recommandations fournis par la Plateforme constituent des <strong>estimations basées sur l'état de l'art</strong> au moment de l'analyse et ne constituent en aucun cas une obligation de résultat.
+              </p>
+            </section>
+
+            {/* Article 5 */}
+            <section id="code">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">5. Responsabilité sur l'Implémentation du Code</h2>
+              <p>
+                La Plateforme génère des <strong>scripts correctifs personnalisés</strong> (données structurées JSON-LD, balises meta, configuration robots.txt, llms.txt, etc.) destinés à être intégrés sur le site de l'utilisateur.
+              </p>
+              <p className="font-semibold">
+                L'utilisateur est seul et unique responsable :
+              </p>
+              <ul>
+                <li>De la décision d'intégrer ou non les correctifs proposés sur son propre site web ;</li>
+                <li>De la bonne implémentation technique du code fourni ;</li>
+                <li>De la vérification de la compatibilité du code avec son environnement technique (CMS, framework, hébergement) ;</li>
+                <li>De la sauvegarde préalable de ses fichiers avant toute modification.</li>
+              </ul>
+              <p>
+                <strong>Crawlers.fr ne saurait être tenu responsable</strong> des erreurs techniques, dysfonctionnements, bugs, baisses de performance, perte de données ou tout autre préjudice direct ou indirect résultant d'une mauvaise manipulation, d'une intégration incorrecte ou partielle du code fourni.
+              </p>
+              <p>
+                Il est expressément recommandé à l'utilisateur de tester toute modification dans un environnement de staging avant mise en production.
+              </p>
+            </section>
+
+            {/* Article 6 */}
+            <section id="credits">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">6. Système de Crédits</h2>
+              <h3 className="text-lg font-semibold mt-4 mb-2">6.1. Nature des crédits</h3>
+              <p>
+                Les crédits constituent des <strong>unités de consommation numérique</strong> permettant d'accéder aux fonctionnalités d'analyse avancée de la Plateforme. Chaque action d'audit (audit expert, génération de code, analyse LLM approfondie, etc.) consomme un ou plusieurs crédits selon la complexité de l'opération.
+              </p>
+
+              <h3 className="text-lg font-semibold mt-4 mb-2">6.2. Achat et utilisation</h3>
+              <p>
+                L'achat de packs de crédits s'effectue par paiement sécurisé via Stripe. Les crédits sont crédités instantanément sur le compte de l'utilisateur après confirmation du paiement. Les crédits achetés n'ont pas de date d'expiration tant que le compte utilisateur reste actif.
+              </p>
+
+              <h3 className="text-lg font-semibold mt-4 mb-2">6.3. Droit de rétractation — Renonciation expresse</h3>
+              <p>
+                Conformément à l'<strong>article L.221-28, 13° du Code de la consommation</strong>, l'achat de crédits constitue la fourniture d'un contenu numérique non fourni sur un support matériel dont l'exécution a commencé avec l'accord préalable exprès du consommateur.
+              </p>
+              <p>
+                <strong>En procédant à l'achat, l'utilisateur reconnaît et accepte expressément :</strong>
+              </p>
+              <ul>
+                <li>Que l'exécution du service commence immédiatement après le paiement ;</li>
+                <li>Qu'il renonce expressément à son droit de rétractation de 14 jours prévu à l'article L.221-18 du Code de la consommation ;</li>
+                <li>Que cette renonciation prend effet dès la première utilisation d'un crédit ou la première consultation d'un rapport généré.</li>
+              </ul>
+
+              <h3 className="text-lg font-semibold mt-4 mb-2">6.4. Non-remboursabilité</h3>
+              <p>
+                Les crédits achetés et utilisés ne sont pas remboursables. En cas de dysfonctionnement technique avéré imputable à la Plateforme empêchant l'exécution normale du service, l'Éditeur s'engage à recréditer les crédits consommés à tort.
+              </p>
+            </section>
+
+            {/* Article 7 */}
+            <section id="abonnement">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">7. Abonnement Pro Agency</h2>
+              <h3 className="text-lg font-semibold mt-4 mb-2">7.1. Modalités</h3>
+              <p>
+                L'abonnement Pro Agency est proposé au tarif de <strong>50 € HT par mois</strong>. Il est souscrit pour une durée indéterminée avec <strong>reconduction tacite mensuelle</strong>. Le paiement est prélevé automatiquement chaque mois via Stripe.
+              </p>
+
+              <h3 className="text-lg font-semibold mt-4 mb-2">7.2. Avantages inclus</h3>
+              <ul>
+                <li>Accès illimité à l'ensemble des outils d'analyse et d'audit ;</li>
+                <li>Dashboard agence dédié avec gestion multi-clients ;</li>
+                <li>Export de rapports personnalisés au format PDF ;</li>
+                <li>Fonctionnalité Marque Blanche (White Label) — voir Article 8 ;</li>
+                <li>Support prioritaire.</li>
+              </ul>
+
+              <h3 className="text-lg font-semibold mt-4 mb-2">7.3. Résiliation</h3>
+              <p>
+                L'utilisateur peut résilier son abonnement <strong>à tout moment, en un clic</strong>, depuis son espace personnel (Console &gt; Mon abonnement) ou via le portail de facturation Stripe. La résiliation prend effet à la fin de la période mensuelle en cours. Aucun remboursement prorata temporis n'est effectué pour le mois en cours.
+              </p>
+            </section>
+
+            {/* Article 8 */}
+            <section id="whitelabel">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">8. Offre Marque Blanche (White Label)</h2>
+              <h3 className="text-lg font-semibold mt-4 mb-2">8.1. Droits accordés</h3>
+              <p>
+                Dans le cadre de l'abonnement Pro Agency, l'utilisateur est autorisé à :
+              </p>
+              <ul>
+                <li>Personnaliser les rapports générés avec son propre logo, ses couleurs et ses coordonnées ;</li>
+                <li>Présenter les rapports à ses clients finaux sous sa propre identité commerciale ;</li>
+                <li>Revendre les rapports d'audit dans le cadre de ses propres prestations de conseil SEO/GEO.</li>
+              </ul>
+
+              <h3 className="text-lg font-semibold mt-4 mb-2">8.2. Responsabilité envers les clients finaux</h3>
+              <p>
+                L'abonné Agency <strong>reste seul responsable</strong> de la relation commerciale avec ses propres clients finaux. Il s'engage à :
+              </p>
+              <ul>
+                <li>Ne pas présenter les résultats comme une garantie de positionnement ou de citation IA ;</li>
+                <li>Assumer l'entière responsabilité de la communication, de la facturation et du support envers ses clients finaux ;</li>
+                <li>Ne pas engager la responsabilité de Crawlers.fr vis-à-vis de ses propres clients.</li>
+              </ul>
+            </section>
+
+            {/* Article 9 */}
+            <section id="pi">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">9. Propriété Intellectuelle</h2>
+              <p>
+                L'ensemble de la Plateforme — incluant mais non limité à son code source, ses algorithmes, ses interfaces, ses textes, ses visuels et son design — est la <strong>propriété exclusive de Crawlers AI</strong> et est protégé par le droit d'auteur et le droit des bases de données.
+              </p>
+              <p>
+                Toute reproduction, représentation, modification, publication, transmission ou dénaturation, totale ou partielle, de la Plateforme ou de son contenu, par quelque procédé que ce soit, est interdite sans l'autorisation écrite préalable de l'Éditeur.
+              </p>
+              <p>
+                Les rapports d'analyse générés par la Plateforme sont mis à la disposition de l'utilisateur pour son usage personnel ou professionnel (dans le cadre de l'offre Agency). L'utilisateur ne peut en aucun cas redistribuer, revendre ou rendre publiquement accessible le contenu des rapports en dehors du cadre prévu par les présentes CGVU.
+              </p>
+            </section>
+
+            {/* Article 10 */}
+            <section id="donnees">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">10. Données de Crawl & Analyse</h2>
+              <p>
+                Les données analysées par Crawlers.fr sont exclusivement des <strong>données publiquement accessibles</strong> sur Internet (contenu HTML, fichiers robots.txt, balises meta, données structurées, etc.). La Plateforme n'accède à aucune donnée privée, protégée ou nécessitant une authentification sur le site audité.
+              </p>
+              <p>
+                Les résultats d'analyse et les rapports générés par l'intelligence artificielle de Crawlers.fr constituent des <strong>œuvres dérivées protégées</strong>. L'Éditeur se réserve le droit d'utiliser les données agrégées et anonymisées à des fins statistiques et d'amélioration du service.
+              </p>
+            </section>
+
+            {/* Article 11 */}
+            <section id="rgpd">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">11. RGPD & Données Personnelles</h2>
+              <p>
+                Les données personnelles collectées par la Plateforme (adresse email, nom, prénom, URLs auditées) le sont exclusivement pour le <strong>bon fonctionnement du service</strong>, la gestion des comptes utilisateurs et la communication relative au service.
+              </p>
+              <p>
+                Conformément au Règlement Général sur la Protection des Données (RGPD — Règlement UE 2016/679) :
+              </p>
+              <ul>
+                <li>Les données personnelles ne sont <strong>jamais revendues</strong> à des tiers ;</li>
+                <li>L'utilisateur dispose d'un droit d'accès, de rectification, de suppression et de portabilité de ses données ;</li>
+                <li>Les données sont hébergées au sein de l'Union Européenne ;</li>
+                <li>L'utilisateur peut exercer ses droits en contactant <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a>.</li>
+              </ul>
+              <p>
+                Pour plus de détails, veuillez consulter notre{' '}
+                <Link to="/politique-confidentialite" className="text-primary hover:underline">
+                  Politique de Confidentialité
+                </Link>{' '}
+                et notre page{' '}
+                <Link to="/rgpd" className="text-primary hover:underline">
+                  RGPD
+                </Link>.
+              </p>
+            </section>
+
+            {/* Article 12 */}
+            <section id="disponibilite">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">12. Disponibilité du Service</h2>
+              <p>
+                L'Éditeur s'efforce d'assurer la disponibilité de la Plateforme 24 heures sur 24, 7 jours sur 7. Toutefois, l'Éditeur ne saurait être tenu responsable des interruptions de service dues à :
+              </p>
+              <ul>
+                <li>Des opérations de maintenance programmées ou d'urgence ;</li>
+                <li>Des défaillances des fournisseurs tiers (hébergement, APIs, services de paiement) ;</li>
+                <li>Des cas de force majeure au sens de l'article 1218 du Code civil.</li>
+              </ul>
+            </section>
+
+            {/* Article 13 */}
+            <section id="modification">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">13. Modification des CGVU</h2>
+              <p>
+                L'Éditeur se réserve le droit de modifier les présentes CGVU à tout moment. Les modifications entreront en vigueur dès leur publication sur la Plateforme. Il est conseillé à l'utilisateur de consulter régulièrement les CGVU. La date de dernière mise à jour est indiquée en bas de la présente page.
+              </p>
+            </section>
+
+            {/* Article 14 */}
+            <section id="litiges">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">14. Droit Applicable & Litiges</h2>
+              <p>
+                Les présentes CGVU sont soumises au <strong>droit français</strong>. Tout litige relatif à l'interprétation, l'exécution ou la résiliation des présentes CGVU sera soumis à la compétence exclusive des tribunaux compétents du ressort du siège social de l'Éditeur, sauf disposition légale impérative contraire.
+              </p>
+              <p>
+                Conformément aux articles L.611-1 et suivants du Code de la consommation, le consommateur est informé qu'il peut recourir gratuitement à un médiateur de la consommation en vue de la résolution amiable de tout litige.
+              </p>
+            </section>
+
+            {/* Dernière mise à jour */}
+            <div className="mt-12 pt-6 border-t border-border">
+              <p className="text-sm text-muted-foreground italic">
+                Dernière mise à jour : Mars 2026
+              </p>
+            </div>
+          </article>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default CGVU;
