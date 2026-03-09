@@ -1153,6 +1153,7 @@ GÉNÈRE UN JSON avec cette structure:
 
 INSTRUCTIONS CRITIQUES:
 - UTILISE LES DONNÉES RÉELLES pour keyword_positioning et market_data_summary
+- keyword_positioning.main_keywords: MINIMUM 5 mots-clés OBLIGATOIRES. Si les données DataForSEO contiennent moins de 5 résultats ou des volumes à 0, COMPLÈTE avec des mots-clés pertinents pour le core business du site avec des volumes estimés et rank "Non classé". Un site a TOUJOURS au moins 5 mots-clés stratégiques liés à son activité.
 - executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
