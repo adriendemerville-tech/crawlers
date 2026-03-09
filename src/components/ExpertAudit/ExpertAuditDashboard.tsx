@@ -828,6 +828,10 @@ export function ExpertAuditDashboard() {
 
       setResult(strategicData);
       setStrategicResult(strategicData);
+      // Store cached context for fast relaunches (competitor corrections, etc.)
+      if (data.data._cachedContext) {
+        setStrategicCachedContext(data.data._cachedContext);
+      }
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
       // Fire-and-forget: CTO Agent analysis
       triggerCtoAgent(strategicData, 'strategic', normalizedUrl, new URL(normalizedUrl).hostname);
