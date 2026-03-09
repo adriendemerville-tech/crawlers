@@ -293,6 +293,7 @@ export interface KeywordItem {
   difficulty: number;
   current_rank: number | string;
   strategic_analysis?: KeywordStrategicAnalysis;
+  is_nugget?: boolean;
 }
 
 export interface QuickWinKeyword {

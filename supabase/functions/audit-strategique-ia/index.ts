@@ -1015,6 +1015,15 @@ function sortByStrategicRelevance(
   
   console.log(`🏆 Top 3 strategic keywords: ${scored.slice(0, 3).map(s => `"${s.kw.keyword}" (relevance: ${(s.finalScore * 100).toFixed(0)}%, core: ${(s.coreMatchScore * 100).toFixed(0)}%, seed: ${(s.seedScore * 100).toFixed(0)}%)`).join(' | ')}`);
   
+  // Tag high-relevance + low-volume keywords as "nuggets" (Pépites)
+  // relevance >= 0.9 (9/10) AND volume < 10 → is_nugget = true
+  for (const s of scored) {
+    if (s.finalScore >= 0.9 && s.kw.volume < 10) {
+      s.kw.is_nugget = true;
+      console.log(`💎 Pépite détectée: "${s.kw.keyword}" (relevance: ${(s.finalScore * 100).toFixed(0)}%, volume: ${s.kw.volume})`);
+    }
+  }
+  
   return scored.map(s => s.kw);
 }
 
