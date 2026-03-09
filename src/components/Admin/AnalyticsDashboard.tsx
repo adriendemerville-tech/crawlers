@@ -303,6 +303,7 @@ export function AnalyticsDashboard() {
         totalEstimatedCost,
         dataforseoCalls,
         openrouterCalls,
+        browserlessCalls,
         byApiService,
       });
 
