@@ -222,7 +222,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
 
         {/* H2 Tagline - SEO/GEO optimized */}
         <h2 className="mb-6 text-lg font-medium text-primary sm:mb-8 sm:text-2xl">
-          Crawlers.AI expertise le référencement SEO et GEO de votre entreprise.
+          {language === 'es' ? 'Auditoría SEO & GEO gratuita — descubra lo que la IA dice de usted.' : language === 'en' ? 'Free SEO & GEO audit — find out what AI says about you.' : 'Audit SEO & GEO gratuit — découvrez ce que l\'IA dit de vous.'}
         </h2>
 
         {/* H3 Subheadline - SEO optimized */}
