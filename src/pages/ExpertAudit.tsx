@@ -111,8 +111,7 @@ const ExpertAudit = () => {
         "url": "https://crawlers.fr"
       },
       "about": {
-        "@type": "SoftwareApplication",
-        "name": "Score SEO 200",
+        "name": "Audit Technique & Stratégique SEO/GEO",
         "applicationCategory": "WebApplication",
         "operatingSystem": "Web Browser",
         "offers": {
