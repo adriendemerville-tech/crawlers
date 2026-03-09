@@ -918,6 +918,9 @@ export function ExpertAuditDashboard() {
 
         setResult(strategicData);
         setStrategicResult(strategicData);
+        if (retryData.data._cachedContext) {
+          setStrategicCachedContext(retryData.data._cachedContext);
+        }
         setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
         setHallucinationDiagnosis(null);
         // Pre-summarize retry result
