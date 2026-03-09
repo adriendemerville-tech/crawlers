@@ -518,8 +518,8 @@ export function generateExpertReportHTML(
 
     content = `
       <div style="text-align: center; margin-bottom: 40px; break-inside: avoid; page-break-inside: avoid;">
-        <div style="display: inline-block; padding: 30px 50px; background: linear-gradient(135deg, #059669, #0891b2); border-radius: 20px; margin-bottom: 20px; min-width: 220px; min-height: 100px;">
-          <div style="font-size: 56px; font-weight: bold; color: white; line-height: 1.2;">${geoScore}/100</div>
+        <div style="display: inline-block; padding: 30px 50px; background: #059669; border-radius: 20px; margin-bottom: 20px; min-width: 220px; min-height: 100px;">
+          <div style="font-size: 56px; font-weight: bold; color: #ffffff; line-height: 1.2;">${geoScore}/100</div>
           <div style="color: rgba(255,255,255,0.9); font-size: 16px; margin-top: 4px;">${t.geoScore}</div>
         </div>
       </div>
