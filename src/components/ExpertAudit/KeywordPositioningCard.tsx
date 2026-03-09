@@ -211,7 +211,7 @@ function ExplorationCard({
   );
 }
 
-export function KeywordPositioningCard({ positioning, marketSummary, competitors, domain }: KeywordPositioningCardProps) {
+export function KeywordPositioningCard({ positioning, marketSummary, competitors, domain, rankingOverview }: KeywordPositioningCardProps) {
   const { toast } = useToast();
   const [expandedKw, setExpandedKw] = useState<number | null>(null);
   const [verticalResults, setVerticalResults] = useState<KeywordItem[]>([]);
