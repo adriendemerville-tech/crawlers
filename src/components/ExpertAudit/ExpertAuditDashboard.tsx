@@ -754,11 +754,15 @@ export function ExpertAuditDashboard() {
     setResult(null);
 
     try {
+      // Use cached context for competitor/hallucination corrections (skips DataForSEO, metadata, etc.)
+      const useCachedContext = (hallucinationCorrections || competitorCorrections) && strategicCachedContext;
+      
       const data = await invokeWithTimeout('audit-strategique-ia', { 
         url: normalizedUrl, 
         toolsData: null,
         hallucinationCorrections: hallucinationCorrections || null,
-        competitorCorrections: competitorCorrections || null
+        competitorCorrections: competitorCorrections || null,
+        cachedContext: useCachedContext ? strategicCachedContext : null,
       });
 
       if (!data.success) throw new Error(data.error || 'Strategic audit failed');
