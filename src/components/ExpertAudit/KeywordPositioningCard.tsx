@@ -337,8 +337,13 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                   </h3>
                   <div className="grid gap-2 md:grid-cols-5">
                     {top5.map((kw, idx) => (
-                      <div key={idx} className="p-3 rounded-lg border bg-card text-center space-y-1">
-                        <p className="text-xs font-medium text-foreground truncate" title={kw.keyword}>{kw.keyword}</p>
+                      <div key={idx} className={`p-3 rounded-lg border bg-card text-center space-y-1 ${kw.is_nugget ? 'border-amber-500/40 ring-1 ring-amber-500/20' : ''}`}>
+                        <p className="text-xs font-medium text-foreground truncate" title={kw.keyword}>
+                          {kw.keyword}
+                        </p>
+                        {kw.is_nugget && (
+                          <div className="flex justify-center"><NuggetBadge /></div>
+                        )}
                         <p className="text-lg font-bold text-primary">{kw.volume.toLocaleString()}</p>
                         <p className="text-[10px] text-muted-foreground">rech./mois</p>
                         <Badge
