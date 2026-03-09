@@ -61,9 +61,9 @@ type AuditMode = 'technical' | 'strategic' | null;
 
 const translations = {
   fr: {
-    badge: 'Audit Expert SEO & IA',
-    title: 'Analysez votre site en profondeur',
-    subtitlePart1: 'Analyse 360° de votre SEO et de votre GEO en moins de 10 min.',
+    badge: 'Audit Expert SEO & GEO',
+    title: 'Audit SEO & GEO gratuit — Score sur 200 points',
+    subtitlePart1: 'Mesurez votre visibilité Google + IA générative en moins de 2 min.',
     subtitlePart2: 'Développement et injection du',
     subtitleCode: 'code correctif',
     subtitlePart3: 'adapté à vos besoins.',
@@ -92,9 +92,9 @@ const translations = {
     newAudit: 'Nouvel Audit',
   },
   en: {
-    badge: 'Expert SEO & AI Audit',
-    title: 'Analyze your site in depth',
-    subtitlePart1: '360° analysis of your SEO and GEO in less than 10 min.',
+    badge: 'Expert SEO & GEO Audit',
+    title: 'Free SEO & GEO Audit — 200-Point Score',
+    subtitlePart1: 'Measure your Google + generative AI visibility in under 2 min.',
     subtitlePart2: 'Development of',
     subtitleCode: 'corrective code',
     subtitlePart3: 'tailored to your needs.',
@@ -123,9 +123,9 @@ const translations = {
     newAudit: 'New Audit',
   },
   es: {
-    badge: 'Auditoría Experta SEO e IA',
-    title: 'Analiza tu sitio en profundidad',
-    subtitlePart1: 'Análisis 360° de tu SEO y GEO en menos de 10 min.',
+    badge: 'Auditoría Experta SEO & GEO',
+    title: 'Auditoría SEO & GEO gratis — Score de 200 puntos',
+    subtitlePart1: 'Mide tu visibilidad Google + IA generativa en menos de 2 min.',
     subtitlePart2: 'Desarrollo del',
     subtitleCode: 'código correctivo',
     subtitlePart3: 'adaptado a tus necesidades.',

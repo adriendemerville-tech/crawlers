@@ -51,6 +51,12 @@ const contentData = {
       "Optimisation du robots.txt pour autoriser les crawlers IA (GPTBot, ClaudeBot, PerplexityBot)",
       "Développement de l'autorité d'entité via Wikidata, presse et écosystème web"
     ],
+
+    seoGeoTitle: "SEO et GEO : deux stratégies complémentaires en 2026",
+    seoGeoText: "Le référencement naturel (SEO) et l'optimisation pour les moteurs génératifs (GEO) ne sont pas des approches concurrentes — elles se renforcent mutuellement. Un socle technique solide (HTTPS, Core Web Vitals, balisage HTML propre) facilite à la fois l'indexation Google et le crawling par GPTBot, ClaudeBot ou PerplexityBot. De même, un contenu sémantiquement riche avec des données structurées JSON-LD améliore votre positionnement classique tout en augmentant votre taux de citation par les LLM.",
+    
+    codeTitle: "Du diagnostic au code correctif en un clic",
+    codeText: "Contrairement aux outils d'audit traditionnels qui se limitent à lister des erreurs, Crawlers.fr génère un code correctif personnalisé (JSON-LD, balises meta, robots.txt) directement injectable dans votre CMS. Chaque recommandation est priorisée par impact SEO et GEO, et le code est adapté à votre stack technique — WordPress, Shopify, ou site custom. Vous passez du diagnostic à l'action sans intervention développeur.",
     
     ctaTitle: "Analysez votre site gratuitement",
     ctaText: "Obtenez votre Score SEO 200 en quelques secondes et découvrez vos opportunités d'amélioration pour dominer l'écosystème Search & IA de 2026."
@@ -100,6 +106,12 @@ const contentData = {
       "Optimizing robots.txt to allow AI crawlers (GPTBot, ClaudeBot, PerplexityBot)",
       "Developing entity authority via Wikidata, press, and web ecosystem"
     ],
+
+    seoGeoTitle: "SEO and GEO: two complementary strategies in 2026",
+    seoGeoText: "Search engine optimization (SEO) and generative engine optimization (GEO) are not competing approaches — they reinforce each other. A solid technical foundation (HTTPS, Core Web Vitals, clean HTML markup) facilitates both Google indexing and crawling by GPTBot, ClaudeBot or PerplexityBot. Similarly, semantically rich content with JSON-LD structured data improves your traditional ranking while increasing your LLM citation rate.",
+    
+    codeTitle: "From diagnosis to corrective code in one click",
+    codeText: "Unlike traditional audit tools that only list errors, Crawlers.fr generates custom corrective code (JSON-LD, meta tags, robots.txt) directly injectable into your CMS. Each recommendation is prioritized by SEO and GEO impact, and the code is adapted to your tech stack — WordPress, Shopify, or custom site. Go from diagnosis to action without developer intervention.",
     
     ctaTitle: "Analyze your site for free",
     ctaText: "Get your SEO 200 Score in seconds and discover improvement opportunities to dominate the 2026 Search & AI ecosystem."
@@ -149,6 +161,12 @@ const contentData = {
       "Optimización del robots.txt para permitir crawlers IA (GPTBot, ClaudeBot, PerplexityBot)",
       "Desarrollo de autoridad de entidad vía Wikidata, prensa y ecosistema web"
     ],
+
+    seoGeoTitle: "SEO y GEO: dos estrategias complementarias en 2026",
+    seoGeoText: "La optimización para motores de búsqueda (SEO) y la optimización para motores generativos (GEO) no son enfoques competidores — se refuerzan mutuamente. Una base técnica sólida (HTTPS, Core Web Vitals, marcado HTML limpio) facilita tanto la indexación de Google como el rastreo por GPTBot, ClaudeBot o PerplexityBot.",
+    
+    codeTitle: "Del diagnóstico al código correctivo en un clic",
+    codeText: "A diferencia de las herramientas de auditoría tradicionales que solo listan errores, Crawlers.fr genera código correctivo personalizado (JSON-LD, meta tags, robots.txt) directamente inyectable en tu CMS. Cada recomendación se prioriza por impacto SEO y GEO.",
     
     ctaTitle: "Analiza tu sitio gratis",
     ctaText: "Obtén tu Score SEO 200 en segundos y descubre oportunidades de mejora para dominar el ecosistema Search e IA de 2026."
@@ -226,6 +244,26 @@ export function ExpertAuditContent() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* SEO + GEO complementarity */}
+      <div className="max-w-3xl mx-auto space-y-6">
+        <h2 className="text-2xl font-bold text-foreground">
+          {content.seoGeoTitle}
+        </h2>
+        <p className="text-muted-foreground leading-relaxed">
+          {content.seoGeoText}
+        </p>
+      </div>
+
+      {/* Corrective code */}
+      <div className="max-w-3xl mx-auto space-y-6">
+        <h2 className="text-2xl font-bold text-foreground">
+          {content.codeTitle}
+        </h2>
+        <p className="text-muted-foreground leading-relaxed">
+          {content.codeText}
+        </p>
       </div>
 
       {/* CTA */}
