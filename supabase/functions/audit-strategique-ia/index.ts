@@ -626,6 +626,7 @@ async function fetchKeywordData(
     });
 
     if (response.ok) {
+      trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'keywords_for_keywords');
       const data = await response.json();
       if (data.status_code === 20000 && data.tasks?.[0]?.result) {
         for (const item of data.tasks[0].result) {
