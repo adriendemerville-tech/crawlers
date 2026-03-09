@@ -316,9 +316,16 @@ export default function Methodologie() {
         {/* Audit points */}
         <section className="py-12 px-4 bg-muted/30">
           <div className="mx-auto max-w-6xl">
-            <h2 className="text-2xl font-bold text-foreground mb-8 text-center">
-              {t3(language, 'Points d\'audit analysés', 'Audit Points Analyzed', 'Puntos de auditoría analizados')}
+            <h2 className="text-2xl font-bold text-foreground mb-2 text-center">
+              {t3(language, '8 catégories, plus de 50 points d\'audit', '8 Categories, Over 50 Audit Points', '8 categorías, más de 50 puntos de auditoría')}
             </h2>
+            <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+              {t3(language,
+                'Chaque analyse croise des signaux techniques classiques et des indicateurs propres à l\'ère de l\'IA générative.',
+                'Each analysis cross-references classic technical signals and generative AI-era indicators.',
+                'Cada análisis cruza señales técnicas clásicas e indicadores de la era de la IA generativa.'
+              )}
+            </p>
             <div className="grid gap-6 md:grid-cols-2">
               {auditCategories.map((cat) => (
                 <Card key={cat.title} className="border-border bg-card">
