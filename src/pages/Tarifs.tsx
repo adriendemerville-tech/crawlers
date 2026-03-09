@@ -20,7 +20,7 @@ import {
 
 const translations = {
   fr: {
-    pageTitle: 'Tarifs - Crawlers.AI',
+    pageTitle: 'Tarifs et Fonctionnement | Crawlers.fr',
     title: 'Tarifs et Fonctionnement',
     subtitle: 'Découvrez comment fonctionne Crawlers.AI et nos différentes offres',
     freeSection: 'Outils Gratuits',

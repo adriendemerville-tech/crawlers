@@ -21,8 +21,8 @@ import {
 
 const translations = {
   fr: {
-    pageTitle: 'Pro Agency - Abonnement SEO & GEO illimité | Crawlers.AI',
-    metaDescription: 'Découvrez l\'offre Pro Agency de Crawlers.AI : rapports SEO/GEO illimités, codes correctifs illimités, marque blanche et multi-comptes pour agences et freelances SEO. 49€/mois.',
+    pageTitle: 'Pro Agency - Abonnement SEO & GEO illimité | Crawlers.fr',
+    metaDescription: 'Découvrez l\'offre Pro Agency de Crawlers.fr : rapports SEO/GEO illimités, codes correctifs illimités, marque blanche et multi-comptes pour agences et freelances SEO. 49€/mois.',
     heroTitle: 'Passez au niveau supérieur',
     heroTitleAccent: 'avec Pro Agency',
     heroSubtitle: 'L\'abonnement tout-en-un pour les professionnels du SEO et du GEO qui veulent scaler leur activité sans limites.',
