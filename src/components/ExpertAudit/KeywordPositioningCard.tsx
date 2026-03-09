@@ -53,20 +53,20 @@ function getBusinessValueColor(value: string): string {
   }
 }
 
-function getIntentIcon(intent: string): string {
-  if (intent.toLowerCase().includes('transaction')) return '💰';
-  if (intent.toLowerCase().includes('décision')) return '🤔';
-  if (intent.toLowerCase().includes('informat')) return '📚';
-  if (intent.toLowerCase().includes('navigat')) return '🧭';
-  return '🔍';
+function getIntentColor(intent: string): string {
+  if (intent.toLowerCase().includes('transaction')) return 'text-success border-success/30 bg-success/10';
+  if (intent.toLowerCase().includes('décision') || intent.toLowerCase().includes('decision')) return 'text-primary border-primary/30 bg-primary/10';
+  if (intent.toLowerCase().includes('informat')) return 'text-warning border-warning/30 bg-warning/10';
+  if (intent.toLowerCase().includes('navigat')) return 'text-muted-foreground border-muted bg-muted/10';
+  return 'text-muted-foreground border-muted bg-muted/10';
 }
 
 function StrategicAnalysisRow({ analysis }: { analysis: KeywordStrategicAnalysis }) {
   return (
     <div className="px-3 py-2 bg-muted/30 border-t border-dashed border-border/50 space-y-2">
       <div className="flex flex-wrap gap-2 items-center">
-        <Badge variant="outline" className="text-xs gap-1">
-          {getIntentIcon(analysis.intent)} {analysis.intent}
+        <Badge variant="outline" className={`text-xs ${getIntentColor(analysis.intent)}`}>
+          {analysis.intent}
         </Badge>
         <Badge variant="outline" className={`text-xs ${getBusinessValueColor(analysis.business_value)}`}>
           Valeur: {analysis.business_value}
@@ -329,8 +329,8 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                         </Badge>
                         {kw.strategic_analysis && (
                           <div className="mt-1">
-                            <Badge variant="outline" className={`text-[10px] ${getBusinessValueColor(kw.strategic_analysis.business_value)}`}>
-                              {getIntentIcon(kw.strategic_analysis.intent)} {kw.strategic_analysis.business_value}
+                            <Badge variant="outline" className={`text-[10px] ${getIntentColor(kw.strategic_analysis.intent)}`}>
+                              {kw.strategic_analysis.intent}
                             </Badge>
                           </div>
                         )}
@@ -349,6 +349,13 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                   Analyse stratégique des mots-clés
                   <span className="text-xs text-muted-foreground font-normal ml-1">(cliquez pour détails)</span>
                 </h3>
+                {/* Légende des couleurs */}
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-success" /> Transactionnelle</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-primary" /> Décisionnelle</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-warning" /> Informationnelle</span>
+                  <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-muted-foreground" /> Navigationnelle</span>
+                </div>
                 <div className="rounded-lg border overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-muted/50">
@@ -371,8 +378,8 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                             <td className="px-3 py-2 font-medium text-foreground">
                               {kw.keyword}
                               {kw.strategic_analysis && (
-                                <Badge variant="outline" className={`ml-2 text-[10px] ${getBusinessValueColor(kw.strategic_analysis.business_value)}`}>
-                                  {getIntentIcon(kw.strategic_analysis.intent)} {kw.strategic_analysis.intent}
+                                <Badge variant="outline" className={`ml-2 text-[10px] ${getIntentColor(kw.strategic_analysis.intent)}`}>
+                                  {kw.strategic_analysis.intent}
                                 </Badge>
                               )}
                             </td>
