@@ -230,7 +230,7 @@ export function generateExpertReportHTML(
     };
 
     const narrativeBloc = (title: string, color: string, bgColor: string, score: number, rows: string) => `
-      <div style="background: ${bgColor}; padding: 14px 16px; border-radius: 10px; border-left: 3px solid ${color}; margin-bottom: 10px;">
+      <div style="background: ${bgColor}; padding: 14px 16px; border-radius: 10px; border-left: 3px solid ${color}; margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <div style="font-size: 13px; font-weight: 600; color: ${color};">${title}</div>
           ${miniGauge(score)}
