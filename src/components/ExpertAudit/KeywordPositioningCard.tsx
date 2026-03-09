@@ -11,7 +11,7 @@ import {
   BarChart3, Search, Loader2, Layers, Compass,
   ChevronDown, ChevronUp, BrainCircuit
 } from 'lucide-react';
-import { KeywordPositioning, CompetitiveLandscape, MarketDataSummary, KeywordItem, KeywordStrategicAnalysis } from '@/types/expertAudit';
+import { KeywordPositioning, CompetitiveLandscape, MarketDataSummary, KeywordItem, KeywordStrategicAnalysis, RankingOverview } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
