@@ -104,20 +104,57 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      // Download HTML report as file (preserves white-label branding)
-      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-      const link = document.createElement('a');
+      const { default: html2canvas } = await import('html2canvas');
+      const { default: jsPDF } = await import('jspdf');
+
+      // Render HTML in a hidden iframe to capture exact styled report
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;height:1123px;border:none;';
+      document.body.appendChild(iframe);
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!iframeDoc) throw new Error('Cannot access iframe');
+      iframeDoc.open();
+      iframeDoc.write(htmlContent);
+      iframeDoc.close();
+
+      // Wait for content + images to render
+      await new Promise((r) => setTimeout(r, 1200));
+
+      const body = iframeDoc.body;
+      const canvas = await html2canvas(body, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        width: 794,
+        windowWidth: 794,
+        logging: false,
+      });
+      document.body.removeChild(iframe);
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const pdfWidth = 210; // A4 mm
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pageHeight = 297; // A4 mm
+      const doc = new jsPDF('p', 'mm', 'a4');
+
+      let position = 0;
+      let remainingHeight = pdfHeight;
+
+      while (remainingHeight > 0) {
+        doc.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
+        remainingHeight -= pageHeight;
+        if (remainingHeight > 0) {
+          doc.addPage();
+          position -= pageHeight;
+        }
+      }
+
       const domain = (() => { try { return new URL(effectiveResult.url.startsWith('http') ? effectiveResult.url : `https://${effectiveResult.url}`).hostname; } catch { return 'report'; } })();
       const auditLabel = auditMode === 'technical' ? 'technique' : 'strategique';
-      link.href = URL.createObjectURL(blob);
-      link.download = `rapport-audit-${auditLabel}-${domain}.html`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
+      doc.save(`rapport-audit-${auditLabel}-${domain}.pdf`);
       toast.success(t.pdfSuccess);
     } catch (error) {
-      console.error('Download error:', error);
+      console.error('PDF generation error:', error);
       toast.error(t.pdfError);
     } finally {
       setIsGeneratingPDF(false);
