@@ -67,8 +67,7 @@ function NuggetBadge() {
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant="outline" className="ml-2 text-[10px] border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 cursor-help">
-            <Gem className="h-3 w-3" />
+          <Badge variant="outline" className="ml-2 text-[10px] border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 cursor-help">
             Pépite
           </Badge>
         </TooltipTrigger>
