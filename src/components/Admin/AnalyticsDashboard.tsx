@@ -623,6 +623,14 @@ export function AnalyticsDashboard() {
                 {tokenUsage.openrouterCalls.toLocaleString('fr-FR')}
               </p>
             </div>
+            <div className="p-3 rounded-lg bg-teal-500/10 border border-teal-500/20">
+              <p className="text-xs text-teal-700 dark:text-teal-400 font-medium flex items-center gap-1">
+                <Globe className="h-3 w-3" /> Browserless
+              </p>
+              <p className="text-lg font-bold text-teal-600 dark:text-teal-400">
+                {tokenUsage.browserlessCalls.toLocaleString('fr-FR')}
+              </p>
+            </div>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">Coût estimé total</p>
               <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
