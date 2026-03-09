@@ -23,7 +23,32 @@ const GenerativeEngineOptimization = () => {
   const { language } = useLanguage();
   useCanonicalHreflang('/generative-engine-optimization');
 
-  const publishDate = '2026-03-09';
+  const [geoUrl, setGeoUrl] = useState('');
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoResult, setGeoResult] = useState<GeoResult | null>(null);
+  const [geoError, setGeoError] = useState('');
+
+  const runGeoAudit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!geoUrl.trim()) return;
+    setGeoLoading(true);
+    setGeoError('');
+    setGeoResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-geo', {
+        body: { url: geoUrl.trim(), lang: language }
+      });
+      if (error || !data?.success) {
+        setGeoError(data?.error || 'Erreur lors de l\'analyse GEO');
+      } else {
+        setGeoResult(data.data);
+      }
+    } catch {
+      setGeoError('Erreur réseau, réessayez.');
+    } finally {
+      setGeoLoading(false);
+    }
+  };
 
   const structuredData = {
     "@context": "https://schema.org",
