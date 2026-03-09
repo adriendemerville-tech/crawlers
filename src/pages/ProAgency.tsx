@@ -226,7 +226,7 @@ const translations = {
     faqTitle: 'Preguntas frecuentes sobre Pro Agency',
     faqs: [
       { q: '¿Puedo cancelar en cualquier momento?', a: 'Sí, puedes cancelar cuando quieras. Conservas el acceso hasta el final de tu período de facturación.' },
-      { q: '¿Qué es exactamente la marca blanca?', a: 'Puedes personalizar los informes con tu logo, colores y datos de contacto. Tus clientes nunca verán la marca Crawlers.AI.' },
+      { q: '¿Qué es exactamente la marca blanca?', a: 'Puedes personalizar los informes con tu logo, colores y datos de contacto. Tus clientes nunca verán la marca Crawlers.fr.' },
       { q: '¿Las 3 cuentas son independientes?', a: 'Sí, cada colaborador tiene su propio acceso. La cuenta principal gestiona los permisos desde la consola.' },
       { q: '¿Hay un compromiso mínimo?', a: 'No, la suscripción es sin compromiso. Pagas mensualmente y puedes parar cuando quieras.' },
     ],
