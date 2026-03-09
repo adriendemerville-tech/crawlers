@@ -122,6 +122,7 @@ interface KeywordData {
   difficulty: number;
   is_ranked: boolean;
   current_rank: number | string;
+  is_nugget?: boolean;
 }
 
 interface MarketData {
