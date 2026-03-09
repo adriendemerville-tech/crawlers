@@ -1479,6 +1479,12 @@ INSTRUCTIONS CRITIQUES:
 - founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable dans les signaux E-E-A-T crawlés ni dans tes connaissances. Ne PAS inventer. C'est le cas le plus fréquent.
 - PRÉSENCE SOCIALE: Analyse uniquement les plateformes PERTINENTES pour le secteur. Ne force pas la présence sur Instagram si ce n'est pas pertinent. Les proof_sources doivent refléter la réalité: si un réseau est absent et non pertinent, indique presence_level: "absent" sans le traiter comme un défaut.
 - TEXTE DES CARDS SOCIALES: Le champ "analysis" de chaque proof_source ne doit JAMAIS être tronqué et doit faire MAXIMUM 450 caractères. Rédige un texte complet et concis.
+- 5 NOUVEAUX MODULES (OBLIGATOIRES):
+  • quotability: Extrais jusqu'à 3 phrases factuelles autonomes et citables par un LLM depuis le contenu de la page. +33 pts par citation de haute qualité. Si aucune n'existe, renvoie un tableau vide et score 0.
+  • summary_resilience: Résume la proposition de valeur du corps en 10 mots max. Compare avec le H1 original. Score 0-100 de similarité sémantique.
+  • lexical_footprint: Calcule le ratio jargon corporate vide vs verbes d'action concrets et entités spécifiques. Score 0-100 (100 = très spécifique et actionnable).
+  • expertise_sentiment: Le texte utilise-t-il des marqueurs d'expérience de première main ("Nous avons testé", "Dans notre expérience", "Étude de cas") ? Note de 1 (générique/IA) à 5 (expert de terrain).
+  • red_team: Agis en client sceptique expert. Identifie les 3 plus grandes failles logiques, preuves manquantes ou objections non adressées. Tableau de 3 strings.
 - JSON pur, sans virgules traînantes`;
 }
 
