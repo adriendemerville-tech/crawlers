@@ -171,6 +171,7 @@ export default function ReportViewer() {
                 auditMode: report.report_type === 'seo_technical' ? 'technical' : 'strategic',
               },
               language,
+              preRenderedHtml: htmlContent,
             }
           : {
               type: report.report_type,
