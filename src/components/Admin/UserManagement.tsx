@@ -235,7 +235,7 @@ export function UserManagement() {
                         {new Date(user.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                           <Dialog open={creditDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                             setCreditDialogOpen(open);
                             if (open) setSelectedUser(user);
