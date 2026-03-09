@@ -2120,12 +2120,12 @@ Réponds avec ce JSON exact:
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     
-    if (authHeader && supabaseUrl && supabaseKey) {
+    if (registryAuthHeader && supabaseUrl && supabaseKey) {
       // Lancer en arrière-plan (ne pas bloquer la réponse)
       saveRecommendationsToRegistry(
         supabaseUrl,
         supabaseKey,
-        authHeader,
+        registryAuthHeader,
         domain,
         normalizedUrl,
         'technical',
