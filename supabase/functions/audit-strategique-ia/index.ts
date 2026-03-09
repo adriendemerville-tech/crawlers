@@ -1289,7 +1289,7 @@ GÉNÈRE UN JSON avec cette structure:
 "conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["OBLIGATOIRE: 3-5 reformulations en QUESTIONS NATURELLES directement liées au business/produits/services du site analysé. Ex pour un e-commerce de matériaux: 'Quel isolant naturel choisir pour une maison ancienne ?'. Ne PAS donner d'exemples génériques."],"recommendations":["..."]},
 "zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
 "priority_content":{"missing_pages":[{"title":"...","rationale":"...","target_keywords":["..."],"expected_impact":"high|medium|low"}],"content_upgrades":[{"page":"...","current_issue":"...","upgrade_strategy":"..."}]},
-"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"..."}],"quick_wins":[{"keyword":"...","current_rank":0,"volume":0,"action":"..."}],"content_gaps":[{"keyword":"...","volume":0,"priority":"high|medium|low","action":"..."}],"opportunities":["..."],"competitive_gaps":["..."],"recommendations":["..."]},
+"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"Transactionnel|Informatif|Décisionnel|Navigationnel","business_value":"High|Medium|Low","pain_point":"Quel problème l'utilisateur cherche-t-il à résoudre ?","recommended_action":"Action concrète pour se positionner"}}],"quick_wins":[{"keyword":"...","current_rank":0,"volume":0,"action":"..."}],"content_gaps":[{"keyword":"...","volume":0,"priority":"high|medium|low","action":"..."}],"opportunities":["..."],"competitive_gaps":["..."],"recommendations":["..."]},
 "market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
 "executive_roadmap":[{"title":"...","prescriptive_action":"Paragraphe 4-5 phrases","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Identité|Contenu|Autorité|Social|Technique","priority":"Prioritaire|Important|Opportunité"}],
 "executive_summary":"3-4 phrases pour CEO/CMO",
@@ -1297,7 +1297,9 @@ GÉNÈRE UN JSON avec cette structure:
 
 INSTRUCTIONS CRITIQUES:
 - UTILISE LES DONNÉES RÉELLES pour keyword_positioning et market_data_summary
-- keyword_positioning.main_keywords: MINIMUM 5 mots-clés OBLIGATOIRES. Si les données DataForSEO contiennent moins de 5 résultats ou des volumes à 0, COMPLÈTE avec des mots-clés pertinents pour le core business du site avec des volumes estimés et rank "Non classé". Un site a TOUJOURS au moins 5 mots-clés stratégiques liés à son activité.
+- keyword_positioning.main_keywords: MINIMUM 5 mots-clés OBLIGATOIRES. Chaque mot-clé DOIT avoir un objet "strategic_analysis" avec intent, business_value, pain_point et recommended_action. Si les données DataForSEO contiennent moins de 5 résultats ou des volumes à 0, COMPLÈTE avec des mots-clés pertinents pour le core business avec volumes estimés et rank "Non classé". Un site a TOUJOURS au moins 5 mots-clés stratégiques.
+- INTERDICTION d'inclure le nom de marque dans les mots-clés main_keywords. Les mots-clés doivent être 100% génériques (ex: "agent IA entreprise" et non "Limova agent IA").
+- Pour chaque mot-clé, l'analyse stratégique doit expliquer POURQUOI ce mot-clé rapporte de l'argent (business_value) et quel PROBLÈME l'utilisateur cherche à résoudre (pain_point).
 - executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
