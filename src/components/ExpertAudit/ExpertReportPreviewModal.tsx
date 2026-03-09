@@ -40,7 +40,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
 
   // White-label branding: available for any subscribed user or admin with custom branding configured
   const isSubscribedOrAdmin = profile && (
-    profile.plan_type !== 'free' || false // non-free plan
+    profile.plan_type !== 'free' || isAdmin
   );
   const hasCustomBranding = profile && (profile.agency_logo_url || profile.agency_primary_color || profile.agency_brand_name);
   const branding: WhiteLabelBranding | undefined =
