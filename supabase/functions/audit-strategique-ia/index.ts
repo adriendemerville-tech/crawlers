@@ -2140,6 +2140,9 @@ Deno.serve(async (req) => {
         .catch(err => console.error('Registre:', err));
     }
 
+    // Fire-and-forget URL tracking
+    trackAnalyzedUrl(url).catch(() => {});
+
     return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
