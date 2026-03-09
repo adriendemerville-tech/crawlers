@@ -1198,7 +1198,7 @@ export function ExpertAuditDashboard() {
                         {result.url} <ExternalLink className="h-3 w-3" />
                       </a>
                       <div className="mt-4 space-y-1">
-                      <p className="text-sm text-muted-foreground">Score Global</p>
+                      <p className="text-base font-semibold text-foreground">Score Global SEO</p>
                       {/* Recompute total from sub-scores for consistency */}
                       {(() => {
                         const computedTotal = result.scores.performance.score + result.scores.technical.score + result.scores.semantic.score + result.scores.aiReady.score + result.scores.security.score;
