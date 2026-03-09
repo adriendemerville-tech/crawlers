@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Target, TrendingUp, TrendingDown, Zap, 
-  AlertTriangle, Lightbulb, Trophy, Gem,
+  AlertTriangle, Lightbulb, Trophy,
   BarChart3, Search, Loader2, Layers, Compass,
   ChevronDown, ChevronUp, BrainCircuit
 } from 'lucide-react';
