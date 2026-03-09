@@ -46,6 +46,9 @@ const Observatoire = lazy(() => import("./pages/Observatoire"));
 const Faq = lazy(() => import("./pages/Faq"));
 const Methodologie = lazy(() => import("./pages/Methodologie"));
 const CGVU = lazy(() => import("./pages/CGVU"));
+const AuditSeoGratuit = lazy(() => import("./pages/AuditSeoGratuit"));
+const AnalyseSiteWebGratuit = lazy(() => import("./pages/AnalyseSiteWebGratuit"));
+const GenerativeEngineOptimization = lazy(() => import("./pages/GenerativeEngineOptimization"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
