@@ -490,6 +490,7 @@ export interface ExpertAuditResult {
   scannedAt: string;
   totalScore: number;
   maxScore: 200;
+  isSPA?: boolean;
   meta?: AuditMeta;
   scores: ExpertAuditScores;
   insights?: ExpertInsights;
