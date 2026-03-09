@@ -1171,6 +1171,9 @@ export function ExpertAuditDashboard() {
         {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" />}
       </div>
 
+      {/* Patience Cards during strategic loading */}
+      <PatienceCards isActive={isStrategicLoading} />
+
       {/* Results */}
       {result && !isLoading && !isStrategicLoading && (
         <motion.div
