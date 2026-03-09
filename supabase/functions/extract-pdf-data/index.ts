@@ -1,20 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { trackTokenUsage } from "../_shared/tokenTracker.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 /**
  * Edge Function: extract-pdf-data
  * 
+ * Purpose: Import third-party SaaS data (SEMrush, Ahrefs, Sistrix, etc.)
+ * and produce calibration signals for the prediction algorithm.
+ *
  * Workflow:
- * 1. Receives a pdf_audit ID
- * 2. Downloads the PDF from Supabase Storage
- * 3. Extracts raw text using pdf-parse
- * 4. Sends extracted text to Gemini for structured SEO data extraction
- * 5. Updates pdf_audits row with extracted_data JSON
+ * 1. Download file from storage
+ * 2. Send to Claude (via OpenRouter) with domain context
+ * 3. Claude compiles, cleans, and structures the data
+ * 4. Produces calibration signals to refine prediction algorithm
+ * 5. Stores calibration data in pdf_audits.extracted_data
  */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -31,15 +35,15 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
 
-    if (!lovableApiKey) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    if (!openrouterKey) {
+      throw new Error('OPENROUTER_API_KEY is not configured');
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // 1. Get audit record
+    // 1. Get record
     const { data: audit, error: auditError } = await supabase
       .from('pdf_audits')
       .select('*')
@@ -47,63 +51,160 @@ serve(async (req) => {
       .single();
 
     if (auditError || !audit) {
-      throw new Error(`Audit not found: ${auditError?.message}`);
+      throw new Error(`Record not found: ${auditError?.message}`);
     }
+
+    const metadata = audit.extracted_data as Record<string, any> || {};
+    const dataSource = metadata._source || 'unknown';
+    const targetDomain = metadata._target_domain || '';
+    const contextNotes = metadata._context_notes || '';
 
     // 2. Update status to processing
     await supabase.from('pdf_audits').update({ status: 'processing' }).eq('id', audit_id);
 
-    // 3. Download PDF from storage
+    // 3. Download file from storage
     const { data: fileData, error: downloadError } = await supabase.storage
       .from('pdf-audits')
       .download(audit.file_path);
 
     if (downloadError || !fileData) {
-      throw new Error(`Failed to download PDF: ${downloadError?.message}`);
+      throw new Error(`Failed to download file: ${downloadError?.message}`);
     }
 
-    // 4. Convert PDF blob to base64 for Gemini multimodal processing
-    const arrayBuffer = await fileData.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    // 4. Convert file to text/base64 depending on type
+    let fileContent: string;
+    const fileName = metadata._original_name || audit.file_path;
+    const isTextBased = /\.(csv|json|txt|tsv)$/i.test(fileName);
 
-    // 5. Send to Gemini for structured extraction
-    const systemPrompt = `You are an expert SEO/GEO auditor. Analyze this PDF audit report and extract the following structured data as JSON:
+    if (isTextBased) {
+      fileContent = await fileData.text();
+      // Truncate very large files to avoid token limits
+      if (fileContent.length > 50000) {
+        fileContent = fileContent.substring(0, 50000) + '\n\n[... TRUNCATED — first 50k chars shown ...]';
+      }
+    } else {
+      // PDF/Excel → base64 for multimodal
+      const arrayBuffer = await fileData.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      fileContent = btoa(binary);
+    }
+
+    // 5. Build Claude prompt for data compilation & calibration
+    const systemPrompt = `Tu es un Data Scientist SEO senior spécialisé dans la calibration d'algorithmes de prédiction de trafic.
+
+CONTEXTE :
+- Un administrateur importe des données provenant d'un SaaS tiers (${dataSource}) pour le domaine "${targetDomain}".
+- Ces données SONT DES DONNÉES RÉELLES (pas un audit interne) et doivent être utilisées pour AFFINER l'algorithme de prédiction de trafic.
+${contextNotes ? `- Notes de contexte : ${contextNotes}` : ''}
+
+TA MISSION (en 3 étapes) :
+
+## ÉTAPE 1 — COMPILATION & NETTOYAGE
+- Extrais toutes les données structurées du fichier (mots-clés, volumes, positions, trafic, backlinks…)
+- Nettoie les anomalies : doublons, outliers, données incohérentes
+- Normalise les formats (volumes arrondis, positions entières)
+
+## ÉTAPE 2 — ANALYSE CROISÉE
+- Identifie les patterns : distribution des positions, clusters sémantiques, ratio brand/non-brand
+- Compare avec les benchmarks sectoriels standards
+- Détecte les incohérences potentielles entre les données tiers et nos propres analyses
+
+## ÉTAPE 3 — SIGNAUX DE CALIBRATION (PRUDENCE MAXIMALE)
+Produis des signaux de calibration pour l'algorithme de prédiction avec une PRUDENCE EXTRÊME :
+- Tout ajustement doit être CONSERVATEUR (max ±10% sur un paramètre)
+- Justifie chaque ajustement par des données factuelles
+- En cas de doute, privilégie TOUJOURS le statu quo
+
+Retourne UNIQUEMENT ce JSON (pas de blocs markdown, pas de texte autour) :
 {
-  "errors": <number of technical errors found>,
-  "technical_score": <overall technical SEO score 0-100>,
-  "geo_keywords": [<list of GEO-relevant keywords found>],
-  "location_target": "<target location/region>",
-  "page_speed_score": <page speed score if available, null otherwise>,
-  "mobile_score": <mobile optimization score if available, null otherwise>,
-  "backlinks_count": <number of backlinks if mentioned, null otherwise>,
-  "domain_authority": <DA if mentioned, null otherwise>,
-  "content_quality_score": <content quality assessment 0-100>,
-  "structured_data_present": <boolean>,
-  "summary": "<brief 2-sentence summary of the audit findings>"
-}
-Return ONLY valid JSON, no markdown fences, no extra text.`;
+  "compiled_data": {
+    "total_keywords": <int>,
+    "avg_volume": <int>,
+    "avg_difficulty": <number 0-100>,
+    "top_keywords": [{"keyword": "<str>", "volume": <int>, "position": <int|null>, "difficulty": <number>}],
+    "traffic_estimate": <int ou null>,
+    "backlinks_count": <int ou null>,
+    "referring_domains": <int ou null>,
+    "domain_rating": <number ou null>
+  },
+  "data_quality": {
+    "completeness": <number 0-1>,
+    "anomalies_detected": <int>,
+    "anomalies_details": ["<description>"],
+    "reliability_score": <number 0-100>
+  },
+  "calibration_signals": {
+    "confidence_level": "high"|"medium"|"low",
+    "keyword_benchmarks": {
+      "total_keywords": <int>,
+      "avg_volume": <int>,
+      "brand_ratio": <number 0-1>,
+      "high_intent_ratio": <number 0-1>
+    },
+    "ranking_distribution": {
+      "top_3": <int>,
+      "top_10": <int>,
+      "top_20": <int>,
+      "top_50": <int>,
+      "beyond_50": <int>
+    },
+    "adjustments": [
+      {
+        "parameter": "<nom du paramètre de l'algo à ajuster>",
+        "current_assumption": "<hypothèse actuelle>",
+        "suggested_value": "<nouvelle valeur suggérée>",
+        "delta_pct": <number — variation en %>,
+        "impact": "high"|"medium"|"low",
+        "evidence": "<preuve factuelle justifiant l'ajustement>",
+        "description": "<description lisible>"
+      }
+    ],
+    "sector_signals": {
+      "detected_sector": "<secteur détecté>",
+      "competitiveness": "high"|"medium"|"low",
+      "avg_cpc": <number ou null>
+    },
+    "summary": "<2-3 phrases résumant les conclusions et la confiance dans les ajustements>"
+  }
+}`;
 
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // 6. Call Claude via OpenRouter
+    const messages: any[] = [
+      { role: 'system', content: systemPrompt },
+    ];
+
+    if (isTextBased) {
+      messages.push({
+        role: 'user',
+        content: `Voici les données exportées de ${dataSource} pour le domaine ${targetDomain} :\n\n${fileContent}`,
+      });
+    } else {
+      messages.push({
+        role: 'user',
+        content: [
+          { type: 'text', text: `Analyse ce fichier exporté de ${dataSource} pour le domaine ${targetDomain}. Extrais et compile les données.` },
+          {
+            type: 'image_url',
+            image_url: { url: `data:application/pdf;base64,${fileContent}` },
+          },
+        ],
+      });
+    }
+
+    const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openrouterKey}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': supabaseUrl,
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Analyze this SEO/GEO audit PDF and extract structured data.' },
-              {
-                type: 'image_url',
-                image_url: { url: `data:application/pdf;base64,${base64}` }
-              }
-            ]
-          }
-        ],
+        model: 'anthropic/claude-3.5-sonnet',
+        messages,
       }),
     });
 
@@ -115,51 +216,84 @@ Return ONLY valid JSON, no markdown fences, no extra text.`;
           status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      throw new Error(`AI gateway error ${aiResponse.status}: ${errText}`);
+      if (aiResponse.status === 402) {
+        await supabase.from('pdf_audits').update({ status: 'error', error_message: 'Credits exhausted on OpenRouter' }).eq('id', audit_id);
+        return new Response(JSON.stringify({ error: 'OpenRouter credits exhausted' }), {
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      throw new Error(`AI error ${aiResponse.status}: ${errText}`);
     }
 
     const aiData = await aiResponse.json();
     const rawContent = aiData.choices?.[0]?.message?.content || '';
 
-    // 6. Parse the JSON from Gemini response
+    await trackTokenUsage('extract-pdf-data', 'anthropic/claude-3.5-sonnet', aiData.usage, targetDomain);
+
+    // 7. Parse JSON
     const jsonMatch = rawContent.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-    let extractedData;
+    let extractedData: any;
     try {
       extractedData = JSON.parse(jsonMatch);
     } catch {
-      throw new Error(`Failed to parse AI response as JSON: ${rawContent.substring(0, 200)}`);
+      throw new Error(`Failed to parse Claude response as JSON: ${rawContent.substring(0, 300)}`);
     }
 
-    // 7. Update audit with extracted data
+    // 8. Validate calibration adjustments — enforce max ±10% delta
+    if (extractedData.calibration_signals?.adjustments) {
+      extractedData.calibration_signals.adjustments = extractedData.calibration_signals.adjustments
+        .filter((adj: any) => {
+          const delta = Math.abs(adj.delta_pct || 0);
+          if (delta > 10) {
+            console.warn(`[extract-pdf-data] Rejected adjustment "${adj.parameter}" — delta ${delta}% exceeds ±10% safety limit`);
+            return false;
+          }
+          return true;
+        });
+    }
+
+    // 9. Merge with original metadata and update
+    const finalData = {
+      ...metadata,
+      ...extractedData,
+      _processed_at: new Date().toISOString(),
+      _data_source: dataSource,
+      _target_domain: targetDomain,
+    };
+
     const { error: updateError } = await supabase
       .from('pdf_audits')
       .update({
-        extracted_data: extractedData,
+        extracted_data: finalData,
         status: 'processed',
         updated_at: new Date().toISOString(),
       })
       .eq('id', audit_id);
 
     if (updateError) {
-      throw new Error(`Failed to update audit: ${updateError.message}`);
+      throw new Error(`Failed to update record: ${updateError.message}`);
     }
 
-    // 8. Update system metrics
+    // 10. Update system metrics
     await supabase.rpc('recalculate_reliability');
 
-    return new Response(JSON.stringify({ success: true, extracted_data: extractedData }), {
+    return new Response(JSON.stringify({
+      success: true,
+      calibration_signals: extractedData.calibration_signals,
+      data_quality: extractedData.data_quality,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('extract-pdf-data error:', error);
 
-    // Try to mark audit as error
+    // Try to mark as error
     try {
-      const { audit_id } = await new Response(req.body).json().catch(() => ({}));
-      if (audit_id) {
+      const body = await new Response(req.body).json().catch(() => ({}));
+      if (body.audit_id) {
         const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-        await supabase.from('pdf_audits').update({ status: 'error', error_message: error.message }).eq('id', audit_id);
+        await supabase.from('pdf_audits').update({ status: 'error', error_message: error.message }).eq('id', body.audit_id);
       }
     } catch {}
 
