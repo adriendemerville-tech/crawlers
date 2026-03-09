@@ -181,8 +181,8 @@ const translations = {
     seePricing: 'See all pricing',
   },
   es: {
-    pageTitle: 'Pro Agency - Suscripción SEO y GEO ilimitada | Crawlers.AI',
-    metaDescription: 'Descubre la oferta Pro Agency de Crawlers.AI: informes SEO/GEO ilimitados, código correctivo ilimitado, marca blanca y multi-cuentas para agencias. 49€/mes.',
+    pageTitle: 'Pro Agency - Suscripción SEO y GEO ilimitada | Crawlers.fr',
+    metaDescription: 'Descubre la oferta Pro Agency de Crawlers.fr: informes SEO/GEO ilimitados, código correctivo ilimitado, marca blanca y multi-cuentas para agencias. 49€/mes.',
     heroTitle: 'Lleva tu negocio al siguiente nivel',
     heroTitleAccent: 'con Pro Agency',
     heroSubtitle: 'La suscripción todo-en-uno para profesionales del SEO y GEO que quieren escalar sin límites.',
