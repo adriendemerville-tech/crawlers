@@ -345,6 +345,8 @@ export function UserManagement() {
           </div>
         )}
       </CardContent>
+
+      <UserKpiModal user={kpiUser} open={kpiModalOpen} onOpenChange={setKpiModalOpen} />
     </Card>
   );
 }
