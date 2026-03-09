@@ -10,6 +10,7 @@ import { expertReportTranslations, generateExpertReportHTML, WhiteLabelBranding,
 import { useAuth } from '@/contexts/AuthContext';
 import { useSaveReport } from '@/hooks/useSaveReport';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAdmin } from '@/hooks/useAdmin';
 
 interface ExpertReportPreviewModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ interface ExpertReportPreviewModalProps {
 export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, preSummarizedResult }: ExpertReportPreviewModalProps) {
   const { language } = useLanguage();
   const { user, profile } = useAuth();
+  const { isAdmin } = useAdmin();
   const { saveReport } = useSaveReport();
   const isMobile = useIsMobile();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -36,9 +38,13 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
   const t =
     expertReportTranslations[language as keyof typeof expertReportTranslations] || expertReportTranslations.fr;
 
-  // White-label branding for agency_pro users
+  // White-label branding: available for any subscribed user or admin with custom branding configured
+  const isSubscribedOrAdmin = profile && (
+    profile.plan_type !== 'free' || isAdmin
+  );
+  const hasCustomBranding = profile && (profile.agency_logo_url || profile.agency_primary_color || profile.agency_brand_name);
   const branding: WhiteLabelBranding | undefined =
-    profile?.plan_type === 'agency_pro' && (profile.agency_logo_url || profile.agency_primary_color)
+    isSubscribedOrAdmin && hasCustomBranding
       ? { logoUrl: profile.agency_logo_url, primaryColor: profile.agency_primary_color }
       : undefined;
 
