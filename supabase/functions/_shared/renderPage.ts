@@ -127,6 +127,8 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
 
     if (response.ok) {
       const renderedHtml = await response.text();
+      // Track Browserless API call
+      await trackPaidApiCall('renderPage', 'browserless', '/content', url).catch(() => {});
       return renderedHtml;
     } else {
       console.log(`[renderPage] ⚠️ Browserless error: ${response.status}`);
