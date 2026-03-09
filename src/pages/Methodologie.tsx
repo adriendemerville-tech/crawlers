@@ -1,13 +1,16 @@
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
+import { Link } from 'react-router-dom';
 import { 
   Bot, Globe, Brain, Gauge, Radar, Shield, FileText, 
   Search, Code, BarChart3, Target, Zap, Eye, Link2, 
-  Smartphone, Lock, Image, ListChecks, TrendingUp, BookOpen
+  Smartphone, Lock, Image, ListChecks, TrendingUp, BookOpen, ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
@@ -29,6 +32,7 @@ interface RecoCategory {
 
 export default function Methodologie() {
   const { language } = useLanguage();
+  useCanonicalHreflang('/methodologie');
 
   const auditCategories: AuditCategory[] = [
     {
@@ -205,30 +209,105 @@ export default function Methodologie() {
     },
   ];
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Méthodologie d'audit SEO & GEO — Crawlers.fr",
+    "description": "Plus de 50 points d'audit SEO, GEO et IA analysés par Crawlers.fr : crawlability, Core Web Vitals, visibilité LLM, EEAT, données structurées et code correctif.",
+    "url": "https://crawlers.fr/methodologie",
+    "isPartOf": { "@type": "WebSite", "name": "Crawlers AI", "url": "https://crawlers.fr" },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
+        { "@type": "ListItem", "position": 2, "name": "Méthodologie", "item": "https://crawlers.fr/methodologie" }
+      ]
+    }
+  };
+
   return (
     <>
       <Helmet>
-        <title>{t3(language, 'Méthodologie d\'audit - Crawlers AI | Périmètre d\'analyse SEO & GEO', 'Audit Methodology - Crawlers AI | SEO & GEO Analysis Scope', 'Metodología de auditoría - Crawlers AI | Alcance de análisis SEO y GEO')}</title>
-        <meta name="description" content={t3(language, 'Découvrez le périmètre complet d\'analyse de Crawlers.fr : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, audit stratégique, mots-clés et code correctif.', 'Discover the full analysis scope of Crawlers.fr: AI crawlability, GEO score, LLM visibility, Core Web Vitals, strategic audit, keywords and corrective code.', 'Descubra el alcance completo de análisis de Crawlers.fr: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, auditoría estratégica, palabras clave y código correctivo.')} />
+        <title>{t3(language,
+          'Méthodologie d\'audit SEO & GEO 2026 — 50+ points analysés | Crawlers.fr',
+          'SEO & GEO Audit Methodology 2026 — 50+ Points Analyzed | Crawlers.fr',
+          'Metodología de auditoría SEO & GEO 2026 — 50+ puntos analizados | Crawlers.fr'
+        )}</title>
+        <meta name="description" content={t3(language,
+          'Comment Crawlers.fr audite votre site en 2026 : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, mots-clés, code correctif JSON-LD. Périmètre complet et transparent.',
+          'How Crawlers.fr audits your site in 2026: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, keywords, JSON-LD corrective code. Full transparent scope.',
+          'Cómo Crawlers.fr audita su sitio en 2026: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, palabras clave, código correctivo JSON-LD.'
+        )} />
         <link rel="canonical" href="https://crawlers.fr/methodologie" />
+        <meta property="og:title" content={t3(language,
+          'Méthodologie d\'audit SEO & GEO — Crawlers.fr',
+          'SEO & GEO Audit Methodology — Crawlers.fr',
+          'Metodología de auditoría SEO & GEO — Crawlers.fr'
+        )} />
+        <meta property="og:description" content={t3(language,
+          'Plus de 50 points d\'audit : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, données structurées JSON-LD et code correctif personnalisé.',
+          '50+ audit points: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, JSON-LD structured data and custom corrective code.',
+          'Más de 50 puntos de auditoría: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, datos estructurados JSON-LD y código correctivo.'
+        )} />
+        <meta property="og:url" content="https://crawlers.fr/methodologie" />
+        <meta property="og:type" content="article" />
+        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
       <Header />
       <main className="min-h-screen bg-background pt-20">
         {/* Hero */}
-        <section className="py-16 px-4">
+        <section className="py-16 px-4 bg-gradient-to-b from-primary/5 to-background">
           <div className="mx-auto max-w-4xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm text-muted-foreground mb-6">
               <BookOpen className="h-4 w-4 text-primary" />
               <span>{t3(language, 'Transparence & Rigueur', 'Transparency & Rigor', 'Transparencia y rigor')}</span>
             </div>
-            <h1 className="text-4xl font-bold text-foreground mb-4">
-              {t3(language, 'Notre méthodologie d\'audit', 'Our Audit Methodology', 'Nuestra metodología de auditoría')}
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-tight">
               {t3(language,
-                'Crawlers.fr analyse votre site sur plus de 50 points d\'audit répartis en 8 catégories. Voici l\'intégralité du périmètre couvert par nos outils.',
-                'Crawlers.fr analyzes your site across 50+ audit points in 8 categories. Here is the full scope covered by our tools.',
-                'Crawlers.fr analiza su sitio en más de 50 puntos de auditoría en 8 categorías. Aquí está el alcance completo cubierto por nuestras herramientas.'
+                'Comment Crawlers.fr audite votre site pour le SEO et l\'IA générative',
+                'How Crawlers.fr Audits Your Site for SEO & Generative AI',
+                'Cómo Crawlers.fr audita su sitio para SEO e IA generativa'
+              )}
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              {t3(language,
+                'Plus de 50 points d\'audit répartis en 8 catégories — de la crawlability des robots IA aux Core Web Vitals, en passant par la citabilité LLM et la génération de code correctif. Voici le périmètre complet de nos analyses.',
+                'Over 50 audit points across 8 categories — from AI bot crawlability to Core Web Vitals, LLM citability and corrective code generation. Here is the full scope of our analysis.',
+                'Más de 50 puntos de auditoría en 8 categorías — desde la crawlability de bots IA hasta Core Web Vitals, citabilidad LLM y generación de código correctivo.'
+              )}
+            </p>
+          </div>
+        </section>
+
+        {/* Chapô éditorial */}
+        <section className="py-10 px-4">
+          <div className="mx-auto max-w-3xl">
+            <h2 className="text-2xl font-bold text-foreground mb-4">
+              {t3(language,
+                'Pourquoi une méthodologie transparente ?',
+                'Why a Transparent Methodology?',
+                '¿Por qué una metodología transparente?'
+              )}
+            </h2>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              {t3(language,
+                'En 2026, les règles du jeu ont changé. Google n\'est plus le seul arbitre de votre visibilité : ChatGPT, Perplexity, Claude et Gemini génèrent désormais des réponses directes en citant — ou en ignorant — votre site. Un audit SEO classique ne suffit plus. Il faut analyser simultanément votre accessibilité aux robots IA, votre citabilité par les modèles de langage, et la qualité technique de votre code.',
+                'In 2026, the rules have changed. Google is no longer the sole arbiter of your visibility: ChatGPT, Perplexity, Claude and Gemini now generate direct answers by citing — or ignoring — your site. A classic SEO audit is no longer enough. You need to simultaneously analyze your AI bot accessibility, your LLM citability, and your code technical quality.',
+                'En 2026, las reglas han cambiado. Google ya no es el único árbitro de su visibilidad: ChatGPT, Perplexity, Claude y Gemini generan respuestas directas citando — o ignorando — su sitio.'
+              )}
+            </p>
+            <p className="text-muted-foreground leading-relaxed mb-4">
+              {t3(language,
+                'Crawlers.fr a été conçu pour couvrir ces deux fronts. Notre plateforme croise les signaux techniques classiques (Core Web Vitals, données structurées, architecture sémantique) avec des indicateurs propres à l\'ère générative : taux de citation par les LLM, détection d\'hallucinations, score d\'autorité sémantique et risque Zero-Click. Le tout est synthétisé dans un score GEO unique et des recommandations actionnables.',
+                'Crawlers.fr was built to cover both fronts. Our platform cross-references classic technical signals (Core Web Vitals, structured data, semantic architecture) with generative-era indicators: LLM citation rate, hallucination detection, semantic authority score and Zero-Click risk. Everything is synthesized into a unique GEO score and actionable recommendations.',
+                'Crawlers.fr fue diseñado para cubrir ambos frentes. Nuestra plataforma cruza señales técnicas clásicas con indicadores de la era generativa: tasa de citación LLM, detección de alucinaciones, score de autoridad semántica y riesgo Zero-Click.'
+              )}
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              {t3(language,
+                'Cette page détaille l\'intégralité de notre périmètre d\'analyse — sans révéler nos algorithmes propriétaires. Vous saurez exactement ce que nous vérifions, et quels types de recommandations nous formulons pour améliorer votre visibilité SEO et GEO.',
+                'This page details our full analysis scope — without revealing our proprietary algorithms. You\'ll know exactly what we check, and what types of recommendations we make to improve your SEO and GEO visibility.',
+                'Esta página detalla todo nuestro alcance de análisis — sin revelar nuestros algoritmos propietarios. Sabrá exactamente qué verificamos y qué tipos de recomendaciones formulamos.'
               )}
             </p>
           </div>
@@ -237,9 +316,16 @@ export default function Methodologie() {
         {/* Audit points */}
         <section className="py-12 px-4 bg-muted/30">
           <div className="mx-auto max-w-6xl">
-            <h2 className="text-2xl font-bold text-foreground mb-8 text-center">
-              {t3(language, 'Points d\'audit analysés', 'Audit Points Analyzed', 'Puntos de auditoría analizados')}
+            <h2 className="text-2xl font-bold text-foreground mb-2 text-center">
+              {t3(language, '8 catégories, plus de 50 points d\'audit', '8 Categories, Over 50 Audit Points', '8 categorías, más de 50 puntos de auditoría')}
             </h2>
+            <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+              {t3(language,
+                'Chaque analyse croise des signaux techniques classiques et des indicateurs propres à l\'ère de l\'IA générative.',
+                'Each analysis cross-references classic technical signals and generative AI-era indicators.',
+                'Cada análisis cruza señales técnicas clásicas e indicadores de la era de la IA generativa.'
+              )}
+            </p>
             <div className="grid gap-6 md:grid-cols-2">
               {auditCategories.map((cat) => (
                 <Card key={cat.title} className="border-border bg-card">
@@ -271,9 +357,16 @@ export default function Methodologie() {
         {/* Recommendations */}
         <section className="py-12 px-4">
           <div className="mx-auto max-w-6xl">
-            <h2 className="text-2xl font-bold text-foreground mb-8 text-center">
-              {t3(language, 'Types de recommandations générées', 'Types of Recommendations Generated', 'Tipos de recomendaciones generadas')}
+            <h2 className="text-2xl font-bold text-foreground mb-2 text-center">
+              {t3(language, 'Des recommandations concrètes, pas juste un diagnostic', 'Concrete Recommendations, Not Just a Diagnosis', 'Recomendaciones concretas, no solo un diagnóstico')}
             </h2>
+            <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+              {t3(language,
+                'Chaque audit génère des actions priorisées par impact, avec du code correctif prêt à intégrer.',
+                'Each audit generates impact-prioritized actions with ready-to-integrate corrective code.',
+                'Cada auditoría genera acciones priorizadas por impacto con código correctivo listo para integrar.'
+              )}
+            </p>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {recoCategories.map((cat) => (
                 <Card key={cat.title} className="border-border bg-card">
@@ -299,6 +392,39 @@ export default function Methodologie() {
           </div>
         </section>
 
+        {/* CTA */}
+        <section className="py-12 px-4 bg-gradient-to-b from-background to-primary/5">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-2xl font-bold text-foreground mb-4">
+              {t3(language,
+                'Testez cette méthodologie sur votre site',
+                'Test This Methodology on Your Site',
+                'Pruebe esta metodología en su sitio'
+              )}
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              {t3(language,
+                'Lancez un audit gratuit en 30 secondes. Aucune carte bancaire requise.',
+                'Launch a free audit in 30 seconds. No credit card required.',
+                'Lance una auditoría gratuita en 30 segundos. Sin tarjeta de crédito.'
+              )}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button asChild size="lg" variant="hero">
+                <Link to="/audit-expert">
+                  {t3(language, 'Lancer mon audit gratuit', 'Launch My Free Audit', 'Lanzar mi auditoría gratuita')}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link to="/tarifs">
+                  {t3(language, 'Voir les tarifs', 'View Pricing', 'Ver precios')}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
         {/* Disclaimer */}
         <section className="py-8 px-4 bg-muted/20 border-t border-border">
           <div className="mx-auto max-w-3xl text-center">
@@ -308,6 +434,9 @@ export default function Methodologie() {
                 'The algorithms, weightings and calculation methods used by Crawlers.fr are proprietary and not disclosed. This page presents only the analysis scope, not the scoring methodology.',
                 'Los algoritmos, ponderaciones y métodos de cálculo utilizados por Crawlers.fr son propietarios y no se divulgan. Esta página presenta solo el alcance del análisis, no la metodología de puntuación.'
               )}
+            </p>
+            <p className="text-xs text-muted-foreground mt-3">
+              {t3(language, 'Dernière mise à jour : Mars 2026', 'Last updated: March 2026', 'Última actualización: Marzo 2026')}
             </p>
           </div>
         </section>
