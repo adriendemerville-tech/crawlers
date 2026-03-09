@@ -103,10 +103,20 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
     try {
-      generateExpertPDF(effectiveResult, auditMode, t, branding, language);
+      // Download HTML report as file (preserves white-label branding)
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const link = document.createElement('a');
+      const domain = (() => { try { return new URL(effectiveResult.url.startsWith('http') ? effectiveResult.url : `https://${effectiveResult.url}`).hostname; } catch { return 'report'; } })();
+      const auditLabel = auditMode === 'technical' ? 'technique' : 'strategique';
+      link.href = URL.createObjectURL(blob);
+      link.download = `rapport-audit-${auditLabel}-${domain}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
       toast.success(t.pdfSuccess);
     } catch (error) {
-      console.error('PDF generation error:', error);
+      console.error('Download error:', error);
       toast.error(t.pdfError);
     } finally {
       setIsGeneratingPDF(false);
