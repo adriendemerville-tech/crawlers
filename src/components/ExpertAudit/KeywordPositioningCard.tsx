@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Target, TrendingUp, TrendingDown, Zap, 
-  AlertTriangle, Lightbulb, Trophy,
+  AlertTriangle, Lightbulb, Trophy, Gem,
   BarChart3, Search, Loader2, Layers, Compass,
   ChevronDown, ChevronUp, BrainCircuit
 } from 'lucide-react';
