@@ -1014,7 +1014,7 @@ function sortByStrategicRelevance(
   return scored.map(s => s.kw);
 }
 
-async function fetchMarketData(domain: string, context: BusinessContext, pageContentContext: string = ''): Promise<MarketData | null> {
+async function fetchMarketData(domain: string, context: BusinessContext, pageContentContext: string = '', url: string = ''): Promise<MarketData | null> {
   console.log('🚀 Collecte DataForSEO pour:', domain);
   
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD || !context.locationCode) {
@@ -1023,23 +1023,61 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
   }
   
   try {
-    const seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext, domain);
-    console.log('🌱 Mots-clés seed:', seedKeywords);
+    // ═══ PHASE 1: AI-Driven Seed Generation ═══
+    let seedKeywords: string[] = [];
+    const effectiveUrl = url || `https://${domain}`;
     
-    const keywordData = await fetchKeywordData(seedKeywords, context.locationCode);
+    const aiSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial');
+    
+    if (aiSeeds.length >= 5) {
+      seedKeywords = aiSeeds;
+      console.log(`✅ AI-driven seeds: ${seedKeywords.length} keywords`);
+    } else {
+      // Fallback to metadata extraction
+      console.log('⚠️ AI seeds insufficient, falling back to metadata extraction');
+      seedKeywords = generateSeedKeywords(context.brandName, context.sector, pageContentContext, domain);
+    }
+    
+    console.log('🌱 Seeds finaux:', seedKeywords.slice(0, 8).join(', '));
+    
+    // ═══ PHASE 2: DataForSEO API Call ═══
+    let keywordData = await fetchKeywordData(seedKeywords, context.locationCode);
+    
+    // ═══ PHASE 3: Validation Loop (retry once if poor quality) ═══
+    if (!checkDataQuality(keywordData) && aiSeeds.length > 0) {
+      console.log('🔄 Data quality check failed — retrying with refined seeds...');
+      const avgVol = keywordData.length > 0 
+        ? (keywordData.reduce((s, k) => s + k.volume, 0) / keywordData.length).toFixed(0)
+        : '0';
+      const feedback = `Volume moyen: ${avgVol}. Seulement ${keywordData.length} résultats. Utilise des expressions plus populaires et mainstream.`;
+      
+      const refinedSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial', feedback);
+      
+      if (refinedSeeds.length >= 5) {
+        const refinedData = await fetchKeywordData(refinedSeeds, context.locationCode);
+        if (refinedData.length > keywordData.length || 
+            (refinedData.length > 0 && refinedData.reduce((s, k) => s + k.volume, 0) > keywordData.reduce((s, k) => s + k.volume, 0))) {
+          keywordData = refinedData;
+          seedKeywords = refinedSeeds;
+          console.log(`✅ Refined seeds produced better results: ${keywordData.length} keywords`);
+        }
+      }
+    }
+    
     if (keywordData.length === 0) {
       console.log('⚠️ Aucun mot-clé trouvé');
       return null;
     }
     
+    // ═══ PHASE 4: Ranking Check ═══
     const rankedKeywords = await checkRankings(keywordData, domain, context.locationCode);
     
     // STRATEGIC SORT: first keyword = most relevant for core business + target
     const strategicKeywords = sortByStrategicRelevance(rankedKeywords, seedKeywords, pageContentContext);
     
-    // GUARANTEE MINIMUM 5 KEYWORDS: If DataForSEO returned fewer, supplement with seed keywords
+    // GUARANTEE MINIMUM 5 KEYWORDS
     if (strategicKeywords.length < 5) {
-      console.log(`⚠️ Only ${strategicKeywords.length} keywords from DataForSEO — supplementing with seeds`);
+      console.log(`⚠️ Only ${strategicKeywords.length} keywords — supplementing with seeds`);
       const existingLower = new Set(strategicKeywords.map(kw => kw.keyword.toLowerCase()));
       for (const seed of seedKeywords) {
         if (strategicKeywords.length >= 5) break;
@@ -1047,7 +1085,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
           existingLower.add(seed.toLowerCase());
           strategicKeywords.push({
             keyword: seed,
-            volume: 0, // Unknown volume — will signal AI to estimate
+            volume: 0,
             difficulty: 0,
             is_ranked: false,
             current_rank: 'Non classé',
