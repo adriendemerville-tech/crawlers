@@ -1088,7 +1088,7 @@ export function ExpertAuditDashboard() {
           {t.badge}
         </Badge>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
-          {t.title}
+          {t.titleLine1}<br />{t.titleLine2}
         </h1>
         <p className="text-muted-foreground max-w-xl mx-auto text-base">
           {t.subtitlePart1}{' '}
