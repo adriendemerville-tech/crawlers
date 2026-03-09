@@ -660,7 +660,7 @@ async function fetchKeywordData(
         const volumeData = await volumeResponse.json();
         if (volumeData.status_code === 20000 && volumeData.tasks?.[0]?.result) {
           for (const item of volumeData.tasks[0].result) {
-            if (item.keyword && item.search_volume > 0) {
+            if (item.keyword && item.search_volume >= 0) {
               addUnique({
                 keyword: item.keyword,
                 volume: item.search_volume || 0,
