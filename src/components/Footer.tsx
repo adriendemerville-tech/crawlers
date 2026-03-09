@@ -52,8 +52,13 @@ function FooterComponent() {
   const resourcesLinks = [
     { 
       label: 'FAQ', 
-      href: '#faq',
+      href: '/faq',
       description: t3(language, 'Questions fréquentes', 'Frequently asked questions', 'Preguntas frecuentes')
+    },
+    { 
+      label: t3(language, 'Méthodologie', 'Methodology', 'Metodología'),
+      href: '/methodologie',
+      description: t3(language, 'Périmètre d\'analyse et points d\'audit', 'Analysis scope and audit points', 'Alcance de análisis y puntos de auditoría')
     },
     { 
       label: t3(language, 'Tarifs', 'Pricing', 'Precios'),
@@ -66,9 +71,9 @@ function FooterComponent() {
       description: t3(language, 'Définitions des termes SEO et GEO', 'SEO and GEO terms definitions', 'Definiciones de términos SEO y GEO')
     },
     { 
-      label: t3(language, 'Plugin WordPress', 'WordPress Plugin', 'Plugin WordPress'),
-      href: '/modifier-code-wordpress',
-      description: t3(language, 'Optimisez WordPress pour l\'IA sans coder', 'Optimize WordPress for AI without coding', 'Optimice WordPress para la IA sin programar')
+      label: 'Blog',
+      href: '/blog',
+      description: t3(language, 'Articles et guides SEO/GEO', 'SEO/GEO articles and guides', 'Artículos y guías SEO/GEO')
     },
     { 
       label: 'Pro Agency',
@@ -76,10 +81,13 @@ function FooterComponent() {
       description: t3(language, 'Abonnement illimité pour agences SEO', 'Unlimited subscription for SEO agencies', 'Suscripción ilimitada para agencias SEO'),
       gold: true
     },
+  ];
+
+  const technicalLinks = [
     { 
-      label: 'Blog',
-      href: '/blog',
-      description: t3(language, 'Articles et guides SEO/GEO', 'SEO/GEO articles and guides', 'Artículos y guías SEO/GEO')
+      label: t3(language, 'Plugin WordPress', 'WordPress Plugin', 'Plugin WordPress'),
+      href: '/modifier-code-wordpress',
+      description: t3(language, 'Optimisez WordPress pour l\'IA sans coder', 'Optimize WordPress for AI without coding', 'Optimice WordPress para la IA sin programar')
     },
     { 
       label: 'Crawlers vs Semrush',
