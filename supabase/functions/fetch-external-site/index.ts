@@ -96,15 +96,16 @@ Deno.serve(async (req) => {
       const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
       if (RENDERING_KEY) {
         try {
-          const renderUrl = `https://chrome.browserless.io/content?token=${RENDERING_KEY}`;
+          const renderUrl = `https://production-sfo.browserless.io/content?token=${RENDERING_KEY}`;
           const renderResponse = await fetch(renderUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               url: finalUrl,
               rejectResourceTypes: ['image', 'stylesheet', 'font', 'media'],
+              setJavaScriptEnabled: true,
               waitFor: 3000,
-              gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
+              gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
               userAgent: MODERN_USER_AGENT,
             }),
             signal: AbortSignal.timeout(30000),

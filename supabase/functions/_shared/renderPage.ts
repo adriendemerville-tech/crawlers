@@ -109,15 +109,16 @@ async function logBrowserlessError(statusCode: number, errorMessage: string, url
 
 async function renderWithBrowserless(url: string, renderingKey: string): Promise<string | null> {
   try {
-    const renderUrl = `https://chrome.browserless.io/content?token=${renderingKey}`;
+    const renderUrl = `https://production-sfo.browserless.io/content?token=${renderingKey}`;
     const response = await fetch(renderUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url,
         rejectResourceTypes: ['image', 'stylesheet', 'font', 'media'],
+        setJavaScriptEnabled: true,
         waitFor: 3000,
-        gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
+        gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
         userAgent: BROWSER_UA,
       }),
       signal: AbortSignal.timeout(30000),
