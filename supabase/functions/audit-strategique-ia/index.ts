@@ -122,6 +122,7 @@ interface KeywordData {
   difficulty: number;
   is_ranked: boolean;
   current_rank: number | string;
+  is_nugget?: boolean;
 }
 
 interface MarketData {
@@ -607,7 +608,7 @@ async function fetchKeywordData(
   
   const addUnique = (kw: { keyword: string; volume: number; difficulty: number }) => {
     const lower = kw.keyword.toLowerCase();
-    if (!seenLower.has(lower) && kw.volume > 0) {
+    if (!seenLower.has(lower) && kw.volume >= 0) {
       seenLower.add(lower);
       allKeywords.push(kw);
     }
@@ -630,7 +631,7 @@ async function fetchKeywordData(
       const data = await response.json();
       if (data.status_code === 20000 && data.tasks?.[0]?.result) {
         for (const item of data.tasks[0].result) {
-          if (item.keyword && item.search_volume > 0) {
+          if (item.keyword && item.search_volume >= 0) {
             addUnique({
               keyword: item.keyword,
               volume: item.search_volume || 0,
@@ -659,7 +660,7 @@ async function fetchKeywordData(
         const volumeData = await volumeResponse.json();
         if (volumeData.status_code === 20000 && volumeData.tasks?.[0]?.result) {
           for (const item of volumeData.tasks[0].result) {
-            if (item.keyword && item.search_volume > 0) {
+            if (item.keyword && item.search_volume >= 0) {
               addUnique({
                 keyword: item.keyword,
                 volume: item.search_volume || 0,
@@ -696,7 +697,7 @@ async function fetchKeywordData(
           const broadData = await broadResponse.json();
           if (broadData.status_code === 20000 && broadData.tasks?.[0]?.result) {
             for (const item of broadData.tasks[0].result) {
-              if (item.keyword && item.search_volume > 0) {
+              if (item.keyword && item.search_volume >= 0) {
                 addUnique({
                   keyword: item.keyword,
                   volume: item.search_volume || 0,
@@ -1013,6 +1014,15 @@ function sortByStrategicRelevance(
   scored.sort((a, b) => b.finalScore - a.finalScore);
   
   console.log(`🏆 Top 3 strategic keywords: ${scored.slice(0, 3).map(s => `"${s.kw.keyword}" (relevance: ${(s.finalScore * 100).toFixed(0)}%, core: ${(s.coreMatchScore * 100).toFixed(0)}%, seed: ${(s.seedScore * 100).toFixed(0)}%)`).join(' | ')}`);
+  
+  // Tag high-relevance + low-volume keywords as "nuggets" (Pépites)
+  // relevance >= 0.9 (9/10) AND volume < 10 → is_nugget = true
+  for (const s of scored) {
+    if (s.finalScore >= 0.9 && s.kw.volume < 10) {
+      s.kw.is_nugget = true;
+      console.log(`💎 Pépite détectée: "${s.kw.keyword}" (relevance: ${(s.finalScore * 100).toFixed(0)}%, volume: ${s.kw.volume})`);
+    }
+  }
   
   return scored.map(s => s.kw);
 }

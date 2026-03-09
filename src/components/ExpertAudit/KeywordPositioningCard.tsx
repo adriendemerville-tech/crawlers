@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Target, TrendingUp, TrendingDown, Zap, 
-  AlertTriangle, Lightbulb, Trophy,
+  AlertTriangle, Lightbulb, Trophy, Gem,
   BarChart3, Search, Loader2, Layers, Compass,
   ChevronDown, ChevronUp, BrainCircuit
 } from 'lucide-react';
@@ -59,6 +60,25 @@ function getIntentColor(intent: string): string {
   if (intent.toLowerCase().includes('informat')) return 'text-warning border-warning/30 bg-warning/10';
   if (intent.toLowerCase().includes('navigat')) return 'text-muted-foreground border-muted bg-muted/10';
   return 'text-muted-foreground border-muted bg-muted/10';
+}
+
+function NuggetBadge() {
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge variant="outline" className="ml-2 text-[10px] border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 cursor-help">
+            <Gem className="h-3 w-3" />
+            Pépite
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
+          <p className="font-semibold mb-1">Opportunité stratégique de niche</p>
+          <p>Cette requête ultra-ciblée présente un volume de recherche statistiquement faible, mais une pertinence métier exceptionnelle. Elle constitue une opportunité stratégique pour établir l'autorité de votre site sur une niche à haute conversion, où la concurrence est souvent inexistante.</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }
 
 function StrategicAnalysisRow({ analysis }: { analysis: KeywordStrategicAnalysis }) {
@@ -145,7 +165,10 @@ function ExplorationCard({
               <tbody>
                 {keywords.map((kw, idx) => (
                   <tr key={idx} className="border-t border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => setExpandedKw(expandedKw === idx ? null : idx)}>
-                    <td className="px-3 py-2 font-medium text-foreground">{kw.keyword}</td>
+                    <td className="px-3 py-2 font-medium text-foreground">
+                      {kw.keyword}
+                      {kw.is_nugget && <NuggetBadge />}
+                    </td>
                     <td className="text-center px-3 py-2 text-muted-foreground">{kw.volume.toLocaleString()}</td>
                     <td className="text-center px-3 py-2">
                       <Badge variant="outline" className={`text-xs ${
@@ -317,8 +340,13 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                   </h3>
                   <div className="grid gap-2 md:grid-cols-5">
                     {top5.map((kw, idx) => (
-                      <div key={idx} className="p-3 rounded-lg border bg-card text-center space-y-1">
-                        <p className="text-xs font-medium text-foreground truncate" title={kw.keyword}>{kw.keyword}</p>
+                      <div key={idx} className={`p-3 rounded-lg border bg-card text-center space-y-1 ${kw.is_nugget ? 'border-amber-500/40 ring-1 ring-amber-500/20' : ''}`}>
+                        <p className="text-xs font-medium text-foreground truncate" title={kw.keyword}>
+                          {kw.keyword}
+                        </p>
+                        {kw.is_nugget && (
+                          <div className="flex justify-center"><NuggetBadge /></div>
+                        )}
                         <p className="text-lg font-bold text-primary">{kw.volume.toLocaleString()}</p>
                         <p className="text-[10px] text-muted-foreground">rech./mois</p>
                         <Badge
@@ -377,6 +405,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                           >
                             <td className="px-3 py-2 font-medium text-foreground">
                               {kw.keyword}
+                              {kw.is_nugget && <NuggetBadge />}
                               {kw.strategic_analysis && (
                                 <Badge variant="outline" className={`ml-2 text-[10px] ${getIntentColor(kw.strategic_analysis.intent)}`}>
                                   {kw.strategic_analysis.intent}
