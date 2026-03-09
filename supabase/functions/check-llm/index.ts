@@ -1,5 +1,5 @@
 import { getLLMTranslations, parseLanguage, type Language } from '../_shared/translations.ts';
-import { trackTokenUsage } from '../_shared/tokenTracker.ts';
+import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -166,6 +166,7 @@ async function queryLLM(
 
     // Track token usage
     trackTokenUsage('check-llm', model, data.usage, domain);
+    trackPaidApiCall('check-llm', 'openrouter', model, domain);
 
     if (!content) {
       throw new Error('No content in response');

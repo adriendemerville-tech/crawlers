@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { trackTokenUsage } from "../_shared/tokenTracker.ts";
+import { trackTokenUsage, trackPaidApiCall } from "../_shared/tokenTracker.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -437,6 +437,7 @@ serve(async (req) => {
     const cleaned = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
 
     await trackTokenUsage('generate-prediction', 'anthropic/claude-3.5-sonnet', aiData.usage);
+    trackPaidApiCall('generate-prediction', 'openrouter', 'anthropic/claude-3.5-sonnet');
 
     let prediction: any;
     try { prediction = JSON.parse(cleaned); }

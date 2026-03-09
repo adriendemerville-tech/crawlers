@@ -16,7 +16,8 @@ import {
   ExternalLink,
   RefreshCw,
   Cpu,
-  Zap
+  Zap,
+  Brain
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -60,6 +61,9 @@ interface TokenUsageStats {
   byModel: Record<string, { promptTokens: number; completionTokens: number; totalTokens: number; calls: number; estimatedCost: number }>;
   paidApiCalls: number;
   totalEstimatedCost: number;
+  dataforseoCalls: number;
+  openrouterCalls: number;
+  byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
 }
 
 // Coûts estimés par million de tokens (input/output) en USD
@@ -150,6 +154,9 @@ export function AnalyticsDashboard() {
     byModel: {},
     paidApiCalls: 0,
     totalEstimatedCost: 0,
+    dataforseoCalls: 0,
+    openrouterCalls: 0,
+    byApiService: {},
   });
 
   // Initial load
@@ -263,6 +270,25 @@ export function AnalyticsDashboard() {
         }
       });
       
+      // Count paid API calls by service
+      const byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }> = {};
+      let dataforseoCalls = 0;
+      let openrouterCalls = 0;
+      
+      paidApiEvents.forEach(e => {
+        const data = e.event_data as Record<string, unknown> | null;
+        if (data) {
+          const service = (data.api_service as string) || 'unknown';
+          const endpoint = (data.endpoint as string) || 'unknown';
+          if (!byApiService[service]) byApiService[service] = { calls: 0, byEndpoint: {} };
+          byApiService[service].calls += 1;
+          byApiService[service].byEndpoint[endpoint] = (byApiService[service].byEndpoint[endpoint] || 0) + 1;
+          
+          if (service === 'dataforseo') dataforseoCalls++;
+          if (service === 'openrouter') openrouterCalls++;
+        }
+      });
+
       setTokenUsage({
         totalTokens,
         promptTokens,
@@ -272,6 +298,9 @@ export function AnalyticsDashboard() {
         byModel,
         paidApiCalls: paidApiEvents.length,
         totalEstimatedCost,
+        dataforseoCalls,
+        openrouterCalls,
+        byApiService,
       });
 
       // Calculate daily data (last 30 days)
@@ -573,6 +602,22 @@ export function AnalyticsDashboard() {
               </p>
               <p className="text-lg font-semibold">{tokenUsage.paidApiCalls.toLocaleString('fr-FR')}</p>
             </div>
+            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <p className="text-xs text-blue-700 dark:text-blue-400 font-medium flex items-center gap-1">
+                <Search className="h-3 w-3" /> DataForSEO
+              </p>
+              <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                {tokenUsage.dataforseoCalls.toLocaleString('fr-FR')}
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+              <p className="text-xs text-violet-700 dark:text-violet-400 font-medium flex items-center gap-1">
+                <Brain className="h-3 w-3" /> OpenRouter
+              </p>
+              <p className="text-lg font-bold text-violet-600 dark:text-violet-400">
+                {tokenUsage.openrouterCalls.toLocaleString('fr-FR')}
+              </p>
+            </div>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">Coût estimé total</p>
               <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
@@ -580,6 +625,33 @@ export function AnalyticsDashboard() {
               </p>
             </div>
           </div>
+
+          {/* Per-API-service breakdown */}
+          {Object.keys(tokenUsage.byApiService).length > 0 && (
+            <div className="space-y-2 mb-4">
+              <p className="text-xs font-medium text-muted-foreground">Détail par service API externe</p>
+              {Object.entries(tokenUsage.byApiService)
+                .sort(([, a], [, b]) => b.calls - a.calls)
+                .map(([service, data]) => (
+                  <div key={service} className="p-2.5 rounded-lg bg-muted/30 border border-border/50">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold capitalize">{service}</span>
+                      <span className="text-xs font-medium text-muted-foreground">{data.calls} appels</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {Object.entries(data.byEndpoint)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 5)
+                        .map(([endpoint, count]) => (
+                          <span key={endpoint} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                            {endpoint.split('/').pop()} ×{count}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
 
           {/* Per-model breakdown */}
           {Object.keys(tokenUsage.byModel).length > 0 && (

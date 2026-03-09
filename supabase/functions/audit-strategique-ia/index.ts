@@ -626,6 +626,7 @@ async function fetchKeywordData(
     });
 
     if (response.ok) {
+      trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'keywords_for_keywords');
       const data = await response.json();
       if (data.status_code === 20000 && data.tasks?.[0]?.result) {
         for (const item of data.tasks[0].result) {
@@ -747,6 +748,7 @@ async function checkRankings(
       await response.text();
       return keywords.map(kw => ({ ...kw, is_ranked: false, current_rank: 'Non classé' }));
     }
+    trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'serp/organic');
 
     const data = await response.json();
     
@@ -887,6 +889,7 @@ async function findLocalCompetitor(
       await response.text();
       return null;
     }
+    trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'serp/organic/local');
 
     const data = await response.json();
     const items = data.tasks?.[0]?.result?.[0]?.items;

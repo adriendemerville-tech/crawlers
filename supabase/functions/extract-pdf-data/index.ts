@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { trackTokenUsage } from "../_shared/tokenTracker.ts";
+import { trackTokenUsage, trackPaidApiCall } from "../_shared/tokenTracker.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -229,6 +229,7 @@ Retourne UNIQUEMENT ce JSON (pas de blocs markdown, pas de texte autour) :
     const rawContent = aiData.choices?.[0]?.message?.content || '';
 
     await trackTokenUsage('extract-pdf-data', 'anthropic/claude-3.5-sonnet', aiData.usage, targetDomain);
+    trackPaidApiCall('extract-pdf-data', 'openrouter', 'anthropic/claude-3.5-sonnet', targetDomain);
 
     // 7. Parse JSON
     const jsonMatch = rawContent.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();

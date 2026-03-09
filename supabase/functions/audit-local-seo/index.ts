@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
+import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -54,6 +54,7 @@ async function getLocationCode(zoneGeographique: string): Promise<{ code: number
       return null;
     }
 
+    trackPaidApiCall('audit-local-seo', 'dataforseo', 'locations');
     const data = await response.json();
     
     if (data.status_code !== 20000 || !data.tasks?.[0]?.result) {
