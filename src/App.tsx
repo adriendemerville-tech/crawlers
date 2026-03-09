@@ -110,6 +110,9 @@ const App = () => (
                           <Route path="/faq" element={<Faq />} />
                           <Route path="/methodologie" element={<Methodologie />} />
                           <Route path="/cgvu" element={<CGVU />} />
+                          <Route path="/audit-seo-gratuit" element={<AuditSeoGratuit />} />
+                          <Route path="/analyse-site-web-gratuit" element={<AnalyseSiteWebGratuit />} />
+                          <Route path="/generative-engine-optimization" element={<GenerativeEngineOptimization />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
