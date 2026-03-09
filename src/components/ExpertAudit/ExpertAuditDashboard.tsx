@@ -63,7 +63,8 @@ type AuditMode = 'technical' | 'strategic' | null;
 const translations = {
   fr: {
     badge: 'Audit Expert SEO & GEO',
-    title: 'Audit technique et stratégique — Check-up complet de votre SEO/GEO',
+    titleLine1: 'Audit technique et stratégique',
+    titleLine2: 'Check-up complet de votre SEO/GEO',
     subtitlePart1: 'Mesurez votre visibilité Google + IA générative en moins de 2 min.',
     subtitlePart2: 'Développement et injection du',
     subtitleCode: 'code correctif',
@@ -94,7 +95,8 @@ const translations = {
   },
   en: {
     badge: 'Expert SEO & GEO Audit',
-    title: 'Technical & Strategic Audit — Complete SEO/GEO Check-up',
+    titleLine1: 'Technical & Strategic Audit',
+    titleLine2: 'Complete SEO/GEO Check-up',
     subtitlePart1: 'Measure your Google + generative AI visibility in under 2 min.',
     subtitlePart2: 'Development of',
     subtitleCode: 'corrective code',
@@ -125,7 +127,8 @@ const translations = {
   },
   es: {
     badge: 'Auditoría Experta SEO & GEO',
-    title: 'Auditoría técnica y estratégica — Check-up completo de tu SEO/GEO',
+    titleLine1: 'Auditoría técnica y estratégica',
+    titleLine2: 'Check-up completo de tu SEO/GEO',
     subtitlePart1: 'Mide tu visibilidad Google + IA generativa en menos de 2 min.',
     subtitlePart2: 'Desarrollo del',
     subtitleCode: 'código correctivo',
@@ -1085,7 +1088,7 @@ export function ExpertAuditDashboard() {
           {t.badge}
         </Badge>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
-          {t.title}
+          {t.titleLine1}<br />{t.titleLine2}
         </h1>
         <p className="text-muted-foreground max-w-xl mx-auto text-base">
           {t.subtitlePart1}{' '}
