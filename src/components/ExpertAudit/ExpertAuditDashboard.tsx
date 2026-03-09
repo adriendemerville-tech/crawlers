@@ -753,9 +753,10 @@ export function ExpertAuditDashboard() {
     setIsStrategicLoading(true);
     setResult(null);
 
+    // Use cached context for competitor/hallucination corrections (skips DataForSEO, metadata, etc.)
+    const useCachedContext = (hallucinationCorrections || competitorCorrections) && strategicCachedContext;
+    
     try {
-      // Use cached context for competitor/hallucination corrections (skips DataForSEO, metadata, etc.)
-      const useCachedContext = (hallucinationCorrections || competitorCorrections) && strategicCachedContext;
       
       const data = await invokeWithTimeout('audit-strategique-ia', { 
         url: normalizedUrl, 
