@@ -322,7 +322,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
 
             {/* Top 5 Summary */}
             {mainKeywords.length > 0 && (() => {
-              const top5 = mainKeywords.slice(0, 5);
+              const top5 = regularKeywords.slice(0, 5);
               const rankedTop5 = top5.filter(k => typeof k.current_rank === 'number' && k.current_rank <= 50);
               const avgRank = rankedTop5.length > 0
                 ? (rankedTop5.reduce((sum, k) => sum + (k.current_rank as number), 0) / rankedTop5.length)
