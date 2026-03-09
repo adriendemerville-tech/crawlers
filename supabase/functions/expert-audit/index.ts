@@ -2116,7 +2116,7 @@ Réponds avec ce JSON exact:
     console.log('Expert Audit complete. Score:', totalScore, '/200');
     
     // Sauvegarder les recommandations dans le registre (async, non-bloquant)
-    const authHeader = req.headers.get('Authorization') || '';
+    const registryAuthHeader = req.headers.get('Authorization') || '';
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
     
