@@ -124,10 +124,12 @@ export function generateCorrectiveScript(
 
   const dateLocale = language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US';
 
-  // Build the complete IIFE script — Règle 5: IIFE + try/catch
+  // Build the complete IIFE script — Règle 5: IIFE + try/catch + Isolation SDK
+  const configEndpoint = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sdk-status`;
+  
   const script = `/**
  * ═══════════════════════════════════════════════════════════════
- * 🏗️ Crawlers.fr — ARCHITECTE GÉNÉRATIF v3.0 (CLS-ZERO Protocol)
+ * 🏗️ Crawlers.fr — ARCHITECTE GÉNÉRATIF v3.1 (CLS-ZERO + SDK Isolation)
  * ═══════════════════════════════════════════════════════════════
  * 
  * Généré le ${new Date().toLocaleDateString(dateLocale)}
@@ -140,17 +142,49 @@ export function generateCorrectiveScript(
  *   → Stratégiques (JSON-LD sémantique): ${strategicFixes.length}
  *   → Anti-Hallucination IA: ${hallucinationFixes.length}
  *
- * Protocole CLS-ZERO:
+ * Protocole CLS-ZERO + SDK Isolation:
  *   Règle 1  — Données sémantiques → JSON-LD <head> uniquement
  *   Règle 2A — Attribution → bas de page (footer)
  *   Règle 2B — Contenu visible → skeleton (min-height) avant injection
  *   Règle 3  — lazy/fetchpriority via MutationObserver
  *   Règle 4  — Locks (data-crawlers-lock) anti double-exécution
- *   Règle 5  — IIFE + try/catch
+ *   Règle 5  — IIFE + try/catch silencieux
+ *   Règle 6  — requestIdleCallback (non-bloquant)
+ *   Règle 7  — Kill Switch distant (sdk-status)
+ *   Règle 8  — No-Global Policy (aucune pollution window)
+ *   Règle 9  — DocumentFragment pour injections DOM
  * ═══════════════════════════════════════════════════════════════
  */
 (function() {
   'use strict';
+
+  // ═══════════════════════════════════════════════════════════
+  // RÈGLE 8 — NO-GLOBAL POLICY
+  // Aucune variable ne fuit dans window sauf le namespace dédié.
+  // ═══════════════════════════════════════════════════════════
+  var __CRAWLERS_CONFIG__ = {
+    version: '3.1',
+    site: '${siteUrl}',
+    fixes: ${enabledFixes.length},
+    started: false
+  };
+  // Exposer uniquement sous préfixe unique
+  try { Object.defineProperty(window, '__CRAWLERS_CONFIG__', { value: __CRAWLERS_CONFIG__, writable: false, configurable: false }); } catch(e) {}
+
+  // ═══════════════════════════════════════════════════════════
+  // RÈGLE 6 — EXECUTION DEFERRAL (Non-bloquant)
+  // Utilise requestIdleCallback pour ne jamais bloquer le rendu.
+  // ═══════════════════════════════════════════════════════════
+  var scheduleIdle = (typeof window.requestIdleCallback === 'function')
+    ? function(fn) { window.requestIdleCallback(fn, { timeout: 3000 }); }
+    : function(fn) { setTimeout(fn, 0); };
+
+  // ═══════════════════════════════════════════════════════════
+  // RÈGLE 5 — FAIL-SAFE : Tout est silencieux en production
+  // ═══════════════════════════════════════════════════════════
+  var isDev = (typeof location !== 'undefined' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1'));
+  function safeLog() { if (isDev) { try { console.log.apply(console, arguments); } catch(e) {} } }
+  function safeWarn() { if (isDev) { try { console.warn.apply(console, arguments); } catch(e) {} } }
 
   // ═══════════════════════════════════════════════════════════
   // UTILITAIRES CLS-ZERO
@@ -178,12 +212,21 @@ export function generateCorrectiveScript(
     script.setAttribute('data-crawlers-jsonld', id);
     script.textContent = JSON.stringify(data, null, 2);
     document.head.appendChild(script);
-    console.log('[Crawlers.fr] JSON-LD injecté:', id);
+    safeLog('[Crawlers.fr] JSON-LD injecté:', id);
+  }
+
+  // Règle 9: DocumentFragment pour minimiser les reflows
+  function createFragment(html) {
+    var frag = document.createDocumentFragment();
+    var temp = document.createElement('div');
+    temp.innerHTML = html;
+    while (temp.firstChild) frag.appendChild(temp.firstChild);
+    return frag;
   }
 
   // Règle 2B: Injection Skeleton — réserve l'espace avant insertion HTML
+  // Utilise DocumentFragment (Règle 9) pour minimiser les reflows
   function injectWithSkeleton(targetSelector, html, minHeight, insertPosition) {
-    // Injecter d'abord le style skeleton pour réserver l'espace (CLS = 0)
     var skeletonId = 'crawlers-skeleton-' + Math.random().toString(36).substr(2, 6);
     var style = document.createElement('style');
     style.textContent = '#' + skeletonId + ' { min-height: ' + minHeight + '; transition: min-height 0.3s ease; }';
@@ -191,7 +234,8 @@ export function generateCorrectiveScript(
 
     var container = document.createElement('div');
     container.id = skeletonId;
-    container.innerHTML = html;
+    // Règle 9: Utiliser DocumentFragment
+    container.appendChild(createFragment(html));
 
     var target = document.querySelector(targetSelector);
     if (target && insertPosition === 'before') {
@@ -234,33 +278,89 @@ ${fixFunctions.join('\n\n')}
     container.appendChild(link);
     setLock(container, 'attribution');
 
-    // Injecter à la fin du footer ou du body
     var footer = document.querySelector('footer');
     if (footer) {
       footer.appendChild(container);
     } else {
       document.body.appendChild(container);
     }
-    console.log('[Crawlers.fr] ✅ Attribution injectée (Règle 2A — bas de page)');
+    safeLog('[Crawlers.fr] ✅ Attribution injectée (Règle 2A — bas de page)');
   }
 
   // ═══════════════════════════════════════════════════════════
-  // EXÉCUTION DES CORRECTIONS
+  // RÈGLE 7 — KILL SWITCH DISTANT
+  // Vérifie l'état du SDK avant exécution. Si désactivé, autodestruction.
+  // ═══════════════════════════════════════════════════════════
+  function checkKillSwitch(callback) {
+    try {
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function() { controller.abort(); }, 2000);
+
+      fetch('${configEndpoint}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: location.hostname }),
+        signal: controller.signal
+      })
+      .then(function(r) {
+        clearTimeout(timeoutId);
+        if (!r.ok) { safeWarn('[Crawlers.fr] Kill switch: endpoint error', r.status); callback(false); return; }
+        return r.json();
+      })
+      .then(function(data) {
+        if (!data) { callback(false); return; }
+        if (data.isEnabled === false) {
+          safeLog('[Crawlers.fr] ⛔ SDK désactivé à distance — autodestruction');
+          callback(false);
+        } else {
+          callback(true);
+        }
+      })
+      .catch(function() {
+        clearTimeout(timeoutId);
+        // Fail-open: si l'endpoint est injoignable, on exécute quand même
+        // pour ne pas casser les sites clients en cas de panne de notre API
+        safeWarn('[Crawlers.fr] Kill switch injoignable — fail-open');
+        callback(true);
+      });
+    } catch(e) {
+      // Environnement sans fetch (SSR, ancien navigateur) → fail-open
+      callback(true);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // EXÉCUTION — Orchestration complète
+  // Règle 5 (try/catch silencieux) + Règle 6 (idle) + Règle 7 (kill switch)
   // ═══════════════════════════════════════════════════════════
 
   ready(function() {
-    console.log('[Crawlers.fr] 🏗️ Architecte Génératif v3.0 — CLS-ZERO Protocol');
-    
-    try {
-${fixCalls.map(call => `      ${call}`).join('\n')}
+    // Règle 6: Defer to idle time
+    scheduleIdle(function() {
+      // Règle 7: Kill switch check before execution
+      checkKillSwitch(function(isEnabled) {
+        if (!isEnabled) return; // Autodestruction silencieuse
 
-      // Règle 2A — Attribution toujours en dernier (bas de page)
-      injectCrawlersAttribution();
-      
-      console.log('[Crawlers.fr] ✅ ${enabledFixes.length} correctif(s) appliqué(s) — CLS-ZERO');
-    } catch (error) {
-      console.error('[Crawlers.fr] ❌ Erreur:', error);
-    }
+        // Règle 5: Global try-catch — SILENT failure
+        try {
+          if (__CRAWLERS_CONFIG__.started) return; // Double-guard
+          __CRAWLERS_CONFIG__.started = true;
+
+          safeLog('[Crawlers.fr] 🏗️ Architecte Génératif v3.1 — CLS-ZERO + SDK Isolation');
+
+${fixCalls.map(call => `          ${call}`).join('\n')}
+
+          // Règle 2A — Attribution toujours en dernier (bas de page)
+          injectCrawlersAttribution();
+
+          safeLog('[Crawlers.fr] ✅ ${enabledFixes.length} correctif(s) appliqué(s) — CLS-ZERO');
+        } catch (e) {
+          // Règle 5: SILENT FAILURE — jamais d'erreur dans la console du client
+          // En dev uniquement, on log pour debug
+          safeWarn('[Crawlers.fr] Erreur silencieuse:', e);
+        }
+      });
+    });
   });
 
 })();`;

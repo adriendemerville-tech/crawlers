@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.gsc-auth]
 verify_jwt = false
+
+[functions.sdk-status]
+verify_jwt = false
