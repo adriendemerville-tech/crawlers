@@ -60,6 +60,9 @@ interface TokenUsageStats {
   byModel: Record<string, { promptTokens: number; completionTokens: number; totalTokens: number; calls: number; estimatedCost: number }>;
   paidApiCalls: number;
   totalEstimatedCost: number;
+  dataforseoCalls: number;
+  openrouterCalls: number;
+  byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
 }
 
 // Coûts estimés par million de tokens (input/output) en USD
