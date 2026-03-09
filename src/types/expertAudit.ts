@@ -280,11 +280,19 @@ export interface BrandAuthority {
 
 // NEW: GEO Readiness 2026
 // NEW: Keyword Positioning (DataForSEO based)
+export interface KeywordStrategicAnalysis {
+  intent: string;
+  business_value: 'High' | 'Medium' | 'Low';
+  pain_point: string;
+  recommended_action: string;
+}
+
 export interface KeywordItem {
   keyword: string;
   volume: number;
   difficulty: number;
   current_rank: number | string;
+  strategic_analysis?: KeywordStrategicAnalysis;
 }
 
 export interface QuickWinKeyword {
