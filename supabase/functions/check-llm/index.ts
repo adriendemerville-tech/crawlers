@@ -1,5 +1,5 @@
 import { getLLMTranslations, parseLanguage, type Language } from '../_shared/translations.ts';
-import { trackTokenUsage } from '../_shared/tokenTracker.ts';
+import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
