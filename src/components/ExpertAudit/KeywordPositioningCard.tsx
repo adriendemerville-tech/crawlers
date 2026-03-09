@@ -65,8 +65,8 @@ function StrategicAnalysisRow({ analysis }: { analysis: KeywordStrategicAnalysis
   return (
     <div className="px-3 py-2 bg-muted/30 border-t border-dashed border-border/50 space-y-2">
       <div className="flex flex-wrap gap-2 items-center">
-        <Badge variant="outline" className="text-xs gap-1">
-          {getIntentIcon(analysis.intent)} {analysis.intent}
+        <Badge variant="outline" className={`text-xs ${getIntentColor(analysis.intent)}`}>
+          {analysis.intent}
         </Badge>
         <Badge variant="outline" className={`text-xs ${getBusinessValueColor(analysis.business_value)}`}>
           Valeur: {analysis.business_value}
