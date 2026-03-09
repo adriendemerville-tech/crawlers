@@ -360,8 +360,9 @@ export function Header() {
                   {/* Invisible bridge to prevent gap flicker */}
                   {isProfileOpen && (
                     <div 
-                      className="absolute top-full right-0 h-2 w-48"
+                      className="absolute top-full right-0 h-3 w-72"
                       onMouseEnter={handleMouseEnter}
+                      onMouseLeave={handleMouseLeave}
                     />
                   )}
                   <DropdownMenuContent 
