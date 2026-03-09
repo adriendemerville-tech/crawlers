@@ -428,6 +428,7 @@ export interface StrategicAnalysis {
   // NEW: Keyword Positioning (DataForSEO based)
   keyword_positioning?: KeywordPositioning;
   market_data_summary?: MarketDataSummary;
+  ranking_overview?: RankingOverview;
   
   // Legacy format (backward compatibility)
   brand_identity?: BrandIdentity;
