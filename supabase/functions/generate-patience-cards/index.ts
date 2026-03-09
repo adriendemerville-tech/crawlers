@@ -43,7 +43,7 @@ Pas de markdown, juste le JSON array.`;
           temperature: 0.8,
         }),
       }),
-      fetch("https://lovable.dev/api/chat", {
+      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
