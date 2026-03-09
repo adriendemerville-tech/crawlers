@@ -1,0 +1,1 @@
+DELETE FROM audit_cache WHERE function_name = 'expert-audit';

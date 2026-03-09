@@ -16,6 +16,7 @@ import { ActionPlan } from './ActionPlan';
 import { LoadingSteps } from './LoadingSteps';
 import { StrategicInsights } from './StrategicInsights';
 import { IntroductionCard } from './IntroductionCard';
+import { SPADetectionAlert } from './SPADetectionAlert';
 import { ExpertInsightsCard } from './ExpertInsightsCard';
 import { BrokenLinksCard } from './BrokenLinksCard';
 import { TechnicalNarrativeSection } from './TechnicalNarrativeSection';
@@ -1181,6 +1182,11 @@ export function ExpertAuditDashboard() {
               {/* Introduction */}
               {result.introduction && (
                 <IntroductionCard introduction={result.introduction} variant="technical" />
+              )}
+
+              {/* SPA Detection Alert */}
+              {result.isSPA && (
+                <SPADetectionAlert />
               )}
 
               {/* Hero Score */}
