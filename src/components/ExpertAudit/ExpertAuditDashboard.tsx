@@ -94,7 +94,7 @@ const translations = {
   },
   en: {
     badge: 'Expert SEO & GEO Audit',
-    title: 'Free SEO & GEO Audit — 200-Point Score',
+    title: 'Technical & Strategic Audit — Complete SEO/GEO Check-up',
     subtitlePart1: 'Measure your Google + generative AI visibility in under 2 min.',
     subtitlePart2: 'Development of',
     subtitleCode: 'corrective code',
