@@ -26,6 +26,7 @@ import { ReportAuthGate } from './ReportAuthGate';
 import { PaymentModal } from './PaymentModal';
 import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 import { WorkflowCarousel } from './WorkflowCarousel';
+import { PatienceCards } from './PatienceCards';
 import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
 import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { AIBotsCard } from './AIBotsCard';
@@ -1169,6 +1170,9 @@ export function ExpertAuditDashboard() {
         {/* Loading State - Strategic */}
         {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" />}
       </div>
+
+      {/* Patience Cards during strategic loading */}
+      <PatienceCards isActive={isStrategicLoading} />
 
       {/* Results */}
       {result && !isLoading && !isStrategicLoading && (

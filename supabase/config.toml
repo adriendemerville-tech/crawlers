@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.sdk-status]
 verify_jwt = false
+
+[functions.generate-patience-cards]
+verify_jwt = false
