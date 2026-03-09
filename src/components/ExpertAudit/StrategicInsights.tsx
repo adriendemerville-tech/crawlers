@@ -24,8 +24,12 @@ import { PriorityContentCard } from './PriorityContentCard';
 import { PainScoreCard } from './PainScoreCard';
 import { ConversationalIntentCard } from './ConversationalIntentCard';
 import { ZeroClickRiskCard } from './ZeroClickRiskCard';
-
 import { CompetitorCorrections } from './CompetitorCorrectionModal';
+import { QuotabilityCard } from './QuotabilityCard';
+import { SummaryResilienceCard } from './SummaryResilienceCard';
+import { LexicalFootprintCard } from './LexicalFootprintCard';
+import { ExpertiseSentimentCard } from './ExpertiseSentimentCard';
+import { RedTeamCard } from './RedTeamCard';
 
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
