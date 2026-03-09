@@ -14,30 +14,34 @@ function FooterComponent() {
     { 
       icon: Bot, 
       label: t3(language, 'Analyse Bots IA', 'AI Bots Analysis', 'Análisis Bots IA'),
-      href: '/#crawlers',
+      href: '/',
       description: t3(language, 'Vérifiez l\'accès des robots IA à votre site', 'Check AI bot access to your site', 'Verifique el acceso de los bots IA a su sitio'),
-      gold: false
+      gold: false,
+      isRoute: true
     },
     { 
       icon: Globe, 
       label: t3(language, 'Score GEO', 'GEO Score', 'Score GEO'),
-      href: '/#geo',
+      href: '/',
       description: t3(language, 'Optimisation pour moteurs génératifs', 'Generative engine optimization', 'Optimización para motores generativos'),
-      gold: false
+      gold: false,
+      isRoute: true
     },
     { 
       icon: Brain, 
       label: t3(language, 'Visibilité LLM', 'LLM Visibility', 'Visibilidad LLM'),
-      href: '/#llm',
+      href: '/',
       description: t3(language, 'Analyse de citabilité par les IA', 'AI citation analysis', 'Análisis de citabilidad por IA'),
-      gold: false
+      gold: false,
+      isRoute: true
     },
     { 
       icon: Gauge, 
       label: 'PageSpeed',
-      href: '/#pagespeed',
+      href: '/',
       description: t3(language, 'Performance et Core Web Vitals', 'Performance & Core Web Vitals', 'Rendimiento y Core Web Vitals'),
-      gold: false
+      gold: false,
+      isRoute: true
     },
     { 
       icon: Radar, 
