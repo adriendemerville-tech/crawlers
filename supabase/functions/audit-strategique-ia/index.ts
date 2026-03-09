@@ -931,6 +931,26 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
     // STRATEGIC SORT: first keyword = most relevant for core business + target
     const strategicKeywords = sortByStrategicRelevance(rankedKeywords, seedKeywords, pageContentContext);
     
+    // GUARANTEE MINIMUM 5 KEYWORDS: If DataForSEO returned fewer, supplement with seed keywords
+    if (strategicKeywords.length < 5) {
+      console.log(`⚠️ Only ${strategicKeywords.length} keywords from DataForSEO — supplementing with seeds`);
+      const existingLower = new Set(strategicKeywords.map(kw => kw.keyword.toLowerCase()));
+      for (const seed of seedKeywords) {
+        if (strategicKeywords.length >= 5) break;
+        if (seed.length > 3 && !existingLower.has(seed.toLowerCase())) {
+          existingLower.add(seed.toLowerCase());
+          strategicKeywords.push({
+            keyword: seed,
+            volume: 0, // Unknown volume — will signal AI to estimate
+            difficulty: 0,
+            is_ranked: false,
+            current_rank: 'Non classé',
+          });
+          console.log(`➕ Added seed keyword: "${seed}" (volume unknown)`);
+        }
+      }
+    }
+    
     const totalVolume = strategicKeywords.reduce((sum, kw) => sum + kw.volume, 0);
     
     console.log(`✅ Données: ${strategicKeywords.length} mots-clés, volume: ${totalVolume}`);
