@@ -246,6 +246,26 @@ export function ExpertAuditContent() {
         </div>
       </div>
 
+      {/* SEO + GEO complementarity */}
+      <div className="max-w-3xl mx-auto space-y-6">
+        <h2 className="text-2xl font-bold text-foreground">
+          {content.seoGeoTitle}
+        </h2>
+        <p className="text-muted-foreground leading-relaxed">
+          {content.seoGeoText}
+        </p>
+      </div>
+
+      {/* Corrective code */}
+      <div className="max-w-3xl mx-auto space-y-6">
+        <h2 className="text-2xl font-bold text-foreground">
+          {content.codeTitle}
+        </h2>
+        <p className="text-muted-foreground leading-relaxed">
+          {content.codeText}
+        </p>
+      </div>
+
       {/* CTA */}
       <div className="text-center bg-card border rounded-2xl p-8">
         <TrendingUp className="h-12 w-12 text-primary mx-auto mb-4" />
