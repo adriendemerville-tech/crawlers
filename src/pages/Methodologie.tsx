@@ -1,13 +1,16 @@
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
+import { Link } from 'react-router-dom';
 import { 
   Bot, Globe, Brain, Gauge, Radar, Shield, FileText, 
   Search, Code, BarChart3, Target, Zap, Eye, Link2, 
-  Smartphone, Lock, Image, ListChecks, TrendingUp, BookOpen
+  Smartphone, Lock, Image, ListChecks, TrendingUp, BookOpen, ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
