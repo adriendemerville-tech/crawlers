@@ -1142,6 +1142,101 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
   }
 }
 
+// ==================== RANKED KEYWORDS (existing domain analysis) ====================
+
+async function fetchRankedKeywords(domain: string, locationCode: number): Promise<RankingOverview | null> {
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
+  
+  const cleanDomain = domain.replace(/^www\./, '');
+  console.log(`📊 Fetching ranked keywords for ${cleanDomain}...`);
+  
+  try {
+    const response = await fetch('https://api.dataforseo.com/v3/dataforseo_labs/google/ranked_keywords/live', {
+      method: 'POST',
+      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify([{
+        target: cleanDomain,
+        location_code: locationCode,
+        language_code: 'fr',
+        limit: 100,
+        order_by: ['keyword_data.keyword_info.search_volume,desc'],
+        filters: ['keyword_data.keyword_info.search_volume', '>', '0'],
+      }]),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) {
+      console.log(`⚠️ Ranked keywords API error: ${response.status}`);
+      await response.text();
+      return null;
+    }
+    trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'labs/ranked_keywords');
+
+    const data = await response.json();
+    const taskResult = data.tasks?.[0]?.result?.[0];
+    
+    if (!taskResult?.items || taskResult.items.length === 0) {
+      console.log('⚠️ No ranked keywords found for domain');
+      return null;
+    }
+    
+    const items = taskResult.items;
+    const totalCount = taskResult.total_count || items.length;
+    
+    // Calculate distribution and averages
+    const distribution = { top3: 0, top10: 0, top20: 0, top50: 0, top100: 0, beyond100: 0 };
+    let sumPositionAll = 0;
+    let sumPositionTop10 = 0;
+    let countTop10 = 0;
+    let totalEtv = 0;
+    
+    const topKeywords: { keyword: string; position: number; volume: number; url: string }[] = [];
+    
+    for (const item of items) {
+      const pos = item.ranked_serp_element?.serp_item?.rank_absolute || item.ranked_serp_element?.serp_item?.rank_group || 999;
+      const kw = item.keyword_data?.keyword || '';
+      const vol = item.keyword_data?.keyword_info?.search_volume || 0;
+      const url = item.ranked_serp_element?.serp_item?.url || '';
+      const etv = item.ranked_serp_element?.serp_item?.etv || 0;
+      
+      sumPositionAll += pos;
+      totalEtv += etv;
+      
+      if (pos <= 3) distribution.top3++;
+      if (pos <= 10) { distribution.top10++; sumPositionTop10 += pos; countTop10++; }
+      else if (pos <= 20) distribution.top20++;
+      else if (pos <= 50) distribution.top50++;
+      else if (pos <= 100) distribution.top100++;
+      else distribution.beyond100++;
+      
+      // Keep top 10 keywords by volume for context
+      if (topKeywords.length < 10) {
+        topKeywords.push({ keyword: kw, position: pos, volume: vol, url });
+      }
+    }
+    
+    const avgGlobal = items.length > 0 ? Math.round(sumPositionAll / items.length * 10) / 10 : 0;
+    const avgTop10 = countTop10 > 0 ? Math.round(sumPositionTop10 / countTop10 * 10) / 10 : 0;
+    
+    const overview: RankingOverview = {
+      total_ranked_keywords: totalCount,
+      average_position_global: avgGlobal,
+      average_position_top10: avgTop10,
+      distribution,
+      top_keywords: topKeywords,
+      etv: Math.round(totalEtv),
+    };
+    
+    console.log(`✅ Ranking overview: ${totalCount} keywords, avg pos global=${avgGlobal}, top10=${avgTop10}, ETV=${overview.etv}`);
+    console.log(`📊 Distribution: top3=${distribution.top3}, top10=${distribution.top10}, top20=${distribution.top20}, top50=${distribution.top50}, top100=${distribution.top100}`);
+    
+    return overview;
+  } catch (error) {
+    console.error('❌ Ranked keywords error:', error);
+    return null;
+  }
+}
+
 // ==================== FOUNDER DISCOVERY VIA SERP ====================
 
 interface FounderInfo {
