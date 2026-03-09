@@ -444,11 +444,16 @@ export default function Tarifs() {
     <>
       <Helmet>
         <title>{t.pageTitle}</title>
-        <meta name="description" content={t.subtitle} />
+        <meta name="description" content={`${t.subtitle}. Audit SEO technique gratuit, Score GEO IA, packs de crédits dès 5€, abonnement Pro Agency 50€/mois avec marque blanche.`} />
         <meta property="og:title" content={t.pageTitle} />
-        <meta property="og:description" content={t.subtitle} />
+        <meta property="og:description" content={`${t.subtitle}. Audit Flash gratuit, packs crédits, abonnement Pro Agency illimité.`} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://crawlers.fr/tarifs" />
+        {/* Open Graph pricing for main offer */}
+        <meta property="og:price:amount" content="50.00" />
+        <meta property="og:price:currency" content="EUR" />
+        <meta property="product:price:amount" content="50.00" />
+        <meta property="product:price:currency" content="EUR" />
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
