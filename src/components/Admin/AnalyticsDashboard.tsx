@@ -63,6 +63,7 @@ interface TokenUsageStats {
   totalEstimatedCost: number;
   dataforseoCalls: number;
   openrouterCalls: number;
+  browserlessCalls: number;
   byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
 }
 
