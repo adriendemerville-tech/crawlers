@@ -153,6 +153,9 @@ export function AnalyticsDashboard() {
     byModel: {},
     paidApiCalls: 0,
     totalEstimatedCost: 0,
+    dataforseoCalls: 0,
+    openrouterCalls: 0,
+    byApiService: {},
   });
 
   // Initial load
