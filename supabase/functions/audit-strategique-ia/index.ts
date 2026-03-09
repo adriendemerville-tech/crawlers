@@ -1818,6 +1818,87 @@ Deno.serve(async (req) => {
       eeatSignals = metadata.eeatSignals;
     }
 
+    const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
+    const domain = new URL(normalizedUrl).hostname;
+    const domainWithoutWww = domain.replace(/^www\./, '');
+    const domainSlug = domainWithoutWww.split('.')[0];
+    
+    // ==================== PROBABILISTIC BRAND NAME RESOLUTION ====================
+    const { name: resolvedEntityName, confidence: brandConfidence } = resolveBrandName(brandSignals, domain, url);
+    const isConfidentBrand = brandConfidence >= 0.95;
+    const humanBrandName = isConfidentBrand ? resolvedEntityName : humanizeBrandName(domainSlug);
+    console.log(`🎯 Entité résolue: "${resolvedEntityName}" (confiance: ${(brandConfidence * 100).toFixed(1)}%, ${isConfidentBrand ? 'NOM DÉTECTÉ' : 'FALLBACK URL'})`);
+
+    console.log('═══════════════════════════════════════════════════════════════');
+    console.log(`🚀 AUDIT STRATÉGIQUE pour: ${domain} (${resolvedEntityName})${useCache ? ' [SMART CACHE]' : ''}`);
+
+    if (!useCache) {
+      // ==================== SINGLE context detection ====================
+      const context = detectBusinessContext(domain, pageContentContext);
+
+      // ==================== ÉTAPE 1: DATAFORSEO + RANKED KEYWORDS (parallel) ====================
+      console.log('\n📊 ÉTAPE 1: DataForSEO...');
+      const [mktData, rkOverview] = await Promise.all([
+        fetchMarketData(domain, context, pageContentContext, url),
+        context.locationCode ? fetchRankedKeywords(domain, context.locationCode) : Promise.resolve(null),
+      ]);
+      marketData = mktData;
+      rankingOverview = rkOverview;
+
+      // ==================== ÉTAPE 1b: CONCURRENT LOCAL + FOUNDER (parallel) ====================
+      console.log('\n🏙️ ÉTAPE 1b: Concurrent local + Founder discovery...');
+      const [localCompResult, founderResult] = await Promise.allSettled([
+        context.locationCode ? findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext) : Promise.resolve(null),
+        searchFounderProfile(domain),
+      ]);
+      
+      if (localCompResult.status === 'fulfilled' && localCompResult.value) {
+        localCompetitorData = localCompResult.value;
+      } else if (localCompResult.status === 'rejected') {
+        console.error('❌ Concurrent local:', localCompResult.reason);
+      }
+      
+      founderInfo = (founderResult.status === 'fulfilled' && founderResult.value) 
+        ? founderResult.value 
+        : { name: null, profileUrl: null, platform: null, isInfluencer: false };
+
+      // ==================== ÉTAPE 1c: CHECK-LLM ====================
+      if (!toolsData?.llm || toolsData.llm.note) {
+        console.log('\n🤖 ÉTAPE 1c: check-llm...');
+        try {
+          const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+          const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+          
+          if (supabaseUrl && supabaseAnonKey) {
+            const llmResponse = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ url, lang: 'fr' }),
+              signal: AbortSignal.timeout(30000),
+            });
+            
+            if (llmResponse.ok) {
+              const llmResult = await llmResponse.json();
+              if (llmResult.success && llmResult.data) {
+                effectiveToolsData.llm = llmResult.data;
+                console.log(`✅ LLM: score ${llmResult.data.overallScore}/100`);
+              }
+            } else {
+              await llmResponse.text();
+              console.log('⚠️ check-llm error:', llmResponse.status);
+            }
+          }
+        } catch (e) {
+          console.error('❌ check-llm:', e);
+        }
+      } else {
+        console.log('✅ LLM data already provided, skipping check-llm call');
+      }
+    }
+
     // ==================== ÉTAPE 2: LLM ANALYSIS ====================
     console.log('\n🤖 ÉTAPE 2: Analyse LLM...');
     
