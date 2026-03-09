@@ -866,7 +866,8 @@ export function ExpertAuditDashboard() {
       try {
         console.log('Strategic audit: auto-retrying...');
         const retryData = await invokeWithTimeout('audit-strategique-ia', {
-          url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null
+          url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
+          cachedContext: useCachedContext ? strategicCachedContext : null,
         });
         if (!retryData?.success) throw new Error(retryData?.error || 'Retry failed');
 
