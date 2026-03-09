@@ -52,8 +52,13 @@ function FooterComponent() {
   const resourcesLinks = [
     { 
       label: 'FAQ', 
-      href: '#faq',
+      href: '/faq',
       description: t3(language, 'Questions fréquentes', 'Frequently asked questions', 'Preguntas frecuentes')
+    },
+    { 
+      label: t3(language, 'Méthodologie', 'Methodology', 'Metodología'),
+      href: '/methodologie',
+      description: t3(language, 'Périmètre d\'analyse et points d\'audit', 'Analysis scope and audit points', 'Alcance de análisis y puntos de auditoría')
     },
     { 
       label: t3(language, 'Tarifs', 'Pricing', 'Precios'),
@@ -66,9 +71,9 @@ function FooterComponent() {
       description: t3(language, 'Définitions des termes SEO et GEO', 'SEO and GEO terms definitions', 'Definiciones de términos SEO y GEO')
     },
     { 
-      label: t3(language, 'Plugin WordPress', 'WordPress Plugin', 'Plugin WordPress'),
-      href: '/modifier-code-wordpress',
-      description: t3(language, 'Optimisez WordPress pour l\'IA sans coder', 'Optimize WordPress for AI without coding', 'Optimice WordPress para la IA sin programar')
+      label: 'Blog',
+      href: '/blog',
+      description: t3(language, 'Articles et guides SEO/GEO', 'SEO/GEO articles and guides', 'Artículos y guías SEO/GEO')
     },
     { 
       label: 'Pro Agency',
@@ -76,10 +81,13 @@ function FooterComponent() {
       description: t3(language, 'Abonnement illimité pour agences SEO', 'Unlimited subscription for SEO agencies', 'Suscripción ilimitada para agencias SEO'),
       gold: true
     },
+  ];
+
+  const technicalLinks = [
     { 
-      label: 'Blog',
-      href: '/blog',
-      description: t3(language, 'Articles et guides SEO/GEO', 'SEO/GEO articles and guides', 'Artículos y guías SEO/GEO')
+      label: t3(language, 'Plugin WordPress', 'WordPress Plugin', 'Plugin WordPress'),
+      href: '/modifier-code-wordpress',
+      description: t3(language, 'Optimisez WordPress pour l\'IA sans coder', 'Optimize WordPress for AI without coding', 'Optimice WordPress para la IA sin programar')
     },
     { 
       label: 'Crawlers vs Semrush',
@@ -185,7 +193,7 @@ function FooterComponent() {
 
       <footer className="border-t border-border bg-card" role="contentinfo">
         <div className="mx-auto max-w-7xl px-4 py-12">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
             
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -193,9 +201,9 @@ function FooterComponent() {
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'Analysez et optimisez la visibilité de votre site web pour les moteurs de recherche IA et les LLM en 2026. Outils gratuits pour le SEO et le GEO en France et en Europe.',
-                  'Analyze and optimize your website visibility for AI search engines and LLMs in 2026. Free tools for SEO and GEO in Great Britain and USA.',
-                  'Analice y optimice la visibilidad de su sitio web para motores de búsqueda IA y LLM en 2026. Herramientas gratuitas para SEO y GEO en España, México y Argentina.'
+                  'Analysez et optimisez la visibilité de votre site web pour les moteurs de recherche IA et les LLM en 2026.',
+                  'Analyze and optimize your website visibility for AI search engines and LLMs in 2026.',
+                  'Analice y optimice la visibilidad de su sitio web para motores de búsqueda IA y LLM en 2026.'
                 )}
               </p>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -247,19 +255,41 @@ function FooterComponent() {
                 <ul className="space-y-3">
                   {resourcesLinks.map((link) => (
                     <li key={link.href}>
+                      <Link
+                        to={link.href}
+                        className={`flex items-center gap-2 text-sm transition-colors ${(link as any).gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                        title={link.description}
+                      >
+                        {(link as any).gold ? (
+                          <Crown className="h-4 w-4 flex-shrink-0 text-amber-500" />
+                        ) : link.href === '/tarifs' ? (
+                          <CreditCard className="h-4 w-4 flex-shrink-0" />
+                        ) : (
+                          <FileText className="h-4 w-4 flex-shrink-0" />
+                        )}
+                        <span>{link.label}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                {t3(language, 'Technique', 'Technical', 'Técnico')}
+              </h3>
+              <nav aria-label="Technique">
+                <ul className="space-y-3">
+                  {technicalLinks.map((link) => (
+                    <li key={link.href}>
                       {link.href.startsWith('/') ? (
                         <Link
                           to={link.href}
-                          className={`flex items-center gap-2 text-sm transition-colors ${(link as any).gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                           title={link.description}
                         >
-                          {(link as any).gold ? (
-                            <Crown className="h-4 w-4 flex-shrink-0 text-amber-500" />
-                          ) : link.href === '/tarifs' ? (
-                            <CreditCard className="h-4 w-4 flex-shrink-0" />
-                          ) : (
-                            <FileText className="h-4 w-4 flex-shrink-0" />
-                          )}
+                          <FileText className="h-4 w-4 flex-shrink-0" />
                           <span>{link.label}</span>
                         </Link>
                       ) : (

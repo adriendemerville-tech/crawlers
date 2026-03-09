@@ -43,6 +43,8 @@ const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersS
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
 const ProAgency = lazy(() => import("./pages/ProAgency"));
 const Observatoire = lazy(() => import("./pages/Observatoire"));
+const Faq = lazy(() => import("./pages/Faq"));
+const Methodologie = lazy(() => import("./pages/Methodologie"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
@@ -101,6 +103,8 @@ const App = () => (
                           <Route path="/modifier-code-wordpress" element={<ModifierCodeWordPress />} />
                           <Route path="/pro-agency" element={<ProAgency />} />
                           <Route path="/observatoire" element={<Observatoire />} />
+                          <Route path="/faq" element={<Faq />} />
+                          <Route path="/methodologie" element={<Methodologie />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
