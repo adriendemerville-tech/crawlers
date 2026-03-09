@@ -258,7 +258,7 @@ export function generateExpertReportHTML(
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 24px;">
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 24px; break-inside: avoid; page-break-inside: avoid;">
         ${[
           { s: scores.performance, l: t.performance },
           { s: scores.technical, l: t.technical },
