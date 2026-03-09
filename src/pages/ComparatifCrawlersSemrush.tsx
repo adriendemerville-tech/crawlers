@@ -720,6 +720,18 @@ const ComparatifCrawlersSemrush = () => {
                     <strong>Accessibilité financière</strong> : Un freelance peut auditer son site pour 0€. 
                     Une TPE peut obtenir un audit stratégique complet pour moins de 2€.
                   </li>
+                  <li>
+                    <strong>Marque Blanche (White Label)</strong> : L'offre{' '}
+                    <Link to="/pro-agency" className="text-primary hover:underline font-medium">Pro Agency</Link>
+                    {' '}à 49€/mois permet de personnaliser entièrement les rapports avec votre propre logo, 
+                    vos couleurs et votre nom de marque. Idéal pour les consultants et agences qui veulent 
+                    présenter des livrables professionnels sous leur propre identité à leurs clients finaux.
+                  </li>
+                  <li>
+                    <strong>Dashboard Agence dédié</strong> : Gestion multi-clients avec dossiers, suivi 
+                    de l'évolution technique, export PDF personnalisé et plans d'action pilotables — 
+                    le tout inclus dans l'abonnement Pro Agency, sans add-on payant supplémentaire.
+                  </li>
                 </ul>
 
                 <h3 className="text-lg md:text-xl font-semibold mt-6 md:mt-8 mb-3 md:mb-4 text-primary flex items-center gap-2">
