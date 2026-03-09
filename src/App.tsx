@@ -45,6 +45,7 @@ const ProAgency = lazy(() => import("./pages/ProAgency"));
 const Observatoire = lazy(() => import("./pages/Observatoire"));
 const Faq = lazy(() => import("./pages/Faq"));
 const Methodologie = lazy(() => import("./pages/Methodologie"));
+const CGVU = lazy(() => import("./pages/CGVU"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
@@ -105,6 +106,7 @@ const App = () => (
                           <Route path="/observatoire" element={<Observatoire />} />
                           <Route path="/faq" element={<Faq />} />
                           <Route path="/methodologie" element={<Methodologie />} />
+                          <Route path="/cgvu" element={<CGVU />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
