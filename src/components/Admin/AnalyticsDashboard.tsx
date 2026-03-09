@@ -269,6 +269,25 @@ export function AnalyticsDashboard() {
         }
       });
       
+      // Count paid API calls by service
+      const byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }> = {};
+      let dataforseoCalls = 0;
+      let openrouterCalls = 0;
+      
+      paidApiEvents.forEach(e => {
+        const data = e.event_data as Record<string, unknown> | null;
+        if (data) {
+          const service = (data.api_service as string) || 'unknown';
+          const endpoint = (data.endpoint as string) || 'unknown';
+          if (!byApiService[service]) byApiService[service] = { calls: 0, byEndpoint: {} };
+          byApiService[service].calls += 1;
+          byApiService[service].byEndpoint[endpoint] = (byApiService[service].byEndpoint[endpoint] || 0) + 1;
+          
+          if (service === 'dataforseo') dataforseoCalls++;
+          if (service === 'openrouter') openrouterCalls++;
+        }
+      });
+
       setTokenUsage({
         totalTokens,
         promptTokens,
@@ -278,6 +297,9 @@ export function AnalyticsDashboard() {
         byModel,
         paidApiCalls: paidApiEvents.length,
         totalEstimatedCost,
+        dataforseoCalls,
+        openrouterCalls,
+        byApiService,
       });
 
       // Calculate daily data (last 30 days)
