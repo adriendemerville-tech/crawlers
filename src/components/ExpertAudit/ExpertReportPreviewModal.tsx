@@ -176,6 +176,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
           url: result.url,
           data: { result: effectiveResult, auditMode },
           language,
+          preRenderedHtml: htmlContent,
         },
       });
 
