@@ -157,6 +157,7 @@ export function AnalyticsDashboard() {
     totalEstimatedCost: 0,
     dataforseoCalls: 0,
     openrouterCalls: 0,
+    browserlessCalls: 0,
     byApiService: {},
   });
 
