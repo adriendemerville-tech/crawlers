@@ -62,6 +62,25 @@ function getIntentColor(intent: string): string {
   return 'text-muted-foreground border-muted bg-muted/10';
 }
 
+function NuggetBadge() {
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge variant="outline" className="ml-2 text-[10px] border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 gap-1 cursor-help">
+            <Gem className="h-3 w-3" />
+            Pépite
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
+          <p className="font-semibold mb-1">Opportunité stratégique de niche</p>
+          <p>Cette requête ultra-ciblée présente un volume de recherche statistiquement faible, mais une pertinence métier exceptionnelle. Elle constitue une opportunité stratégique pour établir l'autorité de votre site sur une niche à haute conversion, où la concurrence est souvent inexistante.</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 function StrategicAnalysisRow({ analysis }: { analysis: KeywordStrategicAnalysis }) {
   return (
     <div className="px-3 py-2 bg-muted/30 border-t border-dashed border-border/50 space-y-2">
