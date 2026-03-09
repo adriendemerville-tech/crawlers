@@ -36,9 +36,13 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
   const t =
     expertReportTranslations[language as keyof typeof expertReportTranslations] || expertReportTranslations.fr;
 
-  // White-label branding for agency_pro users
+  // White-label branding: available for any subscribed user or admin with custom branding configured
+  const isSubscribedOrAdmin = profile && (
+    profile.plan_type !== 'free' || false // non-free plan
+  );
+  const hasCustomBranding = profile && (profile.agency_logo_url || profile.agency_primary_color || profile.agency_brand_name);
   const branding: WhiteLabelBranding | undefined =
-    profile?.plan_type === 'agency_pro' && (profile.agency_logo_url || profile.agency_primary_color)
+    isSubscribedOrAdmin && hasCustomBranding
       ? { logoUrl: profile.agency_logo_url, primaryColor: profile.agency_primary_color }
       : undefined;
 
