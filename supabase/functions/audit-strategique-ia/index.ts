@@ -497,8 +497,18 @@ async function fetchKeywordData(
 ): Promise<{ keyword: string; volume: number; difficulty: number }[]> {
   console.log(`📊 Récupération mots-clés pour location: ${locationCode}`);
   const allKeywords: { keyword: string; volume: number; difficulty: number }[] = [];
+  const seenLower = new Set<string>();
+  
+  const addUnique = (kw: { keyword: string; volume: number; difficulty: number }) => {
+    const lower = kw.keyword.toLowerCase();
+    if (!seenLower.has(lower) && kw.volume > 0) {
+      seenLower.add(lower);
+      allKeywords.push(kw);
+    }
+  };
   
   try {
+    // Phase 1: keywords_for_keywords (broader expansion)
     const response = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live', {
       method: 'POST',
       headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
@@ -514,7 +524,7 @@ async function fetchKeywordData(
       if (data.status_code === 20000 && data.tasks?.[0]?.result) {
         for (const item of data.tasks[0].result) {
           if (item.keyword && item.search_volume > 0) {
-            allKeywords.push({
+            addUnique({
               keyword: item.keyword,
               volume: item.search_volume || 0,
               difficulty: item.competition_index || Math.round((item.competition || 0.3) * 100),
@@ -524,9 +534,10 @@ async function fetchKeywordData(
         console.log(`✅ ${allKeywords.length} mots-clés via Google Ads API`);
       }
     } else {
-      await response.text(); // consume body
+      await response.text();
     }
     
+    // Phase 2: search_volume fallback for seed keywords themselves
     if (allKeywords.length < 10) {
       console.log('🔄 Fallback: search_volume...');
       const volumeResponse = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live', {
@@ -541,9 +552,8 @@ async function fetchKeywordData(
         const volumeData = await volumeResponse.json();
         if (volumeData.status_code === 20000 && volumeData.tasks?.[0]?.result) {
           for (const item of volumeData.tasks[0].result) {
-            if (item.keyword && item.search_volume > 0 &&
-                !allKeywords.find(kw => kw.keyword.toLowerCase() === item.keyword.toLowerCase())) {
-              allKeywords.push({
+            if (item.keyword && item.search_volume > 0) {
+              addUnique({
                 keyword: item.keyword,
                 volume: item.search_volume || 0,
                 difficulty: item.competition ? Math.round(item.competition * 100) : 30,
@@ -552,14 +562,53 @@ async function fetchKeywordData(
           }
         }
       } else {
-        await volumeResponse.text(); // consume body
+        await volumeResponse.text();
+      }
+    }
+    
+    // Phase 3: If still under 5, try broader single-word seeds 
+    if (allKeywords.length < 5 && seedKeywords.length > 0) {
+      console.log('🔄 Phase 3: broader single-word expansion...');
+      const singleWords = seedKeywords
+        .flatMap(s => s.split(/\s+/))
+        .filter(w => w.length >= 4)
+        .slice(0, 5);
+      
+      if (singleWords.length > 0) {
+        const broadResponse = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live', {
+          method: 'POST',
+          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify([{
+            keywords: singleWords,
+            location_code: locationCode, language_code: 'fr',
+            sort_by: 'search_volume', include_adult_keywords: false,
+          }]),
+        });
+        
+        if (broadResponse.ok) {
+          const broadData = await broadResponse.json();
+          if (broadData.status_code === 20000 && broadData.tasks?.[0]?.result) {
+            for (const item of broadData.tasks[0].result) {
+              if (item.keyword && item.search_volume > 0) {
+                addUnique({
+                  keyword: item.keyword,
+                  volume: item.search_volume || 0,
+                  difficulty: item.competition_index || Math.round((item.competition || 0.3) * 100),
+                });
+              }
+            }
+            console.log(`✅ Phase 3: ${allKeywords.length} mots-clés total après expansion`);
+          }
+        } else {
+          await broadResponse.text();
+        }
       }
     }
   } catch (error) {
     console.error('❌ Erreur mots-clés:', error);
   }
   
-  return allKeywords.sort((a, b) => b.volume - a.volume).slice(0, 15); // Reduced from 20 to 15
+  return allKeywords.sort((a, b) => b.volume - a.volume).slice(0, 15);
 }
 
 async function checkRankings(
@@ -882,6 +931,26 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
     // STRATEGIC SORT: first keyword = most relevant for core business + target
     const strategicKeywords = sortByStrategicRelevance(rankedKeywords, seedKeywords, pageContentContext);
     
+    // GUARANTEE MINIMUM 5 KEYWORDS: If DataForSEO returned fewer, supplement with seed keywords
+    if (strategicKeywords.length < 5) {
+      console.log(`⚠️ Only ${strategicKeywords.length} keywords from DataForSEO — supplementing with seeds`);
+      const existingLower = new Set(strategicKeywords.map(kw => kw.keyword.toLowerCase()));
+      for (const seed of seedKeywords) {
+        if (strategicKeywords.length >= 5) break;
+        if (seed.length > 3 && !existingLower.has(seed.toLowerCase())) {
+          existingLower.add(seed.toLowerCase());
+          strategicKeywords.push({
+            keyword: seed,
+            volume: 0, // Unknown volume — will signal AI to estimate
+            difficulty: 0,
+            is_ranked: false,
+            current_rank: 'Non classé',
+          });
+          console.log(`➕ Added seed keyword: "${seed}" (volume unknown)`);
+        }
+      }
+    }
+    
     const totalVolume = strategicKeywords.reduce((sum, kw) => sum + kw.volume, 0);
     
     console.log(`✅ Données: ${strategicKeywords.length} mots-clés, volume: ${totalVolume}`);
@@ -1084,6 +1153,7 @@ GÉNÈRE UN JSON avec cette structure:
 
 INSTRUCTIONS CRITIQUES:
 - UTILISE LES DONNÉES RÉELLES pour keyword_positioning et market_data_summary
+- keyword_positioning.main_keywords: MINIMUM 5 mots-clés OBLIGATOIRES. Si les données DataForSEO contiennent moins de 5 résultats ou des volumes à 0, COMPLÈTE avec des mots-clés pertinents pour le core business du site avec des volumes estimés et rank "Non classé". Un site a TOUJOURS au moins 5 mots-clés stratégiques liés à son activité.
 - executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
 - Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
 - GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
@@ -1730,6 +1800,28 @@ Deno.serve(async (req) => {
             source.profile_url = null;
           }
         }
+      }
+    }
+
+    // ═══ POST-PROCESS: Guarantee minimum 5 main_keywords ═══
+    if (parsedAnalysis.keyword_positioning?.main_keywords) {
+      const mainKw = parsedAnalysis.keyword_positioning.main_keywords;
+      if (mainKw.length < 5 && marketData?.top_keywords) {
+        console.log(`⚠️ Only ${mainKw.length} main_keywords from AI — supplementing from market data`);
+        const existingLower = new Set(mainKw.map((kw: any) => (kw.keyword || '').toLowerCase()));
+        for (const mkw of marketData.top_keywords) {
+          if (mainKw.length >= 5) break;
+          if (!existingLower.has(mkw.keyword.toLowerCase())) {
+            existingLower.add(mkw.keyword.toLowerCase());
+            mainKw.push({
+              keyword: mkw.keyword,
+              volume: mkw.volume,
+              difficulty: mkw.difficulty,
+              current_rank: mkw.current_rank || 'Non classé',
+            });
+          }
+        }
+        console.log(`✅ main_keywords after supplement: ${mainKw.length}`);
       }
     }
 
