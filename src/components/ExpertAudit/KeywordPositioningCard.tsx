@@ -462,7 +462,6 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                         </>
                         );
                       })}
-                      ))}
                     </tbody>
                   </table>
                 </div>
