@@ -43,6 +43,8 @@ const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersS
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
 const ProAgency = lazy(() => import("./pages/ProAgency"));
 const Observatoire = lazy(() => import("./pages/Observatoire"));
+const Faq = lazy(() => import("./pages/Faq"));
+const Methodologie = lazy(() => import("./pages/Methodologie"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
