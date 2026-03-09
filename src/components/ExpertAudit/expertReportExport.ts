@@ -230,7 +230,7 @@ export function generateExpertReportHTML(
     };
 
     const narrativeBloc = (title: string, color: string, bgColor: string, score: number, rows: string) => `
-      <div style="background: ${bgColor}; padding: 14px 16px; border-radius: 10px; border-left: 3px solid ${color}; margin-bottom: 10px;">
+      <div style="background: ${bgColor}; padding: 14px 16px; border-radius: 10px; border-left: 3px solid ${color}; margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <div style="font-size: 13px; font-weight: 600; color: ${color};">${title}</div>
           ${miniGauge(score)}
@@ -251,14 +251,14 @@ export function generateExpertReportHTML(
     const brokenChecked = scores.technical.brokenLinksChecked ?? 0;
 
     content = `
-      <div style="text-align: center; margin-bottom: 28px;">
-        <div style="display: inline-block; padding: 22px 44px; background: linear-gradient(135deg, #7c3aed, #2563eb); border-radius: 18px; margin-bottom: 14px;">
-          <div style="font-size: 48px; font-weight: bold; color: white;">${computedTotal}/200</div>
-          <div style="color: rgba(255,255,255,0.9); font-size: 14px;">${t.score} Global</div>
+      <div style="text-align: center; margin-bottom: 28px; break-inside: avoid; page-break-inside: avoid;">
+        <div style="display: inline-block; padding: 22px 44px; background: linear-gradient(135deg, #7c3aed, #2563eb); border-radius: 18px; margin-bottom: 14px; min-width: 200px; min-height: 90px;">
+          <div style="font-size: 48px; font-weight: bold; color: white; line-height: 1.2;">${computedTotal}/200</div>
+          <div style="color: rgba(255,255,255,0.9); font-size: 14px; margin-top: 4px;">${t.score} Global</div>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 24px;">
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 24px; break-inside: avoid; page-break-inside: avoid;">
         ${[
           { s: scores.performance, l: t.performance },
           { s: scores.technical, l: t.technical },
@@ -283,7 +283,7 @@ export function generateExpertReportHTML(
 
       <!-- Performance & Core Web Vitals -->
       <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${language === 'fr' ? 'Performance & Core Web Vitals' : 'Performance & Core Web Vitals'}</div>
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px;">
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid;">
         <div style="padding: 10px; background: ${psiPerf >= 90 ? '#dcfce7' : psiPerf >= 50 ? '#fef3c7' : '#fee2e2'}; border-radius: 10px; text-align: center;">
           <div style="font-size: 11px; color: #6b7280;">Score PSI</div>
           <div style="font-size: 20px; font-weight: 700; color: ${psiPerf >= 90 ? '#166534' : psiPerf >= 50 ? '#92400e' : '#991b1b'};">${psiPerf}%</div>
@@ -507,7 +507,7 @@ export function generateExpertReportHTML(
 
     // Helper for section cards
     const sectionCard = (title: string, color: string, bgGradient: string, innerHtml: string, lightTitle = false) => `
-      <div style="background: ${bgGradient}; padding: 20px; border-radius: 12px; margin-bottom: 16px; border-left: 4px solid ${color};">
+      <div style="background: ${bgGradient}; padding: 20px; border-radius: 12px; margin-bottom: 16px; border-left: 4px solid ${color}; break-inside: avoid; page-break-inside: avoid;">
         <div style="font-size: 15px; color: ${color}; margin: 0 0 12px 0; font-weight: ${lightTitle ? '500' : '700'};">${title}</div>
         ${innerHtml}
       </div>
@@ -517,10 +517,10 @@ export function generateExpertReportHTML(
     // No truncation — texts may already be AI-summarized before calling this function
 
     content = `
-      <div style="text-align: center; margin-bottom: 40px;">
-        <div style="display: inline-block; padding: 30px 50px; background: linear-gradient(135deg, #059669, #0891b2); border-radius: 20px; margin-bottom: 20px;">
-          <div style="font-size: 56px; font-weight: bold; color: white;">${geoScore}/100</div>
-          <div style="color: rgba(255,255,255,0.9); font-size: 16px;">${t.geoScore}</div>
+      <div style="text-align: center; margin-bottom: 40px; break-inside: avoid; page-break-inside: avoid;">
+        <div style="display: inline-block; padding: 30px 50px; background: linear-gradient(135deg, #059669, #0891b2); border-radius: 20px; margin-bottom: 20px; min-width: 220px; min-height: 100px;">
+          <div style="font-size: 56px; font-weight: bold; color: white; line-height: 1.2;">${geoScore}/100</div>
+          <div style="color: rgba(255,255,255,0.9); font-size: 16px; margin-top: 4px;">${t.geoScore}</div>
         </div>
       </div>
 
@@ -628,7 +628,7 @@ export function generateExpertReportHTML(
         return `
           <h3 style="font-size: 18px; color: #1f2937; margin: 24px 0 16px 0;">${language === 'fr' ? 'Feuille de Route Exécutive' : language === 'es' ? 'Hoja de Ruta Ejecutiva' : 'Executive Roadmap'}</h3>
           ${(strategic.executive_roadmap as any[]).slice(0, 4).map((item: any, i: number) => `
-            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 12px;">
+            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid;">
               <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span style="font-size: 13px; font-weight: 700; color: white; background: #6366f1; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">${i + 1}</span>
                 <strong style="color: #0f172a; font-size: 15px;">${item.title || ''}</strong>
@@ -704,19 +704,22 @@ export function generateExpertReportHTML(
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: #f3f4f6; min-height: 100vh; padding: 40px 20px; }
     .container { max-width: 900px; margin: 0 auto; }
-    .header { text-align: center; margin-bottom: 40px; padding: 28px; background: ${headerGradient}; border-radius: 20px; }
+    .header { text-align: center; margin-bottom: 40px; padding: 28px; background: ${headerGradient}; border-radius: 20px; break-inside: avoid; }
     .header-site { font-size: 26px; font-weight: 700; color: white; margin-bottom: 6px; word-break: break-all; }
     .header-audit-type { color: rgba(255,255,255,0.9); font-size: 15px; font-weight: 500; margin-bottom: 14px; }
     .header-brand { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); font-size: 12px; }
     .header-brand svg { vertical-align: middle; }
     .date { color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 8px; }
     .content { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .footer { text-align: center; margin-top: 40px; padding: 24px; background: ${headerGradient}; border-radius: 16px; }
+    .footer { text-align: center; margin-top: 40px; padding: 24px; background: ${headerGradient}; border-radius: 16px; break-inside: avoid; }
     .footer-brand { color: white; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
     .footer-link { color: white; text-decoration: none; font-weight: 500; padding: 10px 20px; background: rgba(255,255,255,0.2); border-radius: 10px; display: inline-block; }
+    /* Prevent splitting any card/section/table/score block */
+    div[style*="border-radius"], table, tr, .score-box { break-inside: avoid; page-break-inside: avoid; }
     @media print {
-      body { background: white; padding: 0; }
-      .content { box-shadow: none; }
+      body { background: white; padding: 20mm 15mm; }
+      .container { max-width: 100%; }
+      .content { box-shadow: none; padding: 20px; }
       .header, .footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
     @media (max-width: 700px) {
