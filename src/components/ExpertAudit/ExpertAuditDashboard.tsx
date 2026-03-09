@@ -31,6 +31,9 @@ import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
 import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { AIBotsCard } from './AIBotsCard';
 import { MethodologyPopover } from './MethodologyPopover';
+import { DarkSocialCard } from './DarkSocialCard';
+import { FreshnessSignalsCard } from './FreshnessSignalsCard';
+import { ConversionFrictionCard } from './ConversionFrictionCard';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -825,6 +828,12 @@ export function ExpertAuditDashboard() {
           hallucinationCorrections: hallucinationCorrections || null,
            // NEW: Raw LLM visibility data from check-llm
            llm_visibility_raw: data.data.llm_visibility_raw || null,
+           // NEW: 5 Strategic Metrics 2026
+           quotability: data.data.quotability || null,
+           summary_resilience: data.data.summary_resilience || null,
+           lexical_footprint: data.data.lexical_footprint || null,
+           expertise_sentiment: data.data.expertise_sentiment || null,
+           red_team: data.data.red_team || null,
         },
       };
 
@@ -1367,6 +1376,19 @@ export function ExpertAuditDashboard() {
                 {/* AI Bots */}
                 {result.rawData?.crawlersData && (
                   <AIBotsCard data={result.rawData.crawlersData} />
+                )}
+              </div>
+
+              {/* NEW: Technical Audit Cards (Dark Social, Freshness, Conversion Friction) */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {result.rawData?.htmlAnalysis?.darkSocial && (
+                  <DarkSocialCard data={result.rawData.htmlAnalysis.darkSocial} />
+                )}
+                {result.rawData?.htmlAnalysis?.freshnessSignals && (
+                  <FreshnessSignalsCard data={result.rawData.htmlAnalysis.freshnessSignals} />
+                )}
+                {result.rawData?.htmlAnalysis?.conversionFriction && (
+                  <ConversionFrictionCard data={result.rawData.htmlAnalysis.conversionFriction} />
                 )}
               </div>
 

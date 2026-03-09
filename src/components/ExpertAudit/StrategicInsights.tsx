@@ -24,8 +24,12 @@ import { PriorityContentCard } from './PriorityContentCard';
 import { PainScoreCard } from './PainScoreCard';
 import { ConversationalIntentCard } from './ConversationalIntentCard';
 import { ZeroClickRiskCard } from './ZeroClickRiskCard';
-
 import { CompetitorCorrections } from './CompetitorCorrectionModal';
+import { QuotabilityCard } from './QuotabilityCard';
+import { SummaryResilienceCard } from './SummaryResilienceCard';
+import { LexicalFootprintCard } from './LexicalFootprintCard';
+import { ExpertiseSentimentCard } from './ExpertiseSentimentCard';
+import { RedTeamCard } from './RedTeamCard';
 
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
@@ -197,6 +201,13 @@ export function StrategicInsights({
                 <PriorityContentCard domain={domain} />
               </>
             )}
+
+          {/* NEW: 5 Strategic AI Metrics */}
+          {analysis.quotability && <QuotabilityCard data={analysis.quotability} />}
+          {analysis.summary_resilience && <SummaryResilienceCard data={analysis.summary_resilience} />}
+          {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
+          {analysis.expertise_sentiment && <ExpertiseSentimentCard data={analysis.expertise_sentiment} />}
+          {analysis.red_team && <RedTeamCard data={analysis.red_team} />}
 
           {/* Premium Executive Roadmap (Narrative) */}
           {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (

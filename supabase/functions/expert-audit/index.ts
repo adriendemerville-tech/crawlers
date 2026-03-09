@@ -646,6 +646,120 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
         if (/<link[^>]*hreflang[^>]*>/i.test(bodyContent)) misplaced.push('hreflang');
         return misplaced;
       })(),
+      // ═══ DARK SOCIAL READINESS ═══
+      ...(() => {
+        try {
+          const ogTitle = (html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']*)["']/i) || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*property=["']og:title["']/i) || [])[1] || '';
+          const ogDesc = (html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']*)["']/i) || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*property=["']og:description["']/i) || [])[1] || '';
+          const ogImage = (html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']*)["']/i) || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*property=["']og:image["']/i) || [])[1] || '';
+          const twitterCard = (html.match(/<meta[^>]*name=["']twitter:card["'][^>]*content=["']([^"']*)["']/i) || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["']twitter:card["']/i) || [])[1] || '';
+
+          let darkSocialScore = 0;
+          if (ogTitle) darkSocialScore += 30;
+          if (ogDesc) darkSocialScore += 30;
+          if (ogImage) {
+            let imgScore = 40;
+            if (!/\.(jpg|jpeg|png|webp|gif|svg)/i.test(ogImage)) imgScore = 20;
+            darkSocialScore += imgScore;
+          }
+
+          return {
+            darkSocial: {
+              ogTitle,
+              ogDescription: ogDesc,
+              ogImage,
+              twitterCard,
+              score: darkSocialScore,
+            },
+          };
+        } catch { return { darkSocial: { ogTitle: '', ogDescription: '', ogImage: '', twitterCard: '', score: 0 } }; }
+      })(),
+      // ═══ FRESHNESS SIGNALS (Preuve de Vie) ═══
+      ...(() => {
+        try {
+          const lastModHeader = headResponse?.headers.get('Last-Modified') || null;
+          const revisedMeta = (html.match(/<meta[^>]*name=["']revised["'][^>]*content=["']([^"']*)["']/i) || [])[1] || null;
+          
+          let freshnessScore = 0;
+          let freshnessLabel: 'fresh' | 'acceptable' | 'stale' = 'stale';
+          let lastModifiedDate: string | null = null;
+
+          // Check Last-Modified or revised meta
+          const dateStr = lastModHeader || revisedMeta || mostRecentDate;
+          if (dateStr) {
+            try {
+              const d = new Date(dateStr);
+              if (!isNaN(d.getTime())) {
+                lastModifiedDate = d.toISOString();
+                const sixMonthsAgo = new Date();
+                sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+                if (d >= sixMonthsAgo) freshnessScore += 50;
+              }
+            } catch {}
+          }
+
+          // Check for current year in body text
+          const currentYear = new Date().getFullYear().toString();
+          const prevYear = (new Date().getFullYear() - 1).toString();
+          const hasCurrentYear = textContent.includes(currentYear) || textContent.includes(prevYear);
+          if (hasCurrentYear) freshnessScore += 50;
+
+          if (freshnessScore >= 80) freshnessLabel = 'fresh';
+          else if (freshnessScore >= 50) freshnessLabel = 'acceptable';
+
+          return {
+            freshnessSignals: {
+              score: freshnessScore,
+              label: freshnessLabel,
+              lastModifiedDate,
+              hasCurrentYearMention: hasCurrentYear,
+              currentYearFound: hasCurrentYear ? currentYear : null,
+            },
+          };
+        } catch { return { freshnessSignals: { score: 0, label: 'stale' as const, lastModifiedDate: null, hasCurrentYearMention: false, currentYearFound: null } }; }
+      })(),
+      // ═══ CONVERSION FRICTION ANALYSIS ═══
+      ...(() => {
+        try {
+          const formMatches = html.match(/<form[\s>]/gi) || [];
+          const formsCount = formMatches.length;
+
+          // Count visible inputs (exclude hidden)
+          const inputMatches = html.match(/<input[^>]*>/gi) || [];
+          const visibleInputs = inputMatches.filter(inp => !/type\s*=\s*["']hidden["']/i.test(inp)).length;
+
+          const avgFieldsPerForm = formsCount > 0 ? Math.round(visibleInputs / formsCount) : 0;
+
+          // CTA detection
+          const ctaPatterns = [
+            /<a[^>]*class=["'][^"']*\b(?:btn|button|cta)\b[^"']*["'][^>]*>/gi,
+            /<button[^>]*>/gi,
+            /type\s*=\s*["']submit["']/gi,
+          ];
+          let ctaCount = 0;
+          for (const p of ctaPatterns) ctaCount += (html.match(p) || []).length;
+
+          // Check CTA above fold (first 20% of body)
+          const bodyLen = bodyHtml.length;
+          const foldZone = bodyHtml.substring(0, Math.floor(bodyLen * 0.2));
+          const ctaAboveFold = /<(?:a|button)[^>]*class=["'][^"']*\b(?:btn|button|cta|submit)\b[^"']*["'][^>]*>/i.test(foldZone) || /type\s*=\s*["']submit["']/i.test(foldZone);
+
+          let frictionLevel: 'low' | 'optimal' | 'high' = 'optimal';
+          if (formsCount > 0 && avgFieldsPerForm > 5) frictionLevel = 'high';
+          else if (formsCount === 0 && ctaCount === 0) frictionLevel = 'low';
+
+          return {
+            conversionFriction: {
+              formsCount,
+              visibleInputs,
+              avgFieldsPerForm,
+              ctaCount,
+              ctaAboveFold,
+              frictionLevel,
+            },
+          };
+        } catch { return { conversionFriction: { formsCount: 0, visibleInputs: 0, avgFieldsPerForm: 0, ctaCount: 0, ctaAboveFold: false, frictionLevel: 'low' as const } }; }
+      })(),
     };
   } catch (error) {
     console.error('HTML analysis failed:', error);
@@ -700,6 +814,9 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasCaseStudies: false,
       caseStudySignals: 0,
       misplacedHeadTags: [],
+      darkSocial: { ogTitle: '', ogDescription: '', ogImage: '', twitterCard: '', score: 0 },
+      freshnessSignals: { score: 0, label: 'stale' as const, lastModifiedDate: null, hasCurrentYearMention: false, currentYearFound: null },
+      conversionFriction: { formsCount: 0, visibleInputs: 0, avgFieldsPerForm: 0, ctaCount: 0, ctaAboveFold: false, frictionLevel: 'low' as const },
     };
   }
 }

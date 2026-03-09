@@ -1419,7 +1419,12 @@ GÉNÈRE UN JSON avec cette structure:
 "market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
 "executive_roadmap":[{"title":"...","prescriptive_action":"Paragraphe 4-5 phrases","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Identité|Contenu|Autorité|Social|Technique","priority":"Prioritaire|Important|Opportunité"}],
 "executive_summary":"3-4 phrases pour CEO/CMO",
-"overallScore":0-100}
+"overallScore":0-100,
+"quotability":{"score":0-100,"quotes":["Phrase citable 1","Phrase citable 2","Phrase citable 3"]},
+"summary_resilience":{"score":0-100,"originalH1":"Le H1 de la page","llmSummary":"Résumé en 10 mots max de la proposition de valeur"},
+"lexical_footprint":{"score":0-100,"jargonRatio":0-100,"concreteRatio":0-100},
+"expertise_sentiment":{"rating":1-5,"justification":"1 phrase justificative"},
+"red_team":{"flaws":["Faille logique 1","Preuve manquante 2","Objection non adressée 3"]}}
 
 INSTRUCTIONS CRITIQUES:
 - UTILISE LES DONNÉES RÉELLES pour keyword_positioning et market_data_summary
@@ -1474,6 +1479,12 @@ INSTRUCTIONS CRITIQUES:
 - founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable dans les signaux E-E-A-T crawlés ni dans tes connaissances. Ne PAS inventer. C'est le cas le plus fréquent.
 - PRÉSENCE SOCIALE: Analyse uniquement les plateformes PERTINENTES pour le secteur. Ne force pas la présence sur Instagram si ce n'est pas pertinent. Les proof_sources doivent refléter la réalité: si un réseau est absent et non pertinent, indique presence_level: "absent" sans le traiter comme un défaut.
 - TEXTE DES CARDS SOCIALES: Le champ "analysis" de chaque proof_source ne doit JAMAIS être tronqué et doit faire MAXIMUM 450 caractères. Rédige un texte complet et concis.
+- 5 NOUVEAUX MODULES (OBLIGATOIRES):
+  • quotability: Extrais jusqu'à 3 phrases factuelles autonomes et citables par un LLM depuis le contenu de la page. +33 pts par citation de haute qualité. Si aucune n'existe, renvoie un tableau vide et score 0.
+  • summary_resilience: Résume la proposition de valeur du corps en 10 mots max. Compare avec le H1 original. Score 0-100 de similarité sémantique.
+  • lexical_footprint: Calcule le ratio jargon corporate vide vs verbes d'action concrets et entités spécifiques. Score 0-100 (100 = très spécifique et actionnable).
+  • expertise_sentiment: Le texte utilise-t-il des marqueurs d'expérience de première main ("Nous avons testé", "Dans notre expérience", "Étude de cas") ? Note de 1 (générique/IA) à 5 (expert de terrain).
+  • red_team: Agis en client sceptique expert. Identifie les 3 plus grandes failles logiques, preuves manquantes ou objections non adressées. Tableau de 3 strings.
 - JSON pur, sans virgules traînantes`;
 }
 
