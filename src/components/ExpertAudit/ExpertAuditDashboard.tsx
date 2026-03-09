@@ -75,7 +75,7 @@ const translations = {
     launch: 'Démarrer',
     analyzing: 'Analyse...',
     auditComplete: 'Audit terminé !',
-    globalScore: 'Score global',
+    globalScore: 'Score global SEO',
     strategicComplete: 'Analyse IA terminée !',
     strategicDesc2: 'Les recommandations stratégiques sont disponibles.',
     error: 'Erreur',
