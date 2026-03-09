@@ -1373,6 +1373,19 @@ export function ExpertAuditDashboard() {
                 )}
               </div>
 
+              {/* NEW: Technical Audit Cards (Dark Social, Freshness, Conversion Friction) */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {result.rawData?.htmlAnalysis?.darkSocial && (
+                  <DarkSocialCard data={result.rawData.htmlAnalysis.darkSocial} />
+                )}
+                {result.rawData?.htmlAnalysis?.freshnessSignals && (
+                  <FreshnessSignalsCard data={result.rawData.htmlAnalysis.freshnessSignals} />
+                )}
+                {result.rawData?.htmlAnalysis?.conversionFriction && (
+                  <ConversionFrictionCard data={result.rawData.htmlAnalysis.conversionFriction} />
+                )}
+              </div>
+
               {/* Premium Report Button - Before Expert Insights */}
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
