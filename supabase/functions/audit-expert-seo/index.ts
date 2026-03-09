@@ -354,9 +354,59 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
     
     const html = await response.text();
     
-    // For 403 with very little content, it's a real block — try Browserless
+    // For 403 with very little content, it's a real block — try Browserless directly
     if (response.status === 403 && html.length < 500) {
-      console.log(`[SmartFetch] 403 avec contenu insuffisant (${html.length} chars), tentative Browserless...`);
+      console.log(`[SmartFetch] 403 avec contenu insuffisant (${html.length} chars), tentative Browserless directe...`);
+      
+      const RENDERING_KEY_403 = Deno.env.get('RENDERING_API_KEY') || Deno.env.get('BROWSERLESS_API_KEY');
+      
+      if (RENDERING_KEY_403) {
+        try {
+          const renderUrl403 = `https://chrome.browserless.io/content?token=${RENDERING_KEY_403}`;
+          const renderController403 = new AbortController();
+          const renderTimeout403 = setTimeout(() => renderController403.abort(), 30000);
+          
+          const renderResponse403 = await fetch(renderUrl403, {
+            method: 'POST',
+            signal: renderController403.signal,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              url: url,
+              rejectResourceTypes: ['image', 'media', 'font'],
+              waitFor: 3000,
+              gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
+              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            })
+          });
+          
+          clearTimeout(renderTimeout403);
+          
+          if (renderResponse403.ok) {
+            const renderedHtml403 = await renderResponse403.text();
+            if (renderedHtml403.length > 500) {
+              console.log(`[SmartFetch] ✅ Browserless 403-fallback réussi (${renderedHtml403.length} chars)`);
+              const renderedDoc403 = new DOMParser().parseFromString(renderedHtml403, 'text/html');
+              if (renderedDoc403) {
+                const renderedAudit403 = performSelfAudit(renderedDoc403, renderedHtml403.length);
+                return {
+                  html: renderedHtml403,
+                  renderingMode: 'dynamic_rendered' as const,
+                  selfAudit: { ...renderedAudit403, reliabilityScore: Math.max(renderedAudit403.reliabilityScore, 0.85) }
+                };
+              }
+            }
+          } else {
+            const errText = await renderResponse403.text().catch(() => '');
+            console.log(`[SmartFetch] ⚠️ Browserless 403-fallback erreur ${renderResponse403.status}: ${errText.slice(0, 200)}`);
+          }
+        } catch (e403: unknown) {
+          const err403 = e403 as Error;
+          console.log(`[SmartFetch] ⚠️ Browserless 403-fallback exception: ${err403.message}`);
+        }
+      } else {
+        console.log('[SmartFetch] ⚠️ RENDERING_API_KEY non configurée — impossible de contourner le 403');
+      }
+      
       throw new Error(`HTTP 403 (blocked)`);
     }
     
