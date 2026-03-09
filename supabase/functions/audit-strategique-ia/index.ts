@@ -2164,6 +2164,16 @@ Deno.serve(async (req) => {
         ranking_overview: rankingOverview,
         toolsData: null, // Don't echo back the full toolsData to save response size
         llm_visibility_raw: effectiveToolsData.llm,
+        // Smart cache context for fast relaunches (competitor corrections, hallucination fixes)
+        _cachedContext: {
+          pageContentContext,
+          brandSignals,
+          eeatSignals,
+          marketData,
+          rankingOverview,
+          founderInfo,
+          llmData: effectiveToolsData.llm,
+        },
       }
     };
 
