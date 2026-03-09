@@ -20,6 +20,7 @@ interface KeywordPositioningCardProps {
   marketSummary?: MarketDataSummary;
   competitors?: CompetitiveLandscape;
   domain?: string;
+  rankingOverview?: RankingOverview;
 }
 
 function getRankColor(rank: number | string): string {
