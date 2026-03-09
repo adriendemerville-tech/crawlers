@@ -165,7 +165,10 @@ function ExplorationCard({
               <tbody>
                 {keywords.map((kw, idx) => (
                   <tr key={idx} className="border-t border-border/50 hover:bg-muted/30 cursor-pointer" onClick={() => setExpandedKw(expandedKw === idx ? null : idx)}>
-                    <td className="px-3 py-2 font-medium text-foreground">{kw.keyword}</td>
+                    <td className="px-3 py-2 font-medium text-foreground">
+                      {kw.keyword}
+                      {kw.is_nugget && <NuggetBadge />}
+                    </td>
                     <td className="text-center px-3 py-2 text-muted-foreground">{kw.volume.toLocaleString()}</td>
                     <td className="text-center px-3 py-2">
                       <Badge variant="outline" className={`text-xs ${
