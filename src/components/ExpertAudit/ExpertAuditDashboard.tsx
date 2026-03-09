@@ -168,6 +168,7 @@ export function ExpertAuditDashboard() {
   const [result, setResult] = useState<ExpertAuditResult | null>(null);
   const [technicalResult, setTechnicalResult] = useState<ExpertAuditResult | null>(null);
   const [strategicResult, setStrategicResult] = useState<ExpertAuditResult | null>(null);
+  const [strategicCachedContext, setStrategicCachedContext] = useState<any>(null);
   const [preSummarizedResult, setPreSummarizedResult] = useState<ExpertAuditResult | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -495,6 +496,7 @@ export function ExpertAuditDashboard() {
     setResult(null);
     setTechnicalResult(null);
     setStrategicResult(null);
+    setStrategicCachedContext(null);
     setCurrentStep(1);
     setCompletedSteps([]);
     // Clear session storage
@@ -752,12 +754,17 @@ export function ExpertAuditDashboard() {
     setIsStrategicLoading(true);
     setResult(null);
 
+    // Use cached context for competitor/hallucination corrections (skips DataForSEO, metadata, etc.)
+    const useCachedContext = (hallucinationCorrections || competitorCorrections) && strategicCachedContext;
+    
     try {
+      
       const data = await invokeWithTimeout('audit-strategique-ia', { 
         url: normalizedUrl, 
         toolsData: null,
         hallucinationCorrections: hallucinationCorrections || null,
-        competitorCorrections: competitorCorrections || null
+        competitorCorrections: competitorCorrections || null,
+        cachedContext: useCachedContext ? strategicCachedContext : null,
       });
 
       if (!data.success) throw new Error(data.error || 'Strategic audit failed');
@@ -823,6 +830,10 @@ export function ExpertAuditDashboard() {
 
       setResult(strategicData);
       setStrategicResult(strategicData);
+      // Store cached context for fast relaunches (competitor corrections, etc.)
+      if (data.data._cachedContext) {
+        setStrategicCachedContext(data.data._cachedContext);
+      }
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
       // Fire-and-forget: CTO Agent analysis
       triggerCtoAgent(strategicData, 'strategic', normalizedUrl, new URL(normalizedUrl).hostname);
@@ -857,7 +868,8 @@ export function ExpertAuditDashboard() {
       try {
         console.log('Strategic audit: auto-retrying...');
         const retryData = await invokeWithTimeout('audit-strategique-ia', {
-          url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null
+          url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
+          cachedContext: useCachedContext ? strategicCachedContext : null,
         });
         if (!retryData?.success) throw new Error(retryData?.error || 'Retry failed');
 
@@ -907,6 +919,9 @@ export function ExpertAuditDashboard() {
 
         setResult(strategicData);
         setStrategicResult(strategicData);
+        if (retryData.data._cachedContext) {
+          setStrategicCachedContext(retryData.data._cachedContext);
+        }
         setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
         setHallucinationDiagnosis(null);
         // Pre-summarize retry result
