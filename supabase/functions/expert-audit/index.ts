@@ -2133,6 +2133,9 @@ Réponds avec ce JSON exact:
       ).catch(err => console.error('Erreur sauvegarde registre:', err));
     }
     
+    // ═══ SPA DETECTION FLAG ═══
+    const isSPA = !!(htmlAnalysis.hasSPAMarkers && htmlAnalysis.isContentJSDependent);
+
     const responseBody = {
       success: true,
       data: {
@@ -2141,6 +2144,7 @@ Réponds avec ce JSON exact:
         scannedAt: new Date().toISOString(),
         totalScore,
         maxScore: 200,
+        isSPA,
         scores,
         recommendations,
         introduction,
