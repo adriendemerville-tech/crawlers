@@ -397,8 +397,19 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                       </tr>
                     </thead>
                     <tbody>
-                      {mainKeywords.map((kw, idx) => (
+                      {mainKeywords.map((kw, idx) => {
+                        const isFirstNugget = kw.is_nugget && (idx === 0 || !mainKeywords[idx - 1]?.is_nugget);
+                        return (
                         <>
+                          {isFirstNugget && (
+                            <tr key="nugget-sep">
+                              <td colSpan={5} className="px-3 py-2 bg-muted/30">
+                                <div className="border-t border-muted-foreground/20 pt-2 text-[11px] text-muted-foreground font-medium">
+                                  Vertical / Expertise — Opportunités de niche
+                                </div>
+                              </td>
+                            </tr>
+                          )}
                           <tr 
                             key={`row-${idx}`}
                             className={`border-t border-border/50 hover:bg-muted/30 ${kw.strategic_analysis ? 'cursor-pointer' : ''}`}
@@ -449,6 +460,8 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                             </tr>
                           )}
                         </>
+                        );
+                      })}
                       ))}
                     </tbody>
                   </table>
