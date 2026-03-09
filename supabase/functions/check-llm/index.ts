@@ -366,6 +366,9 @@ Deno.serve(async (req) => {
 
     console.log(`Analysis complete. Score: ${result.overallScore}/100, Citations: ${result.citationRate.cited}/${result.citationRate.total}`);
 
+    // Fire-and-forget URL tracking
+    trackAnalyzedUrl(`https://${domain}`).catch(() => {});
+
     return new Response(
       JSON.stringify({ success: true, data: result }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -265,6 +265,9 @@ Deno.serve(async (req) => {
       }
     };
 
+    // Fire-and-forget URL tracking
+    trackAnalyzedUrl(normalizedUrl).catch(() => {});
+
     return new Response(
       JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

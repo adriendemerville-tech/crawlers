@@ -199,6 +199,9 @@ serve(async (req) => {
       finalResult = lighthouseResult;
     }
 
+    // Fire-and-forget URL tracking
+    trackAnalyzedUrl(normalizedUrl).catch(() => {});
+
     return new Response(
       JSON.stringify({
         success: true,
