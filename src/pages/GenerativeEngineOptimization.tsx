@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Link } from 'react-router-dom';
@@ -7,11 +7,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   ArrowRight, CheckCircle2, Globe, Brain, Search,
-  FileText, Shield, BarChart3, Zap, Target, BookOpen, TrendingUp
+  FileText, Shield, BarChart3, Zap, Target, BookOpen, TrendingUp, Loader2
 } from 'lucide-react';
 import heroImage from '@/assets/landing/geo-pillar-hero.webp';
+import { supabase } from '@/integrations/supabase/client';
+import { GeoResult } from '@/types/geo';
+import { GeoDashboard } from '@/components/GeoDashboard';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
