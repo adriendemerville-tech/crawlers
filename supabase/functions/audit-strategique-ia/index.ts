@@ -1472,6 +1472,7 @@ INSTRUCTIONS CRITIQUES:
    - 9-10/10: réservé aux marques à autorité institutionnelle vérifiable (Wikidata sameAs, OU marque de référence que tu peux attester avec certitude)
 - founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable dans les signaux E-E-A-T crawlés ni dans tes connaissances. Ne PAS inventer. C'est le cas le plus fréquent.
 - PRÉSENCE SOCIALE: Analyse uniquement les plateformes PERTINENTES pour le secteur. Ne force pas la présence sur Instagram si ce n'est pas pertinent. Les proof_sources doivent refléter la réalité: si un réseau est absent et non pertinent, indique presence_level: "absent" sans le traiter comme un défaut.
+- TEXTE DES CARDS SOCIALES: Le champ "analysis" de chaque proof_source ne doit JAMAIS être tronqué et doit faire MAXIMUM 450 caractères. Rédige un texte complet et concis.
 - JSON pur, sans virgules traînantes`;
 }
 
