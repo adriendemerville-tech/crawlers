@@ -448,6 +448,13 @@ export interface StrategicAnalysis {
  
    // NEW: Raw LLM visibility data from check-llm
    llm_visibility_raw?: LLMVisibilityRaw | null;
+
+  // NEW: 5 Strategic Metrics 2026
+  quotability?: import('./newAuditMetrics').QuotabilityIndex;
+  summary_resilience?: import('./newAuditMetrics').SummaryResilience;
+  lexical_footprint?: import('./newAuditMetrics').LexicalFootprint;
+  expertise_sentiment?: import('./newAuditMetrics').ExpertiseSentiment;
+  red_team?: import('./newAuditMetrics').RedTeamAnalysis;
 }
 
  // Raw LLM visibility data from check-llm edge function
