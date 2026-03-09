@@ -171,7 +171,7 @@ const translations = {
     faqTitle: 'Frequently asked questions about Pro Agency',
     faqs: [
       { q: 'Can I cancel at any time?', a: 'Yes, you can cancel anytime. You keep access until the end of your current billing period.' },
-      { q: 'What exactly is white label?', a: 'You can customize reports with your own logo, colors and contact details. Your clients will never see the Crawlers.AI brand.' },
+      { q: 'What exactly is white label?', a: 'You can customize reports with your own logo, colors and contact details. Your clients will never see the Crawlers.fr brand.' },
       { q: 'Are the 3 accounts independent?', a: 'Yes, each team member has their own login. The main account manages permissions from the console.' },
       { q: 'Is there a minimum commitment?', a: 'No, the subscription has no commitment. You pay monthly and can stop whenever you want.' },
     ],
