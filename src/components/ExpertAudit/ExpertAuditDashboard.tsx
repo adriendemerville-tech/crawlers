@@ -496,6 +496,7 @@ export function ExpertAuditDashboard() {
     setResult(null);
     setTechnicalResult(null);
     setStrategicResult(null);
+    setStrategicCachedContext(null);
     setCurrentStep(1);
     setCompletedSteps([]);
     // Clear session storage
