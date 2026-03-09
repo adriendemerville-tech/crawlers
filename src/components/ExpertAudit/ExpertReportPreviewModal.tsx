@@ -113,9 +113,9 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
       const { default: html2canvas } = await import('html2canvas');
       const { default: jsPDF } = await import('jspdf');
 
-      // Render HTML in a hidden iframe to capture exact styled report
+      // Render HTML in a hidden iframe
       const iframe = document.createElement('iframe');
-      iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;height:1123px;border:none;';
+      iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;border:none;';
       document.body.appendChild(iframe);
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       if (!iframeDoc) throw new Error('Cannot access iframe');
@@ -124,36 +124,90 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
       iframeDoc.close();
 
       // Wait for content + images to render
-      await new Promise((r) => setTimeout(r, 1200));
+      await new Promise((r) => setTimeout(r, 1500));
 
-      const body = iframeDoc.body;
-      const canvas = await html2canvas(body, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        width: 794,
-        windowWidth: 794,
-        logging: false,
-      });
-      document.body.removeChild(iframe);
+      // Get all top-level sections as separate capture blocks
+      const container = iframeDoc.querySelector('.container') || iframeDoc.body;
+      const sections = Array.from(container.children) as HTMLElement[];
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.92);
-      const pdfWidth = 210; // A4 mm
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      const pageHeight = 297; // A4 mm
+      const pdfWidthMm = 210;
+      const pdfHeightMm = 297;
+      const marginTopMm = 15;
+      const marginBottomMm = 15;
+      const marginSideMm = 10;
+      const usableHeightMm = pdfHeightMm - marginTopMm - marginBottomMm;
+      const usableWidthMm = pdfWidthMm - marginSideMm * 2;
+      const scale = 2;
+
       const doc = new jsPDF('p', 'mm', 'a4');
+      let cursorYMm = marginTopMm;
+      let isFirstPage = true;
 
-      let position = 0;
-      let remainingHeight = pdfHeight;
+      for (const section of sections) {
+        // Capture each section separately
+        const canvas = await html2canvas(section, {
+          scale,
+          useCORS: true,
+          allowTaint: true,
+          width: 794 - 32, // account for container padding
+          windowWidth: 794,
+          logging: false,
+          backgroundColor: '#f8fafc',
+        });
 
-      while (remainingHeight > 0) {
-        doc.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-        remainingHeight -= pageHeight;
-        if (remainingHeight > 0) {
-          doc.addPage();
-          position -= pageHeight;
+        const imgData = canvas.toDataURL('image/png');
+        const sectionWidthMm = usableWidthMm;
+        const sectionHeightMm = (canvas.height * sectionWidthMm) / canvas.width;
+
+        // If section fits on current page
+        if (cursorYMm + sectionHeightMm <= pdfHeightMm - marginBottomMm) {
+          doc.addImage(imgData, 'PNG', marginSideMm, cursorYMm, sectionWidthMm, sectionHeightMm);
+          cursorYMm += sectionHeightMm + 2;
+        } else if (sectionHeightMm <= usableHeightMm) {
+          // Section fits on a fresh page
+          if (!isFirstPage || cursorYMm > marginTopMm + 5) {
+            doc.addPage();
+            cursorYMm = marginTopMm;
+          }
+          doc.addImage(imgData, 'PNG', marginSideMm, cursorYMm, sectionWidthMm, sectionHeightMm);
+          cursorYMm += sectionHeightMm + 2;
+        } else {
+          // Section is taller than one page — slice it across pages
+          const pixelsPerMm = canvas.height / sectionHeightMm;
+          let srcYPx = 0;
+          let remaining = sectionHeightMm;
+
+          while (remaining > 0) {
+            const spaceOnPage = (pdfHeightMm - marginBottomMm) - cursorYMm;
+            const sliceHeightMm = Math.min(remaining, spaceOnPage);
+            const sliceHeightPx = Math.round(sliceHeightMm * pixelsPerMm);
+
+            // Create a sub-canvas for this page slice
+            const sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = sliceHeightPx;
+            const ctx = sliceCanvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(canvas, 0, srcYPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+              const sliceImg = sliceCanvas.toDataURL('image/png');
+              doc.addImage(sliceImg, 'PNG', marginSideMm, cursorYMm, sectionWidthMm, sliceHeightMm);
+            }
+
+            srcYPx += sliceHeightPx;
+            remaining -= sliceHeightMm;
+            cursorYMm += sliceHeightMm;
+
+            if (remaining > 0) {
+              doc.addPage();
+              cursorYMm = marginTopMm;
+            }
+          }
+          cursorYMm += 2;
         }
+        isFirstPage = false;
       }
+
+      document.body.removeChild(iframe);
 
       const domain = (() => { try { return new URL(effectiveResult.url.startsWith('http') ? effectiveResult.url : `https://${effectiveResult.url}`).hostname; } catch { return 'report'; } })();
       const auditLabel = auditMode === 'technical' ? 'technique' : 'strategique';
