@@ -24,6 +24,7 @@ interface ExpertReportPreviewModalProps {
 export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, preSummarizedResult }: ExpertReportPreviewModalProps) {
   const { language } = useLanguage();
   const { user, profile } = useAuth();
+  const { isAdmin } = useAdmin();
   const { saveReport } = useSaveReport();
   const isMobile = useIsMobile();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
