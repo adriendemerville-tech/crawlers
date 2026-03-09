@@ -98,7 +98,7 @@ const translations = {
       },
     ],
     // Testimonial / Social proof
-    socialProofTitle: 'Rejoignez les professionnels qui optimisent avec Crawlers.AI',
+    socialProofTitle: 'Rejoignez les professionnels qui optimisent avec Crawlers.fr',
     socialProofText: 'Des agences SEO en France et en Europe utilisent déjà Pro Agency pour gagner du temps et impressionner leurs clients.',
     // FAQ
     faqTitle: 'Questions fréquentes sur Pro Agency',
