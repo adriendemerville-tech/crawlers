@@ -87,6 +87,7 @@ export function ReportPreviewModal({
 }: ReportPreviewModalProps) {
   const { language } = useLanguage();
   const { profile, user } = useAuth();
+  const isMobile = useIsMobile();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [isEmailing, setIsEmailing] = useState(false);
