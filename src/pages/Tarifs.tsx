@@ -22,7 +22,7 @@ const translations = {
   fr: {
     pageTitle: 'Tarifs et Fonctionnement | Crawlers.fr',
     title: 'Tarifs et Fonctionnement',
-    subtitle: 'Découvrez comment fonctionne Crawlers.AI et nos différentes offres',
+    subtitle: 'Découvrez comment fonctionne Crawlers.fr et nos différentes offres',
     freeSection: 'Outils Gratuits',
     freeDescription: 'Accessibles à tous, sans inscription',
     freeTools: [
