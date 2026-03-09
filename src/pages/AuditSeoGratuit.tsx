@@ -23,7 +23,49 @@ const AuditSeoGratuit = () => {
   const { language } = useLanguage();
   useCanonicalHreflang('/audit-seo-gratuit');
 
-  const structuredData = {
+  const [psUrl, setPsUrl] = useState('');
+  const [psLoading, setPsLoading] = useState(false);
+  const [psResult, setPsResult] = useState<PageSpeedResult | null>(null);
+  const [psStrategy, setPsStrategy] = useState<'mobile' | 'desktop'>('mobile');
+  const [psError, setPsError] = useState('');
+
+  const runPageSpeed = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!psUrl.trim()) return;
+    setPsLoading(true);
+    setPsError('');
+    setPsResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-pagespeed', {
+        body: { url: psUrl.trim(), strategy: psStrategy }
+      });
+      if (error || !data?.success) {
+        setPsError(data?.error === 'quota_exceeded' 
+          ? 'Quota API dépassé, réessayez demain.' 
+          : (data?.error || 'Erreur lors de l\'analyse'));
+      } else {
+        setPsResult(data.data);
+      }
+    } catch {
+      setPsError('Erreur réseau, réessayez.');
+    } finally {
+      setPsLoading(false);
+    }
+  };
+
+  const handleStrategyChange = async (newStrategy: 'mobile' | 'desktop') => {
+    setPsStrategy(newStrategy);
+    if (psResult) {
+      setPsLoading(true);
+      setPsError('');
+      try {
+        const { data, error } = await supabase.functions.invoke('check-pagespeed', {
+          body: { url: psUrl.trim(), strategy: newStrategy }
+        });
+        if (!error && data?.success) setPsResult(data.data);
+      } catch {} finally { setPsLoading(false); }
+    }
+  };
     "@context": "https://schema.org",
     "@graph": [
       {
