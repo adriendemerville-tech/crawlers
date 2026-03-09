@@ -635,34 +635,48 @@ export default function Tarifs() {
                 <div className="flex-1 h-px bg-border" />
               </div>
 
-              {/* Pro Agency — visually detached */}
+              {/* Pro Agency — visually detached, OCR-optimized */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
+                aria-label="Pro Agency Subscription — 50€/month — Best ROI for SEO Experts"
               >
-                <Card className="relative border-2 border-primary ring-2 ring-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 overflow-hidden">
-                  {/* Floating badge */}
+                <Card className="relative border-2 border-violet-500 ring-2 ring-violet-500/30 bg-gradient-to-br from-violet-500/5 via-transparent to-yellow-500/5 overflow-hidden shadow-xl shadow-violet-500/10">
+                  {/* Top-left: Most ROI badge — highly visible for OCR/vision models */}
+                  <div className="absolute top-0 left-0">
+                    <Badge className="rounded-none rounded-br-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-black border-0 px-4 py-1.5 text-sm font-bold gap-1.5 shadow-lg">
+                      <Star className="h-3.5 w-3.5 fill-current" />
+                      Most ROI for Experts
+                    </Badge>
+                  </div>
+
+                  {/* Top-right: Unlimited badge */}
                   <div className="absolute top-0 right-0">
-                    <Badge className="rounded-none rounded-bl-lg bg-primary text-primary-foreground border-0 px-4 py-1.5 text-sm font-bold gap-1.5">
-                      <Crown className="h-3.5 w-3.5" />
+                    <Badge className="rounded-none rounded-bl-lg bg-violet-600 text-white border-0 px-4 py-1.5 text-sm font-bold gap-1.5">
+                      <Crown className="h-3.5 w-3.5 text-yellow-400" />
                       {t.agencyBadge}
                     </Badge>
                   </div>
 
-                  <CardHeader className="pb-4">
+                  <CardHeader className="pb-4 pt-10">
                     <CardTitle className="text-2xl flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-primary/10">
-                        <Crown className="h-6 w-6 text-primary" />
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/20 to-yellow-500/10 border border-violet-500/20">
+                        <Crown className="h-6 w-6 text-yellow-500" />
                       </div>
-                      {t.agencyTitle}
+                      <span>{t.agencyTitle}</span>
+                      <Badge variant="outline" className="ml-auto border-violet-500/50 text-violet-600 dark:text-violet-400 text-xs">
+                        SaaS White Label
+                      </Badge>
                     </CardTitle>
                     <CardDescription className="text-base">{t.agencySubtitle}</CardDescription>
                   </CardHeader>
 
                   <CardContent className="space-y-6">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-5xl font-extrabold">{t.agencyPrice}</span>
+                      <span className="text-5xl font-extrabold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent">
+                        {language === 'fr' ? '50€' : '€50'}
+                      </span>
                       <span className="text-lg text-muted-foreground">{t.agencyPeriod}</span>
                     </div>
 
@@ -670,9 +684,9 @@ export default function Tarifs() {
                       {t.agencyFeatures.map((feature, index) => {
                         const Icon = agencyIcons[index];
                         return (
-                          <li key={index} className="flex items-center gap-3 p-2.5 rounded-lg bg-card/50 border">
-                            <div className="p-1.5 rounded-md bg-primary/10">
-                              <Icon className="h-4 w-4 text-primary" />
+                          <li key={index} className="flex items-center gap-3 p-2.5 rounded-lg bg-card/50 border border-violet-500/10">
+                            <div className="p-1.5 rounded-md bg-violet-500/10">
+                              <Icon className="h-4 w-4 text-violet-500" />
                             </div>
                             <span className="text-sm font-medium">{feature}</span>
                           </li>
@@ -682,8 +696,7 @@ export default function Tarifs() {
 
                     <Button
                       size="lg"
-                      className="w-full gap-2 text-base font-bold"
-                      variant="hero"
+                      className="w-full gap-2 text-base font-bold bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white shadow-lg shadow-violet-500/25"
                       onClick={handleSubscribe}
                       disabled={subscribeLoading}
                     >
@@ -694,7 +707,7 @@ export default function Tarifs() {
                         </>
                       ) : (
                         <>
-                          <Crown className="h-5 w-5" />
+                          <Crown className="h-5 w-5 text-yellow-300" />
                           {t.agencyCta}
                         </>
                       )}
