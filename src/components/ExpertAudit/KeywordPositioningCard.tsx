@@ -262,7 +262,9 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
     }
   };
 
-  const mainKeywords = positioning.main_keywords || [];
+  const regularKeywords = (positioning.main_keywords || []).filter(kw => !kw.is_nugget);
+  const nuggetKeywords = (positioning.main_keywords || []).filter(kw => kw.is_nugget).slice(0, 2);
+  const mainKeywords = [...regularKeywords, ...nuggetKeywords];
 
   return (
     <div className="space-y-4">
