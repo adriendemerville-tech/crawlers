@@ -133,6 +133,23 @@ interface MarketData {
   fetch_timestamp: string;
 }
 
+// Ranking overview from DataForSEO ranked_keywords endpoint
+interface RankingOverview {
+  total_ranked_keywords: number;
+  average_position_global: number;
+  average_position_top10: number;
+  distribution: {
+    top3: number;
+    top10: number;
+    top20: number;
+    top50: number;
+    top100: number;
+    beyond100: number;
+  };
+  top_keywords: { keyword: string; position: number; volume: number; url: string }[];
+  etv: number; // estimated traffic volume
+}
+
 interface BusinessContext {
   sector: string;
   location: string;
