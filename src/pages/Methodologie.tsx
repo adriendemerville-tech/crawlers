@@ -357,9 +357,16 @@ export default function Methodologie() {
         {/* Recommendations */}
         <section className="py-12 px-4">
           <div className="mx-auto max-w-6xl">
-            <h2 className="text-2xl font-bold text-foreground mb-8 text-center">
-              {t3(language, 'Types de recommandations générées', 'Types of Recommendations Generated', 'Tipos de recomendaciones generadas')}
+            <h2 className="text-2xl font-bold text-foreground mb-2 text-center">
+              {t3(language, 'Des recommandations concrètes, pas juste un diagnostic', 'Concrete Recommendations, Not Just a Diagnosis', 'Recomendaciones concretas, no solo un diagnóstico')}
             </h2>
+            <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+              {t3(language,
+                'Chaque audit génère des actions priorisées par impact, avec du code correctif prêt à intégrer.',
+                'Each audit generates impact-prioritized actions with ready-to-integrate corrective code.',
+                'Cada auditoría genera acciones priorizadas por impacto con código correctivo listo para integrar.'
+              )}
+            </p>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {recoCategories.map((cat) => (
                 <Card key={cat.title} className="border-border bg-card">
