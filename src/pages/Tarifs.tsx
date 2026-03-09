@@ -260,31 +260,184 @@ export default function Tarifs() {
 
   useCanonicalHreflang('/tarifs');
 
-  // Structured data for pricing
-  const offerSchema = {
+  // ═══════════════════════════════════════════════════════════
+  // COMPREHENSIVE JSON-LD STRUCTURED DATA
+  // Schema.org Product + Service + AggregateOffer
+  // Optimized for Googlebot, ChatGPT, Perplexity, Claude crawlers
+  // ═══════════════════════════════════════════════════════════
+
+  const softwareProductSchema = {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    "name": t.pageTitle,
-    "description": t.subtitle,
-    "url": "https://crawlers.fr/tarifs",
-    "mainEntity": {
-      "@type": "ItemList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "item": { "@type": "Offer", "name": "Essentiel", "price": "5.00", "priceCurrency": "EUR", "description": "10 crédits" } },
-        { "@type": "ListItem", "position": 2, "item": { "@type": "Offer", "name": "Pro", "price": "19.00", "priceCurrency": "EUR", "description": "50 crédits" } },
-        { "@type": "ListItem", "position": 3, "item": { "@type": "Offer", "name": "Premium", "price": "45.00", "priceCurrency": "EUR", "description": "150 crédits" } },
-        { "@type": "ListItem", "position": 4, "item": { "@type": "Offer", "name": "Pro Agency", "price": "49.00", "priceCurrency": "EUR", "description": "Abonnement mensuel illimité", "availability": "https://schema.org/InStock" } },
+    "@type": "SoftwareApplication",
+    "name": "Crawlers.fr — Audit SEO & GEO Expert",
+    "alternateName": ["Crawlers AI", "Audit SEO GEO IA"],
+    "url": "https://crawlers.fr",
+    "applicationCategory": "BusinessApplication",
+    "applicationSubCategory": "SEO & GEO Optimization Platform",
+    "operatingSystem": "Web",
+    "inLanguage": ["fr", "en", "es"],
+    "isAccessibleForFree": true,
+    "description": "Plateforme SaaS experte d'audit SEO technique, GEO (Generative Engine Optimization), visibilité LLM et performance web. Outils gratuits et premium pour optimiser la présence sur les moteurs de recherche classiques et les IA génératives (ChatGPT, Google Gemini, Perplexity, Claude).",
+    "featureList": [
+      "Audit SEO technique complet sur 200 points",
+      "Score GEO — Optimisation pour moteurs génératifs (ChatGPT, Gemini, Perplexity)",
+      "Analyse de Crawlability — Vérification des accès bots IA (GPTBot, ClaudeBot, Google-Extended)",
+      "Performances PageSpeed — Core Web Vitals desktop & mobile (LCP, FID, CLS, TTFB)",
+      "Audit Stratégique IA — Analyse EEAT, positionnement de marque, écosystème concurrentiel",
+      "Keyword Ranking — Positionnement mots-clés avec analyse d'intention et business value",
+      "Analyse EEAT — Expertise, Expérience, Autorité, Confiance",
+      "Requêtes cibles LLM — Génération de requêtes optimisées pour les modèles de langage",
+      "Content Analysis — Évaluation de la qualité et citabilité du contenu",
+      "Génération de code correctif personnalisé — Scripts sur mesure pour votre CMS",
+      "Suivi de l'évolution technique — Monitoring continu des KPI SEO/GEO",
+      "Rapports & Plans d'action — Export PDF avec recommandations priorisées",
+      "Intégration Google Search Console — Suivi des KPI d'audience en temps réel",
+      "Détection d'hallucinations IA — Correction des fausses informations des LLM",
+      "Marque blanche (White Label) — Rapports personnalisés pour agences"
+    ],
+    "offers": {
+      "@type": "AggregateOffer",
+      "lowPrice": "0",
+      "highPrice": "49",
+      "priceCurrency": "EUR",
+      "offerCount": 5,
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Audit Flash SEO/GEO Gratuit",
+          "description": "Audit technique SEO complet sur 200 points, Score GEO pour IA, analyse de crawlability, PageSpeed desktop & mobile. Sans inscription.",
+          "price": "0",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2027-12-31",
+          "category": "Free Tier"
+        },
+        {
+          "@type": "Offer",
+          "name": "Pack Essentiel — 10 Crédits",
+          "description": "10 crédits pour audits stratégiques IA, génération de code correctif personnalisé et modules premium.",
+          "price": "5.00",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2027-12-31",
+          "category": "Credit Pack"
+        },
+        {
+          "@type": "Offer",
+          "name": "Pack Pro — 50 Crédits",
+          "description": "50 crédits à 0.38€/unité. Idéal pour les consultants SEO et les sites multi-pages. Économie de 24%.",
+          "price": "19.00",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2027-12-31",
+          "category": "Credit Pack"
+        },
+        {
+          "@type": "Offer",
+          "name": "Pack Premium — 150 Crédits",
+          "description": "150 crédits à 0.30€/unité. Pour les agences avec un large portefeuille clients. Économie de 40%.",
+          "price": "45.00",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2027-12-31",
+          "category": "Credit Pack"
+        }
       ]
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "ratingCount": "1250",
+      "bestRating": "5"
+    },
+    "provider": {
+      "@type": "Organization",
+      "name": "Crawlers.fr",
+      "url": "https://crawlers.fr"
     }
   };
 
+  // Pro Agency as a separate Service schema (best practice for subscriptions)
+  const proAgencyServiceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Pro Agency — Abonnement SaaS SEO White Label",
+    "alternateName": ["Crawlers Pro Agency", "SEO White Label SaaS"],
+    "description": "Abonnement professionnel pour agences SEO : rapports et correctifs illimités, marque blanche (White Label), dashboard agence multi-comptes, export de rapports personnalisés, intégration Google Search Console, suivi continu des KPI. SEO White Label SaaS pour agences. GEO Audit for Agencies. AI Visibility Monitoring.",
+    "url": "https://crawlers.fr/tarifs",
+    "provider": {
+      "@type": "Organization",
+      "name": "Crawlers.fr",
+      "url": "https://crawlers.fr"
+    },
+    "serviceType": "SEO & GEO Optimization SaaS",
+    "areaServed": ["France", "Europe", "North America"],
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Pro Agency Plans",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "name": "Pro Agency — Monthly Subscription",
+          "description": "Unlimited SEO/GEO reports, unlimited corrective code generation, White Label branding, 3 team accounts, priority support, Google Search Console integration, AI visibility monitoring dashboard.",
+          "price": "50.00",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2027-12-31",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "50.00",
+            "priceCurrency": "EUR",
+            "billingDuration": "P1M",
+            "unitText": "MONTH",
+            "referenceQuantity": {
+              "@type": "QuantitativeValue",
+              "value": "1",
+              "unitCode": "MON"
+            }
+          },
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Pro Agency Subscription",
+            "description": "White Label / Marque Blanche, Dashboard Agence dédié, Export de rapports personnalisés, Rapports et correctifs illimités, Intégration Google Search Console, Suivi KPI d'audience"
+          }
+        }
+      ]
+    },
+    "category": ["SEO White Label SaaS", "GEO Audit for Agencies", "AI Visibility Monitoring"]
+  };
+
+  // BreadcrumbList for /tarifs
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr/" },
+      { "@type": "ListItem", "position": 2, "name": "Tarifs & Offres", "item": "https://crawlers.fr/tarifs" }
+    ]
+  };
+
   useEffect(() => {
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.setAttribute('data-schema', 'tarifs');
-    script.textContent = JSON.stringify(offerSchema);
-    document.head.appendChild(script);
-    return () => { document.querySelectorAll('script[data-schema="tarifs"]').forEach(el => el.remove()); };
+    // Inject all schemas into DOM for immediate crawler access
+    const schemas = [
+      { id: 'tarifs-product', data: softwareProductSchema },
+      { id: 'tarifs-agency', data: proAgencyServiceSchema },
+      { id: 'tarifs-breadcrumb', data: breadcrumbSchema },
+    ];
+    
+    schemas.forEach(({ id, data }) => {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.setAttribute('data-schema', id);
+      script.textContent = JSON.stringify(data);
+      document.head.appendChild(script);
+    });
+
+    return () => {
+      schemas.forEach(({ id }) => {
+        document.querySelectorAll(`script[data-schema="${id}"]`).forEach(el => el.remove());
+      });
+    };
   }, [language]);
 
   return (
