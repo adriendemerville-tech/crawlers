@@ -274,6 +274,20 @@ const ComparatifCrawlersSemrush = () => {
       semrushWin: false
     },
     {
+      criteria: "Marque Blanche (White Label)",
+      crawlers: "Oui (logo, couleurs, rapports personnalisés)",
+      semrush: "Non (branding Semrush imposé)",
+      crawlersWin: true,
+      semrushWin: false
+    },
+    {
+      criteria: "Dashboard Agence multi-clients",
+      crawlers: "Oui (gestion clients, dossiers, suivi)",
+      semrush: "Oui (Client Manager, add-on payant)",
+      crawlersWin: null,
+      semrushWin: null
+    },
+    {
       criteria: "Analyse concurrentielle",
       crawlers: "Limitée (focus visibilité IA)",
       semrush: "Avancée (trafic, mots-clés, pubs)",
@@ -438,6 +452,20 @@ const ComparatifCrawlersSemrush = () => {
                         <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">Indisponible</td>
                         <td className="px-2 md:px-4 py-2 md:py-3 text-center">
                           <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Natif</Badge>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-border/50 bg-muted/20">
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Marque Blanche (White Label)</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">Indisponible</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Pro Agency</Badge>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Dashboard Agence multi-clients</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Add-on payant</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Inclus (49€/mois)</Badge>
                         </td>
                       </tr>
                       <tr className="border-b border-border/50 bg-muted/20">
@@ -611,9 +639,10 @@ const ComparatifCrawlersSemrush = () => {
                     <li>• <strong>Pack Essentiel</strong> : 10 crédits pour 5€</li>
                     <li>• <strong>Pack Pro</strong> : 50 crédits pour 19€</li>
                     <li>• <strong>Pack Premium</strong> : 150 crédits pour 45€</li>
+                    <li>• <strong>Pro Agency</strong> : 49€/mois — illimité, marque blanche, dashboard agence</li>
                   </ul>
                   <p className="text-xs text-muted-foreground mt-3">
-                    * Pas d'abonnement obligatoire. Les crédits n'expirent pas.
+                    * Pas d'abonnement obligatoire pour les packs. Les crédits n'expirent pas.
                   </p>
                 </div>
 
@@ -691,6 +720,18 @@ const ComparatifCrawlersSemrush = () => {
                   <li>
                     <strong>Accessibilité financière</strong> : Un freelance peut auditer son site pour 0€. 
                     Une TPE peut obtenir un audit stratégique complet pour moins de 2€.
+                  </li>
+                  <li>
+                    <strong>Marque Blanche (White Label)</strong> : L'offre{' '}
+                    <Link to="/pro-agency" className="text-primary hover:underline font-medium">Pro Agency</Link>
+                    {' '}à 49€/mois permet de personnaliser entièrement les rapports avec votre propre logo, 
+                    vos couleurs et votre nom de marque. Idéal pour les consultants et agences qui veulent 
+                    présenter des livrables professionnels sous leur propre identité à leurs clients finaux.
+                  </li>
+                  <li>
+                    <strong>Dashboard Agence dédié</strong> : Gestion multi-clients avec dossiers, suivi 
+                    de l'évolution technique, export PDF personnalisé et plans d'action pilotables — 
+                    le tout inclus dans l'abonnement Pro Agency, sans add-on payant supplémentaire.
                   </li>
                 </ul>
 
