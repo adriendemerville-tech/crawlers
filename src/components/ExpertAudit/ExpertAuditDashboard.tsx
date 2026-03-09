@@ -26,6 +26,7 @@ import { ReportAuthGate } from './ReportAuthGate';
 import { PaymentModal } from './PaymentModal';
 import { CorrectiveCodeEditor } from './CorrectiveCodeEditor';
 import { WorkflowCarousel } from './WorkflowCarousel';
+import { PatienceCards } from './PatienceCards';
 import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
 import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { AIBotsCard } from './AIBotsCard';
