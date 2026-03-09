@@ -11,6 +11,7 @@ interface ShareReportRequest {
   url: string;
   data: any;
   language: string;
+  preRenderedHtml?: string;
 }
 
 const translations = {
