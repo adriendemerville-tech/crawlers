@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Link } from 'react-router-dom';
@@ -7,17 +7,48 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   ArrowRight, CheckCircle2, Globe, Brain, Search,
-  FileText, Shield, BarChart3, Zap, Target, BookOpen, TrendingUp
+  FileText, Shield, BarChart3, Zap, Target, BookOpen, TrendingUp, Loader2
 } from 'lucide-react';
 import heroImage from '@/assets/landing/geo-pillar-hero.webp';
+import { supabase } from '@/integrations/supabase/client';
+import { GeoResult } from '@/types/geo';
+import { GeoDashboard } from '@/components/GeoDashboard';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 const GenerativeEngineOptimization = () => {
   const { language } = useLanguage();
   useCanonicalHreflang('/generative-engine-optimization');
+
+  const [geoUrl, setGeoUrl] = useState('');
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoResult, setGeoResult] = useState<GeoResult | null>(null);
+  const [geoError, setGeoError] = useState('');
+
+  const runGeoAudit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!geoUrl.trim()) return;
+    setGeoLoading(true);
+    setGeoError('');
+    setGeoResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('check-geo', {
+        body: { url: geoUrl.trim(), lang: language }
+      });
+      if (error || !data?.success) {
+        setGeoError(data?.error || 'Erreur lors de l\'analyse GEO');
+      } else {
+        setGeoResult(data.data);
+      }
+    } catch {
+      setGeoError('Erreur réseau, réessayez.');
+    } finally {
+      setGeoLoading(false);
+    }
+  };
 
   const publishDate = '2026-03-09';
 
@@ -253,30 +284,56 @@ const GenerativeEngineOptimization = () => {
               </div>
             </section>
 
-            {/* Lead Magnet */}
-            <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent my-8">
-              <CardContent className="p-6 text-center">
-                <Globe className="h-10 w-10 text-primary mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-foreground mb-2">
-                  Mesurez votre score GEO gratuitement
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Crawlers.fr analyse l'accessibilité de votre site aux crawlers IA, la qualité de vos données structurées 
-                  et votre taux de citation par ChatGPT, Claude et Gemini. Score GEO + Score SEO 200 + Code correctif, 100% gratuit.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button asChild variant="hero" size="lg">
-                    <Link to="/audit-expert">
-                      Obtenir mon score GEO
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg">
-                    <Link to="/">
-                      Tester les outils gratuits
-                    </Link>
-                  </Button>
+            {/* Lead Magnet — Score GEO inline */}
+            <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent my-8" id="score-geo">
+              <CardContent className="p-6">
+                <div className="text-center mb-5">
+                  <Globe className="h-10 w-10 text-primary mx-auto mb-3" />
+                  <h3 className="text-lg font-bold text-foreground mb-1">
+                    Mesurez votre score GEO gratuitement
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Crawlers.fr analyse l'accessibilité de votre site aux crawlers IA, la qualité de vos données structurées 
+                    et votre taux de citation par ChatGPT, Claude et Gemini.
+                  </p>
                 </div>
+
+                <form onSubmit={runGeoAudit} className="flex flex-col sm:flex-row gap-2 mb-4">
+                  <Input
+                    type="url"
+                    placeholder="https://votre-site.fr"
+                    value={geoUrl}
+                    onChange={e => setGeoUrl(e.target.value)}
+                    className="flex-1"
+                    required
+                  />
+                  <Button type="submit" variant="hero" disabled={geoLoading} className="shrink-0">
+                    {geoLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Globe className="h-4 w-4 mr-2" />}
+                    Analyser
+                  </Button>
+                </form>
+
+                {geoError && (
+                  <p className="text-sm text-destructive text-center mb-3">{geoError}</p>
+                )}
+
+                {(geoResult || geoLoading) && (
+                  <GeoDashboard result={geoResult} isLoading={geoLoading} />
+                )}
+
+                {geoResult && (
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Pour l'audit complet (200 points, visibilité LLM, code correctif) :
+                    </p>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/audit-expert">
+                        Lancer l'audit expert complet
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
