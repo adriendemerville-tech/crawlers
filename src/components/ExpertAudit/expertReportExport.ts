@@ -283,7 +283,7 @@ export function generateExpertReportHTML(
 
       <!-- Performance & Core Web Vitals -->
       <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${language === 'fr' ? 'Performance & Core Web Vitals' : 'Performance & Core Web Vitals'}</div>
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px;">
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; break-inside: avoid; page-break-inside: avoid;">
         <div style="padding: 10px; background: ${psiPerf >= 90 ? '#dcfce7' : psiPerf >= 50 ? '#fef3c7' : '#fee2e2'}; border-radius: 10px; text-align: center;">
           <div style="font-size: 11px; color: #6b7280;">Score PSI</div>
           <div style="font-size: 20px; font-weight: 700; color: ${psiPerf >= 90 ? '#166534' : psiPerf >= 50 ? '#92400e' : '#991b1b'};">${psiPerf}%</div>
