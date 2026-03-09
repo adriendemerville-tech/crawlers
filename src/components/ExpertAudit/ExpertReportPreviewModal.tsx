@@ -23,6 +23,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
   const { language } = useLanguage();
   const { user, profile } = useAuth();
   const { saveReport } = useSaveReport();
+  const isMobile = useIsMobile();
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
