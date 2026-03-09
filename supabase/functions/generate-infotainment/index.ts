@@ -64,7 +64,9 @@ Génère EXACTEMENT :
 
 **5 "hack"** : Des astuces intemporelles et expertes sur E-E-A-T, crawlability, données structurées, maillage interne, optimisation pour LLMs, GEO. Chaque hack doit être concret et immédiatement applicable. 500 caractères MAX par item.
 
-IMPORTANT: Ne génère PAS de contenu spéculatif. Chaque "news" doit être basée sur un fait vérifiable. Les "hack" sont des bonnes pratiques établies.
+IMPORTANT:
+- Ne génère PAS de contenu spéculatif. Chaque "news" doit être basée sur un fait vérifiable. Les "hack" sont des bonnes pratiques établies.
+- Chaque item DOIT contenir entre 1 et 3 emojis pertinents intégrés naturellement dans le texte (ex: 🔍, 🚀, ⚡, 📊, 🤖, 💡, 🎯, 🔗, 📈, ✅). Les emojis rendent le contenu plus engageant et lisible.
 
 Retourne UNIQUEMENT un JSON array (pas de markdown) :
 [
