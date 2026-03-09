@@ -1419,7 +1419,12 @@ GÉNÈRE UN JSON avec cette structure:
 "market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
 "executive_roadmap":[{"title":"...","prescriptive_action":"Paragraphe 4-5 phrases","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Identité|Contenu|Autorité|Social|Technique","priority":"Prioritaire|Important|Opportunité"}],
 "executive_summary":"3-4 phrases pour CEO/CMO",
-"overallScore":0-100}
+"overallScore":0-100,
+"quotability":{"score":0-100,"quotes":["Phrase citable 1","Phrase citable 2","Phrase citable 3"]},
+"summary_resilience":{"score":0-100,"originalH1":"Le H1 de la page","llmSummary":"Résumé en 10 mots max de la proposition de valeur"},
+"lexical_footprint":{"score":0-100,"jargonRatio":0-100,"concreteRatio":0-100},
+"expertise_sentiment":{"rating":1-5,"justification":"1 phrase justificative"},
+"red_team":{"flaws":["Faille logique 1","Preuve manquante 2","Objection non adressée 3"]}}
 
 INSTRUCTIONS CRITIQUES:
 - UTILISE LES DONNÉES RÉELLES pour keyword_positioning et market_data_summary
