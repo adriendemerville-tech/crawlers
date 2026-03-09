@@ -497,8 +497,18 @@ async function fetchKeywordData(
 ): Promise<{ keyword: string; volume: number; difficulty: number }[]> {
   console.log(`📊 Récupération mots-clés pour location: ${locationCode}`);
   const allKeywords: { keyword: string; volume: number; difficulty: number }[] = [];
+  const seenLower = new Set<string>();
+  
+  const addUnique = (kw: { keyword: string; volume: number; difficulty: number }) => {
+    const lower = kw.keyword.toLowerCase();
+    if (!seenLower.has(lower) && kw.volume > 0) {
+      seenLower.add(lower);
+      allKeywords.push(kw);
+    }
+  };
   
   try {
+    // Phase 1: keywords_for_keywords (broader expansion)
     const response = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live', {
       method: 'POST',
       headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
@@ -514,7 +524,7 @@ async function fetchKeywordData(
       if (data.status_code === 20000 && data.tasks?.[0]?.result) {
         for (const item of data.tasks[0].result) {
           if (item.keyword && item.search_volume > 0) {
-            allKeywords.push({
+            addUnique({
               keyword: item.keyword,
               volume: item.search_volume || 0,
               difficulty: item.competition_index || Math.round((item.competition || 0.3) * 100),
@@ -524,9 +534,10 @@ async function fetchKeywordData(
         console.log(`✅ ${allKeywords.length} mots-clés via Google Ads API`);
       }
     } else {
-      await response.text(); // consume body
+      await response.text();
     }
     
+    // Phase 2: search_volume fallback for seed keywords themselves
     if (allKeywords.length < 10) {
       console.log('🔄 Fallback: search_volume...');
       const volumeResponse = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/search_volume/live', {
@@ -541,9 +552,8 @@ async function fetchKeywordData(
         const volumeData = await volumeResponse.json();
         if (volumeData.status_code === 20000 && volumeData.tasks?.[0]?.result) {
           for (const item of volumeData.tasks[0].result) {
-            if (item.keyword && item.search_volume > 0 &&
-                !allKeywords.find(kw => kw.keyword.toLowerCase() === item.keyword.toLowerCase())) {
-              allKeywords.push({
+            if (item.keyword && item.search_volume > 0) {
+              addUnique({
                 keyword: item.keyword,
                 volume: item.search_volume || 0,
                 difficulty: item.competition ? Math.round(item.competition * 100) : 30,
@@ -552,14 +562,53 @@ async function fetchKeywordData(
           }
         }
       } else {
-        await volumeResponse.text(); // consume body
+        await volumeResponse.text();
+      }
+    }
+    
+    // Phase 3: If still under 5, try broader single-word seeds 
+    if (allKeywords.length < 5 && seedKeywords.length > 0) {
+      console.log('🔄 Phase 3: broader single-word expansion...');
+      const singleWords = seedKeywords
+        .flatMap(s => s.split(/\s+/))
+        .filter(w => w.length >= 4)
+        .slice(0, 5);
+      
+      if (singleWords.length > 0) {
+        const broadResponse = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live', {
+          method: 'POST',
+          headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify([{
+            keywords: singleWords,
+            location_code: locationCode, language_code: 'fr',
+            sort_by: 'search_volume', include_adult_keywords: false,
+          }]),
+        });
+        
+        if (broadResponse.ok) {
+          const broadData = await broadResponse.json();
+          if (broadData.status_code === 20000 && broadData.tasks?.[0]?.result) {
+            for (const item of broadData.tasks[0].result) {
+              if (item.keyword && item.search_volume > 0) {
+                addUnique({
+                  keyword: item.keyword,
+                  volume: item.search_volume || 0,
+                  difficulty: item.competition_index || Math.round((item.competition || 0.3) * 100),
+                });
+              }
+            }
+            console.log(`✅ Phase 3: ${allKeywords.length} mots-clés total après expansion`);
+          }
+        } else {
+          await broadResponse.text();
+        }
       }
     }
   } catch (error) {
     console.error('❌ Erreur mots-clés:', error);
   }
   
-  return allKeywords.sort((a, b) => b.volume - a.volume).slice(0, 15); // Reduced from 20 to 15
+  return allKeywords.sort((a, b) => b.volume - a.volume).slice(0, 15);
 }
 
 async function checkRankings(
