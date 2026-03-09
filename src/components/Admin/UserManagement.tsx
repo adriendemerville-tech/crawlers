@@ -31,6 +31,8 @@ export function UserManagement() {
   const [creditDialogOpen, setCreditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [kpiUser, setKpiUser] = useState<UserProfile | null>(null);
+  const [kpiModalOpen, setKpiModalOpen] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
