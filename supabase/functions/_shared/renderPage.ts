@@ -66,15 +66,19 @@ function needsJSRendering(html: string, visibleText: string): boolean {
   const htmlToTextRatio = visibleText.length / html.length;
   const spaInfo = detectSPAMarkers(html);
 
+  // Count actual words (not just chars) — more reliable for content detection
+  const wordCount = visibleText.split(/\s+/).filter(w => w.length > 2).length;
+
   return (
     // Very little text despite large HTML
     (visibleText.length < 200 && html.length > 1000) ||
+    // SPA marker detected with low word count (even if SEO meta tags inflate char count)
+    (spaInfo.isSPA && wordCount < 100) ||
     // SPA marker with low text
     (spaInfo.isSPA && visibleText.length < 500) ||
     // Less than 2% text ratio (JS-heavy pages)
     (html.length > 5000 && htmlToTextRatio < 0.02) ||
     // Framework detected (Nuxt, Next, etc.) but key SEO tags missing from raw HTML
-    // These are likely hydrated client-side
     (!!spaInfo.framework && isMissingSEOTags(html))
   );
 }
@@ -116,11 +120,8 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url,
-        rejectResourceTypes: ['image', 'stylesheet', 'font', 'media'],
-        setJavaScriptEnabled: true,
-        waitFor: 3000,
         gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
-        userAgent: BROWSER_UA,
+        waitForSelector: { selector: 'body', timeout: 5000 },
       }),
       signal: AbortSignal.timeout(30000),
     });

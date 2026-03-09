@@ -1,0 +1,1 @@
+DELETE FROM audit_cache WHERE cache_key LIKE '%crawlers.fr%' AND function_name = 'expert-audit';
