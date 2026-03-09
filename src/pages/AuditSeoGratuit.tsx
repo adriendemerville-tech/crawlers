@@ -241,23 +241,60 @@ const AuditSeoGratuit = () => {
               l'audit stratégique IA est disponible pour 2 crédits seulement.
             </p>
 
-            {/* Lead Magnet */}
-            <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
-              <CardContent className="p-6 text-center">
-                <Globe className="h-10 w-10 text-primary mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-foreground mb-2">
-                  Votre score GEO offert avec l'audit
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  En plus du Score SEO 200, obtenez gratuitement votre Score GEO (visibilité sur les moteurs IA génératifs) 
-                  et votre analyse de crawlabilité IA — directement depuis la page d'accueil.
-                </p>
-                <Button asChild variant="hero" size="lg">
-                  <Link to="/audit-expert">
-                    Obtenir mon audit complet gratuit
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+            {/* Lead Magnet — PageSpeed inline */}
+            <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent" id="pagespeed">
+              <CardContent className="p-6">
+                <div className="text-center mb-5">
+                  <Gauge className="h-10 w-10 text-primary mx-auto mb-3" />
+                  <h3 className="text-lg font-bold text-foreground mb-1">
+                    Testez les performances de votre site — gratuitement
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Analyse Google PageSpeed Insights instantanée : Core Web Vitals, score de performance, accessibilité et SEO.
+                  </p>
+                </div>
+
+                <form onSubmit={runPageSpeed} className="flex flex-col sm:flex-row gap-2 mb-4">
+                  <Input
+                    type="url"
+                    placeholder="https://votre-site.fr"
+                    value={psUrl}
+                    onChange={e => setPsUrl(e.target.value)}
+                    className="flex-1"
+                    required
+                  />
+                  <Button type="submit" variant="hero" disabled={psLoading} className="shrink-0">
+                    {psLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Gauge className="h-4 w-4 mr-2" />}
+                    Analyser
+                  </Button>
+                </form>
+
+                {psError && (
+                  <p className="text-sm text-destructive text-center mb-3">{psError}</p>
+                )}
+
+                {(psResult || psLoading) && (
+                  <PageSpeedDashboard
+                    result={psResult}
+                    isLoading={psLoading}
+                    strategy={psStrategy}
+                    onStrategyChange={handleStrategyChange}
+                  />
+                )}
+
+                {psResult && (
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Pour un audit complet (200 points, code correctif, visibilité IA) :
+                    </p>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/audit-expert">
+                        Lancer l'audit expert complet
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
