@@ -16,6 +16,7 @@ import { ActionPlan } from './ActionPlan';
 import { LoadingSteps } from './LoadingSteps';
 import { StrategicInsights } from './StrategicInsights';
 import { IntroductionCard } from './IntroductionCard';
+import { SPADetectionAlert } from './SPADetectionAlert';
 import { ExpertInsightsCard } from './ExpertInsightsCard';
 import { BrokenLinksCard } from './BrokenLinksCard';
 import { TechnicalNarrativeSection } from './TechnicalNarrativeSection';
