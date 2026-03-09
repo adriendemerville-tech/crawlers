@@ -1752,7 +1752,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url, toolsData, hallucinationCorrections, competitorCorrections } = await req.json();
+    const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext } = await req.json();
 
     if (!url) {
       return new Response(
@@ -1776,89 +1776,46 @@ Deno.serve(async (req) => {
       pagespeed: { note: 'Non disponible' },
     };
 
-    // ==================== FETCH PAGE METADATA (lightweight) ====================
-    const { context: pageContentContext, brandSignals, eeatSignals } = await extractPageMetadata(url);
-
-    const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
-    const domain = new URL(normalizedUrl).hostname;
-    const domainWithoutWww = domain.replace(/^www\./, '');
-    const domainSlug = domainWithoutWww.split('.')[0];
+    // ==================== SMART CACHE: Skip expensive calls if cachedContext provided ====================
+    const useCache = !!cachedContext;
     
-    // ==================== PROBABILISTIC BRAND NAME RESOLUTION ====================
-    const { name: resolvedEntityName, confidence: brandConfidence } = resolveBrandName(brandSignals, domain, url);
-    const isConfidentBrand = brandConfidence >= 0.95;
-    // humanBrandName is used for sanitization (slug → readable) in non-introduction sections
-    const humanBrandName = isConfidentBrand ? resolvedEntityName : humanizeBrandName(domainSlug);
-    console.log(`🎯 Entité résolue: "${resolvedEntityName}" (confiance: ${(brandConfidence * 100).toFixed(1)}%, ${isConfidentBrand ? 'NOM DÉTECTÉ' : 'FALLBACK URL'})`);
-
-    console.log('═══════════════════════════════════════════════════════════════');
-    console.log(`🚀 AUDIT STRATÉGIQUE pour: ${domain} (${resolvedEntityName})`);
-
-    // ==================== SINGLE context detection (no duplicate API calls) ====================
-    const context = detectBusinessContext(domain, pageContentContext);
-
-    // ==================== ÉTAPE 1: DATAFORSEO + RANKED KEYWORDS (parallel) ====================
-    console.log('\n📊 ÉTAPE 1: DataForSEO...');
-    const [marketData, rankingOverview] = await Promise.all([
-      fetchMarketData(domain, context, pageContentContext, url),
-      context.locationCode ? fetchRankedKeywords(domain, context.locationCode) : Promise.resolve(null),
-    ]);
-
-    // ==================== ÉTAPE 1b: CONCURRENT LOCAL + FOUNDER (parallel) ====================
-    console.log('\n🏙️ ÉTAPE 1b: Concurrent local + Founder discovery...');
+    let pageContentContext: string;
+    let brandSignals: BrandSignal[];
+    let eeatSignals: EEATSignals;
+    let marketData: MarketData | null;
+    let rankingOverview: RankingOverview | null;
+    let founderInfo: FounderInfo;
     let localCompetitorData: { name: string; url: string; rank: number } | null = null;
-    let founderInfo: FounderInfo = { name: null, profileUrl: null, platform: null, isInfluencer: false };
-    
-    // Run in parallel
-    const [localCompResult, founderResult] = await Promise.allSettled([
-      context.locationCode ? findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext) : Promise.resolve(null),
-      searchFounderProfile(domain),
-    ]);
-    
-    if (localCompResult.status === 'fulfilled' && localCompResult.value) {
-      localCompetitorData = localCompResult.value;
-    } else if (localCompResult.status === 'rejected') {
-      console.error('❌ Concurrent local:', localCompResult.reason);
-    }
-    
-    if (founderResult.status === 'fulfilled' && founderResult.value) {
-      founderInfo = founderResult.value;
-    }
 
-    // ==================== ÉTAPE 1c: CHECK-LLM (skip if toolsData already has LLM data) ====================
-    if (!toolsData?.llm || toolsData.llm.note) {
-      console.log('\n🤖 ÉTAPE 1c: check-llm...');
-      try {
-        const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-        const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-        
-        if (supabaseUrl && supabaseAnonKey) {
-          const llmResponse = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${supabaseAnonKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ url, lang: 'fr' }),
-            signal: AbortSignal.timeout(30000), // 30s timeout for sub-function
-          });
-          
-          if (llmResponse.ok) {
-            const llmResult = await llmResponse.json();
-            if (llmResult.success && llmResult.data) {
-              effectiveToolsData.llm = llmResult.data;
-              console.log(`✅ LLM: score ${llmResult.data.overallScore}/100`);
-            }
-          } else {
-            await llmResponse.text(); // consume
-            console.log('⚠️ check-llm error:', llmResponse.status);
-          }
-        }
-      } catch (e) {
-        console.error('❌ check-llm:', e);
+    if (useCache) {
+      console.log('⚡ SMART CACHE: Using cached context — skipping metadata, DataForSEO, founder, check-llm');
+      pageContentContext = cachedContext.pageContentContext || '';
+      brandSignals = cachedContext.brandSignals || [];
+      eeatSignals = cachedContext.eeatSignals || {
+        hasAuthorBio: false, authorBioCount: 0,
+        hasSocialLinks: false, hasLinkedInLinks: false,
+        socialLinksCount: 0, linkedInLinksCount: 0, linkedInUrls: [],
+        hasSameAs: false, hasWikidataSameAs: false,
+        hasAuthorInJsonLd: false, hasProfilePage: false,
+        hasPerson: false, hasOrganization: false,
+        hasCaseStudies: false, caseStudySignals: 0,
+        hasExpertCitations: false, detectedSocialUrls: [],
+      };
+      marketData = cachedContext.marketData || null;
+      rankingOverview = cachedContext.rankingOverview || null;
+      founderInfo = cachedContext.founderInfo || { name: null, profileUrl: null, platform: null, isInfluencer: false };
+      // When user corrects competitors, skip local competitor search (user overrides)
+      localCompetitorData = null;
+      // Use cached LLM data
+      if (cachedContext.llmData) {
+        effectiveToolsData.llm = cachedContext.llmData;
       }
     } else {
-      console.log('✅ LLM data already provided, skipping check-llm call');
+      // ==================== FETCH PAGE METADATA (lightweight) ====================
+      const metadata = await extractPageMetadata(url);
+      pageContentContext = metadata.context;
+      brandSignals = metadata.brandSignals;
+      eeatSignals = metadata.eeatSignals;
     }
 
     // ==================== ÉTAPE 2: LLM ANALYSIS ====================
