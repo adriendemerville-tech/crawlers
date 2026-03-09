@@ -114,7 +114,19 @@ const ExpertAudit = () => {
         "@type": "SoftwareApplication",
         "name": "Score SEO 200",
         "applicationCategory": "WebApplication",
-        "operatingSystem": "Web Browser"
+        "operatingSystem": "Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR"
+        }
+      },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
+          { "@type": "ListItem", "position": 2, "name": "Audit Expert SEO & GEO", "item": "https://crawlers.fr/audit-expert" }
+        ]
       }
     };
 
