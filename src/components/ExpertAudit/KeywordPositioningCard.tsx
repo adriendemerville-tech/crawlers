@@ -294,6 +294,78 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Market Summary Stats */}
+            {/* Ranking Overview */}
+            {rankingOverview && (
+              <div className="p-4 rounded-lg border border-primary/20 bg-primary/5 space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  État des lieux SEO du domaine
+                  <Badge variant="outline" className="ml-auto text-xs text-primary border-primary/50">
+                    {rankingOverview.total_ranked_keywords} mots-clés positionnés
+                  </Badge>
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                    <Target className="h-4 w-4 text-primary mx-auto mb-1" />
+                    <p className="text-lg font-bold text-foreground">
+                      #{rankingOverview.average_position_global}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Position moy. globale</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                    <Trophy className="h-4 w-4 text-success mx-auto mb-1" />
+                    <p className="text-lg font-bold text-foreground">
+                      {rankingOverview.average_position_top10 > 0 ? `#${rankingOverview.average_position_top10}` : 'N/A'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Position moy. Top 10</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                    <Zap className="h-4 w-4 text-warning mx-auto mb-1" />
+                    <p className="text-lg font-bold text-foreground">{rankingOverview.etv.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">Trafic estimé/mois</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                    <BarChart3 className="h-4 w-4 text-primary mx-auto mb-1" />
+                    <p className="text-lg font-bold text-foreground">{rankingOverview.distribution.top10}</p>
+                    <p className="text-xs text-muted-foreground">Mots-clés Top 10</p>
+                  </div>
+                </div>
+                {/* Distribution bar */}
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Distribution des positions</p>
+                  <div className="flex h-3 rounded-full overflow-hidden bg-muted">
+                    {rankingOverview.distribution.top3 > 0 && (
+                      <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                        <div className="bg-success h-full" style={{ width: `${(rankingOverview.distribution.top3 / rankingOverview.total_ranked_keywords) * 100}%` }} />
+                      </TooltipTrigger><TooltipContent>Top 3 : {rankingOverview.distribution.top3}</TooltipContent></Tooltip></TooltipProvider>
+                    )}
+                    {(rankingOverview.distribution.top10 - rankingOverview.distribution.top3) > 0 && (
+                      <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                        <div className="bg-primary h-full" style={{ width: `${((rankingOverview.distribution.top10 - rankingOverview.distribution.top3) / rankingOverview.total_ranked_keywords) * 100}%` }} />
+                      </TooltipTrigger><TooltipContent>Top 4-10 : {rankingOverview.distribution.top10 - rankingOverview.distribution.top3}</TooltipContent></Tooltip></TooltipProvider>
+                    )}
+                    {rankingOverview.distribution.top20 > 0 && (
+                      <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                        <div className="bg-warning h-full" style={{ width: `${(rankingOverview.distribution.top20 / rankingOverview.total_ranked_keywords) * 100}%` }} />
+                      </TooltipTrigger><TooltipContent>Top 11-20 : {rankingOverview.distribution.top20}</TooltipContent></Tooltip></TooltipProvider>
+                    )}
+                    {rankingOverview.distribution.top50 > 0 && (
+                      <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                        <div className="bg-muted-foreground/30 h-full" style={{ width: `${(rankingOverview.distribution.top50 / rankingOverview.total_ranked_keywords) * 100}%` }} />
+                      </TooltipTrigger><TooltipContent>Top 21-50 : {rankingOverview.distribution.top50}</TooltipContent></Tooltip></TooltipProvider>
+                    )}
+                  </div>
+                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-success inline-block" /> Top 3</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary inline-block" /> Top 10</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-warning inline-block" /> Top 20</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-muted-foreground/30 inline-block" /> Top 50</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Market Summary Stats */}
             {marketSummary && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="p-3 rounded-lg bg-muted/50 text-center">
