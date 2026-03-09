@@ -92,9 +92,9 @@ const translations = {
     newAudit: 'Nouvel Audit',
   },
   en: {
-    badge: 'Expert SEO & AI Audit',
-    title: 'Analyze your site in depth',
-    subtitlePart1: '360° analysis of your SEO and GEO in less than 10 min.',
+    badge: 'Expert SEO & GEO Audit',
+    title: 'Free SEO & GEO Audit — 200-Point Score',
+    subtitlePart1: 'Measure your Google + generative AI visibility in under 2 min.',
     subtitlePart2: 'Development of',
     subtitleCode: 'corrective code',
     subtitlePart3: 'tailored to your needs.',

@@ -45,16 +45,16 @@ const faqSchemaData = {
 
 const metaData = {
   fr: {
-    title: "Score SEO 200 - Audit Expert SEO & IA Gratuit | Crawlers.fr",
-    description: "Analysez votre site avec le Score SEO 200 : Performance, Technique, Sémantique, Préparation IA/GEO et Sécurité. Optimisez votre visibilité sur Google et les moteurs IA en 2026."
+    title: "Audit SEO & GEO Gratuit 2026 — Score 200 points, Visibilité IA | Crawlers.fr",
+    description: "Audit SEO et GEO gratuit en ligne : score sur 200 points, Core Web Vitals, citabilité LLM (ChatGPT, Claude, Perplexity), données structurées JSON-LD et code correctif personnalisé. Résultats en 2 minutes."
   },
   en: {
-    title: "SEO 200 Score - Free Expert SEO & AI Audit | Crawlers.fr",
-    description: "Analyze your site with the SEO 200 Score: Performance, Technical, Semantics, AI/GEO Readiness and Security. Optimize your visibility on Google and AI engines in 2026."
+    title: "Free SEO & GEO Audit 2026 — 200-Point Score, AI Visibility | Crawlers.fr",
+    description: "Free online SEO and GEO audit: 200-point score, Core Web Vitals, LLM citability (ChatGPT, Claude, Perplexity), JSON-LD structured data and custom corrective code. Results in 2 minutes."
   },
   es: {
-    title: "Score SEO 200 - Auditoría Experta SEO e IA Gratis | Crawlers.fr",
-    description: "Analiza tu sitio con el Score SEO 200: Rendimiento, Técnica, Semántica, Preparación IA/GEO y Seguridad. Optimiza tu visibilidad en Google y motores IA en 2026."
+    title: "Auditoría SEO & GEO Gratis 2026 — Score 200 puntos, Visibilidad IA | Crawlers.fr",
+    description: "Auditoría SEO y GEO gratuita online: score de 200 puntos, Core Web Vitals, citabilidad LLM (ChatGPT, Claude, Perplexity), datos estructurados JSON-LD y código correctivo personalizado."
   }
 };
 
