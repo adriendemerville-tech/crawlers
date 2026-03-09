@@ -455,6 +455,20 @@ const ComparatifCrawlersSemrush = () => {
                         </td>
                       </tr>
                       <tr className="border-b border-border/50 bg-muted/20">
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Marque Blanche (White Label)</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground">Indisponible</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Pro Agency</Badge>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-border/50">
+                        <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Dashboard Agence multi-clients</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Add-on payant</td>
+                        <td className="px-2 md:px-4 py-2 md:py-3 text-center">
+                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Inclus (49€/mois)</Badge>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-border/50 bg-muted/20">
                         <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Complexité</td>
                         <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Usine à gaz (Expert requis)</td>
                         <td className="px-2 md:px-4 py-2 md:py-3 text-center">
