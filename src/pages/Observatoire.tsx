@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useObservatoryStats } from '@/hooks/useObservatoryStats';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -13,7 +15,8 @@ import {
   BarChart3, Activity, Map, FileText, Share2, Twitter,
   Link2, Globe, ShieldCheck, Smartphone, MonitorSmartphone,
   Box, Network, Image, ImageOff, Palette, FileCode,
-  Gauge, Zap, LayoutDashboard, MousePointerClick
+  Gauge, Zap, LayoutDashboard, MousePointerClick,
+  BookOpen, FlaskConical, HelpCircle, ArrowRight
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
@@ -32,31 +35,33 @@ const translations = {
     chartTitle: "Évolution des métriques de performance",
     chartSubtitle: "Moyenne mensuelle sur les 6 derniers mois (en ms)",
     noData: "Les données apparaîtront ici dès les premiers scans.",
-    // Boolean KPIs
-    has_json_ld: "JSON-LD",
-    has_sitemap: "Sitemap.xml",
-    has_robots_txt: "Robots.txt",
-    has_meta_description: "Meta Description",
-    has_open_graph: "Open Graph",
-    has_twitter_cards: "Twitter Cards",
-    has_canonical: "Canonical",
-    has_hreflang: "Hreflang",
-    has_https: "HTTPS",
-    is_mobile_friendly: "Mobile-friendly",
-    has_viewport_meta: "Viewport Meta",
-    // Numeric KPIs
-    load_time_ms: "Temps de chargement",
-    error_404_count: "Erreurs 404 / site",
-    dom_size_kb: "Taille DOM",
-    total_requests: "Requêtes HTTP",
-    image_count: "Images / page",
-    images_without_alt: "Images sans Alt",
-    css_files_count: "Fichiers CSS",
-    js_files_count: "Fichiers JS",
-    ttfb_ms: "TTFB",
-    fcp_ms: "FCP",
-    lcp_ms: "LCP",
-    cls_score: "CLS (×1000)",
+    has_json_ld: "JSON-LD", has_sitemap: "Sitemap.xml", has_robots_txt: "Robots.txt",
+    has_meta_description: "Meta Description", has_open_graph: "Open Graph",
+    has_twitter_cards: "Twitter Cards", has_canonical: "Canonical", has_hreflang: "Hreflang",
+    has_https: "HTTPS", is_mobile_friendly: "Mobile-friendly", has_viewport_meta: "Viewport Meta",
+    load_time_ms: "Temps de chargement", error_404_count: "Erreurs 404 / site", dom_size_kb: "Taille DOM",
+    total_requests: "Requêtes HTTP", image_count: "Images / page", images_without_alt: "Images sans Alt",
+    css_files_count: "Fichiers CSS", js_files_count: "Fichiers JS", ttfb_ms: "TTFB", fcp_ms: "FCP",
+    lcp_ms: "LCP", cls_score: "CLS (×1000)",
+    introTitle: "Pourquoi un observatoire du web français ?",
+    introP1: "L'Observatoire du Web Français est le premier tableau de bord open-data dédié à la santé technique SEO et GEO des sites web francophones. Il agrège en temps réel les résultats de milliers d'audits réalisés via Crawlers.fr pour offrir une photographie fidèle de l'état du web français.",
+    introP2: "À l'ère des moteurs de recherche génératifs (Google SGE, ChatGPT Search, Perplexity), la qualité technique d'un site détermine directement sa visibilité dans les réponses des LLM. Notre observatoire mesure les signaux fondamentaux : données structurées JSON-LD, Core Web Vitals, compatibilité mobile, sécurité HTTPS et protocoles d'internationalisation.",
+    introP3: "Ces métriques permettent aux professionnels du SEO, agences et développeurs de comparer la performance de leurs sites aux moyennes nationales et d'identifier rapidement les axes d'amélioration prioritaires pour le référencement classique et le référencement IA (GEO).",
+    methodTitle: "Méthodologie de collecte",
+    methodP1: "Chaque scan effectué sur Crawlers.fr alimente automatiquement l'observatoire. Les données sont anonymisées : aucune URL, aucun domaine ni information personnelle n'est conservé. Seuls les indicateurs techniques bruts sont agrégés.",
+    methodP2: "Les tendances sont calculées sur des fenêtres glissantes de 30 jours. Un score de fraîcheur pondère les données récentes pour refléter l'évolution réelle des pratiques web, pas seulement un instantané historique.",
+    methodP3: "Les Core Web Vitals (TTFB, FCP, LCP, CLS) sont mesurés via l'API Google PageSpeed Insights, garantissant une cohérence avec les données utilisées par Google pour le classement.",
+    faqTitle: "Questions fréquentes",
+    faq: [
+      { q: "Quelles données sont collectées par l'observatoire ?", a: "L'observatoire collecte uniquement des métriques techniques anonymisées : présence de JSON-LD, sitemap, robots.txt, meta description, Open Graph, HTTPS, compatibilité mobile, Core Web Vitals (TTFB, FCP, LCP, CLS), nombre de ressources et erreurs 404. Aucune donnée personnelle ni URL n'est conservée." },
+      { q: "À quelle fréquence les statistiques sont-elles mises à jour ?", a: "Les statistiques sont mises à jour en temps réel. Chaque nouvel audit effectué sur Crawlers.fr enrichit automatiquement l'observatoire. Les tendances mensuelles sont recalculées quotidiennement." },
+      { q: "Comment sont calculées les tendances ?", a: "Les tendances comparent les 30 derniers jours à la période précédente de 30 jours. Un pourcentage positif indique une amélioration (pour les taux d'adoption) ou une augmentation (pour les métriques de performance)." },
+      { q: "L'observatoire est-il pertinent pour le GEO (Generative Engine Optimization) ?", a: "Absolument. Les signaux mesurés — JSON-LD, données structurées, HTTPS, vitesse de chargement — sont exactement ceux que les LLM (ChatGPT, Gemini, Perplexity) utilisent pour évaluer la fiabilité d'une source. Un site conforme aux standards mesurés ici a plus de chances d'être cité dans les réponses génératives." },
+      { q: "Comment utiliser ces données pour améliorer mon référencement ?", a: "Comparez vos propres métriques (obtenues via l'audit expert Crawlers.fr) aux moyennes nationales affichées ici. Si votre taux d'adoption JSON-LD est inférieur à la moyenne, c'est un axe prioritaire. Si vos Core Web Vitals dépassent les moyennes, concentrez-vous sur l'optimisation de la performance." },
+    ],
+    ctaTitle: "Comparez votre site aux moyennes nationales",
+    ctaDesc: "Lancez un audit SEO & GEO expert gratuit et découvrez où vous vous situez par rapport au web français.",
+    ctaButton: "Lancer mon audit gratuit",
   },
   en: {
     title: "The French Web Observatory",
@@ -79,6 +84,25 @@ const translations = {
     total_requests: "HTTP Requests", image_count: "Images / page", images_without_alt: "Images without Alt",
     css_files_count: "CSS Files", js_files_count: "JS Files", ttfb_ms: "TTFB", fcp_ms: "FCP",
     lcp_ms: "LCP", cls_score: "CLS (×1000)",
+    introTitle: "Why a French web observatory?",
+    introP1: "The French Web Observatory is the first open-data dashboard dedicated to the technical SEO and GEO health of French-speaking websites. It aggregates real-time results from thousands of audits performed on Crawlers.fr to offer an accurate snapshot of the French web.",
+    introP2: "In the era of generative search engines (Google SGE, ChatGPT Search, Perplexity), a site's technical quality directly determines its visibility in LLM responses. Our observatory measures fundamental signals: JSON-LD structured data, Core Web Vitals, mobile compatibility, HTTPS security and internationalization protocols.",
+    introP3: "These metrics allow SEO professionals, agencies and developers to benchmark their sites against national averages and quickly identify priority areas for improvement in both classic SEO and AI referencing (GEO).",
+    methodTitle: "Data collection methodology",
+    methodP1: "Each scan performed on Crawlers.fr automatically feeds the observatory. Data is anonymized: no URL, domain or personal information is retained. Only raw technical indicators are aggregated.",
+    methodP2: "Trends are calculated over 30-day sliding windows. A freshness score weights recent data to reflect the actual evolution of web practices, not just a historical snapshot.",
+    methodP3: "Core Web Vitals (TTFB, FCP, LCP, CLS) are measured via the Google PageSpeed Insights API, ensuring consistency with the data Google uses for ranking.",
+    faqTitle: "Frequently asked questions",
+    faq: [
+      { q: "What data does the observatory collect?", a: "The observatory only collects anonymized technical metrics: JSON-LD presence, sitemap, robots.txt, meta description, Open Graph, HTTPS, mobile compatibility, Core Web Vitals (TTFB, FCP, LCP, CLS), resource count and 404 errors. No personal data or URLs are stored." },
+      { q: "How often are the statistics updated?", a: "Statistics are updated in real time. Each new audit on Crawlers.fr automatically enriches the observatory. Monthly trends are recalculated daily." },
+      { q: "How are trends calculated?", a: "Trends compare the last 30 days to the previous 30-day period. A positive percentage indicates improvement (for adoption rates) or increase (for performance metrics)." },
+      { q: "Is the observatory relevant for GEO (Generative Engine Optimization)?", a: "Absolutely. The measured signals — JSON-LD, structured data, HTTPS, loading speed — are exactly those that LLMs (ChatGPT, Gemini, Perplexity) use to evaluate source reliability. A site compliant with the standards measured here is more likely to be cited in generative responses." },
+      { q: "How can I use this data to improve my SEO?", a: "Compare your own metrics (obtained via the Crawlers.fr expert audit) to the national averages shown here. If your JSON-LD adoption rate is below average, it's a priority. If your Core Web Vitals exceed averages, focus on performance optimization." },
+    ],
+    ctaTitle: "Benchmark your site against national averages",
+    ctaDesc: "Run a free expert SEO & GEO audit and discover where you stand compared to the French web.",
+    ctaButton: "Start my free audit",
   },
   es: {
     title: "El Observatorio del Web Francés",
@@ -101,6 +125,25 @@ const translations = {
     total_requests: "Solicitudes HTTP", image_count: "Imágenes / página", images_without_alt: "Imágenes sin Alt",
     css_files_count: "Archivos CSS", js_files_count: "Archivos JS", ttfb_ms: "TTFB", fcp_ms: "FCP",
     lcp_ms: "LCP", cls_score: "CLS (×1000)",
+    introTitle: "¿Por qué un observatorio del web francés?",
+    introP1: "El Observatorio del Web Francés es el primer panel open-data dedicado a la salud técnica SEO y GEO de los sitios web francófonos. Agrega en tiempo real los resultados de miles de auditorías realizadas en Crawlers.fr para ofrecer una fotografía fiel del estado del web francés.",
+    introP2: "En la era de los motores de búsqueda generativos (Google SGE, ChatGPT Search, Perplexity), la calidad técnica de un sitio determina directamente su visibilidad en las respuestas de los LLM. Nuestro observatorio mide las señales fundamentales: datos estructurados JSON-LD, Core Web Vitals, compatibilidad móvil, seguridad HTTPS y protocolos de internacionalización.",
+    introP3: "Estas métricas permiten a los profesionales del SEO, agencias y desarrolladores comparar el rendimiento de sus sitios con los promedios nacionales e identificar rápidamente los ejes de mejora prioritarios para el SEO clásico y el referenciamiento IA (GEO).",
+    methodTitle: "Metodología de recopilación",
+    methodP1: "Cada escaneo realizado en Crawlers.fr alimenta automáticamente el observatorio. Los datos son anonimizados: no se conserva ninguna URL, dominio ni información personal. Solo se agregan los indicadores técnicos brutos.",
+    methodP2: "Las tendencias se calculan sobre ventanas deslizantes de 30 días. Un índice de frescura pondera los datos recientes para reflejar la evolución real de las prácticas web.",
+    methodP3: "Los Core Web Vitals (TTFB, FCP, LCP, CLS) se miden a través de la API Google PageSpeed Insights, garantizando coherencia con los datos que Google usa para el posicionamiento.",
+    faqTitle: "Preguntas frecuentes",
+    faq: [
+      { q: "¿Qué datos recopila el observatorio?", a: "El observatorio solo recopila métricas técnicas anonimizadas: presencia de JSON-LD, sitemap, robots.txt, meta description, Open Graph, HTTPS, compatibilidad móvil, Core Web Vitals, número de recursos y errores 404. No se almacenan datos personales ni URLs." },
+      { q: "¿Con qué frecuencia se actualizan las estadísticas?", a: "Las estadísticas se actualizan en tiempo real. Cada nueva auditoría en Crawlers.fr enriquece automáticamente el observatorio." },
+      { q: "¿Cómo se calculan las tendencias?", a: "Las tendencias comparan los últimos 30 días con el período anterior de 30 días. Un porcentaje positivo indica mejora o aumento." },
+      { q: "¿Es relevante el observatorio para el GEO?", a: "Absolutamente. Las señales medidas — JSON-LD, HTTPS, velocidad — son exactamente las que los LLM usan para evaluar la fiabilidad de una fuente." },
+      { q: "¿Cómo usar estos datos para mejorar mi SEO?", a: "Compare sus métricas propias con los promedios nacionales aquí mostrados para identificar prioridades." },
+    ],
+    ctaTitle: "Compare su sitio con los promedios nacionales",
+    ctaDesc: "Lance una auditoría SEO & GEO experta gratuita y descubra su posición frente al web francés.",
+    ctaButton: "Iniciar mi auditoría gratuita",
   },
 };
 
@@ -126,7 +169,7 @@ const numericUnits: Record<string, string> = {
   css_files_count: '', js_files_count: '',
 };
 
-// ─── Components ──────────────────────────────────────────────
+// ─── Sub-components ─────────────────────────────────────────
 const TrendBadge = ({ value }: { value: number }) => {
   if (value === 0) return null;
   const pos = value > 0;
@@ -183,8 +226,11 @@ const NumCard = ({ field, avg, trend, label }: NumCardProps) => {
   );
 };
 
-const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="text-lg font-semibold text-foreground mb-3 mt-8 first:mt-0">{children}</h2>
+const SectionTitle = ({ icon: Icon, children }: { icon?: any; children: React.ReactNode }) => (
+  <h2 className="text-lg font-semibold text-foreground mb-3 mt-8 first:mt-0 flex items-center gap-2">
+    {Icon && <Icon className="h-5 w-5 text-primary" />}
+    {children}
+  </h2>
 );
 
 // ─── Page ────────────────────────────────────────────────────
@@ -195,31 +241,80 @@ const Observatoire = () => {
 
   useCanonicalHreflang('/observatoire');
 
-  const metaTitle = language === 'fr' ? "Observatoire du Web Français - Statistiques SEO en temps réel | Crawlers.fr"
-    : language === 'es' ? "Observatorio del Web - Estadísticas SEO en tiempo real | Crawlers.fr"
-    : "French Web Observatory - Real-time SEO Statistics | Crawlers.fr";
-  const metaDesc = language === 'fr' ? "Données agrégées de milliers d'audits SEO : taux d'adoption JSON-LD, HTTPS, Core Web Vitals. Statistiques en temps réel du web français."
-    : language === 'es' ? "Datos agregados de miles de auditorías SEO: adopción JSON-LD, HTTPS, Core Web Vitals. Estadísticas en tiempo real."
-    : "Aggregated data from thousands of SEO audits: JSON-LD adoption, HTTPS, Core Web Vitals. Real-time French web statistics.";
+  const metaTitle = language === 'fr'
+    ? "Observatoire SEO & GEO du Web Français – Statistiques Temps Réel 2026"
+    : language === 'es'
+    ? "Observatorio SEO & GEO del Web Francés – Estadísticas 2026"
+    : "French Web SEO & GEO Observatory – Real-Time Statistics 2026";
 
+  const metaDesc = language === 'fr'
+    ? "Tableau de bord open-data des statistiques SEO et GEO du web français : adoption JSON-LD, Core Web Vitals, HTTPS, compatibilité mobile. Données anonymisées en temps réel issues de milliers d'audits Crawlers.fr."
+    : language === 'es'
+    ? "Panel open-data de estadísticas SEO y GEO del web francés: adopción JSON-LD, Core Web Vitals, HTTPS, compatibilidad móvil. Datos anonimizados en tiempo real."
+    : "Open-data dashboard of French web SEO & GEO statistics: JSON-LD adoption, Core Web Vitals, HTTPS, mobile compatibility. Real-time anonymized data from thousands of Crawlers.fr audits.";
+
+  // JSON-LD: Dataset + FAQPage
   useEffect(() => {
-    const schema = {
+    const datasetSchema = {
       "@context": "https://schema.org",
       "@type": "Dataset",
       "name": t.title,
       "description": metaDesc,
       "url": "https://crawlers.fr/observatoire",
-      "creator": { "@type": "Organization", "name": "Crawlers.fr" },
+      "creator": { "@type": "Organization", "name": "Crawlers.fr", "url": "https://crawlers.fr" },
       "temporalCoverage": "2025/..",
       "license": "https://creativecommons.org/licenses/by-nc/4.0/",
+      "keywords": ["SEO", "GEO", "Core Web Vitals", "JSON-LD", "HTTPS", "web français", "statistiques", "observatoire", "audit technique", "Generative Engine Optimization"],
+      "measurementTechnique": "Automated crawl via Crawlers.fr platform + Google PageSpeed Insights API",
+      "variableMeasured": [
+        { "@type": "PropertyValue", "name": "JSON-LD adoption rate", "unitText": "percent" },
+        { "@type": "PropertyValue", "name": "HTTPS adoption rate", "unitText": "percent" },
+        { "@type": "PropertyValue", "name": "Largest Contentful Paint (LCP)", "unitText": "milliseconds" },
+        { "@type": "PropertyValue", "name": "First Contentful Paint (FCP)", "unitText": "milliseconds" },
+        { "@type": "PropertyValue", "name": "Time To First Byte (TTFB)", "unitText": "milliseconds" },
+        { "@type": "PropertyValue", "name": "Cumulative Layout Shift (CLS)", "unitText": "score" },
+      ],
     };
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.setAttribute('data-schema', 'observatoire');
-    script.textContent = JSON.stringify(schema);
-    document.head.appendChild(script);
-    return () => { document.querySelectorAll('script[data-schema="observatoire"]').forEach(el => el.remove()); };
-  }, [language, t.title, metaDesc]);
+
+    const faqSchema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": t.faq.map(item => ({
+        "@type": "Question",
+        "name": item.q,
+        "acceptedAnswer": { "@type": "Answer", "text": item.a },
+      })),
+    };
+
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": language === 'fr' ? 'Accueil' : language === 'es' ? 'Inicio' : 'Home', "item": "https://crawlers.fr/" },
+        { "@type": "ListItem", "position": 2, "name": t.title, "item": "https://crawlers.fr/observatoire" },
+      ],
+    };
+
+    const schemas = [
+      { id: 'observatoire-dataset', data: datasetSchema },
+      { id: 'observatoire-faq', data: faqSchema },
+      { id: 'observatoire-breadcrumb', data: breadcrumbSchema },
+    ];
+
+    schemas.forEach(({ id, data }) => {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.setAttribute('data-schema', id);
+      script.textContent = JSON.stringify(data);
+      document.head.appendChild(script);
+    });
+
+    return () => {
+      schemas.forEach(({ id }) => {
+        document.querySelectorAll(`script[data-schema="${id}"]`).forEach(el => el.remove());
+      });
+    };
+  }, [language, t.title, t.faq, metaDesc]);
 
   const seoFields = ['has_json_ld', 'has_sitemap', 'has_robots_txt', 'has_meta_description', 'has_canonical'] as const;
   const socialFields = ['has_open_graph', 'has_twitter_cards', 'has_hreflang'] as const;
@@ -232,11 +327,36 @@ const Observatoire = () => {
       <Helmet>
         <title>{metaTitle}</title>
         <meta name="description" content={metaDesc} />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+        <meta name="googlebot" content="index, follow, max-image-preview:large" />
+        <meta name="bingbot" content="index, follow" />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
         <meta property="og:title" content={metaTitle} />
         <meta property="og:description" content={metaDesc} />
         <meta property="og:url" content="https://crawlers.fr/observatoire" />
+        <meta property="og:site_name" content="Crawlers.fr" />
+        <meta property="og:image" content="https://crawlers.fr/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:locale" content={language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'} />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={metaTitle} />
+        <meta name="twitter:description" content={metaDesc} />
+        <meta name="twitter:image" content="https://crawlers.fr/og-image.png" />
+        <meta name="twitter:site" content="@crawlers_fr" />
+
+        {/* Author & geo */}
+        <meta name="author" content="Crawlers.fr" />
+        <meta name="geo.region" content="FR" />
+        <meta name="geo.placename" content="France" />
       </Helmet>
+
       <Header />
+
       <main className="flex-1">
         {/* Hero */}
         <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-violet-50 via-background to-amber-50 dark:from-violet-950/20 dark:via-background dark:to-amber-950/20 py-16 md:py-24">
@@ -259,15 +379,31 @@ const Observatoire = () => {
           </div>
         </section>
 
+        {/* Editorial introduction */}
+        <section className="container mx-auto max-w-4xl px-4 py-12 md:py-16">
+          <div className="flex items-start gap-3 mb-6">
+            <div className="rounded-lg p-2 bg-primary/10 mt-0.5">
+              <BookOpen className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-1">{t.introTitle}</h2>
+            </div>
+          </div>
+          <div className="prose prose-slate dark:prose-invert max-w-none prose-p:text-muted-foreground prose-p:leading-relaxed">
+            <p>{t.introP1}</p>
+            <p>{t.introP2}</p>
+            <p>{t.introP3}</p>
+          </div>
+        </section>
+
         {/* KPIs */}
-        <section className="container mx-auto max-w-6xl px-4 py-10">
+        <section className="container mx-auto max-w-6xl px-4 py-10" aria-label="KPI dashboard">
           {stats.loading ? (
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
             </div>
           ) : (
             <>
-              {/* SEO Standards */}
               <SectionTitle>{t.seoSection}</SectionTitle>
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                 {seoFields.map(f => (
@@ -275,7 +411,6 @@ const Observatoire = () => {
                 ))}
               </div>
 
-              {/* Social & i18n */}
               <SectionTitle>{t.socialSection}</SectionTitle>
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {socialFields.map(f => (
@@ -283,7 +418,6 @@ const Observatoire = () => {
                 ))}
               </div>
 
-              {/* Security & Mobile */}
               <SectionTitle>{t.securitySection}</SectionTitle>
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {securityFields.map(f => (
@@ -291,7 +425,6 @@ const Observatoire = () => {
                 ))}
               </div>
 
-              {/* Performance */}
               <SectionTitle>{t.perfSection}</SectionTitle>
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                 {perfFields.map(f => (
@@ -299,7 +432,6 @@ const Observatoire = () => {
                 ))}
               </div>
 
-              {/* Assets */}
               <SectionTitle>{t.assetsSection}</SectionTitle>
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {assetsFields.map(f => (
@@ -374,7 +506,57 @@ const Observatoire = () => {
             </CardContent>
           </Card>
         </section>
+
+        {/* Methodology */}
+        <section className="bg-muted/30 border-y border-border">
+          <div className="container mx-auto max-w-4xl px-4 py-12 md:py-16">
+            <div className="flex items-start gap-3 mb-6">
+              <div className="rounded-lg p-2 bg-primary/10 mt-0.5">
+                <FlaskConical className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">{t.methodTitle}</h2>
+            </div>
+            <div className="prose prose-slate dark:prose-invert max-w-none prose-p:text-muted-foreground prose-p:leading-relaxed">
+              <p>{t.methodP1}</p>
+              <p>{t.methodP2}</p>
+              <p>{t.methodP3}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="container mx-auto max-w-4xl px-4 py-12 md:py-16">
+          <div className="flex items-start gap-3 mb-8">
+            <div className="rounded-lg p-2 bg-primary/10 mt-0.5">
+              <HelpCircle className="h-5 w-5 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground">{t.faqTitle}</h2>
+          </div>
+          <div className="space-y-6">
+            {t.faq.map((item, i) => (
+              <details key={i} className="group rounded-lg border border-border bg-card p-4 hover:shadow-sm transition-shadow">
+                <summary className="cursor-pointer font-semibold text-foreground list-none flex items-center justify-between gap-2">
+                  <span>{item.q}</span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90 shrink-0" />
+                </summary>
+                <p className="mt-3 text-muted-foreground leading-relaxed text-sm">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="container mx-auto max-w-3xl px-4 pb-16">
+          <div className="rounded-xl bg-primary/5 border border-primary/20 p-8 md:p-10 text-center">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">{t.ctaTitle}</h2>
+            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">{t.ctaDesc}</p>
+            <Button asChild size="lg" variant="hero">
+              <Link to="/audit-expert">{t.ctaButton}</Link>
+            </Button>
+          </div>
+        </section>
       </main>
+
       <Footer />
     </div>
   );
