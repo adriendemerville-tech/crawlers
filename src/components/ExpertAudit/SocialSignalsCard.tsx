@@ -130,7 +130,7 @@ export function SocialSignalsCard({ signals }: SocialSignalsCardProps) {
                     
                     {source.analysis && (
                       <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                        {source.analysis.length > 280 ? source.analysis.slice(0, 280) + '…' : source.analysis}
+                        {source.analysis}
                       </p>
                     )}
                   </div>
