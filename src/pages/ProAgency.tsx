@@ -221,7 +221,7 @@ const translations = {
       { title: 'Consultores Freelance', description: 'Ofrece auditorías GEO y SEO premium a tus clientes sin inversión en software.' },
       { title: 'Equipos de Marketing', description: 'Centraliza el análisis SEO/GEO de todos tus dominios en una consola unificada.' },
     ],
-    socialProofTitle: 'Únete a los profesionales que optimizan con Crawlers.AI',
+    socialProofTitle: 'Únete a los profesionales que optimizan con Crawlers.fr',
     socialProofText: 'Agencias SEO en Europa ya usan Pro Agency para ahorrar tiempo e impresionar a sus clientes.',
     faqTitle: 'Preguntas frecuentes sobre Pro Agency',
     faqs: [
