@@ -658,7 +658,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
             )}
             <MethodologyPopover variant="keyword_positioning" />
             <p className="text-[11px] text-muted-foreground/70 text-center pt-2">
-              Les volumes de recherche et estimations de trafic sont des moyennes mensuelles indicatives (source : DataForSEO / Google Ads).
+              Les volumes de recherche et estimations de trafic sont des moyennes mensuelles indicatives (source : bases de données dynamiques professionnelles).
             </p>
           </CardContent>
         </Card>
