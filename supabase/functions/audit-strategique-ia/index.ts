@@ -889,6 +889,7 @@ async function findLocalCompetitor(
       await response.text();
       return null;
     }
+    trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'serp/organic/local');
 
     const data = await response.json();
     const items = data.tasks?.[0]?.result?.[0]?.items;
