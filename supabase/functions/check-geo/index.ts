@@ -2,6 +2,7 @@ import { DOMParser, Element } from "https://deno.land/x/deno_dom/deno-dom-wasm.t
 import { getGeoTranslations, parseLanguage, type Language } from '../_shared/translations.ts';
 import { assertSafeUrl } from '../_shared/ssrf.ts';
 import { fetchAndRenderPage } from '../_shared/renderPage.ts';
+import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -874,6 +875,9 @@ Deno.serve(async (req) => {
     if (selfAudit.reason) {
       result.blockingError = selfAudit.reason;
     }
+
+    // Fire-and-forget URL tracking
+    trackAnalyzedUrl(normalizedUrl).catch(() => {});
 
     return new Response(
       JSON.stringify(result),

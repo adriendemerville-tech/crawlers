@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -197,6 +198,9 @@ serve(async (req) => {
       dataSource = 'lab';
       finalResult = lighthouseResult;
     }
+
+    // Fire-and-forget URL tracking
+    trackAnalyzedUrl(normalizedUrl).catch(() => {});
 
     return new Response(
       JSON.stringify({

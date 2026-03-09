@@ -1,5 +1,6 @@
 import { getLLMTranslations, parseLanguage, type Language } from '../_shared/translations.ts';
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -364,6 +365,9 @@ Deno.serve(async (req) => {
     };
 
     console.log(`Analysis complete. Score: ${result.overallScore}/100, Citations: ${result.citationRate.cited}/${result.citationRate.total}`);
+
+    // Fire-and-forget URL tracking
+    trackAnalyzedUrl(`https://${domain}`).catch(() => {});
 
     return new Response(
       JSON.stringify({ success: true, data: result }),

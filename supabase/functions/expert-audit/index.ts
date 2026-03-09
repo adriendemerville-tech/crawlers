@@ -4,6 +4,7 @@ import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { fetchAndRenderPage } from '../_shared/renderPage.ts'
 import { cacheKey, getCached, setCache, checkRateLimit } from '../_shared/auditCache.ts'
+import { trackAnalyzedUrl } from '../_shared/trackUrl.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -2163,6 +2164,9 @@ Réponds avec ce JSON exact:
 
     // Store in cache (async, non-blocking) — TTL 60 min
     setCache(ck, 'expert-audit', responseBody, 60).catch(e => console.error('[cache] write error:', e));
+
+    // Fire-and-forget URL tracking
+    trackAnalyzedUrl(normalizedUrl).catch(() => {});
 
     return new Response(
       JSON.stringify(responseBody),
