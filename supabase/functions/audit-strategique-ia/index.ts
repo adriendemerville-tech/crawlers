@@ -2121,6 +2121,7 @@ Deno.serve(async (req) => {
         scannedAt: new Date().toISOString(),
         ...parsedAnalysis,
         raw_market_data: marketData,
+        ranking_overview: rankingOverview,
         toolsData: null, // Don't echo back the full toolsData to save response size
         llm_visibility_raw: effectiveToolsData.llm,
       }
