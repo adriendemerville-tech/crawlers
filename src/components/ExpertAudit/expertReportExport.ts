@@ -704,20 +704,24 @@ export function generateExpertReportHTML(
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', sans-serif; background: #f3f4f6; min-height: 100vh; padding: 40px 20px; }
     .container { max-width: 900px; margin: 0 auto; }
-    .header { text-align: center; margin-bottom: 40px; padding: 28px; background: ${headerGradient}; border-radius: 20px; break-inside: avoid; }
+    .header { text-align: center; margin-bottom: 40px; padding: 28px; background: ${headerGradient}; border-radius: 20px; break-inside: avoid; page-break-inside: avoid; }
     .header-site { font-size: 26px; font-weight: 700; color: white; margin-bottom: 6px; word-break: break-all; }
     .header-audit-type { color: rgba(255,255,255,0.9); font-size: 15px; font-weight: 500; margin-bottom: 14px; }
     .header-brand { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); font-size: 12px; }
     .header-brand svg { vertical-align: middle; }
     .date { color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 8px; }
     .content { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .footer { text-align: center; margin-top: 40px; padding: 24px; background: ${headerGradient}; border-radius: 16px; break-inside: avoid; }
+    .footer { text-align: center; margin-top: 40px; padding: 24px; background: ${headerGradient}; border-radius: 16px; break-inside: avoid; page-break-inside: avoid; }
     .footer-brand { color: white; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
     .footer-link { color: white; text-decoration: none; font-weight: 500; padding: 10px 20px; background: rgba(255,255,255,0.2); border-radius: 10px; display: inline-block; }
-    /* Prevent splitting any card/section/table/score block */
-    div[style*="border-radius"], table, tr, .score-box { break-inside: avoid; page-break-inside: avoid; }
+    /* Prevent splitting sections/blocks at page boundaries */
+    div[style*="border-radius"], div[style*="break-inside"], table, .score-box { break-inside: avoid; page-break-inside: avoid; }
+    div[style*="border-left:"] { break-inside: avoid; page-break-inside: avoid; }
+    div[style*="margin-bottom: 10px"] { break-inside: avoid; page-break-inside: avoid; }
+    tr { break-inside: avoid; page-break-inside: avoid; }
+    @page { margin: 15mm 10mm; }
     @media print {
-      body { background: white; padding: 20mm 15mm; }
+      body { background: white; padding: 0; }
       .container { max-width: 100%; }
       .content { box-shadow: none; padding: 20px; }
       .header, .footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
