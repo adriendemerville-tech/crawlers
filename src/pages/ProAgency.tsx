@@ -109,7 +109,7 @@ const translations = {
       },
       {
         q: 'Qu\'est-ce que la marque blanche exactement ?',
-        a: 'Vous pouvez personnaliser vos rapports avec votre propre logo, vos couleurs et vos coordonnées. Vos clients ne verront jamais la marque Crawlers.AI.',
+        a: 'Vous pouvez personnaliser vos rapports avec votre propre logo, vos couleurs et vos coordonnées. Vos clients ne verront jamais la marque Crawlers.fr.',
       },
       {
         q: 'Les 3 comptes sont-ils des comptes indépendants ?',
