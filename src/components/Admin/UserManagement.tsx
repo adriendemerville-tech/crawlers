@@ -18,6 +18,7 @@ interface UserProfile {
   last_name: string;
   email: string;
   credits_balance: number;
+  plan_type: string;
   created_at: string;
   updated_at: string;
 }
