@@ -492,6 +492,112 @@ function generateSeedKeywords(brandName: string, sector: string, pageContentCont
   return keywords.filter(kw => kw.length > 3 && !kw.includes('undefined')).slice(0, 10);
 }
 
+// ==================== AI-DRIVEN SEED GENERATION ====================
+
+async function generateSeedsWithAI(
+  url: string,
+  pageContentContext: string,
+  brandName: string,
+  mode: 'initial' | 'vertical' | 'horizontal' = 'initial',
+  feedback?: string
+): Promise<string[]> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
+    console.log('⚠️ No AI key for seed generation, falling back to metadata extraction');
+    return [];
+  }
+
+  const modeInstructions: Record<string, string> = {
+    initial: "Services principaux + intentions d'achat/conversion. Ex: 'devis rénovation salle de bain', 'plombier urgence Paris', 'logiciel facturation auto-entrepreneur'.",
+    vertical: "Sous-catégories techniques, longue traîne, conversion locale. Creuse en PROFONDEUR les niches métier spécifiques. Ex: 'isolation thermique par l'extérieur prix', 'raccordement cuivre multicouche'.",
+    horizontal: "Étapes AMONT du parcours client (financement, permis, diagnostic, comparatif) et besoins CONNEXES. Trouve des chemins de traverse. Ex: 'aide financement rénovation énergétique', 'permis de construire extension maison'.",
+  };
+
+  const prompt = `Tu es un Senior SEO Strategist spécialisé en recherche de mots-clés à forte intention.
+
+ANALYSE cette page web:
+URL: ${url}
+${pageContentContext}
+
+RÈGLE D'OR ABSOLUE: NE CITE JAMAIS le nom de la marque "${brandName}" ni aucune variante dans tes mots-clés. Les mots-clés doivent être 100% GÉNÉRIQUES.
+
+MODE: ${mode.toUpperCase()}
+${modeInstructions[mode]}
+${feedback ? `\n⚠️ FEEDBACK: Les seeds précédents ont donné de mauvais résultats (volume trop faible ou hors-sujet). ${feedback}. Reformule avec des expressions plus recherchées et plus spécifiques.` : ''}
+
+INSTRUCTIONS:
+1. Identifie le CORE BUSINESS exact de cette entreprise
+2. Génère exactement 15 mots-clés que des clients potentiels taperaient dans Google
+3. Chaque mot-clé = expression de 2-5 mots à forte intention commerciale ou informationnelle
+4. Privilégie les requêtes transactionnelles ("devis X", "prix X", "X pas cher") et décisionnelles ("meilleur X", "comparatif X", "avis X")
+5. Inclus au moins 3 requêtes longue traîne (4-5 mots)
+
+Réponds UNIQUEMENT avec un JSON: {"core_business": "description courte", "seeds": ["mot clé 1", "mot clé 2", ...]}`;
+
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.5,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) {
+      console.log(`⚠️ AI seed generation failed: ${response.status}`);
+      await response.text();
+      return [];
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+    trackTokenUsage('generate-seeds', 'google/gemini-2.5-flash-lite', data.usage, url);
+
+    let seeds: string[] = [];
+    try {
+      let jsonStr = content;
+      if (content.includes('```json')) jsonStr = content.split('```json')[1].split('```')[0].trim();
+      else if (content.includes('```')) jsonStr = content.split('```')[1].split('```')[0].trim();
+      jsonStr = jsonStr.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+      const parsed = JSON.parse(jsonStr);
+      seeds = (parsed.seeds || parsed.keywords || []).filter((s: string) => typeof s === 'string' && s.length > 3);
+      if (parsed.core_business) console.log(`🎯 AI Core Business: "${parsed.core_business}"`);
+    } catch {
+      const match = content.match(/\[([^\]]+)\]/);
+      if (match) {
+        seeds = match[1].split(',').map((s: string) => s.trim().replace(/^["']|["']$/g, '')).filter((s: string) => s.length > 3);
+      }
+    }
+
+    // Filter out brand name
+    const brandLower = brandName.toLowerCase();
+    const domainSlug = brandLower.replace(/\s+/g, '');
+    seeds = seeds.filter(s => {
+      const sLower = s.toLowerCase();
+      return !sLower.includes(brandLower) && !sLower.includes(domainSlug);
+    });
+
+    console.log(`🤖 AI seeds (${mode}): ${seeds.slice(0, 8).join(', ')}... (${seeds.length} total)`);
+    return seeds.slice(0, 15);
+  } catch (error) {
+    console.error('❌ AI seed generation error:', error);
+    return [];
+  }
+}
+
+function checkDataQuality(keywords: { keyword: string; volume: number; difficulty: number }[]): boolean {
+  if (keywords.length < 3) return false;
+  const avgVolume = keywords.reduce((sum, kw) => sum + kw.volume, 0) / keywords.length;
+  if (avgVolume < 100) return false;
+  return true;
+}
+
 async function fetchKeywordData(
   seedKeywords: string[], locationCode: number
 ): Promise<{ keyword: string; volume: number; difficulty: number }[]> {
