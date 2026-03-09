@@ -814,6 +814,9 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasCaseStudies: false,
       caseStudySignals: 0,
       misplacedHeadTags: [],
+      darkSocial: { ogTitle: '', ogDescription: '', ogImage: '', twitterCard: '', score: 0 },
+      freshnessSignals: { score: 0, label: 'stale' as const, lastModifiedDate: null, hasCurrentYearMention: false, currentYearFound: null },
+      conversionFriction: { formsCount: 0, visibleInputs: 0, avgFieldsPerForm: 0, ctaCount: 0, ctaAboveFold: false, frictionLevel: 'low' as const },
     };
   }
 }
