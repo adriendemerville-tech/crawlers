@@ -66,6 +66,7 @@ const AuditSeoGratuit = () => {
       } catch {} finally { setPsLoading(false); }
     }
   };
+  const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
       {
