@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Header } from '@/components/Header';
 import { Link } from 'react-router-dom';
@@ -7,11 +7,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   ArrowRight, CheckCircle2, Zap, Shield, Brain,
-  Target, BarChart3, Search, Globe, FileText, Lock, Gauge
+  Target, BarChart3, Search, Globe, FileText, Lock, Gauge, Loader2, Smartphone, Monitor
 } from 'lucide-react';
 import heroImage from '@/assets/landing/audit-seo-gratuit-hero.webp';
+import { supabase } from '@/integrations/supabase/client';
+import { PageSpeedResult } from '@/types/pagespeed';
+import { PageSpeedDashboard } from '@/components/PageSpeedDashboard';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
