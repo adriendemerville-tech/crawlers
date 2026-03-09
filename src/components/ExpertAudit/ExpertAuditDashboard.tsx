@@ -63,7 +63,7 @@ type AuditMode = 'technical' | 'strategic' | null;
 const translations = {
   fr: {
     badge: 'Audit Expert SEO & GEO',
-    title: 'Audit SEO & GEO gratuit — Score sur 200 points',
+    title: 'Audit technique et stratégique — Check-up complet de votre SEO/GEO',
     subtitlePart1: 'Mesurez votre visibilité Google + IA générative en moins de 2 min.',
     subtitlePart2: 'Développement et injection du',
     subtitleCode: 'code correctif',
@@ -94,7 +94,7 @@ const translations = {
   },
   en: {
     badge: 'Expert SEO & GEO Audit',
-    title: 'Free SEO & GEO Audit — 200-Point Score',
+    title: 'Technical & Strategic Audit — Complete SEO/GEO Check-up',
     subtitlePart1: 'Measure your Google + generative AI visibility in under 2 min.',
     subtitlePart2: 'Development of',
     subtitleCode: 'corrective code',
@@ -125,7 +125,7 @@ const translations = {
   },
   es: {
     badge: 'Auditoría Experta SEO & GEO',
-    title: 'Auditoría SEO & GEO gratis — Score de 200 puntos',
+    title: 'Auditoría técnica y estratégica — Check-up completo de tu SEO/GEO',
     subtitlePart1: 'Mide tu visibilidad Google + IA generativa en menos de 2 min.',
     subtitlePart2: 'Desarrollo del',
     subtitleCode: 'código correctivo',

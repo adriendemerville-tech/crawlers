@@ -45,16 +45,16 @@ const faqSchemaData = {
 
 const metaData = {
   fr: {
-    title: "Audit SEO & GEO Gratuit 2026 — Score 200 points, Visibilité IA | Crawlers.fr",
-    description: "Audit SEO et GEO gratuit en ligne : score sur 200 points, Core Web Vitals, citabilité LLM (ChatGPT, Claude, Perplexity), données structurées JSON-LD et code correctif personnalisé. Résultats en 2 minutes."
+    title: "Audit Technique & Stratégique SEO/GEO — Check-up complet | Crawlers.fr",
+    description: "Audit technique et stratégique de votre SEO et GEO : performance, Core Web Vitals, citabilité LLM (ChatGPT, Claude, Perplexity), données structurées JSON-LD et code correctif personnalisé. Check-up complet en 2 minutes."
   },
   en: {
-    title: "Free SEO & GEO Audit 2026 — 200-Point Score, AI Visibility | Crawlers.fr",
-    description: "Free online SEO and GEO audit: 200-point score, Core Web Vitals, LLM citability (ChatGPT, Claude, Perplexity), JSON-LD structured data and custom corrective code. Results in 2 minutes."
+    title: "Technical & Strategic SEO/GEO Audit — Complete Check-up | Crawlers.fr",
+    description: "Technical and strategic SEO and GEO audit: performance, Core Web Vitals, LLM citability (ChatGPT, Claude, Perplexity), JSON-LD structured data and custom corrective code. Complete check-up in 2 minutes."
   },
   es: {
-    title: "Auditoría SEO & GEO Gratis 2026 — Score 200 puntos, Visibilidad IA | Crawlers.fr",
-    description: "Auditoría SEO y GEO gratuita online: score de 200 puntos, Core Web Vitals, citabilidad LLM (ChatGPT, Claude, Perplexity), datos estructurados JSON-LD y código correctivo personalizado."
+    title: "Auditoría Técnica & Estratégica SEO/GEO — Check-up Completo | Crawlers.fr",
+    description: "Auditoría técnica y estratégica de tu SEO y GEO: rendimiento, Core Web Vitals, citabilidad LLM (ChatGPT, Claude, Perplexity), datos estructurados JSON-LD y código correctivo personalizado. Check-up completo en 2 minutos."
   }
 };
 
@@ -111,8 +111,7 @@ const ExpertAudit = () => {
         "url": "https://crawlers.fr"
       },
       "about": {
-        "@type": "SoftwareApplication",
-        "name": "Score SEO 200",
+        "name": "Audit Technique & Stratégique SEO/GEO",
         "applicationCategory": "WebApplication",
         "operatingSystem": "Web Browser",
         "offers": {
@@ -125,7 +124,7 @@ const ExpertAudit = () => {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://crawlers.fr" },
-          { "@type": "ListItem", "position": 2, "name": "Audit Expert SEO & GEO", "item": "https://crawlers.fr/audit-expert" }
+          { "@type": "ListItem", "position": 2, "name": "Audit Technique & Stratégique SEO/GEO", "item": "https://crawlers.fr/audit-expert" }
         ]
       }
     };
