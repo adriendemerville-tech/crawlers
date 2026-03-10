@@ -299,10 +299,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
                   {content.loadingText}
                 </>
               ) : (
-                <>
-                  <Zap className="h-5 w-5" />
-                  {content.buttonText}
-                </>
+                content.buttonText
               )}
             </Button>
         </div>
