@@ -228,7 +228,7 @@ export default function Methodologie() {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "Méthodologie d'audit SEO & GEO — Crawlers.fr",
-    "description": "Plus de 60 points d'audit SEO, GEO et IA analysés par Crawlers.fr : crawlability, Core Web Vitals, visibilité LLM, EEAT, données structurées, résilience contenu et code correctif.",
+    "description": "Plus de 150 points d'audit SEO, GEO et IA analysés par Crawlers.fr : crawlability, Core Web Vitals, visibilité LLM, EEAT, données structurées, résilience contenu et code correctif.",
     "url": "https://crawlers.fr/methodologie",
     "isPartOf": { "@type": "WebSite", "name": "Crawlers AI", "url": "https://crawlers.fr" },
     "breadcrumb": {
@@ -244,9 +244,9 @@ export default function Methodologie() {
     <>
       <Helmet>
         <title>{t3(language,
-          'Méthodologie d\'audit SEO & GEO 2026 — 60+ points analysés | Crawlers.fr',
-          'SEO & GEO Audit Methodology 2026 — 60+ Points Analyzed | Crawlers.fr',
-          'Metodología de auditoría SEO & GEO 2026 — 60+ puntos analizados | Crawlers.fr'
+          'Méthodologie d\'audit SEO & GEO 2026 — 150+ points analysés | Crawlers.fr',
+          'SEO & GEO Audit Methodology 2026 — 150+ Points Analyzed | Crawlers.fr',
+          'Metodología de auditoría SEO & GEO 2026 — 150+ puntos analizados | Crawlers.fr'
         )}</title>
         <meta name="description" content={t3(language,
           'Comment Crawlers.fr audite votre site en 2026 : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, résilience contenu, red teaming, code correctif JSON-LD. Périmètre complet.',
@@ -260,9 +260,9 @@ export default function Methodologie() {
           'Metodología de auditoría SEO & GEO — Crawlers.fr'
         )} />
         <meta property="og:description" content={t3(language,
-          'Plus de 60 points d\'audit : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, résilience contenu, red teaming et code correctif.',
-          '60+ audit points: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, content resilience, red teaming and corrective code.',
-          'Más de 60 puntos de auditoría: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, resiliencia de contenido, red teaming y código correctivo.'
+          'Plus de 150 points d\'audit : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, résilience contenu, red teaming et code correctif.',
+          '150+ audit points: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, content resilience, red teaming and corrective code.',
+          'Más de 150 puntos de auditoría: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, resiliencia de contenido, red teaming y código correctivo.'
         )} />
         <meta property="og:url" content="https://crawlers.fr/methodologie" />
         <meta property="og:type" content="article" />
@@ -286,9 +286,9 @@ export default function Methodologie() {
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               {t3(language,
-                'Plus de 60 points d\'audit répartis en 9 catégories — de la crawlability des robots IA aux Core Web Vitals, en passant par la citabilité LLM, l\'analyse de résilience du contenu et la génération de code correctif. Voici le périmètre complet de nos analyses.',
-                'Over 60 audit points across 9 categories — from AI bot crawlability to Core Web Vitals, LLM citability, content resilience analysis and corrective code generation. Here is the full scope of our analysis.',
-                'Más de 60 puntos de auditoría en 9 categorías — desde la crawlability de bots IA hasta Core Web Vitals, citabilidad LLM, análisis de resiliencia del contenido y generación de código correctivo.'
+                'Plus de 150 points d\'audit répartis en 9 catégories — de la crawlability des robots IA aux Core Web Vitals, en passant par la citabilité LLM, l\'analyse de résilience du contenu et la génération de code correctif. Voici le périmètre complet de nos analyses.',
+                'Over 150 audit points across 9 categories — from AI bot crawlability to Core Web Vitals, LLM citability, content resilience analysis and corrective code generation. Here is the full scope of our analysis.',
+                'Más de 150 puntos de auditoría en 9 categorías — desde la crawlability de bots IA hasta Core Web Vitals, citabilidad LLM, análisis de resiliencia del contenido y generación de código correctivo.'
               )}
             </p>
           </div>
@@ -332,7 +332,7 @@ export default function Methodologie() {
         <section className="py-12 px-4 bg-muted/30">
           <div className="mx-auto max-w-6xl">
             <h2 className="text-2xl font-bold text-foreground mb-2 text-center">
-              {t3(language, '9 catégories, plus de 60 points d\'audit', '9 Categories, Over 60 Audit Points', '9 categorías, más de 60 puntos de auditoría')}
+              {t3(language, '9 catégories, plus de 150 points d\'audit', '9 Categories, Over 150 Audit Points', '9 categorías, más de 150 puntos de auditoría')}
             </h2>
             <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
               {t3(language,
