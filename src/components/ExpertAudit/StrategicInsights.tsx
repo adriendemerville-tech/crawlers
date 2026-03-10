@@ -185,35 +185,6 @@ export function StrategicInsights({
             <MarketIntelligenceCard intelligence={analysis.market_intelligence} />
           )}
 
-           {/* LLM Visibility Raw Data (from check-llm) */}
-           {analysis.llm_visibility_raw && (
-              <>
-                <LLMVisibilityCard data={analysis.llm_visibility_raw} />
-                <ConversationalIntentCard analysis={analysis} />
-                <LLMTargetQueriesCard 
-                  domain={domain} 
-                  coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
-                  citations={analysis.llm_visibility_raw.citations as any}
-                  selfCorrect
-                  strategicAnalysis={analysis}
-                />
-                <PriorityContentCard domain={domain} />
-                <ZeroClickRiskCard analysis={analysis} domain={domain} />
-              </>
-            )}
-
-          {/* NEW: 5 Strategic AI Metrics */}
-          {analysis.quotability && <QuotabilityCard data={analysis.quotability} />}
-          {analysis.summary_resilience && <SummaryResilienceCard data={analysis.summary_resilience} />}
-          {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
-          {analysis.expertise_sentiment && <ExpertiseSentimentCard data={analysis.expertise_sentiment} />}
-          {analysis.red_team && <RedTeamCard data={analysis.red_team} />}
-
-          {/* Premium Executive Roadmap (Narrative) */}
-          {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (
-            <PremiumRoadmapCard roadmap={analysis.executive_roadmap} />
-          )}
-
           {/* Brand Authority (if available) */}
           {analysis.brand_authority && (
           <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
@@ -251,6 +222,35 @@ export function StrategicInsights({
                 </div>
               </CardContent>
             </Card>
+          )}
+
+           {/* LLM Visibility Raw Data (from check-llm) */}
+           {analysis.llm_visibility_raw && (
+              <>
+                <LLMVisibilityCard data={analysis.llm_visibility_raw} />
+                <ConversationalIntentCard analysis={analysis} />
+                <LLMTargetQueriesCard 
+                  domain={domain} 
+                  coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
+                  citations={analysis.llm_visibility_raw.citations as any}
+                  selfCorrect
+                  strategicAnalysis={analysis}
+                />
+                <PriorityContentCard domain={domain} />
+                <ZeroClickRiskCard analysis={analysis} domain={domain} />
+              </>
+            )}
+
+          {/* NEW: 5 Strategic AI Metrics */}
+          {analysis.quotability && <QuotabilityCard data={analysis.quotability} />}
+          {analysis.summary_resilience && <SummaryResilienceCard data={analysis.summary_resilience} />}
+          {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
+          {analysis.expertise_sentiment && <ExpertiseSentimentCard data={analysis.expertise_sentiment} />}
+          {analysis.red_team && <RedTeamCard data={analysis.red_team} />}
+
+          {/* Premium Executive Roadmap (Narrative) */}
+          {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (
+            <PremiumRoadmapCard roadmap={analysis.executive_roadmap} />
           )}
 
           {/* GEO Readiness Details */}
