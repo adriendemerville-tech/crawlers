@@ -769,18 +769,18 @@ export function generateExpertReportHTML(
         const gr = strategic.geo_readiness;
         const formats = gr.ai_favored_formats;
         return sectionCard(
-          language === 'fr' ? 'Préparation GEO' : 'GEO Readiness',
+          rl.geoReadiness,
           '#0891b2', 'linear-gradient(135deg, #ecfeff, #f0fdfa)',
           `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;">
-            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Citabilité' : 'Citability'}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${gr.citability_score || 0}/100</div></div>
-            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Accessibilité IA' : 'AI Access'}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${gr.ai_accessibility_score || 0}/100</div></div>
-            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Formats IA' : 'AI Formats'}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${formats?.format_score || 0}/100</div></div>
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${rl.citability}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${gr.citability_score || 0}/100</div></div>
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${rl.aiAccess}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${gr.ai_accessibility_score || 0}/100</div></div>
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${rl.aiFormats}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${formats?.format_score || 0}/100</div></div>
           </div>
-          ${gr.semantic_coherence ? labelValue(language === 'fr' ? 'Cohérence Title/H1' : 'Title/H1', gr.semantic_coherence.title_h1_alignment + '% — ' + gr.semantic_coherence.verdict) : ''}
-          ${gr.content_freshness ? labelValue(language === 'fr' ? 'Fraîcheur' : 'Freshness', gr.content_freshness.verdict || '—') : ''}
+          ${gr.semantic_coherence ? labelValue(rl.titleH1, gr.semantic_coherence.title_h1_alignment + '% — ' + gr.semantic_coherence.verdict) : ''}
+          ${gr.content_freshness ? labelValue(rl.contentFreshness, gr.content_freshness.verdict || '—') : ''}
           ${gr.eeat_signals ? labelValue('E-E-A-T', gr.eeat_signals.verdict || '—') : ''}
           ${gr.knowledge_graph_readiness ? labelValue('Knowledge Graph', gr.knowledge_graph_readiness.verdict || '—') : ''}
-          ${formats?.missing_formats?.length ? `<div style="margin-top: 8px;"><span style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Formats manquants' : 'Missing'} : </span>${formats.missing_formats.map((f: string) => `<span style="display: inline-block; padding: 2px 8px; background: #fee2e2; color: #991b1b; border-radius: 6px; font-size: 11px; margin: 2px;">${f}</span>`).join('')}</div>` : ''}`,
+          ${formats?.missing_formats?.length ? `<div style="margin-top: 8px;"><span style="font-size: 12px; color: #6b7280;">${rl.missingFormats} : </span>${formats.missing_formats.map((f: string) => `<span style="display: inline-block; padding: 2px 8px; background: #fee2e2; color: #991b1b; border-radius: 6px; font-size: 11px; margin: 2px;">${f}</span>`).join('')}</div>` : ''}`,
           true
         );
       })() : ''}
