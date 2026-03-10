@@ -1627,6 +1627,11 @@ export function ExpertAuditDashboard() {
                     !isLoggedIn && "pointer-events-none select-none"
                   )}
                 >
+                  {/* AEO Score Card — above LLM cards */}
+                  {result && (
+                    <AEOScoreCard result={result} />
+                  )}
+
                   {/* Strategic Insights */}
                   {result.strategicAnalysis && (
                     <StrategicInsights 
@@ -1638,11 +1643,6 @@ export function ExpertAuditDashboard() {
                       onCompetitorCorrection={handleCompetitorCorrectionComplete}
                       isReanalyzing={isStrategicLoading}
                     />
-                  )}
-
-                  {/* AEO Score Card */}
-                  {result && (
-                    <AEOScoreCard result={result} />
                   )}
 
                   {/* Strategic Roadmap as Action Plan */}
