@@ -246,36 +246,40 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
         {data.queries.map((q, i) => (
           <div
             key={i}
-            className="group flex items-start gap-3 rounded-lg bg-muted/50 p-3 hover:bg-muted/80 transition-colors cursor-pointer"
+            className="group rounded-lg bg-muted/50 p-3 hover:bg-muted/80 transition-colors cursor-pointer"
             onClick={() => handleCopy(q.query, i)}
           >
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-              {i + 1}
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="text-base font-medium text-foreground">"{q.query}"</p>
-              <p className="text-sm text-muted-foreground mt-1">{q.intent}</p>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {q.mentionsBrand && (
-                <Badge variant="outline" className="text-[10px] border-purple-500/30 text-purple-600 dark:text-purple-400">
-                  Marque
-                </Badge>
-              )}
-              <Badge
-                variant="outline"
-                className={q.priority === 'high'
-                  ? 'text-primary border-primary/30 text-[10px]'
-                  : 'text-muted-foreground border-muted-foreground/30 text-[10px]'
-                }
-              >
-                {t[q.priority]}
-              </Badge>
-              {copiedIndex === i ? (
-                <Check className="h-3.5 w-3.5 text-success" />
-              ) : (
-                <Copy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              )}
+            <div className="flex items-start gap-2">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary mt-0.5">
+                {i + 1}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm sm:text-base font-medium text-foreground break-words">"{q.query}"</p>
+                  {copiedIndex === i ? (
+                    <Check className="h-3.5 w-3.5 shrink-0 text-success mt-1" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+                  )}
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">{q.intent}</p>
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  {q.mentionsBrand && (
+                    <Badge variant="outline" className="text-[10px] border-purple-500/30 text-purple-600 dark:text-purple-400">
+                      Marque
+                    </Badge>
+                  )}
+                  <Badge
+                    variant="outline"
+                    className={q.priority === 'high'
+                      ? 'text-primary border-primary/30 text-[10px]'
+                      : 'text-muted-foreground border-muted-foreground/30 text-[10px]'
+                    }
+                  >
+                    {t[q.priority]}
+                  </Badge>
+                </div>
+              </div>
             </div>
           </div>
         ))}
