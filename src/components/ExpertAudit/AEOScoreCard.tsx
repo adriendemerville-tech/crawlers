@@ -92,7 +92,7 @@ Para convencer a los motores generativos de citarte, debes demostrar tu **E-E-A-
 • **Autoridad** — Construye un enlazado interno semántico coherente y obtén citas en fuentes de terceros.
 • **Fiabilidad** — Usa datos estructurados Schema.org, mantén un sitio rápido y seguro.
 
-Los criterios AEO miden tu capacidad para cumplir estos requisitos a través de 10 indicadores técnicos y editoriales verificables.`,
+Los criterios AEO miden tu capacidad para cumplir estos requisitos a través de 8 indicadores técnicos y editoriales verificables.`,
     criteria: {
       schema: { label: 'Marcado Schema.org (FAQ, Article)', explanation: 'Ayuda a las IA a comprender instantáneamente la estructura de tus respuestas.' },
       interrogative: { label: 'Encabezados interrogativos', explanation: 'Apunta a las preguntas exactas que los usuarios hacen por voz o IA.' },
