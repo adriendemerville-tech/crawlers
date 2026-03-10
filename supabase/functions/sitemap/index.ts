@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
     pages.push({ loc: `${SITE_URL}/tarifs`, lastmod: today });
     
     // Pages comparatives
-    pages.push({ loc: `${SITE_URL}/comparatif-audit-geo`, lastmod: today });
+    
     pages.push({ loc: `${SITE_URL}/comparatif-crawlers-semrush`, lastmod: today });
 
     // ========================================
