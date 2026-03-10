@@ -22,7 +22,7 @@ export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
             Empreinte Lexicale
           </div>
           <div className="flex items-center gap-2">
-            <span className={`text-2xl font-bold ${scoreColor}`}>{data.score}</span>
+            <span className={`text-2xl font-bold ${scoreColor}`}>{score}</span>
             <span className="text-sm text-muted-foreground">/100</span>
           </div>
         </CardTitle>
