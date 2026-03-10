@@ -63,7 +63,7 @@ To convince generative engines to cite you, you must demonstrate **E-E-A-T** (Ex
 • **Authoritativeness** — Build a coherent semantic internal linking structure and earn citations on third-party sources.
 • **Trustworthiness** — Use Schema.org structured data, maintain a fast and secure site.
 
-AEO criteria measure your ability to meet these requirements through 10 verifiable technical and editorial indicators.`,
+AEO criteria measure your ability to meet these requirements through 8 verifiable technical and editorial indicators.`,
     criteria: {
       schema: { label: 'Schema.org Markup (FAQ, Article)', explanation: 'Helps AI instantly understand the structure of your answers.' },
       interrogative: { label: 'Interrogative Headings', explanation: 'Targets the exact questions users ask via voice or AI.' },
