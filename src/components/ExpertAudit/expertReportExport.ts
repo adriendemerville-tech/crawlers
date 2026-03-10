@@ -501,7 +501,7 @@ export function generateExpertReportHTML(
             </div>`);
         }
 
-        return techSections.length > 0 ? `<div style="font-size: 14px; font-weight: 600; color: #1f2937; margin: 18px 0 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${language === 'fr' ? 'Signaux de Qualité du Contenu' : 'Content Quality Signals'}</div>${techSections.join('')}` : '';
+        return techSections.length > 0 ? `<div style="font-size: 14px; font-weight: 600; color: #1f2937; margin: 18px 0 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${rl.contentQuality}</div>${techSections.join('')}` : '';
       })()}
 
 
