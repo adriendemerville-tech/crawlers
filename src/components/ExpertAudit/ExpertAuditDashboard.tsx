@@ -1640,6 +1640,11 @@ export function ExpertAuditDashboard() {
                     />
                   )}
 
+                  {/* AEO Score Card */}
+                  {result && (
+                    <AEOScoreCard result={result} />
+                  )}
+
                   {/* Strategic Roadmap as Action Plan */}
                   {result.strategicAnalysis && (() => {
                     const roadmap = result.strategicAnalysis!.executive_roadmap || [];
