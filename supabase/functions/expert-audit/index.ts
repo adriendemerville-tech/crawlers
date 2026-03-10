@@ -1,15 +1,10 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { fetchAndRenderPage } from '../_shared/renderPage.ts'
 import { cacheKey, getCached, setCache, checkRateLimit } from '../_shared/auditCache.ts'
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders } from '../_shared/cors.ts'
 
 // Mapping des recommandations vers les types de fix pour le générateur de code
 const RECOMMENDATION_TO_FIX_MAP: Record<string, { fixType: string | null; category: string }> = {
@@ -1998,7 +1993,7 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
   return recommendations;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }

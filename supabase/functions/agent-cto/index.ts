@@ -1,11 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-}
+import { corsHeaders } from '../_shared/cors.ts'
 
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
@@ -99,7 +94,7 @@ function parseAgentResponse(raw: string): AgentAnalysis {
   };
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
