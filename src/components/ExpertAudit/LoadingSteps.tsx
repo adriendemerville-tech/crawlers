@@ -44,22 +44,12 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
     return () => clearInterval(interval);
   }, [steps.length, variant]);
 
-  // Play microwave ding 3s after unmount (audit finished), then signal parent
+  // Stop Spotify iframe on unmount
   useEffect(() => {
     return () => {
-      setTimeout(() => {
-        const audio = new Audio(microwaveDing);
-        audio.volume = 1.0;
-        audio.play().catch(() => {});
-        // Dispatch event when ding finishes so dashboard can show results
-        audio.addEventListener('ended', () => {
-          window.dispatchEvent(new CustomEvent('audit-ding-ended'));
-        });
-        // Fallback if audio doesn't fire ended
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('audit-ding-ended'));
-        }, 3000);
-      }, 3000);
+      if (iframeRef.current) {
+        iframeRef.current.src = '';
+      }
     };
   }, []);
 
