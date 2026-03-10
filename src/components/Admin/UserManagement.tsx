@@ -34,6 +34,31 @@ export function UserManagement() {
   const [actionLoading, setActionLoading] = useState(false);
   const [kpiUser, setKpiUser] = useState<UserProfile | null>(null);
   const [kpiModalOpen, setKpiModalOpen] = useState(false);
+  const [adminUserIds, setAdminUserIds] = useState<Set<string>>(new Set());
+
+  const fetchAdminRoles = async () => {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'admin');
+    if (data) setAdminUserIds(new Set(data.map(r => r.user_id)));
+  };
+
+  const toggleAdmin = async (userId: string) => {
+    const isAdmin = adminUserIds.has(userId);
+    try {
+      if (isAdmin) {
+        await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', 'admin');
+        toast.success('Rôle admin retiré');
+      } else {
+        await supabase.from('user_roles').insert({ user_id: userId, role: 'admin' });
+        toast.success('Rôle admin attribué');
+      }
+      fetchAdminRoles();
+    } catch {
+      toast.error('Erreur lors de la modification du rôle');
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
