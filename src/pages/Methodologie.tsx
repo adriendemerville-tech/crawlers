@@ -228,7 +228,7 @@ export default function Methodologie() {
     "@context": "https://schema.org",
     "@type": "WebPage",
     "name": "Méthodologie d'audit SEO & GEO — Crawlers.fr",
-    "description": "Plus de 60 points d'audit SEO, GEO et IA analysés par Crawlers.fr : crawlability, Core Web Vitals, visibilité LLM, EEAT, données structurées, résilience contenu et code correctif.",
+    "description": "Plus de 150 points d'audit SEO, GEO et IA analysés par Crawlers.fr : crawlability, Core Web Vitals, visibilité LLM, EEAT, données structurées, résilience contenu et code correctif.",
     "url": "https://crawlers.fr/methodologie",
     "isPartOf": { "@type": "WebSite", "name": "Crawlers AI", "url": "https://crawlers.fr" },
     "breadcrumb": {
