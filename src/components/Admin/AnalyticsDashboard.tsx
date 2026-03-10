@@ -328,6 +328,20 @@ export function AnalyticsDashboard() {
         return format(date, 'yyyy-MM-dd');
       });
 
+      // Fetch real signups from profiles table (reliable source vs analytics events)
+      const { data: profileSignups } = await supabase
+        .from('profiles')
+        .select('created_at')
+        .gte('created_at', thirtyDaysAgo)
+        .not('user_id', 'in', `(${adminUserIds.join(',')})`)
+        .order('created_at', { ascending: false });
+
+      const signupsByDay: Record<string, number> = {};
+      (profileSignups || []).forEach(p => {
+        const day = format(parseISO(p.created_at), 'yyyy-MM-dd');
+        signupsByDay[day] = (signupsByDay[day] || 0) + 1;
+      });
+
       const dailyStats = last30Days.map(date => {
         const dayEvents = events.filter(e => 
           e.created_at && format(parseISO(e.created_at), 'yyyy-MM-dd') === date
@@ -336,7 +350,7 @@ export function AnalyticsDashboard() {
         return {
           date: format(parseISO(date), 'dd MMM', { locale: fr }),
           visits: dayEvents.filter(e => e.event_type === 'page_view').length,
-          signups: dayEvents.filter(e => e.event_type === 'signup_complete').length,
+          signups: signupsByDay[date] || 0,
         };
       });
       setDailyData(dailyStats);
