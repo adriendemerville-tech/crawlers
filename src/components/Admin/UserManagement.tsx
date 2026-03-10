@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle } from 'lucide-react';
+import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
 
 interface UserProfile {
@@ -34,6 +34,31 @@ export function UserManagement() {
   const [actionLoading, setActionLoading] = useState(false);
   const [kpiUser, setKpiUser] = useState<UserProfile | null>(null);
   const [kpiModalOpen, setKpiModalOpen] = useState(false);
+  const [adminUserIds, setAdminUserIds] = useState<Set<string>>(new Set());
+
+  const fetchAdminRoles = async () => {
+    const { data } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'admin');
+    if (data) setAdminUserIds(new Set(data.map(r => r.user_id)));
+  };
+
+  const toggleAdmin = async (userId: string) => {
+    const isAdmin = adminUserIds.has(userId);
+    try {
+      if (isAdmin) {
+        await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', 'admin');
+        toast.success('Rôle admin retiré');
+      } else {
+        await supabase.from('user_roles').insert({ user_id: userId, role: 'admin' });
+        toast.success('Rôle admin attribué');
+      }
+      fetchAdminRoles();
+    } catch {
+      toast.error('Erreur lors de la modification du rôle');
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -56,6 +81,7 @@ export function UserManagement() {
 
   useEffect(() => {
     fetchUsers();
+    fetchAdminRoles();
   }, []);
 
   const filteredUsers = users.filter(user => 
@@ -222,9 +248,14 @@ export function UserManagement() {
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
-                    <TableRow key={user.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setKpiUser(user); setKpiModalOpen(true); }}>
+                    <TableRow key={user.id} className="group cursor-pointer hover:bg-muted/50" onClick={() => { setKpiUser(user); setKpiModalOpen(true); }}>
                       <TableCell className="font-medium">
-                        {user.first_name} {user.last_name}
+                        <div className="flex items-center gap-2">
+                          {user.first_name} {user.last_name}
+                          {adminUserIds.has(user.user_id) && (
+                            <Badge variant="outline" className="text-xs border-primary text-primary">Admin</Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell className="text-center">
@@ -237,6 +268,15 @@ export function UserManagement() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant={adminUserIds.has(user.user_id) ? 'default' : 'outline'}
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => toggleAdmin(user.user_id)}
+                            title={adminUserIds.has(user.user_id) ? 'Retirer admin' : 'Rendre admin'}
+                          >
+                            <ShieldCheck className="h-4 w-4" />
+                          </Button>
                           <Dialog open={creditDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                             setCreditDialogOpen(open);
                             if (open) setSelectedUser(user);
