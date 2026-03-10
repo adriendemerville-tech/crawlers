@@ -752,8 +752,23 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+function detectDefaultLanguage(): Language {
+  const saved = localStorage.getItem('app-language');
+  if (saved === 'fr' || saved === 'en' || saved === 'es') return saved;
+
+  const browserLang = (navigator.language || '').toLowerCase();
+  if (browserLang.startsWith('fr')) return 'fr';
+  if (browserLang.startsWith('es')) return 'es';
+  return 'en';
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('fr');
+  const [language, setLanguageState] = useState<Language>(detectDefaultLanguage);
+
+  const setLanguage = (lang: Language) => {
+    localStorage.setItem('app-language', lang);
+    setLanguageState(lang);
+  };
 
   // Dynamically update <html lang> so crawlers detect the active language
   useEffect(() => {
