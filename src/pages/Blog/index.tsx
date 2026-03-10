@@ -63,7 +63,7 @@ function BlogIndexComponent() {
     async function fetchDbArticles() {
       const { data, error } = await supabase
         .from('blog_articles')
-        .select('id, slug, title, excerpt, image_url, published_at, created_at')
+        .select('id, slug, title, excerpt, image_url, published_at, created_at, title_en, title_es, excerpt_en, excerpt_es')
         .eq('status', 'published')
         .order('published_at', { ascending: false })
         .limit(20);
