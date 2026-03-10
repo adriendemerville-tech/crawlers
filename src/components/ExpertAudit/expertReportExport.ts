@@ -787,7 +787,7 @@ export function generateExpertReportHTML(
 
       ${strategic?.executive_roadmap?.length ? (() => {
         return `
-          <h3 style="font-size: 18px; color: #1f2937; margin: 24px 0 16px 0;">${language === 'fr' ? 'Feuille de Route Exécutive' : language === 'es' ? 'Hoja de Ruta Ejecutiva' : 'Executive Roadmap'}</h3>
+          <h3 style="font-size: 18px; color: #1f2937; margin: 24px 0 16px 0;">${rl.executiveRoadmap}</h3>
           ${(strategic.executive_roadmap as any[]).slice(0, 4).map((item: any, i: number) => `
             <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid;">
               <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
