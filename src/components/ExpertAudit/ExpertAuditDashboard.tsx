@@ -725,8 +725,8 @@ export function ExpertAuditDashboard() {
     });
   };
 
-  // Helper to invoke edge function with extended timeout (360s) for heavy audits
-  const invokeWithTimeout = async (fnName: string, body: any, timeoutMs = 360000) => {
+  // Helper to invoke edge function with extended timeout (540s / 9min) for heavy audits
+  const invokeWithTimeout = async (fnName: string, body: any, timeoutMs = 540000) => {
     const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fnName}`;
     const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
     const session = (await supabase.auth.getSession()).data.session;
