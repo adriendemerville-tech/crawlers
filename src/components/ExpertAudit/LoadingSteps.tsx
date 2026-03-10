@@ -44,14 +44,22 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
     return () => clearInterval(interval);
   }, [steps.length, variant]);
 
-  // Play microwave ding 2s after unmount (audit finished)
+  // Play microwave ding 3s after unmount (audit finished), then signal parent
   useEffect(() => {
     return () => {
       setTimeout(() => {
         const audio = new Audio(microwaveDing);
-        audio.volume = 0.8;
+        audio.volume = 1.0;
         audio.play().catch(() => {});
-      }, 2000);
+        // Dispatch event when ding finishes so dashboard can show results
+        audio.addEventListener('ended', () => {
+          window.dispatchEvent(new CustomEvent('audit-ding-ended'));
+        });
+        // Fallback if audio doesn't fire ended
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('audit-ding-ended'));
+        }, 3000);
+      }, 3000);
     };
   }, []);
 
