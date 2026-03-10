@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.generate-blog-from-news]
 verify_jwt = false
+
+[functions.rss-feed]
+verify_jwt = false
