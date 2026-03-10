@@ -268,7 +268,7 @@ function FooterComponent() {
                 <ul className="space-y-3">
                   {resourcesLinks.map((link) => (
                     <li key={link.href}>
-                      <Link
+                      <SmartLink
                         to={link.href}
                         className={`flex items-center gap-2 text-sm transition-colors ${(link as any).gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                         title={link.description}
@@ -281,7 +281,7 @@ function FooterComponent() {
                           <FileText className="h-4 w-4 flex-shrink-0" />
                         )}
                         <span>{link.label}</span>
-                      </Link>
+                      </SmartLink>
                     </li>
                   ))}
                 </ul>
