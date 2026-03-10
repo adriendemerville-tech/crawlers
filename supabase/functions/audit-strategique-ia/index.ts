@@ -2454,6 +2454,25 @@ Deno.serve(async (req) => {
 
     console.log('✅ AUDIT TERMINÉ');
 
+    // Save result to audit_cache for timeout recovery (fire and forget)
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const supabaseUrlEnv = Deno.env.get('SUPABASE_URL') || '';
+    if (serviceKey && supabaseUrlEnv) {
+      try {
+        const adminClient = createClient(supabaseUrlEnv, serviceKey);
+        const cacheKey = `strategic_${domain}_${url}`;
+        await adminClient.from('audit_cache').upsert({
+          cache_key: cacheKey,
+          function_name: 'audit-strategique-ia',
+          result_data: result,
+          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min TTL
+        }, { onConflict: 'cache_key' });
+        console.log('✅ Result saved to audit_cache for timeout recovery');
+      } catch (cacheErr) {
+        console.warn('⚠️ Failed to cache result:', cacheErr);
+      }
+    }
+
     // Save to registry (fire and forget)
     const authHeader = req.headers.get('Authorization') || '';
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
