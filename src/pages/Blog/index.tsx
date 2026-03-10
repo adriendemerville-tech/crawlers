@@ -194,7 +194,7 @@ function BlogIndexComponent() {
                     <div className="aspect-video overflow-hidden">
                       <img
                         src={article.image_url || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80'}
-                        alt={article.title}
+                        alt={(language === 'en' ? article.title_en : language === 'es' ? article.title_es : null) || article.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading="lazy"
                       />
