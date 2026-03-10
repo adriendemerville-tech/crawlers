@@ -1,5 +1,4 @@
 import { memo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { Calendar, ExternalLink, Share2 } from 'lucide-react';
 import { NewsArticle } from '@/types/news';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
