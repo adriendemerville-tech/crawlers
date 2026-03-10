@@ -218,10 +218,10 @@ function BlogIndexComponent() {
                         </span>
                       </div>
                       <h2 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                        {article.title}
+                        {(language === 'en' ? article.title_en : language === 'es' ? article.title_es : null) || article.title}
                       </h2>
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                        {article.excerpt || ''}
+                        {(language === 'en' ? article.excerpt_en : language === 'es' ? article.excerpt_es : null) || article.excerpt || ''}
                       </p>
                       <div className="flex items-center gap-1 text-sm font-medium text-primary">
                         {t.readMore}
