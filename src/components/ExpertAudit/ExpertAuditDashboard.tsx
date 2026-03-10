@@ -34,6 +34,7 @@ import { MethodologyPopover } from './MethodologyPopover';
 import { DarkSocialCard } from './DarkSocialCard';
 import { FreshnessSignalsCard } from './FreshnessSignalsCard';
 import { ConversionFrictionCard } from './ConversionFrictionCard';
+import { AEOScoreCard } from './AEOScoreCard';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
