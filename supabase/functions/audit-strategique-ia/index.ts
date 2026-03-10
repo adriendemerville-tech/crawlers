@@ -2348,28 +2348,85 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ═══ POST-PROCESS: Ensure strategic AI metrics always exist ═══
-    if (!parsedAnalysis.quotability) {
-      parsedAnalysis.quotability = { score: 0, quotes: [] };
-      console.log('⚠️ quotability missing from AI response — injected default');
+    // ═══ POST-PROCESS: FORCE-COMPUTE quotability & summary_resilience from page content ═══
+    // These are ALWAYS calculated server-side to guarantee they exist
+    {
+      const rawText = (pageContentContext || '').replace(/Titre="[^"]*"/g, '').replace(/H1="[^"]*"/g, '').replace(/Desc="[^"]*"/g, '');
+      
+      // --- QUOTABILITY: Extract citable sentences from page content ---
+      const sentences = rawText
+        .split(/[.!?]+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 40 && s.length < 300);
+      
+      // Score sentences by quotability markers
+      const quotableMarkers = [
+        /\d+\s*%/i, /\d+\s*(fois|x|million|milliard)/i, // Stats
+        /permet|offre|garantit|assure|réduit|augmente|améliore/i, // Value props
+        /premier|unique|seul|leader|innovant|révolutionne/i, // Differentiators
+        /grâce à|en seulement|jusqu'à|plus de|moins de/i, // Quantifiers
+        /enables|provides|reduces|increases|improves|delivers/i, // EN value props
+      ];
+      
+      const scoredSentences = sentences.map(s => {
+        let score = 0;
+        for (const marker of quotableMarkers) {
+          if (marker.test(s)) score++;
+        }
+        // Bonus for sentences that are self-contained (no pronouns at start)
+        if (!/^(il|elle|ils|elles|ce|cette|ces|it|they|this|these)\b/i.test(s)) score++;
+        return { text: s, score };
+      });
+      
+      scoredSentences.sort((a, b) => b.score - a.score);
+      const topQuotes = scoredSentences.slice(0, 3).filter(q => q.score > 0).map(q => q.text);
+      
+      // If LLM provided quotes, merge (LLM first, then server-side)
+      const llmQuotes = parsedAnalysis.quotability?.quotes || [];
+      const allQuotes = [...new Set([...llmQuotes, ...topQuotes])].slice(0, 3);
+      const quotabilityScore = Math.min(100, allQuotes.length * 33);
+      
+      parsedAnalysis.quotability = { score: quotabilityScore, quotes: allQuotes };
+      console.log(`✅ quotability computed: score=${quotabilityScore}, quotes=${allQuotes.length}`);
+      
+      // --- SUMMARY RESILIENCE: Compare H1 vs page content summary ---
+      const h1Match = (pageContentContext || '').match(/H1="([^"]+)"/);
+      const titleMatch = (pageContentContext || '').match(/Titre="([^"]+)"/);
+      const originalH1 = h1Match?.[1] || titleMatch?.[1] || 'Non détecté';
+      
+      // Build a value proposition from the first meaningful paragraph
+      const paragraphs = rawText.split(/\n+/).filter(p => p.trim().length > 50);
+      const firstParagraph = paragraphs[0] || '';
+      
+      // Extract key terms from H1 and check overlap with content
+      const h1Terms = originalH1.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+      const contentLower = (firstParagraph + ' ' + rawText.slice(0, 1000)).toLowerCase();
+      const matchedTerms = h1Terms.filter(t => contentLower.includes(t));
+      const resilienceScore = h1Terms.length > 0
+        ? Math.round((matchedTerms.length / h1Terms.length) * 100)
+        : 0;
+      
+      // Use LLM summary if available, otherwise generate from content
+      const llmSummary = parsedAnalysis.summary_resilience?.llmSummary;
+      const autoSummary = firstParagraph.slice(0, 80).replace(/[.!?,;:]+$/, '').trim() || 'Non disponible';
+      
+      parsedAnalysis.summary_resilience = {
+        score: parsedAnalysis.summary_resilience?.score || resilienceScore,
+        originalH1,
+        llmSummary: llmSummary || autoSummary,
+      };
+      console.log(`✅ summary_resilience computed: score=${parsedAnalysis.summary_resilience.score}, H1="${originalH1}"`);
     }
-    if (!parsedAnalysis.summary_resilience) {
-      // Extract H1 from page content if available
-      const h1Match = (pageContentContext || '').match(/^#\s+(.+)/m) || (pageContentContext || '').match(/H1:\s*(.+)/i);
-      parsedAnalysis.summary_resilience = { score: 0, originalH1: h1Match?.[1] || 'Non détecté', llmSummary: 'Non généré' };
-      console.log('⚠️ summary_resilience missing from AI response — injected default');
-    }
+
+    // Ensure other optional metrics have defaults
     if (!parsedAnalysis.lexical_footprint) {
       parsedAnalysis.lexical_footprint = { jargonRatio: 50, concreteRatio: 50 };
-      console.log('⚠️ lexical_footprint missing from AI response — injected default');
     }
     if (!parsedAnalysis.expertise_sentiment) {
       parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué — données insuffisantes' };
-      console.log('⚠️ expertise_sentiment missing from AI response — injected default');
     }
     if (!parsedAnalysis.red_teaming) {
       parsedAnalysis.red_teaming = { objections: [] };
-      console.log('⚠️ red_teaming missing from AI response — injected default');
     }
 
     const result = {
