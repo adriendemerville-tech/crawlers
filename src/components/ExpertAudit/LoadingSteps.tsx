@@ -74,7 +74,22 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
   const [currentStep, setCurrentStep] = useState(0);
   const steps = variant === 'strategic' ? strategicSteps : technicalSteps;
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const randomTrackId = useMemo(() => PLAYLIST_TRACK_IDS[Math.floor(Math.random() * PLAYLIST_TRACK_IDS.length)], []);
+  const [currentTrackId, setCurrentTrackId] = useState(() => PLAYLIST_TRACK_IDS[Math.floor(Math.random() * PLAYLIST_TRACK_IDS.length)]);
+
+  // Rotate to a new random track every 30 seconds
+  useEffect(() => {
+    const rotateInterval = setInterval(() => {
+      setCurrentTrackId(prev => {
+        let next;
+        do {
+          next = PLAYLIST_TRACK_IDS[Math.floor(Math.random() * PLAYLIST_TRACK_IDS.length)];
+        } while (next === prev && PLAYLIST_TRACK_IDS.length > 1);
+        return next;
+      });
+    }, 30000);
+    return () => clearInterval(rotateInterval);
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentStep((prev) => {
@@ -202,7 +217,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
         <iframe
           ref={iframeRef}
           style={{ borderRadius: '12px' }}
-          src={`https://open.spotify.com/embed/track/${randomTrackId}?utm_source=generator&theme=0`}
+          src={`https://open.spotify.com/embed/track/${currentTrackId}?utm_source=generator&theme=0`}
           width="100%"
           height="152"
           frameBorder="0"
