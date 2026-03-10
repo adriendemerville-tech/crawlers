@@ -432,13 +432,10 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
       if (RENDERING_KEY) {
         try {
           // Browserless.io /content endpoint for full HTML rendering
-          const renderUrl = `https://chrome.browserless.io/content?token=${RENDERING_KEY}`;
-          
-          // User-Agent identique au fetch initial pour éviter les blocages
-          const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CrawlersFR/2.0';
+          const renderUrl = `https://production-sfo.browserless.io/content?token=${RENDERING_KEY}`;
           
           const renderController = new AbortController();
-          const renderTimeoutId = setTimeout(() => renderController.abort(), 30000); // 30s timeout for rendering
+          const renderTimeoutId = setTimeout(() => renderController.abort(), 30000);
           
           const renderResponse = await fetch(renderUrl, {
             method: 'POST',
@@ -446,16 +443,12 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               url: url,
-              // Optimisation: bloquer les ressources inutiles pour accélérer et réduire les coûts
               rejectResourceTypes: ['image', 'media', 'font'],
-              // Attendre que le réseau soit inactif (JS chargé)
-              waitFor: 3000,
               gotoOptions: { 
-                waitUntil: 'networkidle0',
+                waitUntil: 'networkidle2',
                 timeout: 25000
               },
-              // Passer le même User-Agent
-              userAgent: userAgent
+              waitForSelector: { selector: 'body', timeout: 5000 },
             })
           });
           
