@@ -13,22 +13,15 @@ export async function trackAnalyzedUrl(url: string): Promise<void> {
     const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Single UPSERT — no SELECT needed
-    await supabase
-      .from('analyzed_urls')
-      .upsert(
-        {
-          url,
-          domain,
-          analysis_count: 1,
-          last_analyzed_at: new Date().toISOString(),
-        },
-        { onConflict: 'url', ignoreDuplicates: false }
-      );
+    // Single atomic upsert — replaces the old SELECT + UPDATE/INSERT pattern
+    const { error } = await supabase.rpc('upsert_analyzed_url', {
+      p_url: url,
+      p_domain: domain,
+    });
 
-    // Increment counter separately via RPC or raw update for existing rows
-    // Since upsert resets analysis_count to 1, use a raw SQL increment instead
-    await supabase.rpc('increment_analysis_count' as any, { p_url: url });
+    if (error) {
+      console.error('[trackAnalyzedUrl] RPC error (non-blocking):', error.message);
+    }
   } catch (e) {
     console.error('[trackAnalyzedUrl] Error (non-blocking):', e);
   }
