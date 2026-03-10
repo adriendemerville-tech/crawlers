@@ -79,7 +79,7 @@ AEO criteria measure your ability to meet these requirements through 8 verifiabl
   },
   es: {
     title: 'Score AEO (Answer Engine Optimization)',
-    subtitle: 'El AEO optimiza tu contenido para ser citado directamente como fuente por las IA (ChatGPT, Perplexity, Google AI Overviews) y asistentes de voz.',
+    subtitle: "El AEO apunta a la 'Posición Cero' de Google: el fragmento definitivo que muestra tu resumen antes de los enlaces clásicos.",
     methodology: 'Metodología',
     methodologyTitle: 'Metodología AEO — Posición Cero & E-E-A-T',
     methodologyDesc: 'Answer Engine Optimization (AEO) busca posicionar tu contenido como la respuesta de referencia en motores generativos y asistentes de voz.',
