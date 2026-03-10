@@ -90,15 +90,23 @@ export function SocialSignalsCard({ signals }: SocialSignalsCardProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Social Proof Sources */}
+          {/* Social Proof Sources — filter out LinkedIn if geo mismatch */}
           {signals.proof_sources && signals.proof_sources.length > 0 && (
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-1">
                 <MessageCircle className="h-3 w-3" />
                 Preuve Sociale par Plateforme
               </p>
+              {signals.founder_geo_mismatch && (
+                <div className="mb-3 p-2.5 rounded-lg bg-warning/10 border border-warning/30 text-xs text-warning flex items-center gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span>Un dirigeant homonyme a été détecté dans un autre pays — les données LinkedIn ont été exclues pour éviter toute confusion.</span>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {signals.proof_sources.map((source, index) => (
+                {signals.proof_sources
+                  .filter(source => !(signals.founder_geo_mismatch && source.platform === 'linkedin' && source.presence_level !== 'absent'))
+                  .map((source, index) => (
                   <div 
                     key={index}
                     className="p-4 rounded-lg bg-muted/50 border border-border"
