@@ -140,6 +140,22 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
         </AnimatePresence>
       </div>
 
+      <div className="w-full max-w-md mt-4">
+        <p className="text-sm text-muted-foreground text-center mb-3">
+          🎵 Détendez-vous pendant l'analyse…
+        </p>
+        <iframe
+          style={{ borderRadius: '12px' }}
+          src="https://open.spotify.com/embed/playlist/7lp4QzCQhq7ipPLL0Rnbwd?utm_source=generator&theme=0"
+          width="100%"
+          height="152"
+          frameBorder="0"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+          title="Playlist Spotify"
+        />
+      </div>
+
       <p className="text-sm text-muted-foreground text-center">
         L'analyse peut prendre jusqu'à 9 minutes.
         <br />
