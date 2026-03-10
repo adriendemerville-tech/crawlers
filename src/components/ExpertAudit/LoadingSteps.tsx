@@ -191,17 +191,10 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
           <Music className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">Playlist Crawlers</span>
         </div>
-        <iframe
-          key={currentTrackId}
-          ref={iframeRef}
-          style={{ borderRadius: '12px' }}
-          src={`https://open.spotify.com/embed/track/${currentTrackId}?utm_source=generator&theme=0&autoplay=1`}
-          width="100%"
-          height="152"
-          frameBorder="0"
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"
-          title="Playlist Crawlers"
+        <div
+          ref={embedContainerRef}
+          className="w-full overflow-hidden rounded-[12px]"
+          aria-label="Playlist Crawlers"
         />
         <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">
           Volume recommandé : 50%
