@@ -117,10 +117,28 @@ export function MyWallet() {
     setPortalLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-customer-portal');
-      if (error) throw error;
+      if (error) {
+        // Check if this is a "no Stripe account" error (free offer user)
+        const errorMsg = typeof error === 'object' && 'message' in error ? (error as any).message : String(error);
+        if (errorMsg.includes('404') || errorMsg.includes('Aucun compte Stripe') || errorMsg.includes('non-2xx')) {
+          setShowFreeOfferModal(true);
+          return;
+        }
+        throw error;
+      }
+      if (data?.error) {
+        // Edge function returned an error in the body (e.g. 404 wrapped)
+        setShowFreeOfferModal(true);
+        return;
+      }
       if (data?.url) window.location.href = data.url;
     } catch (err) {
-      toast({ title: 'Erreur', description: String(err), variant: 'destructive' });
+      // Fallback: if any error, show the free offer modal for Pro users without Stripe
+      if (isAgencyPro) {
+        setShowFreeOfferModal(true);
+      } else {
+        toast({ title: 'Erreur', description: String(err), variant: 'destructive' });
+      }
     } finally {
       setPortalLoading(false);
     }
