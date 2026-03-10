@@ -162,7 +162,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
         <iframe
           ref={iframeRef}
           style={{ borderRadius: '12px' }}
-          src="https://open.spotify.com/embed/playlist/7lp4QzCQhq7ipPLL0Rnbwd?utm_source=generator&theme=0"
+          src="https://open.spotify.com/embed/playlist/7lp4QzCQhq7ipPLL0Rnbwd?utm_source=generator&theme=0&shuffle=true"
           width="100%"
           height="152"
           frameBorder="0"
@@ -171,7 +171,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
           title="Playlist Crawlers"
         />
         <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">
-          🔊 Volume recommandé : 50%
+          Volume recommandé : 50%
         </p>
       </div>
 
