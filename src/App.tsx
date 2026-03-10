@@ -38,7 +38,7 @@ const ReportViewer = lazy(() => import("./pages/ReportViewer"));
 const SharedReportRedirect = lazy(() => import("./pages/SharedReportRedirect"));
 const Blog = lazy(() => import("./pages/Blog"));
 const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
-const ComparatifAuditGeo = lazy(() => import("./pages/ComparatifAuditGeo"));
+
 const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersSemrush"));
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
 const ProAgency = lazy(() => import("./pages/ProAgency"));
