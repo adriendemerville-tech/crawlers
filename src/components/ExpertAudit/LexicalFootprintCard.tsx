@@ -51,9 +51,9 @@ export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
         </div>
 
         <p className="text-xs text-muted-foreground italic">
-          {data.score >= 80 
+          {score >= 80 
             ? '✓ Contenu spécifique et actionnable — les LLM peuvent extraire des faits précis.'
-            : data.score >= 50
+            : score >= 50
             ? '⚠ Mélange de jargon et de contenu concret — affiner la rédaction pour plus de spécificité.'
             : '✗ Dominance de jargon corporate vide — les LLM peineront à extraire de la valeur.'}
         </p>
