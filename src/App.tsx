@@ -38,7 +38,7 @@ const ReportViewer = lazy(() => import("./pages/ReportViewer"));
 const SharedReportRedirect = lazy(() => import("./pages/SharedReportRedirect"));
 const Blog = lazy(() => import("./pages/Blog"));
 const ArticlePage = lazy(() => import("./pages/Blog/ArticlePage"));
-const ComparatifAuditGeo = lazy(() => import("./pages/ComparatifAuditGeo"));
+
 const ComparatifCrawlersSemrush = lazy(() => import("./pages/ComparatifCrawlersSemrush"));
 const ModifierCodeWordPress = lazy(() => import("./pages/ModifierCodeWordPress"));
 const ProAgency = lazy(() => import("./pages/ProAgency"));
@@ -103,7 +103,7 @@ const App = () => (
                           <Route path="/r/:shareId" element={<SharedReportRedirect />} /> {/* Legacy redirect */}
                           <Route path="/blog" element={<Blog />} />
                           <Route path="/blog/:slug" element={<ArticlePage />} />
-                          <Route path="/comparatif-audit-geo" element={<ComparatifAuditGeo />} />
+                          
                           <Route path="/comparatif-crawlers-semrush" element={<ComparatifCrawlersSemrush />} />
                           <Route path="/modifier-code-wordpress" element={<ModifierCodeWordPress />} />
                           <Route path="/pro-agency" element={<ProAgency />} />

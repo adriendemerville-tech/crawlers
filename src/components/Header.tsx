@@ -274,14 +274,7 @@ export function Header() {
                 </Button>
               </Link>
             )
-          ) : (
-            <Link to="/comparatif-audit-geo">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                <Scale className="h-4 w-4" />
-                <span className="text-sm">{t.comparatif}</span>
-              </Button>
-            </Link>
-          )}
+          ) : null}
           {isAuditExpertPage ? (
             <a href="/modifier-code-wordpress" target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">

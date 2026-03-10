@@ -158,12 +158,6 @@ const ComparatifCrawlersSemrush = () => {
       },
       {
         "@type": "ListItem",
-        "position": 2,
-        "name": "Comparatifs",
-        "item": `${SITE_URL}/comparatif-audit-geo`
-      },
-      {
-        "@type": "ListItem",
         "position": 3,
         "name": "Crawlers.fr vs Semrush",
         "item": `${SITE_URL}/comparatif-crawlers-semrush`
@@ -565,9 +559,7 @@ const ComparatifCrawlersSemrush = () => {
 
                 <p className="leading-relaxed">
                   <strong>Crawlers.fr</strong> se positionne différemment. Notre spécialité, c'est le{' '}
-                  <Link to="/comparatif-audit-geo" className="text-primary hover:underline font-medium">
-                    GEO (Generative Engine Optimization)
-                  </Link>
+                  <strong className="text-primary">GEO (Generative Engine Optimization)</strong>
                   {' '}: s'assurer que votre site est correctement lu, compris et cité par les intelligences artificielles 
                   génératives. Un angle mort que la plupart des outils SEO traditionnels n'adressent pas encore.
                 </p>
