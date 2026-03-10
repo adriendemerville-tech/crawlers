@@ -47,7 +47,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
   const [currentStep, setCurrentStep] = useState(0);
   const steps = variant === 'strategic' ? strategicSteps : technicalSteps;
   const iframeRef = useRef<HTMLIFrameElement>(null);
-
+  const randomTrackId = useMemo(() => PLAYLIST_TRACK_IDS[Math.floor(Math.random() * PLAYLIST_TRACK_IDS.length)], []);
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentStep((prev) => {
