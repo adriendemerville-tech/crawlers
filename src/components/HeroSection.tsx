@@ -234,34 +234,36 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
           dangerouslySetInnerHTML={{ __html: content.subheadline }}
         />
 
-        {/* 4 Tab Buttons */}
-        <div className="mb-6 inline-flex flex-wrap justify-center gap-1 rounded-lg border border-border bg-card p-1">
-          {([
-            { key: 'crawlers' as ToolTab, icon: Bot, label: t.tabs.crawlers },
-            { key: 'geo' as ToolTab, icon: Sparkles, label: t.tabs.geo },
-            { key: 'llm' as ToolTab, icon: Brain, label: t.tabs.llm },
-            { key: 'pagespeed' as ToolTab, icon: Gauge, label: t.tabs.pagespeed },
-          ]).map(({ key, icon: Icon, label }) => (
-            <button
-              key={key}
-              data-tour={`tab-${key}`}
-              onClick={() => onTabChange(key)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
-                activeTab === key
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-              aria-current={activeTab === key ? 'page' : undefined}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              <span>{label}</span>
-            </button>
-          ))}
+        {/* 4 Tab Buttons + Search Form — same max-width container */}
+        <div className="mx-auto max-w-3xl w-full">
+          <div className="mb-2 inline-flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1">
+            {([
+              { key: 'crawlers' as ToolTab, icon: Bot, label: t.tabs.crawlers },
+              { key: 'geo' as ToolTab, icon: Sparkles, label: t.tabs.geo },
+              { key: 'llm' as ToolTab, icon: Brain, label: t.tabs.llm },
+              { key: 'pagespeed' as ToolTab, icon: Gauge, label: t.tabs.pagespeed },
+            ]).map(({ key, icon: Icon, label }) => (
+              <button
+                key={key}
+                data-tour={`tab-${key}`}
+                onClick={() => onTabChange(key)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
+                  activeTab === key
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+                aria-current={activeTab === key ? 'page' : undefined}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Search Form */}
-        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
+        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl w-full">
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
               <Input
