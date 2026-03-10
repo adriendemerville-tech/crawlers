@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import { Globe, Code, Shield, Brain, CheckCircle2, Target, Link2, Users, Search, Music } from 'lucide-react';
-import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
+
 
 const technicalSteps = [
   { id: 'connect', label: 'Audit Speed et Performances...', icon: Globe },
@@ -44,14 +44,12 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
     return () => clearInterval(interval);
   }, [steps.length, variant]);
 
-  // Play microwave ding 2s after unmount (audit finished)
+  // Stop Spotify iframe on unmount
   useEffect(() => {
     return () => {
-      setTimeout(() => {
-        const audio = new Audio(microwaveDing);
-        audio.volume = 0.8;
-        audio.play().catch(() => {});
-      }, 2000);
+      if (iframeRef.current) {
+        iframeRef.current.src = '';
+      }
     };
   }, []);
 

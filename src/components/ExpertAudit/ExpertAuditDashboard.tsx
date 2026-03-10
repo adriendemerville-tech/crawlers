@@ -661,14 +661,7 @@ export function ExpertAuditDashboard() {
           ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
           : '';
 
-        // Play microwave ding sound on audit completion
-        try {
-          const { default: dingUrl } = await import('@/assets/sounds/microwave-ding.mp3');
-          const audio = new Audio(dingUrl);
-          audio.volume = 0.5;
-          audio.play().catch(() => {});
-        } catch {}
-
+        // Ding is handled after loading stops — see finally block below
         toast({
           title: t.auditComplete,
           description: `${t.globalScore} : ${data.data.totalScore}/200${reliabilityInfo}`,
@@ -695,6 +688,22 @@ export function ExpertAuditDashboard() {
     try {
       await attemptAudit(1);
     } finally {
+      // Wait 3s silence, play ding, then show results after ding ends
+      await new Promise<void>((resolve) => {
+        setTimeout(async () => {
+          try {
+            const { default: dingUrl } = await import('@/assets/sounds/microwave-ding.mp3');
+            const audio = new Audio(dingUrl);
+            audio.volume = 1.0;
+            audio.addEventListener('ended', () => resolve());
+            // Fallback in case 'ended' doesn't fire
+            setTimeout(() => resolve(), 3000);
+            audio.play().catch(() => resolve());
+          } catch {
+            resolve();
+          }
+        }, 3000);
+      });
       setIsLoading(false);
     }
   };
