@@ -1509,7 +1509,7 @@ GÉNÈRE UN JSON avec cette structure:
 "overallScore":0-100,
 "quotability":{"score":0-100,"quotes":["Phrase citable 1","Phrase citable 2","Phrase citable 3"]},
 "summary_resilience":{"score":0-100,"originalH1":"Le H1 de la page","llmSummary":"Résumé en 10 mots max de la proposition de valeur"},
-"lexical_footprint":{"score":0-100,"jargonRatio":0-100,"concreteRatio":0-100},
+"lexical_footprint":{"jargonRatio":0-100,"concreteRatio":0-100},
 "expertise_sentiment":{"rating":1-5,"justification":"1 phrase justificative"},
 "red_team":{"flaws":["Faille logique 1","Preuve manquante 2","Objection non adressée 3"]}}
 

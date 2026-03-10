@@ -7,7 +7,9 @@ interface LexicalFootprintCardProps {
 }
 
 export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
-  const scoreColor = data.score >= 80 ? 'text-success' : data.score >= 50 ? 'text-warning' : 'text-destructive';
+  // Derive score from concreteRatio for consistency (ignore LLM-generated score)
+  const score = data.concreteRatio ?? data.score;
+  const scoreColor = score >= 80 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-destructive';
 
   return (
     <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
