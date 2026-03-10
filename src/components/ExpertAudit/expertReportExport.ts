@@ -694,10 +694,10 @@ export function generateExpertReportHTML(
         <div style="background: #faf5ff; padding: 24px; border-radius: 12px; margin-bottom: 20px;">
           <h3 style="font-size: 16px; color: #7c3aed; margin: 0 0 16px 0;">${t.brandIdentity}</h3>
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-            <div><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Archétype</div><div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.archetype}</div></div>
-            <div><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Clarté</div><div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.clarity_score}/100</div></div>
+            <div><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.archetype}</div><div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.archetype}</div></div>
+            <div><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.clarity}</div><div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.clarity_score}/100</div></div>
           </div>
-          <div style="margin-top: 12px;"><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Valeurs perçues</div>
+          <div style="margin-top: 12px;"><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.perceivedValues}</div>
             <div>${strategic.brand_identity.perceived_values.map((v: string) => `<span style="display: inline-block; padding: 4px 8px; background: #e9d5ff; color: #7c3aed; border-radius: 6px; font-size: 12px; margin: 2px;">${v}</span>`).join('')}</div>
           </div>
         </div>
