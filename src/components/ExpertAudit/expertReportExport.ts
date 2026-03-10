@@ -510,8 +510,8 @@ export function generateExpertReportHTML(
         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
           <thead>
             <tr style="background: #f9fafb;">
-              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e5e7eb; width: 70px;">Priorité</th>
-              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e5e7eb;">Recommandation</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e5e7eb; width: 70px;">${rl.priority}</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e5e7eb;">${rl.recommendation}</th>
             </tr>
           </thead>
           <tbody>
