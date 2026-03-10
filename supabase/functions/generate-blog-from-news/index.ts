@@ -302,6 +302,22 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
 
     console.log("[blog-gen] ✅ Article published:", inserted.slug, `(${contentLength} chars)`);
 
+    // ─── STEP 6: Ping Google sitemap for instant indexation ───
+    const sitemapUrl = `${supabaseUrl}/functions/v1/sitemap`;
+    const pingUrls = [
+      `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
+      `https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
+    ];
+
+    for (const pingUrl of pingUrls) {
+      try {
+        const pingRes = await fetch(pingUrl, { method: "GET" });
+        console.log(`[blog-gen] Ping ${new URL(pingUrl).hostname}: ${pingRes.status}`);
+      } catch (e) {
+        console.warn(`[blog-gen] Ping failed for ${pingUrl}:`, e);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

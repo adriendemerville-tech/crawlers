@@ -1,5 +1,4 @@
 import { memo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { Calendar, ExternalLink, Share2 } from 'lucide-react';
 import { NewsArticle } from '@/types/news';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
@@ -165,16 +164,9 @@ Saludos`,
     </Card>
   );
 
-  if (isInternal) {
-    return (
-      <Link to={article.url} {...wrapperProps}>
-        {cardContent}
-      </Link>
-    );
-  }
-
+  // All carousel links open in new tab
   return (
-    <a href={article.url} target="_blank" rel="noopener noreferrer" {...wrapperProps}>
+    <a href={isInternal ? `https://crawlers.fr${article.url}` : article.url} target="_blank" rel="noopener noreferrer" {...wrapperProps}>
       {cardContent}
     </a>
   );

@@ -152,6 +152,30 @@ const ExpertAudit = () => {
     };
   }, [language, meta, faqItems]);
 
+  // Force all links inside audit-expert to open in new tab
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a[href]') as HTMLAnchorElement | null;
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href) return;
+      // Skip internal navigation anchors (hash links, javascript:)
+      if (href.startsWith('#') || href.startsWith('javascript:')) return;
+      // Force external opening
+      if (href.startsWith('http') && !anchor.hasAttribute('target')) {
+        e.preventDefault();
+        window.open(href, '_blank', 'noopener,noreferrer');
+      }
+    };
+
+    const mainEl = document.querySelector('main[aria-label="Audit Expert SEO & IA"]');
+    mainEl?.addEventListener('click', handleClick as EventListener);
+    return () => {
+      mainEl?.removeEventListener('click', handleClick as EventListener);
+    };
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
