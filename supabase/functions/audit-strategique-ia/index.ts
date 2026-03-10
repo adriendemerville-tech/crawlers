@@ -953,25 +953,10 @@ function sortByStrategicRelevance(
 ): KeywordData[] {
   if (keywords.length === 0) return keywords;
 
-  const stopWords = new Set([
-    'le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux',
-    'avec','dans','ou','plus','vous','votre','nos','notre','nous','si','mais','car',
-    'the','and','for','with','your','our','from','that','this',
-  ]);
-
-  const titleMatch = pageContentContext.match(/Titre="([^"?]+)/);
-  const h1Match = pageContentContext.match(/H1="([^"?]+)/);
-  const descMatch = pageContentContext.match(/Desc="([^"?]+)/);
-  const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
-  
+  const texts = extractMetadataTexts(pageContentContext);
   const coreTerms: string[] = [];
   for (const text of texts) {
-    const words = text.toLowerCase()
-      .replace(/[|–—·:,\.!?]/g, ' ')
-      .replace(/[^\wàâäéèêëïîôùûüÿçœæ\s'-]/g, '')
-      .split(/\s+/)
-      .filter(w => w.length > 2 && !stopWords.has(w));
-    coreTerms.push(...words);
+    coreTerms.push(...cleanAndTokenize(text).filter(w => w.length > 2));
   }
   const uniqueCoreTerms = [...new Set(coreTerms)];
 
