@@ -362,7 +362,7 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
       
       if (RENDERING_KEY_403) {
         try {
-          const renderUrl403 = `https://chrome.browserless.io/content?token=${RENDERING_KEY_403}`;
+          const renderUrl403 = `https://production-sfo.browserless.io/content?token=${RENDERING_KEY_403}`;
           const renderController403 = new AbortController();
           const renderTimeout403 = setTimeout(() => renderController403.abort(), 30000);
           
@@ -373,9 +373,8 @@ async function smartFetch(url: string): Promise<SmartFetchResult> {
             body: JSON.stringify({
               url: url,
               rejectResourceTypes: ['image', 'media', 'font'],
-              waitFor: 3000,
-              gotoOptions: { waitUntil: 'networkidle0', timeout: 25000 },
-              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+              gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
+              waitForSelector: { selector: 'body', timeout: 5000 },
             })
           });
           
