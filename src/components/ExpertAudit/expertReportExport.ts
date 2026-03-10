@@ -739,10 +739,10 @@ export function generateExpertReportHTML(
       ${strategic?.market_intelligence ? (() => {
         const mi = strategic.market_intelligence;
         return sectionCard(
-          language === 'fr' ? 'Intelligence de Marché' : 'Market Intelligence',
+          rl.marketIntelligence,
           '#d97706', 'linear-gradient(135deg, #fffbeb, #fef3c7)',
-          `${mi.sophistication ? `${labelValue(language === 'fr' ? 'Niveau de sophistication' : 'Sophistication', mi.sophistication.level + '/5')}${textBlock(mi.sophistication.description || '')}` : ''}
-           ${mi.semantic_gap ? `${labelValue(language === 'fr' ? 'Position vs Leader' : 'Position vs Leader', mi.semantic_gap.current_position + ' → ' + mi.semantic_gap.leader_position)}${labelValue('Gap', mi.semantic_gap.gap_distance + ' pts')}${textBlock(mi.semantic_gap.closing_strategy || '')}` : ''}
+          `${mi.sophistication ? `${labelValue(rl.sophisticationLevel, mi.sophistication.level + '/5')}${textBlock(mi.sophistication.description || '')}` : ''}
+           ${mi.semantic_gap ? `${labelValue('Position vs Leader', mi.semantic_gap.current_position + ' → ' + mi.semantic_gap.leader_position)}${labelValue('Gap', mi.semantic_gap.gap_distance + ' pts')}${textBlock(mi.semantic_gap.closing_strategy || '')}` : ''}
            ${textBlock(mi.positioning_verdict || '')}`
         );
       })() : ''}
