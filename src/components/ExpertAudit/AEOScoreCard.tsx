@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -34,7 +34,7 @@ Pour convaincre les moteurs génératifs de vous citer, vous devez démontrer vo
 • **Autorité** — Construisez un maillage interne sémantique cohérent et obtenez des citations sur des sources tierces.
 • **Fiabilité** — Utilisez des données structurées Schema.org, maintenez un site rapide et sécurisé.
 
-Les critères AEO mesurent votre capacité à satisfaire ces exigences à travers 10 indicateurs techniques et éditoriaux vérifiables.`,
+Les critères AEO mesurent votre capacité à satisfaire ces exigences à travers 8 indicateurs techniques et éditoriaux vérifiables.`,
     criteria: {
       schema: { label: 'Balisage Schema.org (FAQ, Article)', explanation: "Aide les IA à comprendre instantanément la structure de vos réponses." },
       interrogative: { label: 'Titres Hn interrogatifs', explanation: "Cible les questions exactes posées par les internautes à la voix ou à l'IA." },
@@ -63,7 +63,7 @@ To convince generative engines to cite you, you must demonstrate **E-E-A-T** (Ex
 • **Authoritativeness** — Build a coherent semantic internal linking structure and earn citations on third-party sources.
 • **Trustworthiness** — Use Schema.org structured data, maintain a fast and secure site.
 
-AEO criteria measure your ability to meet these requirements through 10 verifiable technical and editorial indicators.`,
+AEO criteria measure your ability to meet these requirements through 8 verifiable technical and editorial indicators.`,
     criteria: {
       schema: { label: 'Schema.org Markup (FAQ, Article)', explanation: 'Helps AI instantly understand the structure of your answers.' },
       interrogative: { label: 'Interrogative Headings', explanation: 'Targets the exact questions users ask via voice or AI.' },
@@ -92,7 +92,7 @@ Para convencer a los motores generativos de citarte, debes demostrar tu **E-E-A-
 • **Autoridad** — Construye un enlazado interno semántico coherente y obtén citas en fuentes de terceros.
 • **Fiabilidad** — Usa datos estructurados Schema.org, mantén un sitio rápido y seguro.
 
-Los criterios AEO miden tu capacidad para cumplir estos requisitos a través de 10 indicadores técnicos y editoriales verificables.`,
+Los criterios AEO miden tu capacidad para cumplir estos requisitos a través de 8 indicadores técnicos y editoriales verificables.`,
     criteria: {
       schema: { label: 'Marcado Schema.org (FAQ, Article)', explanation: 'Ayuda a las IA a comprender instantáneamente la estructura de tus respuestas.' },
       interrogative: { label: 'Encabezados interrogativos', explanation: 'Apunta a las preguntas exactas que los usuarios hacen por voz o IA.' },
@@ -167,8 +167,6 @@ function computeAEOCriteria(result: ExpertAuditResult, lang: string): AEOCriteri
     { label: t.criteria.interrogative.label, passed: hasInterrogativeHn, explanation: t.criteria.interrogative.explanation },
     { label: t.criteria.invertedPyramid.label, passed: hasInvertedPyramid, explanation: t.criteria.invertedPyramid.explanation },
     { label: t.criteria.extractable.label, passed: hasExtractableFormats, explanation: t.criteria.extractable.explanation },
-    { label: t.criteria.bold.label, passed: hasBoldEmphasis, explanation: t.criteria.bold.explanation },
-    { label: t.criteria.readability.label, passed: hasGoodReadability, explanation: t.criteria.readability.explanation },
     { label: t.criteria.ttfb.label, passed: hasFastTTFB, explanation: t.criteria.ttfb.explanation },
     { label: t.criteria.domAccess.label, passed: hasDOMAccessibility, explanation: t.criteria.domAccess.explanation },
     { label: t.criteria.eeat.label, passed: hasEEAT, explanation: t.criteria.eeat.explanation },
@@ -189,10 +187,10 @@ export function AEOScoreCard({ result }: AEOScoreCardProps) {
 
   const criteria = computeAEOCriteria(result, language);
   const passedCount = criteria.filter(c => c.passed).length;
-  const score = passedCount * 10; // 10 criteria = 100 max
+  const score = Math.round((passedCount / 8) * 100); // 8 criteria = 100 max
 
-  const strokeWidth = 10;
-  const size = 140;
+  const strokeWidth = 8;
+  const size = 90;
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (score / 100) * circumference;
@@ -200,21 +198,21 @@ export function AEOScoreCard({ result }: AEOScoreCardProps) {
   return (
     <>
       <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Mic className="h-4.5 w-4.5 text-primary" />
             </div>
             {t.title}
           </CardTitle>
-          <CardDescription className="text-sm text-muted-foreground leading-relaxed">
-            {t.subtitle}
-          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Score Gauge */}
-          <div className="flex justify-center">
-            <div className="relative" style={{ width: size, height: size }}>
+        <CardContent className="space-y-4">
+          {/* Subtitle + Score side by side */}
+          <div className="flex items-center gap-5">
+            <p className="flex-1 text-sm text-muted-foreground leading-relaxed">
+              {t.subtitle}
+            </p>
+            <div className="relative shrink-0" style={{ width: size, height: size }}>
               <svg width={size} height={size} className="-rotate-90">
                 <circle
                   cx={size / 2} cy={size / 2} r={radius}
@@ -232,7 +230,7 @@ export function AEOScoreCard({ result }: AEOScoreCardProps) {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <motion.span
-                  className="text-4xl font-bold"
+                  className="text-2xl font-bold"
                   style={{ color: getScoreColor(score) }}
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -240,50 +238,35 @@ export function AEOScoreCard({ result }: AEOScoreCardProps) {
                 >
                   {score}
                 </motion.span>
-                <span className="text-sm text-muted-foreground font-medium">/ 100</span>
+                <span className="text-[10px] text-muted-foreground font-medium">/ 100</span>
               </div>
             </div>
           </div>
 
           {/* Criteria List */}
-          <div className="space-y-2">
+          <div className="grid gap-1.5">
             {criteria.map((criterion, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 * i, duration: 0.3 }}
-                className="flex items-start gap-3 rounded-lg bg-muted/40 p-3"
+                className="flex items-center gap-2.5 rounded-md bg-muted/40 px-3 py-2"
               >
                 {criterion.passed ? (
-                  <CheckCircle2 className="h-5 w-5 text-success shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                 ) : (
-                  <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <XCircle className="h-4 w-4 text-destructive shrink-0" />
                 )}
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">{criterion.label}</p>
-                  <p className="text-xs text-muted-foreground">{criterion.explanation}</p>
+                  <p className="text-sm font-medium text-foreground leading-tight">{criterion.label}</p>
                 </div>
               </motion.div>
             ))}
           </div>
 
-          {/* Badge summary */}
-          <div className="flex justify-center">
-            <Badge
-              variant="outline"
-              className={
-                score >= 70 ? 'text-success border-success/30' :
-                score >= 40 ? 'text-warning border-warning/30' :
-                'text-destructive border-destructive/30'
-              }
-            >
-              {passedCount}/10
-            </Badge>
-          </div>
-
           {/* Methodology button */}
-          <div className="flex justify-center pt-2">
+          <div className="flex justify-center">
             <Button
               variant="outline"
               size="sm"
