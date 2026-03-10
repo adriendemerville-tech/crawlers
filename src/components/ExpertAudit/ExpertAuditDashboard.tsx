@@ -663,10 +663,6 @@ export function ExpertAuditDashboard() {
           : '';
 
         // Ding is handled after loading stops — see finally block below
-        toast({
-          title: t.auditComplete,
-          description: `${t.globalScore} : ${data.data.totalScore}/200${reliabilityInfo}`,
-        });
       } catch (error) {
         console.error(`Audit error (attempt ${attempt}):`, error);
         trackAnalyticsEvent('error', { eventData: { type: 'technical_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
