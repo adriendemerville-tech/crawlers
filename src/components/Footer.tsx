@@ -98,6 +98,11 @@ function FooterComponent() {
       href: '/comparatif-crawlers-semrush',
       description: t3(language, 'Comparatif SEO/GEO avec Semrush', 'SEO/GEO comparison with Semrush', 'Comparación SEO/GEO con Semrush')
     },
+    { 
+      label: t3(language, 'Guide Audit SEO/GEO', 'SEO/GEO Audit Guide', 'Guía Auditoría SEO/GEO'),
+      href: '/guide-audit-seo',
+      description: t3(language, 'Guide complet de l\'audit SEO en 2026', 'Complete SEO audit guide for 2026', 'Guía completa de auditoría SEO en 2026')
+    },
   ];
 
   const legalLinks = [

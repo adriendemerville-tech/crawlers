@@ -277,6 +277,10 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
         </div>
         </form>
 
+        <p className="mt-3 text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto text-center">
+          {language === 'es' ? 'Más de 150 criterios SEO/GEO analizados en cada auditoría completa, por unos pocos euros.' : language === 'en' ? 'Over 150 SEO/GEO criteria analyzed per full audit, for just a few euros.' : 'Plus de 150 critères SEO/GEO analysés à chaque audit complet, pour quelques euros.'}
+        </p>
+
         <UrlValidationBanner
           suggestedUrl={validation.suggestedUrl}
           urlNotFound={validation.urlNotFound}
