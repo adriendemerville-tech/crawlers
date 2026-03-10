@@ -728,11 +728,11 @@ export function generateExpertReportHTML(
         const tl = ss.thought_leadership;
         const sent = ss.sentiment;
         return sectionCard(
-          language === 'fr' ? 'Signaux Sociaux & Autorité' : 'Social Signals & Authority',
+          rl.socialSignals,
           '#2563eb', 'linear-gradient(135deg, #eff6ff, #f0f9ff)',
-          `${tl ? `${labelValue('E-E-A-T', (tl.eeat_score || 0) + '/10')}${labelValue(language === 'fr' ? 'Reconnaissance' : 'Recognition', tl.entity_recognition || '—')}${textBlock(tl.analysis || '')}` : ''}
-           ${sent ? `${labelValue(language === 'fr' ? 'Sentiment global' : 'Sentiment', sent.overall_polarity || '—')}${labelValue(language === 'fr' ? 'Risque hallucination' : 'Hallucination Risk', sent.hallucination_risk || '—')}` : ''}
-           ${proofRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Plateforme</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Présence</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Analyse</th></tr></thead><tbody>${proofRows}</tbody></table>` : ''}`
+          `${tl ? `${labelValue('E-E-A-T', (tl.eeat_score || 0) + '/10')}${labelValue(rl.recognition, tl.entity_recognition || '—')}${textBlock(tl.analysis || '')}` : ''}
+           ${sent ? `${labelValue(rl.overallSentiment, sent.overall_polarity || '—')}${labelValue(rl.hallucinationRisk, sent.hallucination_risk || '—')}` : ''}
+           ${proofRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">${rl.platform}</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">${rl.presence}</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">${rl.analysis}</th></tr></thead><tbody>${proofRows}</tbody></table>` : ''}`
         );
       })() : ''}
 
