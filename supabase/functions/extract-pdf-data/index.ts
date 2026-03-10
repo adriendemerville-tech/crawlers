@@ -15,7 +15,7 @@ import { corsHeaders } from '../_shared/cors.ts';
  * 4. Produces calibration signals to refine prediction algorithm
  * 5. Stores calibration data in pdf_audits.extracted_data
  */
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }

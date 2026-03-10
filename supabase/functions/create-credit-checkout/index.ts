@@ -18,7 +18,7 @@ const CREDIT_PACKAGES = {
 
 type PackageType = keyof typeof CREDIT_PACKAGES;
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
