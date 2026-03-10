@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
-import { Loader2, Globe, Code, Shield, Brain, CheckCircle2, Target, Link2, Users, Search } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Globe, Code, Shield, Brain, CheckCircle2, Target, Link2, Users, Search, Music } from 'lucide-react';
+import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
 
 const technicalSteps = [
   { id: 'connect', label: 'Audit Speed et Performances...', icon: Globe },
@@ -30,6 +31,7 @@ interface LoadingStepsProps {
 export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const steps = variant === 'strategic' ? strategicSteps : technicalSteps;
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -42,11 +44,22 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
     return () => clearInterval(interval);
   }, [steps.length, variant]);
 
+  // Play microwave ding 2s after unmount (audit finished)
+  useEffect(() => {
+    return () => {
+      setTimeout(() => {
+        const audio = new Audio(microwaveDing);
+        audio.volume = 0.8;
+        audio.play().catch(() => {});
+      }, 2000);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-center py-16 space-y-8">
       {/* Spinning loader with ring */}
       <div className="relative">
-        <div className={`h-20 w-20 rounded-full border-4 border-muted`}></div>
+        <div className="h-20 w-20 rounded-full border-4 border-muted"></div>
         <div className={`absolute inset-0 h-20 w-20 rounded-full border-4 border-t-transparent animate-spin ${
           variant === 'strategic' ? 'border-slate-500' : 'border-primary'
         }`}></div>
@@ -140,11 +153,14 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
         </AnimatePresence>
       </div>
 
+      {/* Spotify Playlist - Crawlers */}
       <div className="w-full max-w-md mt-4">
-        <p className="text-sm text-muted-foreground text-center mb-3">
-          🎵 Détendez-vous pendant l'analyse…
-        </p>
+        <div className="flex items-center gap-2 justify-center mb-3">
+          <Music className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium text-foreground">Playlist Crawlers</span>
+        </div>
         <iframe
+          ref={iframeRef}
           style={{ borderRadius: '12px' }}
           src="https://open.spotify.com/embed/playlist/7lp4QzCQhq7ipPLL0Rnbwd?utm_source=generator&theme=0"
           width="100%"
@@ -152,8 +168,11 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
           frameBorder="0"
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
           loading="lazy"
-          title="Playlist Spotify"
+          title="Playlist Crawlers"
         />
+        <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">
+          🔊 Volume recommandé : 50%
+        </p>
       </div>
 
       <p className="text-sm text-muted-foreground text-center">
