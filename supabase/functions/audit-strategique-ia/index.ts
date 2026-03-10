@@ -1569,7 +1569,7 @@ INSTRUCTIONS CRITIQUES:
 - 5 NOUVEAUX MODULES (OBLIGATOIRES):
   • quotability: Extrais jusqu'à 3 phrases factuelles autonomes et citables par un LLM depuis le contenu de la page. +33 pts par citation de haute qualité. Si aucune n'existe, renvoie un tableau vide et score 0.
   • summary_resilience: Résume la proposition de valeur du corps en 10 mots max. Compare avec le H1 original. Score 0-100 de similarité sémantique.
-  • lexical_footprint: Calcule le ratio jargon corporate vide vs verbes d'action concrets et entités spécifiques. Score 0-100 (100 = très spécifique et actionnable).
+  • lexical_footprint: Calcule le ratio jargon corporate vide vs verbes d'action concrets et entités spécifiques. jargonRatio + concreteRatio DOIVENT sommer à 100. Le champ "score" n'est plus utilisé.
   • expertise_sentiment: Le texte utilise-t-il des marqueurs d'expérience de première main ("Nous avons testé", "Dans notre expérience", "Étude de cas") ? Note de 1 (générique/IA) à 5 (expert de terrain).
   • red_team: Agis en client sceptique expert. Identifie les 3 plus grandes failles logiques, preuves manquantes ou objections non adressées. Tableau de 3 strings.
 - JSON pur, sans virgules traînantes`;
