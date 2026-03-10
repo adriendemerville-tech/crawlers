@@ -219,7 +219,7 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
 <div class="summary-card">
   <h4>📋 L'essentiel en 30 secondes</h4>
   <ul>
-    <li>Point clé 1 (avec chiffre VÉRIFIÉ et DATE 2026)</li>
+    <li>Point clé 1 (avec chiffre VÉRIFIÉ et DATE 2026 OBLIGATOIRE dans au moins un point)</li>
     <li>Point clé 2</li>
     <li>Point clé 3</li>
     <li>Point clé 4</li>
@@ -245,11 +245,11 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
    - Inclure AU MOINS 1 citation avec attribution (nom, poste).
    - Vocabulaire riche : synonymes, termes techniques variés, entités nommées.
    - Mentionner Crawlers.fr UNE SEULE FOIS, naturellement, comme outil de diagnostic SEO/GEO.
-   - Le titre SEO DOIT contenir l'année 2026.
+   - Le titre SEO ne doit PAS obligatoirement contenir 2026, mais le bloc résumé (summary-card) DOIT mentionner 2026 au moins une fois.
 
 6. **Retourne UNIQUEMENT un JSON valide (pas de markdown) :**
 {
-  "title": "Titre SEO < 60 caractères avec mot-clé principal ET année 2026",
+  "title": "Titre SEO < 60 caractères avec mot-clé principal",
   "slug": "slug-url-minuscules-tirets-sans-accents",
   "excerpt": "Meta description < 155 caractères, accrocheuse, mot-clé inclus",
   "content": "<div class='summary-card'>...</div><h2>...</h2>...<div class='impact-card'>...</div>",
