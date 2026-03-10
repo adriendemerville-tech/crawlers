@@ -112,54 +112,50 @@ function computeAEOCriteria(result: ExpertAuditResult, lang: string): AEOCriteri
   const html = result.rawData?.htmlAnalysis || {};
   const scores = result.scores;
   const insights = result.insights;
+  const wordCount = scores.semantic.wordCount || 0;
 
-  // 1. Schema.org with FAQ or Article types
-  const relevantSchemaTypes = ['FAQPage', 'FAQ', 'Article', 'NewsArticle', 'BlogPosting', 'HowTo', 'QAPage'];
+  // 1. Schema.org — accept Organization/WebSite in addition to FAQ/Article
+  const relevantSchemaTypes = ['FAQPage', 'FAQ', 'Article', 'NewsArticle', 'BlogPosting', 'HowTo', 'QAPage', 'Organization', 'WebSite', 'WebPage', 'LocalBusiness'];
   const hasRelevantSchema = scores.aiReady.hasSchemaOrg && 
     scores.aiReady.schemaTypes.some(t => relevantSchemaTypes.some(r => t.toLowerCase().includes(r.toLowerCase())));
 
-  // 2. Interrogative headings (H1 containing ?, Comment, Quel, Pourquoi, How, What, Why, etc.)
+  // 2. Interrogative headings
   const interrogativePatterns = /(\?|comment|quel|quelle|pourquoi|how|what|why|when|where|which|who|cómo|qué|por qué|cuándo|dónde)/i;
   const h1Contents: string[] = html.h1Contents || [];
   const hasInterrogativeHn = h1Contents.some((h: string) => interrogativePatterns.test(h));
 
-  // 3. Inverted Pyramid — approximate: good word count means structured content
-  // We check if the page has a reasonable content length (proxy for having answer blocks)
-  const wordCount = scores.semantic.wordCount || 0;
-  const hasInvertedPyramid = wordCount >= 100 && wordCount <= 3000;
+  // 3. Inverted Pyramid — relaxed upper bound for rich pages
+  const hasInvertedPyramid = wordCount >= 100;
 
-  // 4. Extractable formats (lists, tables)
+  // 4. Extractable formats — lowered threshold to >= 1
   const tableCount = html.tableCount || 0;
   const listCount = html.listCount || 0;
-  const hasExtractableFormats = (tableCount + listCount) >= 2;
+  const hasExtractableFormats = (tableCount + listCount) >= 1;
 
-  // 5. Bold emphasis — check dataDensityScore as proxy (sites with strong formatting tend to have higher density)
-  const dataDensity = html.dataDensityScore || 0;
-  const hasBoldEmphasis = dataDensity >= 3; // statisticCount + percentageCount proxy
-
-  // 6. Readability — use word count and content density ratio
-  const contentDensityRatio = insights?.contentDensity?.ratio || 0;
-  const hasGoodReadability = wordCount >= 300 && contentDensityRatio >= 0.15;
-
-  // 7. TTFB — use FCP as proxy (FCP = TTFB + render time), threshold < 800ms for FCP implies good TTFB
+  // 5. TTFB — use FCP as proxy, threshold < 1200ms (more realistic for SPAs with JS hydration)
   const fcpMs = scores.performance.fcp || 0;
-  const hasFastTTFB = fcpMs > 0 && fcpMs < 800;
+  const hasFastTTFB = fcpMs > 0 && fcpMs < 1200;
 
-  // 8. DOM Accessibility — no SPA markers, not JS dependent
+  // 6. DOM Accessibility — if content was successfully extracted (wordCount > 50), DOM is accessible
+  // regardless of SPA markers. Only fail if JS-dependent AND no content extracted.
   const isJSDependent = html.isContentJSDependent || false;
   const hasSPAMarkers = html.hasSPAMarkers || false;
-  const hasDOMAccessibility = !isJSDependent && !hasSPAMarkers;
+  const contentWasExtracted = wordCount > 50;
+  const hasDOMAccessibility = contentWasExtracted || (!isJSDependent && !hasSPAMarkers);
 
-  // 9. E-E-A-T signals — author bio detected
+  // 7. E-E-A-T signals — also accept Schema.org Organization or sameAs links as authority signals
   const hasAuthorBio = html.hasAuthorBio || false;
   const hasExpertCitations = html.hasExpertCitations || false;
-  const hasEEAT = hasAuthorBio || hasExpertCitations;
+  const hasSameAsLinks = html.hasSameAsLinks || false;
+  const hasOrgSchema = scores.aiReady.hasSchemaOrg && 
+    scores.aiReady.schemaTypes.some(t => ['Organization', 'LocalBusiness', 'Person'].some(r => t.toLowerCase().includes(r.toLowerCase())));
+  const hasEEAT = hasAuthorBio || hasExpertCitations || hasSameAsLinks || hasOrgSchema;
 
-  // 10. Semantic internal linking — check link profile for descriptive anchors
+  // 8. Semantic internal linking — relaxed threshold (>= 2 internal links)
   const linkProfile = insights?.linkProfile;
   const toxicAnchorsCount = linkProfile?.toxicAnchorsCount || 0;
   const internalLinks = linkProfile?.internal || 0;
-  const hasSemanticLinks = internalLinks >= 3 && toxicAnchorsCount <= 2;
+  const hasSemanticLinks = internalLinks >= 2 && toxicAnchorsCount <= 3;
 
   return [
     { label: t.criteria.schema.label, passed: hasRelevantSchema, explanation: t.criteria.schema.explanation },
