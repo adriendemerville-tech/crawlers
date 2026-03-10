@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Newspaper, Lightbulb } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PatienceCard {
   id: string;
@@ -15,6 +16,7 @@ interface PatienceCardsProps {
 }
 
 export function PatienceCards({ isActive }: PatienceCardsProps) {
+  const isMobile = useIsMobile();
   const [newsCard, setNewsCard] = useState<PatienceCard | null>(null);
   const [tipCard, setTipCard] = useState<PatienceCard | null>(null);
   const [showNews, setShowNews] = useState(false);
@@ -79,7 +81,7 @@ export function PatienceCards({ isActive }: PatienceCardsProps) {
     };
   }, [isActive]);
 
-  if (!isActive) return null;
+  if (!isActive || isMobile) return null;
 
   return (
     <>
