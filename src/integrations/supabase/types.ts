@@ -1569,6 +1569,10 @@ export type Database = {
         Returns: boolean
       }
       recalculate_reliability: { Args: never; Returns: undefined }
+      upsert_analyzed_url: {
+        Args: { p_domain: string; p_url: string }
+        Returns: undefined
+      }
       use_credit:
         | { Args: { p_description?: string; p_user_id: string }; Returns: Json }
         | {
