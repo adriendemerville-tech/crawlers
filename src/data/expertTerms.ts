@@ -2688,6 +2688,62 @@ async def check_robots(url: str, bot_name: str = "MyCrawler"):
       relatedTerms: ['ethical-scraping', 'crawl-budget', 'concurrency-control'],
       updatedAt: '2026-02-01'
     },
+    {
+      slug: 'aeo-answer-engine-optimization',
+      term: 'AEO (Answer Engine Optimization)',
+      category: 'data-ai',
+      microDefinition: "Optimisation du contenu pour être cité par les IA et assistants vocaux.",
+      fullDefinition: "Ensemble de techniques visant à structurer et formuler le contenu d'un site web pour qu'il soit sélectionné et lu directement par les assistants vocaux, ou cité comme source de référence par les intelligences artificielles génératives (ChatGPT, Google AI Overviews). Contrairement au SEO traditionnel qui vise le clic, l'AEO vise la citation directe et la Position Zéro.",
+      deepDive: `## AEO : de la visibilité au clic vers la visibilité à la citation
+
+### Pourquoi l'AEO est essentiel en 2026
+
+Avec l'essor des moteurs de recherche génératifs (Google AI Overviews, Perplexity, ChatGPT Search), la bataille du référencement ne se joue plus uniquement sur les 10 liens bleus de Google. En 2026, **plus de 40% des recherches aboutissent à une réponse directe** sans clic vers un site tiers.
+
+### Les 3 piliers de l'AEO
+
+1. **Structure sémantique** : Utiliser des balises Schema.org (FAQPage, HowTo, Article), des titres interrogatifs et une pyramide inversée pour que les IA puissent extraire facilement vos réponses.
+
+2. **Formats extractibles** : Privilégier les listes ordonnées, tableaux comparatifs et résumés (TL;DR) qui sont les formats de prédilection des moteurs de réponses.
+
+3. **Signaux d'autorité (E-E-A-T)** : Démontrer l'expertise par des bios d'auteurs, des citations de sources fiables, des études de cas chiffrées.
+
+### Différence entre SEO, GEO et AEO
+
+- **SEO** : Optimiser pour les résultats organiques de Google (clics)
+- **GEO** : Optimiser pour être cité par les moteurs génératifs (citations)
+- **AEO** : Optimiser pour être la réponse directe des assistants vocaux et IA (Position Zéro)
+
+L'AEO est un sous-ensemble stratégique du GEO, focalisé sur la formulation des réponses et la structure du contenu.`,
+      codeExample: {
+        language: 'javascript',
+        code: `// Exemple de balisage Schema.org FAQPage optimisé AEO
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Comment optimiser son site pour l'AEO en 2026 ?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Pour optimiser votre site pour l'AEO, structurez vos réponses en pyramide inversée (réponse directe en premier paragraphe de 40-60 mots), utilisez des balises Schema.org (FAQPage, HowTo), ajoutez des listes et tableaux comparatifs, et identifiez clairement vos auteurs pour renforcer l'E-E-A-T."
+      }
+    }
+  ]
+};
+
+// Injection dans le <head>
+const script = document.createElement('script');
+script.type = 'application/ld+json';
+script.textContent = JSON.stringify(faqSchema);
+document.head.appendChild(script);`,
+        description: "Balisage Schema.org FAQPage pour maximiser les chances d'être sélectionné comme réponse directe par les IA"
+      },
+      expertOpinion: "L'AEO représente la prochaine frontière du référencement. En 2026, les marques qui n'optimisent pas pour les moteurs de réponses perdent une part croissante de leur visibilité. La clé est de combiner structure technique (Schema.org, pyramide inversée) et autorité éditoriale (E-E-A-T) pour devenir la source de référence que les IA choisissent de citer.",
+      relatedTerms: ['ethical-scraping', 'data-enrichment'],
+      updatedAt: '2026-03-10'
+    },
   ],
   en: [], // English translations would go here
   es: [], // Spanish translations would go here
