@@ -5,6 +5,58 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Pool d'images Unsplash variées pour éviter les doublons
+const IMAGE_POOL = [
+  "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=1200&q=80",
+  "https://images.unsplash.com/photo-1573804633927-bfcbcd909acd?w=1200&q=80",
+  "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=1200&q=80",
+  "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200&q=80",
+  "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=1200&q=80",
+  "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1200&q=80",
+  "https://images.unsplash.com/photo-1563986768609-322da13575f2?w=1200&q=80",
+  "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&q=80",
+  "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1200&q=80",
+  "https://images.unsplash.com/photo-1535378917042-10a22c95931a?w=1200&q=80",
+  "https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=1200&q=80",
+  "https://images.unsplash.com/photo-1542744094-24638eff58bb?w=1200&q=80",
+  "https://images.unsplash.com/photo-1517433456624-0f3a57a6b9c8?w=1200&q=80",
+  "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1200&q=80",
+  "https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&q=80",
+  "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=1200&q=80",
+  "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=1200&q=80",
+  "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&q=80",
+  "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=1200&q=80",
+  "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=1200&q=80",
+];
+
+async function getUsedImages(supabase: any): Promise<string[]> {
+  const { data } = await supabase
+    .from("blog_articles")
+    .select("image_url")
+    .eq("status", "published")
+    .order("published_at", { ascending: false })
+    .limit(30);
+  return (data || []).map((a: any) => a.image_url).filter(Boolean);
+}
+
+function pickUniqueImage(usedImages: string[]): string {
+  const available = IMAGE_POOL.filter((img) => !usedImages.includes(img));
+  if (available.length === 0) return IMAGE_POOL[Math.floor(Math.random() * IMAGE_POOL.length)];
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+async function getRecentArticleTitles(supabase: any): Promise<string[]> {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { data } = await supabase
+    .from("blog_articles")
+    .select("title, slug")
+    .eq("status", "published")
+    .gte("published_at", thirtyDaysAgo)
+    .order("published_at", { ascending: false })
+    .limit(20);
+  return (data || []).map((a: any) => `${a.title} (/${a.slug})`);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -19,28 +71,42 @@ Deno.serve(async (req) => {
 
     console.log("[blog-gen] Starting blog article generation from news...");
 
-    // ─── STEP 1: Get latest active news cards ───
+    // ─── STEP 0: Get existing articles for dedup + image uniqueness ───
+    const [recentTitles, usedImages] = await Promise.all([
+      getRecentArticleTitles(supabase),
+      getUsedImages(supabase),
+    ]);
+
+    const dedupContext = recentTitles.length > 0
+      ? `\n\nARTICLES DÉJÀ PUBLIÉS (NE PAS DUPLIQUER) :\n${recentTitles.map((t) => `- ${t}`).join("\n")}`
+      : "";
+
+    console.log("[blog-gen] Existing articles for dedup:", recentTitles.length);
+
+    // ─── STEP 1: Get latest active news cards (< 30 days only) ───
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { data: newsCards, error: newsErr } = await supabase
       .from("patience_cards")
       .select("id, content, category, created_at")
       .eq("card_type", "news")
       .eq("is_active", true)
+      .gte("created_at", thirtyDaysAgo)
       .order("created_at", { ascending: false })
       .limit(5);
 
     if (newsErr || !newsCards || newsCards.length === 0) {
-      console.log("[blog-gen] No news cards found, skipping");
+      console.log("[blog-gen] No fresh news cards (< 30 days) found, skipping");
       return new Response(
-        JSON.stringify({ success: true, generated: 0, reason: "no_news" }),
+        JSON.stringify({ success: true, generated: 0, reason: "no_fresh_news" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const newsContext = newsCards
-      .map((c: any) => `[${c.category.toUpperCase()}] ${c.content}`)
+      .map((c: any) => `[${c.category.toUpperCase()}] (${new Date(c.created_at).toLocaleDateString("fr-FR")}) ${c.content}`)
       .join("\n\n");
 
-    console.log("[blog-gen] Aggregated", newsCards.length, "news cards");
+    console.log("[blog-gen] Aggregated", newsCards.length, "fresh news cards");
 
     // ─── STEP 2: Perplexity Sonar — recherche web en temps réel ───
     const searchPrompt = `Voici des actualités SEO/GEO/IA récentes :
@@ -48,6 +114,8 @@ Deno.serve(async (req) => {
 ${newsContext}
 
 Identifie LE sujet le plus impactant parmi ces actualités. Puis effectue une recherche approfondie sur ce sujet.
+IMPORTANT : Nous sommes en ${new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}. Ne traite QUE des faits de 2026.
+${dedupContext}
 
 Retourne UNIQUEMENT un JSON valide avec :
 {
@@ -109,7 +177,16 @@ Retourne UNIQUEMENT un JSON valide avec :
     console.log("[blog-gen] Research data obtained:", researchData.topic || "topic extracted");
 
     // ─── STEP 3: Gemini — rédaction de l'article avec données sourcées ───
+    const currentDate = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    
     const articlePrompt = `Tu es le rédacteur en chef de Crawlers.fr, plateforme d'audit SEO et GEO (Generative Engine Optimization).
+DATE ACTUELLE : ${currentDate}. Tous les contenus doivent refléter l'actualité de 2026.
+
+## CONTRAINTE ANTI-REDONDANCE CRITIQUE :
+Voici les articles DÉJÀ PUBLIÉS ce mois-ci. Tu DOIS traiter un angle DIFFÉRENT :
+${recentTitles.map((t) => `- ${t}`).join("\n") || "Aucun article récent."}
+
+Si le sujet est similaire à un article existant, trouve un ANGLE NEUF (ex: impact sectoriel, guide pratique, analyse concurrentielle, étude de cas).
 
 ## DONNÉES DE RECHERCHE VÉRIFIÉES (utilisées comme sources primaires) :
 
@@ -142,7 +219,7 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
 <div class="summary-card">
   <h4>📋 L'essentiel en 30 secondes</h4>
   <ul>
-    <li>Point clé 1 (avec chiffre)</li>
+    <li>Point clé 1 (avec chiffre VÉRIFIÉ et DATE 2026)</li>
     <li>Point clé 2</li>
     <li>Point clé 3</li>
     <li>Point clé 4</li>
@@ -168,10 +245,11 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
    - Inclure AU MOINS 1 citation avec attribution (nom, poste).
    - Vocabulaire riche : synonymes, termes techniques variés, entités nommées.
    - Mentionner Crawlers.fr UNE SEULE FOIS, naturellement, comme outil de diagnostic SEO/GEO.
+   - Le titre SEO DOIT contenir l'année 2026.
 
 6. **Retourne UNIQUEMENT un JSON valide (pas de markdown) :**
 {
-  "title": "Titre SEO < 60 caractères avec mot-clé principal",
+  "title": "Titre SEO < 60 caractères avec mot-clé principal ET année 2026",
   "slug": "slug-url-minuscules-tirets-sans-accents",
   "excerpt": "Meta description < 155 caractères, accrocheuse, mot-clé inclus",
   "content": "<div class='summary-card'>...</div><h2>...</h2>...<div class='impact-card'>...</div>",
@@ -192,7 +270,7 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
         messages: [
           {
             role: "system",
-            content: "Tu es un rédacteur SEO/GEO expert. Tu produis du contenu factuel basé exclusivement sur les données de recherche fournies.",
+            content: "Tu es un rédacteur SEO/GEO expert. Tu produis du contenu factuel basé exclusivement sur les données de recherche fournies. Nous sommes en 2026.",
           },
           { role: "user", content: articlePrompt },
         ],
@@ -206,7 +284,7 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
               parameters: {
                 type: "object",
                 properties: {
-                  title: { type: "string", description: "SEO title < 60 chars" },
+                  title: { type: "string", description: "SEO title < 60 chars with 2026" },
                   slug: { type: "string", description: "URL slug lowercase with dashes, no accents" },
                   excerpt: { type: "string", description: "Meta description < 155 chars" },
                   content: { type: "string", description: "Full HTML article content with summary-card and impact-card divs" },
@@ -279,7 +357,10 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
       article.slug = `${article.slug}-${new Date().toISOString().slice(0, 10)}`;
     }
 
-    // ─── STEP 5: Insert into blog_articles ───
+    // ─── STEP 5: Pick unique image ───
+    const imageUrl = pickUniqueImage(usedImages);
+
+    // ─── STEP 6: Insert into blog_articles ───
     const now = new Date().toISOString();
     const { data: inserted, error: insertErr } = await supabase
       .from("blog_articles")
@@ -288,7 +369,7 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
         title: article.title,
         content: article.content,
         excerpt: article.excerpt || "",
-        image_url: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1200&q=80",
+        image_url: imageUrl,
         status: "published",
         published_at: now,
       })
@@ -300,9 +381,9 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
       throw insertErr;
     }
 
-    console.log("[blog-gen] ✅ Article published:", inserted.slug, `(${contentLength} chars)`);
+    console.log("[blog-gen] ✅ Article published:", inserted.slug, `(${contentLength} chars, image: ${imageUrl})`);
 
-    // ─── STEP 6: Ping Google sitemap for instant indexation ───
+    // ─── STEP 7: Ping Google sitemap for instant indexation ───
     const sitemapUrl = `${supabaseUrl}/functions/v1/sitemap`;
     const pingUrls = [
       `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,
@@ -328,6 +409,7 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
           category: article.category,
           keywords: article.keywords,
           contentLength,
+          imageUrl,
         },
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
