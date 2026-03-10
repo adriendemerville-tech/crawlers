@@ -102,18 +102,17 @@ Saludos`,
     });
   }, [article, language, formatDate, toast]);
 
-  return (
-    <a
-      href={article.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex-shrink-0 w-[300px] md:w-[340px] block cursor-pointer transition-transform duration-300 hover:-translate-y-2"
-      style={{ 
-        contain: 'layout style paint',
-        opacity: 0,
-        animation: `newsCardFadeIn 0.4s ease-out ${index * 0.1}s forwards`
-      }}
-    >
+  const isInternal = article.url.startsWith('/');
+  const wrapperProps = {
+    className: "flex-shrink-0 w-[300px] md:w-[340px] block cursor-pointer transition-transform duration-300 hover:-translate-y-2",
+    style: { 
+      contain: 'layout style paint' as const,
+      opacity: 0,
+      animation: `newsCardFadeIn 0.4s ease-out ${index * 0.1}s forwards`
+    },
+  };
+
+  const cardContent = (
       <Card className="h-full overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
         <div className="relative group">
           <AspectRatio ratio={16 / 9}>
