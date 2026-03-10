@@ -193,7 +193,8 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
         </div>
         <div
           ref={embedContainerRef}
-          className="w-full overflow-hidden rounded-[12px] bg-[#282828]"
+          className="w-full overflow-hidden rounded-[12px] bg-[#282828] isolate"
+          style={{ clipPath: 'inset(0 round 12px)' }}
           aria-label="Playlist Crawlers"
         />
         <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">
