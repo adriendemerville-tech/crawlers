@@ -244,9 +244,9 @@ export default function Methodologie() {
     <>
       <Helmet>
         <title>{t3(language,
-          'Méthodologie d\'audit SEO & GEO 2026 — 60+ points analysés | Crawlers.fr',
-          'SEO & GEO Audit Methodology 2026 — 60+ Points Analyzed | Crawlers.fr',
-          'Metodología de auditoría SEO & GEO 2026 — 60+ puntos analizados | Crawlers.fr'
+          'Méthodologie d\'audit SEO & GEO 2026 — 150+ points analysés | Crawlers.fr',
+          'SEO & GEO Audit Methodology 2026 — 150+ Points Analyzed | Crawlers.fr',
+          'Metodología de auditoría SEO & GEO 2026 — 150+ puntos analizados | Crawlers.fr'
         )}</title>
         <meta name="description" content={t3(language,
           'Comment Crawlers.fr audite votre site en 2026 : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, résilience contenu, red teaming, code correctif JSON-LD. Périmètre complet.',
