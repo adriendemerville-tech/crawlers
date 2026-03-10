@@ -7,8 +7,14 @@ interface LexicalFootprintCardProps {
 }
 
 export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
-  // Derive score from concreteRatio for consistency (ignore LLM-generated score)
-  const score = data.concreteRatio ?? data.score;
+  // Normalize: ensure jargon + concrete = 100 for visual consistency
+  const rawJargon = data.jargonRatio ?? 0;
+  const rawConcrete = data.concreteRatio ?? 0;
+  const total = rawJargon + rawConcrete;
+  const jargonRatio = total > 0 ? Math.round((rawJargon / total) * 100) : 50;
+  const concreteRatio = 100 - jargonRatio;
+  // Score = concreteRatio for consistency
+  const score = concreteRatio;
   const scoreColor = score >= 80 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-destructive';
 
   return (
@@ -37,16 +43,16 @@ export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
           <div className="relative h-4 w-full rounded-full bg-muted overflow-hidden">
             <div 
               className="absolute left-0 top-0 h-full bg-destructive/60 rounded-l-full transition-all duration-700" 
-              style={{ width: `${data.jargonRatio}%` }} 
+              style={{ width: `${jargonRatio}%` }} 
             />
             <div 
               className="absolute right-0 top-0 h-full bg-success/60 rounded-r-full transition-all duration-700" 
-              style={{ width: `${data.concreteRatio}%` }} 
+              style={{ width: `${concreteRatio}%` }} 
             />
           </div>
           <div className="flex justify-between text-xs font-medium">
-            <span className="text-destructive">{data.jargonRatio}%</span>
-            <span className="text-success">{data.concreteRatio}%</span>
+            <span className="text-destructive">{jargonRatio}%</span>
+            <span className="text-success">{concreteRatio}%</span>
           </div>
         </div>
 
