@@ -49,6 +49,7 @@ type SpotifyEmbedController = {
   loadUri: (spotifyUri: string) => void;
   play: () => void;
   destroy?: () => void;
+  addListener: (event: string, callback: (data: unknown) => void) => void;
 };
 
 type SpotifyIframeApi = {
@@ -129,6 +130,12 @@ export function useSpotifyTrackRotation() {
   const playTimeoutRef = useRef<number | null>(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
 
+  // Track whether the user has actively chosen to play music.
+  // Starts false → no autoplay on first load or rotation.
+  // Becomes true when user clicks play, false when user clicks pause.
+  const userWantsPlaybackRef = useRef(false);
+  const isFirstTrackRef = useRef(true);
+
   const trackQueue = useMemo(() => shuffleTrackIds(PLAYLIST_TRACK_IDS), []);
   const currentTrackId = trackQueue[currentTrackIndex];
 
@@ -150,7 +157,10 @@ export function useSpotifyTrackRotation() {
 
     const spotifyUri = `spotify:track:${currentTrackId}`;
 
-    const queuePlayback = () => {
+    const queuePlaybackIfUserWants = () => {
+      // Only auto-play if the user previously clicked play
+      if (!userWantsPlaybackRef.current) return;
+
       if (playTimeoutRef.current) {
         window.clearTimeout(playTimeoutRef.current);
       }
@@ -169,7 +179,8 @@ export function useSpotifyTrackRotation() {
 
       if (controllerRef.current) {
         controllerRef.current.loadUri(spotifyUri);
-        queuePlayback();
+        // On track rotation, only resume if user was already playing
+        queuePlaybackIfUserWants();
         return;
       }
 
@@ -189,7 +200,26 @@ export function useSpotifyTrackRotation() {
           }
 
           controllerRef.current = controller;
-          queuePlayback();
+
+          // Listen for playback state changes to track user intent
+          controller.addListener('playback_update', (data: unknown) => {
+            const update = data as { data?: { isPaused?: boolean } };
+            if (update?.data) {
+              const isPaused = update.data.isPaused;
+              if (isPaused === false) {
+                // User clicked play (or autoplay succeeded)
+                userWantsPlaybackRef.current = true;
+                isFirstTrackRef.current = false;
+              } else if (isPaused === true && !isFirstTrackRef.current) {
+                // User clicked pause (only track after first interaction)
+                userWantsPlaybackRef.current = false;
+              }
+            }
+          });
+
+          // Don't auto-play on first load — let the user click play
+          // queuePlaybackIfUserWants() would be a no-op here since
+          // userWantsPlaybackRef is false initially
         },
       );
     };
