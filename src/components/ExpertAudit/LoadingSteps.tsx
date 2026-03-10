@@ -74,22 +74,7 @@ interface LoadingStepsProps {
 export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const steps = variant === 'strategic' ? strategicSteps : technicalSteps;
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [currentTrackId, setCurrentTrackId] = useState(() => PLAYLIST_TRACK_IDS[Math.floor(Math.random() * PLAYLIST_TRACK_IDS.length)]);
-
-  // Rotate to a new random track every 30 seconds
-  useEffect(() => {
-    const rotateInterval = setInterval(() => {
-      setCurrentTrackId(prev => {
-        let next;
-        do {
-          next = PLAYLIST_TRACK_IDS[Math.floor(Math.random() * PLAYLIST_TRACK_IDS.length)];
-        } while (next === prev && PLAYLIST_TRACK_IDS.length > 1);
-        return next;
-      });
-    }, 30000);
-    return () => clearInterval(rotateInterval);
-  }, []);
+  const { embedContainerRef } = useSpotifyTrackRotation();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -101,15 +86,6 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
 
     return () => clearInterval(interval);
   }, [steps.length, variant]);
-
-  // Stop Spotify iframe on unmount
-  useEffect(() => {
-    return () => {
-      if (iframeRef.current) {
-        iframeRef.current.src = '';
-      }
-    };
-  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center py-16 space-y-8">
