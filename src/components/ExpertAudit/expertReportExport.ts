@@ -559,15 +559,15 @@ export function generateExpertReportHTML(
         ? `
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;">
             <div style="padding: 12px; background: #f8fafc; border-radius: 10px; text-align: center;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Volume marché / mois</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.marketVolume}</div>
               <div style="font-weight: 700; color: #0f172a;">${renderNumber(ms.total_market_volume)}</div>
             </div>
             <div style="padding: 12px; background: #f8fafc; border-radius: 10px; text-align: center;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Mots-clés classés</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.keywordsRanked}</div>
               <div style="font-weight: 700; color: #0f172a;">${renderNumber(ms.keywords_ranked)}/${renderNumber(ms.keywords_analyzed)}</div>
             </div>
             <div style="padding: 12px; background: #f8fafc; border-radius: 10px; text-align: center;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Position moyenne</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.avgPosition}</div>
               <div style="font-weight: 700; color: #0f172a;">${
                 typeof ms.average_position === 'number' && ms.average_position > 0
                   ? `#${ms.average_position.toFixed(1)}`
