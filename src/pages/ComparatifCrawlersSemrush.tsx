@@ -158,12 +158,6 @@ const ComparatifCrawlersSemrush = () => {
       },
       {
         "@type": "ListItem",
-        "position": 2,
-        "name": "Comparatifs",
-        "item": `${SITE_URL}/comparatif-audit-geo`
-      },
-      {
-        "@type": "ListItem",
         "position": 3,
         "name": "Crawlers.fr vs Semrush",
         "item": `${SITE_URL}/comparatif-crawlers-semrush`
