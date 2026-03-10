@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Globe, Code, Shield, Brain, CheckCircle2, Target, Link2, Users, Search, Music } from 'lucide-react';
+import { useSpotifyTrackRotation } from './useSpotifyTrackRotation';
 
 // Track IDs from the "Chill out 🐈" playlist
 const PLAYLIST_TRACK_IDS = [
@@ -73,22 +74,7 @@ interface LoadingStepsProps {
 export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const steps = variant === 'strategic' ? strategicSteps : technicalSteps;
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [currentTrackId, setCurrentTrackId] = useState(() => PLAYLIST_TRACK_IDS[Math.floor(Math.random() * PLAYLIST_TRACK_IDS.length)]);
-
-  // Rotate to a new random track every 30 seconds
-  useEffect(() => {
-    const rotateInterval = setInterval(() => {
-      setCurrentTrackId(prev => {
-        let next;
-        do {
-          next = PLAYLIST_TRACK_IDS[Math.floor(Math.random() * PLAYLIST_TRACK_IDS.length)];
-        } while (next === prev && PLAYLIST_TRACK_IDS.length > 1);
-        return next;
-      });
-    }, 30000);
-    return () => clearInterval(rotateInterval);
-  }, []);
+  const { embedContainerRef } = useSpotifyTrackRotation();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -100,15 +86,6 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
 
     return () => clearInterval(interval);
   }, [steps.length, variant]);
-
-  // Stop Spotify iframe on unmount
-  useEffect(() => {
-    return () => {
-      if (iframeRef.current) {
-        iframeRef.current.src = '';
-      }
-    };
-  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center py-16 space-y-8">
@@ -214,17 +191,10 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
           <Music className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">Playlist Crawlers</span>
         </div>
-        <iframe
-          key={currentTrackId}
-          ref={iframeRef}
-          style={{ borderRadius: '12px' }}
-          src={`https://open.spotify.com/embed/track/${currentTrackId}?utm_source=generator&theme=0&autoplay=1`}
-          width="100%"
-          height="152"
-          frameBorder="0"
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"
-          title="Playlist Crawlers"
+        <div
+          ref={embedContainerRef}
+          className="w-full overflow-hidden rounded-[12px]"
+          aria-label="Playlist Crawlers"
         />
         <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">
           Volume recommandé : 50%
