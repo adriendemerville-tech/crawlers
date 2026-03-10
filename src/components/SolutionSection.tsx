@@ -113,6 +113,30 @@ export function SolutionSection() {
           </p>
         </motion.div>
 
+        {/* Pro Agency CTA Banner */}
+        <div className="mb-10 rounded-xl border border-violet-500/20 bg-gradient-to-r from-violet-950/10 via-background to-amber-950/10 py-6 px-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Crown className="h-7 w-7 text-yellow-500 shrink-0" />
+              <div>
+                <h3 className="font-bold text-foreground text-base">
+                  {language === 'fr' ? 'Passez en illimité avec Pro Agency' : language === 'es' ? 'Pase a ilimitado con Pro Agency' : 'Go unlimited with Pro Agency'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {language === 'fr' ? 'Rapports, correctifs & marque blanche — 49€/mois' : language === 'es' ? 'Informes, correcciones y marca blanca — 49€/mes' : 'Reports, fixes & white label — €49/month'}
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/pro-agency"
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-violet-600 to-amber-500 px-5 py-2 text-sm font-semibold text-white shadow-lg hover:shadow-xl hover:from-violet-700 hover:to-amber-600 transition-all whitespace-nowrap"
+            >
+              {language === 'fr' ? 'Découvrir l\'abonnement Pro' : language === 'es' ? 'Descubrir la suscripción Pro' : 'Discover Pro subscription'}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+
         {/* Three Pillars */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           {pillars.map((pillar, index) => (
