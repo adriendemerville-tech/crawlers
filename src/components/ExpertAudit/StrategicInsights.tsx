@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AEOScoreCard } from './AEOScoreCard';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +41,7 @@ interface StrategicInsightsProps {
   onHallucinationData?: (data: any) => void;
   onCompetitorCorrection?: (corrections: CompetitorCorrections) => void;
   isReanalyzing?: boolean;
+  auditResult?: import('@/types/expertAudit').ExpertAuditResult;
 }
 
 export function StrategicInsights({ 
@@ -49,7 +51,8 @@ export function StrategicInsights({
   siteName = '',
   onHallucinationData,
   onCompetitorCorrection,
-  isReanalyzing = false
+  isReanalyzing = false,
+  auditResult
 }: StrategicInsightsProps) {
   const [showHallucinationModal, setShowHallucinationModal] = useState(false);
   
@@ -171,6 +174,10 @@ export function StrategicInsights({
             />
           )}
 
+          {/* AEO Score Card — below Brand Authority */}
+          {auditResult && (
+            <AEOScoreCard result={auditResult} />
+          )}
 
           {/* Mots clés (doit apparaître entre Écosystème Concurrentiel et Autorité Sociale & Humaine) */}
           <KeywordModuleSection analysis={analysis} domain={domain} />
@@ -225,6 +232,11 @@ export function StrategicInsights({
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* AEO Score Card — below Brand Authority */}
+          {auditResult && (
+            <AEOScoreCard result={auditResult} />
           )}
 
            {/* LLM Visibility Raw Data (from check-llm) */}
