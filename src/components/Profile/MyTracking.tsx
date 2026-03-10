@@ -296,6 +296,7 @@ export function MyTracking() {
       fetchGscData();
     } else {
       setGscData(null);
+      setGscLoading(false);
     }
   }, [gscConnected, currentSiteDomain, fetchGscData]);
 
