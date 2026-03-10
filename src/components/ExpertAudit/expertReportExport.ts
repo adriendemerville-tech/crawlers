@@ -395,6 +395,7 @@ export function generateExpertReportHTML(
       })()}
 
 
+      ${result.recommendations?.length > 0 ? `
         <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin: 18px 0 8px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${t.recommendations}</div>
         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
           <thead>
