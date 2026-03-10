@@ -234,10 +234,6 @@ export function StrategicInsights({
             </Card>
           )}
 
-          {/* AEO Score Card — below Brand Authority */}
-          {auditResult && (
-            <AEOScoreCard result={auditResult} />
-          )}
 
            {/* LLM Visibility Raw Data (from check-llm) */}
            {analysis.llm_visibility_raw && (
