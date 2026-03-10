@@ -21,7 +21,7 @@ interface AEOCriterion {
 const translations = {
   fr: {
     title: 'Score AEO (Answer Engine Optimization)',
-    subtitle: "L'AEO permet d'optimiser votre contenu pour être directement cité comme source par les Intelligences Artificielles (ChatGPT, Perplexity, Google AI Overviews) et les assistants vocaux.",
+    subtitle: "L'AEO vise la 'Position Zéro' de Google : l'encart ultime affichant votre résumé avant les liens classiques.",
     methodology: 'Méthodologie',
     methodologyTitle: 'Méthodologie AEO — Position Zéro & E-E-A-T',
     methodologyDesc: "L'Answer Engine Optimization (AEO) vise à positionner votre contenu comme la réponse de référence dans les moteurs génératifs et les assistants vocaux.",
@@ -50,7 +50,7 @@ Les critères AEO mesurent votre capacité à satisfaire ces exigences à traver
   },
   en: {
     title: 'AEO Score (Answer Engine Optimization)',
-    subtitle: 'AEO optimizes your content to be directly cited as a source by AI engines (ChatGPT, Perplexity, Google AI Overviews) and voice assistants.',
+    subtitle: "AEO targets Google's 'Position Zero': the ultimate snippet displaying your summary above traditional links.",
     methodology: 'Methodology',
     methodologyTitle: 'AEO Methodology — Position Zero & E-E-A-T',
     methodologyDesc: 'Answer Engine Optimization (AEO) aims to position your content as the reference answer in generative engines and voice assistants.',
@@ -79,7 +79,7 @@ AEO criteria measure your ability to meet these requirements through 8 verifiabl
   },
   es: {
     title: 'Score AEO (Answer Engine Optimization)',
-    subtitle: 'El AEO optimiza tu contenido para ser citado directamente como fuente por las IA (ChatGPT, Perplexity, Google AI Overviews) y asistentes de voz.',
+    subtitle: "El AEO apunta a la 'Posición Cero' de Google: el fragmento definitivo que muestra tu resumen antes de los enlaces clásicos.",
     methodology: 'Metodología',
     methodologyTitle: 'Metodología AEO — Posición Cero & E-E-A-T',
     methodologyDesc: 'Answer Engine Optimization (AEO) busca posicionar tu contenido como la respuesta de referencia en motores generativos y asistentes de voz.',
