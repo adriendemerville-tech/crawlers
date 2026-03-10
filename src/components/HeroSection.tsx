@@ -20,6 +20,8 @@ interface HeroSectionProps {
   onSubmit: (url: string) => void;
   activeTab: ToolTab;
   isLoading: boolean;
+  onTabChange: (tab: ToolTab) => void;
+  currentUrl?: string;
 }
 
 const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
