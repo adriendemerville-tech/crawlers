@@ -338,6 +338,63 @@ export function generateExpertReportHTML(
         </div>
       `}
 
+      ${/* NEW: 3 Technical Metrics in PDF */(() => {
+        const html = result.rawData?.htmlAnalysis as any;
+        const techSections: string[] = [];
+
+        if (html?.darkSocial) {
+          const ds = html.darkSocial;
+          const scoreColor = ds.score >= 80 ? '#166534' : ds.score >= 50 ? '#92400e' : '#991b1b';
+          techSections.push(`
+            <div style="background: #f0f9ff; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #0ea5e9; margin-bottom: 10px; break-inside: avoid;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 13px; font-weight: 600; color: #0c4a6e;">Dark Social Readiness</div>
+                <span style="font-size: 16px; font-weight: 700; color: ${scoreColor};">${ds.score}/100</span>
+              </div>
+              ${statusRow('og:title', !!ds.ogTitle, ds.ogTitle ? String(ds.ogTitle).substring(0, 50) : '—')}
+              ${statusRow('og:description', !!ds.ogDescription, ds.ogDescription ? String(ds.ogDescription).substring(0, 50) + '…' : '—')}
+              ${statusRow('og:image', !!ds.ogImage)}
+              ${statusRow('twitter:card', !!ds.twitterCard, ds.twitterCard || '—')}
+            </div>`);
+        }
+
+        if (html?.freshnessSignals) {
+          const fs = html.freshnessSignals;
+          const labelBgs: Record<string, string> = { fresh: '#dcfce7', acceptable: '#fef3c7', stale: '#fee2e2' };
+          const labelColors: Record<string, string> = { fresh: '#166534', acceptable: '#92400e', stale: '#991b1b' };
+          techSections.push(`
+            <div style="background: #f0fdf4; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #059669; margin-bottom: 10px; break-inside: avoid;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 13px; font-weight: 600; color: #065f46;">${language === 'fr' ? 'Preuve de Vie (Freshness)' : 'Freshness Signals'}</div>
+                <span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${labelBgs[fs.label] || '#f3f4f6'}; color: ${labelColors[fs.label] || '#374151'};">${fs.label}</span>
+              </div>
+              ${statusRow('Score', fs.score >= 50, fs.score + '/100')}
+              ${statusRow('Last-Modified', !!fs.lastModifiedDate, fs.lastModifiedDate || '—')}
+              ${statusRow(language === 'fr' ? 'Année courante' : 'Current year', fs.hasCurrentYearMention, fs.currentYearFound || '—')}
+            </div>`);
+        }
+
+        if (html?.conversionFriction) {
+          const cf = html.conversionFriction;
+          const frictionBgs: Record<string, string> = { low: '#dcfce7', optimal: '#dcfce7', high: '#fee2e2' };
+          const frictionColors: Record<string, string> = { low: '#166534', optimal: '#166534', high: '#991b1b' };
+          techSections.push(`
+            <div style="background: #faf5ff; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #7c3aed; margin-bottom: 10px; break-inside: avoid;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 13px; font-weight: 600; color: #5b21b6;">${language === 'fr' ? 'Friction de Conversion' : 'Conversion Friction'}</div>
+                <span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${frictionBgs[cf.frictionLevel] || '#f3f4f6'}; color: ${frictionColors[cf.frictionLevel] || '#374151'};">${cf.frictionLevel}</span>
+              </div>
+              ${statusRow(language === 'fr' ? 'Formulaires' : 'Forms', cf.formsCount > 0, String(cf.formsCount))}
+              ${statusRow(language === 'fr' ? 'Champs / formulaire' : 'Fields / form', cf.avgFieldsPerForm <= 3, cf.avgFieldsPerForm.toFixed(1))}
+              ${statusRow('CTAs', cf.ctaCount > 0, String(cf.ctaCount))}
+              ${statusRow('CTA above fold', cf.ctaAboveFold)}
+            </div>`);
+        }
+
+        return techSections.length > 0 ? `<div style="font-size: 14px; font-weight: 600; color: #1f2937; margin: 18px 0 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${language === 'fr' ? 'Signaux de Qualité du Contenu' : 'Content Quality Signals'}</div>${techSections.join('')}` : '';
+      })()}
+
+
       ${result.recommendations?.length > 0 ? `
         <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin: 18px 0 8px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${t.recommendations}</div>
         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
@@ -651,6 +708,70 @@ export function generateExpertReportHTML(
           </tbody>
         </table>
       ` : ''}
+
+      ${/* NEW: 5 Strategic AI Metrics in PDF */(() => {
+        const sections: string[] = [];
+
+        if (strategic?.quotability?.quotes?.length) {
+          const quotesHtml = strategic.quotability.quotes.map((q: string) => `<blockquote style="border-left: 3px solid #6366f1; padding: 8px 12px; margin: 6px 0; background: #f8fafc; font-style: italic; color: #374151; font-size: 13px;">"${q}"</blockquote>`).join('');
+          sections.push(sectionCard(
+            language === 'fr' ? 'Indice de Citabilité' : language === 'es' ? 'Índice de Citabilidad' : 'Quotability Index',
+            '#6366f1', '#f5f3ff',
+            `${labelValue('Score', (strategic.quotability.score || 0) + '/100')}${quotesHtml}`
+          ));
+        }
+
+        if (strategic?.summary_resilience) {
+          const sr = strategic.summary_resilience;
+          const barColor = sr.score >= 80 ? '#166534' : sr.score >= 50 ? '#92400e' : '#991b1b';
+          sections.push(sectionCard(
+            language === 'fr' ? 'Résilience au Résumé' : language === 'es' ? 'Resiliencia al Resumen' : 'Summary Resilience',
+            '#059669', '#f0fdf4',
+            `${labelValue('Score', sr.score + '/100')}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
+              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px;"><div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">H1 original</div><div style="font-size: 13px; color: #0f172a; font-weight: 500;">${sr.originalH1 || '—'}</div></div>
+              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px;"><div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">Résumé LLM</div><div style="font-size: 13px; color: #0f172a; font-weight: 500;">${sr.llmSummary || '—'}</div></div>
+            </div>
+            <div style="margin-top: 8px; height: 6px; background: #e5e7eb; border-radius: 99px; overflow: hidden;"><div style="height: 100%; width: ${sr.score}%; background: ${barColor}; border-radius: 99px;"></div></div>`
+          ));
+        }
+
+        if (strategic?.lexical_footprint) {
+          const lf = strategic.lexical_footprint;
+          sections.push(sectionCard(
+            language === 'fr' ? 'Empreinte Lexicale' : language === 'es' ? 'Huella Léxica' : 'Lexical Footprint',
+            '#d97706', '#fffbeb',
+            `${labelValue('Score', lf.score + '/100')}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
+              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;"><div style="font-size: 11px; color: #6b7280;">Jargon</div><div style="font-size: 20px; font-weight: 700; color: #92400e;">${Math.round(lf.jargonRatio * 100)}%</div></div>
+              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;"><div style="font-size: 11px; color: #6b7280;">Concret</div><div style="font-size: 20px; font-weight: 700; color: #166534;">${Math.round(lf.concreteRatio * 100)}%</div></div>
+            </div>`
+          ));
+        }
+
+        if (strategic?.expertise_sentiment) {
+          const es = strategic.expertise_sentiment;
+          const stars = Array.from({ length: 5 }, (_, i) => `<span style="font-size: 20px; color: ${i < es.rating ? '#f59e0b' : '#d1d5db'};">★</span>`).join('');
+          const labels = ['', 'Générique / IA', 'Peu incarné', 'Modéré', 'Expérimenté', 'Expert de terrain'];
+          sections.push(sectionCard(
+            language === 'fr' ? 'Sentiment d\'Expertise (E-E-A-T)' : 'Expertise Sentiment (E-E-A-T)',
+            '#7c3aed', '#faf5ff',
+            `<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">${stars}<span style="font-size: 13px; font-weight: 500; color: #374151;">${labels[es.rating] || ''}</span></div>
+            <p style="color: #6b7280; font-style: italic; font-size: 13px; border-left: 2px solid #7c3aed; padding-left: 10px;">${es.justification || ''}</p>`
+          ));
+        }
+
+        if (strategic?.red_team?.flaws?.length) {
+          const flawsHtml = strategic.red_team.flaws.map((f: string) => `<div style="display: flex; gap: 8px; padding: 8px 12px; background: rgba(220,38,38,0.05); border: 1px solid rgba(220,38,38,0.15); border-radius: 8px; margin-bottom: 6px;"><span style="color: #dc2626; font-size: 14px;">⚠️</span><span style="color: #374151; font-size: 13px;">${f}</span></div>`).join('');
+          sections.push(sectionCard(
+            language === 'fr' ? 'Red Team : Objections Non Adressées' : 'Red Team: Unaddressed Objections',
+            '#dc2626', '#fef2f2',
+            `${flawsHtml}<p style="font-size: 11px; color: #6b7280; font-style: italic; margin-top: 6px;">${language === 'fr' ? 'Analyse adversariale : objections qu\'un prospect sceptique soulèverait.' : 'Adversarial analysis: objections a skeptical prospect would raise.'}</p>`
+          ));
+        }
+
+        return sections.join('');
+      })()}
     `;
   }
 
