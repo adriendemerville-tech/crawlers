@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,16 +110,35 @@ export function MyWallet() {
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [showFreeOfferModal, setShowFreeOfferModal] = useState(false);
   const t = translations[language];
 
   const handleOpenPortal = async () => {
     setPortalLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-customer-portal');
-      if (error) throw error;
+      if (error) {
+        // Check if this is a "no Stripe account" error (free offer user)
+        const errorMsg = typeof error === 'object' && 'message' in error ? (error as any).message : String(error);
+        if (errorMsg.includes('404') || errorMsg.includes('Aucun compte Stripe') || errorMsg.includes('non-2xx')) {
+          setShowFreeOfferModal(true);
+          return;
+        }
+        throw error;
+      }
+      if (data?.error) {
+        // Edge function returned an error in the body (e.g. 404 wrapped)
+        setShowFreeOfferModal(true);
+        return;
+      }
       if (data?.url) window.location.href = data.url;
     } catch (err) {
-      toast({ title: 'Erreur', description: String(err), variant: 'destructive' });
+      // Fallback: if any error, show the free offer modal for Pro users without Stripe
+      if (isAgencyPro) {
+        setShowFreeOfferModal(true);
+      } else {
+        toast({ title: 'Erreur', description: String(err), variant: 'destructive' });
+      }
     } finally {
       setPortalLoading(false);
     }
@@ -239,6 +259,7 @@ export function MyWallet() {
   // Pro Agency: dedicated subscription page with sub-tabs
   if (isAgencyPro || isAdmin) {
     return (
+      <>
       <div className="space-y-6">
         {subscriptionStatus === 'canceling' && (
           <div className="flex items-center gap-2 mb-4 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
@@ -437,6 +458,30 @@ export function MyWallet() {
           </div>
         </Tabs>
       </div>
+
+      <Dialog open={showFreeOfferModal} onOpenChange={setShowFreeOfferModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-yellow-500" />
+              {language === 'fr' ? 'Offre gratuite active' : language === 'es' ? 'Oferta gratuita activa' : 'Free offer active'}
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              {language === 'fr'
+                ? 'Votre abonnement Pro Agency est actuellement offert. Aucun moyen de paiement n\'est associé à votre compte. Si vous souhaitez modifier votre offre, contactez-nous via le support.'
+                : language === 'es'
+                ? 'Su suscripción Pro Agency es actualmente gratuita. No hay método de pago asociado a su cuenta. Si desea modificar su oferta, contáctenos a través del soporte.'
+                : 'Your Pro Agency subscription is currently free. No payment method is associated with your account. If you wish to change your plan, contact us through support.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end pt-2">
+            <Button variant="outline" onClick={() => setShowFreeOfferModal(false)}>
+              {language === 'fr' ? 'Compris' : language === 'es' ? 'Entendido' : 'Got it'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      </>
     );
   }
 
