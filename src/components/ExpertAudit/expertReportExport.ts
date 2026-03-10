@@ -714,9 +714,9 @@ export function generateExpertReportHTML(
         const cl = strategic.competitive_landscape;
         const actorRow = (role: string, actor: any) => actor ? `<tr><td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #0f172a;">${role}</td><td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #334155;">${actor.name || '—'}</td><td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #6b7280; font-size: 13px;">${actor.analysis || '—'}</td></tr>` : '';
         return sectionCard(
-          language === 'fr' ? 'Écosystème Concurrentiel' : 'Competitive Landscape',
+          rl.competitiveLandscape,
           '#dc2626', 'linear-gradient(135deg, #fef2f2, #fff7ed)',
-          `<table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 10px 12px; text-align: left; font-size: 12px;">Rôle</th><th style="padding: 10px 12px; text-align: left; font-size: 12px;">Acteur</th><th style="padding: 10px 12px; text-align: left; font-size: 12px;">Analyse</th></tr></thead><tbody>${actorRow('Leader', cl.leader)}${actorRow(language === 'fr' ? 'Concurrent direct' : 'Direct Competitor', cl.direct_competitor)}${actorRow('Challenger', cl.challenger)}${actorRow('Inspiration', cl.inspiration_source)}</tbody></table>`
+          `<table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 10px 12px; text-align: left; font-size: 12px;">${rl.role}</th><th style="padding: 10px 12px; text-align: left; font-size: 12px;">${rl.actor}</th><th style="padding: 10px 12px; text-align: left; font-size: 12px;">${rl.analysis}</th></tr></thead><tbody>${actorRow('Leader', cl.leader)}${actorRow(rl.directCompetitor, cl.direct_competitor)}${actorRow('Challenger', cl.challenger)}${actorRow('Inspiration', cl.inspiration_source)}</tbody></table>`
         );
       })() : ''}
 
