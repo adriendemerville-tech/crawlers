@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { CheckCircle2, XCircle, Mic, BookOpen } from 'lucide-react';
+import { CheckCircle2, XCircle, Mic, Info } from 'lucide-react';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
 
