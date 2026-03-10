@@ -360,7 +360,86 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
     // ─── STEP 5: Pick unique image ───
     const imageUrl = pickUniqueImage(usedImages);
 
-    // ─── STEP 6: Insert into blog_articles ───
+    // ─── STEP 6: Generate EN + ES translations ───
+    console.log("[blog-gen] Step 6: Generating EN + ES translations...");
+
+    const translationPrompt = (lang: string, langLabel: string) => `You are a professional SEO translator. Translate this French blog article to ${langLabel}.
+
+RULES:
+- Keep ALL HTML structure intact (tags, classes, attributes)
+- Keep brand names (Crawlers.fr, Google, ChatGPT, etc.) unchanged
+- Keep URLs unchanged
+- Adapt cultural references naturally
+- The translation must be fluent and native-sounding, NOT literal
+- Keep technical SEO/GEO terms that are commonly used in ${langLabel}
+- Return ONLY a JSON object with exactly these fields:
+
+{
+  "title": "Translated SEO title < 60 chars",
+  "excerpt": "Translated meta description < 155 chars",
+  "content": "Full translated HTML content"
+}
+
+FRENCH ARTICLE TO TRANSLATE:
+Title: ${article.title}
+Excerpt: ${article.excerpt}
+Content: ${article.content}`;
+
+    const [enRes, esRes] = await Promise.all([
+      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${lovableApiKey}`,
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: "You are a professional translator. Return only valid JSON." },
+            { role: "user", content: translationPrompt("en", "English") },
+          ],
+          temperature: 0.3,
+        }),
+      }),
+      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${lovableApiKey}`,
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: "You are a professional translator. Return only valid JSON." },
+            { role: "user", content: translationPrompt("es", "Spanish") },
+          ],
+          temperature: 0.3,
+        }),
+      }),
+    ]);
+
+    let enArticle: any = null;
+    let esArticle: any = null;
+
+    for (const [res, lang] of [[enRes, "en"], [esRes, "es"]] as const) {
+      try {
+        if (res.ok) {
+          const data = await res.json();
+          const raw = data.choices?.[0]?.message?.content || "";
+          const cleaned = raw.replace(/```json\n?/g, "").replace(/```/g, "").trim();
+          const parsed = JSON.parse(cleaned);
+          if (lang === "en") enArticle = parsed;
+          else esArticle = parsed;
+          console.log(`[blog-gen] ✅ ${lang.toUpperCase()} translation ready`);
+        } else {
+          console.warn(`[blog-gen] ⚠️ ${lang.toUpperCase()} translation failed: ${res.status}`);
+        }
+      } catch (e) {
+        console.warn(`[blog-gen] ⚠️ ${lang.toUpperCase()} translation parse error:`, e);
+      }
+    }
+
+    // ─── STEP 7: Insert into blog_articles ───
     const now = new Date().toISOString();
     const { data: inserted, error: insertErr } = await supabase
       .from("blog_articles")
@@ -372,6 +451,12 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
         image_url: imageUrl,
         status: "published",
         published_at: now,
+        title_en: enArticle?.title || null,
+        title_es: esArticle?.title || null,
+        excerpt_en: enArticle?.excerpt || null,
+        excerpt_es: esArticle?.excerpt || null,
+        content_en: enArticle?.content || null,
+        content_es: esArticle?.content || null,
       })
       .select("id, slug")
       .single();
@@ -381,9 +466,9 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
       throw insertErr;
     }
 
-    console.log("[blog-gen] ✅ Article published:", inserted.slug, `(${contentLength} chars, image: ${imageUrl})`);
+    console.log("[blog-gen] ✅ Article published:", inserted.slug, `(${contentLength} chars, image: ${imageUrl}, EN: ${!!enArticle}, ES: ${!!esArticle})`);
 
-    // ─── STEP 7: Ping Google sitemap for instant indexation ───
+    // ─── STEP 8: Ping Google sitemap for instant indexation ───
     const sitemapUrl = `${supabaseUrl}/functions/v1/sitemap`;
     const pingUrls = [
       `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`,

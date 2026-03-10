@@ -482,40 +482,58 @@ export type Database = {
         Row: {
           author_id: string | null
           content: string | null
+          content_en: string | null
+          content_es: string | null
           created_at: string
           excerpt: string | null
+          excerpt_en: string | null
+          excerpt_es: string | null
           id: string
           image_url: string | null
           published_at: string | null
           slug: string
           status: Database["public"]["Enums"]["article_status"]
           title: string
+          title_en: string | null
+          title_es: string | null
           updated_at: string
         }
         Insert: {
           author_id?: string | null
           content?: string | null
+          content_en?: string | null
+          content_es?: string | null
           created_at?: string
           excerpt?: string | null
+          excerpt_en?: string | null
+          excerpt_es?: string | null
           id?: string
           image_url?: string | null
           published_at?: string | null
           slug: string
           status?: Database["public"]["Enums"]["article_status"]
           title: string
+          title_en?: string | null
+          title_es?: string | null
           updated_at?: string
         }
         Update: {
           author_id?: string | null
           content?: string | null
+          content_en?: string | null
+          content_es?: string | null
           created_at?: string
           excerpt?: string | null
+          excerpt_en?: string | null
+          excerpt_es?: string | null
           id?: string
           image_url?: string | null
           published_at?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["article_status"]
           title?: string
+          title_en?: string | null
+          title_es?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -19,6 +19,10 @@ interface DbArticle {
   image_url: string | null;
   published_at: string | null;
   created_at: string;
+  title_en: string | null;
+  title_es: string | null;
+  excerpt_en: string | null;
+  excerpt_es: string | null;
 }
 
 const translations = {
@@ -59,7 +63,7 @@ function BlogIndexComponent() {
     async function fetchDbArticles() {
       const { data, error } = await supabase
         .from('blog_articles')
-        .select('id, slug, title, excerpt, image_url, published_at, created_at')
+        .select('id, slug, title, excerpt, image_url, published_at, created_at, title_en, title_es, excerpt_en, excerpt_es')
         .eq('status', 'published')
         .order('published_at', { ascending: false })
         .limit(20);
@@ -190,7 +194,7 @@ function BlogIndexComponent() {
                     <div className="aspect-video overflow-hidden">
                       <img
                         src={article.image_url || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80'}
-                        alt={article.title}
+                        alt={(language === 'en' ? article.title_en : language === 'es' ? article.title_es : null) || article.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                         loading="lazy"
                       />
@@ -214,10 +218,10 @@ function BlogIndexComponent() {
                         </span>
                       </div>
                       <h2 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                        {article.title}
+                        {(language === 'en' ? article.title_en : language === 'es' ? article.title_es : null) || article.title}
                       </h2>
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                        {article.excerpt || ''}
+                        {(language === 'en' ? article.excerpt_en : language === 'es' ? article.excerpt_es : null) || article.excerpt || ''}
                       </p>
                       <div className="flex items-center gap-1 text-sm font-medium text-primary">
                         {t.readMore}

@@ -17,6 +17,12 @@ interface DbArticle {
   published_at: string | null;
   created_at: string;
   status: string;
+  title_en: string | null;
+  title_es: string | null;
+  excerpt_en: string | null;
+  excerpt_es: string | null;
+  content_en: string | null;
+  content_es: string | null;
 }
 
 // Métadonnées SEO spécifiques par article (pour override le head)
@@ -267,9 +273,16 @@ function ArticlePageComponent() {
     return <Navigate to="/blog" replace />;
   }
 
-  // Déterminer les données à utiliser
-  const title = dbArticle?.title || staticArticle?.title[language] || staticArticle?.title.fr || '';
-  const description = dbArticle?.excerpt || staticArticle?.description[language] || staticArticle?.description.fr || '';
+  // Déterminer les données à utiliser (avec traductions)
+  const getDbTranslated = (field: 'title' | 'excerpt' | 'content') => {
+    if (!dbArticle) return null;
+    if (language === 'en') return (dbArticle as any)[`${field}_en`] || dbArticle[field];
+    if (language === 'es') return (dbArticle as any)[`${field}_es`] || dbArticle[field];
+    return dbArticle[field];
+  };
+
+  const title = getDbTranslated('title') || staticArticle?.title[language] || staticArticle?.title.fr || '';
+  const description = getDbTranslated('excerpt') || staticArticle?.description[language] || staticArticle?.description.fr || '';
   const author = 'Adrien';
   const date = dbArticle?.published_at || dbArticle?.created_at || staticArticle?.date || new Date().toISOString();
   const heroImage = dbArticle?.image_url || staticArticle?.heroImage || '';
@@ -278,9 +291,11 @@ function ArticlePageComponent() {
 
   // Déterminer le contenu à afficher
   const renderContent = () => {
-    // Priorité 1: Contenu DB si substantiel et disponible
-    if (useDbContent && dbArticle?.content) {
-      return <HtmlContentRenderer html={dbArticle.content} />;
+    const translatedDbContent = getDbTranslated('content');
+    
+    // Priorité 1: Contenu DB traduit si substantiel et disponible
+    if (useDbContent && translatedDbContent) {
+      return <HtmlContentRenderer html={translatedDbContent} />;
     }
     
     // Priorité 2: Contenu statique JSX (riche avec composants)
@@ -289,8 +304,8 @@ function ArticlePageComponent() {
     }
     
     // Priorité 3: Contenu DB basique (fallback)
-    if (dbArticle?.content) {
-      return <HtmlContentRenderer html={dbArticle.content} />;
+    if (translatedDbContent) {
+      return <HtmlContentRenderer html={translatedDbContent} />;
     }
 
     // Pas de contenu disponible
