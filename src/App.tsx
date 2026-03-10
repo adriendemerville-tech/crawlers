@@ -49,6 +49,7 @@ const CGVU = lazy(() => import("./pages/CGVU"));
 const AuditSeoGratuit = lazy(() => import("./pages/AuditSeoGratuit"));
 const AnalyseSiteWebGratuit = lazy(() => import("./pages/AnalyseSiteWebGratuit"));
 const GenerativeEngineOptimization = lazy(() => import("./pages/GenerativeEngineOptimization"));
+const GuideAuditSeo = lazy(() => import("./pages/GuideAuditSeo"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
@@ -113,6 +114,7 @@ const App = () => (
                           <Route path="/audit-seo-gratuit" element={<AuditSeoGratuit />} />
                           <Route path="/analyse-site-web-gratuit" element={<AnalyseSiteWebGratuit />} />
                           <Route path="/generative-engine-optimization" element={<GenerativeEngineOptimization />} />
+                          <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
