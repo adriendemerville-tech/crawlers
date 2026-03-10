@@ -897,16 +897,20 @@ export function ExpertAuditDashboard() {
       let recovered = false;
       
       try {
-        console.log('Strategic audit: checking server-side cache for completed result...');
+        console.log('Strategic audit: checking server-side cache for completed result...', { cacheKey });
         // Wait a few seconds for server to finish saving
         await new Promise(r => setTimeout(r, 5000));
         
-        const { data: cached } = await supabase
+        const { data: cached, error: cacheError } = await supabase
           .from('audit_cache')
           .select('result_data')
           .eq('cache_key', cacheKey)
           .gt('expires_at', new Date().toISOString())
           .maybeSingle();
+        
+        if (cacheError) {
+          console.warn('Cache query error:', cacheError);
+        }
         
         if (cached?.result_data) {
           const cachedResult = cached.result_data as any;
