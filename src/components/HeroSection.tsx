@@ -290,7 +290,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
                 "h-14 min-w-[122px] transition-shadow duration-500",
                 glowActive && "animate-cta-glow"
               )}
-              style={{ paddingLeft: 10, paddingRight: 10 }}
+              style={{ paddingLeft: 20, paddingRight: 20 }}
             >
               {validation.isValidating ? (
                 <>
