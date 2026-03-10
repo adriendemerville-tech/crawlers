@@ -117,6 +117,115 @@ export interface WhiteLabelBranding {
   primaryColor?: string | null;
 }
 
+// Reusable i18n labels for the HTML report content
+function getReportLabels(language: string) {
+  const l = {
+    fr: {
+      priority: 'Priorité', recommendation: 'Recommandation', brokenLinksDetected: 'Liens cassés détectés',
+      brokenOf: 'lien(s) cassé(s) sur', checked: 'vérifiés', noBrokenLinks: 'Aucun lien cassé détecté',
+      contentQuality: 'Signaux de Qualité du Contenu', freshness: 'Preuve de Vie (Freshness)',
+      currentYear: 'Année courante', conversionFriction: 'Friction de Conversion',
+      forms: 'Formulaires', fieldsPerForm: 'Champs / formulaire',
+      marketVolume: 'Volume marché / mois', keywordsRanked: 'Mots-clés classés', avgPosition: 'Position moyenne',
+      topKeywords: 'Top mots-clés (volume, difficulté, position)',
+      keyword: 'Mot-clé', volume: 'Volume', difficulty: 'Difficulté', position: 'Position',
+      noKeywordData: "Aucune donnée de mots-clés n'a été fournie pour ce rapport.",
+      quickWins: 'Quick wins (positions 11–20)', contentGaps: 'Gaps de contenu (opportunités)',
+      keywordRecommendations: 'Recommandations mots-clés',
+      archetype: 'Archétype', clarity: 'Clarté', perceivedValues: 'Valeurs perçues',
+      brandAuthority: 'Autorité de Marque', entityStrength: "Force de l'entité",
+      competitiveLandscape: 'Écosystème Concurrentiel',
+      role: 'Rôle', actor: 'Acteur', analysis: 'Analyse',
+      directCompetitor: 'Concurrent direct',
+      socialSignals: 'Signaux Sociaux & Autorité', recognition: 'Reconnaissance',
+      overallSentiment: 'Sentiment global', hallucinationRisk: 'Risque hallucination',
+      platform: 'Plateforme', presence: 'Présence',
+      marketIntelligence: 'Intelligence de Marché', sophisticationLevel: 'Niveau de sophistication',
+      llmVisibility: 'Visibilité LLM', cited: 'Cité', invisible: 'Invisible', summary: 'Résumé',
+      geoReadiness: 'Préparation GEO', citability: 'Citabilité', aiAccess: 'Accessibilité IA', aiFormats: 'Formats IA',
+      titleH1: 'Cohérence Title/H1', contentFreshness: 'Fraîcheur', missingFormats: 'Formats manquants',
+      executiveRoadmap: 'Feuille de Route Exécutive',
+      quotabilityIndex: 'Indice de Citabilité', summaryResilience: 'Résilience au Résumé',
+      originalH1: 'H1 original', llmSummary: 'Résumé LLM',
+      lexicalFootprint: 'Empreinte Lexicale', jargon: 'Jargon', concrete: 'Concret',
+      expertiseSentiment: "Sentiment d'Expertise (E-E-A-T)",
+      expertiseLabels: ['', 'Générique / IA', 'Peu incarné', 'Modéré', 'Expérimenté', 'Expert de terrain'],
+      redTeam: 'Red Team : Objections Non Adressées',
+      redTeamNote: "Analyse adversariale : objections qu'un prospect sceptique soulèverait.",
+      action: 'Action', objective: 'Objectif',
+    },
+    en: {
+      priority: 'Priority', recommendation: 'Recommendation', brokenLinksDetected: 'Broken Links Detected',
+      brokenOf: 'broken link(s) out of', checked: 'checked', noBrokenLinks: 'No broken links detected',
+      contentQuality: 'Content Quality Signals', freshness: 'Freshness Signals',
+      currentYear: 'Current year', conversionFriction: 'Conversion Friction',
+      forms: 'Forms', fieldsPerForm: 'Fields / form',
+      marketVolume: 'Market volume / month', keywordsRanked: 'Keywords ranked', avgPosition: 'Average position',
+      topKeywords: 'Top keywords (volume, difficulty, position)',
+      keyword: 'Keyword', volume: 'Volume', difficulty: 'Difficulty', position: 'Position',
+      noKeywordData: 'No keyword data was provided for this report.',
+      quickWins: 'Quick wins (positions 11–20)', contentGaps: 'Content gaps (opportunities)',
+      keywordRecommendations: 'Keyword recommendations',
+      archetype: 'Archetype', clarity: 'Clarity', perceivedValues: 'Perceived values',
+      brandAuthority: 'Brand Authority', entityStrength: 'Entity Strength',
+      competitiveLandscape: 'Competitive Landscape',
+      role: 'Role', actor: 'Actor', analysis: 'Analysis',
+      directCompetitor: 'Direct Competitor',
+      socialSignals: 'Social Signals & Authority', recognition: 'Recognition',
+      overallSentiment: 'Sentiment', hallucinationRisk: 'Hallucination Risk',
+      platform: 'Platform', presence: 'Presence',
+      marketIntelligence: 'Market Intelligence', sophisticationLevel: 'Sophistication',
+      llmVisibility: 'LLM Visibility', cited: 'Cited', invisible: 'Invisible', summary: 'Summary',
+      geoReadiness: 'GEO Readiness', citability: 'Citability', aiAccess: 'AI Access', aiFormats: 'AI Formats',
+      titleH1: 'Title/H1', contentFreshness: 'Freshness', missingFormats: 'Missing',
+      executiveRoadmap: 'Executive Roadmap',
+      quotabilityIndex: 'Quotability Index', summaryResilience: 'Summary Resilience',
+      originalH1: 'Original H1', llmSummary: 'LLM Summary',
+      lexicalFootprint: 'Lexical Footprint', jargon: 'Jargon', concrete: 'Concrete',
+      expertiseSentiment: 'Expertise Sentiment (E-E-A-T)',
+      expertiseLabels: ['', 'Generic / AI', 'Shallow', 'Moderate', 'Experienced', 'Field expert'],
+      redTeam: 'Red Team: Unaddressed Objections',
+      redTeamNote: 'Adversarial analysis: objections a skeptical prospect would raise.',
+      action: 'Action', objective: 'Objective',
+    },
+    es: {
+      priority: 'Prioridad', recommendation: 'Recomendación', brokenLinksDetected: 'Enlaces rotos detectados',
+      brokenOf: 'enlace(s) roto(s) de', checked: 'verificados', noBrokenLinks: 'Ningún enlace roto detectado',
+      contentQuality: 'Señales de Calidad del Contenido', freshness: 'Señales de Frescura',
+      currentYear: 'Año actual', conversionFriction: 'Fricción de Conversión',
+      forms: 'Formularios', fieldsPerForm: 'Campos / formulario',
+      marketVolume: 'Volumen de mercado / mes', keywordsRanked: 'Palabras clave posicionadas', avgPosition: 'Posición media',
+      topKeywords: 'Palabras clave principales (volumen, dificultad, posición)',
+      keyword: 'Palabra clave', volume: 'Volumen', difficulty: 'Dificultad', position: 'Posición',
+      noKeywordData: 'No se proporcionaron datos de palabras clave para este informe.',
+      quickWins: 'Quick wins (posiciones 11–20)', contentGaps: 'Brechas de contenido (oportunidades)',
+      keywordRecommendations: 'Recomendaciones de palabras clave',
+      archetype: 'Arquetipo', clarity: 'Claridad', perceivedValues: 'Valores percibidos',
+      brandAuthority: 'Autoridad de Marca', entityStrength: 'Fuerza de la entidad',
+      competitiveLandscape: 'Ecosistema Competitivo',
+      role: 'Rol', actor: 'Actor', analysis: 'Análisis',
+      directCompetitor: 'Competidor directo',
+      socialSignals: 'Señales Sociales y Autoridad', recognition: 'Reconocimiento',
+      overallSentiment: 'Sentimiento general', hallucinationRisk: 'Riesgo de alucinación',
+      platform: 'Plataforma', presence: 'Presencia',
+      marketIntelligence: 'Inteligencia de Mercado', sophisticationLevel: 'Nivel de sofisticación',
+      llmVisibility: 'Visibilidad LLM', cited: 'Citado', invisible: 'Invisible', summary: 'Resumen',
+      geoReadiness: 'Preparación GEO', citability: 'Citabilidad', aiAccess: 'Acceso IA', aiFormats: 'Formatos IA',
+      titleH1: 'Title/H1', contentFreshness: 'Frescura', missingFormats: 'Faltantes',
+      executiveRoadmap: 'Hoja de Ruta Ejecutiva',
+      quotabilityIndex: 'Índice de Citabilidad', summaryResilience: 'Resiliencia al Resumen',
+      originalH1: 'H1 original', llmSummary: 'Resumen LLM',
+      lexicalFootprint: 'Huella Léxica', jargon: 'Jerga', concrete: 'Concreto',
+      expertiseSentiment: 'Sentimiento de Expertise (E-E-A-T)',
+      expertiseLabels: ['', 'Genérico / IA', 'Poco encarnado', 'Moderado', 'Experimentado', 'Experto de campo'],
+      redTeam: 'Red Team: Objeciones No Abordadas',
+      redTeamNote: 'Análisis adversarial: objeciones que un prospecto escéptico plantearía.',
+      action: 'Acción', objective: 'Objetivo',
+    },
+  };
+  return l[language as keyof typeof l] || l.fr;
+}
+
 export function generateExpertReportHTML(
   result: ExpertAuditResult,
   auditMode: 'technical' | 'strategic',
@@ -124,6 +233,7 @@ export function generateExpertReportHTML(
   language: string,
   branding?: WhiteLabelBranding
 ): string {
+  const rl = getReportLabels(language);
   const now = new Date(result.scannedAt).toLocaleDateString(
     language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
     { year: 'numeric', month: 'long', day: 'numeric' }
@@ -329,12 +439,12 @@ export function generateExpertReportHTML(
       <!-- Broken Links -->
       ${brokenCount > 0 ? `
         <div style="background: #fef2f2; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #dc2626; margin-bottom: 16px;">
-          <div style="font-size: 13px; font-weight: 600; color: #dc2626; margin-bottom: 4px;">${language === 'fr' ? 'Liens cassés détectés' : 'Broken Links Detected'}</div>
-          <div style="font-size: 12px; color: #991b1b;">${brokenCount} ${language === 'fr' ? 'lien(s) cassé(s) sur' : 'broken link(s) out of'} ${brokenChecked} ${language === 'fr' ? 'vérifiés' : 'checked'}</div>
+          <div style="font-size: 13px; font-weight: 600; color: #dc2626; margin-bottom: 4px;">${rl.brokenLinksDetected}</div>
+          <div style="font-size: 12px; color: #991b1b;">${brokenCount} ${rl.brokenOf} ${brokenChecked} ${rl.checked}</div>
         </div>
       ` : `
         <div style="background: #f0fdf4; padding: 10px 16px; border-radius: 10px; border-left: 3px solid #059669; margin-bottom: 16px;">
-          <div style="font-size: 12px; color: #166534;">${language === 'fr' ? 'Aucun lien cassé détecté' : 'No broken links detected'} (${brokenChecked} ${language === 'fr' ? 'vérifiés' : 'checked'})</div>
+          <div style="font-size: 12px; color: #166534;">${rl.noBrokenLinks} (${brokenChecked} ${rl.checked})</div>
         </div>
       `}
 
@@ -365,12 +475,12 @@ export function generateExpertReportHTML(
           techSections.push(`
             <div style="background: #f0fdf4; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #059669; margin-bottom: 10px; break-inside: avoid;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 13px; font-weight: 600; color: #065f46;">${language === 'fr' ? 'Preuve de Vie (Freshness)' : 'Freshness Signals'}</div>
+                <div style="font-size: 13px; font-weight: 600; color: #065f46;">${rl.freshness}</div>
                 <span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${labelBgs[fs.label] || '#f3f4f6'}; color: ${labelColors[fs.label] || '#374151'};">${fs.label}</span>
               </div>
               ${statusRow('Score', fs.score >= 50, fs.score + '/100')}
               ${statusRow('Last-Modified', !!fs.lastModifiedDate, fs.lastModifiedDate || '—')}
-              ${statusRow(language === 'fr' ? 'Année courante' : 'Current year', fs.hasCurrentYearMention, fs.currentYearFound || '—')}
+              ${statusRow(rl.currentYear, fs.hasCurrentYearMention, fs.currentYearFound || '—')}
             </div>`);
         }
 
@@ -381,17 +491,17 @@ export function generateExpertReportHTML(
           techSections.push(`
             <div style="background: #faf5ff; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #7c3aed; margin-bottom: 10px; break-inside: avoid;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 13px; font-weight: 600; color: #5b21b6;">${language === 'fr' ? 'Friction de Conversion' : 'Conversion Friction'}</div>
+                <div style="font-size: 13px; font-weight: 600; color: #5b21b6;">${rl.conversionFriction}</div>
                 <span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${frictionBgs[cf.frictionLevel] || '#f3f4f6'}; color: ${frictionColors[cf.frictionLevel] || '#374151'};">${cf.frictionLevel}</span>
               </div>
-              ${statusRow(language === 'fr' ? 'Formulaires' : 'Forms', cf.formsCount > 0, String(cf.formsCount))}
-              ${statusRow(language === 'fr' ? 'Champs / formulaire' : 'Fields / form', cf.avgFieldsPerForm <= 3, cf.avgFieldsPerForm.toFixed(1))}
+              ${statusRow(rl.forms, cf.formsCount > 0, String(cf.formsCount))}
+              ${statusRow(rl.fieldsPerForm, cf.avgFieldsPerForm <= 3, cf.avgFieldsPerForm.toFixed(1))}
               ${statusRow('CTAs', cf.ctaCount > 0, String(cf.ctaCount))}
               ${statusRow('CTA above fold', cf.ctaAboveFold)}
             </div>`);
         }
 
-        return techSections.length > 0 ? `<div style="font-size: 14px; font-weight: 600; color: #1f2937; margin: 18px 0 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${language === 'fr' ? 'Signaux de Qualité du Contenu' : 'Content Quality Signals'}</div>${techSections.join('')}` : '';
+        return techSections.length > 0 ? `<div style="font-size: 14px; font-weight: 600; color: #1f2937; margin: 18px 0 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${rl.contentQuality}</div>${techSections.join('')}` : '';
       })()}
 
 
@@ -400,8 +510,8 @@ export function generateExpertReportHTML(
         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
           <thead>
             <tr style="background: #f9fafb;">
-              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e5e7eb; width: 70px;">Priorité</th>
-              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e5e7eb;">Recommandation</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e5e7eb; width: 70px;">${rl.priority}</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid #e5e7eb;">${rl.recommendation}</th>
             </tr>
           </thead>
           <tbody>
@@ -449,15 +559,15 @@ export function generateExpertReportHTML(
         ? `
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;">
             <div style="padding: 12px; background: #f8fafc; border-radius: 10px; text-align: center;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Volume marché / mois</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.marketVolume}</div>
               <div style="font-weight: 700; color: #0f172a;">${renderNumber(ms.total_market_volume)}</div>
             </div>
             <div style="padding: 12px; background: #f8fafc; border-radius: 10px; text-align: center;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Mots-clés classés</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.keywordsRanked}</div>
               <div style="font-weight: 700; color: #0f172a;">${renderNumber(ms.keywords_ranked)}/${renderNumber(ms.keywords_analyzed)}</div>
             </div>
             <div style="padding: 12px; background: #f8fafc; border-radius: 10px; text-align: center;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Position moyenne</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.avgPosition}</div>
               <div style="font-weight: 700; color: #0f172a;">${
                 typeof ms.average_position === 'number' && ms.average_position > 0
                   ? `#${ms.average_position.toFixed(1)}`
@@ -472,14 +582,14 @@ export function generateExpertReportHTML(
         kp?.main_keywords?.length
           ? `
             <div style="margin-top: 6px;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">Top mots-clés (volume, difficulté, position)</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">${rl.topKeywords}</div>
               <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
                 <thead style="background: #f9fafb;">
                   <tr>
-                    <th style="padding: 10px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Mot-clé</th>
-                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Volume</th>
-                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Difficulté</th>
-                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Position</th>
+                    <th style="padding: 10px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 12px;">${rl.keyword}</th>
+                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">${rl.volume}</th>
+                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">${rl.difficulty}</th>
+                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">${rl.position}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -500,13 +610,13 @@ export function generateExpertReportHTML(
               </table>
             </div>
           `
-          : `<p style="color: #374151; line-height: 1.6; margin: 0;">Aucune donnée de mots-clés n'a été fournie pour ce rapport.</p>`;
+          : `<p style="color: #374151; line-height: 1.6; margin: 0;">${rl.noKeywordData}</p>`;
 
       const quickWins =
         kp?.quick_wins?.length
           ? `
             <div style="margin-top: 14px;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Quick wins (positions 11–20)</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">${rl.quickWins}</div>
               <ul style="margin: 0; padding-left: 18px; color: #334155; line-height: 1.7;">
                 ${kp.quick_wins
                   .slice(0, 4)
@@ -524,7 +634,7 @@ export function generateExpertReportHTML(
         kp?.content_gaps?.length
           ? `
             <div style="margin-top: 14px;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Gaps de contenu (opportunités)</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">${rl.contentGaps}</div>
               <ul style="margin: 0; padding-left: 18px; color: #334155; line-height: 1.7;">
                 ${kp.content_gaps
                   .slice(0, 4)
@@ -542,7 +652,7 @@ export function generateExpertReportHTML(
         kp?.recommendations?.length
           ? `
             <div style="margin-top: 14px; padding: 14px; background: #f8fafc; border-radius: 12px; border: 1px solid #e5e7eb;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Recommandations mots-clés</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">${rl.keywordRecommendations}</div>
               <ul style="margin: 0; padding-left: 18px; color: #0f172a; line-height: 1.7;">
                 ${kp.recommendations.slice(0, 4).map((r: any) => `<li>${r}</li>`).join('')}
               </ul>
@@ -584,19 +694,19 @@ export function generateExpertReportHTML(
         <div style="background: #faf5ff; padding: 24px; border-radius: 12px; margin-bottom: 20px;">
           <h3 style="font-size: 16px; color: #7c3aed; margin: 0 0 16px 0;">${t.brandIdentity}</h3>
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-            <div><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Archétype</div><div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.archetype}</div></div>
-            <div><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Clarté</div><div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.clarity_score}/100</div></div>
+            <div><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.archetype}</div><div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.archetype}</div></div>
+            <div><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.clarity}</div><div style="font-weight: 600; color: #1f2937;">${strategic.brand_identity.clarity_score}/100</div></div>
           </div>
-          <div style="margin-top: 12px;"><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Valeurs perçues</div>
+          <div style="margin-top: 12px;"><div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">${rl.perceivedValues}</div>
             <div>${strategic.brand_identity.perceived_values.map((v: string) => `<span style="display: inline-block; padding: 4px 8px; background: #e9d5ff; color: #7c3aed; border-radius: 6px; font-size: 12px; margin: 2px;">${v}</span>`).join('')}</div>
           </div>
         </div>
       ` : ''}
 
       ${strategic?.brand_authority ? sectionCard(
-        language === 'fr' ? 'Autorité de Marque' : language === 'es' ? 'Autoridad de Marca' : 'Brand Authority',
+        rl.brandAuthority,
         '#7c3aed', '#faf5ff',
-        `${labelValue(language === 'fr' ? "Force de l'entité" : 'Entity Strength', strategic.brand_authority.entity_strength || '—')}
+        `${labelValue(rl.entityStrength, strategic.brand_authority.entity_strength || '—')}
          ${labelValue('Thought Leadership', (strategic.brand_authority.thought_leadership_score || 0) + '/100')}
          ${textBlock(strategic.brand_authority.dna_analysis || '')}`) : ''}
 
@@ -604,9 +714,9 @@ export function generateExpertReportHTML(
         const cl = strategic.competitive_landscape;
         const actorRow = (role: string, actor: any) => actor ? `<tr><td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #0f172a;">${role}</td><td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #334155;">${actor.name || '—'}</td><td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #6b7280; font-size: 13px;">${actor.analysis || '—'}</td></tr>` : '';
         return sectionCard(
-          language === 'fr' ? 'Écosystème Concurrentiel' : 'Competitive Landscape',
+          rl.competitiveLandscape,
           '#dc2626', 'linear-gradient(135deg, #fef2f2, #fff7ed)',
-          `<table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 10px 12px; text-align: left; font-size: 12px;">Rôle</th><th style="padding: 10px 12px; text-align: left; font-size: 12px;">Acteur</th><th style="padding: 10px 12px; text-align: left; font-size: 12px;">Analyse</th></tr></thead><tbody>${actorRow('Leader', cl.leader)}${actorRow(language === 'fr' ? 'Concurrent direct' : 'Direct Competitor', cl.direct_competitor)}${actorRow('Challenger', cl.challenger)}${actorRow('Inspiration', cl.inspiration_source)}</tbody></table>`
+          `<table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 10px 12px; text-align: left; font-size: 12px;">${rl.role}</th><th style="padding: 10px 12px; text-align: left; font-size: 12px;">${rl.actor}</th><th style="padding: 10px 12px; text-align: left; font-size: 12px;">${rl.analysis}</th></tr></thead><tbody>${actorRow('Leader', cl.leader)}${actorRow(rl.directCompetitor, cl.direct_competitor)}${actorRow('Challenger', cl.challenger)}${actorRow('Inspiration', cl.inspiration_source)}</tbody></table>`
         );
       })() : ''}
 
@@ -618,21 +728,21 @@ export function generateExpertReportHTML(
         const tl = ss.thought_leadership;
         const sent = ss.sentiment;
         return sectionCard(
-          language === 'fr' ? 'Signaux Sociaux & Autorité' : 'Social Signals & Authority',
+          rl.socialSignals,
           '#2563eb', 'linear-gradient(135deg, #eff6ff, #f0f9ff)',
-          `${tl ? `${labelValue('E-E-A-T', (tl.eeat_score || 0) + '/10')}${labelValue(language === 'fr' ? 'Reconnaissance' : 'Recognition', tl.entity_recognition || '—')}${textBlock(tl.analysis || '')}` : ''}
-           ${sent ? `${labelValue(language === 'fr' ? 'Sentiment global' : 'Sentiment', sent.overall_polarity || '—')}${labelValue(language === 'fr' ? 'Risque hallucination' : 'Hallucination Risk', sent.hallucination_risk || '—')}` : ''}
-           ${proofRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Plateforme</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Présence</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Analyse</th></tr></thead><tbody>${proofRows}</tbody></table>` : ''}`
+          `${tl ? `${labelValue('E-E-A-T', (tl.eeat_score || 0) + '/10')}${labelValue(rl.recognition, tl.entity_recognition || '—')}${textBlock(tl.analysis || '')}` : ''}
+           ${sent ? `${labelValue(rl.overallSentiment, sent.overall_polarity || '—')}${labelValue(rl.hallucinationRisk, sent.hallucination_risk || '—')}` : ''}
+           ${proofRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">${rl.platform}</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">${rl.presence}</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">${rl.analysis}</th></tr></thead><tbody>${proofRows}</tbody></table>` : ''}`
         );
       })() : ''}
 
       ${strategic?.market_intelligence ? (() => {
         const mi = strategic.market_intelligence;
         return sectionCard(
-          language === 'fr' ? 'Intelligence de Marché' : 'Market Intelligence',
+          rl.marketIntelligence,
           '#d97706', 'linear-gradient(135deg, #fffbeb, #fef3c7)',
-          `${mi.sophistication ? `${labelValue(language === 'fr' ? 'Niveau de sophistication' : 'Sophistication', mi.sophistication.level + '/5')}${textBlock(mi.sophistication.description || '')}` : ''}
-           ${mi.semantic_gap ? `${labelValue(language === 'fr' ? 'Position vs Leader' : 'Position vs Leader', mi.semantic_gap.current_position + ' → ' + mi.semantic_gap.leader_position)}${labelValue('Gap', mi.semantic_gap.gap_distance + ' pts')}${textBlock(mi.semantic_gap.closing_strategy || '')}` : ''}
+          `${mi.sophistication ? `${labelValue(rl.sophisticationLevel, mi.sophistication.level + '/5')}${textBlock(mi.sophistication.description || '')}` : ''}
+           ${mi.semantic_gap ? `${labelValue('Position vs Leader', mi.semantic_gap.current_position + ' → ' + mi.semantic_gap.leader_position)}${labelValue('Gap', mi.semantic_gap.gap_distance + ' pts')}${textBlock(mi.semantic_gap.closing_strategy || '')}` : ''}
            ${textBlock(mi.positioning_verdict || '')}`
         );
       })() : ''}
@@ -641,9 +751,9 @@ export function generateExpertReportHTML(
         const llm = strategic.llm_visibility_raw;
         const citedCount = llm.citationRate?.cited || 0;
         const totalCount = llm.citationRate?.total || 0;
-        const citationRows = llm.citations?.slice(0, 5).map((c: any) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600;">${c.provider?.name || '—'}</td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; ${c.cited ? 'background: #dcfce7; color: #166534;' : 'background: #fee2e2; color: #991b1b;'}">${c.cited ? 'Cité' : 'Invisible'}</span></td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; ${c.sentiment === 'positive' || c.sentiment === 'mostly_positive' ? 'background: #dcfce7; color: #166534;' : c.sentiment === 'neutral' ? 'background: #f3f4f6; color: #374151;' : 'background: #fee2e2; color: #991b1b;'}">${c.sentiment || '—'}</span></td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #6b7280; font-size: 12px;">${c.summary || ''}</td></tr>`).join('') || '';
+        const citationRows = llm.citations?.slice(0, 5).map((c: any) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; font-weight: 600;">${c.provider?.name || '—'}</td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; ${c.cited ? 'background: #dcfce7; color: #166534;' : 'background: #fee2e2; color: #991b1b;'}">${c.cited ? rl.cited : rl.invisible}</span></td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9;"><span style="padding: 2px 8px; border-radius: 12px; font-size: 11px; ${c.sentiment === 'positive' || c.sentiment === 'mostly_positive' ? 'background: #dcfce7; color: #166534;' : c.sentiment === 'neutral' ? 'background: #f3f4f6; color: #374151;' : 'background: #fee2e2; color: #991b1b;'}">${c.sentiment || '—'}</span></td><td style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #6b7280; font-size: 12px;">${c.summary || ''}</td></tr>`).join('') || '';
         return sectionCard(
-          language === 'fr' ? 'Visibilité LLM' : 'LLM Visibility',
+          rl.llmVisibility,
           '#8b5cf6', 'linear-gradient(135deg, #f5f3ff, #ede9fe)',
           `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;">
             <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">Score</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${llm.overallScore || 0}/100</div></div>
@@ -651,7 +761,7 @@ export function generateExpertReportHTML(
             <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">Sentiment</div><div style="font-weight: 700; color: #0f172a;">${llm.overallSentiment || '—'}</div></div>
           </div>
           ${textBlock(llm.coreValueSummary || '')}
-          ${citationRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">LLM</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Citation</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Sentiment</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Résumé</th></tr></thead><tbody>${citationRows}</tbody></table>` : ''}`
+          ${citationRows ? `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><thead style="background: #f9fafb;"><tr><th style="padding: 8px 12px; text-align: left; font-size: 12px;">LLM</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Citation</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">Sentiment</th><th style="padding: 8px 12px; text-align: left; font-size: 12px;">${rl.summary}</th></tr></thead><tbody>${citationRows}</tbody></table>` : ''}`
         );
       })() : ''}
 
@@ -659,25 +769,25 @@ export function generateExpertReportHTML(
         const gr = strategic.geo_readiness;
         const formats = gr.ai_favored_formats;
         return sectionCard(
-          language === 'fr' ? 'Préparation GEO' : 'GEO Readiness',
+          rl.geoReadiness,
           '#0891b2', 'linear-gradient(135deg, #ecfeff, #f0fdfa)',
           `<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;">
-            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Citabilité' : 'Citability'}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${gr.citability_score || 0}/100</div></div>
-            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Accessibilité IA' : 'AI Access'}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${gr.ai_accessibility_score || 0}/100</div></div>
-            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Formats IA' : 'AI Formats'}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${formats?.format_score || 0}/100</div></div>
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${rl.citability}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${gr.citability_score || 0}/100</div></div>
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${rl.aiAccess}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${gr.ai_accessibility_score || 0}/100</div></div>
+            <div style="padding: 12px; background: rgba(255,255,255,0.7); border-radius: 10px; text-align: center;"><div style="font-size: 12px; color: #6b7280;">${rl.aiFormats}</div><div style="font-weight: 700; font-size: 20px; color: #0f172a;">${formats?.format_score || 0}/100</div></div>
           </div>
-          ${gr.semantic_coherence ? labelValue(language === 'fr' ? 'Cohérence Title/H1' : 'Title/H1', gr.semantic_coherence.title_h1_alignment + '% — ' + gr.semantic_coherence.verdict) : ''}
-          ${gr.content_freshness ? labelValue(language === 'fr' ? 'Fraîcheur' : 'Freshness', gr.content_freshness.verdict || '—') : ''}
+          ${gr.semantic_coherence ? labelValue(rl.titleH1, gr.semantic_coherence.title_h1_alignment + '% — ' + gr.semantic_coherence.verdict) : ''}
+          ${gr.content_freshness ? labelValue(rl.contentFreshness, gr.content_freshness.verdict || '—') : ''}
           ${gr.eeat_signals ? labelValue('E-E-A-T', gr.eeat_signals.verdict || '—') : ''}
           ${gr.knowledge_graph_readiness ? labelValue('Knowledge Graph', gr.knowledge_graph_readiness.verdict || '—') : ''}
-          ${formats?.missing_formats?.length ? `<div style="margin-top: 8px;"><span style="font-size: 12px; color: #6b7280;">${language === 'fr' ? 'Formats manquants' : 'Missing'} : </span>${formats.missing_formats.map((f: string) => `<span style="display: inline-block; padding: 2px 8px; background: #fee2e2; color: #991b1b; border-radius: 6px; font-size: 11px; margin: 2px;">${f}</span>`).join('')}</div>` : ''}`,
+          ${formats?.missing_formats?.length ? `<div style="margin-top: 8px;"><span style="font-size: 12px; color: #6b7280;">${rl.missingFormats} : </span>${formats.missing_formats.map((f: string) => `<span style="display: inline-block; padding: 2px 8px; background: #fee2e2; color: #991b1b; border-radius: 6px; font-size: 11px; margin: 2px;">${f}</span>`).join('')}</div>` : ''}`,
           true
         );
       })() : ''}
 
       ${strategic?.executive_roadmap?.length ? (() => {
         return `
-          <h3 style="font-size: 18px; color: #1f2937; margin: 24px 0 16px 0;">${language === 'fr' ? 'Feuille de Route Exécutive' : language === 'es' ? 'Hoja de Ruta Ejecutiva' : 'Executive Roadmap'}</h3>
+          <h3 style="font-size: 18px; color: #1f2937; margin: 24px 0 16px 0;">${rl.executiveRoadmap}</h3>
           ${(strategic.executive_roadmap as any[]).slice(0, 4).map((item: any, i: number) => `
             <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 12px; break-inside: avoid; page-break-inside: avoid;">
               <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
@@ -696,7 +806,7 @@ export function generateExpertReportHTML(
       ${strategic?.strategic_roadmap?.length > 0 && !(strategic?.executive_roadmap?.length) ? `
         <h3 style="font-size: 18px; color: #1f2937; margin-bottom: 16px;">${t.roadmap}</h3>
         <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-          <thead><tr style="background: #f9fafb;"><th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Priorité</th><th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Action</th><th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Objectif</th></tr></thead>
+          <thead><tr style="background: #f9fafb;"><th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">${rl.priority}</th><th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">${rl.action}</th><th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">${rl.objective}</th></tr></thead>
           <tbody>
             ${strategic.strategic_roadmap.map((item: any) => `<tr><td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><span style="padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; ${item.priority === 'Prioritaire' ? 'background: #fee2e2; color: #991b1b;' : item.priority === 'Important' ? 'background: #fef3c7; color: #92400e;' : 'background: #dcfce7; color: #166534;'}">${item.priority}</span></td><td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.action_concrete}</td><td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">${item.strategic_goal}</td></tr>`).join('')}
           </tbody>
@@ -709,7 +819,7 @@ export function generateExpertReportHTML(
         if (strategic?.quotability?.quotes?.length) {
           const quotesHtml = strategic.quotability.quotes.map((q: string) => `<blockquote style="border-left: 3px solid #6366f1; padding: 8px 12px; margin: 6px 0; background: #f8fafc; font-style: italic; color: #374151; font-size: 13px;">"${q}"</blockquote>`).join('');
           sections.push(sectionCard(
-            language === 'fr' ? 'Indice de Citabilité' : language === 'es' ? 'Índice de Citabilidad' : 'Quotability Index',
+            rl.quotabilityIndex,
             '#6366f1', '#f5f3ff',
             `${labelValue('Score', (strategic.quotability.score || 0) + '/100')}${quotesHtml}`
           ));
@@ -719,12 +829,12 @@ export function generateExpertReportHTML(
           const sr = strategic.summary_resilience;
           const barColor = sr.score >= 80 ? '#166534' : sr.score >= 50 ? '#92400e' : '#991b1b';
           sections.push(sectionCard(
-            language === 'fr' ? 'Résilience au Résumé' : language === 'es' ? 'Resiliencia al Resumen' : 'Summary Resilience',
+            rl.summaryResilience,
             '#059669', '#f0fdf4',
             `${labelValue('Score', sr.score + '/100')}
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
-              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px;"><div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">H1 original</div><div style="font-size: 13px; color: #0f172a; font-weight: 500;">${sr.originalH1 || '—'}</div></div>
-              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px;"><div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">Résumé LLM</div><div style="font-size: 13px; color: #0f172a; font-weight: 500;">${sr.llmSummary || '—'}</div></div>
+              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px;"><div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">${rl.originalH1}</div><div style="font-size: 13px; color: #0f172a; font-weight: 500;">${sr.originalH1 || '—'}</div></div>
+              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px;"><div style="font-size: 11px; color: #6b7280; margin-bottom: 4px;">${rl.llmSummary}</div><div style="font-size: 13px; color: #0f172a; font-weight: 500;">${sr.llmSummary || '—'}</div></div>
             </div>
             <div style="margin-top: 8px; height: 6px; background: #e5e7eb; border-radius: 99px; overflow: hidden;"><div style="height: 100%; width: ${sr.score}%; background: ${barColor}; border-radius: 99px;"></div></div>`
           ));
@@ -733,12 +843,12 @@ export function generateExpertReportHTML(
         if (strategic?.lexical_footprint) {
           const lf = strategic.lexical_footprint;
           sections.push(sectionCard(
-            language === 'fr' ? 'Empreinte Lexicale' : language === 'es' ? 'Huella Léxica' : 'Lexical Footprint',
+            rl.lexicalFootprint,
             '#d97706', '#fffbeb',
             `${labelValue('Score', lf.score + '/100')}
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
-              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;"><div style="font-size: 11px; color: #6b7280;">Jargon</div><div style="font-size: 20px; font-weight: 700; color: #92400e;">${Math.round(lf.jargonRatio * 100)}%</div></div>
-              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;"><div style="font-size: 11px; color: #6b7280;">Concret</div><div style="font-size: 20px; font-weight: 700; color: #166534;">${Math.round(lf.concreteRatio * 100)}%</div></div>
+              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;"><div style="font-size: 11px; color: #6b7280;">${rl.jargon}</div><div style="font-size: 20px; font-weight: 700; color: #92400e;">${Math.round(lf.jargonRatio * 100)}%</div></div>
+              <div style="padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;"><div style="font-size: 11px; color: #6b7280;">${rl.concrete}</div><div style="font-size: 20px; font-weight: 700; color: #166534;">${Math.round(lf.concreteRatio * 100)}%</div></div>
             </div>`
           ));
         }
@@ -746,11 +856,10 @@ export function generateExpertReportHTML(
         if (strategic?.expertise_sentiment) {
           const es = strategic.expertise_sentiment;
           const stars = Array.from({ length: 5 }, (_, i) => `<span style="font-size: 20px; color: ${i < es.rating ? '#f59e0b' : '#d1d5db'};">★</span>`).join('');
-          const labels = ['', 'Générique / IA', 'Peu incarné', 'Modéré', 'Expérimenté', 'Expert de terrain'];
           sections.push(sectionCard(
-            language === 'fr' ? 'Sentiment d\'Expertise (E-E-A-T)' : 'Expertise Sentiment (E-E-A-T)',
+            rl.expertiseSentiment,
             '#7c3aed', '#faf5ff',
-            `<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">${stars}<span style="font-size: 13px; font-weight: 500; color: #374151;">${labels[es.rating] || ''}</span></div>
+            `<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">${stars}<span style="font-size: 13px; font-weight: 500; color: #374151;">${rl.expertiseLabels[es.rating] || ''}</span></div>
             <p style="color: #6b7280; font-style: italic; font-size: 13px; border-left: 2px solid #7c3aed; padding-left: 10px;">${es.justification || ''}</p>`
           ));
         }
@@ -758,9 +867,9 @@ export function generateExpertReportHTML(
         if (strategic?.red_team?.flaws?.length) {
           const flawsHtml = strategic.red_team.flaws.map((f: string) => `<div style="display: flex; gap: 8px; padding: 8px 12px; background: rgba(220,38,38,0.05); border: 1px solid rgba(220,38,38,0.15); border-radius: 8px; margin-bottom: 6px;"><span style="color: #dc2626; font-size: 14px;">⚠️</span><span style="color: #374151; font-size: 13px;">${f}</span></div>`).join('');
           sections.push(sectionCard(
-            language === 'fr' ? 'Red Team : Objections Non Adressées' : 'Red Team: Unaddressed Objections',
+            rl.redTeam,
             '#dc2626', '#fef2f2',
-            `${flawsHtml}<p style="font-size: 11px; color: #6b7280; font-style: italic; margin-top: 6px;">${language === 'fr' ? 'Analyse adversariale : objections qu\'un prospect sceptique soulèverait.' : 'Adversarial analysis: objections a skeptical prospect would raise.'}</p>`
+            `${flawsHtml}<p style="font-size: 11px; color: #6b7280; font-style: italic; margin-top: 6px;">${rl.redTeamNote}</p>`
           ));
         }
 
