@@ -16,6 +16,33 @@ const PLAYLIST_TRACK_IDS = [
   '0Q0IVlqMV64kNLlwjPj0Hl', // Killing Me Softly - Fugees
   '08QmEfykPyTLC5uCC9WCHv', // La javanaise - Gainsbourg
   '0YMFcrMtBowDdD5bPz0cgy', // Talkin' Bout a Revolution - Tracy Chapman
+  '6ztstiyZL6FXzh4aG46ZPD', // Boogie Wonderland - Earth Wind & Fire
+  '0DwClY2t9YAWHBROMIgrXb', // Ho Hey - The Lumineers
+  '3spdoTYpuCpmq19tuD0bOe', // My Way - Frank Sinatra
+  '2g4oQ1siRRrg8yAkQLVx0c', // Le vent nous portera - Noir Désir
+  '6zeE5tKyr8Nu882DQhhSQI', // Dust in the Wind - Kansas
+  '2YplrdHMBoRdnHgMeHEwHm', // The Sound of Silence - Simon & Garfunkel
+  '2Fxmhks0bxGSBdJ92vM42m', // bad guy - Billie Eilish
+  '2Foc5Q5nqNiosCNqttzHof', // Get Lucky - Daft Punk
+  '6FLwmdmW77N1Pxb1aWsZmO', // Only Time - Enya
+  '7wC8EVTpYfKxe73eXmbiMe', // Postcards from Italy - Beirut
+  '4KFM3A5QF2IMcc6nHsu3Wp', // Englishman In New York - Sting
+  '2gNjmvuQiEd2z9SqyYi8HH', // Summertime - Ella Fitzgerald & Louis Armstrong
+  '1jGkLUJCl46NmXIM6rUghn', // Estación Esperanza - Sofia Kourtesis
+  '5gOnivVq0hLxPvIPC00ZhF', // Cosmic Dancer - T. Rex
+  '1fmoCZ6mtMiqA5GHWPcZz9', // A New Error - Moderat
+  '29GuoJqjg7aMxUmEO3XLEp', // Comment te dire adieu - Françoise Hardy
+  '7aZjExRehKGrH6vZ3MNXlq', // Precious Angel - Bob Dylan
+  '0rqCsgBpf8mojW1bMy6DQU', // Back In The Day - De Hofnar
+  '688swhveYzWFjUpyR060tG', // Castle in the Snow - The Avener
+  '5CQ30WqJwcep0pYcV4AMNc', // Stairway to Heaven alt
+  '2ZQVJD9I6GCqXmkmMuEoLa', // Le vent nous portera alt - Noir Désir
+  '5y788ya4NvwhBznoDIcXwK', // The Sound of Silence acoustic - Simon & Garfunkel
+  '2FH3BLTMhJlCH1Dmkua5DW', // Insomnia Monster Mix - Faithless
+  '0GNI8K3VATWBABQFAzBAYe', // Stay alt - Rihanna
+  '0biKl6K9vgQtXNqoOrH9QM', // Je suis venu te dire - Gainsbourg
+  '2H6BI0TAiEYHVfhcjgGEZS', // La loi de Murphy - Angèle
+  '5IV5Wh6hdncGcsnbVhhVug', // La marcheuse - Christine and the Queens
 ];
 
 const technicalSteps = [
