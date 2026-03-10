@@ -1,8 +1,18 @@
 import { memo } from 'react';
 import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
+
+/** On audit-expert page, all internal links open in a new tab */
+function SmartLink({ to, className, title, children }: { to: string; className?: string; title?: string; children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  const isAuditPage = pathname.startsWith('/audit-expert');
+  if (isAuditPage) {
+    return <a href={to} target="_blank" rel="noopener noreferrer" className={className} title={title}>{children}</a>;
+  }
+  return <Link to={to} className={className} title={title}>{children}</Link>;
+}
 
 const t3 = (language: string, fr: string, en: string, es: string) =>
   language === 'fr' ? fr : language === 'es' ? es : en;
