@@ -263,7 +263,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
         </div>
 
         {/* Search Form */}
-        <form onSubmit={handleSubmit} className="mx-auto w-full" style={{ maxWidth: '85%', maxWidth: 'min(85%, 48rem)' }}>
+        <form onSubmit={handleSubmit} className="mx-auto w-full" style={{ maxWidth: 'min(85%, 48rem)' }}>
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
               <Input
