@@ -110,6 +110,7 @@ export function MyWallet() {
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [showFreeOfferModal, setShowFreeOfferModal] = useState(false);
   const t = translations[language];
 
   const handleOpenPortal = async () => {
