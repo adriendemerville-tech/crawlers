@@ -582,14 +582,14 @@ export function generateExpertReportHTML(
         kp?.main_keywords?.length
           ? `
             <div style="margin-top: 6px;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">Top mots-clés (volume, difficulté, position)</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">${rl.topKeywords}</div>
               <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
                 <thead style="background: #f9fafb;">
                   <tr>
-                    <th style="padding: 10px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Mot-clé</th>
-                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Volume</th>
-                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Difficulté</th>
-                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">Position</th>
+                    <th style="padding: 10px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; font-size: 12px;">${rl.keyword}</th>
+                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">${rl.volume}</th>
+                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">${rl.difficulty}</th>
+                    <th style="padding: 10px 12px; text-align: center; border-bottom: 1px solid #e5e7eb; font-size: 12px;">${rl.position}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -610,7 +610,7 @@ export function generateExpertReportHTML(
               </table>
             </div>
           `
-          : `<p style="color: #374151; line-height: 1.6; margin: 0;">Aucune donnée de mots-clés n'a été fournie pour ce rapport.</p>`;
+          : `<p style="color: #374151; line-height: 1.6; margin: 0;">${rl.noKeywordData}</p>`;
 
       const quickWins =
         kp?.quick_wins?.length
