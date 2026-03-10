@@ -338,7 +338,63 @@ export function generateExpertReportHTML(
         </div>
       `}
 
-      ${result.recommendations?.length > 0 ? `
+      ${/* NEW: 3 Technical Metrics in PDF */(() => {
+        const html = result.rawData?.htmlAnalysis as any;
+        const techSections: string[] = [];
+
+        if (html?.darkSocial) {
+          const ds = html.darkSocial;
+          const scoreColor = ds.score >= 80 ? '#166534' : ds.score >= 50 ? '#92400e' : '#991b1b';
+          techSections.push(`
+            <div style="background: #f0f9ff; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #0ea5e9; margin-bottom: 10px; break-inside: avoid;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 13px; font-weight: 600; color: #0c4a6e;">Dark Social Readiness</div>
+                <span style="font-size: 16px; font-weight: 700; color: ${scoreColor};">${ds.score}/100</span>
+              </div>
+              ${statusRow('og:title', !!ds.ogTitle, ds.ogTitle ? String(ds.ogTitle).substring(0, 50) : '—')}
+              ${statusRow('og:description', !!ds.ogDescription, ds.ogDescription ? String(ds.ogDescription).substring(0, 50) + '…' : '—')}
+              ${statusRow('og:image', !!ds.ogImage)}
+              ${statusRow('twitter:card', !!ds.twitterCard, ds.twitterCard || '—')}
+            </div>`);
+        }
+
+        if (html?.freshnessSignals) {
+          const fs = html.freshnessSignals;
+          const labelBgs: Record<string, string> = { fresh: '#dcfce7', acceptable: '#fef3c7', stale: '#fee2e2' };
+          const labelColors: Record<string, string> = { fresh: '#166534', acceptable: '#92400e', stale: '#991b1b' };
+          techSections.push(`
+            <div style="background: #f0fdf4; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #059669; margin-bottom: 10px; break-inside: avoid;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 13px; font-weight: 600; color: #065f46;">${language === 'fr' ? 'Preuve de Vie (Freshness)' : 'Freshness Signals'}</div>
+                <span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${labelBgs[fs.label] || '#f3f4f6'}; color: ${labelColors[fs.label] || '#374151'};">${fs.label}</span>
+              </div>
+              ${statusRow('Score', fs.score >= 50, fs.score + '/100')}
+              ${statusRow('Last-Modified', !!fs.lastModifiedDate, fs.lastModifiedDate || '—')}
+              ${statusRow(language === 'fr' ? 'Année courante' : 'Current year', fs.hasCurrentYearMention, fs.currentYearFound || '—')}
+            </div>`);
+        }
+
+        if (html?.conversionFriction) {
+          const cf = html.conversionFriction;
+          const frictionBgs: Record<string, string> = { low: '#dcfce7', optimal: '#dcfce7', high: '#fee2e2' };
+          const frictionColors: Record<string, string> = { low: '#166534', optimal: '#166534', high: '#991b1b' };
+          techSections.push(`
+            <div style="background: #faf5ff; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #7c3aed; margin-bottom: 10px; break-inside: avoid;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="font-size: 13px; font-weight: 600; color: #5b21b6;">${language === 'fr' ? 'Friction de Conversion' : 'Conversion Friction'}</div>
+                <span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${frictionBgs[cf.frictionLevel] || '#f3f4f6'}; color: ${frictionColors[cf.frictionLevel] || '#374151'};">${cf.frictionLevel}</span>
+              </div>
+              ${statusRow(language === 'fr' ? 'Formulaires' : 'Forms', cf.formsCount > 0, String(cf.formsCount))}
+              ${statusRow(language === 'fr' ? 'Champs / formulaire' : 'Fields / form', cf.avgFieldsPerForm <= 3, cf.avgFieldsPerForm.toFixed(1))}
+              ${statusRow('CTAs', cf.ctaCount > 0, String(cf.ctaCount))}
+              ${statusRow('CTA above fold', cf.ctaAboveFold)}
+            </div>`);
+        }
+
+        return techSections.length > 0 ? `<div style="font-size: 14px; font-weight: 600; color: #1f2937; margin: 18px 0 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${language === 'fr' ? 'Signaux de Qualité du Contenu' : 'Content Quality Signals'}</div>${techSections.join('')}` : '';
+      })()}
+
+
         <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin: 18px 0 8px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px;">${t.recommendations}</div>
         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
           <thead>
