@@ -231,11 +231,18 @@ export function AnalyticsDashboard() {
         return true;
       }) || [];
 
+      // Fetch real signup count from profiles (30 days, excluding admins)
+      const { count: realSignupCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', thirtyDaysAgo)
+        .not('user_id', 'in', `(${adminUserIds.join(',')})`);
+
       // Calculate stats
       const newStats: AnalyticsStats = {
         totalVisits: events.filter(e => e.event_type === 'page_view').length,
         signupClicks: events.filter(e => e.event_type === 'signup_click').length,
-        signupCompleted: events.filter(e => e.event_type === 'signup_complete').length,
+        signupCompleted: realSignupCount || 0,
         reportClicks: events.filter(e => e.event_type === 'report_button_click').length,
         freeAnalysisCrawlers: events.filter(e => e.event_type === 'free_analysis_crawlers').length,
         expertAuditLaunched: events.filter(e => e.event_type === 'expert_audit_launched').length,
