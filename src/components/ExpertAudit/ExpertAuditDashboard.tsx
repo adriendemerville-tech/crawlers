@@ -890,78 +890,168 @@ export function ExpertAuditDashboard() {
     } catch (error) {
       console.error('Strategic audit error:', error);
       trackAnalyticsEvent('error', { eventData: { type: 'strategic_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
-      // Auto-retry once silently instead of showing error toast
+      
+      // Step 1: Try to recover result from server-side cache (audit may have completed but connection was cut)
+      const domain = new URL(normalizedUrl).hostname;
+      const cacheKey = `strategic_${domain}_${normalizedUrl}`;
+      let recovered = false;
+      
       try {
-        console.log('Strategic audit: auto-retrying...');
-        const retryData = await invokeWithTimeout('audit-strategique-ia', {
-          url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
-          cachedContext: useCachedContext ? strategicCachedContext : null,
-        });
-        if (!retryData?.success) throw new Error(retryData?.error || 'Retry failed');
+        console.log('Strategic audit: checking server-side cache for completed result...');
+        // Wait a few seconds for server to finish saving
+        await new Promise(r => setTimeout(r, 5000));
+        
+        const { data: cached } = await supabase
+          .from('audit_cache')
+          .select('result_data')
+          .eq('cache_key', cacheKey)
+          .gt('expires_at', new Date().toISOString())
+          .maybeSingle();
+        
+        if (cached?.result_data) {
+          const cachedResult = cached.result_data as any;
+          if (cachedResult?.success && cachedResult?.data) {
+            console.log('Strategic audit: ✅ Recovered completed result from cache!');
+            const data = cachedResult;
+            const keywordPositioning = data.data?.keyword_positioning ?? data.data?.keywordPositioning ?? null;
+            const marketDataSummary = data.data?.market_data_summary ?? data.data?.marketDataSummary ?? null;
 
-        const keywordPositioning = retryData?.data?.keyword_positioning ?? retryData?.data?.keywordPositioning ?? null;
-        const marketDataSummary = retryData?.data?.market_data_summary ?? retryData?.data?.marketDataSummary ?? null;
+            const strategicData: ExpertAuditResult = {
+              url: normalizedUrl,
+              domain,
+              totalScore: data.data.overallScore * 2,
+              maxScore: 200,
+              scores: {
+                performance: { score: 0, maxScore: 40, psiPerformance: 0, lcp: 0, cls: 0, tbt: 0, fcp: 0 },
+                technical: { score: 0, maxScore: 50, psiSeo: 0, httpStatus: 200, isHttps: true },
+                semantic: { score: 0, maxScore: 60, hasTitle: false, titleLength: 0, hasMetaDesc: false, metaDescLength: 0, h1Count: 0, hasUniqueH1: false, wordCount: 0 },
+                aiReady: { score: 0, maxScore: 30, hasSchemaOrg: false, schemaTypes: [], hasRobotsTxt: false, robotsPermissive: false },
+                security: { score: 0, maxScore: 20, isHttps: true, safeBrowsingOk: true, threats: [] },
+              },
+              recommendations: [],
+              rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
+              scannedAt: data.data.scannedAt || new Date().toISOString(),
+              strategicAnalysis: {
+                introduction: data.data.introduction,
+                brand_authority: data.data.brand_authority,
+                social_signals: data.data.social_signals,
+                market_intelligence: data.data.market_intelligence,
+                competitive_landscape: data.data.competitive_landscape,
+                geo_readiness: data.data.geo_readiness,
+                executive_roadmap: data.data.executive_roadmap,
+                keyword_positioning: keywordPositioning,
+                market_data_summary: marketDataSummary,
+                brand_identity: data.data.brand_identity,
+                market_positioning: data.data.market_positioning,
+                geo_score: data.data.geo_score,
+                strategic_roadmap: data.data.strategic_roadmap,
+                executive_summary: data.data.executive_summary,
+                brandPerception: data.data.brandPerception,
+                geoAnalysis: data.data.geoAnalysis,
+                llmVisibility: data.data.llmVisibility,
+                testQueries: data.data.testQueries,
+                executiveSummary: data.data.executiveSummary,
+                overallScore: data.data.overallScore || data.data.geo_readiness?.citability_score || data.data.geo_score?.score,
+                hallucinationCorrections: hallucinationCorrections || null,
+                llm_visibility_raw: data.data.llm_visibility_raw || null,
+                quotability: data.data.quotability || null,
+                summary_resilience: data.data.summary_resilience || null,
+                lexical_footprint: data.data.lexical_footprint || null,
+                expertise_sentiment: data.data.expertise_sentiment || null,
+                red_team: data.data.red_team || null,
+              },
+            };
 
-        const strategicData: ExpertAuditResult = {
-          url: normalizedUrl,
-          domain: new URL(normalizedUrl).hostname,
-          totalScore: retryData.data.overallScore * 2,
-          maxScore: 200,
-          scores: {
-            performance: { score: 0, maxScore: 40, psiPerformance: 0, lcp: 0, cls: 0, tbt: 0, fcp: 0 },
-            technical: { score: 0, maxScore: 50, psiSeo: 0, httpStatus: 200, isHttps: true },
-            semantic: { score: 0, maxScore: 60, hasTitle: false, titleLength: 0, hasMetaDesc: false, metaDescLength: 0, h1Count: 0, hasUniqueH1: false, wordCount: 0 },
-            aiReady: { score: 0, maxScore: 30, hasSchemaOrg: false, schemaTypes: [], hasRobotsTxt: false, robotsPermissive: false },
-            security: { score: 0, maxScore: 20, isHttps: true, safeBrowsingOk: true, threats: [] },
-          },
-          recommendations: [],
-          rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
-          scannedAt: retryData.data.scannedAt || new Date().toISOString(),
-          strategicAnalysis: {
-            introduction: retryData.data.introduction,
-            brand_authority: retryData.data.brand_authority,
-            social_signals: retryData.data.social_signals,
-            market_intelligence: retryData.data.market_intelligence,
-            competitive_landscape: retryData.data.competitive_landscape,
-            geo_readiness: retryData.data.geo_readiness,
-            executive_roadmap: retryData.data.executive_roadmap,
-            keyword_positioning: keywordPositioning,
-            market_data_summary: marketDataSummary,
-            brand_identity: retryData.data.brand_identity,
-            market_positioning: retryData.data.market_positioning,
-            geo_score: retryData.data.geo_score,
-            strategic_roadmap: retryData.data.strategic_roadmap,
-            executive_summary: retryData.data.executive_summary,
-            brandPerception: retryData.data.brandPerception,
-            geoAnalysis: retryData.data.geoAnalysis,
-            llmVisibility: retryData.data.llmVisibility,
-            testQueries: retryData.data.testQueries,
-            executiveSummary: retryData.data.executiveSummary,
-            overallScore: retryData.data.overallScore || retryData.data.geo_readiness?.citability_score || retryData.data.geo_score?.score,
-            hallucinationCorrections: hallucinationCorrections || null,
-            llm_visibility_raw: retryData.data.llm_visibility_raw || null,
-          },
-        };
-
-        setResult(strategicData);
-        setStrategicResult(strategicData);
-        if (retryData.data._cachedContext) {
-          setStrategicCachedContext(retryData.data._cachedContext);
+            setResult(strategicData);
+            setStrategicResult(strategicData);
+            if (data.data._cachedContext) setStrategicCachedContext(data.data._cachedContext);
+            setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+            setHallucinationDiagnosis(null);
+            setPreSummarizedResult(null);
+            summarizeStrategicResult(strategicData, language).then(s => setPreSummarizedResult(s)).catch(() => {});
+            trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
+            fetchStoredCorrections(domain);
+            toast({ title: t.strategicComplete, description: t.strategicDesc2 });
+            recovered = true;
+          }
         }
-        setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
-        setHallucinationDiagnosis(null);
-        // Pre-summarize retry result
-        setPreSummarizedResult(null);
-        summarizeStrategicResult(strategicData, language).then((s) => setPreSummarizedResult(s)).catch(() => {});
-        trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
-        const domain = new URL(normalizedUrl).hostname;
-        fetchStoredCorrections(domain);
-        toast({ title: t.strategicComplete, description: t.strategicDesc2 });
-      } catch (retryError) {
-        console.error('Strategic audit retry also failed:', retryError);
-        toast({
-          title: 'Erreur de chargement',
-        });
+      } catch (cacheErr) {
+        console.warn('Cache recovery failed:', cacheErr);
+      }
+
+      if (!recovered) {
+        // Step 2: Full retry
+        try {
+          console.log('Strategic audit: auto-retrying...');
+          const retryData = await invokeWithTimeout('audit-strategique-ia', {
+            url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
+            cachedContext: useCachedContext ? strategicCachedContext : null,
+          });
+          if (!retryData?.success) throw new Error(retryData?.error || 'Retry failed');
+
+          const keywordPositioning = retryData?.data?.keyword_positioning ?? retryData?.data?.keywordPositioning ?? null;
+          const marketDataSummary = retryData?.data?.market_data_summary ?? retryData?.data?.marketDataSummary ?? null;
+
+          const strategicData: ExpertAuditResult = {
+            url: normalizedUrl,
+            domain: new URL(normalizedUrl).hostname,
+            totalScore: retryData.data.overallScore * 2,
+            maxScore: 200,
+            scores: {
+              performance: { score: 0, maxScore: 40, psiPerformance: 0, lcp: 0, cls: 0, tbt: 0, fcp: 0 },
+              technical: { score: 0, maxScore: 50, psiSeo: 0, httpStatus: 200, isHttps: true },
+              semantic: { score: 0, maxScore: 60, hasTitle: false, titleLength: 0, hasMetaDesc: false, metaDescLength: 0, h1Count: 0, hasUniqueH1: false, wordCount: 0 },
+              aiReady: { score: 0, maxScore: 30, hasSchemaOrg: false, schemaTypes: [], hasRobotsTxt: false, robotsPermissive: false },
+              security: { score: 0, maxScore: 20, isHttps: true, safeBrowsingOk: true, threats: [] },
+            },
+            recommendations: [],
+            rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
+            scannedAt: retryData.data.scannedAt || new Date().toISOString(),
+            strategicAnalysis: {
+              introduction: retryData.data.introduction,
+              brand_authority: retryData.data.brand_authority,
+              social_signals: retryData.data.social_signals,
+              market_intelligence: retryData.data.market_intelligence,
+              competitive_landscape: retryData.data.competitive_landscape,
+              geo_readiness: retryData.data.geo_readiness,
+              executive_roadmap: retryData.data.executive_roadmap,
+              keyword_positioning: keywordPositioning,
+              market_data_summary: marketDataSummary,
+              brand_identity: retryData.data.brand_identity,
+              market_positioning: retryData.data.market_positioning,
+              geo_score: retryData.data.geo_score,
+              strategic_roadmap: retryData.data.strategic_roadmap,
+              executive_summary: retryData.data.executive_summary,
+              brandPerception: retryData.data.brandPerception,
+              geoAnalysis: retryData.data.geoAnalysis,
+              llmVisibility: retryData.data.llmVisibility,
+              testQueries: retryData.data.testQueries,
+              executiveSummary: retryData.data.executiveSummary,
+              overallScore: retryData.data.overallScore || retryData.data.geo_readiness?.citability_score || retryData.data.geo_score?.score,
+              hallucinationCorrections: hallucinationCorrections || null,
+              llm_visibility_raw: retryData.data.llm_visibility_raw || null,
+            },
+          };
+
+          setResult(strategicData);
+          setStrategicResult(strategicData);
+          if (retryData.data._cachedContext) {
+            setStrategicCachedContext(retryData.data._cachedContext);
+          }
+          setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+          setHallucinationDiagnosis(null);
+          setPreSummarizedResult(null);
+          summarizeStrategicResult(strategicData, language).then((s) => setPreSummarizedResult(s)).catch(() => {});
+          trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
+          const retryDomain = new URL(normalizedUrl).hostname;
+          fetchStoredCorrections(retryDomain);
+          toast({ title: t.strategicComplete, description: t.strategicDesc2 });
+        } catch (retryError) {
+          console.error('Strategic audit retry also failed:', retryError);
+          toast({
+            title: 'Erreur de chargement',
+          });
+        }
       }
     } finally {
       setIsStrategicLoading(false);
