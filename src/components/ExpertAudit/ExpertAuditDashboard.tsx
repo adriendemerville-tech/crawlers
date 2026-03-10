@@ -893,20 +893,25 @@ export function ExpertAuditDashboard() {
       
       // Step 1: Try to recover result from server-side cache (audit may have completed but connection was cut)
       const domain = new URL(normalizedUrl).hostname;
+      const cacheKey = `strategic_${domain}_${normalizedUrl}`;
       let recovered = false;
       
       try {
         console.log('Strategic audit: checking server-side cache for completed result...');
-        await new Promise(r => setTimeout(r, 3000));
-
-        for (let attempt = 1; attempt <= 3 && !recovered; attempt += 1) {
-          const cachedResult = await invokeWithTimeout('audit-strategique-ia', {
-            url: normalizedUrl,
-            recoverFromCache: true,
-          }, 15000);
-
+        // Wait a few seconds for server to finish saving
+        await new Promise(r => setTimeout(r, 5000));
+        
+        const { data: cached } = await supabase
+          .from('audit_cache')
+          .select('result_data')
+          .eq('cache_key', cacheKey)
+          .gt('expires_at', new Date().toISOString())
+          .maybeSingle();
+        
+        if (cached?.result_data) {
+          const cachedResult = cached.result_data as any;
           if (cachedResult?.success && cachedResult?.data) {
-            console.log(`Strategic audit: ✅ Recovered completed result from cache on attempt ${attempt}`);
+            console.log('Strategic audit: ✅ Recovered completed result from cache!');
             const data = cachedResult;
             const keywordPositioning = data.data?.keyword_positioning ?? data.data?.keywordPositioning ?? null;
             const marketDataSummary = data.data?.market_data_summary ?? data.data?.marketDataSummary ?? null;
@@ -968,8 +973,6 @@ export function ExpertAuditDashboard() {
             fetchStoredCorrections(domain);
             toast({ title: t.strategicComplete, description: t.strategicDesc2 });
             recovered = true;
-          } else if (attempt < 3) {
-            await new Promise(r => setTimeout(r, 2000));
           }
         }
       } catch (cacheErr) {
