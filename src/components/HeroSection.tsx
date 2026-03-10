@@ -284,9 +284,10 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               size="lg" 
               disabled={isLoading || validation.isValidating}
               className={cn(
-                "h-14 px-8 min-w-[122px] transition-shadow duration-500",
+                "h-14 min-w-[122px] transition-shadow duration-500",
                 glowActive && "animate-cta-glow"
               )}
+              style={{ paddingLeft: 7, paddingRight: 7 }}
             >
               {validation.isValidating ? (
                 <>
