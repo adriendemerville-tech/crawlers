@@ -548,10 +548,6 @@ const Index = () => {
         {/* Mobile-only Lexique button */}
         <MobileLexiqueButton />
         
-        <Suspense fallback={<SectionSkeleton />}>
-          <SolutionSection />
-        </Suspense>
-
         {/* Pro Agency CTA Banner */}
         <section className="border-y border-violet-500/20 bg-gradient-to-r from-violet-950/10 via-background to-amber-950/10 py-10">
           <div className="mx-auto max-w-4xl px-4 flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -575,6 +571,10 @@ const Index = () => {
             </Link>
           </div>
         </section>
+
+        <Suspense fallback={<SectionSkeleton />}>
+          <SolutionSection />
+        </Suspense>
 
         <Suspense fallback={<SectionSkeleton />}>
           <NewsCarousel />
