@@ -536,13 +536,10 @@ const Index = () => {
           onSubmit={handleCheck} 
           isLoading={isLoading} 
           activeTab={activeTab}
+          onTabChange={handleTabChange}
+          currentUrl={currentUrl}
         />
         <section aria-label="Outils d'analyse">
-          <ToolTabs 
-            activeTab={activeTab} 
-            onTabChange={handleTabChange}
-            currentUrl={currentUrl}
-          />
           <Suspense fallback={<DashboardSkeleton />}>
             {renderDashboard()}
           </Suspense>
