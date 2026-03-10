@@ -219,7 +219,7 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
 <div class="summary-card">
   <h4>📋 L'essentiel en 30 secondes</h4>
   <ul>
-    <li>Point clé 1 (avec chiffre VÉRIFIÉ et DATE 2026)</li>
+    <li>Point clé 1 (avec chiffre VÉRIFIÉ et DATE 2026 OBLIGATOIRE dans au moins un point)</li>
     <li>Point clé 2</li>
     <li>Point clé 3</li>
     <li>Point clé 4</li>
