@@ -234,48 +234,50 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
           dangerouslySetInnerHTML={{ __html: content.subheadline }}
         />
 
-        {/* 4 Tab Buttons + Search Form — same container for alignment */}
+        {/* Search Form with inline tab bar */}
         <div className="mx-auto w-full text-left" style={{ maxWidth: 'min(85%, 48rem)' }}>
-          <div className="mb-2 flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1">
-            {([
-              { key: 'crawlers' as ToolTab, icon: Bot, label: t.tabs.crawlers },
-              { key: 'geo' as ToolTab, icon: Sparkles, label: t.tabs.geo },
-              { key: 'llm' as ToolTab, icon: Brain, label: t.tabs.llm },
-              { key: 'pagespeed' as ToolTab, icon: Gauge, label: t.tabs.pagespeed },
-            ]).map(({ key, icon: Icon, label }) => (
-              <button
-                key={key}
-                data-tour={`tab-${key}`}
-                onClick={() => onTabChange(key)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
-                  activeTab === key
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-                aria-current={activeTab === key ? 'page' : undefined}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-
-        {/* Search Form */}
         <form onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="relative flex-1">
-              <Input
-                type="text"
-                placeholder=""
-                value={url}
-                onChange={(e) => handleUrlChange(e.target.value)}
-                onBlur={handleUrlBlur}
-                className="h-14 pl-4 pr-12 text-base"
-                required
-                aria-label="URL du site web"
-              />
-              <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1">
+              {/* Tab bar aligned to input width */}
+              <div className="mb-2 flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1">
+                {([
+                  { key: 'crawlers' as ToolTab, icon: Bot, label: t.tabs.crawlers },
+                  { key: 'geo' as ToolTab, icon: Sparkles, label: t.tabs.geo },
+                  { key: 'llm' as ToolTab, icon: Brain, label: t.tabs.llm },
+                  { key: 'pagespeed' as ToolTab, icon: Gauge, label: t.tabs.pagespeed },
+                ]).map(({ key, icon: Icon, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    data-tour={`tab-${key}`}
+                    onClick={() => onTabChange(key)}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
+                      activeTab === key
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                    aria-current={activeTab === key ? 'page' : undefined}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder=""
+                  value={url}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  onBlur={handleUrlBlur}
+                  className="h-14 pl-4 pr-12 text-base"
+                  required
+                  aria-label="URL du site web"
+                />
+                <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              </div>
             </div>
             <Button 
               type="submit" 
