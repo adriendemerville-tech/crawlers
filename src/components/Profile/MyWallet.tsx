@@ -259,6 +259,7 @@ export function MyWallet() {
   // Pro Agency: dedicated subscription page with sub-tabs
   if (isAgencyPro || isAdmin) {
     return (
+      <>
       <div className="space-y-6">
         {subscriptionStatus === 'canceling' && (
           <div className="flex items-center gap-2 mb-4 p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive">
