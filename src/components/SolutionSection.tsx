@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
-import { Search, ClipboardCopy, CheckCircle, ArrowRight } from 'lucide-react';
+import { Search, ClipboardCopy, CheckCircle, ArrowRight, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const translations = {
   fr: {
