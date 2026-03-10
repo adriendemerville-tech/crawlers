@@ -358,14 +358,8 @@ const KNOWN_LOCATIONS: Record<string, { code: number; name: string }> = {
 function extractCoreBusiness(pageContentContext: string): string {
   if (!pageContentContext) return '';
   
-  const titleMatch = pageContentContext.match(/Titre="([^"?]+)/);
-  const h1Match = pageContentContext.match(/H1="([^"?]+)/);
-  const descMatch = pageContentContext.match(/Desc="([^"?]+)/);
-  
-  const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
+  const texts = extractMetadataTexts(pageContentContext);
   if (texts.length === 0) return '';
-  
-  const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
   
   const bigrams: string[] = [];
   const allWords: string[] = [];
