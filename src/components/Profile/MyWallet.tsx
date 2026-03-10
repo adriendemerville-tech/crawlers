@@ -481,7 +481,8 @@ export function MyWallet() {
           </div>
         </DialogContent>
       </Dialog>
-    </>;
+      </>
+    );
   }
 
   // Free users: full wallet with credits, upsell, and transaction history
