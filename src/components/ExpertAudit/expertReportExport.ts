@@ -704,9 +704,9 @@ export function generateExpertReportHTML(
       ` : ''}
 
       ${strategic?.brand_authority ? sectionCard(
-        language === 'fr' ? 'Autorité de Marque' : language === 'es' ? 'Autoridad de Marca' : 'Brand Authority',
+        rl.brandAuthority,
         '#7c3aed', '#faf5ff',
-        `${labelValue(language === 'fr' ? "Force de l'entité" : 'Entity Strength', strategic.brand_authority.entity_strength || '—')}
+        `${labelValue(rl.entityStrength, strategic.brand_authority.entity_strength || '—')}
          ${labelValue('Thought Leadership', (strategic.brand_authority.thought_leadership_score || 0) + '/100')}
          ${textBlock(strategic.brand_authority.dna_analysis || '')}`) : ''}
 
