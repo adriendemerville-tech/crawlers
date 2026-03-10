@@ -16,6 +16,7 @@ interface PatienceCardsProps {
 }
 
 export function PatienceCards({ isActive }: PatienceCardsProps) {
+  const isMobile = useIsMobile();
   const [newsCard, setNewsCard] = useState<PatienceCard | null>(null);
   const [tipCard, setTipCard] = useState<PatienceCard | null>(null);
   const [showNews, setShowNews] = useState(false);
