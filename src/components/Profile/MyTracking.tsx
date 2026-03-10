@@ -743,7 +743,7 @@ export function MyTracking() {
                   )}
 
                   {/* Google Search Console Chart */}
-                  <Card className={!gscConnected ? 'border-dashed opacity-60' : ''}>
+                  <Card className={!gscConnected ? 'border-dashed opacity-60 pointer-events-auto' : ''}>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
                         <Search className="h-4 w-4" />
