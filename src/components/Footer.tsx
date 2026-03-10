@@ -236,14 +236,14 @@ function FooterComponent() {
                   {toolsLinks.map((link) => (
                     <li key={link.href}>
                       {link.isRoute ? (
-                        <Link
+                        <SmartLink
                           to={link.href}
                           className={`group flex items-start gap-2 text-sm transition-colors ${link.gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                           title={link.description}
                         >
                           <link.icon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${link.gold ? 'text-amber-500' : ''}`} />
                           <span>{link.label}</span>
-                        </Link>
+                        </SmartLink>
                       ) : (
                         <a 
                           href={link.href}
