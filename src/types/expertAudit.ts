@@ -195,6 +195,8 @@ export interface SocialSignals {
   proof_sources: SocialProofSource[];
   thought_leadership: ThoughtLeadership;
   sentiment: SentimentAnalysis;
+  founder_geo_mismatch?: boolean;
+  founder_geo_country?: string;
 }
 
 // NEW: Market Intelligence
