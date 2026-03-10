@@ -52,7 +52,7 @@ function calculateDynamicPrice(fixesMetadata: FixMetadata[], totalAdvancedFixes:
   return price;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
