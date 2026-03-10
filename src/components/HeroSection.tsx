@@ -280,10 +280,6 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
         </div>
         </form>
 
-        <p className="mt-3 text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto text-center">
-          {language === 'es' ? 'Más de 150 criterios SEO/GEO analizados en cada auditoría completa, por unos pocos euros.' : language === 'en' ? 'Over 150 SEO/GEO criteria analyzed per full audit, for just a few euros.' : 'Plus de 150 critères SEO/GEO analysés à chaque audit complet, pour quelques euros.'}
-        </p>
-
         <UrlValidationBanner
           suggestedUrl={validation.suggestedUrl}
           urlNotFound={validation.urlNotFound}
@@ -295,7 +291,34 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
           onIgnoreSuggestion={handleIgnoreSuggestion}
         />
 
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+        {/* 4 Tab Buttons */}
+        <div className="mt-6 inline-flex flex-wrap justify-center gap-1 rounded-lg border border-border bg-card p-1">
+          {([
+            { key: 'crawlers' as ToolTab, icon: Bot, label: t.tabs.crawlers },
+            { key: 'geo' as ToolTab, icon: Sparkles, label: t.tabs.geo },
+            { key: 'llm' as ToolTab, icon: Brain, label: t.tabs.llm },
+            { key: 'pagespeed' as ToolTab, icon: Gauge, label: t.tabs.pagespeed },
+          ]).map(({ key, icon: Icon, label }) => (
+            <button
+              key={key}
+              data-tour={`tab-${key}`}
+              onClick={() => onTabChange(key)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-all sm:px-4 sm:py-2",
+                activeTab === key
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+              aria-current={activeTab === key ? 'page' : undefined}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* 3 Green Bullets */}
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-success" />
             <span>Dopé à l'IA</span>
@@ -310,10 +333,27 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
             <div className="h-2 w-2 rounded-full bg-success" />
             <span>{t.hero.trust.instant}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-success" />
-            <span>{t.hero.trust.free}</span>
-          </div>
+        </div>
+
+        {/* "Plus de 150 critères" */}
+        <p className="mt-4 text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto text-center">
+          {language === 'es' ? 'Más de 150 criterios SEO/GEO analizados en cada auditoría completa, por unos pocos euros.' : language === 'en' ? 'Over 150 SEO/GEO criteria analyzed per full audit, for just a few euros.' : 'Plus de 150 critères SEO/GEO analysés à chaque audit complet, pour quelques euros.'}
+        </p>
+
+        {/* Expert Audit Button */}
+        <div className="mt-4 flex justify-center" data-tour="audit-expert">
+          <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}` : '/audit-expert'}>
+            <Button
+              variant="outline"
+              size="lg"
+              className="gap-2 bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 border-amber-400 border-2 px-6 py-3 text-base shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
+            >
+              <FileSearch className="h-5 w-5 text-primary" />
+              <span className="font-bold text-foreground">
+                {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
+              </span>
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
