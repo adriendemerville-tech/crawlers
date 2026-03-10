@@ -196,24 +196,23 @@ function ArticlePageComponent() {
   useEffect(() => {
     if (!slug) return;
     
-    // Récupérer les métadonnées spécifiques ou construire à partir des données statiques
     const seoOverride = ARTICLE_SEO_OVERRIDES[slug];
     
     if (seoOverride) {
-      // Utiliser les métadonnées optimisées manuellement
       forceMetaTags(slug, seoOverride.title, seoOverride.description, seoOverride.ogTitle);
     } else if (staticArticle) {
-      // Fallback sur les données de l'article statique
       const title = `${staticArticle.title[language] || staticArticle.title.fr} | Crawlers.fr`;
       const description = staticArticle.description[language] || staticArticle.description.fr;
       forceMetaTags(slug, title, description);
+    } else if (dbArticle) {
+      // Articles auto-générés depuis la DB — SEO dynamique
+      const title = `${dbArticle.title} | Crawlers.fr`;
+      const description = dbArticle.excerpt || dbArticle.title;
+      forceMetaTags(slug, title, description);
     }
     
-    // Cleanup: on ne restore pas les anciennes valeurs car la navigation SPA gère ça
-    return () => {
-      // Optionnel: reset au démontage si nécessaire
-    };
-  }, [slug, language, staticArticle]);
+    return () => {};
+  }, [slug, language, staticArticle, dbArticle]);
 
   useEffect(() => {
     async function fetchDbArticle() {
