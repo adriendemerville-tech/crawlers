@@ -1418,6 +1418,83 @@ F. FRAÎCHEUR & IA: 17.Fraîcheur contenus 18.Complexité Schema.org 19.Formats 
 G. E-E-A-T: 22.Signaux E-E-A-T 23.Densité données 24.Knowledge Graph 25.Études de cas
 H. MONITORING: 26.Monitoring LLM (GA4 referrers IA) 27.Fichier llms.txt`;
 
+// ==================== TOOLS DATA → MARKDOWN (token optimizer) ====================
+
+function formatToolsDataToMarkdown(toolsData: ToolsData): string {
+  const lines: string[] = [];
+
+  // --- CRAWLERS ---
+  if (toolsData.crawlers) {
+    const c = toolsData.crawlers;
+    lines.push('## CRAWLERS');
+    if (c.overallScore != null) lines.push(`Score: ${c.overallScore}/100`);
+    if (c.bots && Array.isArray(c.bots)) {
+      for (const b of c.bots) {
+        if (b.name) lines.push(`- ${b.name}: ${b.isAllowed ? '✅' : '❌'}${b.crawlDelay ? ` delay=${b.crawlDelay}` : ''}`);
+      }
+    }
+    if (c.recommendations && Array.isArray(c.recommendations)) {
+      lines.push(`Recs: ${c.recommendations.slice(0, 5).join('; ')}`);
+    }
+  }
+
+  // --- GEO ---
+  if (toolsData.geo) {
+    const g = toolsData.geo;
+    lines.push('## GEO');
+    if (g.overallScore != null) lines.push(`Score: ${g.overallScore}/100`);
+    if (g.factors && Array.isArray(g.factors)) {
+      for (const f of g.factors) {
+        if (f.name) lines.push(`- ${f.name}: ${f.score ?? f.status ?? '?'}${f.details ? ` (${String(f.details).substring(0, 80)})` : ''}`);
+      }
+    }
+    if (g.recommendations && Array.isArray(g.recommendations)) {
+      lines.push(`Recs: ${g.recommendations.slice(0, 5).join('; ')}`);
+    }
+  }
+
+  // --- LLM ---
+  if (toolsData.llm) {
+    const l = toolsData.llm;
+    lines.push('## LLM');
+    if (l.overallScore != null) lines.push(`Score: ${l.overallScore}/100`);
+    if (l.brandMentioned != null) lines.push(`Brand mentioned: ${l.brandMentioned}`);
+    if (l.citationScore != null) lines.push(`Citation: ${l.citationScore}`);
+    if (l.sentimentScore != null) lines.push(`Sentiment: ${l.sentimentScore}`);
+    if (l.hallucinationRisk != null) lines.push(`Hallucination risk: ${l.hallucinationRisk}`);
+    if (l.models && Array.isArray(l.models)) {
+      for (const m of l.models) {
+        if (m.name) lines.push(`- ${m.name}: mentioned=${m.brandMentioned ?? '?'}, sentiment=${m.sentiment ?? '?'}`);
+      }
+    }
+    if (l.recommendations && Array.isArray(l.recommendations)) {
+      lines.push(`Recs: ${l.recommendations.slice(0, 5).join('; ')}`);
+    }
+  }
+
+  // --- PAGESPEED ---
+  if (toolsData.pagespeed) {
+    const p = toolsData.pagespeed;
+    lines.push('## PAGESPEED');
+    if (p.overallScore != null) lines.push(`Score: ${p.overallScore}/100`);
+    if (p.lcp != null) lines.push(`LCP: ${p.lcp}ms`);
+    if (p.fcp != null) lines.push(`FCP: ${p.fcp}ms`);
+    if (p.cls != null) lines.push(`CLS: ${p.cls}`);
+    if (p.tbt != null) lines.push(`TBT: ${p.tbt}ms`);
+    if (p.si != null) lines.push(`SI: ${p.si}ms`);
+    if (p.ttfb != null) lines.push(`TTFB: ${p.ttfb}ms`);
+    if (p.performance != null) lines.push(`Performance: ${p.performance}`);
+    if (p.accessibility != null) lines.push(`Accessibility: ${p.accessibility}`);
+    if (p.seo != null) lines.push(`SEO: ${p.seo}`);
+    if (p.bestPractices != null) lines.push(`Best Practices: ${p.bestPractices}`);
+    if (p.recommendations && Array.isArray(p.recommendations)) {
+      lines.push(`Recs: ${p.recommendations.slice(0, 5).join('; ')}`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
 function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo): string {
   let marketSection = '';
   
@@ -1455,7 +1532,6 @@ Manquants: ${missing.length > 0 ? missing.map(kw => `"${kw.keyword}"(${kw.volume
     lines.push(`- Liens sociaux détectés dans le HTML: ${eeatSignals.socialLinksCount} lien(s)`);
     if (eeatSignals.detectedSocialUrls.length > 0) {
       lines.push(`  URLs sociales trouvées: ${eeatSignals.detectedSocialUrls.slice(0, 10).join(', ')}`);
-      // Distinguish personal LinkedIn profiles from company pages
       const personalLI = eeatSignals.linkedInUrls.filter(u => /linkedin\.com\/in\//i.test(u));
       const companyLI = eeatSignals.linkedInUrls.filter(u => /linkedin\.com\/company\//i.test(u));
       if (personalLI.length > 0) lines.push(`  └─ Profils LinkedIn PERSONNELS (incarnation humaine): ${personalLI.join(', ')}`);
@@ -1480,16 +1556,14 @@ INSTRUCTION: Cite "${founderInfo.name}" nommément dans thought_leadership.analy
     founderSection = `\n⚠️ ATTENTION: Un dirigeant homonyme a été trouvé mais il est basé dans un autre pays (${founderInfo.detectedCountry}). NE PAS le mentionner. Ne cite aucun fondateur/dirigeant pour l'analyse thought_leadership — indique "unknown" pour founder_authority.`;
   }
 
-  // Compact JSON serialization (no pretty-print to save memory)
+  // Convert tools data to compact Markdown instead of raw JSON
+  const toolsMarkdown = formatToolsDataToMarkdown(toolsData);
+
   return `Analyse du site "${url}" (domaine: ${domain}).
-${pageContentContext}
 ${pageContentContext}
 ${eeatSection}${founderSection}
 ${marketSection}
-CRAWLERS:${JSON.stringify(toolsData.crawlers)}
-GEO:${JSON.stringify(toolsData.geo)}
-LLM:${JSON.stringify(toolsData.llm)}
-PAGESPEED:${JSON.stringify(toolsData.pagespeed)}
+${toolsMarkdown}
 
 GÉNÈRE UN JSON avec cette structure:
 {"introduction":{"presentation":"4-5 phrases","strengths":"4-5 phrases","improvement":"4-5 phrases","competitors":["Leader","Concurrent","Challenger"]},
