@@ -187,7 +187,7 @@ export function AEOScoreCard({ result }: AEOScoreCardProps) {
 
   const criteria = computeAEOCriteria(result, language);
   const passedCount = criteria.filter(c => c.passed).length;
-  const score = passedCount * 10; // 10 criteria = 100 max
+  const score = Math.round((passedCount / 8) * 100); // 8 criteria = 100 max
 
   const strokeWidth = 10;
   const size = 140;
