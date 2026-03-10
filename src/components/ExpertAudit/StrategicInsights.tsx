@@ -175,6 +175,9 @@ export function StrategicInsights({
           {/* Mots clés (doit apparaître entre Écosystème Concurrentiel et Autorité Sociale & Humaine) */}
           <KeywordModuleSection analysis={analysis} domain={domain} />
 
+          {/* Empreinte Lexicale — avant Autorité Sociale */}
+          {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
+
           {/* Social Signals & Human Authority */}
           {analysis.social_signals && (
             <SocialSignalsCard signals={analysis.social_signals} />
@@ -236,15 +239,17 @@ export function StrategicInsights({
                   selfCorrect
                   strategicAnalysis={analysis}
                 />
+
+                {/* Citabilité & Résilience — avant Matrice de Risque */}
+                {analysis.quotability && <QuotabilityCard data={analysis.quotability} />}
+                {analysis.summary_resilience && <SummaryResilienceCard data={analysis.summary_resilience} />}
+
                 <ZeroClickRiskCard analysis={analysis} domain={domain} />
                 <PriorityContentCard domain={domain} />
               </>
             )}
 
-          {/* NEW: 5 Strategic AI Metrics */}
-          {analysis.quotability && <QuotabilityCard data={analysis.quotability} />}
-          {analysis.summary_resilience && <SummaryResilienceCard data={analysis.summary_resilience} />}
-          {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
+          {/* Remaining Strategic AI Metrics */}
           {analysis.expertise_sentiment && <ExpertiseSentimentCard data={analysis.expertise_sentiment} />}
           {analysis.red_team && <RedTeamCard data={analysis.red_team} />}
 
