@@ -448,53 +448,26 @@ function extractKeywordsFromMetadata(pageContentContext: string, domain: string 
 function generateSeedKeywords(brandName: string, sector: string, pageContentContext: string = '', domain: string = ''): string[] {
   const keywords: string[] = [];
   
-  // CRITICAL: Extract the core business phrase and ensure it's the TOP seed keyword
   if (pageContentContext) {
     const coreBusiness = extractCoreBusiness(pageContentContext);
-    // Extract the most meaningful bigram as the core business keyword
-    const titleMatch = pageContentContext.match(/Titre="([^"?]+)/);
-    const h1Match = pageContentContext.match(/H1="([^"?]+)/);
-    const descMatch = pageContentContext.match(/Desc="([^"?]+)/);
-    const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
-    
-    // Find the best core-business bigram (the "what we do" phrase)
-    const businessStopWords = new Set(['le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux','il','elle','ce','cette','qui','que','son','sa','ses','se','ne','pas','avec','dans','ou','plus','vous','votre','vos','nous','notre','nos','leur','leurs','si','mais','car','donc','ni','comme','entre','chez','vers','très','aussi','bien','encore','tout','tous','même','autre','autres','gratuit','gratuite','meilleur','meilleure','site','web','page','accueil','www','http','https','bienvenue','welcome','home','officiel','official','the','and','for','with','your','our','from','that','this','are','was','will','can','has','have']);
-    
-    // Build domain slugs to exclude
-    const domainSlugs = new Set<string>();
-    if (domain) {
-      const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
-      for (const part of cleanDomain.split('.')) {
-        if (part.length > 2) domainSlugs.add(part);
-      }
-    }
+    const texts = extractMetadataTexts(pageContentContext);
+    const domainSlugs = buildDomainSlugs(domain);
     
     const coreBigrams: string[] = [];
     for (const text of texts) {
-      const cleaned = text.toLowerCase()
-        .replace(/[|–—·:,\.!?]/g, ' ')
-        .replace(/[^\wàâäéèêëïîôùûüÿçœæ\s'-]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-      const words = cleaned.split(' ').filter(w => w.length > 1 && !businessStopWords.has(w) && !domainSlugs.has(w));
+      const words = cleanAndTokenize(text, domainSlugs);
       for (let i = 0; i < words.length - 1; i++) {
         coreBigrams.push(`${words[i]} ${words[i + 1]}`);
       }
     }
     
-    // Add core bigrams FIRST (these are the "what we do" phrases)
     for (const bg of coreBigrams.slice(0, 3)) {
-      if (bg.length > 4 && !keywords.includes(bg)) {
-        keywords.push(bg);
-      }
+      if (bg.length > 4 && !keywords.includes(bg)) keywords.push(bg);
     }
     
-    // Then add remaining metadata keywords
     const metaKeywords = extractKeywordsFromMetadata(pageContentContext, domain);
     for (const mk of metaKeywords) {
-      if (mk.length > 4 && !keywords.includes(mk)) {
-        keywords.push(mk);
-      }
+      if (mk.length > 4 && !keywords.includes(mk)) keywords.push(mk);
     }
   }
   
