@@ -457,7 +457,30 @@ export function MyWallet() {
           </div>
         </Tabs>
       </div>
-    );
+
+      <Dialog open={showFreeOfferModal} onOpenChange={setShowFreeOfferModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-yellow-500" />
+              {language === 'fr' ? 'Offre gratuite active' : language === 'es' ? 'Oferta gratuita activa' : 'Free offer active'}
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              {language === 'fr'
+                ? 'Votre abonnement Pro Agency est actuellement offert. Aucun moyen de paiement n\'est associé à votre compte. Si vous souhaitez modifier votre offre, contactez-nous via le support.'
+                : language === 'es'
+                ? 'Su suscripción Pro Agency es actualmente gratuita. No hay método de pago asociado a su cuenta. Si desea modificar su oferta, contáctenos a través del soporte.'
+                : 'Your Pro Agency subscription is currently free. No payment method is associated with your account. If you wish to change your plan, contact us through support.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end pt-2">
+            <Button variant="outline" onClick={() => setShowFreeOfferModal(false)}>
+              {language === 'fr' ? 'Compris' : language === 'es' ? 'Entendido' : 'Got it'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>;
   }
 
   // Free users: full wallet with credits, upsell, and transaction history
