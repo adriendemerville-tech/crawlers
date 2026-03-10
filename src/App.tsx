@@ -49,6 +49,7 @@ const CGVU = lazy(() => import("./pages/CGVU"));
 const AuditSeoGratuit = lazy(() => import("./pages/AuditSeoGratuit"));
 const AnalyseSiteWebGratuit = lazy(() => import("./pages/AnalyseSiteWebGratuit"));
 const GenerativeEngineOptimization = lazy(() => import("./pages/GenerativeEngineOptimization"));
+const GuideAuditSeo = lazy(() => import("./pages/GuideAuditSeo"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Loading fallback
