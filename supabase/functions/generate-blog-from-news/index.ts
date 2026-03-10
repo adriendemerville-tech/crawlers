@@ -179,7 +179,7 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
   "keywords": "mot-clé 1, mot-clé 2, mot-clé 3, mot-clé 4, mot-clé 5"
 }`;
 
-    console.log("[blog-gen] Step 3: Calling Gemini for article writing...");
+    console.log("[blog-gen] Step 3: Calling Gemini for article writing with tool calling...");
 
     const genRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -192,11 +192,34 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
         messages: [
           {
             role: "system",
-            content: "Tu es un rédacteur SEO/GEO expert. Tu produis du contenu factuel basé exclusivement sur les données de recherche fournies. Tu retournes du JSON valide uniquement.",
+            content: "Tu es un rédacteur SEO/GEO expert. Tu produis du contenu factuel basé exclusivement sur les données de recherche fournies.",
           },
           { role: "user", content: articlePrompt },
         ],
         temperature: 0.6,
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "publish_article",
+              description: "Publish a blog article with SEO-optimized content",
+              parameters: {
+                type: "object",
+                properties: {
+                  title: { type: "string", description: "SEO title < 60 chars" },
+                  slug: { type: "string", description: "URL slug lowercase with dashes, no accents" },
+                  excerpt: { type: "string", description: "Meta description < 155 chars" },
+                  content: { type: "string", description: "Full HTML article content with summary-card and impact-card divs" },
+                  category: { type: "string", enum: ["seo", "geo", "llm", "ia"] },
+                  keywords: { type: "string", description: "Comma-separated keywords" },
+                },
+                required: ["title", "slug", "excerpt", "content", "category", "keywords"],
+                additionalProperties: false,
+              },
+            },
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "publish_article" } },
       }),
     });
 
@@ -207,15 +230,29 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
     }
 
     const genData = await genRes.json();
-    const rawText = genData.choices?.[0]?.message?.content || "";
-    const cleaned = rawText.replace(/```json\n?/g, "").replace(/```/g, "").trim();
-
+    
     let article: any;
-    try {
-      article = JSON.parse(cleaned);
-    } catch {
-      console.error("[blog-gen] Failed to parse JSON:", cleaned.slice(0, 500));
-      throw new Error("Failed to parse AI response as JSON");
+    
+    // Try tool call first
+    const toolCall = genData.choices?.[0]?.message?.tool_calls?.[0];
+    if (toolCall?.function?.arguments) {
+      try {
+        article = JSON.parse(toolCall.function.arguments);
+      } catch {
+        console.error("[blog-gen] Failed to parse tool call arguments");
+      }
+    }
+    
+    // Fallback to content parsing
+    if (!article) {
+      const rawText = genData.choices?.[0]?.message?.content || "";
+      const cleaned = rawText.replace(/```json\n?/g, "").replace(/```/g, "").trim();
+      try {
+        article = JSON.parse(cleaned);
+      } catch {
+        console.error("[blog-gen] Failed to parse JSON fallback:", cleaned.slice(0, 500));
+        throw new Error("Failed to parse AI response");
+      }
     }
 
     if (!article.title || !article.slug || !article.content) {
