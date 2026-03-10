@@ -193,7 +193,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
         </div>
         <div
           ref={embedContainerRef}
-          className="w-full overflow-hidden rounded-[12px]"
+          className="w-full overflow-hidden rounded-[12px] bg-[#282828]"
           aria-label="Playlist Crawlers"
         />
         <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">
