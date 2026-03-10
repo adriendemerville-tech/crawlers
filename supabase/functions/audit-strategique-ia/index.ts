@@ -2230,7 +2230,29 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ═══ POST-PROCESS: Guarantee minimum 5 main_keywords ═══
+    // ═══ POST-PROCESS: Flag geo mismatch on social signals ═══
+    if (founderInfo?.geoMismatch && parsedAnalysis.social_signals) {
+      parsedAnalysis.social_signals.founder_geo_mismatch = true;
+      parsedAnalysis.social_signals.founder_geo_country = founderInfo.detectedCountry;
+      
+      // Remove LinkedIn proof_source entries that reference the mismatched founder
+      if (parsedAnalysis.social_signals.proof_sources) {
+        const beforeCount = parsedAnalysis.social_signals.proof_sources.length;
+        parsedAnalysis.social_signals.proof_sources = parsedAnalysis.social_signals.proof_sources.filter(
+          (s: any) => s.platform !== 'linkedin' || s.presence_level === 'absent'
+        );
+        const removed = beforeCount - parsedAnalysis.social_signals.proof_sources.length;
+        if (removed > 0) {
+          console.log(`👤 ⛔ Removed ${removed} LinkedIn proof_source(s) due to geo mismatch`);
+        }
+      }
+      
+      // Reset founder authority to unknown
+      if (parsedAnalysis.social_signals.thought_leadership) {
+        parsedAnalysis.social_signals.thought_leadership.founder_authority = 'unknown';
+      }
+    }
+
     if (parsedAnalysis.keyword_positioning?.main_keywords) {
       const mainKw = parsedAnalysis.keyword_positioning.main_keywords;
       if (mainKw.length < 5 && marketData?.top_keywords) {
