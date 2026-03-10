@@ -41,6 +41,7 @@ interface StrategicInsightsProps {
   onHallucinationData?: (data: any) => void;
   onCompetitorCorrection?: (corrections: CompetitorCorrections) => void;
   isReanalyzing?: boolean;
+  auditResult?: import('@/types/expertAudit').ExpertAuditResult;
 }
 
 export function StrategicInsights({ 
@@ -50,7 +51,8 @@ export function StrategicInsights({
   siteName = '',
   onHallucinationData,
   onCompetitorCorrection,
-  isReanalyzing = false
+  isReanalyzing = false,
+  auditResult
 }: StrategicInsightsProps) {
   const [showHallucinationModal, setShowHallucinationModal] = useState(false);
   
