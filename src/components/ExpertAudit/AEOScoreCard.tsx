@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { CheckCircle2, XCircle, Mic, BookOpen } from 'lucide-react';
+import { CheckCircle2, XCircle, Mic, Info } from 'lucide-react';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -199,14 +198,14 @@ export function AEOScoreCard({ result }: AEOScoreCardProps) {
     <>
       <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+         <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Mic className="h-4.5 w-4.5 text-primary" />
             </div>
             {t.title}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 -mt-2">
           {/* Subtitle + Score side by side */}
           <div className="flex items-center gap-5">
             <p className="flex-1 text-sm text-muted-foreground leading-relaxed">
@@ -266,16 +265,14 @@ export function AEOScoreCard({ result }: AEOScoreCardProps) {
           </div>
 
           {/* Methodology button */}
-          <div className="flex justify-center">
-            <Button
-              variant="outline"
-              size="sm"
+          <div className="flex justify-end pt-1">
+            <button
               onClick={() => setIsMethodologyOpen(true)}
-              className="gap-2"
+              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
             >
-              <BookOpen className="h-4 w-4" />
+              <Info className="h-3 w-3" />
               {t.methodology}
-            </Button>
+            </button>
           </div>
         </CardContent>
       </Card>
