@@ -167,8 +167,6 @@ function computeAEOCriteria(result: ExpertAuditResult, lang: string): AEOCriteri
     { label: t.criteria.interrogative.label, passed: hasInterrogativeHn, explanation: t.criteria.interrogative.explanation },
     { label: t.criteria.invertedPyramid.label, passed: hasInvertedPyramid, explanation: t.criteria.invertedPyramid.explanation },
     { label: t.criteria.extractable.label, passed: hasExtractableFormats, explanation: t.criteria.extractable.explanation },
-    { label: t.criteria.bold.label, passed: hasBoldEmphasis, explanation: t.criteria.bold.explanation },
-    { label: t.criteria.readability.label, passed: hasGoodReadability, explanation: t.criteria.readability.explanation },
     { label: t.criteria.ttfb.label, passed: hasFastTTFB, explanation: t.criteria.ttfb.explanation },
     { label: t.criteria.domAccess.label, passed: hasDOMAccessibility, explanation: t.criteria.domAccess.explanation },
     { label: t.criteria.eeat.label, passed: hasEEAT, explanation: t.criteria.eeat.explanation },
