@@ -19,6 +19,10 @@ interface DbArticle {
   image_url: string | null;
   published_at: string | null;
   created_at: string;
+  title_en: string | null;
+  title_es: string | null;
+  excerpt_en: string | null;
+  excerpt_es: string | null;
 }
 
 const translations = {
