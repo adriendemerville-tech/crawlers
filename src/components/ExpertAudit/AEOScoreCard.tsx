@@ -21,7 +21,7 @@ interface AEOCriterion {
 const translations = {
   fr: {
     title: 'Score AEO (Answer Engine Optimization)',
-    subtitle: "L'AEO permet d'optimiser votre contenu pour être directement cité comme source par les Intelligences Artificielles (ChatGPT, Perplexity, Google AI Overviews) et les assistants vocaux.",
+    subtitle: "L'AEO vise la 'Position Zéro' de Google : l'encart ultime affichant votre résumé avant les liens classiques.",
     methodology: 'Méthodologie',
     methodologyTitle: 'Méthodologie AEO — Position Zéro & E-E-A-T',
     methodologyDesc: "L'Answer Engine Optimization (AEO) vise à positionner votre contenu comme la réponse de référence dans les moteurs génératifs et les assistants vocaux.",
