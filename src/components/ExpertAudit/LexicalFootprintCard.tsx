@@ -43,16 +43,16 @@ export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
           <div className="relative h-4 w-full rounded-full bg-muted overflow-hidden">
             <div 
               className="absolute left-0 top-0 h-full bg-destructive/60 rounded-l-full transition-all duration-700" 
-              style={{ width: `${data.jargonRatio}%` }} 
+              style={{ width: `${jargonRatio}%` }} 
             />
             <div 
               className="absolute right-0 top-0 h-full bg-success/60 rounded-r-full transition-all duration-700" 
-              style={{ width: `${data.concreteRatio}%` }} 
+              style={{ width: `${concreteRatio}%` }} 
             />
           </div>
           <div className="flex justify-between text-xs font-medium">
-            <span className="text-destructive">{data.jargonRatio}%</span>
-            <span className="text-success">{data.concreteRatio}%</span>
+            <span className="text-destructive">{jargonRatio}%</span>
+            <span className="text-success">{concreteRatio}%</span>
           </div>
         </div>
 
