@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
 import { Globe, Code, Shield, Brain, CheckCircle2, Target, Link2, Users, Search, Music } from 'lucide-react';
-import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
+
 
 const technicalSteps = [
   { id: 'connect', label: 'Audit Speed et Performances...', icon: Globe },
