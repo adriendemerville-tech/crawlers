@@ -1898,7 +1898,7 @@ Deno.serve(async (req) => {
       };
       marketData = cachedContext.marketData || null;
       rankingOverview = cachedContext.rankingOverview || null;
-      founderInfo = cachedContext.founderInfo || { name: null, profileUrl: null, platform: null, isInfluencer: false };
+      founderInfo = cachedContext.founderInfo || { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
       // When user corrects competitors, skip local competitor search (user overrides)
       localCompetitorData = null;
       // Use cached LLM data
