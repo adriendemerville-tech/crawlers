@@ -234,8 +234,8 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
           dangerouslySetInnerHTML={{ __html: content.subheadline }}
         />
 
-        {/* 4 Tab Buttons + Search Form — same max-width container */}
-        <div className="mx-auto max-w-3xl w-full">
+        {/* 4 Tab Buttons + Search Form — same container for alignment */}
+        <div className="mx-auto w-full" style={{ maxWidth: 'min(85%, 48rem)' }}>
           <div className="mb-2 inline-flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1">
             {([
               { key: 'crawlers' as ToolTab, icon: Bot, label: t.tabs.crawlers },
@@ -260,10 +260,9 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               </button>
             ))}
           </div>
-        </div>
 
         {/* Search Form */}
-        <form onSubmit={handleSubmit} className="mx-auto w-full" style={{ maxWidth: 'min(85%, 48rem)' }}>
+        <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
               <Input
@@ -305,6 +304,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
             </Button>
         </div>
         </form>
+        </div>
 
         <UrlValidationBanner
           suggestedUrl={validation.suggestedUrl}
