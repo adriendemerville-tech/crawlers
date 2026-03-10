@@ -125,16 +125,47 @@ export async function fetchArticles(
     
     const articles: NewsArticle[] = data.articles;
     
+    // ─── Merge blog articles from DB into carousel ───
+    try {
+      const { data: blogData } = await supabase
+        .from('blog_articles')
+        .select('slug, title, excerpt, image_url, published_at, created_at')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(5);
+
+      if (blogData && blogData.length > 0) {
+        for (const blog of blogData) {
+          const blogAsNews: NewsArticle = {
+            id: `blog-${blog.slug}`,
+            title: blog.title,
+            summary: blog.excerpt || '',
+            url: `/blog/${blog.slug}`,
+            imageUrl: blog.image_url || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80',
+            category: 'GEO',
+            source: { id: 'crawlers', name: 'Crawlers.fr', url: 'https://crawlers.fr', trustScore: 99, lastCrawled: new Date().toISOString() },
+            publishedAt: blog.published_at || blog.created_at,
+            relevanceScore: 95,
+            keywords: ['SEO', 'GEO', 'LLM'],
+          };
+          articles.unshift(blogAsNews);
+        }
+      }
+    } catch (e) {
+      console.error('Error fetching blog articles for carousel:', e);
+    }
+
     // Appliquer le scoring de priorité basé sur la whitelist
     const maxAgeMs = MAX_ARTICLE_AGE_DAYS * 24 * 60 * 60 * 1000;
     
     const processedArticles = articles
       .filter(article => {
+        // Blog articles always pass age filter
+        if (article.id.startsWith('blog-')) return true;
         const articleAge = now - new Date(article.publishedAt).getTime();
         return articleAge <= maxAgeMs;
       })
       .map(article => {
-        // Chercher si la source existe dans la whitelist pour appliquer son trustScore
         const whitelistedSource = whitelist.sources.find(
           s => s.name.toLowerCase() === article.source.name.toLowerCase() ||
                article.source.url.includes(s.url.replace('https://', '').replace('http://', ''))
