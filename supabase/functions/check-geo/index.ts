@@ -3,11 +3,7 @@ import { getGeoTranslations, parseLanguage, type Language } from '../_shared/tra
 import { assertSafeUrl } from '../_shared/ssrf.ts';
 import { fetchAndRenderPage } from '../_shared/renderPage.ts';
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from '../_shared/cors.ts';
 
 // ============================================================================
 // INTERFACES EXPERT
