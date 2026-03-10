@@ -199,14 +199,14 @@ export function AEOScoreCard({ result }: AEOScoreCardProps) {
     <>
       <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+         <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
               <Mic className="h-4.5 w-4.5 text-primary" />
             </div>
             {t.title}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 -mt-2">
           {/* Subtitle + Score side by side */}
           <div className="flex items-center gap-5">
             <p className="flex-1 text-sm text-muted-foreground leading-relaxed">
