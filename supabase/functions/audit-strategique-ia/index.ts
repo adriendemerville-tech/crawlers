@@ -424,36 +424,11 @@ function detectBusinessContext(domain: string, pageContentContext: string = ''):
 
 function extractKeywordsFromMetadata(pageContentContext: string, domain: string = ''): string[] {
   const extracted: string[] = [];
-  const titleMatch = pageContentContext.match(/Titre="([^"?]+)/);
-  const h1Match = pageContentContext.match(/H1="([^"?]+)/);
-  const descMatch = pageContentContext.match(/Desc="([^"?]+)/);
-  
-  const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
-  
-  const stopWords = new Set(['le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux','il','elle','ce','cette','qui','que','son','sa','ses','se','ne','pas','avec','dans','ou','plus','vous','votre','vos','nous','notre','nos','leur','leurs','mon','ma','mes','ton','ta','tes','si','mais','car','donc','ni','comme','entre','chez','vers','très','aussi','bien','encore','tout','tous','même','autre','autres','quel','quelle','quels','quelles','chaque','quelque','certains','plusieurs','aucun','tel','telle','tels','telles','gratuit','gratuite','meilleur','meilleure','site','web','page','accueil','www','http','https','calcul','calculer','outil','service','solution','application','app','logiciel','plateforme']);
-  
-  // Build a set of domain-derived slugs to filter out (e.g. "limova", "limovaai")
-  const domainSlugs = new Set<string>();
-  if (domain) {
-    const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
-    const parts = cleanDomain.split('.');
-    for (const part of parts) {
-      if (part.length > 2) domainSlugs.add(part);
-    }
-    domainSlugs.add(cleanDomain.replace(/\./g, ''));
-    if (parts.length > 0) domainSlugs.add(parts[0]);
-  }
+  const texts = extractMetadataTexts(pageContentContext);
+  const domainSlugs = buildDomainSlugs(domain);
   
   for (const text of texts) {
-    const cleaned = text.toLowerCase()
-      .replace(/[|–—·:]/g, ' ')
-      .replace(/[^\wàâäéèêëïîôùûüÿçœæ\s-]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    
-    const words = cleaned.split(' ').filter(w => 
-      w.length > 2 && !stopWords.has(w) && !domainSlugs.has(w)
-    );
+    const words = cleanAndTokenize(text, domainSlugs).filter(w => w.length > 2);
     
     // Prioritize bigrams and trigrams (market-intent phrases)
     for (let i = 0; i < words.length - 2; i++) {
@@ -462,7 +437,6 @@ function extractKeywordsFromMetadata(pageContentContext: string, domain: string 
     for (let i = 0; i < words.length - 1; i++) {
       extracted.push(`${words[i]} ${words[i + 1]}`);
     }
-    // Individual words only if long enough to be meaningful
     for (const word of words) {
       if (word.length >= 5) extracted.push(word);
     }
