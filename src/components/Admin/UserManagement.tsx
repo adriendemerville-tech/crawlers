@@ -248,9 +248,14 @@ export function UserManagement() {
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
-                    <TableRow key={user.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setKpiUser(user); setKpiModalOpen(true); }}>
+                    <TableRow key={user.id} className="group cursor-pointer hover:bg-muted/50" onClick={() => { setKpiUser(user); setKpiModalOpen(true); }}>
                       <TableCell className="font-medium">
-                        {user.first_name} {user.last_name}
+                        <div className="flex items-center gap-2">
+                          {user.first_name} {user.last_name}
+                          {adminUserIds.has(user.user_id) && (
+                            <Badge variant="outline" className="text-xs border-primary text-primary">Admin</Badge>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell className="text-center">
@@ -263,6 +268,15 @@ export function UserManagement() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant={adminUserIds.has(user.user_id) ? 'default' : 'outline'}
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => toggleAdmin(user.user_id)}
+                            title={adminUserIds.has(user.user_id) ? 'Retirer admin' : 'Rendre admin'}
+                          >
+                            <ShieldCheck className="h-4 w-4" />
+                          </Button>
                           <Dialog open={creditDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                             setCreditDialogOpen(open);
                             if (open) setSelectedUser(user);
