@@ -318,34 +318,18 @@ function extractCoreBusiness(pageContentContext: string): string {
   const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
   if (texts.length === 0) return '';
   
-  const stopWords = new Set([
-    'le','la','les','de','des','du','un','une','et','est','en','pour','par','sur','au','aux',
-    'il','elle','ce','cette','qui','que','son','sa','ses','se','ne','pas','avec','dans','ou',
-    'plus','vous','votre','vos','nous','notre','nos','leur','leurs','mon','ma','mes','ton','ta','tes',
-    'si','mais','car','donc','ni','comme','entre','chez','vers','très','aussi','bien','encore',
-    'tout','tous','même','autre','autres','chaque','quelque',
-    'gratuit','gratuite','meilleur','meilleure','site','web','page','accueil','www','http','https',
-    'the','and','for','with','your','our','from','that','this','are','was','will','can','has','have',
-    'bienvenue','welcome','home','officiel','official',
-  ]);
+  const texts = [titleMatch?.[1], h1Match?.[1], descMatch?.[1]].filter(Boolean) as string[];
   
-  // Extract meaningful bigrams from ALL text sources (best for business intent)
   const bigrams: string[] = [];
   const allWords: string[] = [];
   for (const text of texts) {
-    const cleaned = text.toLowerCase()
-      .replace(/[|–—·:,\.!?]/g, ' ')
-      .replace(/[^\wàâäéèêëïîôùûüÿçœæ\s'-]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    const words = cleaned.split(' ').filter(w => w.length > 1 && !stopWords.has(w));
+    const words = cleanAndTokenize(text);
     allWords.push(...words);
     for (let i = 0; i < words.length - 1; i++) {
       bigrams.push(`${words[i]} ${words[i + 1]}`);
     }
   }
   
-  // The core business = unique meaningful words combined
   const uniqueWords = [...new Set(allWords)];
   const coreBusiness = uniqueWords.slice(0, 8).join(' ');
   
