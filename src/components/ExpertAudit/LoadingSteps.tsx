@@ -217,7 +217,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
         <iframe
           ref={iframeRef}
           style={{ borderRadius: '12px' }}
-          src={`https://open.spotify.com/embed/track/${randomTrackId}?utm_source=generator&theme=0`}
+          src={`https://open.spotify.com/embed/track/${currentTrackId}?utm_source=generator&theme=0`}
           width="100%"
           height="152"
           frameBorder="0"
