@@ -260,9 +260,9 @@ export default function Methodologie() {
           'Metodología de auditoría SEO & GEO — Crawlers.fr'
         )} />
         <meta property="og:description" content={t3(language,
-          'Plus de 60 points d\'audit : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, résilience contenu, red teaming et code correctif.',
-          '60+ audit points: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, content resilience, red teaming and corrective code.',
-          'Más de 60 puntos de auditoría: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, resiliencia de contenido, red teaming y código correctivo.'
+          'Plus de 150 points d\'audit : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, résilience contenu, red teaming et code correctif.',
+          '150+ audit points: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, content resilience, red teaming and corrective code.',
+          'Más de 150 puntos de auditoría: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, resiliencia de contenido, red teaming y código correctivo.'
         )} />
         <meta property="og:url" content="https://crawlers.fr/methodologie" />
         <meta property="og:type" content="article" />
