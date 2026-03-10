@@ -165,16 +165,9 @@ Saludos`,
     </Card>
   );
 
-  if (isInternal) {
-    return (
-      <Link to={article.url} {...wrapperProps}>
-        {cardContent}
-      </Link>
-    );
-  }
-
+  // All carousel links open in new tab
   return (
-    <a href={article.url} target="_blank" rel="noopener noreferrer" {...wrapperProps}>
+    <a href={isInternal ? `https://crawlers.fr${article.url}` : article.url} target="_blank" rel="noopener noreferrer" {...wrapperProps}>
       {cardContent}
     </a>
   );

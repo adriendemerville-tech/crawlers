@@ -11,11 +11,16 @@ interface HtmlContentRendererProps {
  */
 function HtmlContentRendererComponent({ html, className = '' }: HtmlContentRendererProps) {
   // Nettoyer le HTML pour la sécurité basique
-  // Note: Pour une sécurité renforcée, utiliser DOMPurify en production
   const sanitizedHtml = html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/on\w+="[^"]*"/gi, '')
-    .replace(/on\w+='[^']*'/gi, '');
+    .replace(/on\w+='[^']*'/gi, '')
+    // Force all links to open in new tab
+    .replace(/<a\s+(?![^>]*target=)/gi, '<a target="_blank" rel="noopener noreferrer" ')
+    .replace(/<a\s+([^>]*?)(?<!target=["'][^"']*["'])>/gi, (match) => {
+      if (match.includes('target=')) return match;
+      return match.replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
+    });
 
   return (
     <div 
