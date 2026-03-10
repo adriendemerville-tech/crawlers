@@ -1245,10 +1245,77 @@ interface FounderInfo {
   profileUrl: string | null;
   platform: string | null;
   isInfluencer: boolean;
+  geoMismatch: boolean;
+  detectedCountry: string | null;
 }
 
-async function searchFounderProfile(domain: string): Promise<FounderInfo> {
-  const result: FounderInfo = { name: null, profileUrl: null, platform: null, isInfluencer: false };
+// Countries that should match the target site's TLD/location
+const COUNTRY_KEYWORDS: Record<string, string[]> = {
+  'france': ['france', 'paris', 'lyon', 'marseille', 'toulouse', 'bordeaux', 'lille', 'nantes', 'strasbourg', 'nice', 'rennes', 'montpellier', 'île-de-france', 'french'],
+  'belgium': ['belgium', 'belgique', 'bruxelles', 'brussels', 'anvers', 'antwerp', 'liège', 'gand', 'ghent', 'belgian'],
+  'switzerland': ['switzerland', 'suisse', 'schweiz', 'zürich', 'zurich', 'genève', 'geneva', 'bern', 'berne', 'lausanne', 'swiss'],
+  'canada': ['canada', 'montréal', 'montreal', 'toronto', 'vancouver', 'québec', 'quebec', 'ottawa', 'canadian'],
+  'germany': ['germany', 'deutschland', 'berlin', 'munich', 'münchen', 'hamburg', 'frankfurt', 'köln', 'german'],
+  'spain': ['spain', 'españa', 'madrid', 'barcelona', 'valencia', 'sevilla', 'spanish'],
+  'italy': ['italy', 'italia', 'roma', 'rome', 'milan', 'milano', 'italian'],
+  'united kingdom': ['united kingdom', 'uk', 'london', 'manchester', 'birmingham', 'edinburgh', 'british', 'england', 'scotland', 'wales'],
+};
+
+// Foreign countries to detect mismatch (not the target country)
+const FOREIGN_COUNTRY_MARKERS: Record<string, string> = {
+  'états-unis': 'usa', 'united states': 'usa', 'usa': 'usa', 'new york': 'usa', 'san francisco': 'usa', 'silicon valley': 'usa', 'los angeles': 'usa', 'seattle': 'usa', 'austin': 'usa', 'boston': 'usa', 'chicago': 'usa', 'miami': 'usa',
+  'india': 'india', 'inde': 'india', 'mumbai': 'india', 'bangalore': 'india', 'bengaluru': 'india', 'delhi': 'india', 'hyderabad': 'india',
+  'china': 'china', 'chine': 'china', 'beijing': 'china', 'shanghai': 'china', 'shenzhen': 'china',
+  'japan': 'japan', 'japon': 'japan', 'tokyo': 'japan',
+  'brazil': 'brazil', 'brésil': 'brazil', 'são paulo': 'brazil',
+  'australia': 'australia', 'australie': 'australia', 'sydney': 'australia', 'melbourne': 'australia',
+  'nigeria': 'nigeria', 'lagos': 'nigeria',
+  'south africa': 'south_africa', 'afrique du sud': 'south_africa', 'johannesburg': 'south_africa', 'cape town': 'south_africa',
+  'morocco': 'morocco', 'maroc': 'morocco', 'casablanca': 'morocco', 'rabat': 'morocco',
+  'tunisia': 'tunisia', 'tunisie': 'tunisia', 'tunis': 'tunisia',
+  'algeria': 'algeria', 'algérie': 'algeria', 'alger': 'algeria',
+  'dubai': 'uae', 'abu dhabi': 'uae', 'émirats': 'uae', 'uae': 'uae',
+  'singapore': 'singapore', 'singapour': 'singapore',
+  'israel': 'israel', 'israël': 'israel', 'tel aviv': 'israel',
+  'russia': 'russia', 'russie': 'russia', 'moscow': 'russia', 'moscou': 'russia',
+  'south korea': 'south_korea', 'corée du sud': 'south_korea', 'seoul': 'south_korea',
+  'mexico': 'mexico', 'mexique': 'mexico',
+  'argentina': 'argentina', 'argentine': 'argentina', 'buenos aires': 'argentina',
+  'colombia': 'colombia', 'colombie': 'colombia', 'bogota': 'colombia',
+};
+
+/**
+ * Geo-verification: checks if a LinkedIn founder's detected location matches the target company's country.
+ * Returns { mismatch: true, detectedCountry } if the founder appears to be in a different country.
+ */
+function verifyFounderGeo(linkedinSnippet: string, targetLocation: string): { mismatch: boolean; detectedCountry: string | null } {
+  const snippetLower = linkedinSnippet.toLowerCase();
+  const targetLower = targetLocation.toLowerCase();
+  
+  // Check if the snippet mentions the TARGET country — if yes, no mismatch
+  const targetKeywords = COUNTRY_KEYWORDS[targetLower] || COUNTRY_KEYWORDS['france'] || [];
+  const matchesTarget = targetKeywords.some(kw => snippetLower.includes(kw));
+  if (matchesTarget) {
+    return { mismatch: false, detectedCountry: null };
+  }
+  
+  // Check if the snippet mentions a FOREIGN country
+  for (const [marker, country] of Object.entries(FOREIGN_COUNTRY_MARKERS)) {
+    if (snippetLower.includes(marker)) {
+      // Make sure the target country is not the same as the detected foreign country
+      const targetCountryId = Object.entries(COUNTRY_KEYWORDS).find(([k]) => k === targetLower)?.[0];
+      if (country !== targetCountryId) {
+        return { mismatch: true, detectedCountry: country };
+      }
+    }
+  }
+  
+  // No foreign country detected — assume OK (benefit of the doubt)
+  return { mismatch: false, detectedCountry: null };
+}
+
+async function searchFounderProfile(domain: string, targetLocation: string = 'france'): Promise<FounderInfo> {
+  const result: FounderInfo = { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return result;
   
   const domainClean = domain.replace(/^www\./, '');
@@ -1277,7 +1344,9 @@ async function searchFounderProfile(domain: string): Promise<FounderInfo> {
         if (organic) {
           let name = organic.title?.split(/\s*[-–|]\s*/)?.[0]?.trim() || null;
           if (name) name = name.replace(/\s*\(.*\)/, '').replace(/\s*@.*/, '').trim();
-          return { name, url: organic.url, platform, title: organic.title };
+          // Capture the snippet for geo-verification
+          const snippet = organic.description || organic.title || '';
+          return { name, url: organic.url, platform, title: organic.title, snippet };
         }
         return null;
       } catch { return null; }
@@ -1296,7 +1365,22 @@ async function searchFounderProfile(domain: string): Promise<FounderInfo> {
     result.platform = best!.platform;
     result.isInfluencer = results.length >= 1;
     
-    console.log(`👤 Founder found: ${result.name} on ${result.platform} → ${result.profileUrl}`);
+    // ═══ GEO-VERIFICATION LOOP ═══
+    // If the best result is LinkedIn, verify the founder's country matches the target company
+    if (best!.platform === 'linkedin' && best!.snippet) {
+      const geoCheck = verifyFounderGeo(best!.snippet, targetLocation);
+      if (geoCheck.mismatch) {
+        console.log(`👤 ⚠️ GEO MISMATCH: Founder "${result.name}" appears to be in "${geoCheck.detectedCountry}" but target company is in "${targetLocation}"`);
+        console.log(`👤 → LinkedIn card will be HIDDEN to avoid confusion with a homonymous foreign entity`);
+        result.geoMismatch = true;
+        result.detectedCountry = geoCheck.detectedCountry;
+        // Do NOT clear name/profileUrl — keep them for logging, but the flag prevents display
+      } else {
+        console.log(`👤 ✅ Geo-verification OK: founder location consistent with target "${targetLocation}"`);
+      }
+    }
+    
+    console.log(`👤 Founder found: ${result.name} on ${result.platform} → ${result.profileUrl}${result.geoMismatch ? ' [GEO MISMATCH]' : ''}`);
     if (results.length >= 2) {
       console.log(`👤 Multi-platform: ${results.map(r => r!.platform).join(', ')}`);
     }
