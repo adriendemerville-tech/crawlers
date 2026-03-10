@@ -129,17 +129,25 @@ export async function fetchArticles(
     try {
       const { data: blogData } = await supabase
         .from('blog_articles')
-        .select('slug, title, excerpt, image_url, published_at, created_at')
+        .select('slug, title, title_en, title_es, excerpt, excerpt_en, excerpt_es, image_url, published_at, created_at')
         .eq('status', 'published')
         .order('published_at', { ascending: false })
         .limit(5);
 
       if (blogData && blogData.length > 0) {
         for (const blog of blogData) {
+          // Pick translated title/excerpt based on current language
+          const blogTitle = lang === 'en' ? (blog.title_en || blog.title) 
+                          : lang === 'es' ? (blog.title_es || blog.title) 
+                          : blog.title;
+          const blogExcerpt = lang === 'en' ? (blog.excerpt_en || blog.excerpt) 
+                            : lang === 'es' ? (blog.excerpt_es || blog.excerpt) 
+                            : blog.excerpt;
+
           const blogAsNews: NewsArticle = {
             id: `blog-${blog.slug}`,
-            title: blog.title,
-            summary: blog.excerpt || '',
+            title: blogTitle,
+            summary: blogExcerpt || '',
             url: `/blog/${blog.slug}`,
             imageUrl: blog.image_url || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80',
             category: 'GEO',
