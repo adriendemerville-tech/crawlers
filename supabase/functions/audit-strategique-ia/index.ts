@@ -1466,15 +1466,18 @@ Manquants: ${missing.length > 0 ? missing.map(kw => `"${kw.keyword}"(${kw.volume
     eeatSection = lines.join('\n');
   }
 
-  // Inject founder info from SERP discovery
+  // Inject founder info from SERP discovery (SKIP if geo mismatch detected)
   let founderSection = '';
-  if (founderInfo?.name) {
+  if (founderInfo?.name && !founderInfo.geoMismatch) {
     founderSection = `\n👤 FONDATEUR/DIRIGEANT IDENTIFIÉ (via recherche SERP — donnée vérifiée):
 - Nom: ${founderInfo.name}
 - Plateforme principale: ${founderInfo.platform || 'inconnue'}
 - URL profil vérifié: ${founderInfo.profileUrl || 'non trouvé'}
 - Présence sociale: ${founderInfo.isInfluencer ? 'OUI — actif sur les réseaux' : 'NON — pas de présence sociale notable'}
 INSTRUCTION: Cite "${founderInfo.name}" nommément dans thought_leadership.analysis et si pertinent dans l'introduction.${founderInfo.profileUrl ? ` Utilise EXACTEMENT cette URL: ${founderInfo.profileUrl} comme profile_url dans le proof_source correspondant à la plateforme "${founderInfo.platform}".` : ' Ce dirigeant n\'a pas de profil social influent — mentionne-le dans l\'analyse SANS profile_url.'}`;
+  } else if (founderInfo?.geoMismatch) {
+    console.log(`👤 ⛔ Founder "${founderInfo.name}" EXCLUDED from prompt (geo mismatch: ${founderInfo.detectedCountry})`);
+    founderSection = `\n⚠️ ATTENTION: Un dirigeant homonyme a été trouvé mais il est basé dans un autre pays (${founderInfo.detectedCountry}). NE PAS le mentionner. Ne cite aucun fondateur/dirigeant pour l'analyse thought_leadership — indique "unknown" pour founder_authority.`;
   }
 
   // Compact JSON serialization (no pretty-print to save memory)
