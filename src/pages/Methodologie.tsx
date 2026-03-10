@@ -286,9 +286,9 @@ export default function Methodologie() {
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               {t3(language,
-                'Plus de 50 points d\'audit répartis en 8 catégories — de la crawlability des robots IA aux Core Web Vitals, en passant par la citabilité LLM et la génération de code correctif. Voici le périmètre complet de nos analyses.',
-                'Over 50 audit points across 8 categories — from AI bot crawlability to Core Web Vitals, LLM citability and corrective code generation. Here is the full scope of our analysis.',
-                'Más de 50 puntos de auditoría en 8 categorías — desde la crawlability de bots IA hasta Core Web Vitals, citabilidad LLM y generación de código correctivo.'
+                'Plus de 60 points d\'audit répartis en 9 catégories — de la crawlability des robots IA aux Core Web Vitals, en passant par la citabilité LLM, l\'analyse de résilience du contenu et la génération de code correctif. Voici le périmètre complet de nos analyses.',
+                'Over 60 audit points across 9 categories — from AI bot crawlability to Core Web Vitals, LLM citability, content resilience analysis and corrective code generation. Here is the full scope of our analysis.',
+                'Más de 60 puntos de auditoría en 9 categorías — desde la crawlability de bots IA hasta Core Web Vitals, citabilidad LLM, análisis de resiliencia del contenido y generación de código correctivo.'
               )}
             </p>
           </div>
