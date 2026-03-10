@@ -17,6 +17,12 @@ interface DbArticle {
   published_at: string | null;
   created_at: string;
   status: string;
+  title_en: string | null;
+  title_es: string | null;
+  excerpt_en: string | null;
+  excerpt_es: string | null;
+  content_en: string | null;
+  content_es: string | null;
 }
 
 // Métadonnées SEO spécifiques par article (pour override le head)
