@@ -26,7 +26,7 @@ interface HeroSectionProps {
 
 const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 
-function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionProps) {
+function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, currentUrl }: HeroSectionProps) {
   const [url, setUrl] = useState('');
   const { t, language } = useLanguage();
   const validation = useUrlValidation(language);
