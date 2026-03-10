@@ -143,6 +143,21 @@ export default function Methodologie() {
         t3(language, 'Budget publicitaire équivalent estimé', 'Estimated equivalent advertising budget', 'Presupuesto publicitario equivalente estimado'),
       ]
     },
+    {
+      icon: Eye,
+      title: t3(language, 'Analyse de Résilience & Qualité du Contenu', 'Content Resilience & Quality Analysis', 'Análisis de resiliencia y calidad del contenido'),
+      description: t3(language, '8 indicateurs avancés évaluant la robustesse, la citabilité et la crédibilité du contenu face aux moteurs IA', '8 advanced indicators evaluating content robustness, citability and credibility for AI engines', '8 indicadores avanzados evaluando la robustez, citabilidad y credibilidad del contenido'),
+      points: [
+        t3(language, 'Dark Social Readiness : audit des balises OG/Twitter pour le partage social (WhatsApp, Slack, LinkedIn)', 'Dark Social Readiness: OG/Twitter tag audit for social sharing (WhatsApp, Slack, LinkedIn)', 'Dark Social Readiness: auditoría de etiquetas OG/Twitter para compartir en redes sociales'),
+        t3(language, 'Preuve de Vie (Freshness Signals) : fraîcheur du contenu via Last-Modified, balises <time> et mention de l\'année courante', 'Freshness Signals: content freshness via Last-Modified, <time> tags and current year mention', 'Señales de frescura: frescura del contenido via Last-Modified, etiquetas <time> y mención del año actual'),
+        t3(language, 'Friction de Conversion : analyse statique des formulaires, inputs et CTAs above-the-fold', 'Conversion Friction: static analysis of forms, inputs and above-the-fold CTAs', 'Fricción de conversión: análisis estático de formularios, inputs y CTAs above-the-fold'),
+        t3(language, 'Indice de Citabilité (Quotability) : extraction de phrases factuelles autonomes citables par les LLM', 'Quotability Index: extraction of standalone factual sentences citable by LLMs', 'Índice de citabilidad: extracción de frases factuales autónomas citables por LLMs'),
+        t3(language, 'Résilience au Résumé : score de correspondance sémantique entre le H1 et un résumé LLM en 10 mots', 'Summary Resilience: semantic match score between H1 and a 10-word LLM summary', 'Resiliencia al resumen: score de correspondencia semántica entre el H1 y un resumen LLM de 10 palabras'),
+        t3(language, 'Empreinte Lexicale : ratio jargon corporate vs. terminologie concrète et actionnable', 'Lexical Footprint: corporate jargon vs. concrete actionable terminology ratio', 'Huella léxica: ratio de jerga corporativa vs. terminología concreta y accionable'),
+        t3(language, 'Sentiment d\'Expertise (E-E-A-T Tone) : évaluation du ton d\'autorité et des marqueurs d\'expérience de terrain', 'Expertise Sentiment (E-E-A-T Tone): authority tone and first-hand experience markers evaluation', 'Sentimiento de experiencia (E-E-A-T Tone): evaluación del tono de autoridad y marcadores de experiencia directa'),
+        t3(language, 'Red Teaming : identification adversariale des failles logiques, preuves manquantes et objections non adressées', 'Red Teaming: adversarial identification of logical flaws, missing proofs and unaddressed objections', 'Red Teaming: identificación adversarial de fallas lógicas, pruebas faltantes y objeciones no abordadas'),
+      ]
+    },
   ];
 
   const recoCategories: RecoCategory[] = [
