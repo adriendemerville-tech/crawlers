@@ -81,6 +81,7 @@ export function UserManagement() {
 
   useEffect(() => {
     fetchUsers();
+    fetchAdminRoles();
   }, []);
 
   const filteredUsers = users.filter(user => 
