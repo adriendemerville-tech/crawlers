@@ -652,7 +652,7 @@ export function generateExpertReportHTML(
         kp?.recommendations?.length
           ? `
             <div style="margin-top: 14px; padding: 14px; background: #f8fafc; border-radius: 12px; border: 1px solid #e5e7eb;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Recommandations mots-clés</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">${rl.keywordRecommendations}</div>
               <ul style="margin: 0; padding-left: 18px; color: #0f172a; line-height: 1.7;">
                 ${kp.recommendations.slice(0, 4).map((r: any) => `<li>${r}</li>`).join('')}
               </ul>
