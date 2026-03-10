@@ -634,7 +634,7 @@ export function generateExpertReportHTML(
         kp?.content_gaps?.length
           ? `
             <div style="margin-top: 14px;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Gaps de contenu (opportunités)</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">${rl.contentGaps}</div>
               <ul style="margin: 0; padding-left: 18px; color: #334155; line-height: 1.7;">
                 ${kp.content_gaps
                   .slice(0, 4)
