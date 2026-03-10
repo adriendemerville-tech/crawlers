@@ -192,13 +192,13 @@ function FooterComponent() {
               ))}
             </div>
             <div className="mt-4 text-center">
-              <Link
+              <SmartLink
                 to="/blog"
                 className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
                 {t3(language, 'Voir tous les articles', 'View all articles', 'Ver todos los artículos')}
                 <span aria-hidden="true">→</span>
-              </Link>
+              </SmartLink>
             </div>
           </div>
         </section>
