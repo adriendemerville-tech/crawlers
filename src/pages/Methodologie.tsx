@@ -332,7 +332,7 @@ export default function Methodologie() {
         <section className="py-12 px-4 bg-muted/30">
           <div className="mx-auto max-w-6xl">
             <h2 className="text-2xl font-bold text-foreground mb-2 text-center">
-              {t3(language, '9 catégories, plus de 60 points d\'audit', '9 Categories, Over 60 Audit Points', '9 categorías, más de 60 puntos de auditoría')}
+              {t3(language, '9 catégories, plus de 150 points d\'audit', '9 Categories, Over 150 Audit Points', '9 categorías, más de 150 puntos de auditoría')}
             </h2>
             <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
               {t3(language,
