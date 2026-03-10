@@ -263,7 +263,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
         </div>
 
         {/* Search Form */}
-        <form onSubmit={handleSubmit} className="mx-auto max-w-3xl w-full">
+        <form onSubmit={handleSubmit} className="mx-auto w-full" style={{ maxWidth: '85%', maxWidth: 'min(85%, 48rem)' }}>
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
               <Input
@@ -284,7 +284,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               size="lg" 
               disabled={isLoading || validation.isValidating}
               className={cn(
-                "h-14 min-w-[122px] transition-shadow duration-500",
+                "h-14 px-3 min-w-[122px] transition-shadow duration-500",
                 glowActive && "animate-cta-glow"
               )}
             >
