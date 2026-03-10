@@ -23,13 +23,16 @@ import { Link } from 'react-router-dom';
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 const CTA = ({ className = '' }: { className?: string }) => (
-  <div className={`flex justify-center ${className}`}>
+  <div className={`flex flex-col items-center ${className}`}>
     <Link to="/audit-expert">
       <Button variant="hero" size="xl" className="text-lg gap-2">
         Demander un Audit SEO Expert
         <ArrowRight className="h-5 w-5" />
       </Button>
     </Link>
+    <p className="mt-3 text-sm text-muted-foreground text-center max-w-xl">
+      Plus de 150 critères SEO/GEO analysés à chaque audit complet, pour quelques euros.
+    </p>
   </div>
 );
 

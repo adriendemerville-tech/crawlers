@@ -94,7 +94,14 @@ function BlogIndexComponent() {
               </p>
             </div>
 
-            {/* Articles Grid */}
+            {/* Guide SEO/GEO Banner */}
+            <div className="mb-8 p-4 rounded-lg border border-primary/20 bg-primary/5 text-center">
+              <Link to="/guide-audit-seo" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
+                <ArrowRight className="h-4 w-4" />
+                {language === 'es' ? '📘 Leer nuestro Guía Completa del Audit SEO/GEO en 2026' : language === 'en' ? '📘 Read our Complete SEO/GEO Audit Guide for 2026' : '📘 Lire notre Guide Complet de l\'Audit SEO/GEO en 2026'}
+              </Link>
+            </div>
+
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {blogArticles.map((article) => (
                 <Link key={article.slug} to={`/blog/${article.slug}`} className="group">
