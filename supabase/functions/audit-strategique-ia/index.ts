@@ -2348,6 +2348,30 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ═══ POST-PROCESS: Ensure strategic AI metrics always exist ═══
+    if (!parsedAnalysis.quotability) {
+      parsedAnalysis.quotability = { score: 0, quotes: [] };
+      console.log('⚠️ quotability missing from AI response — injected default');
+    }
+    if (!parsedAnalysis.summary_resilience) {
+      // Extract H1 from page content if available
+      const h1Match = (pageContentContext || '').match(/^#\s+(.+)/m) || (pageContentContext || '').match(/H1:\s*(.+)/i);
+      parsedAnalysis.summary_resilience = { score: 0, originalH1: h1Match?.[1] || 'Non détecté', llmSummary: 'Non généré' };
+      console.log('⚠️ summary_resilience missing from AI response — injected default');
+    }
+    if (!parsedAnalysis.lexical_footprint) {
+      parsedAnalysis.lexical_footprint = { jargonRatio: 50, concreteRatio: 50 };
+      console.log('⚠️ lexical_footprint missing from AI response — injected default');
+    }
+    if (!parsedAnalysis.expertise_sentiment) {
+      parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué — données insuffisantes' };
+      console.log('⚠️ expertise_sentiment missing from AI response — injected default');
+    }
+    if (!parsedAnalysis.red_teaming) {
+      parsedAnalysis.red_teaming = { objections: [] };
+      console.log('⚠️ red_teaming missing from AI response — injected default');
+    }
+
     const result = {
       success: true,
       data: {
