@@ -347,7 +347,7 @@ function pct(final: number, baseline: number): number {
 
 // ─── SERVE ──────────────────────────────────────────────────────────────────
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
