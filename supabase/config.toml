@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.generate-patience-cards]
 verify_jwt = false
+
+[functions.generate-blog-from-news]
+verify_jwt = false
