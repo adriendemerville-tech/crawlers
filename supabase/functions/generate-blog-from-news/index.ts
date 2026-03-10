@@ -249,7 +249,7 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
 
 6. **Retourne UNIQUEMENT un JSON valide (pas de markdown) :**
 {
-  "title": "Titre SEO < 60 caractères avec mot-clé principal ET année 2026",
+  "title": "Titre SEO < 60 caractères avec mot-clé principal",
   "slug": "slug-url-minuscules-tirets-sans-accents",
   "excerpt": "Meta description < 155 caractères, accrocheuse, mot-clé inclus",
   "content": "<div class='summary-card'>...</div><h2>...</h2>...<div class='impact-card'>...</div>",
