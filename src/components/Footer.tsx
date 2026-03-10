@@ -297,14 +297,14 @@ function FooterComponent() {
                   {technicalLinks.map((link) => (
                     <li key={link.href}>
                       {link.href.startsWith('/') ? (
-                        <Link
+                        <SmartLink
                           to={link.href}
                           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                           title={link.description}
                         >
                           <FileText className="h-4 w-4 flex-shrink-0" />
                           <span>{link.label}</span>
-                        </Link>
+                        </SmartLink>
                       ) : (
                         <a 
                           href={link.href}
