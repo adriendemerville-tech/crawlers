@@ -355,14 +355,14 @@ function FooterComponent() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <nav aria-label="Mentions légales" className="flex flex-wrap gap-x-6 gap-y-2">
                 {legalLinks.map((link) => (
-                  <Link
+                  <SmartLink
                     key={link.href}
                     to={link.href}
                     className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
                   >
                     <Shield className="h-3 w-3" />
                     {link.label}
-                  </Link>
+                  </SmartLink>
                 ))}
               </nav>
 
