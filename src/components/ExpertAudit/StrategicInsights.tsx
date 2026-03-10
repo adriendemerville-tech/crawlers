@@ -236,8 +236,8 @@ export function StrategicInsights({
                   selfCorrect
                   strategicAnalysis={analysis}
                 />
-                <PriorityContentCard domain={domain} />
                 <ZeroClickRiskCard analysis={analysis} domain={domain} />
+                <PriorityContentCard domain={domain} />
               </>
             )}
 
