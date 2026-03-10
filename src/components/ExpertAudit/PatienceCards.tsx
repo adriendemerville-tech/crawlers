@@ -81,7 +81,7 @@ export function PatienceCards({ isActive }: PatienceCardsProps) {
     };
   }, [isActive]);
 
-  if (!isActive) return null;
+  if (!isActive || isMobile) return null;
 
   return (
     <>
