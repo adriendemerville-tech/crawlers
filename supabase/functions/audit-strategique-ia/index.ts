@@ -1944,7 +1944,7 @@ Deno.serve(async (req) => {
       console.log('\n🏙️ ÉTAPE 1b: Concurrent local + Founder discovery...');
       const [localCompResult, founderResult] = await Promise.allSettled([
         context.locationCode ? findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext) : Promise.resolve(null),
-        searchFounderProfile(domain),
+        searchFounderProfile(domain, context.location),
       ]);
       
       if (localCompResult.status === 'fulfilled' && localCompResult.value) {
@@ -1955,7 +1955,7 @@ Deno.serve(async (req) => {
       
       founderInfo = (founderResult.status === 'fulfilled' && founderResult.value) 
         ? founderResult.value 
-        : { name: null, profileUrl: null, platform: null, isInfluencer: false };
+        : { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
 
       // ==================== ÉTAPE 1c: CHECK-LLM ====================
       if (!toolsData?.llm || toolsData.llm.note) {
