@@ -1454,7 +1454,7 @@ function formatToolsDataToMarkdown(toolsData: ToolsData): string {
   return lines.join('\n');
 }
 
-function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo): string {
+function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo, rankingOverview?: RankingOverview | null): string {
   let marketSection = '';
   
   if (marketData) {
@@ -1467,144 +1467,87 @@ function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, mark
     );
     const missing = marketData.top_keywords.filter(kw => !kw.is_ranked && kw.volume > 200);
     
-    marketSection = `
-📊 DONNÉES MARCHÉ (DataForSEO) - Zone: ${marketData.location_used}, Volume total: ${marketData.total_market_volume}
+    marketSection = `📊 DONNÉES MARCHÉ (DataForSEO) - Zone: ${marketData.location_used}, Volume total: ${marketData.total_market_volume}
 Mots-clés: ${kwList}
 Quick Wins: ${quickWins.length > 0 ? quickWins.map(kw => `"${kw.keyword}" pos${kw.current_rank}(${kw.volume}vol)`).join(', ') : 'Aucun'}
-Manquants: ${missing.length > 0 ? missing.map(kw => `"${kw.keyword}"(${kw.volume}vol)`).join(', ') : 'Aucun'}
-`;
+Manquants: ${missing.length > 0 ? missing.map(kw => `"${kw.keyword}"(${kw.volume}vol)`).join(', ') : 'Aucun'}`;
   } else {
-    marketSection = `⚠️ DataForSEO non disponible - base-toi sur ton analyse du secteur.\n`;
+    marketSection = `⚠️ DataForSEO non disponible - base-toi sur ton analyse du secteur.`;
   }
 
-  // Build E-E-A-T evidence section from crawled HTML signals
+  // Merge ranking overview into market section to avoid keyword duplication
+  if (rankingOverview) {
+    marketSection += `\n📈 ÉTAT DES LIEUX SEO: ${rankingOverview.total_ranked_keywords} mots-clés positionnés, pos moy=${rankingOverview.average_position_global}, Top10 moy=${rankingOverview.average_position_top10 || 'N/A'}, ETV=${rankingOverview.etv}
+Distrib: Top3=${rankingOverview.distribution.top3} Top10=${rankingOverview.distribution.top10} Top20=${rankingOverview.distribution.top20} Top50=${rankingOverview.distribution.top50} Top100=${rankingOverview.distribution.top100}
+Top positionnés: ${rankingOverview.top_keywords.slice(0, 5).map(k => `"${k.keyword}" pos${k.position}(${k.volume}vol)`).join(', ')}`;
+  }
+
+  // Build compact E-E-A-T section
   let eeatSection = '';
   if (eeatSignals) {
-    const lines: string[] = ['🔍 SIGNAUX E-E-A-T DÉTECTÉS SUR LE SITE (données factuelles du crawler):'];
-    lines.push(`- Bios auteur détectées dans le HTML: ${eeatSignals.hasAuthorBio ? `OUI (${eeatSignals.authorBioCount} occurrences)` : 'NON'}`);
-    lines.push(`- Author déclaré en JSON-LD: ${eeatSignals.hasAuthorInJsonLd ? 'OUI' : 'NON'}`);
-    lines.push(`- Entité Person en JSON-LD: ${eeatSignals.hasPerson ? 'OUI' : 'NON'}`);
-    lines.push(`- ProfilePage en JSON-LD: ${eeatSignals.hasProfilePage ? 'OUI' : 'NON'}`);
-    lines.push(`- Organization en JSON-LD: ${eeatSignals.hasOrganization ? 'OUI' : 'NON'}`);
-    lines.push(`- sameAs (liens entités externes): ${eeatSignals.hasSameAs ? 'OUI' : 'NON'}`);
-    lines.push(`- sameAs vers Wikidata: ${eeatSignals.hasWikidataSameAs ? 'OUI ← signal fort d\'autorité institutionnelle' : 'NON'}`);
-    lines.push(`- Liens sociaux détectés dans le HTML: ${eeatSignals.socialLinksCount} lien(s)`);
+    const yn = (v: boolean) => v ? 'OUI' : 'NON';
+    const lines = [`🔍 E-E-A-T: AuthorBio=${yn(eeatSignals.hasAuthorBio)}(${eeatSignals.authorBioCount}), AuthorJsonLD=${yn(eeatSignals.hasAuthorInJsonLd)}, Person=${yn(eeatSignals.hasPerson)}, ProfilePage=${yn(eeatSignals.hasProfilePage)}, Organization=${yn(eeatSignals.hasOrganization)}, sameAs=${yn(eeatSignals.hasSameAs)}, Wikidata=${yn(eeatSignals.hasWikidataSameAs)}, SocialLinks=${eeatSignals.socialLinksCount}, ExpertCitations=${yn(eeatSignals.hasExpertCitations)}, CaseStudies=${yn(eeatSignals.hasCaseStudies)}(${eeatSignals.caseStudySignals})`];
     if (eeatSignals.detectedSocialUrls.length > 0) {
-      lines.push(`  URLs sociales trouvées: ${eeatSignals.detectedSocialUrls.slice(0, 10).join(', ')}`);
+      lines.push(`URLs sociales: ${eeatSignals.detectedSocialUrls.slice(0, 10).join(', ')}`);
       const personalLI = eeatSignals.linkedInUrls.filter(u => /linkedin\.com\/in\//i.test(u));
       const companyLI = eeatSignals.linkedInUrls.filter(u => /linkedin\.com\/company\//i.test(u));
-      if (personalLI.length > 0) lines.push(`  └─ Profils LinkedIn PERSONNELS (incarnation humaine): ${personalLI.join(', ')}`);
-      if (companyLI.length > 0) lines.push(`  └─ Pages LinkedIn ENTREPRISE (entité de marque): ${companyLI.join(', ')}`);
+      if (personalLI.length > 0) lines.push(`LinkedIn perso: ${personalLI.join(', ')}`);
+      if (companyLI.length > 0) lines.push(`LinkedIn entreprise: ${companyLI.join(', ')}`);
     }
-    lines.push(`- Citations d'experts / blockquotes: ${eeatSignals.hasExpertCitations ? 'OUI' : 'NON'}`);
-    lines.push(`- Études de cas / témoignages: ${eeatSignals.hasCaseStudies ? `OUI (${eeatSignals.caseStudySignals} signaux)` : 'NON'}`);
     eeatSection = lines.join('\n');
   }
 
-  // Inject founder info from SERP discovery (SKIP if geo mismatch detected)
+  // Compact founder section
   let founderSection = '';
   if (founderInfo?.name && !founderInfo.geoMismatch) {
-    founderSection = `\n👤 FONDATEUR/DIRIGEANT IDENTIFIÉ (via recherche SERP — donnée vérifiée):
-- Nom: ${founderInfo.name}
-- Plateforme principale: ${founderInfo.platform || 'inconnue'}
-- URL profil vérifié: ${founderInfo.profileUrl || 'non trouvé'}
-- Présence sociale: ${founderInfo.isInfluencer ? 'OUI — actif sur les réseaux' : 'NON — pas de présence sociale notable'}
-INSTRUCTION: Cite "${founderInfo.name}" nommément dans thought_leadership.analysis et si pertinent dans l'introduction.${founderInfo.profileUrl ? ` Utilise EXACTEMENT cette URL: ${founderInfo.profileUrl} comme profile_url dans le proof_source correspondant à la plateforme "${founderInfo.platform}".` : ' Ce dirigeant n\'a pas de profil social influent — mentionne-le dans l\'analyse SANS profile_url.'}`;
+    founderSection = `\n👤 FONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''} Social:${founderInfo.isInfluencer ? 'actif' : 'non'}. Cite ce nom dans thought_leadership.analysis.`;
   } else if (founderInfo?.geoMismatch) {
-    console.log(`👤 ⛔ Founder "${founderInfo.name}" EXCLUDED from prompt (geo mismatch: ${founderInfo.detectedCountry})`);
-    founderSection = `\n⚠️ ATTENTION: Un dirigeant homonyme a été trouvé mais il est basé dans un autre pays (${founderInfo.detectedCountry}). NE PAS le mentionner. Ne cite aucun fondateur/dirigeant pour l'analyse thought_leadership — indique "unknown" pour founder_authority.`;
+    founderSection = `\n⚠️ Fondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner. founder_authority="unknown".`;
   }
 
-  // Convert tools data to compact Markdown instead of raw JSON
   const toolsMarkdown = formatToolsDataToMarkdown(toolsData);
 
-  return `Analyse du site "${url}" (domaine: ${domain}).
+  return `Analyse "${url}" (${domain}).
 ${pageContentContext}
 ${eeatSection}${founderSection}
 ${marketSection}
 ${toolsMarkdown}
 
-GÉNÈRE UN JSON avec cette structure:
-{"introduction":{"presentation":"4-5 phrases","strengths":"4-5 phrases","improvement":"4-5 phrases","competitors":["Leader","Concurrent","Challenger"]},
+GÉNÈRE un JSON:
+{"introduction":{"presentation":"4-5ph","strengths":"4-5ph","improvement":"4-5ph","competitors":["Leader","Concurrent","Challenger"]},
 "brand_authority":{"dna_analysis":"...","thought_leadership_score":0-100,"entity_strength":"dominant|established|emerging|unknown"},
-"social_signals":{"proof_sources":[{"platform":"reddit|x|linkedin|youtube|instagram","presence_level":"strong|moderate|weak|absent","analysis":"TEXTE COMPLET NON TRONQUÉ, maximum 450 caractères","profile_url":"URL COMPLÈTE du profil social détecté (ex: https://linkedin.com/in/..., https://x.com/..., https://instagram.com/...) ou null si inconnu","profile_name":"Nom du profil/personne identifié ou null"}],"thought_leadership":{"founder_authority":"high|moderate|low|unknown","entity_recognition":"...","eeat_score":0-10,"analysis":"..."},"sentiment":{"overall_polarity":"positive|mostly_positive|neutral|mixed|negative","hallucination_risk":"low|medium|high","reputation_vibration":"..."}},
-"market_intelligence":{"sophistication":{"level":1-5,"description":"...","emotional_levers":["1","2","3"]},"semantic_gap":{"current_position":0-100,"leader_position":0-100,"gap_analysis":"...","priority_themes":["thème sémantique manquant 1","thème 2","thème 3","thème 4"],"closing_strategy":"..."}},
-"competitive_landscape":{"leader":{"name":"...","url":"URL ou null","authority_factor":"facteur clé de domination","analysis":"3-4 phrases d'analyse"},"direct_competitor":{"name":"...","url":"URL VALIDE OBLIGATOIRE","authority_factor":"facteur clé de parité/différence","analysis":"3-4 phrases d'analyse"},"challenger":{"name":"...","url":"URL ou null","authority_factor":"facteur de disruption","analysis":"3-4 phrases d'analyse"},"inspiration_source":{"name":"...","url":"URL ou null","authority_factor":"qualité benchmark","analysis":"3-4 phrases d'analyse"}},
-"geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":["..."],"weaknesses":["..."],"recommendations":["..."]},
+"social_signals":{"proof_sources":[{"platform":"reddit|x|linkedin|youtube|instagram","presence_level":"strong|moderate|weak|absent","analysis":"max 450 car","profile_url":"URL exacte des E-E-A-T ou null","profile_name":"ou null"}],"thought_leadership":{"founder_authority":"high|moderate|low|unknown","entity_recognition":"...","eeat_score":0-10,"analysis":"Distingue signaux vérifiés vs inférés"},"sentiment":{"overall_polarity":"positive|mostly_positive|neutral|mixed|negative","hallucination_risk":"low|medium|high","reputation_vibration":"..."}},
+"market_intelligence":{"sophistication":{"level":1-5,"description":"...","emotional_levers":["1","2","3"]},"semantic_gap":{"current_position":0-100,"leader_position":0-100,"gap_analysis":"...","priority_themes":["t1","t2","t3","t4"],"closing_strategy":"..."}},
+"competitive_landscape":{"leader":{"name":"...","url":"...","authority_factor":"...","analysis":"3-4ph"},"direct_competitor":{"name":"...","url":"URL VALIDE","authority_factor":"...","analysis":"3-4ph"},"challenger":{...},"inspiration_source":{...}},
+"geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":[],"weaknesses":[],"recommendations":[]},
 "llm_visibility":{"citation_probability":0-100,"knowledge_graph_presence":"strong|moderate|weak|absent","analysis":"...","test_queries":[{"query":"...","purpose":"...","target_llms":["ChatGPT","Claude","Perplexity"]}]},
-"conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["OBLIGATOIRE: 3-5 reformulations en QUESTIONS NATURELLES directement liées au business/produits/services du site analysé. Ex pour un e-commerce de matériaux: 'Quel isolant naturel choisir pour une maison ancienne ?'. Ne PAS donner d'exemples génériques."],"recommendations":["..."]},
+"conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["3-5 questions naturelles liées au business"],"recommendations":[]},
 "zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
-"priority_content":{"missing_pages":[{"title":"...","rationale":"...","target_keywords":["..."],"expected_impact":"high|medium|low"}],"content_upgrades":[{"page":"...","current_issue":"...","upgrade_strategy":"..."}]},
-"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"Transactionnel|Informatif|Décisionnel|Navigationnel","business_value":"High|Medium|Low","pain_point":"Quel problème l'utilisateur cherche-t-il à résoudre ?","recommended_action":"Action concrète pour se positionner"}}],"quick_wins":[{"keyword":"...","current_rank":0,"volume":0,"action":"..."}],"content_gaps":[{"keyword":"...","volume":0,"priority":"high|medium|low","action":"..."}],"opportunities":["..."],"competitive_gaps":["..."],"recommendations":["..."]},
+"priority_content":{"missing_pages":[{"title":"...","rationale":"...","target_keywords":[],"expected_impact":"high|medium|low"}],"content_upgrades":[{"page":"...","current_issue":"...","upgrade_strategy":"..."}]},
+"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"Transactionnel|Informatif|Décisionnel|Navigationnel","business_value":"High|Medium|Low","pain_point":"...","recommended_action":"..."}}],"quick_wins":[],"content_gaps":[],"opportunities":[],"competitive_gaps":[],"recommendations":[]},
 "market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
-"executive_roadmap":[{"title":"...","prescriptive_action":"Paragraphe 4-5 phrases","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Identité|Contenu|Autorité|Social|Technique","priority":"Prioritaire|Important|Opportunité"}],
-"executive_summary":"3-4 phrases pour CEO/CMO",
-"overallScore":0-100,
-"quotability":{"score":0-100,"quotes":["Phrase citable 1","Phrase citable 2","Phrase citable 3"]},
-"summary_resilience":{"score":0-100,"originalH1":"Le H1 de la page","llmSummary":"Résumé en 10 mots max de la proposition de valeur"},
+"executive_roadmap":[{"title":"...","prescriptive_action":"4-5ph","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Identité|Contenu|Autorité|Social|Technique","priority":"Prioritaire|Important|Opportunité"}],
+"executive_summary":"3-4ph CEO/CMO","overallScore":0-100,
+"quotability":{"score":0-100,"quotes":["phrase citable 1","2","3"]},
+"summary_resilience":{"score":0-100,"originalH1":"...","llmSummary":"10 mots max"},
 "lexical_footprint":{"jargonRatio":0-100,"concreteRatio":0-100},
-"expertise_sentiment":{"rating":1-5,"justification":"1 phrase justificative"},
-"red_team":{"flaws":["Faille logique 1","Preuve manquante 2","Objection non adressée 3"]}}
+"expertise_sentiment":{"rating":1-5,"justification":"1ph"},
+"red_team":{"flaws":["faille 1","preuve manquante 2","objection 3"]}}
 
-INSTRUCTIONS CRITIQUES:
-- UTILISE LES DONNÉES RÉELLES pour keyword_positioning et market_data_summary
-- keyword_positioning.main_keywords: MINIMUM 5 mots-clés OBLIGATOIRES. Chaque mot-clé DOIT avoir un objet "strategic_analysis" avec intent, business_value, pain_point et recommended_action. Si les données DataForSEO contiennent moins de 5 résultats ou des volumes à 0, COMPLÈTE avec des mots-clés pertinents pour le core business avec volumes estimés et rank "Non classé". Un site a TOUJOURS au moins 5 mots-clés stratégiques.
-- INTERDICTION d'inclure le nom de marque dans les mots-clés main_keywords. Les mots-clés doivent être 100% génériques (ex: "agent IA entreprise" et non "Limova agent IA").
-- Pour chaque mot-clé, l'analyse stratégique doit expliquer POURQUOI ce mot-clé rapporte de l'argent (business_value) et quel PROBLÈME l'utilisateur cherche à résoudre (pain_point).
-- executive_roadmap: MINIMUM 6 recommandations narratives dont AU MOINS 1 avec category "Social"
-- Recommandation Social: identifier LE réseau social adapté à la marque, stratégie concrète, impact sur citabilité IA
-- GOLIATH=leader national/international massif. CONCURRENT LOCAL=acteur SERP local avec URL valide obligatoire
-- ⚠️ RÈGLE ABSOLUE CONCURRENT DIRECT: Le "direct_competitor" NE PEUT JAMAIS être le même domaine que le site analysé ("${domain}"). Il doit OBLIGATOIREMENT s'agir d'un AUTRE nom de domaine, positionné plus haut dans les SERPs, avec le même core business ou une fonctionnalité équivalente. Si les données SERP fournissent un concurrent, utilise-le. Sinon, identifie un acteur réel du même secteur.
-- PROFILS SOCIAUX — RÈGLE ABSOLUE ANTI-HALLUCINATION:
-   • Les SEULES URLs autorisées dans "profile_url" sont celles EXACTEMENT listées dans "URLs sociales trouvées" des SIGNAUX E-E-A-T ci-dessus.
-   • Tu ne dois JAMAIS inventer, deviner ou construire une URL de profil social. Si tu n'as pas vu l'URL exacte dans les données crawler, mets profile_url: null.
-   • COPIE-COLLE les URLs telles quelles depuis les signaux E-E-A-T. Ne modifie pas un seul caractère.
-   • Inclus MAXIMUM 2 profils avec profile_url (uniquement parmi les URLs détectées). Les autres plateformes: profile_url: null.
-- IDENTIFICATION DU FONDATEUR/DIRIGEANT: Si tu connais avec CERTITUDE le nom du fondateur ou dirigeant principal de l'entité (grâce à tes connaissances pré-entraînées), cite-le nommément dans thought_leadership.analysis et/ou dans l'introduction. Indique son profil LinkedIn UNIQUEMENT s'il figure dans les URLs détectées. Si tu n'es pas certain de l'identité, écris "fondateur non identifié".
-- SCORING E-E-A-T EVIDENCE-BASED: Le eeat_score (0-10) doit être fondé sur les PREUVES OBSERVABLES fournies dans "SIGNAUX E-E-A-T DÉTECTÉS". 
-   MÉTHODOLOGIE: Commence par compter les signaux factuels détectés, puis enrichis avec tes connaissances pré-entraînées sur la marque (si elle est suffisamment connue).
-   
-   ⚠️ RÉALITÉ DU MARCHÉ: La plupart des entreprises n'ont PAS d'incarnation humaine (pas de fondateur identifiable, pas de Person en JSON-LD). C'est NORMAL. Le E-E-A-T est une donnée NOUVELLE que très peu de sites implémentent. Ne pénalise pas excessivement l'absence d'incarnation.
-   
-   SIGNAUX TECHNIQUES (vérifiés par le crawler — haute fiabilité):
-   +1pt: Author déclaré en JSON-LD (hasAuthorInJsonLd=OUI)
-   +1pt: Person ou ProfilePage en JSON-LD (hasPerson ou hasProfilePage=OUI)
-   +1pt: sameAs vers Wikidata (hasWikidataSameAs=OUI) — signal fort d'autorité institutionnelle
-   +1pt: Organization déclarée en JSON-LD avec données structurées complètes
-   +0.5pt: sameAs présent sans Wikidata (hasSameAs=OUI)
-   +0.5pt: Bios auteur dans le HTML (hasAuthorBio=OUI)
-   +0.5pt: Page LinkedIn entreprise (/company/) détectée — entité de marque
-   +0.5pt: Profils LinkedIn personnels (/in/) détectés — incarnation humaine (BONUS, pas obligatoire)
-   +0.5pt: Citations d'experts / blockquotes détectées
-   +0.5pt: Études de cas / témoignages détectés
-   Base technique max: ~7 points à partir des signaux crawlés
-   
-   SIGNAUX INFÉRÉS (connaissances pré-entraînées — fiabilité variable):
-   +1-3pts: Marque connue nationalement/internationalement (Wikipedia, Knowledge Graph Google, couverture presse)
-   +0.5-1pt: GMB actif avec avis (si la marque est suffisamment connue pour que tu le saches)
-   ATTENTION: Si tu n'es PAS CERTAIN qu'une information est vraie, NE L'AJOUTE PAS au score. Mieux vaut sous-estimer que halluciner.
-   
-   HONNÊTETÉ RADICALE:
-   - Tu NE PEUX PAS vérifier le nombre d'abonnés d'un réseau social → ne prétends JAMAIS connaître ce chiffre
-   - Tu NE PEUX PAS vérifier si un GMB existe → ne l'affirme que pour des marques notoirement connues
-   - Tu NE PEUX PAS vérifier la fraîcheur des publications sociales → ne juge pas l'activité récente
-   - Instagram n'est PAS obligatoire. Ne recommande un réseau que s'il est pertinent pour le secteur d'activité.
-   - Dans "analysis" du thought_leadership, DISTINGUE EXPLICITEMENT: "Signaux vérifiés sur le site: [liste]" vs "Signaux estimés (connaissances pré-entraînées): [liste]"
-   
-   PLAFONDS (ajustés — incarnation NON obligatoire):
-   - Sans AUCUN signal technique détecté (tout à NON): max 3/10 (basé uniquement sur la notoriété inférée)
-   - Avec signaux techniques (Organization, sameAs, etc.) SANS incarnation humaine: max 7/10 (c'est le cas normal)
-   - Avec incarnation (Person/Author/profil personnel) + signaux techniques: 7-9/10
-   - 9-10/10: réservé aux marques à autorité institutionnelle vérifiable (Wikidata sameAs, OU marque de référence que tu peux attester avec certitude)
-- founder_authority: "unknown" si aucun fondateur/dirigeant n'est identifiable dans les signaux E-E-A-T crawlés ni dans tes connaissances. Ne PAS inventer. C'est le cas le plus fréquent.
-- PRÉSENCE SOCIALE: Analyse uniquement les plateformes PERTINENTES pour le secteur. Ne force pas la présence sur Instagram si ce n'est pas pertinent. Les proof_sources doivent refléter la réalité: si un réseau est absent et non pertinent, indique presence_level: "absent" sans le traiter comme un défaut.
-- TEXTE DES CARDS SOCIALES: Le champ "analysis" de chaque proof_source ne doit JAMAIS être tronqué et doit faire MAXIMUM 450 caractères. Rédige un texte complet et concis.
-- 5 NOUVEAUX MODULES (OBLIGATOIRES):
-  • quotability: Extrais jusqu'à 3 phrases factuelles autonomes et citables par un LLM depuis le contenu de la page. +33 pts par citation de haute qualité. Si aucune n'existe, renvoie un tableau vide et score 0.
-  • summary_resilience: Résume la proposition de valeur du corps en 10 mots max. Compare avec le H1 original. Score 0-100 de similarité sémantique.
-  • lexical_footprint: Calcule le ratio jargon corporate vide vs verbes d'action concrets et entités spécifiques. jargonRatio + concreteRatio DOIVENT sommer à 100. Le champ "score" n'est plus utilisé.
-  • expertise_sentiment: Le texte utilise-t-il des marqueurs d'expérience de première main ("Nous avons testé", "Dans notre expérience", "Étude de cas") ? Note de 1 (générique/IA) à 5 (expert de terrain).
-  • red_team: Agis en client sceptique expert. Identifie les 3 plus grandes failles logiques, preuves manquantes ou objections non adressées. Tableau de 3 strings.
+RÈGLES:
+- main_keywords: MIN 5 obligatoires avec strategic_analysis (intent,business_value,pain_point,recommended_action). Complète si <5 résultats DataForSEO. JAMAIS le nom de marque. 100% génériques.
+- executive_roadmap: MIN 6 recs narratives dont ≥1 category "Social"
+- direct_competitor: JAMAIS "${domain}". AUTRE domaine, même core business.
+- profile_url: UNIQUEMENT URLs listées dans E-E-A-T ci-dessus. COPIE-COLLE. Max 2 profils avec URL. Sinon null.
+- Fondateur: cite si CERTAIN. Sinon "fondateur non identifié". founder_authority="unknown" par défaut.
+- eeat_score EVIDENCE-BASED: Crawlé: +1pt(AuthorJsonLD,Person/ProfilePage,Wikidata,Organization) +0.5pt(sameAs,AuthorBio,LI company,LI perso,Citations,CaseStudies). Max tech ~7pts. Inféré: +1-3pts marque connue. Sans signal tech: max 3. Avec tech sans incarnation: max 7. Avec incarnation: 7-9. 10: Wikidata ou marque certaine.
+- NE PRÉTENDS PAS connaître: nb abonnés, existence GMB, fraîcheur posts. analysis thought_leadership: sépare "Signaux vérifiés" vs "Signaux estimés".
+- quotability: phrases factuelles autonomes citables. +33pts/citation.
+- summary_resilience: résumé ≤10 mots. Score similarité H1/contenu.
+- lexical_footprint: jargonRatio+concreteRatio=100.
+- expertise_sentiment: 1(générique/IA) à 5(expert terrain).
+- red_team: 3 failles/objections client sceptique.
+- Base recommandations sur état des lieux SEO réel si fourni.
 - JSON pur, sans virgules traînantes`;
 }
 
