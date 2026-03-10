@@ -34,7 +34,7 @@ Pour convaincre les moteurs génératifs de vous citer, vous devez démontrer vo
 • **Autorité** — Construisez un maillage interne sémantique cohérent et obtenez des citations sur des sources tierces.
 • **Fiabilité** — Utilisez des données structurées Schema.org, maintenez un site rapide et sécurisé.
 
-Les critères AEO mesurent votre capacité à satisfaire ces exigences à travers 10 indicateurs techniques et éditoriaux vérifiables.`,
+Les critères AEO mesurent votre capacité à satisfaire ces exigences à travers 8 indicateurs techniques et éditoriaux vérifiables.`,
     criteria: {
       schema: { label: 'Balisage Schema.org (FAQ, Article)', explanation: "Aide les IA à comprendre instantanément la structure de vos réponses." },
       interrogative: { label: 'Titres Hn interrogatifs', explanation: "Cible les questions exactes posées par les internautes à la voix ou à l'IA." },
