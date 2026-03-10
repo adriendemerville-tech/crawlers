@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, memo, lazy, Suspense, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Zap } from 'lucide-react';
+import { Search, Zap, Bot, Sparkles, Brain, Gauge, FileSearch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { UrlValidationBanner } from '@/components/UrlValidationBanner';
+import { Link } from 'react-router-dom';
 
 // Lazy load framer-motion - only needed after hydration for animations
 const MotionSpan = lazy(() => 
