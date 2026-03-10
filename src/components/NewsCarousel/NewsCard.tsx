@@ -113,56 +113,69 @@ Saludos`,
   };
 
   const cardContent = (
-      <Card className="h-full overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
-        <div className="relative group">
-          <AspectRatio ratio={16 / 9}>
-            <img
-              src={article.imageUrl}
-              alt={article.title}
-              className="object-cover w-full h-full"
-              loading="lazy"
-              decoding="async"
-            />
-          </AspectRatio>
-          <Badge
-            className={`absolute top-3 left-3 ${categoryColors[article.category]} text-white font-semibold border-0`}
-          >
-            {article.category}
-          </Badge>
-          <Button
-            variant="secondary"
-            size="icon"
-            onClick={handleShare}
-            className="absolute top-3 right-3 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-            aria-label="Partager l'article"
-          >
-            <Share2 className="h-4 w-4" aria-hidden="true" />
-          </Button>
-        </div>
+    <Card className="h-full overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
+      <div className="relative group">
+        <AspectRatio ratio={16 / 9}>
+          <img
+            src={article.imageUrl}
+            alt={article.title}
+            className="object-cover w-full h-full"
+            loading="lazy"
+            decoding="async"
+          />
+        </AspectRatio>
+        <Badge
+          className={`absolute top-3 left-3 ${categoryColors[article.category]} text-white font-semibold border-0`}
+        >
+          {article.category}
+        </Badge>
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={handleShare}
+          className="absolute top-3 right-3 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+          aria-label="Partager l'article"
+        >
+          <Share2 className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </div>
+      
+      <CardContent className="p-4 flex flex-col gap-3">
+        <h3 className="font-bold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+          {article.title}
+        </h3>
         
-        <CardContent className="p-4 flex flex-col gap-3">
-          <h3 className="font-bold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors">
-            {article.title}
-          </h3>
-          
-          <p className="text-sm text-muted-foreground line-clamp-3">
-            {article.summary}
-          </p>
-          
-          <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <ExternalLink className="h-3 w-3" />
-              <span className="font-medium truncate max-w-[120px]">
-                {article.source.name}
-              </span>
-            </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              <span>{formatDate(article.publishedAt)}</span>
-            </div>
+        <p className="text-sm text-muted-foreground line-clamp-3">
+          {article.summary}
+        </p>
+        
+        <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <ExternalLink className="h-3 w-3" />
+            <span className="font-medium truncate max-w-[120px]">
+              {article.source.name}
+            </span>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Calendar className="h-3 w-3" />
+            <span>{formatDate(article.publishedAt)}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  if (isInternal) {
+    return (
+      <Link to={article.url} {...wrapperProps}>
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return (
+    <a href={article.url} target="_blank" rel="noopener noreferrer" {...wrapperProps}>
+      {cardContent}
     </a>
   );
 }
