@@ -235,7 +235,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
         />
 
         {/* 4 Tab Buttons + Search Form — same container for alignment */}
-        <div className="mx-auto w-full" style={{ maxWidth: 'min(85%, 48rem)' }}>
+        <div className="mx-auto w-full text-left" style={{ maxWidth: 'min(85%, 48rem)' }}>
           <div className="mb-2 inline-flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1">
             {([
               { key: 'crawlers' as ToolTab, icon: Bot, label: t.tabs.crawlers },
