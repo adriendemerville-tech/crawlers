@@ -475,12 +475,12 @@ export function generateExpertReportHTML(
           techSections.push(`
             <div style="background: #f0fdf4; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #059669; margin-bottom: 10px; break-inside: avoid;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="font-size: 13px; font-weight: 600; color: #065f46;">${language === 'fr' ? 'Preuve de Vie (Freshness)' : 'Freshness Signals'}</div>
+                <div style="font-size: 13px; font-weight: 600; color: #065f46;">${rl.freshness}</div>
                 <span style="padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; background: ${labelBgs[fs.label] || '#f3f4f6'}; color: ${labelColors[fs.label] || '#374151'};">${fs.label}</span>
               </div>
               ${statusRow('Score', fs.score >= 50, fs.score + '/100')}
               ${statusRow('Last-Modified', !!fs.lastModifiedDate, fs.lastModifiedDate || '—')}
-              ${statusRow(language === 'fr' ? 'Année courante' : 'Current year', fs.hasCurrentYearMention, fs.currentYearFound || '—')}
+              ${statusRow(rl.currentYear, fs.hasCurrentYearMention, fs.currentYearFound || '—')}
             </div>`);
         }
 
