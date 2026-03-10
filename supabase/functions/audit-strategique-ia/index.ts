@@ -1509,7 +1509,7 @@ GÉNÈRE UN JSON avec cette structure:
 "overallScore":0-100,
 "quotability":{"score":0-100,"quotes":["Phrase citable 1","Phrase citable 2","Phrase citable 3"]},
 "summary_resilience":{"score":0-100,"originalH1":"Le H1 de la page","llmSummary":"Résumé en 10 mots max de la proposition de valeur"},
-"lexical_footprint":{"score":0-100,"jargonRatio":0-100,"concreteRatio":0-100},
+"lexical_footprint":{"jargonRatio":0-100,"concreteRatio":0-100},
 "expertise_sentiment":{"rating":1-5,"justification":"1 phrase justificative"},
 "red_team":{"flaws":["Faille logique 1","Preuve manquante 2","Objection non adressée 3"]}}
 
@@ -1569,7 +1569,7 @@ INSTRUCTIONS CRITIQUES:
 - 5 NOUVEAUX MODULES (OBLIGATOIRES):
   • quotability: Extrais jusqu'à 3 phrases factuelles autonomes et citables par un LLM depuis le contenu de la page. +33 pts par citation de haute qualité. Si aucune n'existe, renvoie un tableau vide et score 0.
   • summary_resilience: Résume la proposition de valeur du corps en 10 mots max. Compare avec le H1 original. Score 0-100 de similarité sémantique.
-  • lexical_footprint: Calcule le ratio jargon corporate vide vs verbes d'action concrets et entités spécifiques. Score 0-100 (100 = très spécifique et actionnable).
+  • lexical_footprint: Calcule le ratio jargon corporate vide vs verbes d'action concrets et entités spécifiques. jargonRatio + concreteRatio DOIVENT sommer à 100. Le champ "score" n'est plus utilisé.
   • expertise_sentiment: Le texte utilise-t-il des marqueurs d'expérience de première main ("Nous avons testé", "Dans notre expérience", "Étude de cas") ? Note de 1 (générique/IA) à 5 (expert de terrain).
   • red_team: Agis en client sceptique expert. Identifie les 3 plus grandes failles logiques, preuves manquantes ou objections non adressées. Tableau de 3 strings.
 - JSON pur, sans virgules traînantes`;

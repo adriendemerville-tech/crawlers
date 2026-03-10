@@ -7,7 +7,9 @@ interface LexicalFootprintCardProps {
 }
 
 export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
-  const scoreColor = data.score >= 80 ? 'text-success' : data.score >= 50 ? 'text-warning' : 'text-destructive';
+  // Derive score from concreteRatio for consistency (ignore LLM-generated score)
+  const score = data.concreteRatio ?? data.score;
+  const scoreColor = score >= 80 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-destructive';
 
   return (
     <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
@@ -20,7 +22,7 @@ export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
             Empreinte Lexicale
           </div>
           <div className="flex items-center gap-2">
-            <span className={`text-2xl font-bold ${scoreColor}`}>{data.score}</span>
+            <span className={`text-2xl font-bold ${scoreColor}`}>{score}</span>
             <span className="text-sm text-muted-foreground">/100</span>
           </div>
         </CardTitle>
@@ -49,9 +51,9 @@ export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
         </div>
 
         <p className="text-xs text-muted-foreground italic">
-          {data.score >= 80 
+          {score >= 80 
             ? '✓ Contenu spécifique et actionnable — les LLM peuvent extraire des faits précis.'
-            : data.score >= 50
+            : score >= 50
             ? '⚠ Mélange de jargon et de contenu concret — affiner la rédaction pour plus de spécificité.'
             : '✗ Dominance de jargon corporate vide — les LLM peineront à extraire de la valeur.'}
         </p>
