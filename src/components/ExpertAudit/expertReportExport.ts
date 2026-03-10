@@ -616,7 +616,7 @@ export function generateExpertReportHTML(
         kp?.quick_wins?.length
           ? `
             <div style="margin-top: 14px;">
-              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">Quick wins (positions 11–20)</div>
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 6px;">${rl.quickWins}</div>
               <ul style="margin: 0; padding-left: 18px; color: #334155; line-height: 1.7;">
                 ${kp.quick_wins
                   .slice(0, 4)
