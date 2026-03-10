@@ -7,8 +7,14 @@ interface LexicalFootprintCardProps {
 }
 
 export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
-  // Derive score from concreteRatio for consistency (ignore LLM-generated score)
-  const score = data.concreteRatio ?? data.score;
+  // Normalize: ensure jargon + concrete = 100 for visual consistency
+  const rawJargon = data.jargonRatio ?? 0;
+  const rawConcrete = data.concreteRatio ?? 0;
+  const total = rawJargon + rawConcrete;
+  const jargonRatio = total > 0 ? Math.round((rawJargon / total) * 100) : 50;
+  const concreteRatio = 100 - jargonRatio;
+  // Score = concreteRatio for consistency
+  const score = concreteRatio;
   const scoreColor = score >= 80 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-destructive';
 
   return (
