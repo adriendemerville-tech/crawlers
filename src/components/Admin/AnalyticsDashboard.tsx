@@ -196,14 +196,27 @@ export function AnalyticsDashboard() {
       // Limite aux 30 derniers jours pour éviter la surcharge mémoire
       const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
       
-      // Fetch events des 30 derniers jours seulement
-      const { data: allEvents, error } = await supabase
-        .from('analytics_events')
-        .select('event_type, url, created_at, user_id, event_data')
-        .gte('created_at', thirtyDaysAgo)
-        .order('created_at', { ascending: false });
+      // Fetch ALL events des 30 derniers jours avec pagination (contourne la limite 1000)
+      let allEvents: typeof rawPage = [];
+      let page = 0;
+      const PAGE_SIZE = 1000;
+      while (true) {
+        const { data: rawPage, error: pageError } = await supabase
+          .from('analytics_events')
+          .select('event_type, url, created_at, user_id, event_data')
+          .gte('created_at', thirtyDaysAgo)
+          .order('created_at', { ascending: false })
+          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+        
+        if (pageError) throw pageError;
+        if (!rawPage || rawPage.length === 0) break;
+        allEvents = allEvents.concat(rawPage);
+        if (rawPage.length < PAGE_SIZE) break;
+        page++;
+      }
 
-      if (error) throw error;
+      console.log(`📊 Analytics: ${allEvents.length} événements chargés (${page + 1} pages)`);
+
 
       // Filtrer les événements des admins et des IPs exclues
       const events = allEvents?.filter(e => {
