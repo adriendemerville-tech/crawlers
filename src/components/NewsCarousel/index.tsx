@@ -48,10 +48,10 @@ export function NewsCarousel() {
   const [newSourceDiscovered, setNewSourceDiscovered] = useState<string | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const autoScrollRef = useRef<NodeJS.Timeout | null>(null);
+  const autoScrollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounce search to avoid too many API calls
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const loadArticles = useCallback(async (search = '', category = '') => {

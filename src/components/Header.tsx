@@ -101,7 +101,7 @@ export function Header() {
   
   // Hover state for profile dropdown
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check if we're on specific pages
   const isAuditExpertPage = location.pathname === '/audit-expert';
