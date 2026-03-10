@@ -224,9 +224,6 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab }: HeroSectionPro
         <h2 className="mb-4 text-lg font-medium text-primary sm:mb-6 sm:text-2xl">
           {language === 'es' ? 'Auditoría SEO & GEO gratuita — descubra lo que la IA dice de usted.' : language === 'en' ? 'Free SEO & GEO audit — find out what AI says about you.' : 'Audit SEO & GEO gratuit — découvrez ce que l\'IA dit de vous.'}
         </h2>
-        <p className="mb-6 text-sm sm:text-base text-muted-foreground sm:mb-8 max-w-2xl mx-auto">
-          {language === 'es' ? '¡Es hora del chequeo de su sitio e-commerce! Más de 150 criterios SEO/GEO analizados en cada auditoría completa, por unos pocos euros.' : language === 'en' ? 'Time for your e-commerce site check-up! Over 150 SEO/GEO criteria analyzed per full audit, for just a few euros.' : 'C\'est l\'heure du check-up de votre site marchand ! Plus de 150 critères SEO/GEO analysés à chaque audit complet, pour quelques euros.'}
-        </p>
 
         {/* H3 Subheadline - SEO optimized */}
         <p 
