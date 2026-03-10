@@ -439,12 +439,12 @@ export function generateExpertReportHTML(
       <!-- Broken Links -->
       ${brokenCount > 0 ? `
         <div style="background: #fef2f2; padding: 14px 16px; border-radius: 10px; border-left: 3px solid #dc2626; margin-bottom: 16px;">
-          <div style="font-size: 13px; font-weight: 600; color: #dc2626; margin-bottom: 4px;">${language === 'fr' ? 'Liens cassés détectés' : 'Broken Links Detected'}</div>
-          <div style="font-size: 12px; color: #991b1b;">${brokenCount} ${language === 'fr' ? 'lien(s) cassé(s) sur' : 'broken link(s) out of'} ${brokenChecked} ${language === 'fr' ? 'vérifiés' : 'checked'}</div>
+          <div style="font-size: 13px; font-weight: 600; color: #dc2626; margin-bottom: 4px;">${rl.brokenLinksDetected}</div>
+          <div style="font-size: 12px; color: #991b1b;">${brokenCount} ${rl.brokenOf} ${brokenChecked} ${rl.checked}</div>
         </div>
       ` : `
         <div style="background: #f0fdf4; padding: 10px 16px; border-radius: 10px; border-left: 3px solid #059669; margin-bottom: 16px;">
-          <div style="font-size: 12px; color: #166534;">${language === 'fr' ? 'Aucun lien cassé détecté' : 'No broken links detected'} (${brokenChecked} ${language === 'fr' ? 'vérifiés' : 'checked'})</div>
+          <div style="font-size: 12px; color: #166534;">${rl.noBrokenLinks} (${brokenChecked} ${rl.checked})</div>
         </div>
       `}
 
