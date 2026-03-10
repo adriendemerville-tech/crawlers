@@ -1976,22 +1976,8 @@ Deno.serve(async (req) => {
     // ==================== ÉTAPE 2: LLM ANALYSIS ====================
     console.log('\n🤖 ÉTAPE 2: Analyse LLM...');
     
-    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo);
+    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview);
     
-    // Inject ranking overview as priority context for the LLM
-    if (rankingOverview) {
-      const rkSection = `
-📈 ÉTAT DES LIEUX SEO ACTUEL (DataForSEO ranked_keywords — données RÉELLES du domaine):
-- Mots-clés positionnés: ${rankingOverview.total_ranked_keywords}
-- Position moyenne globale: ${rankingOverview.average_position_global}
-- Position moyenne Top 10: ${rankingOverview.average_position_top10 || 'Aucun mot-clé en Top 10'}
-- Trafic organique estimé (ETV): ${rankingOverview.etv}
-- Distribution: Top 3=${rankingOverview.distribution.top3}, Top 10=${rankingOverview.distribution.top10}, Top 20=${rankingOverview.distribution.top20}, Top 50=${rankingOverview.distribution.top50}, Top 100=${rankingOverview.distribution.top100}
-- Top keywords positionnés: ${rankingOverview.top_keywords.slice(0, 5).map(k => `"${k.keyword}" pos${k.position}(${k.volume}vol)`).join(', ')}
-⚠️ INSTRUCTION: Base tes recommandations sur cet état des lieux RÉEL. Identifie les forces (mots-clés bien positionnés) et les faiblesses (absence du Top 10 sur des requêtes clés). Le market_data_summary DOIT inclure average_position basé sur ces données. Les quick_wins doivent tenir compte des positions existantes.
-`;
-      userPrompt = rkSection + userPrompt;
-    }
     
     // Inject resolved entity name for the LLM
     userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport (introduction incluse).\n` + userPrompt;
