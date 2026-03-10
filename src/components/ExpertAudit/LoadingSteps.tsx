@@ -1,7 +1,22 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Globe, Code, Shield, Brain, CheckCircle2, Target, Link2, Users, Search, Music } from 'lucide-react';
 
+// Track IDs from the "Chill out 🐈" playlist
+const PLAYLIST_TRACK_IDS = [
+  '17nOJOcPbcl4sKzM2yyYDp', // Sugar Man - Rodríguez
+  '51rPRW8NjxZoWPPjnRGzHw', // Tadow - Masego, FKJ
+  '2jX5c5RFp0A9E1GDsvGxIa', // Balance ton quoi - Angèle
+  '6eZZcBjuiLVOxO0VX2xEfF', // Insomnia - Faithless
+  '39qYD4J4BKvZMQgxfXl5bv', // Eye In The Sky - Alan Parsons
+  '5CQ30WqJwcep0pYcV4AMNc', // Stairway to Heaven - Led Zeppelin
+  '51tUT1gHE30GQPhn1agudM', // Hideaway - Kiesza
+  '1vxw6aYJls2oq3gW0DujAo', // Crazy - Gnarls Barkley
+  '1dEy9Pl81QopSxNsPxXQxv', // Stay - Rihanna
+  '0Q0IVlqMV64kNLlwjPj0Hl', // Killing Me Softly - Fugees
+  '08QmEfykPyTLC5uCC9WCHv', // La javanaise - Gainsbourg
+  '0YMFcrMtBowDdD5bPz0cgy', // Talkin' Bout a Revolution - Tracy Chapman
+];
 
 const technicalSteps = [
   { id: 'connect', label: 'Audit Speed et Performances...', icon: Globe },
@@ -32,7 +47,7 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
   const [currentStep, setCurrentStep] = useState(0);
   const steps = variant === 'strategic' ? strategicSteps : technicalSteps;
   const iframeRef = useRef<HTMLIFrameElement>(null);
-
+  const randomTrackId = useMemo(() => PLAYLIST_TRACK_IDS[Math.floor(Math.random() * PLAYLIST_TRACK_IDS.length)], []);
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentStep((prev) => {
@@ -160,9 +175,9 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
         <iframe
           ref={iframeRef}
           style={{ borderRadius: '12px' }}
-          src="https://open.spotify.com/embed/playlist/7lp4QzCQhq7ipPLL0Rnbwd?utm_source=generator&theme=0&shuffle=true"
+          src={`https://open.spotify.com/embed/track/${randomTrackId}?utm_source=generator&theme=0`}
           width="100%"
-          height="352"
+          height="152"
           frameBorder="0"
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
           loading="lazy"
