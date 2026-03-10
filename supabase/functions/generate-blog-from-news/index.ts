@@ -245,7 +245,7 @@ ${(researchData.authority_links || []).map((l: any) => `- ${l.title}: ${l.url}`)
    - Inclure AU MOINS 1 citation avec attribution (nom, poste).
    - Vocabulaire riche : synonymes, termes techniques variés, entités nommées.
    - Mentionner Crawlers.fr UNE SEULE FOIS, naturellement, comme outil de diagnostic SEO/GEO.
-   - Le titre SEO DOIT contenir l'année 2026.
+   - Le titre SEO ne doit PAS obligatoirement contenir 2026, mais le bloc résumé (summary-card) DOIT mentionner 2026 au moins une fois.
 
 6. **Retourne UNIQUEMENT un JSON valide (pas de markdown) :**
 {
