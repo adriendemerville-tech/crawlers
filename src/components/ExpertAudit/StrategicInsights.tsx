@@ -174,10 +174,6 @@ export function StrategicInsights({
             />
           )}
 
-          {/* AEO Score Card — below Brand Authority */}
-          {auditResult && (
-            <AEOScoreCard result={auditResult} />
-          )}
 
           {/* Mots clés (doit apparaître entre Écosystème Concurrentiel et Autorité Sociale & Humaine) */}
           <KeywordModuleSection analysis={analysis} domain={domain} />
