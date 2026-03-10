@@ -249,9 +249,9 @@ export default function Methodologie() {
           'Metodología de auditoría SEO & GEO 2026 — 60+ puntos analizados | Crawlers.fr'
         )}</title>
         <meta name="description" content={t3(language,
-          'Comment Crawlers.fr audite votre site en 2026 : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, mots-clés, code correctif JSON-LD. Périmètre complet et transparent.',
-          'How Crawlers.fr audits your site in 2026: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, keywords, JSON-LD corrective code. Full transparent scope.',
-          'Cómo Crawlers.fr audita su sitio en 2026: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, palabras clave, código correctivo JSON-LD.'
+          'Comment Crawlers.fr audite votre site en 2026 : crawlability IA, score GEO, visibilité LLM, Core Web Vitals, EEAT, résilience contenu, red teaming, code correctif JSON-LD. Périmètre complet.',
+          'How Crawlers.fr audits your site in 2026: AI crawlability, GEO score, LLM visibility, Core Web Vitals, EEAT, content resilience, red teaming, JSON-LD corrective code.',
+          'Cómo Crawlers.fr audita su sitio en 2026: crawlability IA, score GEO, visibilidad LLM, Core Web Vitals, EEAT, resiliencia de contenido, red teaming, código correctivo JSON-LD.'
         )} />
         <link rel="canonical" href="https://crawlers.fr/methodologie" />
         <meta property="og:title" content={t3(language,
