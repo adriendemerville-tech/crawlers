@@ -243,57 +243,55 @@ export function Header() {
 
         {/* Center: Lexique + Comparatif links - hidden on mobile */}
         <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
-          <Link to="/lexique">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-muted-foreground hover:text-foreground"
-            >
-              <Book className="h-4 w-4" />
-              <span className="text-sm">{lexiqueLabels[language]}</span>
-            </Button>
-          </Link>
-          {isProfilePage ? null : (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) ? (
-            <Link to="/console">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
-              >
-                <LayoutDashboard className="h-4 w-4" />
-                <span className="text-sm">{t.console}</span>
+          {isAuditExpertPage ? (
+            <a href="/lexique" target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                <Book className="h-4 w-4" />
+                <span className="text-sm">{lexiqueLabels[language]}</span>
+              </Button>
+            </a>
+          ) : (
+            <Link to="/lexique">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                <Book className="h-4 w-4" />
+                <span className="text-sm">{lexiqueLabels[language]}</span>
               </Button>
             </Link>
+          )}
+          {isProfilePage ? null : (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) ? (
+            isAuditExpertPage ? (
+              <a href="/console" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span className="text-sm">{t.console}</span>
+                </Button>
+              </a>
+            ) : (
+              <Link to="/console">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span className="text-sm">{t.console}</span>
+                </Button>
+              </Link>
+            )
           ) : (
             <Link to="/comparatif-audit-geo">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
-              >
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                 <Scale className="h-4 w-4" />
                 <span className="text-sm">{t.comparatif}</span>
               </Button>
             </Link>
           )}
           {isAuditExpertPage ? (
-            <Link to="/modifier-code-wordpress">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
-              >
+            <a href="/modifier-code-wordpress" target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                 <Puzzle className="h-4 w-4" />
                 <span className="text-sm">WordPress</span>
               </Button>
-            </Link>
+            </a>
           ) : (
             <Link to="/observatoire">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-muted-foreground hover:text-foreground"
-              >
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                 <Radar className="h-4 w-4" />
                 <span className="text-sm">{language === 'fr' ? 'Observatoire' : language === 'es' ? 'Observatorio' : 'Observatory'}</span>
               </Button>

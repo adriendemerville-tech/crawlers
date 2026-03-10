@@ -1,8 +1,18 @@
 import { memo } from 'react';
 import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
+
+/** On audit-expert page, all internal links open in a new tab */
+function SmartLink({ to, className, title, children }: { to: string; className?: string; title?: string; children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  const isAuditPage = pathname.startsWith('/audit-expert');
+  if (isAuditPage) {
+    return <a href={to} target="_blank" rel="noopener noreferrer" className={className} title={title}>{children}</a>;
+  }
+  return <Link to={to} className={className} title={title}>{children}</Link>;
+}
 
 const t3 = (language: string, fr: string, en: string, es: string) =>
   language === 'fr' ? fr : language === 'es' ? es : en;
@@ -182,13 +192,13 @@ function FooterComponent() {
               ))}
             </div>
             <div className="mt-4 text-center">
-              <Link
+              <SmartLink
                 to="/blog"
                 className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
                 {t3(language, 'Voir tous les articles', 'View all articles', 'Ver todos los artículos')}
                 <span aria-hidden="true">→</span>
-              </Link>
+              </SmartLink>
             </div>
           </div>
         </section>
@@ -226,14 +236,14 @@ function FooterComponent() {
                   {toolsLinks.map((link) => (
                     <li key={link.href}>
                       {link.isRoute ? (
-                        <Link
+                        <SmartLink
                           to={link.href}
                           className={`group flex items-start gap-2 text-sm transition-colors ${link.gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                           title={link.description}
                         >
                           <link.icon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${link.gold ? 'text-amber-500' : ''}`} />
                           <span>{link.label}</span>
-                        </Link>
+                        </SmartLink>
                       ) : (
                         <a 
                           href={link.href}
@@ -258,7 +268,7 @@ function FooterComponent() {
                 <ul className="space-y-3">
                   {resourcesLinks.map((link) => (
                     <li key={link.href}>
-                      <Link
+                      <SmartLink
                         to={link.href}
                         className={`flex items-center gap-2 text-sm transition-colors ${(link as any).gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                         title={link.description}
@@ -271,7 +281,7 @@ function FooterComponent() {
                           <FileText className="h-4 w-4 flex-shrink-0" />
                         )}
                         <span>{link.label}</span>
-                      </Link>
+                      </SmartLink>
                     </li>
                   ))}
                 </ul>
@@ -287,14 +297,14 @@ function FooterComponent() {
                   {technicalLinks.map((link) => (
                     <li key={link.href}>
                       {link.href.startsWith('/') ? (
-                        <Link
+                        <SmartLink
                           to={link.href}
                           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
                           title={link.description}
                         >
                           <FileText className="h-4 w-4 flex-shrink-0" />
                           <span>{link.label}</span>
-                        </Link>
+                        </SmartLink>
                       ) : (
                         <a 
                           href={link.href}
@@ -345,14 +355,14 @@ function FooterComponent() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <nav aria-label="Mentions légales" className="flex flex-wrap gap-x-6 gap-y-2">
                 {legalLinks.map((link) => (
-                  <Link
+                  <SmartLink
                     key={link.href}
                     to={link.href}
                     className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
                   >
                     <Shield className="h-3 w-3" />
                     {link.label}
-                  </Link>
+                  </SmartLink>
                 ))}
               </nav>
 
