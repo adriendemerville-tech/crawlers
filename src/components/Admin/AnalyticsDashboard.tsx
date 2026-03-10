@@ -197,8 +197,8 @@ export function AnalyticsDashboard() {
       const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
       
       // Fetch ALL events des 30 derniers jours avec pagination (contourne la limite 1000)
-      let allEvents: typeof rawPage = [];
-      let page = 0;
+      type EventRow = { event_type: string; url: string | null; created_at: string; user_id: string | null; event_data: Record<string, unknown> | null };
+      let allEvents: EventRow[] = [];
       const PAGE_SIZE = 1000;
       while (true) {
         const { data: rawPage, error: pageError } = await supabase
