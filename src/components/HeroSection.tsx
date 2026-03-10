@@ -304,6 +304,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
             </Button>
         </div>
         </form>
+        </div>
 
         <UrlValidationBanner
           suggestedUrl={validation.suggestedUrl}
