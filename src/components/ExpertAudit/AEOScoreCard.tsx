@@ -266,16 +266,14 @@ export function AEOScoreCard({ result }: AEOScoreCardProps) {
           </div>
 
           {/* Methodology button */}
-          <div className="flex justify-center">
-            <Button
-              variant="outline"
-              size="sm"
+          <div className="flex justify-end pt-1">
+            <button
               onClick={() => setIsMethodologyOpen(true)}
-              className="gap-2"
+              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
             >
-              <BookOpen className="h-4 w-4" />
+              <Info className="h-3 w-3" />
               {t.methodology}
-            </Button>
+            </button>
           </div>
         </CardContent>
       </Card>
