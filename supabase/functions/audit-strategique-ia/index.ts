@@ -1924,52 +1924,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, recoverFromCache } = await req.json();
+    const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext } = await req.json();
 
     if (!url) {
       return new Response(
         JSON.stringify({ success: false, error: 'URL is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-    }
-
-    if (recoverFromCache) {
-      try {
-        const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-        const supabaseUrlEnv = Deno.env.get('SUPABASE_URL') || '';
-
-        if (!serviceKey || !supabaseUrlEnv) {
-          return new Response(
-            JSON.stringify({ success: false, recovered: false, error: 'Cache recovery unavailable' }),
-            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        const adminClient = createClient(supabaseUrlEnv, serviceKey);
-        const domain = new URL(url).hostname;
-        const cacheKey = `strategic_${domain}_${url}`;
-        const { data: cached, error: cacheError } = await adminClient
-          .from('audit_cache')
-          .select('result_data')
-          .eq('cache_key', cacheKey)
-          .gt('expires_at', new Date().toISOString())
-          .maybeSingle();
-
-        if (cacheError) {
-          console.error('❌ Cache recovery error:', cacheError);
-        }
-
-        return new Response(
-          JSON.stringify(cached?.result_data ? { ...cached.result_data, recovered: true } : { success: false, recovered: false, error: 'No cached result found' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      } catch (cacheRecoveryError) {
-        console.error('❌ Cache recovery exception:', cacheRecoveryError);
-        return new Response(
-          JSON.stringify({ success: false, recovered: false, error: 'Cache recovery failed' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
     }
 
     const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
