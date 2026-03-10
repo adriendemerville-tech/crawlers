@@ -1,13 +1,25 @@
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Calendar, ArrowRight, User } from 'lucide-react';
+import { Calendar, ArrowRight, User, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { blogArticles } from '@/data/blogArticles';
+import { supabase } from '@/integrations/supabase/client';
+
+interface DbArticle {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  image_url: string | null;
+  published_at: string | null;
+  created_at: string;
+}
 
 const translations = {
   fr: {
@@ -16,6 +28,7 @@ const translations = {
     readMore: 'Lire l\'article',
     metaTitle: 'Blog SEO & GEO | Ressources Crawlers AI',
     metaDescription: 'Découvrez nos articles et guides sur le SEO, le GEO et l\'optimisation de visibilité pour les moteurs de recherche IA comme ChatGPT et Perplexity.',
+    generatedBadge: 'Veille auto',
   },
   en: {
     title: 'Blog & Resources',
@@ -23,6 +36,7 @@ const translations = {
     readMore: 'Read article',
     metaTitle: 'SEO & GEO Blog | Crawlers AI Resources',
     metaDescription: 'Discover our articles and guides on SEO, GEO and visibility optimization for AI search engines like ChatGPT and Perplexity.',
+    generatedBadge: 'Auto-generated',
   },
   es: {
     title: 'Blog y Recursos',
@@ -30,6 +44,7 @@ const translations = {
     readMore: 'Leer artículo',
     metaTitle: 'Blog SEO y GEO | Recursos Crawlers AI',
     metaDescription: 'Descubre nuestros artículos y guías sobre SEO, GEO y optimización de visibilidad para motores de búsqueda IA como ChatGPT y Perplexity.',
+    generatedBadge: 'Auto-generado',
   },
 };
 
@@ -37,9 +52,33 @@ function BlogIndexComponent() {
   const { language } = useLanguage();
   useCanonicalHreflang('/blog');
   const t = translations[language] || translations.fr;
+  const [dbArticles, setDbArticles] = useState<DbArticle[]>([]);
+
+  // Fetch dynamic articles from database
+  useEffect(() => {
+    async function fetchDbArticles() {
+      const { data, error } = await supabase
+        .from('blog_articles')
+        .select('id, slug, title, excerpt, image_url, published_at, created_at')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(20);
+
+      if (data && !error) {
+        // Filter out articles that already exist as static articles
+        const staticSlugs = new Set(blogArticles.map(a => a.slug));
+        setDbArticles(data.filter(a => !staticSlugs.has(a.slug)));
+      }
+    }
+    fetchDbArticles();
+  }, []);
 
   // ItemList schema for blog listing
   useEffect(() => {
+    const allArticleSlugs = [
+      ...blogArticles.map(a => ({ slug: a.slug, name: a.title[language] || a.title.fr })),
+      ...dbArticles.map(a => ({ slug: a.slug, name: a.title })),
+    ];
     const itemListSchema = {
       "@context": "https://schema.org",
       "@type": "CollectionPage",
@@ -48,11 +87,11 @@ function BlogIndexComponent() {
       "url": "https://crawlers.fr/blog",
       "mainEntity": {
         "@type": "ItemList",
-        "itemListElement": blogArticles.map((article, i) => ({
+        "itemListElement": allArticleSlugs.map((article, i) => ({
           "@type": "ListItem",
           "position": i + 1,
           "url": `https://crawlers.fr/blog/${article.slug}`,
-          "name": article.title[language] || article.title.fr,
+          "name": article.name,
         })),
       },
     };
@@ -62,7 +101,7 @@ function BlogIndexComponent() {
     script.textContent = JSON.stringify(itemListSchema);
     document.head.appendChild(script);
     return () => { document.querySelectorAll('script[data-schema="blog-index"]').forEach(el => el.remove()); };
-  }, [language, t]);
+  }, [language, t, dbArticles]);
 
   return (
     <>
@@ -103,6 +142,7 @@ function BlogIndexComponent() {
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Static articles */}
               {blogArticles.map((article) => (
                 <Link key={article.slug} to={`/blog/${article.slug}`} className="group">
                   <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30">
@@ -133,6 +173,51 @@ function BlogIndexComponent() {
                       </h2>
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
                         {article.description[language] || article.description.fr}
+                      </p>
+                      <div className="flex items-center gap-1 text-sm font-medium text-primary">
+                        {t.readMore}
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+
+              {/* Dynamic DB articles */}
+              {dbArticles.map((article) => (
+                <Link key={article.slug} to={`/blog/${article.slug}`} className="group">
+                  <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30 relative">
+                    <div className="aspect-video overflow-hidden">
+                      <img
+                        src={article.image_url || 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600&q=80'}
+                        alt={article.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <Badge className="absolute top-3 left-3 bg-primary/90 text-primary-foreground border-0 gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        {t.generatedBadge}
+                      </Badge>
+                    </div>
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          Crawlers.fr
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(article.published_at || article.created_at).toLocaleDateString(
+                            language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US',
+                            { month: 'short', day: 'numeric', year: 'numeric' }
+                          )}
+                        </span>
+                      </div>
+                      <h2 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                        {article.title}
+                      </h2>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                        {article.excerpt || ''}
                       </p>
                       <div className="flex items-center gap-1 text-sm font-medium text-primary">
                         {t.readMore}

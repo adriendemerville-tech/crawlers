@@ -178,6 +178,22 @@ Retourne UNIQUEMENT un JSON array (pas de markdown) :
 
     console.log("[infotainment] Successfully inserted", cards.length, "new cards");
 
+    // ─── STEP 5: Trigger blog article generation from news ───
+    try {
+      const blogRes = await fetch(`${supabaseUrl}/functions/v1/generate-blog-from-news`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({ trigger: "infotainment" }),
+      });
+      const blogData = await blogRes.json();
+      console.log("[infotainment] Blog generation result:", JSON.stringify(blogData));
+    } catch (blogErr) {
+      console.error("[infotainment] Blog generation failed (non-blocking):", blogErr);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
