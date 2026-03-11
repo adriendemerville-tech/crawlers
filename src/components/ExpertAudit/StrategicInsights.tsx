@@ -226,103 +226,135 @@ export function StrategicInsights({
           {analysis.red_team && <RedTeamCard data={analysis.red_team} />}
 
           {/* 5-7. Analyse comparative DataForSEO + Mots-clés + Gaps */}
-          <KeywordModuleSection analysis={analysis} domain={domain} />
+          <RevealWrapper delay={2000} isDataCard enabled={progressiveReveal}>
+            <KeywordModuleSection analysis={analysis} domain={domain} />
+          </RevealWrapper>
 
           {/* 8. Score AEO (Answer Engine Optimization) */}
           {auditResult && (
-            <AEOScoreCard result={auditResult} />
+            <RevealWrapper delay={4000} isDataCard enabled={progressiveReveal}>
+              <AEOScoreCard result={auditResult} />
+            </RevealWrapper>
           )}
 
           {/* 9. Visibilité LLMs */}
           {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
-            <LLMVisibilityCard data={analysis.llm_visibility_raw} />
+            <RevealWrapper delay={6000} isDataCard enabled={progressiveReveal}>
+              <LLMVisibilityCard data={analysis.llm_visibility_raw} />
+            </RevealWrapper>
           )}
 
           {/* 10. Matrice de Risque Zéro-Clic */}
-          <ZeroClickRiskCard analysis={analysis} domain={domain} />
+          <RevealWrapper delay={8000} isDataCard enabled={progressiveReveal}>
+            <ZeroClickRiskCard analysis={analysis} domain={domain} />
+          </RevealWrapper>
 
           {/* 11. Requêtes LLM à cibler */}
           {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
-            <LLMTargetQueriesCard 
-              domain={domain} 
-              coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
-              citations={analysis.llm_visibility_raw.citations as any}
-              selfCorrect
-              strategicAnalysis={analysis}
-            />
+            <RevealWrapper delay={10000} isDataCard enabled={progressiveReveal}>
+              <LLMTargetQueriesCard 
+                domain={domain} 
+                coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
+                citations={analysis.llm_visibility_raw.citations as any}
+                selfCorrect
+                strategicAnalysis={analysis}
+              />
+            </RevealWrapper>
           )}
 
           {/* 12. Thought Leadership + Sentiment & Polarité */}
-          <ConversationalIntentCard analysis={analysis} />
+          <RevealWrapper delay={12000} enabled={progressiveReveal}>
+            <ConversationalIntentCard analysis={analysis} />
+          </RevealWrapper>
 
           {/* 13. Autorité Sociale & Humaine */}
           {analysis.social_signals && (
-            <SocialSignalsCard signals={analysis.social_signals} />
+            <RevealWrapper delay={14000} isDataCard enabled={progressiveReveal}>
+              <SocialSignalsCard signals={analysis.social_signals} />
+            </RevealWrapper>
           )}
 
           {/* 14. Sémantique IA & Reformulations */}
           {analysis.geo_readiness && (
-            <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                    <Globe className="h-4.5 w-4.5 text-primary" />
-                  </div>
-                  Sémantique IA & Reformulations
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="p-3 rounded-lg bg-muted/50">
-                    <p className="text-xs text-muted-foreground mb-1">Score Citabilité</p>
-                    <p className="text-2xl font-bold text-primary">
-                      {analysis.geo_readiness.citability_score}
-                      <span className="text-sm text-muted-foreground">/100</span>
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-muted/50">
-                    <p className="text-xs text-muted-foreground mb-1">Accessibilité IA</p>
-                    <p className="text-2xl font-bold text-foreground">
-                      {analysis.geo_readiness.ai_accessibility_score}
-                      <span className="text-sm text-muted-foreground">/100</span>
-                    </p>
-                  </div>
-                  {analysis.geo_readiness.semantic_coherence && (
+            <RevealWrapper delay={16000} isDataCard enabled={progressiveReveal}>
+              <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <Globe className="h-4.5 w-4.5 text-primary" />
+                    </div>
+                    Sémantique IA & Reformulations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div className="p-3 rounded-lg bg-muted/50">
-                      <p className="text-xs text-muted-foreground mb-1">Cohérence Title/H1</p>
-                      <p className="text-2xl font-bold text-foreground">
-                        {analysis.geo_readiness.semantic_coherence.title_h1_alignment}%
+                      <p className="text-xs text-muted-foreground mb-1">Score Citabilité</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {analysis.geo_readiness.citability_score}
+                        <span className="text-sm text-muted-foreground">/100</span>
                       </p>
                     </div>
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground mb-1">Accessibilité IA</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {analysis.geo_readiness.ai_accessibility_score}
+                        <span className="text-sm text-muted-foreground">/100</span>
+                      </p>
+                    </div>
+                    {analysis.geo_readiness.semantic_coherence && (
+                      <div className="p-3 rounded-lg bg-muted/50">
+                        <p className="text-xs text-muted-foreground mb-1">Cohérence Title/H1</p>
+                        <p className="text-2xl font-bold text-foreground">
+                          {analysis.geo_readiness.semantic_coherence.title_h1_alignment}%
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  {analysis.geo_readiness.performance_impact && (
+                    <p className="text-sm text-muted-foreground italic border-l-2 border-primary/30 pl-3">
+                      💡 {analysis.geo_readiness.performance_impact}
+                    </p>
                   )}
-                </div>
-                {analysis.geo_readiness.performance_impact && (
-                  <p className="text-sm text-muted-foreground italic border-l-2 border-primary/30 pl-3">
-                    💡 {analysis.geo_readiness.performance_impact}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </RevealWrapper>
           )}
 
           {/* 15. Indice de Citabilité & Résilience au Résumé */}
-          {analysis.quotability && <QuotabilityCard data={analysis.quotability} />}
-          {analysis.summary_resilience && <SummaryResilienceCard data={analysis.summary_resilience} />}
+          {(analysis.quotability || analysis.summary_resilience) && (
+            <RevealWrapper delay={18000} isDataCard enabled={progressiveReveal}>
+              <div className="space-y-6">
+                {analysis.quotability && <QuotabilityCard data={analysis.quotability} />}
+                {analysis.summary_resilience && <SummaryResilienceCard data={analysis.summary_resilience} />}
+              </div>
+            </RevealWrapper>
+          )}
 
           {/* 16. Empreinte Lexicale */}
-          {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
+          {analysis.lexical_footprint && (
+            <RevealWrapper delay={20000} isDataCard enabled={progressiveReveal}>
+              <LexicalFootprintCard data={analysis.lexical_footprint} />
+            </RevealWrapper>
+          )}
 
           {/* 17. Matrice de Gap Sémantique */}
           {geoScoreForVisualization && (
-            <GeoScoreVisualization geoScore={geoScoreForVisualization} />
+            <RevealWrapper delay={22000} isDataCard enabled={progressiveReveal}>
+              <GeoScoreVisualization geoScore={geoScoreForVisualization} />
+            </RevealWrapper>
           )}
 
           {/* 18. Contenus à produire en priorité */}
-          <PriorityContentCard domain={domain} />
+          <RevealWrapper delay={24000} isDataCard enabled={progressiveReveal}>
+            <PriorityContentCard domain={domain} />
+          </RevealWrapper>
 
           {/* 19. Feuille de Route Exécutive 2026 */}
           {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (
-            <PremiumRoadmapCard roadmap={analysis.executive_roadmap} />
+            <RevealWrapper delay={26000} enabled={progressiveReveal}>
+              <PremiumRoadmapCard roadmap={analysis.executive_roadmap} />
+            </RevealWrapper>
           )}
         </>
       )}

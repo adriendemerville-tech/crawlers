@@ -1687,6 +1687,7 @@ export function ExpertAuditDashboard() {
                         onCompetitorCorrection={handleCompetitorCorrectionComplete}
                         isReanalyzing={isStrategicLoading}
                         auditResult={result}
+                        progressiveReveal={strategicProgressiveReveal}
                       />
                     );
                   })()}
