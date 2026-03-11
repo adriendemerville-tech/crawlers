@@ -569,7 +569,7 @@ export default function SiteCrawl() {
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <Sparkles className="w-5 h-5 text-primary" />
-                      Synthèse IA
+                      {t.aiSummary}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
