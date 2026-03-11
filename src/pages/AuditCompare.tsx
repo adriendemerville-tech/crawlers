@@ -534,13 +534,13 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {/* LLM Visibility */}
       <Card className="border-border/50 bg-card/80">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+          <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
             <Brain className="h-4 w-4 text-violet-500" /> {t.llmVisibility}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="text-2xl font-bold text-foreground">{llmScore}<span className="text-sm text-muted-foreground">/100</span></div>
+            <div className="text-3xl font-bold text-foreground">{llmScore}<span className="text-sm text-foreground/50">/100</span></div>
             {llm_raw?.brandMentioned !== undefined && (
               <Badge variant={llm_raw.brandMentioned ? 'default' : 'secondary'} className="text-xs">
                 {llm_raw.brandMentioned ? t.brandCited : t.brandNotCited}
@@ -548,14 +548,14 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
             )}
           </div>
           {analysis.llm_visibility?.analysis && (
-            <p className="text-xs text-muted-foreground">{analysis.llm_visibility.analysis}</p>
+            <p className="text-sm text-foreground/70 leading-relaxed">{analysis.llm_visibility.analysis}</p>
           )}
           {llm_raw?.models && Array.isArray(llm_raw.models) && (
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {llm_raw.models.map((m: any, i: number) => (
-                <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">{m.name}</span>
-                  <Badge variant={m.brandMentioned ? 'default' : 'outline'} className="text-[10px] px-1.5">
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <span className="text-foreground/70">{m.name}</span>
+                  <Badge variant={m.brandMentioned ? 'default' : 'outline'} className="text-xs px-2">
                     {m.brandMentioned ? t.cited : t.absent}
                   </Badge>
                 </div>
