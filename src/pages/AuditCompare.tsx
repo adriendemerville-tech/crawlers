@@ -733,7 +733,7 @@ const AuditCompare = () => {
               </div>
 
               <p className="text-sm text-muted-foreground text-center mt-6">
-                L'analyse peut prendre jusqu'à 3 minutes.
+                {t.analysisTime}
               </p>
             </div>
           )}
