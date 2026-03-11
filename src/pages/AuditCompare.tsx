@@ -431,23 +431,23 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {/* Brand DNA */}
       <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+          <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
             <Globe className="h-4 w-4 text-primary" /> Brand DNA
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground leading-relaxed">{analysis.brand_dna}</p>
-          <div className="grid grid-cols-1 gap-2">
+          <p className="text-sm text-foreground/80 leading-relaxed">{analysis.brand_dna}</p>
+          <div className="grid grid-cols-1 gap-3">
             <div>
-              <p className="text-xs font-semibold text-emerald-500 mb-1 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> {t.strengths}</p>
+              <p className="text-sm font-semibold text-emerald-500 mb-1.5 flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> {t.strengths}</p>
               {(analysis.strengths || []).map((s, i) => (
-                <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-emerald-500/30 mb-1">{s}</p>
+                <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-emerald-500/30 mb-1.5">{s}</p>
               ))}
             </div>
             <div>
-              <p className="text-xs font-semibold text-rose-500 mb-1 flex items-center gap-1"><TrendingDown className="h-3 w-3" /> {t.weaknesses}</p>
+              <p className="text-sm font-semibold text-rose-500 mb-1.5 flex items-center gap-1"><TrendingDown className="h-3.5 w-3.5" /> {t.weaknesses}</p>
               {(analysis.weaknesses || []).map((w, i) => (
-                <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-rose-500/30 mb-1">{w}</p>
+                <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-rose-500/30 mb-1.5">{w}</p>
               ))}
             </div>
           </div>
@@ -458,30 +458,30 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {backlinks && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <Link2 className="h-4 w-4 text-blue-500" /> {t.backlinks}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 rounded-lg bg-muted/30 text-center">
-                <p className="text-lg font-bold text-foreground">{backlinks.referringDomains.toLocaleString()}</p>
-                <p className="text-[10px] text-muted-foreground">{t.referringDomains}</p>
+              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+                <p className="text-xl font-bold text-foreground">{backlinks.referringDomains.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">{t.referringDomains}</p>
               </div>
-              <div className="p-2 rounded-lg bg-muted/30 text-center">
-                <p className="text-lg font-bold text-foreground">{backlinks.domainRank}</p>
-                <p className="text-[10px] text-muted-foreground">{t.domainRank}</p>
+              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+                <p className="text-xl font-bold text-foreground">{backlinks.domainRank}</p>
+                <p className="text-xs text-muted-foreground">{t.domainRank}</p>
               </div>
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-sm text-foreground/70">
               <span className="font-medium">{backlinks.totalBacklinks.toLocaleString()}</span> backlinks total
             </div>
             {backlinks.topAnchors.length > 0 && (
               <div>
-                <p className="text-[10px] text-muted-foreground mb-1">{t.topAnchors}</p>
+                <p className="text-xs text-muted-foreground mb-1">{t.topAnchors}</p>
                 <div className="flex flex-wrap gap-1">
                   {backlinks.topAnchors.map((a, i) => (
-                    <Badge key={i} variant="outline" className="text-[9px] px-1.5">{a}</Badge>
+                    <Badge key={i} variant="outline" className="text-[10px] px-1.5">{a}</Badge>
                   ))}
                 </div>
               </div>
@@ -494,38 +494,38 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {contentDepth && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <FileText className="h-4 w-4 text-teal-500" /> {t.contentDepth}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-1.5 rounded bg-muted/30">
-                <p className="text-sm font-bold text-foreground">{contentDepth.wordCount.toLocaleString()}</p>
-                <p className="text-[9px] text-muted-foreground">{t.words}</p>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-base font-bold text-foreground">{contentDepth.wordCount.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">{t.words}</p>
               </div>
-              <div className="p-1.5 rounded bg-muted/30">
-                <p className="text-sm font-bold text-foreground">{contentDepth.h2Count}</p>
-                <p className="text-[9px] text-muted-foreground">H2</p>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-base font-bold text-foreground">{contentDepth.h2Count}</p>
+                <p className="text-xs text-muted-foreground">H2</p>
               </div>
-              <div className="p-1.5 rounded bg-muted/30">
-                <p className="text-sm font-bold text-foreground">{contentDepth.h3Count}</p>
-                <p className="text-[9px] text-muted-foreground">H3</p>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-base font-bold text-foreground">{contentDepth.h3Count}</p>
+                <p className="text-xs text-muted-foreground">H3</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {contentDepth.hasJsonLd && <Badge variant="default" className="text-[9px] px-1.5">JSON-LD</Badge>}
-              {contentDepth.hasOpenGraph && <Badge variant="default" className="text-[9px] px-1.5">Open Graph</Badge>}
-              {contentDepth.hasFAQ && <Badge variant="default" className="text-[9px] px-1.5">FAQ Schema</Badge>}
-              {!contentDepth.hasJsonLd && <Badge variant="outline" className="text-[9px] px-1.5 opacity-50">JSON-LD ✗</Badge>}
-              {!contentDepth.hasOpenGraph && <Badge variant="outline" className="text-[9px] px-1.5 opacity-50">OG ✗</Badge>}
+              {contentDepth.hasJsonLd && <Badge variant="default" className="text-[10px] px-1.5">JSON-LD</Badge>}
+              {contentDepth.hasOpenGraph && <Badge variant="default" className="text-[10px] px-1.5">Open Graph</Badge>}
+              {contentDepth.hasFAQ && <Badge variant="default" className="text-[10px] px-1.5">FAQ Schema</Badge>}
+              {!contentDepth.hasJsonLd && <Badge variant="outline" className="text-[10px] px-1.5 opacity-50">JSON-LD ✗</Badge>}
+              {!contentDepth.hasOpenGraph && <Badge variant="outline" className="text-[10px] px-1.5 opacity-50">OG ✗</Badge>}
             </div>
-            <div className="flex justify-between text-[10px] text-muted-foreground">
+            <div className="flex justify-between text-xs text-foreground/60">
               <span>{t.internalLinks}: {contentDepth.internalLinksCount}</span>
               <span>{t.externalLinks}: {contentDepth.externalLinksCount}</span>
             </div>
             {contentDepth.imagesWithoutAlt > 0 && (
-              <p className="text-[10px] text-rose-400">{contentDepth.imagesWithoutAlt}/{contentDepth.imagesCount} {t.images} {t.withoutAlt}</p>
+              <p className="text-xs text-rose-400">{contentDepth.imagesWithoutAlt}/{contentDepth.imagesCount} {t.images} {t.withoutAlt}</p>
             )}
           </CardContent>
         </Card>
@@ -534,13 +534,13 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {/* LLM Visibility */}
       <Card className="border-border/50 bg-card/80">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+          <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
             <Brain className="h-4 w-4 text-violet-500" /> {t.llmVisibility}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="text-2xl font-bold text-foreground">{llmScore}<span className="text-sm text-muted-foreground">/100</span></div>
+            <div className="text-3xl font-bold text-foreground">{llmScore}<span className="text-sm text-foreground/50">/100</span></div>
             {llm_raw?.brandMentioned !== undefined && (
               <Badge variant={llm_raw.brandMentioned ? 'default' : 'secondary'} className="text-xs">
                 {llm_raw.brandMentioned ? t.brandCited : t.brandNotCited}
@@ -548,14 +548,14 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
             )}
           </div>
           {analysis.llm_visibility?.analysis && (
-            <p className="text-xs text-muted-foreground">{analysis.llm_visibility.analysis}</p>
+            <p className="text-sm text-foreground/70 leading-relaxed">{analysis.llm_visibility.analysis}</p>
           )}
           {llm_raw?.models && Array.isArray(llm_raw.models) && (
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {llm_raw.models.map((m: any, i: number) => (
-                <div key={i} className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">{m.name}</span>
-                  <Badge variant={m.brandMentioned ? 'default' : 'outline'} className="text-[10px] px-1.5">
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <span className="text-foreground/70">{m.name}</span>
+                  <Badge variant={m.brandMentioned ? 'default' : 'outline'} className="text-xs px-2">
                     {m.brandMentioned ? t.cited : t.absent}
                   </Badge>
                 </div>
@@ -569,17 +569,17 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {analysis.keyword_positioning?.main_keywords && analysis.keyword_positioning.main_keywords.length > 0 && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <Target className="h-4 w-4 text-amber-500" /> {t.keywords}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {analysis.keyword_positioning.main_keywords.slice(0, 6).map((kw, i) => (
-                <div key={i} className="flex items-center justify-between text-xs gap-2">
+                <div key={i} className="flex items-center justify-between text-sm gap-2">
                   <span className="text-foreground truncate flex-1">{kw.keyword}</span>
-                  <span className="text-muted-foreground whitespace-nowrap">{kw.volume} vol</span>
-                  <Badge variant={typeof kw.current_rank === 'number' && kw.current_rank <= 10 ? 'default' : 'outline'} className="text-[10px] px-1.5 whitespace-nowrap">
+                  <span className="text-foreground/50 whitespace-nowrap">{kw.volume} vol</span>
+                  <Badge variant={typeof kw.current_rank === 'number' && kw.current_rank <= 10 ? 'default' : 'outline'} className="text-xs px-2 whitespace-nowrap">
                     {typeof kw.current_rank === 'number' ? `#${kw.current_rank}` : 'N/C'}
                   </Badge>
                 </div>
@@ -593,13 +593,12 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {analysis.llm_visibility?.test_queries && analysis.llm_visibility.test_queries.length > 0 && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-cyan-500" /> {t.llmQueries}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2.5">
             {(() => {
-              // Count how many queries target each LLM
               const queries = analysis.llm_visibility!.test_queries!;
               const llmColors: Record<string, string> = {
                 'ChatGPT': 'text-emerald-400', 'GPT-4': 'text-emerald-400', 'GPT-5': 'text-emerald-400',
@@ -616,14 +615,14 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
                 return 'text-teal-400';
               };
               return queries.slice(0, 3).map((q, i) => (
-                <div key={i} className="p-2 rounded-lg bg-muted/30 border border-border/30">
-                  <p className="text-xs font-medium text-foreground">"{q.query}"</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{q.purpose}</p>
-                  <div className="flex gap-1.5 mt-1 flex-wrap">
+                <div key={i} className="p-2.5 rounded-lg bg-muted/30 border border-border/30">
+                  <p className="text-sm font-medium text-foreground">"{q.query}"</p>
+                  <p className="text-xs text-foreground/60 mt-0.5">{q.purpose}</p>
+                  <div className="flex gap-1.5 mt-1.5 flex-wrap">
                     {q.target_llms?.map((llm, j) => {
                       const count = queries.filter(qq => qq.target_llms?.includes(llm)).length;
                       return (
-                        <Badge key={j} variant="outline" className={`text-[9px] px-1.5 ${getLlmColor(llm)}`}>
+                        <Badge key={j} variant="outline" className={`text-[10px] px-1.5 ${getLlmColor(llm)}`}>
                           {llm} <span className="ml-0.5 opacity-70">({count})</span>
                         </Badge>
                       );
@@ -640,26 +639,26 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {pagespeed && (pagespeed.performanceMobile > 0 || pagespeed.performanceDesktop > 0) && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <Gauge className="h-4 w-4 text-orange-500" /> {t.pagespeed}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 rounded-lg bg-muted/30 text-center">
-                <p className={`text-2xl font-bold ${pagespeed.performanceMobile >= 90 ? 'text-emerald-500' : pagespeed.performanceMobile >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+                <p className={`text-3xl font-bold ${pagespeed.performanceMobile >= 90 ? 'text-emerald-500' : pagespeed.performanceMobile >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
                   {pagespeed.performanceMobile}
                 </p>
-                <p className="text-[10px] text-muted-foreground">{t.mobile}</p>
+                <p className="text-xs text-muted-foreground">{t.mobile}</p>
               </div>
-              <div className="p-2 rounded-lg bg-muted/30 text-center">
-                <p className={`text-2xl font-bold ${pagespeed.performanceDesktop >= 90 ? 'text-emerald-500' : pagespeed.performanceDesktop >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+                <p className={`text-3xl font-bold ${pagespeed.performanceDesktop >= 90 ? 'text-emerald-500' : pagespeed.performanceDesktop >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
                   {pagespeed.performanceDesktop}
                 </p>
-                <p className="text-[10px] text-muted-foreground">{t.desktop}</p>
+                <p className="text-xs text-muted-foreground">{t.desktop}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-foreground/60">
               <span>FCP: {(pagespeed.fcpMs / 1000).toFixed(1)}s</span>
               <span>LCP: {(pagespeed.lcpMs / 1000).toFixed(1)}s</span>
               <span>CLS: {pagespeed.cls}</span>
@@ -673,15 +672,15 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {analysis.eeat_score && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <Award className="h-4 w-4 text-indigo-500" /> {t.eeat}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-3">
             <div className="text-center mb-2">
-              <p className="text-2xl font-bold text-foreground">{analysis.eeat_score.overall}<span className="text-xs text-muted-foreground">/10</span></p>
+              <p className="text-3xl font-bold text-foreground">{analysis.eeat_score.overall}<span className="text-sm text-foreground/50">/10</span></p>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {[
                 { label: t.experience, value: analysis.eeat_score.experience },
                 { label: t.expertiseLabel, value: analysis.eeat_score.expertise },
@@ -689,19 +688,19 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
                 { label: t.trust, value: analysis.eeat_score.trustworthiness },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground w-16 shrink-0">{item.label}</span>
-                  <div className="flex-1 h-1.5 rounded-full bg-muted/50 overflow-hidden">
+                  <span className="text-xs text-foreground/60 w-20 shrink-0">{item.label}</span>
+                  <div className="flex-1 h-2 rounded-full bg-muted/50 overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${item.value >= 8 ? 'bg-emerald-500' : item.value >= 5 ? 'bg-amber-500' : 'bg-rose-500'}`}
                       style={{ width: `${(item.value / 10) * 100}%` }}
                     />
                   </div>
-                  <span className="text-[10px] font-medium text-foreground w-5 text-right">{item.value}</span>
+                  <span className="text-xs font-medium text-foreground w-5 text-right">{item.value}</span>
                 </div>
               ))}
             </div>
             {analysis.eeat_score.justification && (
-              <p className="text-[10px] text-muted-foreground italic mt-1">{analysis.eeat_score.justification}</p>
+              <p className="text-xs text-foreground/60 italic mt-1">{analysis.eeat_score.justification}</p>
             )}
           </CardContent>
         </Card>
@@ -712,20 +711,20 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
         <Card className="border-border/50 bg-card/80">
           <CardContent className="pt-4 text-center">
             <Zap className="h-5 w-5 mx-auto text-amber-500 mb-1" />
-            <p className="text-xs text-muted-foreground">{t.aeoScore}</p>
-            <p className="text-2xl font-bold text-foreground">{analysis.aeo_score}<span className="text-xs text-muted-foreground">/100</span></p>
+            <p className="text-xs text-foreground/60">{t.aeoScore}</p>
+            <p className="text-3xl font-bold text-foreground">{analysis.aeo_score}<span className="text-sm text-foreground/50">/100</span></p>
           </CardContent>
         </Card>
         <Card className="border-border/50 bg-card/80">
           <CardContent className="pt-4 text-center">
             <Star className="h-5 w-5 mx-auto text-yellow-500 mb-1" />
-            <p className="text-xs text-muted-foreground">{t.expertise}</p>
+            <p className="text-xs text-foreground/60">{t.expertise}</p>
             <div className="flex items-center justify-center gap-0.5 mt-1">
               {[1, 2, 3, 4, 5].map(n => (
                 <Star key={n} className={`h-4 w-4 ${n <= (analysis.expertise_sentiment?.rating || 0) ? 'text-yellow-500 fill-yellow-500' : 'text-muted'}`} />
               ))}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">{analysis.expertise_sentiment?.justification}</p>
+            <p className="text-xs text-foreground/60 mt-1">{analysis.expertise_sentiment?.justification}</p>
           </CardContent>
         </Card>
       </div>
@@ -769,31 +768,31 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-foreground leading-relaxed">{cross.verdict}</p>
+          <p className="text-base text-foreground leading-relaxed">{cross.verdict}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Authority winner */}
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border/50">
-              <Shield className="h-4 w-4 text-blue-500 shrink-0" />
+            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-card border border-border/50">
+              <Shield className="h-5 w-5 text-blue-500 shrink-0" />
               <div className="min-w-0">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t.authorityWinner}</p>
-                <p className="text-sm font-bold text-foreground truncate">{cross.authority_winner}</p>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-foreground/50 uppercase tracking-wider">{t.authorityWinner}</p>
+                <p className="text-base font-bold text-foreground truncate">{cross.authority_winner}</p>
+                <p className="text-xs text-foreground/60">
                   {cross.authority_gap?.magnitude} — {cross.authority_gap?.key_factor}
                 </p>
               </div>
             </div>
             {/* Content winner */}
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border/50">
-              <FileText className="h-4 w-4 text-teal-500 shrink-0" />
+            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-card border border-border/50">
+              <FileText className="h-5 w-5 text-teal-500 shrink-0" />
               <div className="min-w-0">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t.contentWinner}</p>
-                <p className="text-sm font-bold text-foreground truncate">{cross.content_depth_winner}</p>
-                <p className="text-[10px] text-muted-foreground">{cross.content_comparison?.structural_advantage}</p>
+                <p className="text-xs text-foreground/50 uppercase tracking-wider">{t.contentWinner}</p>
+                <p className="text-base font-bold text-foreground truncate">{cross.content_depth_winner}</p>
+                <p className="text-xs text-foreground/60">{cross.content_comparison?.structural_advantage}</p>
               </div>
             </div>
           </div>
           {cross.content_comparison?.technical_seo_edge && (
-            <p className="text-xs text-muted-foreground italic">{cross.content_comparison.technical_seo_edge}</p>
+            <p className="text-sm text-foreground/60 italic">{cross.content_comparison.technical_seo_edge}</p>
           )}
         </CardContent>
       </Card>
@@ -802,37 +801,37 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
       {cross.serp_battlefield && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-violet-500" /> {t.serpBattlefield}
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-violet-500" /> {t.serpBattlefield}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {cross.serp_battlefield.head_to_head && cross.serp_battlefield.head_to_head.length > 0 && (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border/30">
-                      <th className="text-left py-1.5 text-muted-foreground font-medium">{t.keywords}</th>
-                      <th className="text-center py-1.5 text-muted-foreground font-medium">{site1Domain}</th>
-                      <th className="text-center py-1.5 text-muted-foreground font-medium">{site2Domain}</th>
-                      <th className="text-center py-1.5 text-muted-foreground font-medium">🏆</th>
+                      <th className="text-left py-2 text-foreground/60 font-medium">{t.keywords}</th>
+                      <th className="text-center py-2 text-foreground/60 font-medium">{site1Domain}</th>
+                      <th className="text-center py-2 text-foreground/60 font-medium">{site2Domain}</th>
+                      <th className="text-center py-2 text-foreground/60 font-medium">🏆</th>
                     </tr>
                   </thead>
                   <tbody>
                     {cross.serp_battlefield.head_to_head.map((h, i) => (
                       <tr key={i} className="border-b border-border/10">
-                        <td className="py-1.5 text-foreground font-medium">{h.keyword}</td>
-                        <td className="text-center py-1.5">
-                          <Badge variant={h.winner === site1Domain ? 'default' : 'outline'} className="text-[10px] px-1.5">
+                        <td className="py-2 text-foreground font-medium">{h.keyword}</td>
+                        <td className="text-center py-2">
+                          <Badge variant={h.winner === site1Domain ? 'default' : 'outline'} className="text-xs px-2">
                             {typeof h.site1_rank === 'number' ? `#${h.site1_rank}` : h.site1_rank}
                           </Badge>
                         </td>
-                        <td className="text-center py-1.5">
-                          <Badge variant={h.winner === site2Domain ? 'default' : 'outline'} className="text-[10px] px-1.5">
+                        <td className="text-center py-2">
+                          <Badge variant={h.winner === site2Domain ? 'default' : 'outline'} className="text-xs px-2">
                             {typeof h.site2_rank === 'number' ? `#${h.site2_rank}` : h.site2_rank}
                           </Badge>
                         </td>
-                        <td className="text-center py-1.5 text-[10px] text-foreground font-medium truncate max-w-[80px]">{h.winner}</td>
+                        <td className="text-center py-2 text-xs text-foreground font-medium truncate max-w-[80px]">{h.winner}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -843,21 +842,21 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
             {/* Exclusive keywords */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {cross.serp_battlefield.exclusive_strengths_site1 && cross.serp_battlefield.exclusive_strengths_site1.length > 0 && (
-                <div className="p-2 rounded-lg bg-violet-500/5 border border-violet-500/20">
-                  <p className="text-[10px] text-muted-foreground mb-1">{t.exclusiveKeywords} — <span className="font-medium text-violet-400">{site1Domain}</span></p>
-                  <div className="flex flex-wrap gap-1">
+                <div className="p-3 rounded-lg bg-violet-500/5 border border-violet-500/20">
+                  <p className="text-xs text-foreground/60 mb-1.5">{t.exclusiveKeywords} — <span className="font-medium text-violet-400">{site1Domain}</span></p>
+                  <div className="flex flex-wrap gap-1.5">
                     {cross.serp_battlefield.exclusive_strengths_site1.map((k, i) => (
-                      <Badge key={i} variant="outline" className="text-[9px] px-1.5 border-violet-500/30">{k}</Badge>
+                      <Badge key={i} variant="outline" className="text-[10px] px-2 border-violet-500/30">{k}</Badge>
                     ))}
                   </div>
                 </div>
               )}
               {cross.serp_battlefield.exclusive_strengths_site2 && cross.serp_battlefield.exclusive_strengths_site2.length > 0 && (
-                <div className="p-2 rounded-lg bg-amber-500/5 border border-amber-500/20">
-                  <p className="text-[10px] text-muted-foreground mb-1">{t.exclusiveKeywords} — <span className="font-medium text-amber-400">{site2Domain}</span></p>
-                  <div className="flex flex-wrap gap-1">
+                <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                  <p className="text-xs text-foreground/60 mb-1.5">{t.exclusiveKeywords} — <span className="font-medium text-amber-400">{site2Domain}</span></p>
+                  <div className="flex flex-wrap gap-1.5">
                     {cross.serp_battlefield.exclusive_strengths_site2.map((k, i) => (
-                      <Badge key={i} variant="outline" className="text-[9px] px-1.5 border-amber-500/30">{k}</Badge>
+                      <Badge key={i} variant="outline" className="text-[10px] px-2 border-amber-500/30">{k}</Badge>
                     ))}
                   </div>
                 </div>
@@ -871,23 +870,23 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
       {cross.differentiators && cross.differentiators.length > 0 && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <Swords className="h-4 w-4 text-primary" /> {t.differentiators}
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+              <Swords className="h-5 w-5 text-primary" /> {t.differentiators}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2.5">
             {cross.differentiators.map((d, i) => (
-              <div key={i} className={`p-2.5 rounded-lg border ${impactColors[d.impact] || impactColors.mineur}`}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-foreground">{d.dimension}</span>
-                  <Badge variant="outline" className="text-[9px] px-1.5">{d.impact}</Badge>
+              <div key={i} className={`p-3 rounded-lg border ${impactColors[d.impact] || impactColors.mineur}`}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-sm font-semibold text-foreground">{d.dimension}</span>
+                  <Badge variant="outline" className="text-[10px] px-2">{d.impact}</Badge>
                 </div>
-                <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center text-[11px]">
-                  <div className={`text-center p-1 rounded ${d.advantage === site1Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center text-sm">
+                  <div className={`text-center p-1.5 rounded ${d.advantage === site1Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-foreground/60'}`}>
                     {d.site1_value}
                   </div>
-                  <span className="text-muted-foreground text-[9px]">vs</span>
-                  <div className={`text-center p-1 rounded ${d.advantage === site2Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                  <span className="text-foreground/40 text-xs">vs</span>
+                  <div className={`text-center p-1.5 rounded ${d.advantage === site2Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-foreground/60'}`}>
                     {d.site2_value}
                   </div>
                 </div>
@@ -902,28 +901,28 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="border-violet-500/20 bg-card/80">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
                 <ArrowRight className="h-4 w-4 text-violet-500" /> {t.recommendations} — {site1Domain}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {(cross.strategic_recommendations.for_site1 || []).map((r, i) => (
-                  <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-violet-500/30">{r}</p>
+                  <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-violet-500/30">{r}</p>
                 ))}
               </div>
             </CardContent>
           </Card>
           <Card className="border-amber-500/20 bg-card/80">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
                 <ArrowRight className="h-4 w-4 text-amber-500" /> {t.recommendations} — {site2Domain}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {(cross.strategic_recommendations.for_site2 || []).map((r, i) => (
-                  <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-amber-500/30">{r}</p>
+                  <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-amber-500/30">{r}</p>
                 ))}
               </div>
             </CardContent>
@@ -934,8 +933,8 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
       {/* Radar Comparatif */}
       <Card className="border-border/50 bg-card/80">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-primary" /> {t.radarTitle}
+          <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" /> {t.radarTitle}
           </CardTitle>
         </CardHeader>
         <CardContent>
