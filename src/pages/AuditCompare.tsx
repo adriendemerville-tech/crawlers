@@ -332,7 +332,7 @@ function CompareLoadingSteps({ siteName, t }: { siteName: string; t: typeof i18n
           return (
             <motion.div key={step.id}
               initial={{ opacity: 0, x: -10 }} animate={{ opacity: isActive || isComplete ? 1 : 0.3, x: 0 }}
-              className={`flex items-center gap-2.5 p-2.5 rounded-lg text-[13px] ${isActive ? 'bg-primary/10 border border-primary/30' : isComplete ? 'bg-emerald-500/10' : 'bg-muted/30'}`}>
+              className={`flex items-center gap-3 p-3.5 rounded-lg text-sm ${isActive ? 'bg-primary/10 border border-primary/30' : isComplete ? 'bg-emerald-500/10' : 'bg-muted/30'}`}>
               <StepIcon className={`h-[18px] w-[18px] ${isComplete ? 'text-emerald-500' : isActive ? 'text-primary' : 'text-muted-foreground'}`} />
               <span className={isActive ? 'font-medium text-foreground' : 'text-muted-foreground'}>{step.label}</span>
               {isComplete && <CheckCircle2 className="h-4 w-4 text-emerald-500 ml-auto" />}
