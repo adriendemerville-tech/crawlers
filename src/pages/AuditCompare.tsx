@@ -598,17 +598,40 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {analysis.llm_visibility.test_queries.slice(0, 3).map((q, i) => (
-              <div key={i} className="p-2 rounded-lg bg-muted/30 border border-border/30">
-                <p className="text-xs font-medium text-foreground">"{q.query}"</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{q.purpose}</p>
-                <div className="flex gap-1 mt-1">
-                  {q.target_llms?.map((llm, j) => (
-                    <Badge key={j} variant="outline" className="text-[9px] px-1">{llm}</Badge>
-                  ))}
+            {(() => {
+              // Count how many queries target each LLM
+              const queries = analysis.llm_visibility!.test_queries!;
+              const llmColors: Record<string, string> = {
+                'ChatGPT': 'text-emerald-400', 'GPT-4': 'text-emerald-400', 'GPT-5': 'text-emerald-400',
+                'Gemini': 'text-blue-400', 'Google': 'text-blue-400',
+                'Perplexity': 'text-violet-400',
+                'Claude': 'text-amber-400',
+                'Mistral': 'text-rose-400',
+                'Copilot': 'text-cyan-400',
+              };
+              const getLlmColor = (name: string) => {
+                for (const [key, color] of Object.entries(llmColors)) {
+                  if (name.toLowerCase().includes(key.toLowerCase())) return color;
+                }
+                return 'text-teal-400';
+              };
+              return queries.slice(0, 3).map((q, i) => (
+                <div key={i} className="p-2 rounded-lg bg-muted/30 border border-border/30">
+                  <p className="text-xs font-medium text-foreground">"{q.query}"</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{q.purpose}</p>
+                  <div className="flex gap-1.5 mt-1 flex-wrap">
+                    {q.target_llms?.map((llm, j) => {
+                      const count = queries.filter(qq => qq.target_llms?.includes(llm)).length;
+                      return (
+                        <Badge key={j} variant="outline" className={`text-[9px] px-1.5 ${getLlmColor(llm)}`}>
+                          {llm} <span className="ml-0.5 opacity-70">({count})</span>
+                        </Badge>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ));
+            })()}
           </CardContent>
         </Card>
       )}
