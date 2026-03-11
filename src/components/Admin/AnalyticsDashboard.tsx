@@ -259,7 +259,17 @@ export function AnalyticsDashboard() {
         expertAuditStep2: events.filter(e => e.event_type === 'expert_audit_step_2').length,
         expertAuditStep3: events.filter(e => e.event_type === 'expert_audit_step_3').length,
         errorCount: events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final').length,
+        auditCompareLaunched: events.filter(e => e.event_type === 'audit_compare_launched').length,
+        multiPageCrawls: 0, // will be set from site_crawls table below
       };
+
+      // Count multi-page crawls from site_crawls table (30 days)
+      const { count: crawlsCount } = await supabase
+        .from('site_crawls')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', thirtyDaysAgo);
+      newStats.multiPageCrawls = crawlsCount || 0;
+
       setStats(newStats);
 
       // Calculate token usage from ALL events (including ai_token_usage and paid_api_call)
