@@ -645,7 +645,7 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   
   try {
-    const { url1, url2 } = await req.json();
+    const { url1, url2, skipCache } = await req.json();
     
     if (!url1 || !url2) return json({ success: false, error: 'Two URLs are required' }, 400);
     
@@ -670,17 +670,23 @@ Deno.serve(async (req) => {
     const normalizedUrl2 = normalize(url2);
     const cacheKey = buildCacheKey(normalizedUrl1, normalizedUrl2);
 
-    // Check cache
-    const { data: cached } = await supabaseAdmin
-      .from('audit_cache')
-      .select('result_data')
-      .eq('cache_key', cacheKey)
-      .gt('expires_at', new Date().toISOString())
-      .single();
+    // Check cache (skip if requested)
+    if (!skipCache) {
+      const { data: cached } = await supabaseAdmin
+        .from('audit_cache')
+        .select('result_data')
+        .eq('cache_key', cacheKey)
+        .gt('expires_at', new Date().toISOString())
+        .single();
 
-    if (cached?.result_data) {
-      console.log(`✅ Audit comparé: cache hit for ${url1} vs ${url2}`);
-      return json({ success: true, data: cached.result_data, fromCache: true });
+      if (cached?.result_data) {
+        console.log(`✅ Audit comparé: cache hit for ${url1} vs ${url2}`);
+        return json({ success: true, data: cached.result_data, fromCache: true });
+      }
+    } else {
+      // Invalidate old cache
+      await supabaseAdmin.from('audit_cache').delete().eq('cache_key', cacheKey);
+      console.log(`🗑️ Cache invalidated for ${cacheKey}`);
     }
 
     // Check credits (5 required)
