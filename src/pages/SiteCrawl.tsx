@@ -660,7 +660,7 @@ export default function SiteCrawl() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm text-foreground truncate font-medium">{page.path}</div>
-                            <div className="text-xs text-muted-foreground truncate">{page.title || '(sans titre)'}</div>
+                            <div className="text-xs text-muted-foreground truncate">{page.title || t.noTitle}</div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             {(page.issues || []).length > 0 && (
