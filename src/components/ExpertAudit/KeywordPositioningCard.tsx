@@ -587,7 +587,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                         <span className="font-medium text-foreground">"{qw.keyword}"</span>
                         <Badge variant="outline" className="text-warning border-warning/50">#{qw.current_rank}</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground mb-1">{qw.volume.toLocaleString()} recherches/mois</p>
+                      <p className="text-xs text-muted-foreground mb-1">{(qw.volume ?? 0).toLocaleString()} recherches/mois</p>
                       <p className="text-xs text-foreground">{qw.action}</p>
                     </div>
                   ))}
