@@ -1335,7 +1335,7 @@ export function ExpertAuditDashboard() {
         {isLoading && <LoadingSteps siteName={url} variant="technical" onStopMusicRef={stopMusicRef} />}
         
         {/* Loading State - Strategic */}
-        {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" />}
+        {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" onStopMusicRef={stopMusicRef} />}
       </div>
 
       {/* Patience Cards during strategic loading */}
