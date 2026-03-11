@@ -279,6 +279,14 @@ const i18n = {
     authority: 'Authority',
     trust: 'Trust',
     radarTitle: 'Comparative Radar',
+    faqTitle: 'Frequently Asked Questions about Online Competition',
+    faq: [
+      { q: 'How do I analyze my site\'s SEO competition?', a: 'SEO competitive analysis involves comparing technical performance (Core Web Vitals, HTML structure), backlink profiles, content depth and E‑E‑A‑T scores of your site against direct competitors. Our comparative audit automates this analysis in minutes.' },
+      { q: 'Why compare visibility in generative AI engines?', a: 'In 2026, ChatGPT, Perplexity and Google SGE generate a growing share of qualified traffic. A competitor better cited by these LLMs captures visitors you never see in your classic analytics. Comparing your AI presence to rivals reveals opportunities invisible in traditional SEO.' },
+      { q: 'What criteria differentiate two competing sites online?', a: 'Key criteria include: domain authority (backlinks and Domain Rank), semantic depth (word count, H2/H3 structure), structured data (JSON‑LD, FAQ Schema), page speed (LCP, CLS) and presence in LLM responses. Our comparative radar visualizes these gaps at a glance.' },
+      { q: 'What is Brand DNA in competitive auditing?', a: 'Brand DNA is a brand\'s unique digital fingerprint: its value proposition, semantic positioning, associated entities in Knowledge Graphs and reputation in generative responses. Comparing the Brand DNA of two sites reveals the strengths and weaknesses of each online brand strategy.' },
+      { q: 'How often should I monitor my competitors?', a: 'We recommend a monthly comparative audit for competitive markets (e‑commerce, SaaS, finance) and quarterly for other sectors. Search engine and LLM algorithms constantly evolve: regular monitoring helps anticipate competitive moves and adjust your GEO strategy.' },
+    ],
   },
   es: {
     pageTitle: 'Auditoría Comparativa SEO/GEO — Compare dos sitios | Crawlers.fr',
