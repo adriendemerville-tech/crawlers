@@ -348,9 +348,8 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
             <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-[11px] text-muted-foreground font-medium">{t.llmVolumes}</span>
             <div className="flex items-center gap-1.5 ml-auto flex-wrap">
-              {Object.entries(LLM_COLORS).map(([llm, color]) => (
-                <span key={llm} className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <span className={`inline-block h-2 w-2 rounded-sm ${color}`} />
+              {Object.entries(LLM_COLORS).map(([llm, colorClass]) => (
+                <span key={llm} className={`text-[10px] font-semibold ${colorClass}`}>
                   {LLM_LABELS[llm] || llm}
                 </span>
               ))}
