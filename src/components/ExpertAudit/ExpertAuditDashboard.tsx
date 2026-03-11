@@ -508,6 +508,7 @@ export function ExpertAuditDashboard() {
     setStrategicCachedContext(null);
     setCurrentStep(1);
     setCompletedSteps([]);
+    setStrategicProgressiveReveal(false);
     // Clear session storage
     sessionStorage.removeItem('audit_url');
     sessionStorage.removeItem('audit_technical_result');
