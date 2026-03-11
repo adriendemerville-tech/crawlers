@@ -585,6 +585,77 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
         </Card>
       )}
 
+      {/* PageSpeed */}
+      {pagespeed && (pagespeed.performanceMobile > 0 || pagespeed.performanceDesktop > 0) && (
+        <Card className="border-border/50 bg-card/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Gauge className="h-4 w-4 text-orange-500" /> {t.pagespeed}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2 rounded-lg bg-muted/30 text-center">
+                <p className={`text-2xl font-bold ${pagespeed.performanceMobile >= 90 ? 'text-emerald-500' : pagespeed.performanceMobile >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+                  {pagespeed.performanceMobile}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{t.mobile}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-muted/30 text-center">
+                <p className={`text-2xl font-bold ${pagespeed.performanceDesktop >= 90 ? 'text-emerald-500' : pagespeed.performanceDesktop >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+                  {pagespeed.performanceDesktop}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{t.desktop}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
+              <span>FCP: {(pagespeed.fcpMs / 1000).toFixed(1)}s</span>
+              <span>LCP: {(pagespeed.lcpMs / 1000).toFixed(1)}s</span>
+              <span>CLS: {pagespeed.cls}</span>
+              <span>TTFB: {pagespeed.ttfbMs}ms</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* E-E-A-T Score */}
+      {analysis.eeat_score && (
+        <Card className="border-border/50 bg-card/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Award className="h-4 w-4 text-indigo-500" /> {t.eeat}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="text-center mb-2">
+              <p className="text-2xl font-bold text-foreground">{analysis.eeat_score.overall}<span className="text-xs text-muted-foreground">/10</span></p>
+            </div>
+            <div className="space-y-1.5">
+              {[
+                { label: t.experience, value: analysis.eeat_score.experience },
+                { label: t.expertiseLabel, value: analysis.eeat_score.expertise },
+                { label: t.authority, value: analysis.eeat_score.authoritativeness },
+                { label: t.trust, value: analysis.eeat_score.trustworthiness },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground w-16 shrink-0">{item.label}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-muted/50 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${item.value >= 8 ? 'bg-emerald-500' : item.value >= 5 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                      style={{ width: `${(item.value / 10) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-medium text-foreground w-5 text-right">{item.value}</span>
+                </div>
+              ))}
+            </div>
+            {analysis.eeat_score.justification && (
+              <p className="text-[10px] text-muted-foreground italic mt-1">{analysis.eeat_score.justification}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* AEO Score + Expertise Sentiment */}
       <div className="grid grid-cols-2 gap-3">
         <Card className="border-border/50 bg-card/80">
