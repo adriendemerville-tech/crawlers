@@ -129,7 +129,7 @@ const i18n = {
     confirmSite1: 'Confirmez l\'URL du Site 1',
     confirmSite2: 'Confirmez l\'URL du Site 2',
     errorConfirm: 'Veuillez confirmer les deux URLs avant de lancer l\'audit.',
-    insufficientCredits: '5 crédits requis pour un audit comparé.',
+    insufficientCredits: '4 crédits requis pour un audit comparé.',
     retry: 'L\'analyse a pris trop de temps. Veuillez relancer l\'audit.',
     analysisTime: 'L\'analyse peut prendre jusqu\'à 3 minutes.',
     newAudit: 'Nouvel audit comparé',
