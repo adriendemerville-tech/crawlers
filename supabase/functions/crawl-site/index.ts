@@ -42,23 +42,39 @@ Deno.serve(async (req) => {
     const domain = new URL(normalizedUrl).hostname;
     const pageLimit = Math.min(maxPages, 500);
 
+    // Check if user is Pro Agency or Admin (unlimited crawl)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan_type, subscription_status')
+      .eq('user_id', userId)
+      .single();
+
+    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
+
+    const isProAgency = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
+    const isUnlimited = isProAgency || isAdmin === true;
+
     // Credit cost
-    const creditCost = pageLimit <= 50 ? 5 : pageLimit <= 100 ? 10 : pageLimit <= 200 ? 15 : 30;
+    const creditCost = isUnlimited ? 0 : (pageLimit <= 50 ? 5 : pageLimit <= 100 ? 10 : pageLimit <= 200 ? 15 : 30);
 
-    // Deduct credits
-    const { data: creditResult } = await supabase.rpc('use_credit', {
-      p_user_id: userId,
-      p_amount: creditCost,
-      p_description: `Crawl multi-pages: ${domain} (${pageLimit} pages max)`,
-    });
+    if (!isUnlimited) {
+      // Deduct credits
+      const { data: creditResult } = await supabase.rpc('use_credit', {
+        p_user_id: userId,
+        p_amount: creditCost,
+        p_description: `Crawl multi-pages: ${domain} (${pageLimit} pages max)`,
+      });
 
-    if (!creditResult?.success) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Crédits insuffisants',
-        required: creditCost,
-        balance: creditResult?.balance || 0,
-      }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (!creditResult?.success) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: 'Crédits insuffisants',
+          required: creditCost,
+          balance: creditResult?.balance || 0,
+        }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    } else {
+      console.log(`[${domain}] Crawl illimité (${isProAgency ? 'Pro Agency' : 'Admin'})`);
     }
 
     // Create site_crawls row
