@@ -321,7 +321,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
                     <Zap className="h-4 w-4 text-warning mx-auto mb-1" />
-                    <p className="text-lg font-bold text-foreground">{rankingOverview.etv.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-foreground">{(rankingOverview?.etv ?? 0).toLocaleString()}</p>
                     <p className="text-xs text-muted-foreground">Trafic estimé/mois</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
