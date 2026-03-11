@@ -711,20 +711,20 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
         <Card className="border-border/50 bg-card/80">
           <CardContent className="pt-4 text-center">
             <Zap className="h-5 w-5 mx-auto text-amber-500 mb-1" />
-            <p className="text-xs text-muted-foreground">{t.aeoScore}</p>
-            <p className="text-2xl font-bold text-foreground">{analysis.aeo_score}<span className="text-xs text-muted-foreground">/100</span></p>
+            <p className="text-xs text-foreground/60">{t.aeoScore}</p>
+            <p className="text-3xl font-bold text-foreground">{analysis.aeo_score}<span className="text-sm text-foreground/50">/100</span></p>
           </CardContent>
         </Card>
         <Card className="border-border/50 bg-card/80">
           <CardContent className="pt-4 text-center">
             <Star className="h-5 w-5 mx-auto text-yellow-500 mb-1" />
-            <p className="text-xs text-muted-foreground">{t.expertise}</p>
+            <p className="text-xs text-foreground/60">{t.expertise}</p>
             <div className="flex items-center justify-center gap-0.5 mt-1">
               {[1, 2, 3, 4, 5].map(n => (
                 <Star key={n} className={`h-4 w-4 ${n <= (analysis.expertise_sentiment?.rating || 0) ? 'text-yellow-500 fill-yellow-500' : 'text-muted'}`} />
               ))}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-1">{analysis.expertise_sentiment?.justification}</p>
+            <p className="text-xs text-foreground/60 mt-1">{analysis.expertise_sentiment?.justification}</p>
           </CardContent>
         </Card>
       </div>
