@@ -1199,9 +1199,19 @@ const AuditCompare = () => {
                 </div>
               </div>
 
+              {/* Cross-Comparison Section */}
+              {result.crossComparison && (
+                <CrossComparisonSection 
+                  cross={result.crossComparison} 
+                  site1Domain={result.site1.domain} 
+                  site2Domain={result.site2.domain} 
+                  t={t} 
+                />
+              )}
+
               {/* Restart */}
               <div className="text-center mt-8">
-                <Button variant="outline" onClick={() => { setResult(null); setUrl1(''); setUrl2(''); }}>
+                <Button variant="outline" onClick={() => { setResult(null); setUrl1(''); setUrl2(''); setConfirmedUrl1(null); setConfirmedUrl2(null); }}>
                   {t.newAudit}
                 </Button>
               </div>
