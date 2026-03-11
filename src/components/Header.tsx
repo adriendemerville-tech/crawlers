@@ -208,32 +208,32 @@ export function Header() {
                 <span className="hidden sm:inline text-lg font-display text-[#7c3aed]" style={{ fontWeight: 900 }}>Crawlers</span>
               </a>
 
-              {/* Language selector - hidden on mobile and profile page */}
+              {/* Language selector below Crawlers - hidden on mobile and profile page */}
               {!isProfilePage && (
-                <div className="hidden sm:flex items-center gap-1" role="group" aria-label="Sélection de la langue">
+                <div className="hidden sm:flex items-center gap-0.5 ml-1" role="group" aria-label="Sélection de la langue">
                   <button
                     onClick={() => setLanguage('fr')}
-                    className={`h-7 w-7 rounded-md flex items-center justify-center transition-opacity ${language === 'fr' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                    className={`h-6 w-6 rounded-md flex items-center justify-center transition-opacity ${language === 'fr' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
                     aria-pressed={language === 'fr'}
                     aria-label="Français"
                   >
-                    <span className="text-base">🇫🇷</span>
+                    <span className="text-sm">🇫🇷</span>
                   </button>
                   <button
                     onClick={() => setLanguage('en')}
-                    className={`h-7 w-7 rounded-md flex items-center justify-center transition-opacity ${language === 'en' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                    className={`h-6 w-6 rounded-md flex items-center justify-center transition-opacity ${language === 'en' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
                     aria-pressed={language === 'en'}
                     aria-label="English"
                   >
-                    <span className="text-base">🇬🇧</span>
+                    <span className="text-sm">🇬🇧</span>
                   </button>
                   <button
                     onClick={() => setLanguage('es')}
-                    className={`h-7 w-7 rounded-md flex items-center justify-center transition-opacity ${language === 'es' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                    className={`h-6 w-6 rounded-md flex items-center justify-center transition-opacity ${language === 'es' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
                     aria-pressed={language === 'es'}
                     aria-label="Español"
                   >
-                    <span className="text-base">🇪🇸</span>
+                    <span className="text-sm">🇪🇸</span>
                   </button>
                 </div>
               )}
@@ -241,8 +241,21 @@ export function Header() {
           )}
         </div>
 
-        {/* Center: Lexique + Comparatif links - hidden on mobile */}
+        {/* Center: Navigation links - hidden on mobile */}
         <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+          {/* Audit button first - hidden on audit-expert page */}
+          {!isAuditExpertPage && (
+            <Link to="/audit-expert">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-yellow-500 hover:text-yellow-400 hover:bg-transparent"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span className="text-sm">Audit</span>
+              </Button>
+            </Link>
+          )}
           {isAuditExpertPage ? (
             <a href="/lexique" target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
@@ -303,19 +316,6 @@ export function Header() {
         {/* Right side: Audit CTA, Credits, Theme, User */}
         <div className="flex items-center gap-3">
 
-          {/* Audit Expert CTA - hidden on audit-expert page */}
-          {!isAuditExpertPage && (
-            <Link to="/audit-expert">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-yellow-500 hover:text-yellow-400 hover:bg-transparent font-bold"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span className="hidden sm:inline">Audit</span>
-              </Button>
-            </Link>
-          )}
           {/* Credit recharge button - on home and /audit-expert (show for all users) */}
           {(isAuditExpertPage || location.pathname === '/') && (
             <Suspense fallback={null}>
