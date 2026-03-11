@@ -2008,7 +2008,7 @@ Deno.serve(async (req) => {
                 const llmResult = await llmResponse.json();
                 return llmResult.success && llmResult.data ? llmResult.data : null;
               })(),
-              30_000, 'check_llm'
+              45_000, 'check_llm'
             )
           : Promise.resolve(null),
         // Local competitor
