@@ -1151,6 +1151,7 @@ export function ExpertAuditDashboard() {
     if (strategicResult) {
       setAuditMode('strategic');
       setResult(strategicResult);
+      setStrategicProgressiveReveal(false);
     }
   }, [strategicResult]);
 
