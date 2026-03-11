@@ -122,6 +122,14 @@ const translations = {
 
 // LLM brand colors for volume bars
 const LLM_COLORS: Record<string, string> = {
+  ChatGPT: 'text-emerald-600 dark:text-emerald-400',
+  Perplexity: 'text-blue-600 dark:text-blue-400',
+  Gemini: 'text-indigo-600 dark:text-indigo-400',
+  Google_AI: 'text-amber-600 dark:text-amber-400',
+  Grok: 'text-rose-600 dark:text-rose-400',
+};
+
+const LLM_DOT_COLORS: Record<string, string> = {
   ChatGPT: 'bg-emerald-500',
   Perplexity: 'bg-blue-500',
   Gemini: 'bg-indigo-500',
