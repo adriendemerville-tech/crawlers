@@ -192,11 +192,16 @@ export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsPr
           <span className="text-sm font-medium text-foreground">Playlist Crawlers</span>
         </div>
         <div
-          ref={embedContainerRef}
           className="w-full overflow-hidden rounded-[12px] bg-[#282828] isolate"
           style={{ clipPath: 'inset(0 round 12px)' }}
-          aria-label="Playlist Crawlers"
-        />
+        >
+          <div
+            ref={embedContainerRef}
+            className="w-full"
+            style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }}
+            aria-label="Playlist Crawlers"
+          />
+        </div>
         <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">
           Volume recommandé : 50%
         </p>
