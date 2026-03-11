@@ -768,31 +768,31 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-foreground leading-relaxed">{cross.verdict}</p>
+          <p className="text-base text-foreground leading-relaxed">{cross.verdict}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Authority winner */}
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border/50">
-              <Shield className="h-4 w-4 text-blue-500 shrink-0" />
+            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-card border border-border/50">
+              <Shield className="h-5 w-5 text-blue-500 shrink-0" />
               <div className="min-w-0">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t.authorityWinner}</p>
-                <p className="text-sm font-bold text-foreground truncate">{cross.authority_winner}</p>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-xs text-foreground/50 uppercase tracking-wider">{t.authorityWinner}</p>
+                <p className="text-base font-bold text-foreground truncate">{cross.authority_winner}</p>
+                <p className="text-xs text-foreground/60">
                   {cross.authority_gap?.magnitude} — {cross.authority_gap?.key_factor}
                 </p>
               </div>
             </div>
             {/* Content winner */}
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border/50">
-              <FileText className="h-4 w-4 text-teal-500 shrink-0" />
+            <div className="flex items-center gap-3 p-3.5 rounded-lg bg-card border border-border/50">
+              <FileText className="h-5 w-5 text-teal-500 shrink-0" />
               <div className="min-w-0">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t.contentWinner}</p>
-                <p className="text-sm font-bold text-foreground truncate">{cross.content_depth_winner}</p>
-                <p className="text-[10px] text-muted-foreground">{cross.content_comparison?.structural_advantage}</p>
+                <p className="text-xs text-foreground/50 uppercase tracking-wider">{t.contentWinner}</p>
+                <p className="text-base font-bold text-foreground truncate">{cross.content_depth_winner}</p>
+                <p className="text-xs text-foreground/60">{cross.content_comparison?.structural_advantage}</p>
               </div>
             </div>
           </div>
           {cross.content_comparison?.technical_seo_edge && (
-            <p className="text-xs text-muted-foreground italic">{cross.content_comparison.technical_seo_edge}</p>
+            <p className="text-sm text-foreground/60 italic">{cross.content_comparison.technical_seo_edge}</p>
           )}
         </CardContent>
       </Card>
