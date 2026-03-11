@@ -237,7 +237,7 @@ const i18n = {
     badge: 'Auditoría Comparativa',
     h1: 'Compare dos sitios frente a la IA',
     subtitle: 'Analice y compare la visibilidad IA, las palabras clave y la estrategia GEO de dos sitios lado a lado.',
-    credits: '5 créditos',
+    credits: '4 créditos',
     confirm: 'Confirmar',
     launch: 'Lanzar auditoría comparativa',
     confirmBoth: 'Confirme ambas URLs para lanzar la auditoría',
