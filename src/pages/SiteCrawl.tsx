@@ -534,7 +534,7 @@ export default function SiteCrawl() {
                 <Card className="border">
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-foreground">{crawlResult.crawled_pages}</div>
-                    <div className="text-xs text-muted-foreground mt-1">Pages analysées</div>
+                    <div className="text-xs text-muted-foreground mt-1">{t.pagesAnalyzedLabel}</div>
                   </CardContent>
                 </Card>
                 <Card className={`border ${getScoreBg(crawlResult.avg_score || 0)}`}>
