@@ -544,8 +544,8 @@ const AuditCompare = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>Audit Comparé SEO/GEO — Comparez deux sites | Crawlers.fr</title>
-        <meta name="description" content="Comparez deux sites web face-à-face : Brand DNA, SWOT, visibilité LLM et score AEO. Analyse concurrentielle SEO & GEO par IA." />
+        <title>{t.pageTitle}</title>
+        <meta name="description" content={t.pageDesc} />
       </Helmet>
       <Header />
       <main className="flex-1">
@@ -553,15 +553,15 @@ const AuditCompare = () => {
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
             <Badge variant="outline" className="mb-3 text-xs border-violet-500/30 text-violet-400">
-              <Swords className="h-3 w-3 mr-1" /> Audit Comparé
+              <Swords className="h-3 w-3 mr-1" /> {t.badge}
             </Badge>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              Comparez deux sites face aux IA
+              {t.h1}
             </h1>
             <p className="text-muted-foreground text-sm max-w-lg mx-auto">
-              Analysez et comparez la visibilité IA, les mots-clés et la stratégie GEO de deux sites côte à côte.
+              {t.subtitle}
             </p>
-            <Badge variant="secondary" className="mt-2 text-xs">5 crédits</Badge>
+            <Badge variant="secondary" className="mt-2 text-xs">{t.credits}</Badge>
           </motion.div>
 
           {/* URL Inputs */}
