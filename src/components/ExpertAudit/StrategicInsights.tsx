@@ -157,14 +157,166 @@ export function StrategicInsights({
         onHallucinationDataReady={onHallucinationData}
       />
 
-      {/* PREMIUM FORMAT: Full 13 Modules Display */}
+      {/* PREMIUM FORMAT — Ordre stratégique 2026 */}
       {hasPremiumFormat && (
         <>
-          {/* GEO Score Visualization */}
+          {/* 1. Autorité de Marque (Brand DNA) */}
+          {analysis.brand_authority && (
+            <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Target className="h-4.5 w-4.5 text-primary" />
+                  </div>
+                  Autorité de Marque (Brand DNA)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-muted-foreground leading-relaxed">
+                  {analysis.brand_authority.dna_analysis}
+                </p>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Thought Leadership:</span>
+                    <span className="text-lg font-bold text-primary">
+                      {analysis.brand_authority.thought_leadership_score}
+                      <span className="text-sm text-muted-foreground">/100</span>
+                    </span>
+                  </div>
+                  <Badge 
+                    variant="outline" 
+                    className={
+                      analysis.brand_authority.entity_strength === 'dominant' ? 'text-success border-success/30' :
+                      analysis.brand_authority.entity_strength === 'established' ? 'text-primary border-primary/30' :
+                      analysis.brand_authority.entity_strength === 'emerging' ? 'text-warning border-warning/30' :
+                      'text-muted-foreground'
+                    }
+                  >
+                    Entité: {analysis.brand_authority.entity_strength}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 2. Intelligence Marché & Psychologie */}
+          {analysis.market_intelligence && (
+            <MarketIntelligenceCard intelligence={analysis.market_intelligence} />
+          )}
+
+          {/* 3. Écosystème Concurrentiel */}
+          {analysis.competitive_landscape && (
+            <CompetitiveLandscapeCard 
+              landscape={analysis.competitive_landscape}
+              onCorrectionSubmit={onCompetitorCorrection}
+              isReanalyzing={isReanalyzing}
+            />
+          )}
+
+          {/* 4. Sentiment d'Expertise (E-E-A-T Tone) & Red Team */}
+          {analysis.expertise_sentiment && <ExpertiseSentimentCard data={analysis.expertise_sentiment} />}
+          {analysis.red_team && <RedTeamCard data={analysis.red_team} />}
+
+          {/* 5-7. Analyse comparative DataForSEO + Mots-clés + Gaps */}
+          <KeywordModuleSection analysis={analysis} domain={domain} />
+
+          {/* 8. Score AEO (Answer Engine Optimization) */}
+          {auditResult && (
+            <AEOScoreCard result={auditResult} />
+          )}
+
+          {/* 9. Visibilité LLMs */}
+          {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
+            <LLMVisibilityCard data={analysis.llm_visibility_raw} />
+          )}
+
+          {/* 10. Matrice de Risque Zéro-Clic */}
+          <ZeroClickRiskCard analysis={analysis} domain={domain} />
+
+          {/* 11. Requêtes LLM à cibler */}
+          {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
+            <LLMTargetQueriesCard 
+              domain={domain} 
+              coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
+              citations={analysis.llm_visibility_raw.citations as any}
+              selfCorrect
+              strategicAnalysis={analysis}
+            />
+          )}
+
+          {/* 12. Thought Leadership + Sentiment & Polarité */}
+          <ConversationalIntentCard analysis={analysis} />
+
+          {/* 13. Autorité Sociale & Humaine */}
+          {analysis.social_signals && (
+            <SocialSignalsCard signals={analysis.social_signals} />
+          )}
+
+          {/* 14. Sémantique IA & Reformulations */}
+          {analysis.geo_readiness && (
+            <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Globe className="h-4.5 w-4.5 text-primary" />
+                  </div>
+                  Sémantique IA & Reformulations
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground mb-1">Score Citabilité</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {analysis.geo_readiness.citability_score}
+                      <span className="text-sm text-muted-foreground">/100</span>
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground mb-1">Accessibilité IA</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {analysis.geo_readiness.ai_accessibility_score}
+                      <span className="text-sm text-muted-foreground">/100</span>
+                    </p>
+                  </div>
+                  {analysis.geo_readiness.semantic_coherence && (
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground mb-1">Cohérence Title/H1</p>
+                      <p className="text-2xl font-bold text-foreground">
+                        {analysis.geo_readiness.semantic_coherence.title_h1_alignment}%
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {analysis.geo_readiness.performance_impact && (
+                  <p className="text-sm text-muted-foreground italic border-l-2 border-primary/30 pl-3">
+                    💡 {analysis.geo_readiness.performance_impact}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 15. Indice de Citabilité & Résilience au Résumé */}
+          {analysis.quotability && <QuotabilityCard data={analysis.quotability} />}
+          {analysis.summary_resilience && <SummaryResilienceCard data={analysis.summary_resilience} />}
+
+          {/* 16. Empreinte Lexicale */}
+          {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
+
+          {/* 17. Matrice de Gap Sémantique */}
           {geoScoreForVisualization && (
             <GeoScoreVisualization geoScore={geoScoreForVisualization} />
           )}
 
+          {/* 18. Contenus à produire en priorité */}
+          <PriorityContentCard domain={domain} />
+
+          {/* 19. Feuille de Route Exécutive 2026 */}
+          {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (
+            <PremiumRoadmapCard roadmap={analysis.executive_roadmap} />
+          )}
+        </>
           {/* Competitive Landscape (4 Actors) */}
           {analysis.competitive_landscape && (
             <CompetitiveLandscapeCard 
