@@ -1992,7 +1992,7 @@ Deno.serve(async (req) => {
         // Market data (DataForSEO keywords)
         withDeadline(
           fetchMarketData(domain, context, pageContentContext, url),
-          120_000, 'market_data'
+          180_000, 'market_data'
         ),
         // LLM visibility check (sub-function call)
         needsLlmCheck && supabaseUrl && supabaseAnonKey
