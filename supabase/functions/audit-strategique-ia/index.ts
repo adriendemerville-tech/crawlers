@@ -1814,28 +1814,102 @@ Utilise ces informations pour identifier le core business.`;
 
 // ==================== MAIN HANDLER ====================
 
+/** Safely execute an async task, returning null on failure */
+async function safe<T>(label: string, fn: () => Promise<T>): Promise<T | null> {
+  try {
+    return await fn();
+  } catch (e) {
+    console.warn(`⚠️ [${label}] failed:`, e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+/** Race a promise against a deadline. Returns null if deadline wins. */
+function withDeadline<T>(promise: Promise<T>, deadlineMs: number, label: string): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => {
+      console.warn(`⏰ [${label}] hit deadline (${deadlineMs}ms)`);
+      resolve(null);
+    }, deadlineMs)),
+  ]);
+}
+
+/** Save result to audit_cache (fire-and-forget) */
+async function saveToCache(domain: string, url: string, result: any): Promise<void> {
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  const supabaseUrlEnv = Deno.env.get('SUPABASE_URL') || '';
+  if (!serviceKey || !supabaseUrlEnv) return;
+  try {
+    const adminClient = createClient(supabaseUrlEnv, serviceKey);
+    const cacheKey = `strategic_${domain}_${url}`;
+    await adminClient.from('audit_cache').upsert({
+      cache_key: cacheKey,
+      function_name: 'audit-strategique-ia',
+      result_data: result,
+      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+    }, { onConflict: 'cache_key' });
+    console.log('✅ Result saved to audit_cache for timeout recovery');
+  } catch (cacheErr) {
+    console.warn('⚠️ Failed to cache result:', cacheErr);
+  }
+}
+
+/** Build a minimal fallback result when LLM fails */
+function buildFallbackResult(url: string, domain: string, marketData: MarketData | null, rankingOverview: RankingOverview | null, llmData: any, cachedContextOut: any): any {
+  return {
+    success: true,
+    data: {
+      url, domain,
+      scannedAt: new Date().toISOString(),
+      overallScore: 0,
+      introduction: { presentation: 'L\'analyse IA n\'a pas pu être complétée. Les données de marché sont disponibles.', strengths: '', improvement: '', competitors: [] },
+      brand_authority: { dna_analysis: 'Non disponible', thought_leadership_score: 0, entity_strength: 'unknown' },
+      social_signals: { proof_sources: [], thought_leadership: { founder_authority: 'unknown', entity_recognition: '', eeat_score: 0, analysis: '' }, sentiment: { overall_polarity: 'neutral', hallucination_risk: 'medium', reputation_vibration: '' } },
+      market_intelligence: { sophistication: { level: 1, description: '', emotional_levers: [] }, semantic_gap: { current_position: 0, leader_position: 0, gap_analysis: '', priority_themes: [], closing_strategy: '' } },
+      competitive_landscape: { leader: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, direct_competitor: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, challenger: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' }, inspiration_source: { name: 'Non identifié', url: null, authority_factor: '', analysis: '' } },
+      geo_readiness: { citability_score: 0, readiness_level: 'basic', analysis: 'Non disponible', strengths: [], weaknesses: [], recommendations: [] },
+      executive_roadmap: [],
+      keyword_positioning: marketData ? {
+        main_keywords: marketData.top_keywords.slice(0, 5).map(kw => ({ keyword: kw.keyword, volume: kw.volume, difficulty: kw.difficulty, current_rank: kw.current_rank })),
+        quick_wins: [], content_gaps: [], opportunities: [], competitive_gaps: [], recommendations: [],
+      } : null,
+      market_data_summary: marketData ? { total_market_volume: marketData.total_market_volume, keywords_ranked: marketData.top_keywords.filter(k => k.is_ranked).length, keywords_analyzed: marketData.top_keywords.length, average_position: 0, data_source: 'dataforseo' } : null,
+      executive_summary: 'L\'analyse stratégique n\'a pas pu être complétée par l\'IA. Les données de marché et de positionnement sont disponibles.',
+      quotability: { score: 0, quotes: [] },
+      summary_resilience: { score: 0, originalH1: '', llmSummary: '' },
+      lexical_footprint: { jargonRatio: 50, concreteRatio: 50 },
+      expertise_sentiment: { rating: 1, justification: 'Non évalué' },
+      red_team: { flaws: [] },
+      raw_market_data: marketData,
+      ranking_overview: rankingOverview,
+      toolsData: null,
+      llm_visibility_raw: llmData,
+      _cachedContext: cachedContextOut,
+    },
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ═══ GLOBAL DEADLINE: 8 min 30s — guarantees response before Edge Function timeout ═══
+  const GLOBAL_DEADLINE = 510_000; // 8min30s
+  const startTime = Date.now();
+  const isOverDeadline = () => Date.now() - startTime > GLOBAL_DEADLINE;
+
+  const json = (data: any, status = 200) =>
+    new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
   try {
     const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext } = await req.json();
 
-    if (!url) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'URL is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    if (!url) return json({ success: false, error: 'URL is required' }, 400);
 
     const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
-    if (!OPENROUTER_API_KEY) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'AI service not configured (OPENROUTER_API_KEY missing)' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    if (!OPENROUTER_API_KEY) return json({ success: false, error: 'AI service not configured' }, 500);
 
     const effectiveToolsData: ToolsData = toolsData || {
       crawlers: { note: 'Non disponible' },
@@ -1844,9 +1918,14 @@ Deno.serve(async (req) => {
       pagespeed: { note: 'Non disponible' },
     };
 
+    const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
+    const domain = new URL(normalizedUrl).hostname;
+    const domainWithoutWww = domain.replace(/^www\./, '');
+    const domainSlug = domainWithoutWww.split('.')[0];
+
     // ==================== SMART CACHE: Skip expensive calls if cachedContext provided ====================
     const useCache = !!cachedContext;
-    
+
     let pageContentContext: string;
     let brandSignals: BrandSignal[];
     let eeatSignals: EEATSignals;
@@ -1856,442 +1935,406 @@ Deno.serve(async (req) => {
     let localCompetitorData: { name: string; url: string; rank: number } | null = null;
 
     if (useCache) {
-      console.log('⚡ SMART CACHE: Using cached context — skipping metadata, DataForSEO, founder, check-llm');
+      // ═══ FAST PATH: Reuse cached context (corrections/re-runs) ═══
+      console.log('⚡ SMART CACHE: Using cached context — skipping all data collection');
       pageContentContext = cachedContext.pageContentContext || '';
       brandSignals = cachedContext.brandSignals || [];
       eeatSignals = cachedContext.eeatSignals || {
-        hasAuthorBio: false, authorBioCount: 0,
-        hasSocialLinks: false, hasLinkedInLinks: false,
+        hasAuthorBio: false, authorBioCount: 0, hasSocialLinks: false, hasLinkedInLinks: false,
         socialLinksCount: 0, linkedInLinksCount: 0, linkedInUrls: [],
-        hasSameAs: false, hasWikidataSameAs: false,
-        hasAuthorInJsonLd: false, hasProfilePage: false,
-        hasPerson: false, hasOrganization: false,
-        hasCaseStudies: false, caseStudySignals: 0,
+        hasSameAs: false, hasWikidataSameAs: false, hasAuthorInJsonLd: false, hasProfilePage: false,
+        hasPerson: false, hasOrganization: false, hasCaseStudies: false, caseStudySignals: 0,
         hasExpertCitations: false, detectedSocialUrls: [],
       };
       marketData = cachedContext.marketData || null;
       rankingOverview = cachedContext.rankingOverview || null;
       founderInfo = cachedContext.founderInfo || { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
-      // When user corrects competitors, skip local competitor search (user overrides)
       localCompetitorData = null;
-      // Use cached LLM data
-      if (cachedContext.llmData) {
-        effectiveToolsData.llm = cachedContext.llmData;
-      }
+      if (cachedContext.llmData) effectiveToolsData.llm = cachedContext.llmData;
     } else {
-      // ==================== FETCH PAGE METADATA (lightweight) ====================
-      const metadata = await extractPageMetadata(url);
-      pageContentContext = metadata.context;
-      brandSignals = metadata.brandSignals;
-      eeatSignals = metadata.eeatSignals;
+      // ═══ FULL PATH: Collect all data with maximum parallelism ═══
+
+      // ── WAVE 1: Metadata + Ranked Keywords (independent, parallel) ──
+      console.log('📊 WAVE 1: Metadata + Ranked Keywords (parallel)...');
+      const [metadataResult, rkOverviewResult] = await Promise.all([
+        safe('metadata', () => extractPageMetadata(url)),
+        safe('ranked_keywords', () => {
+          // We need location code — default to France
+          const tld = domain.split('.').pop() || 'com';
+          const tldMap: Record<string, string> = { 'fr': 'france', 'be': 'belgium', 'ch': 'switzerland', 'ca': 'canada', 'de': 'germany', 'es': 'spain', 'it': 'italy', 'uk': 'united kingdom', 'com': 'france', 'ai': 'france', 'io': 'france', 'dev': 'france', 'app': 'france' };
+          const locKey = tldMap[tld] || 'france';
+          const locCode = KNOWN_LOCATIONS[locKey]?.code || 2250;
+          return fetchRankedKeywords(domain, locCode);
+        }),
+      ]);
+
+      pageContentContext = metadataResult?.context || '';
+      brandSignals = metadataResult?.brandSignals || [];
+      eeatSignals = metadataResult?.eeatSignals || {
+        hasAuthorBio: false, authorBioCount: 0, hasSocialLinks: false, hasLinkedInLinks: false,
+        socialLinksCount: 0, linkedInLinksCount: 0, linkedInUrls: [],
+        hasSameAs: false, hasWikidataSameAs: false, hasAuthorInJsonLd: false, hasProfilePage: false,
+        hasPerson: false, hasOrganization: false, hasCaseStudies: false, caseStudySignals: 0,
+        hasExpertCitations: false, detectedSocialUrls: [],
+      };
+      rankingOverview = rkOverviewResult;
+
+      const context = detectBusinessContext(domain, pageContentContext);
+
+      // ── WAVE 2: DataForSEO Market + check-llm + Local Competitor + Founder (all parallel) ──
+      console.log('\n📊 WAVE 2: Market data + LLM check + Competitor + Founder (parallel)...');
+
+      const needsLlmCheck = !toolsData?.llm || toolsData.llm.note;
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+
+      const [mktDataResult, llmCheckResult, localCompResult, founderResult] = await Promise.allSettled([
+        // Market data (DataForSEO keywords)
+        withDeadline(
+          fetchMarketData(domain, context, pageContentContext, url),
+          120_000, 'market_data'
+        ),
+        // LLM visibility check (sub-function call)
+        needsLlmCheck && supabaseUrl && supabaseAnonKey
+          ? withDeadline(
+              (async () => {
+                const llmResponse = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ url, lang: 'fr' }),
+                  signal: AbortSignal.timeout(25000),
+                });
+                if (!llmResponse.ok) { await llmResponse.text(); return null; }
+                const llmResult = await llmResponse.json();
+                return llmResult.success && llmResult.data ? llmResult.data : null;
+              })(),
+              30_000, 'check_llm'
+            )
+          : Promise.resolve(null),
+        // Local competitor
+        context.locationCode
+          ? withDeadline(
+              findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext),
+              20_000, 'local_competitor'
+            )
+          : Promise.resolve(null),
+        // Founder discovery
+        withDeadline(
+          searchFounderProfile(domain, context.location),
+          15_000, 'founder'
+        ),
+      ]);
+
+      marketData = mktDataResult.status === 'fulfilled' ? mktDataResult.value : null;
+
+      if (llmCheckResult.status === 'fulfilled' && llmCheckResult.value) {
+        effectiveToolsData.llm = llmCheckResult.value;
+        console.log(`✅ LLM: score ${llmCheckResult.value.overallScore}/100`);
+      }
+
+      if (localCompResult.status === 'fulfilled' && localCompResult.value) {
+        localCompetitorData = localCompResult.value;
+      }
+
+      founderInfo = (founderResult.status === 'fulfilled' && founderResult.value)
+        ? founderResult.value
+        : { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
+
+      console.log(`⏱️ Data collection done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
 
-    const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
-    const domain = new URL(normalizedUrl).hostname;
-    const domainWithoutWww = domain.replace(/^www\./, '');
-    const domainSlug = domainWithoutWww.split('.')[0];
-    
-    // ==================== PROBABILISTIC BRAND NAME RESOLUTION ====================
+    // ═══ BRAND RESOLUTION ═══
     const { name: resolvedEntityName, confidence: brandConfidence } = resolveBrandName(brandSignals, domain, url);
     const isConfidentBrand = brandConfidence >= 0.95;
     const humanBrandName = isConfidentBrand ? resolvedEntityName : humanizeBrandName(domainSlug);
-    console.log(`🎯 Entité résolue: "${resolvedEntityName}" (confiance: ${(brandConfidence * 100).toFixed(1)}%, ${isConfidentBrand ? 'NOM DÉTECTÉ' : 'FALLBACK URL'})`);
+    console.log(`🎯 Entité: "${resolvedEntityName}" (${(brandConfidence * 100).toFixed(0)}%)`);
 
-    console.log('═══════════════════════════════════════════════════════════════');
-    console.log(`🚀 AUDIT STRATÉGIQUE pour: ${domain} (${resolvedEntityName})${useCache ? ' [SMART CACHE]' : ''}`);
+    // ═══ BUILD CACHED CONTEXT for client-side recovery & re-runs ═══
+    const cachedContextOut = {
+      pageContentContext, brandSignals, eeatSignals,
+      marketData, rankingOverview, founderInfo,
+      llmData: effectiveToolsData.llm,
+    };
 
-    if (!useCache) {
-      // ==================== SINGLE context detection ====================
-      const context = detectBusinessContext(domain, pageContentContext);
-
-      // ==================== ÉTAPE 1: DATAFORSEO + RANKED KEYWORDS (parallel) ====================
-      console.log('\n📊 ÉTAPE 1: DataForSEO...');
-      const [mktData, rkOverview] = await Promise.all([
-        fetchMarketData(domain, context, pageContentContext, url),
-        context.locationCode ? fetchRankedKeywords(domain, context.locationCode) : Promise.resolve(null),
-      ]);
-      marketData = mktData;
-      rankingOverview = rkOverview;
-
-      // ==================== ÉTAPE 1b: CONCURRENT LOCAL + FOUNDER (parallel) ====================
-      console.log('\n🏙️ ÉTAPE 1b: Concurrent local + Founder discovery...');
-      const [localCompResult, founderResult] = await Promise.allSettled([
-        context.locationCode ? findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext) : Promise.resolve(null),
-        searchFounderProfile(domain, context.location),
-      ]);
-      
-      if (localCompResult.status === 'fulfilled' && localCompResult.value) {
-        localCompetitorData = localCompResult.value;
-      } else if (localCompResult.status === 'rejected') {
-        console.error('❌ Concurrent local:', localCompResult.reason);
-      }
-      
-      founderInfo = (founderResult.status === 'fulfilled' && founderResult.value) 
-        ? founderResult.value 
-        : { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
-
-      // ==================== ÉTAPE 1c: CHECK-LLM ====================
-      if (!toolsData?.llm || toolsData.llm.note) {
-        console.log('\n🤖 ÉTAPE 1c: check-llm...');
-        try {
-          const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-          const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-          
-          if (supabaseUrl && supabaseAnonKey) {
-            const llmResponse = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${supabaseAnonKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ url, lang: 'fr' }),
-              signal: AbortSignal.timeout(30000),
-            });
-            
-            if (llmResponse.ok) {
-              const llmResult = await llmResponse.json();
-              if (llmResult.success && llmResult.data) {
-                effectiveToolsData.llm = llmResult.data;
-                console.log(`✅ LLM: score ${llmResult.data.overallScore}/100`);
-              }
-            } else {
-              await llmResponse.text();
-              console.log('⚠️ check-llm error:', llmResponse.status);
-            }
-          }
-        } catch (e) {
-          console.error('❌ check-llm:', e);
-        }
-      } else {
-        console.log('✅ LLM data already provided, skipping check-llm call');
-      }
+    // ═══ CHECK DEADLINE before expensive LLM call ═══
+    if (isOverDeadline()) {
+      console.warn('⏰ Deadline reached before LLM call — returning fallback with market data');
+      const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
+      saveToCache(domain, url, fallback).catch(() => {});
+      return json(fallback);
     }
 
-    // ==================== ÉTAPE 2: LLM ANALYSIS ====================
-    console.log('\n🤖 ÉTAPE 2: Analyse LLM...');
-    
+    // ═══ ÉTAPE 2: LLM ANALYSIS ═══
+    console.log(`\n🤖 ÉTAPE 2: Analyse LLM (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
+
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview);
-    
-    
-    // Inject resolved entity name for the LLM
-    userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport (introduction incluse).\n` + userPrompt;
-    
+
+    // Inject entity name
+    userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport.\n` + userPrompt;
+
     if (localCompetitorData) {
       userPrompt = `🏙️ CONCURRENT LOCAL SERP: "${localCompetitorData.name}" URL:${localCompetitorData.url} Position:${localCompetitorData.rank}. Utilise comme direct_competitor.\n` + userPrompt;
     }
-    
+
     if (hallucinationCorrections) {
-      const corrections = Object.entries(hallucinationCorrections)
-        .filter(([_, v]) => v)
-        .map(([k, v]) => `${k}="${v}"`)
-        .join(', ');
-      if (corrections) {
-        userPrompt = `⚠️ CORRECTIONS UTILISATEUR (priorité absolue): ${corrections}\n` + userPrompt;
-      }
+      const corrections = Object.entries(hallucinationCorrections).filter(([_, v]) => v).map(([k, v]) => `${k}="${v}"`).join(', ');
+      if (corrections) userPrompt = `⚠️ CORRECTIONS UTILISATEUR (priorité absolue): ${corrections}\n` + userPrompt;
     }
-    
+
     if (competitorCorrections) {
       const cc = competitorCorrections;
       const parts: string[] = [];
       if (cc.leader?.name) parts.push(`Leader:"${cc.leader.name}"${cc.leader.url ? `(${cc.leader.url})` : ''}`);
       if (cc.direct_competitor?.name) parts.push(`Concurrent:"${cc.direct_competitor.name}"${cc.direct_competitor.url ? `(${cc.direct_competitor.url})` : ''}`);
       if (cc.challenger?.name) parts.push(`Challenger:"${cc.challenger.name}"`);
-      if (parts.length > 0) {
-        userPrompt = `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n` + userPrompt;
-      }
-    }
-    
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.3,
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ success: false, error: 'Rate limit exceeded.' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ success: false, error: 'AI credits exhausted.' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
-      const errorText = await response.text();
-      console.error('AI error:', response.status, errorText.substring(0, 200));
-      return new Response(JSON.stringify({ success: false, error: 'AI analysis failed' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (parts.length > 0) userPrompt = `🏢 CONCURRENTS CORRIGÉS: ${parts.join(', ')}\n` + userPrompt;
     }
 
-    const aiResponse = await response.json();
-    const content = aiResponse.choices?.[0]?.message?.content;
-    trackTokenUsage('audit-strategique-ia', 'google/gemini-2.5-pro', aiResponse.usage, url);
+    // ── LLM call with remaining time budget ──
+    const remainingMs = Math.max(60_000, GLOBAL_DEADLINE - (Date.now() - startTime) - 15_000); // keep 15s buffer
+    let parsedAnalysis: any = null;
 
-    if (!content) {
-      return new Response(JSON.stringify({ success: false, error: 'Empty AI response' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const llmResult = await withDeadline(
+      (async () => {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-pro',
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.3,
+          }),
+          signal: AbortSignal.timeout(remainingMs),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('AI error:', response.status, errorText.substring(0, 200));
+          return null;
+        }
+
+        const aiResponse = await response.json();
+        const content = aiResponse.choices?.[0]?.message?.content;
+        trackTokenUsage('audit-strategique-ia', 'google/gemini-2.5-pro', aiResponse.usage, url);
+
+        if (!content) return null;
+        return content;
+      })(),
+      remainingMs + 5000, 'llm_call'
+    );
+
+    if (!llmResult) {
+      console.warn('⚠️ LLM call failed or timed out — returning fallback');
+      const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
+      saveToCache(domain, url, fallback).catch(() => {});
+      return json(fallback);
     }
 
-    // ==================== PARSE JSON ====================
+    // ═══ PARSE JSON ═══
     console.log('\n📝 Parsing...');
-    let parsedAnalysis;
     try {
-      let jsonContent = content;
-      if (content.includes('```json')) jsonContent = content.split('```json')[1].split('```')[0].trim();
-      else if (content.includes('```')) jsonContent = content.split('```')[1].split('```')[0].trim();
+      let jsonContent = llmResult;
+      if (llmResult.includes('```json')) jsonContent = llmResult.split('```json')[1].split('```')[0].trim();
+      else if (llmResult.includes('```')) jsonContent = llmResult.split('```')[1].split('```')[0].trim();
       jsonContent = jsonContent.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
       parsedAnalysis = JSON.parse(jsonContent);
     } catch {
       try {
-        const firstBrace = content.indexOf('{');
-        const lastBrace = content.lastIndexOf('}');
+        const firstBrace = llmResult.indexOf('{');
+        const lastBrace = llmResult.lastIndexOf('}');
         if (firstBrace !== -1 && lastBrace > firstBrace) {
-          let jsonContent = content.substring(firstBrace, lastBrace + 1);
+          let jsonContent = llmResult.substring(firstBrace, lastBrace + 1);
           jsonContent = jsonContent.replace(/,(\s*[\}\]])/g, '$1');
           parsedAnalysis = JSON.parse(jsonContent);
-        } else throw new Error('No JSON found');
+        }
       } catch {
-        return new Response(JSON.stringify({ success: false, error: 'Failed to parse AI analysis' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        console.error('❌ JSON parse failed — returning fallback');
+        const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
+        saveToCache(domain, url, fallback).catch(() => {});
+        return json(fallback);
       }
     }
+
+    if (!parsedAnalysis) {
+      const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
+      saveToCache(domain, url, fallback).catch(() => {});
+      return json(fallback);
+    }
+
+    // ═══ POST-PROCESSING (all synchronous or fast parallel) ═══
 
     // Sanitize brand name
     parsedAnalysis = sanitizeBrandNameInResponse(parsedAnalysis, domainSlug, humanBrandName);
 
-    // ═══ POST-PROCESS: Validate ALL competitive actors are not the target domain ═══
+    // Validate competitive actors are not self-referencing
     const cleanTargetDomain = domain.replace(/^www\./, '').toLowerCase();
-    const brandNameLower = resolvedEntityName.toLowerCase().replace(/\..*$/, ''); // "limova.ai" → "limova"
-    const domainSlugLower = domainSlug.toLowerCase(); // "limova"
-    
+    const brandNameLower = resolvedEntityName.toLowerCase().replace(/\..*$/, '');
+    const domainSlugLower = domainSlug.toLowerCase();
+
     function isSelfReference(actor: any): boolean {
       if (!actor) return false;
-      // Check URL match
       const actorDomain = (() => {
-        try {
-          const u = actor.url?.startsWith('http') ? actor.url : `https://${actor.url || ''}`;
-          return new URL(u).hostname.replace(/^www\./, '').toLowerCase();
-        } catch { return ''; }
+        try { return new URL(actor.url || '').hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; }
       })();
-      if (actorDomain && (actorDomain === cleanTargetDomain || actorDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(actorDomain))) {
-        return true;
-      }
-      // Check name match (e.g. "Limova.ai", "Limova", "limova")
-      const nameLower = (actor.name || '').toLowerCase().replace(/\s+/g, '');
-      if (nameLower === cleanTargetDomain || nameLower === brandNameLower || nameLower === domainSlugLower ||
-          nameLower.includes(domainSlugLower) || domainSlugLower.includes(nameLower)) {
-        return true;
-      }
-      return false;
+      const actorNameLower = (actor.name || '').toLowerCase().replace(/\s+/g, '');
+      return (actorDomain && (actorDomain === cleanTargetDomain || actorDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(actorDomain))) ||
+             (actorNameLower && (actorNameLower === brandNameLower || actorNameLower === domainSlugLower || actorNameLower.includes(domainSlugLower) || domainSlugLower.includes(actorNameLower)));
     }
 
     if (parsedAnalysis.competitive_landscape) {
       const roles = ['leader', 'direct_competitor', 'challenger', 'inspiration_source'] as const;
       for (const role of roles) {
         const actor = parsedAnalysis.competitive_landscape[role];
-        if (actor && isSelfReference(actor)) {
-          console.log(`⚠️ ${role} "${actor.name}" is self-reference — replacing`);
+        if (isSelfReference(actor)) {
+          console.log(`⚠️ Self-reference in ${role}: "${actor?.name}" — replacing`);
           if (role === 'direct_competitor' && localCompetitorData) {
             parsedAnalysis.competitive_landscape[role] = {
-              name: localCompetitorData.name,
-              url: localCompetitorData.url,
-              authority_factor: actor.authority_factor || 'Concurrent SERP local',
+              name: localCompetitorData.name, url: localCompetitorData.url,
+              authority_factor: actor?.authority_factor || 'Concurrent SERP local',
               analysis: `Concurrent identifié via les résultats de recherche locaux, positionné #${localCompetitorData.rank}.`,
             };
           } else {
             parsedAnalysis.competitive_landscape[role].name = 'Non identifié';
             parsedAnalysis.competitive_landscape[role].url = null;
-            parsedAnalysis.competitive_landscape[role].analysis = `Auto-référence détectée et supprimée. Acteur non identifié pour le rôle "${role}".`;
+            parsedAnalysis.competitive_landscape[role].analysis = `Auto-référence détectée et supprimée.`;
           }
         }
       }
-    }
 
-    // ═══ POST-PROCESS: Validate competitor URLs are accessible ═══
-    if (parsedAnalysis.competitive_landscape) {
-      const roles2 = ['leader', 'direct_competitor', 'challenger', 'inspiration_source'] as const;
-      await Promise.all(roles2.map(async (role) => {
-        const actor = parsedAnalysis.competitive_landscape[role];
-        if (!actor?.url) return;
-        let href = actor.url.trim().replace(/^\/+/, '');
-        if (!href.startsWith('http://') && !href.startsWith('https://')) {
-          href = `https://${href}`;
-        }
-        try {
-          new URL(href); // syntax check
-          const ctrl = new AbortController();
-          const tid = setTimeout(() => ctrl.abort(), 6000);
-          const res = await fetch(href, {
-            method: 'HEAD',
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-            redirect: 'follow',
-            signal: ctrl.signal,
-          });
-          clearTimeout(tid);
-          if (res.ok || res.status === 403) {
-            // Update to final URL after redirects
-            actor.url = res.url || href;
-            console.log(`✅ ${role} URL valid: ${actor.url}`);
-          } else {
-            console.log(`❌ ${role} URL returned ${res.status} — removing`);
+      // Validate competitor URLs (parallel, with short timeout)
+      if (!isOverDeadline()) {
+        await Promise.all(roles.map(async (role) => {
+          const actor = parsedAnalysis.competitive_landscape[role];
+          if (!actor?.url) return;
+          let href = actor.url.trim().replace(/^\/+/, '');
+          if (!href.startsWith('http')) href = `https://${href}`;
+          try {
+            new URL(href);
+            const res = await fetch(href, {
+              method: 'HEAD',
+              headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+              redirect: 'follow',
+              signal: AbortSignal.timeout(4000),
+            });
+            if (res.ok || res.status === 403) {
+              actor.url = res.url || href;
+              console.log(`✅ ${role} URL valid: ${actor.url}`);
+            } else {
+              console.log(`❌ ${role} URL ${res.status} — removing`);
+              actor.url = null;
+            }
+          } catch {
             actor.url = null;
           }
-        } catch (e: any) {
-          console.log(`❌ ${role} URL unreachable (${e.message}) — removing`);
-          actor.url = null;
-        }
-      }));
+        }));
+      }
     }
 
-    // ═══ POST-PROCESS: Remove self from introduction.competitors[] ═══
+    // Remove self from introduction.competitors[]
     if (parsedAnalysis.introduction?.competitors && Array.isArray(parsedAnalysis.introduction.competitors)) {
       parsedAnalysis.introduction.competitors = parsedAnalysis.introduction.competitors.filter((c: string) => {
         const cLower = c.toLowerCase().replace(/\s+/g, '');
-        const isSelf = cLower === cleanTargetDomain || cLower === brandNameLower || cLower === domainSlugLower ||
-                       cLower.includes(domainSlugLower) || domainSlugLower.includes(cLower);
-        if (isSelf) console.log(`⚠️ Removing self-reference "${c}" from introduction.competitors`);
-        return !isSelf;
+        return !(cLower === cleanTargetDomain || cLower === brandNameLower || cLower === domainSlugLower ||
+                 cLower.includes(domainSlugLower) || domainSlugLower.includes(cLower));
       });
     }
 
-    // ═══ POST-PROCESS: Validate social URLs against crawler-detected ones ═══
+    // Validate social URLs
     if (parsedAnalysis.social_signals?.proof_sources && Array.isArray(parsedAnalysis.social_signals.proof_sources)) {
       const detectedUrlsSet = new Set(
         (eeatSignals.detectedSocialUrls || []).map((u: string) => u.toLowerCase().replace(/\/$/, ''))
       );
-      // Also whitelist founder profile URL from SERP discovery
-      if (founderInfo?.profileUrl) {
-        detectedUrlsSet.add(founderInfo.profileUrl.toLowerCase().replace(/\/$/, ''));
-      }
+      if (founderInfo?.profileUrl) detectedUrlsSet.add(founderInfo.profileUrl.toLowerCase().replace(/\/$/, ''));
       console.log(`🔗 Validating social URLs against ${detectedUrlsSet.size} detected URLs:`, [...detectedUrlsSet]);
-      
+
       for (const source of parsedAnalysis.social_signals.proof_sources) {
         if (source.profile_url) {
           const normalized = source.profile_url.toLowerCase().replace(/\/$/, '');
-          // Check if this URL (or a close match) was actually detected by the crawler
-          const isValid = [...detectedUrlsSet].some(detected => 
+          const isValid = [...detectedUrlsSet].some(detected =>
             normalized.includes(detected) || detected.includes(normalized) ||
-            // Allow matching by path segment (e.g. /in/yoan-drahy matches detected /in/yoan-drahy)
             normalized.split('/').slice(-1)[0] === detected.split('/').slice(-1)[0]
           );
           if (!isValid) {
-            console.log(`⚠️ Removing hallucinated social URL: ${source.profile_url} (not in detected set)`);
+            console.log(`⚠️ Removing hallucinated social URL: ${source.profile_url}`);
             source.profile_url = null;
           }
         }
       }
     }
 
-    // ═══ POST-PROCESS: Flag geo mismatch on social signals ═══
+    // Flag geo mismatch
     if (founderInfo?.geoMismatch && parsedAnalysis.social_signals) {
       parsedAnalysis.social_signals.founder_geo_mismatch = true;
       parsedAnalysis.social_signals.founder_geo_country = founderInfo.detectedCountry;
-      
-      // Remove LinkedIn proof_source entries that reference the mismatched founder
       if (parsedAnalysis.social_signals.proof_sources) {
-        const beforeCount = parsedAnalysis.social_signals.proof_sources.length;
         parsedAnalysis.social_signals.proof_sources = parsedAnalysis.social_signals.proof_sources.filter(
           (s: any) => s.platform !== 'linkedin' || s.presence_level === 'absent'
         );
-        const removed = beforeCount - parsedAnalysis.social_signals.proof_sources.length;
-        if (removed > 0) {
-          console.log(`👤 ⛔ Removed ${removed} LinkedIn proof_source(s) due to geo mismatch`);
-        }
       }
-      
-      // Reset founder authority to unknown
       if (parsedAnalysis.social_signals.thought_leadership) {
         parsedAnalysis.social_signals.thought_leadership.founder_authority = 'unknown';
       }
     }
 
+    // Supplement main_keywords if < 5
     if (parsedAnalysis.keyword_positioning?.main_keywords) {
       const mainKw = parsedAnalysis.keyword_positioning.main_keywords;
       if (mainKw.length < 5 && marketData?.top_keywords) {
-        console.log(`⚠️ Only ${mainKw.length} main_keywords from AI — supplementing from market data`);
         const existingLower = new Set(mainKw.map((kw: any) => (kw.keyword || '').toLowerCase()));
         for (const mkw of marketData.top_keywords) {
           if (mainKw.length >= 5) break;
           if (!existingLower.has(mkw.keyword.toLowerCase())) {
             existingLower.add(mkw.keyword.toLowerCase());
-            mainKw.push({
-              keyword: mkw.keyword,
-              volume: mkw.volume,
-              difficulty: mkw.difficulty,
-              current_rank: mkw.current_rank || 'Non classé',
-            });
+            mainKw.push({ keyword: mkw.keyword, volume: mkw.volume, difficulty: mkw.difficulty, current_rank: mkw.current_rank || 'Non classé' });
           }
         }
-        console.log(`✅ main_keywords after supplement: ${mainKw.length}`);
       }
     }
 
-    // ═══ POST-PROCESS: FORCE-COMPUTE quotability & summary_resilience from page content ═══
-    // These are ALWAYS calculated server-side to guarantee they exist
+    // ═══ FORCE-COMPUTE quotability & summary_resilience ═══
     {
       const rawText = (pageContentContext || '').replace(/Titre="[^"]*"/g, '').replace(/H1="[^"]*"/g, '').replace(/Desc="[^"]*"/g, '');
-      
-      // --- QUOTABILITY: Extract citable sentences from page content ---
-      const sentences = rawText
-        .split(/[.!?]+/)
-        .map(s => s.trim())
-        .filter(s => s.length > 40 && s.length < 300);
-      
-      // Score sentences by quotability markers
+
+      // Quotability
+      const sentences = rawText.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 40 && s.length < 300);
       const quotableMarkers = [
-        /\d+\s*%/i, /\d+\s*(fois|x|million|milliard)/i, // Stats
-        /permet|offre|garantit|assure|réduit|augmente|améliore/i, // Value props
-        /premier|unique|seul|leader|innovant|révolutionne/i, // Differentiators
-        /grâce à|en seulement|jusqu'à|plus de|moins de/i, // Quantifiers
-        /enables|provides|reduces|increases|improves|delivers/i, // EN value props
+        /\d+\s*%/i, /\d+\s*(fois|x|million|milliard)/i,
+        /permet|offre|garantit|assure|réduit|augmente|améliore/i,
+        /premier|unique|seul|leader|innovant|révolutionne/i,
+        /grâce à|en seulement|jusqu'à|plus de|moins de/i,
+        /enables|provides|reduces|increases|improves|delivers/i,
       ];
-      
       const scoredSentences = sentences.map(s => {
         let score = 0;
-        for (const marker of quotableMarkers) {
-          if (marker.test(s)) score++;
-        }
-        // Bonus for sentences that are self-contained (no pronouns at start)
+        for (const m of quotableMarkers) if (m.test(s)) score++;
         if (!/^(il|elle|ils|elles|ce|cette|ces|it|they|this|these)\b/i.test(s)) score++;
         return { text: s, score };
-      });
-      
-      scoredSentences.sort((a, b) => b.score - a.score);
+      }).sort((a, b) => b.score - a.score);
+
       const topQuotes = scoredSentences.slice(0, 3).filter(q => q.score > 0).map(q => q.text);
-      
-      // If LLM provided quotes, merge (LLM first, then server-side)
       const llmQuotes = parsedAnalysis.quotability?.quotes || [];
       const allQuotes = [...new Set([...llmQuotes, ...topQuotes])].slice(0, 3);
-      const quotabilityScore = Math.min(100, allQuotes.length * 33);
-      
-      parsedAnalysis.quotability = { score: quotabilityScore, quotes: allQuotes };
-      console.log(`✅ quotability computed: score=${quotabilityScore}, quotes=${allQuotes.length}`);
-      
-      // --- SUMMARY RESILIENCE: Compare H1 vs page content summary ---
+      parsedAnalysis.quotability = { score: Math.min(100, allQuotes.length * 33), quotes: allQuotes };
+      console.log(`✅ quotability computed: score=${parsedAnalysis.quotability.score}, quotes=${allQuotes.length}`);
+
+      // Summary resilience
       const h1Match = (pageContentContext || '').match(/H1="([^"]+)"/);
       const titleMatch = (pageContentContext || '').match(/Titre="([^"]+)"/);
       const originalH1 = h1Match?.[1] || titleMatch?.[1] || 'Non détecté';
-      
-      // Build a value proposition from the first meaningful paragraph
       const paragraphs = rawText.split(/\n+/).filter(p => p.trim().length > 50);
       const firstParagraph = paragraphs[0] || '';
-      
-      // Extract key terms from H1 and check overlap with content
       const h1Terms = originalH1.toLowerCase().split(/\s+/).filter(w => w.length > 3);
       const contentLower = (firstParagraph + ' ' + rawText.slice(0, 1000)).toLowerCase();
       const matchedTerms = h1Terms.filter(t => contentLower.includes(t));
-      const resilienceScore = h1Terms.length > 0
-        ? Math.round((matchedTerms.length / h1Terms.length) * 100)
-        : 0;
-      
-      // Use LLM summary if available, otherwise generate from content
+      const resilienceScore = h1Terms.length > 0 ? Math.round((matchedTerms.length / h1Terms.length) * 100) : 0;
       const llmSummary = parsedAnalysis.summary_resilience?.llmSummary;
       const autoSummary = firstParagraph.slice(0, 80).replace(/[.!?,;:]+$/, '').trim() || 'Non disponible';
-      
       parsedAnalysis.summary_resilience = {
         score: parsedAnalysis.summary_resilience?.score || resilienceScore,
         originalH1,
@@ -2300,17 +2343,12 @@ Deno.serve(async (req) => {
       console.log(`✅ summary_resilience computed: score=${parsedAnalysis.summary_resilience.score}, H1="${originalH1}"`);
     }
 
-    // Ensure other optional metrics have defaults
-    if (!parsedAnalysis.lexical_footprint) {
-      parsedAnalysis.lexical_footprint = { jargonRatio: 50, concreteRatio: 50 };
-    }
-    if (!parsedAnalysis.expertise_sentiment) {
-      parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué — données insuffisantes' };
-    }
-    if (!parsedAnalysis.red_teaming) {
-      parsedAnalysis.red_teaming = { objections: [] };
-    }
+    // Defaults for optional metrics
+    if (!parsedAnalysis.lexical_footprint) parsedAnalysis.lexical_footprint = { jargonRatio: 50, concreteRatio: 50 };
+    if (!parsedAnalysis.expertise_sentiment) parsedAnalysis.expertise_sentiment = { rating: 1, justification: 'Non évalué' };
+    if (!parsedAnalysis.red_teaming) parsedAnalysis.red_teaming = { objections: [] };
 
+    // ═══ BUILD FINAL RESULT ═══
     const result = {
       success: true,
       data: {
@@ -2319,61 +2357,46 @@ Deno.serve(async (req) => {
         ...parsedAnalysis,
         raw_market_data: marketData,
         ranking_overview: rankingOverview,
-        toolsData: null, // Don't echo back the full toolsData to save response size
+        toolsData: null,
         llm_visibility_raw: effectiveToolsData.llm,
-        // Smart cache context for fast relaunches (competitor corrections, hallucination fixes)
-        _cachedContext: {
-          pageContentContext,
-          brandSignals,
-          eeatSignals,
-          marketData,
-          rankingOverview,
-          founderInfo,
-          llmData: effectiveToolsData.llm,
-        },
-      }
+        _cachedContext: cachedContextOut,
+      },
     };
 
-    console.log('✅ AUDIT TERMINÉ');
+    console.log(`✅ AUDIT TERMINÉ (${((Date.now() - startTime) / 1000).toFixed(1)}s)`);
 
-    // Save result to audit_cache for timeout recovery (fire and forget)
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-    const supabaseUrlEnv = Deno.env.get('SUPABASE_URL') || '';
-    if (serviceKey && supabaseUrlEnv) {
-      try {
-        const adminClient = createClient(supabaseUrlEnv, serviceKey);
-        const cacheKey = `strategic_${domain}_${url}`;
-        await adminClient.from('audit_cache').upsert({
-          cache_key: cacheKey,
-          function_name: 'audit-strategique-ia',
-          result_data: result,
-          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min TTL
-        }, { onConflict: 'cache_key' });
-        console.log('✅ Result saved to audit_cache for timeout recovery');
-      } catch (cacheErr) {
-        console.warn('⚠️ Failed to cache result:', cacheErr);
-      }
-    }
+    // ═══ SAVE & RETURN ═══
+    // Save to cache (fire-and-forget)
+    saveToCache(domain, url, result).catch(() => {});
 
-    // Save to registry (fire and forget)
+    // Save recommendations to registry (fire-and-forget)
     const authHeader = req.headers.get('Authorization') || '';
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-    if (authHeader && supabaseUrl && supabaseKey) {
-      saveStrategicRecommendationsToRegistry(supabaseUrl, supabaseKey, authHeader, domain, url, parsedAnalysis)
+    const supabaseUrl2 = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseKey2 = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    if (authHeader && supabaseUrl2 && supabaseKey2) {
+      saveStrategicRecommendationsToRegistry(supabaseUrl2, supabaseKey2, authHeader, domain, url, parsedAnalysis)
         .catch(err => console.error('Registre:', err));
     }
 
-    // Fire-and-forget URL tracking
+    // URL tracking (fire-and-forget)
     trackAnalyzedUrl(url).catch(() => {});
 
-    return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return json(result);
 
   } catch (error) {
-    console.error('Error:', error);
-    return new Response(
-      JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Failed to generate audit' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('❌ Fatal error:', error);
+    // Even fatal errors return success:true with an empty structure so client never crashes
+    return json({
+      success: true,
+      data: {
+        url: '', domain: '',
+        scannedAt: new Date().toISOString(),
+        overallScore: 0,
+        introduction: { presentation: 'Une erreur inattendue est survenue. Veuillez relancer l\'analyse.', strengths: '', improvement: '', competitors: [] },
+        executive_roadmap: [],
+        executive_summary: 'Analyse interrompue. Veuillez réessayer.',
+        _error: error instanceof Error ? error.message : 'Unknown error',
+      },
+    });
   }
 });
