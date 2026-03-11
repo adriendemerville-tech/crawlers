@@ -1440,41 +1440,30 @@ const AuditCompare = () => {
           {/* Results */}
           {result && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-              <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-4 items-start">
-                {/* Site 1 */}
-                <div>
-                  <div className="text-center mb-4">
-                    <Badge className="bg-violet-600 text-white text-xs">{result.site1.domain}</Badge>
-                    <p className="text-xs text-muted-foreground mt-1 truncate">{result.site1.metadata.title}</p>
-                  </div>
-                  <SiteResultCard site={result.site1} t={t} />
+              {/* Site headers */}
+              <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-4 items-center mb-6">
+                <div className="text-center">
+                  <Badge className="bg-violet-600 text-white text-xs">{result.site1.domain}</Badge>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">{result.site1.metadata.title}</p>
                 </div>
-
-                {/* Separator */}
-                <div className="hidden md:flex flex-col items-center pt-8">
-                  <div className="w-px h-full min-h-[400px] bg-gradient-to-b from-violet-500/20 via-amber-500/30 to-violet-500/20 relative">
-                    <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 left-1/2 w-10 h-10 rounded-full bg-gradient-to-r from-violet-600 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                      VS
-                    </div>
-                  </div>
-                </div>
-
-                {/* Mobile VS */}
-                <div className="md:hidden flex justify-center py-4">
+                <div className="hidden md:flex items-center justify-center">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-r from-violet-600 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
                     VS
                   </div>
                 </div>
-
-                {/* Site 2 */}
-                <div>
-                  <div className="text-center mb-4">
-                    <Badge className="bg-amber-600 text-white text-xs">{result.site2.domain}</Badge>
-                    <p className="text-xs text-muted-foreground mt-1 truncate">{result.site2.metadata.title}</p>
+                <div className="md:hidden flex justify-center py-2">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-violet-600 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                    VS
                   </div>
-                  <SiteResultCard site={result.site2} t={t} />
+                </div>
+                <div className="text-center">
+                  <Badge className="bg-amber-600 text-white text-xs">{result.site2.domain}</Badge>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">{result.site2.metadata.title}</p>
                 </div>
               </div>
+
+              {/* Row-based comparison */}
+              <SiteComparisonGrid site1={result.site1} site2={result.site2} t={t} />
 
               {/* Cross-Comparison Section */}
               {result.crossComparison && (
