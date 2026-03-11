@@ -25,7 +25,9 @@
     ],
     "premium_features": [
       "Strategic GEO Audit (1 credit, 2 free)",
-      "Corrective Code Generator (1 credit or €3-12)"
+      "Corrective Code Generator (1 credit or €3-12)",
+      "Competitive Audit / Audit Comparé (5 credits)",
+      "Multi-Page Crawl up to 500 pages (5-40 credits)"
     ],
     "credit_packs": [
       {"name": "Essential", "credits": 10, "price_eur": 5},
