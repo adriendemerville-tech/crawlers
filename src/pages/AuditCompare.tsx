@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 // ==================== TYPES ====================
 
@@ -204,6 +205,14 @@ const i18n = {
     authority: 'Autorité',
     trust: 'Confiance',
     radarTitle: 'Radar comparatif',
+    faqTitle: 'Questions fréquentes sur la concurrence en ligne',
+    faq: [
+      { q: 'Comment analyser la concurrence SEO de mon site ?', a: 'L\'analyse concurrentielle SEO consiste à comparer les performances techniques (Core Web Vitals, structure HTML), le profil de backlinks, la profondeur de contenu et le score E‑E‑A‑T de votre site face à vos concurrents directs. Notre audit comparé automatise cette analyse en quelques minutes.' },
+      { q: 'Pourquoi comparer sa visibilité dans les moteurs IA génératifs ?', a: 'En 2026, ChatGPT, Perplexity et Google SGE génèrent une part croissante du trafic qualifié. Un concurrent mieux cité par ces LLM capte des visiteurs que vous ne voyez jamais dans vos statistiques classiques. Comparer votre présence IA à celle de vos rivaux révèle des opportunités invisibles en SEO traditionnel.' },
+      { q: 'Quels critères différencient deux sites concurrents en ligne ?', a: 'Les principaux critères sont : l\'autorité de domaine (backlinks et Domain Rank), la profondeur sémantique (nombre de mots, structure H2/H3), les données structurées (JSON‑LD, FAQ Schema), la vitesse de chargement (LCP, CLS) et la présence dans les réponses des LLM. Notre radar comparatif visualise ces écarts en un coup d\'œil.' },
+      { q: 'Qu\'est-ce que le Brand DNA en audit concurrentiel ?', a: 'Le Brand DNA est l\'empreinte numérique unique d\'une marque : sa proposition de valeur, son positionnement sémantique, ses entités associées dans les Knowledge Graphs et sa réputation dans les réponses génératives. Comparer le Brand DNA de deux sites révèle les forces et faiblesses de chaque stratégie de marque en ligne.' },
+      { q: 'À quelle fréquence faut-il surveiller ses concurrents ?', a: 'Nous recommandons un audit comparé mensuel pour les marchés compétitifs (e‑commerce, SaaS, finance) et trimestriel pour les autres secteurs. Les algorithmes des moteurs de recherche et des LLM évoluent constamment : un suivi régulier permet d\'anticiper les mouvements concurrentiels et d\'ajuster votre stratégie GEO.' },
+    ],
   },
   en: {
     pageTitle: 'Comparative SEO/GEO Audit — Compare two sites | Crawlers.fr',
@@ -271,6 +280,14 @@ const i18n = {
     authority: 'Authority',
     trust: 'Trust',
     radarTitle: 'Comparative Radar',
+    faqTitle: 'Frequently Asked Questions about Online Competition',
+    faq: [
+      { q: 'How do I analyze my site\'s SEO competition?', a: 'SEO competitive analysis involves comparing technical performance (Core Web Vitals, HTML structure), backlink profiles, content depth and E‑E‑A‑T scores of your site against direct competitors. Our comparative audit automates this analysis in minutes.' },
+      { q: 'Why compare visibility in generative AI engines?', a: 'In 2026, ChatGPT, Perplexity and Google SGE generate a growing share of qualified traffic. A competitor better cited by these LLMs captures visitors you never see in your classic analytics. Comparing your AI presence to rivals reveals opportunities invisible in traditional SEO.' },
+      { q: 'What criteria differentiate two competing sites online?', a: 'Key criteria include: domain authority (backlinks and Domain Rank), semantic depth (word count, H2/H3 structure), structured data (JSON‑LD, FAQ Schema), page speed (LCP, CLS) and presence in LLM responses. Our comparative radar visualizes these gaps at a glance.' },
+      { q: 'What is Brand DNA in competitive auditing?', a: 'Brand DNA is a brand\'s unique digital fingerprint: its value proposition, semantic positioning, associated entities in Knowledge Graphs and reputation in generative responses. Comparing the Brand DNA of two sites reveals the strengths and weaknesses of each online brand strategy.' },
+      { q: 'How often should I monitor my competitors?', a: 'We recommend a monthly comparative audit for competitive markets (e‑commerce, SaaS, finance) and quarterly for other sectors. Search engine and LLM algorithms constantly evolve: regular monitoring helps anticipate competitive moves and adjust your GEO strategy.' },
+    ],
   },
   es: {
     pageTitle: 'Auditoría Comparativa SEO/GEO — Compare dos sitios | Crawlers.fr',
@@ -338,6 +355,14 @@ const i18n = {
     authority: 'Autoridad',
     trust: 'Confianza',
     radarTitle: 'Radar comparativo',
+    faqTitle: 'Preguntas frecuentes sobre la competencia en línea',
+    faq: [
+      { q: '¿Cómo analizar la competencia SEO de mi sitio?', a: 'El análisis competitivo SEO consiste en comparar el rendimiento técnico (Core Web Vitals, estructura HTML), el perfil de backlinks, la profundidad de contenido y la puntuación E‑E‑A‑T de su sitio frente a sus competidores directos. Nuestra auditoría comparativa automatiza este análisis en minutos.' },
+      { q: '¿Por qué comparar la visibilidad en motores IA generativos?', a: 'En 2026, ChatGPT, Perplexity y Google SGE generan una parte creciente del tráfico cualificado. Un competidor mejor citado por estos LLM capta visitantes que nunca ve en sus estadísticas clásicas. Comparar su presencia IA con la de sus rivales revela oportunidades invisibles en SEO tradicional.' },
+      { q: '¿Qué criterios diferencian dos sitios competidores en línea?', a: 'Los principales criterios son: autoridad de dominio (backlinks y Domain Rank), profundidad semántica (conteo de palabras, estructura H2/H3), datos estructurados (JSON‑LD, FAQ Schema), velocidad de carga (LCP, CLS) y presencia en las respuestas de los LLM. Nuestro radar comparativo visualiza estas brechas de un vistazo.' },
+      { q: '¿Qué es el Brand DNA en una auditoría competitiva?', a: 'El Brand DNA es la huella digital única de una marca: su propuesta de valor, su posicionamiento semántico, sus entidades asociadas en los Knowledge Graphs y su reputación en las respuestas generativas. Comparar el Brand DNA de dos sitios revela las fortalezas y debilidades de cada estrategia de marca en línea.' },
+      { q: '¿Con qué frecuencia debo monitorear a mis competidores?', a: 'Recomendamos una auditoría comparativa mensual para mercados competitivos (e‑commerce, SaaS, finanzas) y trimestral para otros sectores. Los algoritmos de los motores de búsqueda y los LLM evolucionan constantemente: un seguimiento regular permite anticipar movimientos competitivos y ajustar su estrategia GEO.' },
+    ],
   },
 };
 
@@ -1395,6 +1420,32 @@ const AuditCompare = () => {
           )}
         </div>
       </main>
+
+      {/* FAQ Section */}
+      <section className="bg-muted/30 py-16 px-4" aria-labelledby="faq-compare-heading">
+        <div className="mx-auto max-w-3xl">
+          <h2 id="faq-compare-heading" className="text-2xl font-bold text-foreground text-center mb-8">
+            {t.faqTitle}
+          </h2>
+          <Accordion type="single" collapsible className="space-y-3">
+            {t.faq.map((item, i) => (
+              <AccordionItem
+                key={i}
+                value={`faq-${i}`}
+                className="border border-border rounded-lg bg-card px-6 data-[state=open]:bg-card/80"
+              >
+                <AccordionTrigger className="text-left font-medium hover:no-underline py-4">
+                  <h3 className="text-base font-medium">{item.q}</h3>
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pb-4">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
       <Footer />
     </div>
   );
