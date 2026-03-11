@@ -231,7 +231,7 @@ function CompareLoadingSteps({ siteName, t }: { siteName: string; t: typeof i18n
 
 // ==================== RESULT CARD ====================
 
-function SiteResultCard({ site }: { site: SiteResult }) {
+function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
   const { analysis, llm_raw } = site;
   const llmScore = llm_raw?.overallScore ?? analysis.llm_visibility?.citation_probability ?? 0;
 
@@ -248,13 +248,13 @@ function SiteResultCard({ site }: { site: SiteResult }) {
           <p className="text-sm text-muted-foreground leading-relaxed">{analysis.brand_dna}</p>
           <div className="grid grid-cols-1 gap-2">
             <div>
-              <p className="text-xs font-semibold text-emerald-500 mb-1 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> Forces</p>
+              <p className="text-xs font-semibold text-emerald-500 mb-1 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> {t.strengths}</p>
               {(analysis.strengths || []).map((s, i) => (
                 <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-emerald-500/30 mb-1">{s}</p>
               ))}
             </div>
             <div>
-              <p className="text-xs font-semibold text-rose-500 mb-1 flex items-center gap-1"><TrendingDown className="h-3 w-3" /> Faiblesses</p>
+              <p className="text-xs font-semibold text-rose-500 mb-1 flex items-center gap-1"><TrendingDown className="h-3 w-3" /> {t.weaknesses}</p>
               {(analysis.weaknesses || []).map((w, i) => (
                 <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-rose-500/30 mb-1">{w}</p>
               ))}
@@ -267,7 +267,7 @@ function SiteResultCard({ site }: { site: SiteResult }) {
       <Card className="border-border/50 bg-card/80">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-            <Brain className="h-4 w-4 text-violet-500" /> Visibilité LLM
+            <Brain className="h-4 w-4 text-violet-500" /> {t.llmVisibility}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -275,7 +275,7 @@ function SiteResultCard({ site }: { site: SiteResult }) {
             <div className="text-2xl font-bold text-foreground">{llmScore}<span className="text-sm text-muted-foreground">/100</span></div>
             {llm_raw?.brandMentioned !== undefined && (
               <Badge variant={llm_raw.brandMentioned ? 'default' : 'secondary'} className="text-xs">
-                {llm_raw.brandMentioned ? 'Marque citée' : 'Non citée'}
+                {llm_raw.brandMentioned ? t.brandCited : t.brandNotCited}
               </Badge>
             )}
           </div>
@@ -288,7 +288,7 @@ function SiteResultCard({ site }: { site: SiteResult }) {
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">{m.name}</span>
                   <Badge variant={m.brandMentioned ? 'default' : 'outline'} className="text-[10px] px-1.5">
-                    {m.brandMentioned ? 'Cité' : 'Absent'}
+                    {m.brandMentioned ? t.cited : t.absent}
                   </Badge>
                 </div>
               ))}
