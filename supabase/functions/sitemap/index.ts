@@ -150,6 +150,20 @@ Deno.serve(async (req) => {
     }
 
     // ========================================
+    // LEXIQUE TERM PAGES
+    // ========================================
+    const lexiqueSlugs = [
+      'tls-fingerprinting', 'ja3-ja3s', 'behavioral-analysis', 'ip-rotation-proxies',
+      'canvas-fingerprinting', 'user-agent-spoofing', 'headless-browsing', 'dom-parsing',
+      'shadow-dom', 'ssr-vs-csr', 'http2-http3', 'data-normalization', 'schema-org-extraction',
+      'rag', 'llm-based-parsing', 'self-healing-scrapers', 'crawl-budget', 'concurrency-control',
+      'ethical-scraping', 'robots-txt-interpretation', 'aeo-answer-engine-optimization',
+    ];
+    for (const slug of lexiqueSlugs) {
+      pages.push({ loc: `${SITE_URL}/lexique/${slug}`, lastmod: today });
+    }
+
+    // ========================================
     // PAGES LÉGALES (mises à jour rarement)
     // ========================================
     const legalLastmod = '2025-01-01';
@@ -157,6 +171,7 @@ Deno.serve(async (req) => {
     pages.push({ loc: `${SITE_URL}/politique-confidentialite`, lastmod: legalLastmod });
     pages.push({ loc: `${SITE_URL}/conditions-utilisation`, lastmod: legalLastmod });
     pages.push({ loc: `${SITE_URL}/rgpd`, lastmod: legalLastmod });
+    pages.push({ loc: `${SITE_URL}/cgvu`, lastmod: legalLastmod });
 
     const sitemap = generateSitemap(pages);
 
