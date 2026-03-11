@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdmin } from '@/hooks/useAdmin';
 import { toast } from 'sonner';
 import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
 
