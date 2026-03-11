@@ -469,15 +469,15 @@ export default function SiteCrawl() {
                     <Input
                       value={url}
                       onChange={e => setUrl(e.target.value)}
-                      placeholder="https://votre-site.fr"
-                      className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500"
+                     placeholder={t.placeholder}
+                     className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500"
                       required
                       disabled={isLoading}
                     />
                   </div>
                   <Button type="submit" disabled={isLoading || !url} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white">
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                    {isLoading ? phase || 'Crawl en cours…' : 'Lancer le crawl'}
+                    {isLoading ? phase || t.crawling : t.launchBtn}
                   </Button>
                 </div>
 
