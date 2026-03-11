@@ -24,6 +24,7 @@ interface CorrectiveCode {
   code: string;
   fixes_applied: CorrectiveCodeFix[];
   created_at: string;
+  validated_at: string | null;
 }
 
 const translations = {
@@ -108,9 +109,13 @@ export function MyCorrectiveCodes() {
         url: item.url,
         code: item.code,
         created_at: item.created_at,
+        validated_at: (item as any).validated_at || null,
         fixes_applied: (item.fixes_applied as unknown as CorrectiveCodeFix[]) || []
       }));
       setCodes(mappedCodes);
+      // Pre-populate validated IDs
+      const preValidated = new Set(mappedCodes.filter(c => c.validated_at).map(c => c.id));
+      if (preValidated.size > 0) setValidatedIds(preValidated);
     }
     setLoading(false);
   };
@@ -165,6 +170,12 @@ export function MyCorrectiveCodes() {
             .eq('id', existing.id);
         }
       }
+
+      // Mark the corrective code itself as validated (used by prediction engine)
+      await supabase
+        .from('saved_corrective_codes')
+        .update({ validated_at: new Date().toISOString() })
+        .eq('id', code.id);
 
       setValidatedIds(prev => new Set(prev).add(code.id));
       toast.success(t.validatedToast);

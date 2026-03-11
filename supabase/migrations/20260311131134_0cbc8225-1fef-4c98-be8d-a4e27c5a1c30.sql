@@ -1,0 +1,1 @@
+ALTER TABLE public.saved_corrective_codes ADD COLUMN validated_at timestamp with time zone DEFAULT NULL;
