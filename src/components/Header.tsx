@@ -316,19 +316,6 @@ export function Header() {
         {/* Right side: Audit CTA, Credits, Theme, User */}
         <div className="flex items-center gap-3">
 
-          {/* Audit Expert CTA - hidden on audit-expert page */}
-          {!isAuditExpertPage && (
-            <Link to="/audit-expert">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-yellow-500 hover:text-yellow-400 hover:bg-transparent font-bold"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span className="hidden sm:inline">Audit</span>
-              </Button>
-            </Link>
-          )}
           {/* Credit recharge button - on home and /audit-expert (show for all users) */}
           {(isAuditExpertPage || location.pathname === '/') && (
             <Suspense fallback={null}>
