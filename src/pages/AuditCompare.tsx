@@ -326,6 +326,15 @@ const i18n = {
     exclusiveKeywords: 'Palabras clave exclusivas',
     impact: 'Impacto',
     advantage: 'Ventaja',
+    pagespeed: 'Rendimiento',
+    mobile: 'Móvil',
+    desktop: 'Escritorio',
+    eeat: 'Puntuación E-E-A-T',
+    experience: 'Experiencia',
+    expertiseLabel: 'Expertise',
+    authority: 'Autoridad',
+    trust: 'Confianza',
+    radarTitle: 'Radar comparativo',
   },
 };
 
