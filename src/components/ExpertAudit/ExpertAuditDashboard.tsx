@@ -1073,7 +1073,12 @@ export function ExpertAuditDashboard() {
         }
       }
     } finally {
-      // Stop music, wait 3s, play microwave ding, then show results
+      // Enforce minimum 150s loading (Labor Illusion)
+      const elapsed = Date.now() - auditStartTimeRef.current;
+      const remaining = Math.max(0, 150_000 - elapsed);
+      if (remaining > 0) await new Promise(r => setTimeout(r, remaining));
+
+      // Stop music, wait 3s silence, play microwave ding, then show results
       await new Promise<void>((resolve) => {
         stopMusicRef.current?.();
         setTimeout(async () => {
