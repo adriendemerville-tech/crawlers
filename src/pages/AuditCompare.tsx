@@ -180,7 +180,7 @@ const i18n = {
     badge: 'Comparative Audit',
     h1: 'Compare two sites against AI',
     subtitle: 'Analyze and compare AI visibility, keywords and GEO strategy of two sites side by side.',
-    credits: '5 credits',
+    credits: '4 credits',
     confirm: 'Confirm',
     launch: 'Launch comparative audit',
     confirmBoth: 'Confirm both URLs to launch the audit',
