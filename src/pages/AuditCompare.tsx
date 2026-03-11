@@ -713,7 +713,7 @@ const AuditCompare = () => {
                   <div className="text-center mb-2">
                     <Badge variant="outline" className="text-xs">{url2.replace(/^https?:\/\//, '').substring(0, 30)}</Badge>
                   </div>
-                  <CompareLoadingSteps siteName={new URL(url2.startsWith('http') ? url2 : `https://${url2}`).hostname} />
+                  <CompareLoadingSteps siteName={new URL(url2.startsWith('http') ? url2 : `https://${url2}`).hostname} t={t} />
                 </div>
               </div>
 
