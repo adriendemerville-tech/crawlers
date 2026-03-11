@@ -137,9 +137,9 @@ async function extractPageMetadata(url: string, domain: string): Promise<PageMet
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               url: normalizedUrl,
-              rejectResourceTypes: ['image', 'media', 'font', 'stylesheet'],
-              waitForSelector: { selector: 'h1, h2, [data-testid], main, article', timeout: 8000 },
-              gotoOptions: { waitUntil: 'networkidle2', timeout: 20000 },
+              rejectResourceTypes: ['image', 'media', 'font'],
+              waitForSelector: { selector: 'h2, main, article, section, [class*="hero"], #root > div > div', timeout: 10000 },
+              gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
             }),
             signal: AbortSignal.timeout(25000),
           });
