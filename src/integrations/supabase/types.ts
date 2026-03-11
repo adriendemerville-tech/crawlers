@@ -1217,6 +1217,7 @@ export type Database = {
           updated_at: string
           url: string
           user_id: string
+          validated_at: string | null
         }
         Insert: {
           code: string
@@ -1227,6 +1228,7 @@ export type Database = {
           updated_at?: string
           url: string
           user_id: string
+          validated_at?: string | null
         }
         Update: {
           code?: string
@@ -1237,6 +1239,7 @@ export type Database = {
           updated_at?: string
           url?: string
           user_id?: string
+          validated_at?: string | null
         }
         Relationships: []
       }
