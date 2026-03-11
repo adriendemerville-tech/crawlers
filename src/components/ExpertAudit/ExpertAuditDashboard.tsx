@@ -1062,6 +1062,15 @@ export function ExpertAuditDashboard() {
       }
     } finally {
       setIsStrategicLoading(false);
+      // Safety net: if no result is set after all attempts, restore technical results
+      // This prevents the "black screen" where nothing renders
+      setResult(prev => {
+        if (!prev && technicalResult) {
+          setAuditMode('technical');
+          return technicalResult;
+        }
+        return prev;
+      });
     }
   };
 
