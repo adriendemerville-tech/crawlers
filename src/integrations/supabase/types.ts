@@ -538,6 +538,86 @@ export type Database = {
         }
         Relationships: []
       }
+      crawl_pages: {
+        Row: {
+          broken_links: Json | null
+          crawl_id: string
+          created_at: string
+          external_links: number | null
+          h1: string | null
+          has_canonical: boolean | null
+          has_hreflang: boolean | null
+          has_og: boolean | null
+          has_schema_org: boolean | null
+          http_status: number | null
+          id: string
+          images_total: number | null
+          images_without_alt: number | null
+          internal_links: number | null
+          issues: Json | null
+          meta_description: string | null
+          path: string
+          seo_score: number | null
+          title: string | null
+          url: string
+          word_count: number | null
+        }
+        Insert: {
+          broken_links?: Json | null
+          crawl_id: string
+          created_at?: string
+          external_links?: number | null
+          h1?: string | null
+          has_canonical?: boolean | null
+          has_hreflang?: boolean | null
+          has_og?: boolean | null
+          has_schema_org?: boolean | null
+          http_status?: number | null
+          id?: string
+          images_total?: number | null
+          images_without_alt?: number | null
+          internal_links?: number | null
+          issues?: Json | null
+          meta_description?: string | null
+          path?: string
+          seo_score?: number | null
+          title?: string | null
+          url: string
+          word_count?: number | null
+        }
+        Update: {
+          broken_links?: Json | null
+          crawl_id?: string
+          created_at?: string
+          external_links?: number | null
+          h1?: string | null
+          has_canonical?: boolean | null
+          has_hreflang?: boolean | null
+          has_og?: boolean | null
+          has_schema_org?: boolean | null
+          http_status?: number | null
+          id?: string
+          images_total?: number | null
+          images_without_alt?: number | null
+          internal_links?: number | null
+          issues?: Json | null
+          meta_description?: string | null
+          path?: string
+          seo_score?: number | null
+          title?: string | null
+          url?: string
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crawl_pages_crawl_id_fkey"
+            columns: ["crawl_id"]
+            isOneToOne: false
+            referencedRelation: "site_crawls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_transactions: {
         Row: {
           amount: number
@@ -1219,6 +1299,57 @@ export type Database = {
           referrer_id?: string
           report_id?: string
           visitor_ip?: string
+        }
+        Relationships: []
+      }
+      site_crawls: {
+        Row: {
+          ai_recommendations: Json | null
+          ai_summary: string | null
+          avg_score: number | null
+          completed_at: string | null
+          crawled_pages: number
+          created_at: string
+          credits_used: number
+          domain: string
+          error_message: string | null
+          id: string
+          status: string
+          total_pages: number
+          url: string
+          user_id: string
+        }
+        Insert: {
+          ai_recommendations?: Json | null
+          ai_summary?: string | null
+          avg_score?: number | null
+          completed_at?: string | null
+          crawled_pages?: number
+          created_at?: string
+          credits_used?: number
+          domain: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          total_pages?: number
+          url: string
+          user_id: string
+        }
+        Update: {
+          ai_recommendations?: Json | null
+          ai_summary?: string | null
+          avg_score?: number | null
+          completed_at?: string | null
+          crawled_pages?: number
+          created_at?: string
+          credits_used?: number
+          domain?: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          total_pages?: number
+          url?: string
+          user_id?: string
         }
         Relationships: []
       }

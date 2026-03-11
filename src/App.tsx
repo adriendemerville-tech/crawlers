@@ -51,6 +51,7 @@ const AnalyseSiteWebGratuit = lazy(() => import("./pages/AnalyseSiteWebGratuit")
 const GenerativeEngineOptimization = lazy(() => import("./pages/GenerativeEngineOptimization"));
 const GuideAuditSeo = lazy(() => import("./pages/GuideAuditSeo"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const SiteCrawl = lazy(() => import("./pages/SiteCrawl"));
 
 // Loading fallback
 const PageLoader = () => (
@@ -115,6 +116,7 @@ const App = () => (
                           <Route path="/analyse-site-web-gratuit" element={<AnalyseSiteWebGratuit />} />
                           <Route path="/generative-engine-optimization" element={<GenerativeEngineOptimization />} />
                           <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
+                          <Route path="/site-crawl" element={<SiteCrawl />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
