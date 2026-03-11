@@ -1355,14 +1355,22 @@ const AuditCompare = () => {
                 </div>
               </div>
 
-              <div className="text-center">
+              <div className="text-center flex flex-col items-center gap-3">
                 <Button onClick={handleLaunch} size="lg" disabled={!bothConfirmed}
                   className="bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold px-8 disabled:opacity-50">
                   <Swords className="h-4 w-4 mr-2" />
                   {t.launch}
                 </Button>
+                <button
+                  type="button"
+                  onClick={() => setShowTopUp(true)}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-500 hover:text-amber-400 transition-colors cursor-pointer"
+                >
+                  <CreditCoin size="sm" />
+                  <span>{t.credits}</span>
+                </button>
                 {!bothConfirmed && (url1.trim() || url2.trim()) && (
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-xs text-muted-foreground">
                     {!confirmedUrl1 && !confirmedUrl2 ? t.confirmBoth 
                       : !confirmedUrl1 ? t.confirmSite1 : t.confirmSite2}
                   </p>
