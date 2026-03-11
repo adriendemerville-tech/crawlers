@@ -347,7 +347,7 @@ function CompareLoadingSteps({ siteName, t }: { siteName: string; t: typeof i18n
 // ==================== RESULT CARD ====================
 
 function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
-  const { analysis, llm_raw } = site;
+  const { analysis, llm_raw, backlinks, contentDepth } = site;
   const llmScore = llm_raw?.overallScore ?? analysis.llm_visibility?.citation_probability ?? 0;
 
   return (
@@ -377,6 +377,83 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
           </div>
         </CardContent>
       </Card>
+
+      {/* Backlinks */}
+      {backlinks && (
+        <Card className="border-border/50 bg-card/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-blue-500" /> {t.backlinks}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2 rounded-lg bg-muted/30 text-center">
+                <p className="text-lg font-bold text-foreground">{backlinks.referringDomains.toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground">{t.referringDomains}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-muted/30 text-center">
+                <p className="text-lg font-bold text-foreground">{backlinks.domainRank}</p>
+                <p className="text-[10px] text-muted-foreground">{t.domainRank}</p>
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              <span className="font-medium">{backlinks.totalBacklinks.toLocaleString()}</span> backlinks total
+            </div>
+            {backlinks.topAnchors.length > 0 && (
+              <div>
+                <p className="text-[10px] text-muted-foreground mb-1">{t.topAnchors}</p>
+                <div className="flex flex-wrap gap-1">
+                  {backlinks.topAnchors.map((a, i) => (
+                    <Badge key={i} variant="outline" className="text-[9px] px-1.5">{a}</Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Content Depth */}
+      {contentDepth && (
+        <Card className="border-border/50 bg-card/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <FileText className="h-4 w-4 text-teal-500" /> {t.contentDepth}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="p-1.5 rounded bg-muted/30">
+                <p className="text-sm font-bold text-foreground">{contentDepth.wordCount.toLocaleString()}</p>
+                <p className="text-[9px] text-muted-foreground">{t.words}</p>
+              </div>
+              <div className="p-1.5 rounded bg-muted/30">
+                <p className="text-sm font-bold text-foreground">{contentDepth.h2Count}</p>
+                <p className="text-[9px] text-muted-foreground">H2</p>
+              </div>
+              <div className="p-1.5 rounded bg-muted/30">
+                <p className="text-sm font-bold text-foreground">{contentDepth.h3Count}</p>
+                <p className="text-[9px] text-muted-foreground">H3</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {contentDepth.hasJsonLd && <Badge variant="default" className="text-[9px] px-1.5">JSON-LD</Badge>}
+              {contentDepth.hasOpenGraph && <Badge variant="default" className="text-[9px] px-1.5">Open Graph</Badge>}
+              {contentDepth.hasFAQ && <Badge variant="default" className="text-[9px] px-1.5">FAQ Schema</Badge>}
+              {!contentDepth.hasJsonLd && <Badge variant="outline" className="text-[9px] px-1.5 opacity-50">JSON-LD ✗</Badge>}
+              {!contentDepth.hasOpenGraph && <Badge variant="outline" className="text-[9px] px-1.5 opacity-50">OG ✗</Badge>}
+            </div>
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>{t.internalLinks}: {contentDepth.internalLinksCount}</span>
+              <span>{t.externalLinks}: {contentDepth.externalLinksCount}</span>
+            </div>
+            {contentDepth.imagesWithoutAlt > 0 && (
+              <p className="text-[10px] text-rose-400">{contentDepth.imagesWithoutAlt}/{contentDepth.imagesCount} {t.images} {t.withoutAlt}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* LLM Visibility */}
       <Card className="border-border/50 bg-card/80">
@@ -483,6 +560,194 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
         </Card>
       </div>
     </div>
+  );
+}
+
+// ==================== CROSS-COMPARISON SECTION ====================
+
+const impactColors: Record<string, string> = {
+  critique: 'text-rose-500 bg-rose-500/10 border-rose-500/30',
+  important: 'text-amber-500 bg-amber-500/10 border-amber-500/30',
+  mineur: 'text-muted-foreground bg-muted/30 border-border/30',
+  critical: 'text-rose-500 bg-rose-500/10 border-rose-500/30',
+  minor: 'text-muted-foreground bg-muted/30 border-border/30',
+};
+
+function CrossComparisonSection({ cross, site1Domain, site2Domain, t }: { cross: CrossComparison; site1Domain: string; site2Domain: string; t: typeof i18n['fr'] }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-8 space-y-4">
+      <Separator className="my-6" />
+      
+      {/* Verdict */}
+      <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-primary" /> {t.crossVerdict}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-foreground leading-relaxed">{cross.verdict}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Authority winner */}
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border/50">
+              <Shield className="h-4 w-4 text-blue-500 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t.authorityWinner}</p>
+                <p className="text-sm font-bold text-foreground truncate">{cross.authority_winner}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {cross.authority_gap?.magnitude} — {cross.authority_gap?.key_factor}
+                </p>
+              </div>
+            </div>
+            {/* Content winner */}
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-card border border-border/50">
+              <FileText className="h-4 w-4 text-teal-500 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t.contentWinner}</p>
+                <p className="text-sm font-bold text-foreground truncate">{cross.content_depth_winner}</p>
+                <p className="text-[10px] text-muted-foreground">{cross.content_comparison?.structural_advantage}</p>
+              </div>
+            </div>
+          </div>
+          {cross.content_comparison?.technical_seo_edge && (
+            <p className="text-xs text-muted-foreground italic">{cross.content_comparison.technical_seo_edge}</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* SERP Battlefield */}
+      {cross.serp_battlefield && (
+        <Card className="border-border/50 bg-card/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-violet-500" /> {t.serpBattlefield}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {cross.serp_battlefield.head_to_head && cross.serp_battlefield.head_to_head.length > 0 && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border/30">
+                      <th className="text-left py-1.5 text-muted-foreground font-medium">{t.keywords}</th>
+                      <th className="text-center py-1.5 text-muted-foreground font-medium">{site1Domain}</th>
+                      <th className="text-center py-1.5 text-muted-foreground font-medium">{site2Domain}</th>
+                      <th className="text-center py-1.5 text-muted-foreground font-medium">🏆</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cross.serp_battlefield.head_to_head.map((h, i) => (
+                      <tr key={i} className="border-b border-border/10">
+                        <td className="py-1.5 text-foreground font-medium">{h.keyword}</td>
+                        <td className="text-center py-1.5">
+                          <Badge variant={h.winner === site1Domain ? 'default' : 'outline'} className="text-[10px] px-1.5">
+                            {typeof h.site1_rank === 'number' ? `#${h.site1_rank}` : h.site1_rank}
+                          </Badge>
+                        </td>
+                        <td className="text-center py-1.5">
+                          <Badge variant={h.winner === site2Domain ? 'default' : 'outline'} className="text-[10px] px-1.5">
+                            {typeof h.site2_rank === 'number' ? `#${h.site2_rank}` : h.site2_rank}
+                          </Badge>
+                        </td>
+                        <td className="text-center py-1.5 text-[10px] text-foreground font-medium truncate max-w-[80px]">{h.winner}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            
+            {/* Exclusive keywords */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {cross.serp_battlefield.exclusive_strengths_site1 && cross.serp_battlefield.exclusive_strengths_site1.length > 0 && (
+                <div className="p-2 rounded-lg bg-violet-500/5 border border-violet-500/20">
+                  <p className="text-[10px] text-muted-foreground mb-1">{t.exclusiveKeywords} — <span className="font-medium text-violet-400">{site1Domain}</span></p>
+                  <div className="flex flex-wrap gap-1">
+                    {cross.serp_battlefield.exclusive_strengths_site1.map((k, i) => (
+                      <Badge key={i} variant="outline" className="text-[9px] px-1.5 border-violet-500/30">{k}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {cross.serp_battlefield.exclusive_strengths_site2 && cross.serp_battlefield.exclusive_strengths_site2.length > 0 && (
+                <div className="p-2 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                  <p className="text-[10px] text-muted-foreground mb-1">{t.exclusiveKeywords} — <span className="font-medium text-amber-400">{site2Domain}</span></p>
+                  <div className="flex flex-wrap gap-1">
+                    {cross.serp_battlefield.exclusive_strengths_site2.map((k, i) => (
+                      <Badge key={i} variant="outline" className="text-[9px] px-1.5 border-amber-500/30">{k}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Differentiators */}
+      {cross.differentiators && cross.differentiators.length > 0 && (
+        <Card className="border-border/50 bg-card/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Swords className="h-4 w-4 text-primary" /> {t.differentiators}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {cross.differentiators.map((d, i) => (
+              <div key={i} className={`p-2.5 rounded-lg border ${impactColors[d.impact] || impactColors.mineur}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold text-foreground">{d.dimension}</span>
+                  <Badge variant="outline" className="text-[9px] px-1.5">{d.impact}</Badge>
+                </div>
+                <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center text-[11px]">
+                  <div className={`text-center p-1 rounded ${d.advantage === site1Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                    {d.site1_value}
+                  </div>
+                  <span className="text-muted-foreground text-[9px]">vs</span>
+                  <div className={`text-center p-1 rounded ${d.advantage === site2Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                    {d.site2_value}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Strategic Recommendations */}
+      {cross.strategic_recommendations && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="border-violet-500/20 bg-card/80">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                <ArrowRight className="h-4 w-4 text-violet-500" /> {t.recommendations} — {site1Domain}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1.5">
+                {(cross.strategic_recommendations.for_site1 || []).map((r, i) => (
+                  <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-violet-500/30">{r}</p>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-amber-500/20 bg-card/80">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+                <ArrowRight className="h-4 w-4 text-amber-500" /> {t.recommendations} — {site2Domain}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1.5">
+                {(cross.strategic_recommendations.for_site2 || []).map((r, i) => (
+                  <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-amber-500/30">{r}</p>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </motion.div>
   );
 }
 
