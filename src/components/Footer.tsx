@@ -14,8 +14,7 @@ function SmartLink({ to, className, title, children }: { to: string; className?:
   return <Link to={to} className={className} title={title}>{children}</Link>;
 }
 
-const t3 = (language: string, fr: string, en: string, es: string) =>
-  language === 'fr' ? fr : language === 'es' ? es : en;
+import { t3 } from '@/utils/i18n';
 
 function FooterComponent() {
   const { t, language } = useLanguage();
