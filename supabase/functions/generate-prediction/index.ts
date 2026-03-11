@@ -9,16 +9,14 @@ const CTR_CURVE: Record<number, number> = {
   6: 0.06, 7: 0.04, 8: 0.03, 9: 0.02, 10: 0.01,
 };
 
-/** Seasonal coefficients by sector × month (0=Jan … 11=Dec). */
 const SEASONALITY_MATRIX: Record<string, number[]> = {
-  //                   Jan   Feb   Mar   Apr   May   Jun   Jul   Aug   Sep   Oct   Nov   Dec
-  Retail:       [0.85, 0.80, 0.90, 0.95, 1.00, 1.05, 1.00, 0.90, 1.10, 1.15, 1.30, 1.50],
-  RealEstate:   [0.90, 0.95, 1.30, 1.25, 1.20, 1.15, 1.05, 0.85, 1.10, 1.05, 0.95, 0.80],
-  Medical:      [1.15, 1.10, 1.05, 1.00, 0.95, 0.90, 0.85, 0.85, 1.10, 1.15, 1.10, 1.00],
-  Services:     [1.00, 1.00, 1.05, 1.05, 1.00, 0.95, 0.90, 0.85, 1.10, 1.10, 1.05, 1.00],
-  Travel:       [1.10, 1.05, 1.00, 1.10, 1.25, 1.35, 1.40, 1.30, 1.05, 0.90, 0.80, 0.95],
-  Finance:      [1.20, 1.10, 1.15, 1.05, 1.00, 0.95, 0.90, 0.90, 1.05, 1.10, 1.10, 1.05],
-  Education:    [1.15, 1.10, 1.00, 0.95, 0.90, 0.85, 0.80, 1.20, 1.30, 1.15, 1.05, 0.90],
+  Retail:     [0.85, 0.80, 0.90, 0.95, 1.00, 1.05, 1.00, 0.90, 1.10, 1.15, 1.30, 1.50],
+  RealEstate: [0.90, 0.95, 1.30, 1.25, 1.20, 1.15, 1.05, 0.85, 1.10, 1.05, 0.95, 0.80],
+  Medical:    [1.15, 1.10, 1.05, 1.00, 0.95, 0.90, 0.85, 0.85, 1.10, 1.15, 1.10, 1.00],
+  Services:   [1.00, 1.00, 1.05, 1.05, 1.00, 0.95, 0.90, 0.85, 1.10, 1.10, 1.05, 1.00],
+  Travel:     [1.10, 1.05, 1.00, 1.10, 1.25, 1.35, 1.40, 1.30, 1.05, 0.90, 0.80, 0.95],
+  Finance:    [1.20, 1.10, 1.15, 1.05, 1.00, 0.95, 0.90, 0.90, 1.05, 1.10, 1.10, 1.05],
+  Education:  [1.15, 1.10, 1.00, 0.95, 0.90, 0.85, 0.80, 1.20, 1.30, 1.15, 1.05, 0.90],
 };
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -72,7 +70,6 @@ function potentialGain(tdi: number): number {
   return 0.5;
 }
 
-/** Resolve sector from extracted_data to a SEASONALITY_MATRIX key */
 function resolveSector(ext: Record<string, any>): string {
   const raw = (ext.sector || ext.industry || ext.niche || 'Services').toString().toLowerCase();
   const map: Record<string, string> = {
@@ -89,7 +86,6 @@ function resolveSector(ext: Record<string, any>): string {
   return 'Services';
 }
 
-/** Average seasonal coefficient over the next 3 months (90-day projection window) */
 function seasonalFactor90d(sector: string): number {
   const now = new Date();
   const m0 = now.getMonth();
@@ -166,8 +162,8 @@ function segmentGsc(gsc_data: any, root: string): GscSegment {
 interface Anchors {
   potentialPositionGain: number;
   targetPos: number;
-  theoreticalNonBrandGain: number;  // raw, before seasonality
-  seasonalGain: number;             // after seasonality
+  theoreticalNonBrandGain: number;
+  seasonalGain: number;
   seasonalFactor: number;
   sector: string;
   currentMonth: number;
@@ -191,7 +187,6 @@ function computeAnchors(seg: GscSegment, tdiScore: number, sector: string): Anch
     Math.round((seg.lowIntentClicks / (seg.nonBrandClicks || 1)) * 100)
   ));
 
-  // ±15% corridor around seasonal-adjusted gain
   const realisticTarget = seg.totalClicks + Math.max(0, seasonalGain);
   const realisticFloor = Math.round(realisticTarget * 0.85);
   const realisticCeiling = Math.round(realisticTarget * 1.15);
@@ -203,34 +198,327 @@ function computeAnchors(seg: GscSegment, tdiScore: number, sector: string): Anch
   };
 }
 
+// ─── DATA SOURCE: Multi-source intelligence gathering ───────────────────────
+
+/**
+ * Input source types:
+ * - 'pdf_audit': legacy PDF upload (admin)
+ * - 'crawl': multi-page crawl data
+ * - 'saved_reports': user's saved audit reports
+ * - 'gsc': Google Search Console live data
+ * - 'corrective_codes': implemented fixes detection
+ */
+interface DataIntelligence {
+  domain: string;
+  root: string;
+  errorCount: number;
+  tdiScore: number;
+  depth: 'thin' | 'utility' | 'authority';
+  reboundDays: number;
+  sector: string;
+  ext: Record<string, any>;  // normalized extracted data
+  gscData: any;
+  crawlContext: CrawlContext | null;
+  fixesImplemented: boolean;
+  fixesCount: number;
+  reportsCount: number;
+  source: string;
+}
+
+interface CrawlContext {
+  totalPages: number;
+  avgScore: number;
+  pagesWithSchema: number;
+  pagesWithCanonical: number;
+  pagesWithOg: number;
+  thinPages: number;
+  totalImagesNoAlt: number;
+  topIssues: any[];
+}
+
+async function gatherIntelligence(
+  supabase: any,
+  params: {
+    audit_id?: string;
+    crawl_id?: string;
+    client_id?: string;
+    gsc_data?: any;
+    sector?: string;
+  }
+): Promise<DataIntelligence> {
+  const ext: Record<string, any> = {};
+  let domain = '';
+  let errorCount = 0;
+  let source = 'unknown';
+  let crawlContext: CrawlContext | null = null;
+  let gscData = params.gsc_data || null;
+
+  // ─── Source 1: PDF Audit (legacy admin) ───
+  if (params.audit_id) {
+    const { data: audit } = await supabase
+      .from('pdf_audits').select('*').eq('id', params.audit_id).maybeSingle();
+    
+    if (audit?.status === 'processed' && audit.extracted_data) {
+      Object.assign(ext, audit.extracted_data);
+      domain = ext.domain || '';
+      errorCount = Number(ext.errors) || 0;
+      source = 'pdf_audit';
+    }
+  }
+
+  // ─── Source 2: Multi-page Crawl ───
+  if (params.crawl_id) {
+    const { data: crawl } = await supabase
+      .from('site_crawls').select('*').eq('id', params.crawl_id).maybeSingle();
+    
+    if (crawl?.status === 'completed') {
+      domain = domain || crawl.domain;
+      source = source === 'pdf_audit' ? 'pdf_audit+crawl' : 'crawl';
+
+      const { data: pages } = await supabase
+        .from('crawl_pages').select('*').eq('crawl_id', params.crawl_id);
+      
+      if (pages && pages.length > 0) {
+        const crawlErrors = pages.reduce((s: number, p: any) => s + ((p.issues as any[])?.length || 0), 0);
+        // Use adjusted TDI exponent for multi-page (many small errors)
+        errorCount = Math.max(errorCount, crawlErrors);
+
+        crawlContext = {
+          totalPages: pages.length,
+          avgScore: crawl.avg_score || 0,
+          pagesWithSchema: pages.filter((p: any) => p.has_schema_org).length,
+          pagesWithCanonical: pages.filter((p: any) => p.has_canonical).length,
+          pagesWithOg: pages.filter((p: any) => p.has_og).length,
+          thinPages: pages.filter((p: any) => (p.word_count || 0) < 100).length,
+          totalImagesNoAlt: pages.reduce((s: number, p: any) => s + (p.images_without_alt || 0), 0),
+          topIssues: (crawl.ai_recommendations || []).slice(0, 5),
+        };
+
+        // Enrich ext with crawl averages
+        ext.word_count = ext.word_count || Math.round(pages.reduce((s: number, p: any) => s + (p.word_count || 0), 0) / pages.length);
+        ext.structured_data_present = ext.structured_data_present || (crawlContext.pagesWithSchema / pages.length > 0.5);
+        ext.technical_score = ext.technical_score || Math.round(crawlContext.avgScore / 2); // /200 -> /100
+      }
+    }
+  }
+
+  // ─── Source 3: Saved Reports (user's audit history for this domain) ───
+  if (domain && params.client_id) {
+    const { data: reports } = await supabase
+      .from('saved_reports')
+      .select('report_data, report_type, created_at')
+      .eq('user_id', params.client_id)
+      .ilike('url', `%${domain}%`)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (reports && reports.length > 0) {
+      // Extract technical signals from saved expert reports
+      for (const report of reports) {
+        const rd = report.report_data as Record<string, any>;
+        if (report.report_type === 'expert' || report.report_type === 'crawlers') {
+          // Merge scores if not already set from PDF or crawl
+          if (!ext.content_quality_score && rd?.contentDensity?.ratio) {
+            ext.content_quality_score = Math.round(rd.contentDensity.ratio * 100);
+          }
+          if (!ext.page_speed_score && rd?.pagespeed?.performance) {
+            ext.page_speed_score = rd.pagespeed.performance;
+          }
+          if (!ext.domain_authority && rd?.domainAuthority) {
+            ext.domain_authority = rd.domainAuthority;
+          }
+          // Count additional errors from expert reports
+          const reportErrors = (rd?.brokenLinks?.total || 0) + 
+            (rd?.missingH1 ? 1 : 0) + (rd?.missingMeta ? 1 : 0) + 
+            (rd?.noRobotsTxt ? 1 : 0) + (rd?.noSitemap ? 1 : 0);
+          errorCount = Math.max(errorCount, reportErrors);
+        }
+      }
+      ext._reports_count = reports.length;
+    }
+  }
+
+  // ─── Source 4: GSC data auto-fetch if user has integration ───
+  if (!gscData && domain && params.client_id) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('gsc_access_token, gsc_refresh_token, gsc_site_url, gsc_token_expiry')
+      .eq('user_id', params.client_id)
+      .maybeSingle();
+
+    if (profile?.gsc_access_token && profile?.gsc_site_url) {
+      try {
+        // Check if token is still valid (not expired)
+        const tokenExpiry = profile.gsc_token_expiry ? new Date(profile.gsc_token_expiry) : null;
+        const isExpired = tokenExpiry && tokenExpiry < new Date();
+        
+        let accessToken = profile.gsc_access_token;
+        
+        // Refresh token if expired
+        if (isExpired && profile.gsc_refresh_token) {
+          const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
+          const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
+          if (clientId && clientSecret) {
+            const refreshRes = await fetch('https://oauth2.googleapis.com/token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({
+                client_id: clientId,
+                client_secret: clientSecret,
+                refresh_token: profile.gsc_refresh_token,
+                grant_type: 'refresh_token',
+              }),
+            });
+            if (refreshRes.ok) {
+              const tokenData = await refreshRes.json();
+              accessToken = tokenData.access_token;
+              // Update profile with new token
+              await supabase.from('profiles').update({
+                gsc_access_token: accessToken,
+                gsc_token_expiry: new Date(Date.now() + (tokenData.expires_in || 3600) * 1000).toISOString(),
+              }).eq('user_id', params.client_id);
+            }
+          }
+        }
+
+        // Fetch GSC data for last 30 days
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        
+        const gscRes = await fetch(
+          `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(profile.gsc_site_url)}/searchAnalytics/query`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              startDate, endDate,
+              dimensions: ['query'],
+              rowLimit: 500,
+            }),
+          }
+        );
+        
+        if (gscRes.ok) {
+          gscData = await gscRes.json();
+          source += '+gsc';
+        }
+      } catch (gscErr) {
+        console.warn('GSC auto-fetch failed:', gscErr);
+        // Non-blocking: continue without GSC
+      }
+    }
+  }
+
+  // ─── Source 5: Corrective codes implementation detection ───
+  let fixesImplemented = false;
+  let fixesCount = 0;
+  if (domain) {
+    const { data: codes } = await supabase
+      .from('saved_corrective_codes')
+      .select('id, created_at')
+      .ilike('url', `%${domain}%`);
+    
+    if (codes && codes.length > 0) {
+      fixesCount = codes.length;
+      fixesImplemented = true;
+      source += '+fixes';
+    }
+
+    // Also check WordPress tracked sites for deployed fixes
+    if (!fixesImplemented) {
+      const { data: wpSites } = await supabase
+        .from('tracked_sites')
+        .select('id, current_config')
+        .ilike('domain', `%${domain}%`)
+        .limit(1);
+      if (wpSites && wpSites.length > 0) {
+        const cfg = wpSites[0].current_config as Record<string, any> | null;
+        if (cfg && (cfg.fixes?.length > 0 || cfg.last_sync)) {
+          fixesImplemented = true;
+          fixesCount = cfg.fixes?.length || 1;
+          source += '+wp';
+        }
+      }
+    }
+  }
+
+  // ─── Compute derived metrics ───
+  const root = domainRoot(domain);
+  const tdiScore = crawlContext 
+    ? (errorCount > 0 ? Math.pow(errorCount, 0.8) : 0) // Adjusted exponent for crawl
+    : computeTDI(errorCount);
+  const depth = classifyDepth(ext);
+  const reboundDays = REBOUND_DAYS[depth];
+  const sector = resolveSector(params.sector ? { sector: params.sector } : ext);
+
+  return {
+    domain, root, errorCount, tdiScore, depth, reboundDays, sector, ext,
+    gscData, crawlContext, fixesImplemented, fixesCount,
+    reportsCount: ext._reports_count || 0, source,
+  };
+}
+
 // ─── PROMPT BUILDER ─────────────────────────────────────────────────────────
 
 function buildPrompt(
-  ext: Record<string, any>,
+  intel: DataIntelligence,
   seg: GscSegment,
   anchors: Anchors,
-  tdiScore: number,
-  errorCount: number,
-  depth: string,
-  reboundDays: number,
 ): string {
   const monthName = MONTH_NAMES[anchors.currentMonth];
+  
+  let crawlBlock = '';
+  if (intel.crawlContext) {
+    const cc = intel.crawlContext;
+    crawlBlock = `
+## MULTI-PAGE CRAWL DATA
+- Pages crawled: ${cc.totalPages}
+- Average SEO score: ${cc.avgScore}/200
+- Schema.org adoption: ${cc.pagesWithSchema}/${cc.totalPages} (${Math.round(cc.pagesWithSchema / cc.totalPages * 100)}%)
+- Canonical adoption: ${cc.pagesWithCanonical}/${cc.totalPages}
+- Open Graph adoption: ${cc.pagesWithOg}/${cc.totalPages}
+- Thin content pages (<100 words): ${cc.thinPages}
+- Total images without alt: ${cc.totalImagesNoAlt}
+${cc.topIssues.length > 0 ? `- Top issues:\n${cc.topIssues.map((r: any) => `  • ${r.title} (${r.priority}, ${r.affected_pages || '?'} pages)`).join('\n')}` : ''}`;
+  }
+
+  let fixesBlock = '';
+  if (intel.fixesImplemented) {
+    fixesBlock = `
+## CORRECTIVE ACTIONS DETECTED
+- ${intel.fixesCount} corrective code(s) generated and implemented for this domain
+- This indicates active optimization — factor in a HIGHER growth expectation (+5-10% on realistic)`;
+  }
+
+  let reportsBlock = '';
+  if (intel.reportsCount > 0) {
+    reportsBlock = `
+## HISTORICAL AUDIT DATA
+- ${intel.reportsCount} saved audit report(s) for this domain
+- This provides longitudinal context for trend analysis`;
+  }
 
   return `You are a Senior Search Data Scientist running a causal traffic simulation for the 2026 Search ecosystem.
 
+## DATA SOURCES USED: ${intel.source}
+
 ## PRE-COMPUTED INTELLIGENCE (use as-is, do NOT recalculate)
-- Technical Debt Index (TDI): ${tdiScore.toFixed(1)} (from ${errorCount} errors, formula: errors^1.5)
+- Technical Debt Index (TDI): ${intel.tdiScore.toFixed(1)} (from ${intel.errorCount} errors)
   → High TDI creates an "Indexing Ceiling": Google throttles crawl budget.
-- Semantic Depth: "${depth}" → Trust Rebound ETA: ${reboundDays} days
-- Domain Authority: ${ext.domain_authority || 'N/A'}
+- Semantic Depth: "${intel.depth}" → Trust Rebound ETA: ${intel.reboundDays} days
+- Domain Authority: ${intel.ext.domain_authority || 'N/A'}
 
 ## AUDIT DATA
-- Technical SEO score: ${ext.technical_score || 'N/A'}/100
-- Content quality score: ${ext.content_quality_score || 'N/A'}/100
-- Page speed score: ${ext.page_speed_score || 'N/A'}
-- Mobile score: ${ext.mobile_score || 'N/A'}
-- Structured data present: ${ext.structured_data_present || false}
-- Schema types: ${JSON.stringify(ext.schema_types || [])}
+- Technical SEO score: ${intel.ext.technical_score || 'N/A'}/100
+- Content quality score: ${intel.ext.content_quality_score || 'N/A'}/100
+- Page speed score: ${intel.ext.page_speed_score || 'N/A'}
+- Mobile score: ${intel.ext.mobile_score || 'N/A'}
+- Structured data present: ${intel.ext.structured_data_present || false}
+- Schema types: ${JSON.stringify(intel.ext.schema_types || [])}
+${crawlBlock}${fixesBlock}${reportsBlock}
 
 ## GSC BASELINE (30 days)
 - Total clicks: ${seg.totalClicks} | Impressions: ${seg.totalImpressions} | Avg position: ${seg.avgPos.toFixed(1)}
@@ -242,24 +530,19 @@ function buildPrompt(
 ## INFLEXIBLE TRUTHS — YOU MUST RESPECT THESE
 
 ### 1. CTR Base Gain
-Based on industry CTR curves, moving from position ${seg.avgPos.toFixed(1)} to position ${anchors.targetPos.toFixed(1)} yields a raw theoretical gain of **${anchors.theoreticalNonBrandGain}** non-brand clicks.
-After applying the seasonal coefficient (${anchors.seasonalFactor}), the adjusted gain is **${anchors.seasonalGain}** clicks.
-Your **Realistic** scenario's total clicks MUST equal brand clicks (${seg.brandClicks}) + current non-brand clicks (${seg.nonBrandClicks}) + a gain that is within **±15%** of ${anchors.seasonalGain}.
-Use your expertise on the audit's EEAT and content quality to decide the exact position within this corridor.
+Moving from position ${seg.avgPos.toFixed(1)} to position ${anchors.targetPos.toFixed(1)} yields raw gain of **${anchors.theoreticalNonBrandGain}** non-brand clicks.
+After seasonal coefficient (${anchors.seasonalFactor}), adjusted gain = **${anchors.seasonalGain}** clicks.
+Your **Realistic** total clicks MUST = brand (${seg.brandClicks}) + non-brand (${seg.nonBrandClicks}) + gain within **±15%** of ${anchors.seasonalGain}.
 
 ### 2. Sector Seasonality
-We are in **${monthName}**. The sector is **${anchors.sector}**. The seasonal coefficient for the ${anchors.sector} industry over the next 90 days is **${anchors.seasonalFactor}**. You MUST multiply your growth estimates by this factor. A coefficient > 1.0 means favorable season; < 1.0 means headwinds.
+Month: **${monthName}**. Sector: **${anchors.sector}**. Coefficient: **${anchors.seasonalFactor}**.
 
 ### 3. AI Risk Constraint
-The calculated Base AI Risk is **${anchors.baseAiRisk}/100**.
-You may adjust ai_risk_score by ONLY ±15 points from this base. Final ai_risk_score must be between ${Math.max(0, anchors.baseAiRisk - 15)} and ${Math.min(100, anchors.baseAiRisk + 15)}.
+Base AI Risk = **${anchors.baseAiRisk}/100**. Adjust by ONLY ±15 points. Final: ${Math.max(0, anchors.baseAiRisk - 15)}-${Math.min(100, anchors.baseAiRisk + 15)}.
 
 ### 4. Scenario Spread (STRICT)
 - pessimistic.clicks = realistic.clicks × 0.7
 - aggressive.clicks = realistic.clicks × 1.4
-
-## TRUST REBOUND PRINCIPLE
-Fixing technical errors triggers a ${reboundDays}-day trust rebound window.
 
 ## OUTPUT — Return ONLY this JSON (no markdown fences, no commentary)
 {
@@ -283,7 +566,7 @@ Fixing technical errors triggers a ${reboundDays}-day trust rebound window.
 
 GUARDRAILS:
 - Realistic clicks MUST be between ${anchors.realisticFloor} and ${anchors.realisticCeiling}.
-- Brand traffic (${seg.brandClicks}) is constant — included unchanged.
+- Brand traffic (${seg.brandClicks}) is constant.
 - ai_risk_score MUST be integer between ${Math.max(0, anchors.baseAiRisk - 15)} and ${Math.min(100, anchors.baseAiRisk + 15)}.
 - business_impact.annual_value_euro = monthly_value_euro × 12.
 - Use CPC: high-intent × €1.20, low-intent × €0.25. Only NET GAIN over baseline.`;
@@ -291,21 +574,15 @@ GUARDRAILS:
 
 // ─── POST-PROCESSING ────────────────────────────────────────────────────────
 
-function validateAndCorrect(
-  prediction: any,
-  seg: GscSegment,
-  anchors: Anchors,
-): any {
+function validateAndCorrect(prediction: any, seg: GscSegment, anchors: Anchors): any {
   const p = prediction;
 
-  // 1. Stability check on realistic (±15% corridor)
   let realisticClicks = p.scenarios?.realistic?.clicks ?? seg.totalClicks;
   if (realisticClicks < anchors.realisticFloor || realisticClicks > anchors.realisticCeiling) {
     realisticClicks = Math.max(anchors.realisticFloor, Math.min(anchors.realisticCeiling, realisticClicks));
   }
   realisticClicks = Math.max(realisticClicks, seg.totalClicks);
 
-  // 2. Enforce scenario spread
   const pessimisticClicks = Math.max(seg.totalClicks, Math.round(realisticClicks * 0.7));
   const aggressiveClicks = Math.round(realisticClicks * 1.4);
 
@@ -315,12 +592,10 @@ function validateAndCorrect(
     aggressive:  { clicks: aggressiveClicks,  increase_pct: pct(aggressiveClicks, seg.totalClicks) },
   };
 
-  // 3. Clamp AI risk
   const minRisk = Math.max(0, anchors.baseAiRisk - 15);
   const maxRisk = Math.min(100, anchors.baseAiRisk + 15);
   p.ai_risk_score = Math.min(maxRisk, Math.max(minRisk, p.ai_risk_score ?? anchors.baseAiRisk));
 
-  // 4. ROI propagation from validated clicks
   const netGain = realisticClicks - seg.totalClicks;
   if (netGain > 0 && seg.nonBrandClicks > 0) {
     const hiRatio = seg.highIntentClicks / seg.nonBrandClicks;
@@ -353,10 +628,25 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { audit_id, client_id, gsc_data } = await req.json();
+    /**
+     * Accepted input params:
+     * - audit_id: string (optional — PDF audit source)
+     * - crawl_id: string (optional — multi-page crawl source)
+     * - client_id: string (required — user who owns the data)
+     * - gsc_data: object (optional — manual GSC data, auto-fetched if absent)
+     * - sector: string (optional — override sector detection)
+     */
+    const body = await req.json();
+    const { audit_id, crawl_id, client_id, gsc_data, sector } = body;
 
-    if (!audit_id || !client_id) {
-      return new Response(JSON.stringify({ error: 'audit_id and client_id are required' }), {
+    if (!client_id) {
+      return new Response(JSON.stringify({ error: 'client_id is required' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!audit_id && !crawl_id) {
+      return new Response(JSON.stringify({ error: 'audit_id or crawl_id is required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -368,32 +658,39 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // ── Fetch audit ──
-    const { data: audit, error: auditErr } = await supabase
-      .from('pdf_audits').select('*').eq('id', audit_id).single();
+    // ── Gather intelligence from all available sources ──
+    const intel = await gatherIntelligence(supabase, { audit_id, crawl_id, client_id, gsc_data, sector });
 
-    if (auditErr || !audit || audit.status !== 'processed') {
-      throw new Error('Audit not found or not yet processed');
+    if (!intel.domain) {
+      throw new Error('Could not resolve domain from any source');
     }
 
-    const ext: Record<string, any> = audit.extracted_data || {};
-
-    // ── Pre-compute intelligence ──
-    const errorCount = Number(ext.errors) || 0;
-    const tdiScore = computeTDI(errorCount);
-    const root = domainRoot(ext.domain || audit.file_path || '');
-    const depth = classifyDepth(ext);
-    const reboundDays = REBOUND_DAYS[depth];
-    const sector = resolveSector(ext);
-
     // ── GSC segmentation ──
-    const seg = segmentGsc(gsc_data, root);
+    const seg = segmentGsc(intel.gscData, intel.root);
 
-    // ── Deterministic anchors (now with seasonality) ──
-    const anchors = computeAnchors(seg, tdiScore, sector);
+    // ── If no GSC data and source is crawl-only, synthesize baseline from crawl ──
+    if (seg.totalClicks === 0 && intel.crawlContext) {
+      const cc = intel.crawlContext;
+      // Heuristic baseline: ~15 clicks per well-optimized page per month
+      const syntheticBaseline = Math.round(cc.totalPages * (cc.avgScore / 200) * 15);
+      seg.totalClicks = syntheticBaseline;
+      seg.totalImpressions = syntheticBaseline * 20;
+      seg.avgPos = 15 - (cc.avgScore / 200) * 10; // Score-based position estimate
+      seg.brandClicks = Math.round(syntheticBaseline * 0.30);
+      seg.nonBrandClicks = syntheticBaseline - seg.brandClicks;
+      seg.highIntentClicks = Math.round(seg.nonBrandClicks * 0.35);
+      seg.lowIntentClicks = seg.nonBrandClicks - seg.highIntentClicks;
+      seg.brandImpressions = Math.round(seg.totalImpressions * 0.30);
+      seg.nonBrandImpressions = seg.totalImpressions - seg.brandImpressions;
+      seg.highIntentImpressions = Math.round(seg.nonBrandImpressions * 0.35);
+      seg.lowIntentImpressions = seg.nonBrandImpressions - seg.highIntentImpressions;
+    }
+
+    // ── Deterministic anchors ──
+    const anchors = computeAnchors(seg, intel.tdiScore, intel.sector);
 
     // ── Build prompt ──
-    const prompt = buildPrompt(ext, seg, anchors, tdiScore, errorCount, depth, reboundDays);
+    const prompt = buildPrompt(intel, seg, anchors);
 
     // ── Call AI ──
     const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -441,51 +738,32 @@ Deno.serve(async (req) => {
     // ── Post-processing: validate & correct ──
     prediction = validateAndCorrect(prediction, seg, anchors);
 
-    // ── Consistency Rule: ±2% if same audit_id AND no code patch detected ──
-    const siteDomain = ext.domain || root || '';
+    // ── Consistency Rule: ±2% if same audit AND no code patch detected ──
     let anchorPrediction: number | null = null;
     let consistencyClamped = false;
     let consistencySkipReason: string | null = null;
 
-    let hasPatch = false;
-    if (siteDomain) {
-      const { data: codes } = await supabase
-        .from('saved_corrective_codes')
-        .select('id')
-        .ilike('url', `%${siteDomain}%`)
-        .limit(1);
-      if (codes && codes.length > 0) hasPatch = true;
-
-      if (!hasPatch) {
-        const { data: wpSites } = await supabase
-          .from('tracked_sites')
-          .select('id, current_config')
-          .ilike('domain', `%${siteDomain}%`)
-          .limit(1);
-        if (wpSites && wpSites.length > 0) {
-          const cfg = wpSites[0].current_config as Record<string, any> | null;
-          if (cfg && (cfg.fixes?.length > 0 || cfg.last_sync)) hasPatch = true;
-        }
-      }
-    }
-
-    if (hasPatch) {
+    if (intel.fixesImplemented) {
       consistencySkipReason = 'patch_detected';
-    } else if (siteDomain) {
-      const { data: priorPreds } = await supabase
+    } else if (intel.domain) {
+      // Find prior predictions for same domain
+      const priorQuery = supabase
         .from('predictions')
         .select('predicted_traffic, prediction_details')
-        .eq('audit_id', audit_id)
+        .eq('domain', intel.domain)
         .order('created_at', { ascending: true })
         .limit(1);
+      
+      if (audit_id) priorQuery.eq('audit_id', audit_id);
+
+      const { data: priorPreds } = await priorQuery;
 
       if (priorPreds && priorPreds.length > 0) {
         anchorPrediction = priorPreds[0].predicted_traffic;
 
-        // Check if TDI has significantly changed (>30% delta) — if so, widen corridor
         const priorTdi = (priorPreds[0].prediction_details as any)?._meta?.tdi_score;
-        const tdiDelta = priorTdi != null ? Math.abs(tdiScore - priorTdi) / (priorTdi || 1) : 0;
-        const consistencyMargin = tdiDelta > 0.30 ? 0.10 : 0.02; // 10% if TDI changed significantly, else 2%
+        const tdiDelta = priorTdi != null ? Math.abs(intel.tdiScore - priorTdi) / (priorTdi || 1) : 0;
+        const consistencyMargin = tdiDelta > 0.30 ? 0.10 : 0.02;
 
         const lowerBound = Math.round(anchorPrediction * (1 - consistencyMargin));
         const upperBound = Math.round(anchorPrediction * (1 + consistencyMargin));
@@ -511,22 +789,22 @@ Deno.serve(async (req) => {
           consistencyClamped = true;
         }
       } else {
-        consistencySkipReason = 'new_audit';
+        consistencySkipReason = 'new_prediction';
       }
     }
 
     // ── Inject auditable metadata ──
     const aiRealisticRaw = JSON.parse(cleaned).scenarios?.realistic?.clicks ?? null;
     prediction._meta = {
-      tdi_score: tdiScore,
-      error_count: errorCount,
-      semantic_depth: depth,
-      trust_rebound_days: reboundDays,
+      source: intel.source,
+      tdi_score: intel.tdiScore,
+      error_count: intel.errorCount,
+      semantic_depth: intel.depth,
+      trust_rebound_days: intel.reboundDays,
       brand_clicks: seg.brandClicks,
       non_brand_clicks: seg.nonBrandClicks,
       high_intent_clicks: seg.highIntentClicks,
       low_intent_clicks: seg.lowIntentClicks,
-      // Deterministic anchor fields
       theoretical_gain_anchor: anchors.theoreticalNonBrandGain,
       seasonal_gain_anchor: anchors.seasonalGain,
       seasonal_factor: anchors.seasonalFactor,
@@ -539,10 +817,16 @@ Deno.serve(async (req) => {
       realistic_ceiling: anchors.realisticCeiling,
       potential_position_gain: anchors.potentialPositionGain,
       ai_raw_realistic_clicks: aiRealisticRaw,
-      // Consistency tracking
       consistency_anchor: anchorPrediction,
       consistency_clamped: consistencyClamped,
       consistency_skip_reason: consistencySkipReason,
+      fixes_detected: intel.fixesImplemented,
+      fixes_count: intel.fixesCount,
+      reports_used: intel.reportsCount,
+      crawl_context: intel.crawlContext ? {
+        total_pages: intel.crawlContext.totalPages,
+        avg_score: intel.crawlContext.avgScore,
+      } : null,
     };
 
     // ── Persist ──
@@ -552,13 +836,13 @@ Deno.serve(async (req) => {
     const { data: saved, error: saveErr } = await supabase
       .from('predictions')
       .insert({
-        audit_id,
+        audit_id: audit_id || crawl_id, // Use crawl_id as audit_id fallback for FK
         client_id,
-        domain: siteDomain || null,
+        domain: intel.domain || null,
         predicted_increase_pct: realisticPct,
         predicted_traffic: realisticClicks,
         baseline_traffic: seg.totalClicks,
-        baseline_data: gsc_data || {},
+        baseline_data: intel.gscData || {},
         prediction_details: prediction,
       })
       .select()
@@ -568,7 +852,16 @@ Deno.serve(async (req) => {
 
     await supabase.rpc('recalculate_reliability');
 
-    return new Response(JSON.stringify({ success: true, prediction: saved }), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      prediction: saved,
+      // Also return in predict-from-crawl compatible format for frontend
+      baseline_traffic: seg.totalClicks,
+      scenarios: prediction.scenarios,
+      ai_risk_score: prediction.ai_risk_score,
+      business_impact: prediction.business_impact,
+      reasoning: prediction.reasoning,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

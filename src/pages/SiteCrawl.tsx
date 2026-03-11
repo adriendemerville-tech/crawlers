@@ -195,12 +195,18 @@ export default function SiteCrawl() {
     if (!crawlResult || !user) return;
     setIsPredicting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('predict-from-crawl', {
-        body: { crawl_id: crawlResult.id, userId: user.id },
+      const { data, error } = await supabase.functions.invoke('generate-prediction', {
+        body: { crawl_id: crawlResult.id, client_id: user.id },
       });
       if (error) throw error;
       if (data?.success) {
-        setPrediction(data.prediction);
+        setPrediction({
+          baseline_traffic: data.baseline_traffic,
+          scenarios: data.scenarios,
+          ai_risk_score: data.ai_risk_score,
+          business_impact: data.business_impact,
+          reasoning: data.reasoning,
+        });
         toast.success('Prédiction de trafic générée');
       } else {
         toast.error(data?.error || 'Erreur prédiction');
