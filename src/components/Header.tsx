@@ -241,8 +241,21 @@ export function Header() {
           )}
         </div>
 
-        {/* Center: Lexique + Comparatif links - hidden on mobile */}
+        {/* Center: Navigation links - hidden on mobile */}
         <div className="hidden sm:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+          {/* Audit button first - hidden on audit-expert page */}
+          {!isAuditExpertPage && (
+            <Link to="/audit-expert">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-yellow-500 hover:text-yellow-400 hover:bg-transparent"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span className="text-sm">Audit</span>
+              </Button>
+            </Link>
+          )}
           {isAuditExpertPage ? (
             <a href="/lexique" target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
