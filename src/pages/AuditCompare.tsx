@@ -149,7 +149,7 @@ const i18n = {
     seoParagraph: 'En 2026, les moteurs de réponse génératifs comme ChatGPT, Perplexity et Google SGE redéfinissent la visibilité en ligne. Notre audit comparé analyse côte à côte le Brand DNA, les backlinks, la profondeur de contenu, le score E\u2011E\u2011A\u2011T et la présence dans les LLM de deux sites concurrents — pour identifier précisément les leviers SEO et GEO à activer.',
     credits: '4 crédits',
     confirm: 'Confirmer',
-    launch: 'Lancer l\'audit comparé',
+    launch: 'Démarrer',
     confirmBoth: 'Confirmez les deux URLs pour lancer l\'audit',
     confirmSite1: 'Confirmez l\'URL du Site 1',
     confirmSite2: 'Confirmez l\'URL du Site 2',
