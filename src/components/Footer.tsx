@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown } from 'lucide-react';
+import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
@@ -60,6 +60,23 @@ function FooterComponent() {
       description: t3(language, 'Audit SEO/GEO approfondi par IA', 'In-depth AI-powered SEO/GEO audit', 'Auditoría SEO/GEO en profundidad con IA'),
       gold: true,
       isRoute: true
+    },
+    { 
+      icon: GitCompareArrows, 
+      label: t3(language, 'Audit Comparé', 'Compared Audit', 'Auditoría Comparada'),
+      href: '/audit-compare',
+      description: t3(language, 'Comparez deux sites SEO/GEO', 'Compare two SEO/GEO sites', 'Compare dos sitios SEO/GEO'),
+      gold: false,
+      isRoute: true
+    },
+    { 
+      icon: ScanSearch, 
+      label: t3(language, 'Audit Multi-Pages', 'Multi-Page Audit', 'Auditoría Multi-Página'),
+      href: '/site-crawl',
+      description: t3(language, 'Crawl complet jusqu\'à 500 pages', 'Full crawl up to 500 pages', 'Crawl completo hasta 500 páginas'),
+      gold: true,
+      isRoute: true,
+      violet: true
     },
   ];
 
@@ -238,10 +255,10 @@ function FooterComponent() {
                       {link.isRoute ? (
                         <SmartLink
                           to={link.href}
-                          className={`group flex items-start gap-2 text-sm transition-colors ${link.gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
+                          className={`group flex items-start gap-2 text-sm transition-colors ${(link as any).violet ? 'text-violet-500 hover:text-violet-400 font-medium' : link.gold ? 'text-amber-500 hover:text-amber-400 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                           title={link.description}
                         >
-                          <link.icon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${link.gold ? 'text-amber-500' : ''}`} />
+                          <link.icon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${(link as any).violet ? 'text-violet-500' : link.gold ? 'text-amber-500' : ''}`} />
                           <span>{link.label}</span>
                         </SmartLink>
                       ) : (
