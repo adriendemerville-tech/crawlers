@@ -124,6 +124,7 @@ interface SiteResult {
   keywords: any[];
   backlinks?: BacklinkProfile | null;
   contentDepth?: ContentDepth | null;
+  pagespeed?: PageSpeedScores | null;
 }
 
 interface CompareResult {
