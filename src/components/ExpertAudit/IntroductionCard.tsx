@@ -5,6 +5,7 @@ import { Globe, CheckCircle2, AlertCircle, Lightbulb, Zap, Users, BrainCircuit }
 import { StrategicIntroduction } from '@/types/expertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
+import { TypewriterText } from './TypewriterText';
 
 interface IntroductionCardProps {
   introduction: StrategicIntroduction;
@@ -13,6 +14,7 @@ interface IntroductionCardProps {
   siteName?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onHallucinationData?: (data: any) => void;
+  typewriter?: boolean;
 }
 
 const translations = {
@@ -50,7 +52,8 @@ export function IntroductionCard({
   variant,
   domain = '',
   siteName = '',
-  onHallucinationData
+  onHallucinationData,
+  typewriter = false
 }: IntroductionCardProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
@@ -99,7 +102,11 @@ export function IntroductionCard({
                 {t.presentation}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed pl-6">
-                {introduction.presentation}
+                {typewriter ? (
+                  <TypewriterText text={introduction.presentation} speed={10} chunkSize={3} />
+                ) : (
+                  introduction.presentation
+                )}
               </p>
             </div>
           )}
@@ -112,7 +119,11 @@ export function IntroductionCard({
                 {t.strengths}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed pl-6">
-                {introduction.strengths}
+                {typewriter ? (
+                  <TypewriterText text={introduction.strengths} speed={10} chunkSize={3} />
+                ) : (
+                  introduction.strengths
+                )}
               </p>
             </div>
           )}
@@ -125,7 +136,11 @@ export function IntroductionCard({
                 {t.improvement}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed pl-6">
-                {introduction.improvement}
+                {typewriter ? (
+                  <TypewriterText text={introduction.improvement} speed={10} chunkSize={3} />
+                ) : (
+                  introduction.improvement
+                )}
               </p>
             </div>
           )}

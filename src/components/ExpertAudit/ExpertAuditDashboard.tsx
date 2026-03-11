@@ -195,6 +195,8 @@ export function ExpertAuditDashboard() {
   const [storedCorrections, setStoredCorrections] = useState<any[]>([]);
   const loadingRef = useRef<HTMLDivElement>(null);
   const stopMusicRef = useRef<(() => void) | null>(null);
+  const auditStartTimeRef = useRef<number>(0);
+  const [strategicProgressiveReveal, setStrategicProgressiveReveal] = useState(false);
   
   const { toast } = useToast();
   const { language } = useLanguage();
@@ -385,6 +387,7 @@ export function ExpertAuditDashboard() {
       setStrategicResult(parsed);
       setResult(parsed);
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+      setStrategicProgressiveReveal(false);
     }
     if (savedAuditMode) {
       setAuditMode(savedAuditMode as AuditMode);
@@ -505,6 +508,7 @@ export function ExpertAuditDashboard() {
     setStrategicCachedContext(null);
     setCurrentStep(1);
     setCompletedSteps([]);
+    setStrategicProgressiveReveal(false);
     // Clear session storage
     sessionStorage.removeItem('audit_url');
     sessionStorage.removeItem('audit_technical_result');
@@ -771,6 +775,7 @@ export function ExpertAuditDashboard() {
 
   const runStrategicAudit = async (validatedUrl: string, hallucinationCorrections?: any, competitorCorrections?: any) => {
     const normalizedUrl = validatedUrl;
+    auditStartTimeRef.current = Date.now();
     setAuditMode('strategic');
     setIsStrategicLoading(true);
     setResult(null);
@@ -857,6 +862,7 @@ export function ExpertAuditDashboard() {
 
       setResult(strategicData);
       setStrategicResult(strategicData);
+      setStrategicProgressiveReveal(true);
       // Store cached context for fast relaunches (competitor corrections, etc.)
       if (data.data._cachedContext) {
         setStrategicCachedContext(data.data._cachedContext);
@@ -969,6 +975,7 @@ export function ExpertAuditDashboard() {
 
             setResult(strategicData);
             setStrategicResult(strategicData);
+            setStrategicProgressiveReveal(true);
             if (data.data._cachedContext) setStrategicCachedContext(data.data._cachedContext);
             setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
             setHallucinationDiagnosis(null);
@@ -1040,6 +1047,7 @@ export function ExpertAuditDashboard() {
 
           setResult(strategicData);
           setStrategicResult(strategicData);
+          setStrategicProgressiveReveal(true);
           if (retryData.data._cachedContext) {
             setStrategicCachedContext(retryData.data._cachedContext);
           }
@@ -1065,7 +1073,12 @@ export function ExpertAuditDashboard() {
         }
       }
     } finally {
-      // Stop music, wait 3s, play microwave ding, then show results
+      // Enforce minimum 150s loading (Labor Illusion)
+      const elapsed = Date.now() - auditStartTimeRef.current;
+      const remaining = Math.max(0, 150_000 - elapsed);
+      if (remaining > 0) await new Promise(r => setTimeout(r, remaining));
+
+      // Stop music, wait 3s silence, play microwave ding, then show results
       await new Promise<void>((resolve) => {
         stopMusicRef.current?.();
         setTimeout(async () => {
@@ -1138,6 +1151,7 @@ export function ExpertAuditDashboard() {
     if (strategicResult) {
       setAuditMode('strategic');
       setResult(strategicResult);
+      setStrategicProgressiveReveal(false);
     }
   }, [strategicResult]);
 
@@ -1597,6 +1611,7 @@ export function ExpertAuditDashboard() {
                     domain={result.domain || url}
                     siteName={result.domain || url}
                     onHallucinationData={handleHallucinationCorrectionComplete}
+                    typewriter={strategicProgressiveReveal}
                   />
                   {/* Report button under introduction */}
                   <motion.div 
@@ -1672,6 +1687,7 @@ export function ExpertAuditDashboard() {
                         onCompetitorCorrection={handleCompetitorCorrectionComplete}
                         isReanalyzing={isStrategicLoading}
                         auditResult={result}
+                        progressiveReveal={strategicProgressiveReveal}
                       />
                     );
                   })()}

@@ -64,14 +64,12 @@ export function PatienceCards({ isActive }: PatienceCardsProps) {
   useEffect(() => {
     if (!isActive) return;
 
-    // Show news at 45s
-    const newsTimer = setTimeout(() => setShowNews(true), 45_000);
-    // Hide news at 75s (45 + 30)
-    const hideNewsTimer = setTimeout(() => setShowNews(false), 75_000);
-    // Show tip at 90s
-    const tipTimer = setTimeout(() => setShowTip(true), 90_000);
-    // Hide tip at 120s (90 + 30)
-    const hideTipTimer = setTimeout(() => setShowTip(false), 120_000);
+    // Show news at 30s, hide at 70s (spread across 150s window)
+    const newsTimer = setTimeout(() => setShowNews(true), 30_000);
+    const hideNewsTimer = setTimeout(() => setShowNews(false), 70_000);
+    // Show tip at 85s, hide at 130s
+    const tipTimer = setTimeout(() => setShowTip(true), 85_000);
+    const hideTipTimer = setTimeout(() => setShowTip(false), 130_000);
 
     return () => {
       clearTimeout(newsTimer);
