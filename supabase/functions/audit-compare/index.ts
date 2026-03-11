@@ -128,7 +128,7 @@ async function extractPageMetadata(url: string, domain: string): Promise<PageMet
     const textOnly = bodyContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '').replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     
     if (textOnly.length < 200 && html.length > 500) {
-      const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
+      const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY') || Deno.env.get('BROWSERLESS_API_KEY');
       if (RENDERING_KEY) {
         try {
           console.log(`[audit-compare] SPA detected for ${normalizedUrl} (textOnly=${textOnly.length} chars), using Browserless v2`);
@@ -137,9 +137,9 @@ async function extractPageMetadata(url: string, domain: string): Promise<PageMet
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               url: normalizedUrl,
-              rejectResourceTypes: ['image', 'media', 'font', 'stylesheet'],
-              waitForSelector: { selector: 'h1, h2, [data-testid], main, article', timeout: 8000 },
-              gotoOptions: { waitUntil: 'networkidle2', timeout: 20000 },
+              rejectResourceTypes: ['image', 'media', 'font'],
+              waitForSelector: { selector: 'h2, main, article, section, [class*="hero"], #root > div > div', timeout: 10000 },
+              gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
             }),
             signal: AbortSignal.timeout(25000),
           });
