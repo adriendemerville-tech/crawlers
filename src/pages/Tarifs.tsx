@@ -188,7 +188,7 @@ const translations = {
     agencyPeriod: '/ month',
     agencyFeatures: [
       'Unlimited expert audit',
-      'Unlimited fixes',
+      'Unlimited corrective code',
       'Unlimited multi-page crawl',
       'White Label option',
       '3 accounts included',
