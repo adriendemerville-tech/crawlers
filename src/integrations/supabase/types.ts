@@ -688,6 +688,30 @@ export type Database = {
         }
         Relationships: []
       }
+      market_trends: {
+        Row: {
+          id: string
+          intent_rates: Json
+          llm_shares: Json
+          market_region: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          intent_rates?: Json
+          llm_shares?: Json
+          market_region: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          intent_rates?: Json
+          llm_shares?: Json
+          market_region?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patience_cards: {
         Row: {
           card_type: string
