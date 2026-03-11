@@ -109,9 +109,13 @@ export function MyCorrectiveCodes() {
         url: item.url,
         code: item.code,
         created_at: item.created_at,
+        validated_at: (item as any).validated_at || null,
         fixes_applied: (item.fixes_applied as unknown as CorrectiveCodeFix[]) || []
       }));
       setCodes(mappedCodes);
+      // Pre-populate validated IDs
+      const preValidated = new Set(mappedCodes.filter(c => c.validated_at).map(c => c.id));
+      if (preValidated.size > 0) setValidatedIds(preValidated);
     }
     setLoading(false);
   };
