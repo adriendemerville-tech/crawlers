@@ -536,11 +536,6 @@ const AuditCompare = () => {
                       : !confirmedUrl1 ? 'Confirmez l\'URL du Site 1' : 'Confirmez l\'URL du Site 2'}
                   </p>
                 )}
-                {error && (
-                  <p className="text-destructive text-sm mt-3 flex items-center justify-center gap-1">
-                    <AlertCircle className="h-3.5 w-3.5" /> {error}
-                  </p>
-                )}
               </div>
             </motion.div>
           )}
