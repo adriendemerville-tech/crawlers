@@ -22,8 +22,10 @@ import { UrlValidationBanner } from '@/components/UrlValidationBanner';
 import { 
   Swords, Globe, Target, Brain, CheckCircle2, Search, 
   Music, Star, TrendingUp, TrendingDown,
-  MessageSquare, Zap, Loader2, Check
+  MessageSquare, Zap, Loader2, Check, Link2, FileText,
+  Trophy, BarChart3, Shield, ArrowRight
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 // ==================== TYPES ====================
 
