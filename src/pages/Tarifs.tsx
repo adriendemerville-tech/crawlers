@@ -242,6 +242,26 @@ const translations = {
         'Exportación e integración fácil',
       ],
     },
+    crawlMultiPages: {
+      title: 'Crawl Multi-Páginas',
+      description: '1 crédito por cada 50 páginas (ilimitado Pro Agency)',
+      features: [
+        'Análisis de hasta 500 páginas',
+        'Puntuación SEO por página',
+        'Detección de errores técnicos',
+        'Resumen y recomendaciones IA',
+      ],
+    },
+    auditCompare: {
+      title: 'Auditoría Comparada',
+      description: '5 créditos por auditoría comparativa',
+      features: [
+        'Comparación lado a lado de 2 sitios',
+        'Análisis Brand DNA y backlinks',
+        'SERP Battlefield y palabras clave',
+        'Radar diferencial multi-ejes',
+      ],
+    },
     creditsSection: 'Packs de Créditos',
     creditsDescription: 'Recarga tu cuenta para acceder a las funcionalidades premium',
     packs: [
