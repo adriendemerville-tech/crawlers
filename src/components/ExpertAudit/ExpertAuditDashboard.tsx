@@ -975,6 +975,7 @@ export function ExpertAuditDashboard() {
 
             setResult(strategicData);
             setStrategicResult(strategicData);
+            setStrategicProgressiveReveal(true);
             if (data.data._cachedContext) setStrategicCachedContext(data.data._cachedContext);
             setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
             setHallucinationDiagnosis(null);
