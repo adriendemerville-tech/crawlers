@@ -401,7 +401,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
                     </Badge>
                   )}
                 </div>
-                {volumes[i]?.breakdown && <VolumeBar volumes={volumes[i]} />}
+                {volumes[i]?.breakdown && <VolumeBreakdownText volumes={volumes[i]} />}
               </div>
             </div>
           </div>
