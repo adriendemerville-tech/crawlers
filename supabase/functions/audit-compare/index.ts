@@ -494,10 +494,45 @@ function buildCrossComparePrompt(
   const cd1 = site1.contentDepth;
   const cd2 = site2.contentDepth;
 
-  // Compute SERP overlap
+  // Compute SERP overlap — now using enriched keywords with cross-domain rankings
   const kw1Set = new Set(site1.keywords.map((k: any) => k.keyword.toLowerCase()));
   const kw2Set = new Set(site2.keywords.map((k: any) => k.keyword.toLowerCase()));
   const overlap = [...kw1Set].filter(k => kw2Set.has(k));
+
+  // Build unified keyword table for the prompt (all keywords with both sites' rankings)
+  const allKwMap = new Map<string, { site1_rank: string | number; site2_rank: string | number; volume: number }>();
+  for (const kw of site1.keywords) {
+    const key = kw.keyword.toLowerCase();
+    allKwMap.set(key, {
+      site1_rank: kw.current_rank ?? 'Non classé',
+      site2_rank: kw.opponent_rank ?? 'Non vérifié',
+      volume: kw.volume || 0,
+    });
+  }
+  for (const kw of site2.keywords) {
+    const key = kw.keyword.toLowerCase();
+    const existing = allKwMap.get(key);
+    if (existing) {
+      existing.site2_rank = kw.current_rank ?? 'Non classé';
+    } else {
+      allKwMap.set(key, {
+        site1_rank: kw.opponent_rank ?? 'Non vérifié',
+        site2_rank: kw.current_rank ?? 'Non classé',
+        volume: kw.volume || 0,
+      });
+    }
+  }
+
+  // Keywords where BOTH sites have a numeric rank = direct competition
+  const directCompetition = [...allKwMap.entries()]
+    .filter(([, v]) => typeof v.site1_rank === 'number' && typeof v.site2_rank === 'number')
+    .sort((a, b) => b[1].volume - a[1].volume);
+
+  const kwTableLines = [...allKwMap.entries()]
+    .sort((a, b) => b[1].volume - a[1].volume)
+    .slice(0, 15)
+    .map(([kw, v]) => `"${kw}": vol=${v.volume}, ${site1.domain}=#${v.site1_rank}, ${site2.domain}=#${v.site2_rank}`)
+    .join('\n');
 
   return `COMPARAISON: ${site1.domain} vs ${site2.domain}
 
@@ -511,9 +546,11 @@ ${site2.domain}: ${cd2.wordCount} mots, ${cd2.h2Count} H2, ${cd2.h3Count} H3, JS
 ${site1.domain}: ${bl1 ? `${bl1.referringDomains} domaines référents, ${bl1.totalBacklinks} backlinks, DR=${bl1.domainRank}, ancres=[${bl1.topAnchors.join(', ')}]` : 'Non disponible'}
 ${site2.domain}: ${bl2 ? `${bl2.referringDomains} domaines référents, ${bl2.totalBacklinks} backlinks, DR=${bl2.domainRank}, ancres=[${bl2.topAnchors.join(', ')}]` : 'Non disponible'}
 
-📊 CHEVAUCHEMENT SERP (mots-clés en commun): ${overlap.length > 0 ? overlap.join(', ') : 'Aucun'}
-${site1.domain} keywords: ${site1.keywords.map((k: any) => `${k.keyword}(pos:${k.current_rank})`).join(', ') || 'N/A'}
-${site2.domain} keywords: ${site2.keywords.map((k: any) => `${k.keyword}(pos:${k.current_rank})`).join(', ') || 'N/A'}
+📊 TABLEAU SERP CROISÉ (positions des deux sites sur le pool commun de mots-clés):
+${kwTableLines || 'Aucune donnée SERP disponible'}
+
+Chevauchement exact: ${overlap.length} mots-clés en commun
+Compétition directe (les deux classés): ${directCompetition.length} mots-clés
 
 🤖 SCORES IA INDIVIDUELS:
 ${site1.domain}: AEO=${site1.analysis?.aeo_score ?? '?'}, Expertise=${site1.analysis?.expertise_sentiment?.rating ?? '?'}/5
@@ -538,10 +575,10 @@ Génère un JSON avec cette structure:
     "technical_seo_edge": "Qui a le meilleur setup technique (JSON-LD, OG, FAQ) et pourquoi"
   },
   "serp_battlefield": {
-    "overlap_count": ${overlap.length},
+    "overlap_count": number,
     "head_to_head": [{"keyword":"...","site1_rank":"...","site2_rank":"...","winner":"...","analysis":"1 phrase"}],
-    "exclusive_strengths_site1": ["mots-clés où seul site1 est positionné"],
-    "exclusive_strengths_site2": ["mots-clés où seul site2 est positionné"]
+    "exclusive_strengths_site1": ["mots-clés où seul ${site1.domain} est positionné"],
+    "exclusive_strengths_site2": ["mots-clés où seul ${site2.domain} est positionné"]
   },
   "differentiators": [
     {"dimension": "...", "site1_value": "...", "site2_value": "...", "advantage": "${site1.domain}|${site2.domain}", "impact": "critique|important|mineur"}
@@ -553,7 +590,7 @@ Génère un JSON avec cette structure:
 }
 
 RÈGLES STRICTES:
-- head_to_head: uniquement les mots-clés en chevauchement RÉEL, max 5
+- head_to_head: utilise le TABLEAU SERP CROISÉ ci-dessus. Prends les mots-clés où les DEUX sites ont un classement numérique, max 8. Si un seul est classé, mets-le dans exclusive_strengths.
 - differentiators: EXACTEMENT 4-6 dimensions, chaque valeur CHIFFRÉE
 - Si un écart est < 15%, dis "marginal" et cherche ce qui les distingue VRAIMENT
 - Recommandations: spécifiques à chaque site, jamais génériques
