@@ -639,6 +639,48 @@ export default function Tarifs() {
                     </ul>
                   </CardContent>
                 </Card>
+
+                {/* Crawl Multi-Pages */}
+                <Card className="border-violet-500/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ScanSearch className="h-5 w-5 text-violet-500" />
+                      {t.crawlMultiPages.title}
+                    </CardTitle>
+                    <CardDescription>{t.crawlMultiPages.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {t.crawlMultiPages.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-violet-500" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                {/* Audit Comparé */}
+                <Card className="border-violet-500/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <GitCompareArrows className="h-5 w-5 text-violet-500" />
+                      {t.auditCompare.title}
+                    </CardTitle>
+                    <CardDescription>{t.auditCompare.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {t.auditCompare.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-violet-500" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
