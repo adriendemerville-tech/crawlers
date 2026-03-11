@@ -145,34 +145,20 @@ const LLM_LABELS: Record<string, string> = {
   Grok: 'Grok',
 };
 
-function VolumeBar({ volumes }: { volumes: LLMVolumeBreakdown }) {
-  const maxVal = Math.max(...Object.values(volumes.breakdown), 1);
+function VolumeBreakdownText({ volumes }: { volumes: LLMVolumeBreakdown }) {
   const sorted = Object.entries(volumes.breakdown).sort(([, a], [, b]) => b - a);
 
   return (
-    <TooltipProvider>
-      <div className="flex items-center gap-1 mt-1.5">
-        {sorted.map(([llm, vol]) => {
-          const width = Math.max(8, (vol / maxVal) * 100);
-          return (
-            <Tooltip key={llm}>
-              <TooltipTrigger asChild>
-                <div
-                  className={`h-3 rounded-sm ${LLM_COLORS[llm] || 'bg-muted-foreground'} opacity-80 hover:opacity-100 transition-opacity cursor-help`}
-                  style={{ width: `${width}%`, minWidth: vol > 0 ? '6px' : '2px' }}
-                />
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                <span className="font-medium">{LLM_LABELS[llm] || llm}</span>: ~{vol.toLocaleString()}
-              </TooltipContent>
-            </Tooltip>
-          );
-        })}
-        <span className="text-[10px] text-muted-foreground ml-1 shrink-0">
-          ~{volumes.total_llm_volume.toLocaleString()}
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+      {sorted.map(([llm, vol]) => (
+        <span key={llm} className="inline-flex items-center gap-1 text-[11px]">
+          <span className={`font-semibold ${LLM_COLORS[llm] || 'text-muted-foreground'}`}>
+            {LLM_LABELS[llm] || llm}
+          </span>
+          <span className="text-muted-foreground font-medium">{(vol ?? 0).toLocaleString()}</span>
         </span>
-      </div>
-    </TooltipProvider>
+      ))}
+    </div>
   );
 }
 
