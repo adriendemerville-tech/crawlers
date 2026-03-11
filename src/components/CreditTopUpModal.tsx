@@ -315,10 +315,10 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
               </h3>
               <p className="text-sm text-muted-foreground">
                 {language === 'fr'
-                  ? 'Plus de limites. Rapports et correctifs illimités, rapports en marque blanche avec votre logo, et support prioritaire — tout inclus.'
+                  ? 'Plus de limites. Rapports, correctifs et audit crawl multi-pages illimités, rapports en marque blanche avec votre logo, et support prioritaire — tout inclus.'
                   : language === 'es'
-                    ? 'Sin límites. Informes y correctivos ilimitados, informes en marca blanca con su logo, y soporte prioritario — todo incluido.'
-                    : 'No limits. Unlimited reports & fixes, white-label reports with your logo, and priority support — all included.'}
+                    ? 'Sin límites. Informes, correctivos y auditoría crawl multi-páginas ilimitados, informes en marca blanca con su logo, y soporte prioritario — todo incluido.'
+                    : 'No limits. Unlimited reports, fixes & multi-page crawl audit, white-label reports with your logo, and priority support — all included.'}
               </p>
               <div className="flex flex-wrap gap-3 pt-1">
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Rapports ∞' : language === 'es' ? 'Informes ∞' : 'Reports ∞'}</span>
