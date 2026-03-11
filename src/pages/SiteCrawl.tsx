@@ -347,8 +347,17 @@ export default function SiteCrawl() {
                     />
                   </div>
                   <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border">
-                    <CreditCoin size="md" />
-                    <span className="text-sm font-semibold">{creditCost} crédits</span>
+                    {isUnlimited ? (
+                      <Badge className="bg-violet-600 text-white gap-1">
+                        <span className="text-base">∞</span>
+                        Illimité
+                      </Badge>
+                    ) : (
+                      <>
+                        <CreditCoin size="md" />
+                        <span className="text-sm font-semibold">{creditCost} crédits</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </form>
