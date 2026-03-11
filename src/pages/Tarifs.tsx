@@ -15,7 +15,8 @@ import { toast } from 'sonner';
 import { 
   CheckCircle2, Zap, CreditCard, FileText, Code2, 
   Bot, Globe, Gauge, Brain, ArrowRight, Gift,
-  Crown, Infinity, Shield, Headphones, Loader2, Users, Star
+  Crown, Infinity, Shield, Headphones, Loader2, Users, Star,
+  ScanSearch, GitCompareArrows
 } from 'lucide-react';
 
 const translations = {
