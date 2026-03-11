@@ -1,5 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 
