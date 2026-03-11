@@ -429,13 +429,13 @@ export default function SiteCrawl() {
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
               <Bug className="w-4 h-4" />
-              Crawl Multi-Pages
+              {t.badge}
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
-              Auditez votre site <span className="text-primary">page par page</span>
+              {t.h1_1} <span className="text-primary">{t.h1_2}</span>
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Crawl complet avec score SEO/200 par page, détection d'erreurs techniques et synthèse IA globale.
+              {t.subtitle}
             </p>
           </div>
 
