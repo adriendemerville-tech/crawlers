@@ -317,7 +317,7 @@ export default function SiteCrawl() {
                       value={[maxPages]}
                       onValueChange={v => setMaxPages(v[0])}
                       min={10}
-                      max={200}
+                      max={500}
                       step={10}
                       disabled={isLoading}
                     />
