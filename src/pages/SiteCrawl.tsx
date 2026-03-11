@@ -77,6 +77,7 @@ export default function SiteCrawl() {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
+  useCanonicalHreflang('/site-crawl');
 
   const [url, setUrl] = useState('');
   const [maxPages, setMaxPages] = useState(50);
