@@ -538,6 +538,68 @@ export type Database = {
         }
         Relationships: []
       }
+      crawl_jobs: {
+        Row: {
+          completed_at: string | null
+          crawl_id: string
+          created_at: string
+          domain: string
+          error_message: string | null
+          id: string
+          max_concurrent: number
+          priority: number
+          processed_count: number
+          started_at: string | null
+          status: string
+          total_count: number
+          url: string
+          urls_to_process: Json
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          crawl_id: string
+          created_at?: string
+          domain: string
+          error_message?: string | null
+          id?: string
+          max_concurrent?: number
+          priority?: number
+          processed_count?: number
+          started_at?: string | null
+          status?: string
+          total_count?: number
+          url: string
+          urls_to_process?: Json
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          crawl_id?: string
+          created_at?: string
+          domain?: string
+          error_message?: string | null
+          id?: string
+          max_concurrent?: number
+          priority?: number
+          processed_count?: number
+          started_at?: string | null
+          status?: string
+          total_count?: number
+          url?: string
+          urls_to_process?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crawl_jobs_crawl_id_fkey"
+            columns: ["crawl_id"]
+            isOneToOne: false
+            referencedRelation: "site_crawls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crawl_pages: {
         Row: {
           broken_links: Json | null
