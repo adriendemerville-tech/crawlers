@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown } from 'lucide-react';
+import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +14,7 @@ import { MyActionPlans } from '@/components/Profile/MyActionPlans';
 import { MyCorrectiveCodes } from '@/components/Profile/MyCorrectiveCodes';
 import { MyWallet } from '@/components/Profile/MyWallet';
 import { MyTracking } from '@/components/Profile/MyTracking';
+import { MyCrawls } from '@/components/Profile/MyCrawls';
 import { AdminDashboard } from '@/components/Admin';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -181,6 +182,15 @@ export default function Profile() {
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.myReports}</span>
                 </TabsTrigger>
+                <TabsTrigger
+                  value="crawls"
+                  className="flex-1 gap-2"
+                  disabled={!isProUser}
+                >
+                  <Bug className="h-4 w-4 text-purple-500" />
+                  <span className="hidden sm:inline">Crawls</span>
+                  {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
+                </TabsTrigger>
                 <TabsTrigger value="action-plans" className="flex-1 gap-2">
                   <CheckSquare className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.actionPlans}</span>
@@ -235,6 +245,12 @@ export default function Profile() {
               <TabsContent value="corrective-codes">
                 <MyCorrectiveCodes />
               </TabsContent>
+
+              {isProUser && (
+                <TabsContent value="crawls">
+                  <MyCrawls />
+                </TabsContent>
+              )}
 
 
               {isAdmin && (
