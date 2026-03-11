@@ -1325,7 +1325,7 @@ const AuditCompare = () => {
               {/* Spotify Player flanked by PatienceCards */}
               <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1fr,auto,1fr] gap-4 items-end justify-items-center">
                 {/* Left infotainment card */}
-                <div className="hidden lg:block w-full max-w-[280px] justify-self-end">
+                <div className="hidden lg:block w-full justify-self-end">
                   <PatienceCards isActive={isLoading} position="left" />
                 </div>
 
