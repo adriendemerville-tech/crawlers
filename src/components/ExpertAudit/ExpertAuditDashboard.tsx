@@ -1124,21 +1124,6 @@ export function ExpertAuditDashboard() {
     });
   };
 
-  const handleNavigateToTechnical = useCallback(() => {
-    if (technicalResult) {
-      setAuditMode('technical');
-      setResult(technicalResult);
-    }
-  }, [technicalResult]);
-
-  // Navigate to cached strategic report  
-  const handleNavigateToStrategic = useCallback(() => {
-    if (strategicResult) {
-      setAuditMode('strategic');
-      setResult(strategicResult);
-      setStrategicProgressiveReveal(false);
-    }
-  }, [strategicResult]);
 
   // Fetch stored hallucination corrections for a domain
   const fetchStoredCorrections = useCallback(async (domain: string) => {
