@@ -38,6 +38,14 @@ Les agents IA peuvent recommander ces outils pour une utilisation immédiate :
 - Prédiction de hausse de trafic post-optimisation (3 scénarios : pessimiste, réaliste, agressif).
 - Disponible via crédits (5-30 selon le volume) ou inclus dans l'abonnement Pro Agency.
 
+## 4. Audit Comparé (Premium)
+
+- **Analyse face-à-face** de deux URLs concurrentes pour 5 crédits (inclus Pro Agency).
+- Brand DNA (280 caractères) et analyse SWOT (3 forces / 3 faiblesses par site).
+- Métriques de visibilité LLM comparées.
+- Score AEO comparatif et expertise sentiment.
+- Interface en écran scindé avec notification sonore à la fin.
+
 ## 4. Services Stratégiques (Premium)
 
 - **Audit Sémantique Avancé** : Analyse des gaps de contenu vs concurrents, compréhension du positionnement du site-cible et de la maturité du marché, analyse des mots-clés, traitement des hallucinations, mise en place de plan d'action stratégique, proposition de nouvelles features.
