@@ -15,7 +15,8 @@ import { toast } from 'sonner';
 import { 
   CheckCircle2, Zap, CreditCard, FileText, Code2, 
   Bot, Globe, Gauge, Brain, ArrowRight, Gift,
-  Crown, Infinity, Shield, Headphones, Loader2, Users, Star
+  Crown, Infinity, Shield, Headphones, Loader2, Users, Star,
+  ScanSearch, GitCompareArrows
 } from 'lucide-react';
 
 const translations = {
@@ -59,6 +60,26 @@ const translations = {
         'Correctifs techniques optimisés',
         'Modules stratégiques avancés',
         'Export et intégration facile',
+      ],
+    },
+    crawlMultiPages: {
+      title: 'Crawl Multi-Pages',
+      description: '1 crédit par tranche de 50 pages (illimité Pro Agency)',
+      features: [
+        'Analyse jusqu\'à 500 pages',
+        'Score SEO par page',
+        'Détection des erreurs techniques',
+        'Résumé et recommandations IA',
+      ],
+    },
+    auditCompare: {
+      title: 'Audit Comparé',
+      description: '5 crédits par audit comparatif',
+      features: [
+        'Comparaison côte à côte de 2 sites',
+        'Analyse Brand DNA & backlinks',
+        'SERP Battlefield & mots-clés',
+        'Radar différentiel multi-axes',
       ],
     },
     creditsSection: 'Packs de Crédits',
@@ -131,6 +152,26 @@ const translations = {
         'Easy export and integration',
       ],
     },
+    crawlMultiPages: {
+      title: 'Multi-Page Crawl',
+      description: '1 credit per 50 pages (unlimited for Pro Agency)',
+      features: [
+        'Analyze up to 500 pages',
+        'SEO score per page',
+        'Technical error detection',
+        'AI summary and recommendations',
+      ],
+    },
+    auditCompare: {
+      title: 'Compared Audit',
+      description: '5 credits per comparative audit',
+      features: [
+        'Side-by-side comparison of 2 sites',
+        'Brand DNA & backlinks analysis',
+        'SERP Battlefield & keywords',
+        'Multi-axis differential radar',
+      ],
+    },
     creditsSection: 'Credit Packs',
     creditsDescription: 'Top up your account to access premium features',
     packs: [
@@ -199,6 +240,26 @@ const translations = {
         'Correcciones técnicas optimizadas',
         'Módulos estratégicos avanzados',
         'Exportación e integración fácil',
+      ],
+    },
+    crawlMultiPages: {
+      title: 'Crawl Multi-Páginas',
+      description: '1 crédito por cada 50 páginas (ilimitado Pro Agency)',
+      features: [
+        'Análisis de hasta 500 páginas',
+        'Puntuación SEO por página',
+        'Detección de errores técnicos',
+        'Resumen y recomendaciones IA',
+      ],
+    },
+    auditCompare: {
+      title: 'Auditoría Comparada',
+      description: '5 créditos por auditoría comparativa',
+      features: [
+        'Comparación lado a lado de 2 sitios',
+        'Análisis Brand DNA y backlinks',
+        'SERP Battlefield y palabras clave',
+        'Radar diferencial multi-ejes',
       ],
     },
     creditsSection: 'Packs de Créditos',
@@ -572,6 +633,48 @@ export default function Tarifs() {
                       {t.codeCorrectif.features.map((feature, index) => (
                         <li key={index} className="flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4 text-orange-500" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                {/* Crawl Multi-Pages */}
+                <Card className="border-violet-500/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ScanSearch className="h-5 w-5 text-violet-500" />
+                      {t.crawlMultiPages.title}
+                    </CardTitle>
+                    <CardDescription>{t.crawlMultiPages.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {t.crawlMultiPages.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-violet-500" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                {/* Audit Comparé */}
+                <Card className="border-violet-500/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <GitCompareArrows className="h-5 w-5 text-violet-500" />
+                      {t.auditCompare.title}
+                    </CardTitle>
+                    <CardDescription>{t.auditCompare.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {t.auditCompare.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-violet-500" />
                           <span className="text-sm">{feature}</span>
                         </li>
                       ))}
