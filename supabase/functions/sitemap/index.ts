@@ -75,18 +75,26 @@ Deno.serve(async (req) => {
     // Homepage
     pages.push({ loc: SITE_URL, lastmod: today });
     
-    // Audit Expert
+    // Outils principaux
     pages.push({ loc: `${SITE_URL}/audit-expert`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/audit-compare`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/site-crawl`, lastmod: today });
     
-    // Lexique
+    // Pages produit & info
     pages.push({ loc: `${SITE_URL}/lexique`, lastmod: today });
-    
-    // Tarifs
     pages.push({ loc: `${SITE_URL}/tarifs`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/pro-agency`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/observatoire`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/faq`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/methodologie`, lastmod: today });
     
-    // Pages comparatives
-    
+    // Landing pages SEO
+    pages.push({ loc: `${SITE_URL}/audit-seo-gratuit`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/analyse-site-web-gratuit`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/generative-engine-optimization`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/guide-audit-seo`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/comparatif-crawlers-semrush`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/modifier-code-wordpress`, lastmod: today });
 
     // ========================================
     // BLOG INDEX
@@ -142,6 +150,20 @@ Deno.serve(async (req) => {
     }
 
     // ========================================
+    // LEXIQUE TERM PAGES
+    // ========================================
+    const lexiqueSlugs = [
+      'tls-fingerprinting', 'ja3-ja3s', 'behavioral-analysis', 'ip-rotation-proxies',
+      'canvas-fingerprinting', 'user-agent-spoofing', 'headless-browsing', 'dom-parsing',
+      'shadow-dom', 'ssr-vs-csr', 'http2-http3', 'data-normalization', 'schema-org-extraction',
+      'rag', 'llm-based-parsing', 'self-healing-scrapers', 'crawl-budget', 'concurrency-control',
+      'ethical-scraping', 'robots-txt-interpretation', 'aeo-answer-engine-optimization',
+    ];
+    for (const slug of lexiqueSlugs) {
+      pages.push({ loc: `${SITE_URL}/lexique/${slug}`, lastmod: today });
+    }
+
+    // ========================================
     // PAGES LÉGALES (mises à jour rarement)
     // ========================================
     const legalLastmod = '2025-01-01';
@@ -149,6 +171,7 @@ Deno.serve(async (req) => {
     pages.push({ loc: `${SITE_URL}/politique-confidentialite`, lastmod: legalLastmod });
     pages.push({ loc: `${SITE_URL}/conditions-utilisation`, lastmod: legalLastmod });
     pages.push({ loc: `${SITE_URL}/rgpd`, lastmod: legalLastmod });
+    pages.push({ loc: `${SITE_URL}/cgvu`, lastmod: legalLastmod });
 
     const sitemap = generateSitemap(pages);
 
