@@ -326,7 +326,7 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-cyan-500" /> Requêtes LLM
+              <MessageSquare className="h-4 w-4 text-cyan-500" /> {t.llmQueries}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
