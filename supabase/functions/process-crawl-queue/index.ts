@@ -1,10 +1,55 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
-const MAX_GLOBAL_CONCURRENT = 20; // Rule: max 20 pages at once across ALL users
+const MAX_GLOBAL_CONCURRENT = 20;
 
-// ── Score SEO simplifié (sur 200) ──────────────────────────
+// ── SPA Detection ──────────────────────────────────────────
+function detectSPAMarkers(html: string): { isSPA: boolean; framework?: string } {
+  const hasSPAMarker =
+    /<div\s+id=["'](app|root|__next|__nuxt)["'][^>]*>/i.test(html) ||
+    /data-reactroot/i.test(html) ||
+    /<app-root/i.test(html);
+
+  let framework: string | undefined;
+  if (/__NEXT_DATA__/i.test(html)) framework = 'Next.js';
+  else if (/__NUXT__/i.test(html)) framework = 'Nuxt';
+  else if (/data-reactroot|__REACT|ReactDOM/i.test(html)) framework = 'React';
+  else if (/__VUE__|Vue\.createApp/i.test(html)) framework = 'Vue';
+  else if (/ng-version|<app-root/i.test(html)) framework = 'Angular';
+
+  return { isSPA: hasSPAMarker || !!framework, framework };
+}
+
+// ── Browserless rendering ──────────────────────────────────
+async function renderWithBrowserless(url: string, renderingKey: string): Promise<string | null> {
+  try {
+    const response = await fetch(`https://production-sfo.browserless.io/content?token=${renderingKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        gotoOptions: { waitUntil: 'networkidle2', timeout: 20000 },
+        waitForSelector: { selector: 'body', timeout: 5000 },
+      }),
+      signal: AbortSignal.timeout(25000),
+    });
+
+    if (response.ok) {
+      const html = await response.text();
+      await trackPaidApiCall('process-crawl-queue', 'browserless', '/content', url).catch(() => {});
+      return html;
+    }
+    console.warn(`[Worker] Browserless error ${response.status} for ${url}`);
+    return null;
+  } catch (e) {
+    console.warn(`[Worker] Browserless failed for ${url}:`, e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+// ── Score SEO (sur 200) ────────────────────────────────────
 interface PageAnalysis {
   url: string;
   path: string;
@@ -54,11 +99,9 @@ function analyzeHtml(html: string, pageUrl: string, domain: string): Omit<PageAn
   let path = '/';
   try { path = new URL(pageUrl).pathname; } catch {}
 
-  // ── Title: support multiline, entities, nested tags ──
   const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() || null : null;
 
-  // ── Meta description: flexible attribute order, single/double quotes, spaces ──
   const metaDescPatterns = [
     /<meta\s[^>]*name\s*=\s*["']description["'][^>]*content\s*=\s*["']([\s\S]*?)["'][^>]*\/?>/i,
     /<meta\s[^>]*content\s*=\s*["']([\s\S]*?)["'][^>]*name\s*=\s*["']description["'][^>]*\/?>/i,
@@ -69,17 +112,14 @@ function analyzeHtml(html: string, pageUrl: string, domain: string): Omit<PageAn
     if (m) { meta_description = m[1].replace(/\s+/g, ' ').trim(); break; }
   }
 
-  // ── H1: support nested tags, classes, etc. ──
   const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
   const h1 = h1Match ? h1Match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() || null : null;
 
-  // ── Structured data & head signals ──
   const has_schema_org = /application\/ld\+json/i.test(html) || /itemtype\s*=\s*["']https?:\/\/schema\.org/i.test(html);
   const has_canonical = /<link[^>]+rel\s*=\s*["']canonical["']/i.test(html);
   const has_hreflang = /<link[^>]+hreflang/i.test(html);
   const has_og = /<meta[^>]+property\s*=\s*["']og:/i.test(html);
 
-  // ── Word count (body only, excluding scripts/styles/nav/footer) ──
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
   let bodyText = '';
   if (bodyMatch) {
@@ -96,17 +136,14 @@ function analyzeHtml(html: string, pageUrl: string, domain: string): Omit<PageAn
   }
   const word_count = bodyText.split(/\s+/).filter(w => w.length > 1).length;
 
-  // ── Images ──
   const imgMatches = html.match(/<img[^>]*>/gi) || [];
   const images_total = imgMatches.length;
   const images_without_alt = imgMatches.filter(img => {
-    // Missing alt, empty alt=""  , or alt=" "
     if (!/alt\s*=/i.test(img)) return true;
     const altVal = img.match(/alt\s*=\s*["']([\s\S]*?)["']/i);
     return !altVal || altVal[1].trim().length === 0;
   }).length;
 
-  // ── Links ──
   const linkMatches = html.match(/<a\s[^>]*href\s*=\s*["']([^"'#]+)["'][^>]*/gi) || [];
   let internal_links = 0, external_links = 0;
   for (const link of linkMatches) {
@@ -118,7 +155,6 @@ function analyzeHtml(html: string, pageUrl: string, domain: string): Omit<PageAn
     else if (href.startsWith('http')) external_links++;
   }
 
-  // ── Issues detection ──
   const issues: string[] = [];
   if (!title) issues.push('missing_title');
   else if (title.length > 60) issues.push('title_too_long');
@@ -139,11 +175,86 @@ function analyzeHtml(html: string, pageUrl: string, domain: string): Omit<PageAn
   };
 }
 
+// ── Scrape a single page (Firecrawl or Browserless) ────────
+async function scrapePage(
+  pageUrl: string,
+  domain: string,
+  firecrawlKey: string,
+  useBrowserless: boolean,
+  renderingKey: string | null,
+): Promise<PageAnalysis | null> {
+  try {
+    let html = '';
+    let statusCode = 200;
+
+    if (useBrowserless && renderingKey) {
+      // Browserless mode for SPA sites
+      const rendered = await renderWithBrowserless(pageUrl, renderingKey);
+      if (!rendered) return null;
+      html = rendered;
+    } else {
+      // Firecrawl mode (default)
+      const res = await fetch(`${FIRECRAWL_API}/scrape`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: pageUrl, formats: ['rawHtml'], onlyMainContent: false, waitFor: 3000 }),
+      });
+      const data = await res.json();
+      html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
+      statusCode = data?.data?.metadata?.statusCode || 200;
+      if (!html) return null;
+    }
+
+    const analysis = analyzeHtml(html, pageUrl, domain);
+    analysis.http_status = statusCode;
+    const seo_score = computePageScore(analysis);
+    return { ...analysis, seo_score } as PageAnalysis;
+  } catch (e) {
+    console.warn(`[Worker] Scrape error ${pageUrl}:`, e);
+    return null;
+  }
+}
+
+// ── SPA probe: test first page to decide rendering strategy ─
+async function probeSPAStatus(
+  firstUrl: string,
+  domain: string,
+  firecrawlKey: string,
+  renderingKey: string | null,
+): Promise<{ isSPA: boolean; firstPageResult: PageAnalysis | null }> {
+  // Scrape first page with Firecrawl
+  const result = await scrapePage(firstUrl, domain, firecrawlKey, false, null);
+
+  if (!result) return { isSPA: false, firstPageResult: null };
+
+  // Check SPA indicators: very low word count or missing all key tags
+  const isThinContent = result.word_count < 50;
+  
+  if (!isThinContent) {
+    return { isSPA: false, firstPageResult: result };
+  }
+
+  // Thin content detected — try Browserless to confirm SPA
+  if (!renderingKey) {
+    console.log(`[Worker] Thin content on ${firstUrl} (${result.word_count} words) but no RENDERING_API_KEY`);
+    return { isSPA: false, firstPageResult: result };
+  }
+
+  console.log(`[Worker] 🔍 Thin content detected on ${firstUrl} (${result.word_count} words) — probing with Browserless...`);
+  const renderedResult = await scrapePage(firstUrl, domain, firecrawlKey, true, renderingKey);
+
+  if (renderedResult && renderedResult.word_count > result.word_count * 2 && renderedResult.word_count > 50) {
+    console.log(`[Worker] ✅ SPA confirmed: ${result.word_count} → ${renderedResult.word_count} words after JS rendering`);
+    return { isSPA: true, firstPageResult: renderedResult };
+  }
+
+  console.log(`[Worker] ❌ Not a SPA (Browserless: ${renderedResult?.word_count || 0} words)`);
+  return { isSPA: false, firstPageResult: result };
+}
+
 /**
  * process-crawl-queue — Async worker
- * Called by pg_cron every 30s OR by crawl-site on job creation
- * Picks up pending/processing jobs and processes batches of pages
- * Global concurrency limit: 20 pages at once (all users combined)
+ * With intelligent SPA fallback: probes first page, switches to Browserless if SPA detected.
  */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -153,11 +264,11 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')!;
+  const renderingKey = Deno.env.get('RENDERING_API_KEY') || null;
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    // Fetch active jobs (pending or processing), ordered by priority then age
     const { data: jobs, error: fetchError } = await supabase
       .from('crawl_jobs')
       .select('*')
@@ -173,7 +284,6 @@ Deno.serve(async (req) => {
     }
 
     console.log(`[Worker] Found ${jobs.length} active jobs`);
-
     let globalPagesProcessed = 0;
 
     for (const job of jobs) {
@@ -187,15 +297,9 @@ Deno.serve(async (req) => {
       const remaining = urlsToProcess.slice(alreadyProcessed);
 
       if (remaining.length === 0) {
-        // All pages processed, move to AI analysis phase
         await finalizeJob(supabase, job, firecrawlKey);
         continue;
       }
-
-      // Calculate how many pages this job can process in this cycle
-      const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
-      const batchSize = Math.min(remaining.length, availableSlots, 20);
-      const batch = remaining.slice(0, batchSize);
 
       // Mark job as processing
       if (job.status === 'pending') {
@@ -204,39 +308,44 @@ Deno.serve(async (req) => {
           started_at: new Date().toISOString(),
         }).eq('id', job.id);
 
-        await supabase.from('site_crawls').update({
-          status: 'crawling',
-        }).eq('id', job.crawl_id);
+        await supabase.from('site_crawls').update({ status: 'crawling' }).eq('id', job.crawl_id);
       }
 
-      console.log(`[Worker] Job ${job.id}: processing batch of ${batch.length} pages (${alreadyProcessed}/${job.total_count})`);
+      // ── SPA Probe on first batch ──
+      let useBrowserless = false;
+      let firstPageResult: PageAnalysis | null = null;
+
+      if (alreadyProcessed === 0) {
+        // First batch: probe the first URL to detect SPA
+        const probe = await probeSPAStatus(remaining[0], job.domain, firecrawlKey, renderingKey);
+        useBrowserless = probe.isSPA;
+        firstPageResult = probe.firstPageResult;
+
+        if (useBrowserless) {
+          console.log(`[Worker] Job ${job.id}: 🌐 SPA mode enabled — using Browserless for all pages`);
+        }
+      }
+
+      const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
+      // If first page was already probed, skip it in the batch
+      const batchStart = (alreadyProcessed === 0 && firstPageResult) ? 1 : 0;
+      const batchSize = Math.min(remaining.length - batchStart, availableSlots - (firstPageResult ? 1 : 0), 20);
+      const batch = remaining.slice(batchStart, batchStart + batchSize);
+
+      console.log(`[Worker] Job ${job.id}: processing ${firstPageResult ? '1+' : ''}${batch.length} pages (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA mode]' : ''}`);
 
       // Scrape batch in parallel
-      const scrapePromises = batch.map(async (pageUrl: string) => {
-        try {
-          const res = await fetch(`${FIRECRAWL_API}/scrape`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: pageUrl, formats: ['rawHtml'], onlyMainContent: false, waitFor: 3000 }),
-          });
-          const data = await res.json();
-          const html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
-          const statusCode = data?.data?.metadata?.statusCode || 200;
-
-          if (!html) return null;
-
-          const analysis = analyzeHtml(html, pageUrl, job.domain);
-          analysis.http_status = statusCode;
-          const seo_score = computePageScore(analysis);
-          return { ...analysis, seo_score } as PageAnalysis;
-        } catch (e) {
-          console.warn(`[Worker] Scrape error ${pageUrl}:`, e);
-          return null;
-        }
-      });
+      const scrapePromises = batch.map(pageUrl =>
+        scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey)
+      );
 
       const results = await Promise.all(scrapePromises);
       const validResults = results.filter(Boolean) as PageAnalysis[];
+
+      // Include first page result if it was probed
+      if (firstPageResult) {
+        validResults.unshift(firstPageResult);
+      }
 
       // Save to crawl_pages
       if (validResults.length > 0) {
@@ -244,22 +353,15 @@ Deno.serve(async (req) => {
         await supabase.from('crawl_pages').insert(rows);
       }
 
-      const newProcessedCount = alreadyProcessed + batch.length;
-      globalPagesProcessed += batch.length;
+      const pagesInThisCycle = (firstPageResult ? 1 : 0) + batch.length;
+      const newProcessedCount = alreadyProcessed + pagesInThisCycle;
+      globalPagesProcessed += pagesInThisCycle;
 
-      // Update job progress
-      await supabase.from('crawl_jobs').update({
-        processed_count: newProcessedCount,
-      }).eq('id', job.id);
-
-      // Update site_crawls progress (for frontend polling)
-      await supabase.from('site_crawls').update({
-        crawled_pages: newProcessedCount,
-      }).eq('id', job.crawl_id);
+      await supabase.from('crawl_jobs').update({ processed_count: newProcessedCount }).eq('id', job.id);
+      await supabase.from('site_crawls').update({ crawled_pages: newProcessedCount }).eq('id', job.crawl_id);
 
       console.log(`[Worker] Job ${job.id}: ${newProcessedCount}/${job.total_count} pages done`);
 
-      // Check if all pages are now processed
       if (newProcessedCount >= job.total_count) {
         await finalizeJob(supabase, { ...job, processed_count: newProcessedCount }, firecrawlKey);
       }
@@ -289,7 +391,6 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
   await supabase.from('crawl_jobs').update({ status: 'analyzing' }).eq('id', job.id);
   await supabase.from('site_crawls').update({ status: 'analyzing' }).eq('id', job.crawl_id);
 
-  // Load all pages for this crawl
   const { data: allPages } = await supabase
     .from('crawl_pages')
     .select('*')
@@ -300,7 +401,6 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
     ? Math.round(pages.reduce((s: number, p: any) => s + (p.seo_score || 0), 0) / pages.length)
     : 0;
 
-  // AI Summary
   let aiSummary = '';
   let aiRecommendations: any[] = [];
   const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
@@ -372,7 +472,6 @@ Donne 5-8 recommandations max, classées par impact.`;
     }
   }
 
-  // Finalize
   await supabase.from('site_crawls').update({
     status: 'completed',
     crawled_pages: pages.length,
