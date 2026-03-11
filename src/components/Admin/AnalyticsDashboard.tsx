@@ -672,6 +672,14 @@ export function AnalyticsDashboard() {
                 {tokenUsage.browserlessCalls.toLocaleString('fr-FR')}
               </p>
             </div>
+            <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+              <p className="text-xs text-orange-700 dark:text-orange-400 font-medium flex items-center gap-1">
+                <Flame className="h-3 w-3" /> Firecrawl
+              </p>
+              <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                {tokenUsage.firecrawlCalls.toLocaleString('fr-FR')}
+              </p>
+            </div>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">Coût estimé total</p>
               <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
