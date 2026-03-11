@@ -301,6 +301,7 @@ export function AnalyticsDashboard() {
       let dataforseoCalls = 0;
       let openrouterCalls = 0;
       let browserlessCalls = 0;
+      let firecrawlCalls = 0;
       
       paidApiEvents.forEach(e => {
         const data = e.event_data as Record<string, unknown> | null;
@@ -314,6 +315,7 @@ export function AnalyticsDashboard() {
           if (service === 'dataforseo') dataforseoCalls++;
           if (service === 'openrouter') openrouterCalls++;
           if (service === 'browserless') browserlessCalls++;
+          if (service === 'firecrawl') firecrawlCalls++;
         }
       });
 
@@ -329,6 +331,7 @@ export function AnalyticsDashboard() {
         dataforseoCalls,
         openrouterCalls,
         browserlessCalls,
+        firecrawlCalls,
         byApiService,
       });
 
