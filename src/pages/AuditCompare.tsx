@@ -334,7 +334,7 @@ const AuditCompare = () => {
       url: url1.trim(),
       target_url: url2.trim(),
       user_id: user?.id || null,
-    }).then(() => {}).catch(() => {});
+    }).then(() => {});
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('audit-compare', {
