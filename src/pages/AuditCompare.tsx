@@ -143,6 +143,7 @@ const i18n = {
     badge: 'Audit Comparé',
     h1: 'Comparez deux sites face aux IA',
     subtitle: 'Analysez et comparez la visibilité IA, les mots-clés et la stratégie GEO de deux sites côte à côte.',
+    seoParagraph: 'En 2026, les moteurs de réponse génératifs comme ChatGPT, Perplexity et Google SGE redéfinissent la visibilité en ligne. Notre audit comparé analyse côte à côte le Brand DNA, les backlinks, la profondeur de contenu, le score E\u2011E\u2011A\u2011T et la présence dans les LLM de deux sites concurrents — pour identifier précisément les leviers SEO et GEO à activer.',
     credits: '4 crédits',
     confirm: 'Confirmer',
     launch: 'Lancer l\'audit comparé',
