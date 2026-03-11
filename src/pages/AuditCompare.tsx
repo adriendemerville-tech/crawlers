@@ -379,28 +379,89 @@ const AuditCompare = () => {
           {/* URL Inputs */}
           {!isLoading && !result && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-4 items-end mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-4 items-start mb-6">
+                {/* Site 1 */}
                 <div>
                   <label className="text-sm font-medium text-foreground mb-1.5 block">Site 1</label>
-                  <Input
-                    placeholder="https://site-a.com"
-                    value={url1}
-                    onChange={e => setUrl1(e.target.value)}
-                    className="h-12 text-sm"
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://site-a.com"
+                      value={url1}
+                      onChange={e => setUrl1(e.target.value)}
+                      className={`h-12 text-sm ${confirmedUrl1 ? 'border-emerald-500/50 bg-emerald-500/5' : ''}`}
+                      disabled={validation1.isValidating}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleConfirmUrl1}
+                      disabled={!url1.trim() || validation1.isValidating || !!confirmedUrl1}
+                      variant={confirmedUrl1 ? 'default' : 'outline'}
+                      className={`h-12 shrink-0 ${confirmedUrl1 ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
+                    >
+                      {validation1.isValidating ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : confirmedUrl1 ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        'Confirmer'
+                      )}
+                    </Button>
+                  </div>
+                  <UrlValidationBanner
+                    suggestedUrl={validation1.suggestedUrl}
+                    urlNotFound={validation1.urlNotFound}
+                    suggestionPrefix={validation1.getSuggestionPrefix()}
+                    notFoundMessage={validation1.getNotFoundMessage()}
+                    onAcceptSuggestion={() => validation1.acceptSuggestion(validation1.suggestedUrl!, (validUrl) => { setUrl1(validUrl); setConfirmedUrl1(validUrl); })}
+                    onDismissSuggestion={() => validation1.dismissSuggestion()}
+                    onDismissNotFound={() => validation1.dismissNotFound()}
+                    onIgnoreSuggestion={() => { const normalized = normalizeUrl(url1); setConfirmedUrl1(normalized); setUrl1(normalized); validation1.dismissSuggestion(); }}
                   />
                 </div>
-                <div className="hidden md:flex items-center justify-center">
+
+                {/* VS badge */}
+                <div className="hidden md:flex items-center justify-center pt-8">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-r from-violet-600 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
                     VS
                   </div>
                 </div>
+
+                {/* Site 2 */}
                 <div>
                   <label className="text-sm font-medium text-foreground mb-1.5 block">Site 2</label>
-                  <Input
-                    placeholder="https://site-b.com"
-                    value={url2}
-                    onChange={e => setUrl2(e.target.value)}
-                    className="h-12 text-sm"
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://site-b.com"
+                      value={url2}
+                      onChange={e => setUrl2(e.target.value)}
+                      className={`h-12 text-sm ${confirmedUrl2 ? 'border-emerald-500/50 bg-emerald-500/5' : ''}`}
+                      disabled={validation2.isValidating}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleConfirmUrl2}
+                      disabled={!url2.trim() || validation2.isValidating || !!confirmedUrl2}
+                      variant={confirmedUrl2 ? 'default' : 'outline'}
+                      className={`h-12 shrink-0 ${confirmedUrl2 ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
+                    >
+                      {validation2.isValidating ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : confirmedUrl2 ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        'Confirmer'
+                      )}
+                    </Button>
+                  </div>
+                  <UrlValidationBanner
+                    suggestedUrl={validation2.suggestedUrl}
+                    urlNotFound={validation2.urlNotFound}
+                    suggestionPrefix={validation2.getSuggestionPrefix()}
+                    notFoundMessage={validation2.getNotFoundMessage()}
+                    onAcceptSuggestion={() => validation2.acceptSuggestion(validation2.suggestedUrl!, (validUrl) => { setUrl2(validUrl); setConfirmedUrl2(validUrl); })}
+                    onDismissSuggestion={() => validation2.dismissSuggestion()}
+                    onDismissNotFound={() => validation2.dismissNotFound()}
+                    onIgnoreSuggestion={() => { const normalized = normalizeUrl(url2); setConfirmedUrl2(normalized); setUrl2(normalized); validation2.dismissSuggestion(); }}
                   />
                 </div>
               </div>
@@ -413,11 +474,17 @@ const AuditCompare = () => {
               </div>
 
               <div className="text-center">
-                <Button onClick={handleLaunch} size="lg"
-                  className="bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold px-8">
+                <Button onClick={handleLaunch} size="lg" disabled={!bothConfirmed}
+                  className="bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold px-8 disabled:opacity-50">
                   <Swords className="h-4 w-4 mr-2" />
                   Lancer l'audit comparé
                 </Button>
+                {!bothConfirmed && (url1.trim() || url2.trim()) && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {!confirmedUrl1 && !confirmedUrl2 ? 'Confirmez les deux URLs pour lancer l\'audit' 
+                      : !confirmedUrl1 ? 'Confirmez l\'URL du Site 1' : 'Confirmez l\'URL du Site 2'}
+                  </p>
+                )}
                 {error && (
                   <p className="text-destructive text-sm mt-3 flex items-center justify-center gap-1">
                     <AlertCircle className="h-3.5 w-3.5" /> {error}
