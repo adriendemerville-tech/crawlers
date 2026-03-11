@@ -65,6 +65,7 @@ interface TokenUsageStats {
   dataforseoCalls: number;
   openrouterCalls: number;
   browserlessCalls: number;
+  firecrawlCalls: number;
   byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
 }
 
