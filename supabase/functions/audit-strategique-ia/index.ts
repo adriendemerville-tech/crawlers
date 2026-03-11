@@ -1992,7 +1992,7 @@ Deno.serve(async (req) => {
         // Market data (DataForSEO keywords)
         withDeadline(
           fetchMarketData(domain, context, pageContentContext, url),
-          120_000, 'market_data'
+          180_000, 'market_data'
         ),
         // LLM visibility check (sub-function call)
         needsLlmCheck && supabaseUrl && supabaseAnonKey
@@ -2002,13 +2002,13 @@ Deno.serve(async (req) => {
                   method: 'POST',
                   headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' },
                   body: JSON.stringify({ url, lang: 'fr' }),
-                  signal: AbortSignal.timeout(25000),
+                  signal: AbortSignal.timeout(40000),
                 });
                 if (!llmResponse.ok) { await llmResponse.text(); return null; }
                 const llmResult = await llmResponse.json();
                 return llmResult.success && llmResult.data ? llmResult.data : null;
               })(),
-              30_000, 'check_llm'
+              45_000, 'check_llm'
             )
           : Promise.resolve(null),
         // Local competitor
