@@ -357,7 +357,7 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
         <Card className="border-border/50 bg-card/80">
           <CardContent className="pt-4 text-center">
             <Star className="h-5 w-5 mx-auto text-yellow-500 mb-1" />
-            <p className="text-xs text-muted-foreground">Expertise</p>
+            <p className="text-xs text-muted-foreground">{t.expertise}</p>
             <div className="flex items-center justify-center gap-0.5 mt-1">
               {[1, 2, 3, 4, 5].map(n => (
                 <Star key={n} className={`h-4 w-4 ${n <= (analysis.expertise_sentiment?.rating || 0) ? 'text-yellow-500 fill-yellow-500' : 'text-muted'}`} />
