@@ -1030,6 +1030,7 @@ const AuditCompare = () => {
   const [confirmedUrl2, setConfirmedUrl2] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CompareResult | null>(null);
+  const [showTopUp, setShowTopUp] = useState(false);
   const retryCountRef = useRef(0);
   const MAX_RETRIES = 2;
 
