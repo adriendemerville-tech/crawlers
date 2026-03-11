@@ -494,38 +494,38 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {contentDepth && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <FileText className="h-4 w-4 text-teal-500" /> {t.contentDepth}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-1.5 rounded bg-muted/30">
-                <p className="text-sm font-bold text-foreground">{contentDepth.wordCount.toLocaleString()}</p>
-                <p className="text-[9px] text-muted-foreground">{t.words}</p>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-base font-bold text-foreground">{contentDepth.wordCount.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">{t.words}</p>
               </div>
-              <div className="p-1.5 rounded bg-muted/30">
-                <p className="text-sm font-bold text-foreground">{contentDepth.h2Count}</p>
-                <p className="text-[9px] text-muted-foreground">H2</p>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-base font-bold text-foreground">{contentDepth.h2Count}</p>
+                <p className="text-xs text-muted-foreground">H2</p>
               </div>
-              <div className="p-1.5 rounded bg-muted/30">
-                <p className="text-sm font-bold text-foreground">{contentDepth.h3Count}</p>
-                <p className="text-[9px] text-muted-foreground">H3</p>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-base font-bold text-foreground">{contentDepth.h3Count}</p>
+                <p className="text-xs text-muted-foreground">H3</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {contentDepth.hasJsonLd && <Badge variant="default" className="text-[9px] px-1.5">JSON-LD</Badge>}
-              {contentDepth.hasOpenGraph && <Badge variant="default" className="text-[9px] px-1.5">Open Graph</Badge>}
-              {contentDepth.hasFAQ && <Badge variant="default" className="text-[9px] px-1.5">FAQ Schema</Badge>}
-              {!contentDepth.hasJsonLd && <Badge variant="outline" className="text-[9px] px-1.5 opacity-50">JSON-LD ✗</Badge>}
-              {!contentDepth.hasOpenGraph && <Badge variant="outline" className="text-[9px] px-1.5 opacity-50">OG ✗</Badge>}
+              {contentDepth.hasJsonLd && <Badge variant="default" className="text-[10px] px-1.5">JSON-LD</Badge>}
+              {contentDepth.hasOpenGraph && <Badge variant="default" className="text-[10px] px-1.5">Open Graph</Badge>}
+              {contentDepth.hasFAQ && <Badge variant="default" className="text-[10px] px-1.5">FAQ Schema</Badge>}
+              {!contentDepth.hasJsonLd && <Badge variant="outline" className="text-[10px] px-1.5 opacity-50">JSON-LD ✗</Badge>}
+              {!contentDepth.hasOpenGraph && <Badge variant="outline" className="text-[10px] px-1.5 opacity-50">OG ✗</Badge>}
             </div>
-            <div className="flex justify-between text-[10px] text-muted-foreground">
+            <div className="flex justify-between text-xs text-foreground/60">
               <span>{t.internalLinks}: {contentDepth.internalLinksCount}</span>
               <span>{t.externalLinks}: {contentDepth.externalLinksCount}</span>
             </div>
             {contentDepth.imagesWithoutAlt > 0 && (
-              <p className="text-[10px] text-rose-400">{contentDepth.imagesWithoutAlt}/{contentDepth.imagesCount} {t.images} {t.withoutAlt}</p>
+              <p className="text-xs text-rose-400">{contentDepth.imagesWithoutAlt}/{contentDepth.imagesCount} {t.images} {t.withoutAlt}</p>
             )}
           </CardContent>
         </Card>
