@@ -608,7 +608,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-foreground">"{gap.keyword}"</span>
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">{gap.volume.toLocaleString()} vol.</Badge>
+                          <Badge variant="outline" className="text-xs">{(gap.volume ?? 0).toLocaleString()} vol.</Badge>
                           <Badge variant="outline" className={`text-xs ${getPriorityColor(gap.priority)}`}>
                             {gap.priority === 'high' ? 'Priorité haute' : gap.priority === 'medium' ? 'Priorité moyenne' : 'Opportunité'}
                           </Badge>
