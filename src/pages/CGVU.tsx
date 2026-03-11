@@ -80,6 +80,7 @@ const CGVU = () => {
                 <li>L'audit de performance technique (Core Web Vitals, PageSpeed) sur mobile et desktop ;</li>
                 <li>L'audit stratégique approfondi (EEAT, positionnement concurrentiel, analyse sémantique) ;</li>
                 <li>L'analyse de mots-clés, requêtes cibles et contenu prioritaire ;</li>
+                <li>Le <strong>crawl multi-pages</strong> : analyse récursive de l'ensemble des pages d'un site (structure, SEO par page, score global, synthèse IA) ;</li>
                 <li>La génération de code correctif personnalisé (JSON-LD, balises meta, robots.txt, llms.txt) ;</li>
                 <li>Le suivi de l'évolution technique via un tableau de bord et l'intégration Google Search Console ;</li>
                 <li>La génération de rapports exportables (PDF) et de plans d'action.</li>
