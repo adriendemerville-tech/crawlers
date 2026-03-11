@@ -216,7 +216,7 @@ export default function SiteCrawl() {
           {/* Hero */}
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-              <Spider className="w-4 h-4" />
+              <Bug className="w-4 h-4" />
               Crawl Multi-Pages
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
