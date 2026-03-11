@@ -775,6 +775,7 @@ export function ExpertAuditDashboard() {
 
   const runStrategicAudit = async (validatedUrl: string, hallucinationCorrections?: any, competitorCorrections?: any) => {
     const normalizedUrl = validatedUrl;
+    auditStartTimeRef.current = Date.now();
     setAuditMode('strategic');
     setIsStrategicLoading(true);
     setResult(null);
