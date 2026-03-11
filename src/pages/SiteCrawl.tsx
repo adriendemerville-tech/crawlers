@@ -550,7 +550,7 @@ export default function SiteCrawl() {
                     <div className="text-2xl font-bold text-foreground">
                       {pages.filter(p => (p.issues || []).length === 0).length}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">Pages parfaites</div>
+                    <div className="text-xs text-muted-foreground mt-1">{t.perfectPages}</div>
                   </CardContent>
                 </Card>
                 <Card className="border border-destructive/20 bg-destructive/5">
