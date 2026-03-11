@@ -729,7 +729,7 @@ const AuditCompare = () => {
                     style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }}
                     aria-label="Playlist Crawlers" />
                 </div>
-                <p className="text-[10px] text-muted-foreground text-center mt-1 opacity-60">Volume : 50%</p>
+                <p className="text-[10px] text-muted-foreground text-center mt-1 opacity-60">{t.volume}</p>
               </div>
 
               <p className="text-sm text-muted-foreground text-center mt-6">
