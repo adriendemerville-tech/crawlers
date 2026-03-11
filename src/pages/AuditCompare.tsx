@@ -730,6 +730,9 @@ const AuditCompare = () => {
           {/* Loading State */}
           {isLoading && (
             <div className="relative">
+              {/* PatienceCards flanking the content */}
+              <PatienceCards isActive={isLoading} />
+
               <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-0 items-start">
                 {/* Left loading */}
                 <div className="border-r-0 md:border-r border-border/30 pr-0 md:pr-4">
@@ -739,7 +742,7 @@ const AuditCompare = () => {
                   <CompareLoadingSteps siteName={new URL(url1.startsWith('http') ? url1 : `https://${url1}`).hostname} t={t} />
                 </div>
                 
-                {/* Center: Spotify player on separator (desktop) */}
+                {/* Center: VS separator (desktop) */}
                 <div className="hidden md:flex flex-col items-center px-4 pt-16">
                   <div className="w-px h-16 bg-gradient-to-b from-transparent via-border to-transparent" />
                   <div className="w-12 h-12 rounded-full bg-gradient-to-r from-violet-600 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg my-3">
