@@ -229,6 +229,7 @@ export default function SiteCrawl() {
   const [isLoading, setIsLoading] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
   const [pages, setPages] = useState<CrawlPage[]>([]);
+  const [showTopUp, setShowTopUp] = useState(false);
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState('');
   const [expandedPage, setExpandedPage] = useState<string | null>(null);
