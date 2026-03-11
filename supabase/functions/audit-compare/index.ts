@@ -732,6 +732,145 @@ async function runCrossComparison(
   }
 }
 
+// ==================== PHASE 2.5: CROSS-SERP CHECK ====================
+
+/**
+ * After both sites have their own keywords, we merge the keyword pools
+ * and check SERP rankings for BOTH domains on the combined set.
+ * This ensures the "SERP Battlefield" has data even when both sites
+ * target the same niche (e.g. twin products).
+ */
+async function crossCheckSerpRankings(
+  kw1: any[], kw2: any[],
+  domain1: string, domain2: string,
+  locationCode: number,
+): Promise<{ site1Keywords: any[]; site2Keywords: any[] }> {
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
+    return { site1Keywords: kw1, site2Keywords: kw2 };
+  }
+
+  const cleanDomain1 = domain1.replace(/^www\./, '').toLowerCase();
+  const cleanDomain2 = domain2.replace(/^www\./, '').toLowerCase();
+
+  // Collect unique keywords from both sites that need cross-checking
+  const kw1Map = new Map(kw1.map(k => [k.keyword.toLowerCase(), k]));
+  const kw2Map = new Map(kw2.map(k => [k.keyword.toLowerCase(), k]));
+
+  // Keywords from site1 that site2 doesn't have (need to check site2's rank)
+  const needCheckForSite2: string[] = [];
+  // Keywords from site2 that site1 doesn't have (need to check site1's rank)
+  const needCheckForSite1: string[] = [];
+
+  for (const [key, kw] of kw1Map) {
+    if (!kw2Map.has(key)) {
+      needCheckForSite2.push(kw.keyword);
+    }
+  }
+  for (const [key, kw] of kw2Map) {
+    if (!kw1Map.has(key)) {
+      needCheckForSite1.push(kw.keyword);
+    }
+  }
+
+  // For overlapping keywords, cross-assign ranks
+  for (const [key] of kw1Map) {
+    if (kw2Map.has(key)) {
+      kw1Map.get(key)!.opponent_rank = kw2Map.get(key)!.current_rank;
+      kw2Map.get(key)!.opponent_rank = kw1Map.get(key)!.current_rank;
+    }
+  }
+
+  // Batch SERP check: site2's rankings on site1's keywords and vice versa
+  const allToCheck = [
+    ...needCheckForSite2.slice(0, 5).map(kw => ({ keyword: kw, checkDomain: cleanDomain2, assignTo: 'kw1' as const })),
+    ...needCheckForSite1.slice(0, 5).map(kw => ({ keyword: kw, checkDomain: cleanDomain1, assignTo: 'kw2' as const })),
+  ];
+
+  if (allToCheck.length > 0) {
+    try {
+      const serpTasks = allToCheck.map(item => ({
+        keyword: item.keyword,
+        location_code: locationCode,
+        language_code: 'fr',
+        depth: 30,
+        se_domain: 'google.fr',
+      }));
+
+      const serpResp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
+        method: 'POST',
+        headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(serpTasks),
+        signal: AbortSignal.timeout(15000),
+      });
+
+      if (serpResp.ok) {
+        trackPaidApiCall('audit-compare', 'dataforseo', 'serp/organic-cross');
+        const serpData = await serpResp.json();
+
+        for (let i = 0; i < allToCheck.length; i++) {
+          const item = allToCheck[i];
+          const taskResult = serpData.tasks?.[i]?.result?.[0];
+          let opponentRank: number | string = 'Non classé';
+          let ownRank: number | string = 'Non classé';
+
+          if (taskResult?.items) {
+            for (const entry of taskResult.items) {
+              if (entry.type === 'paid') continue;
+              const entryDomain = (entry.domain || '').toLowerCase().replace(/^www\./, '');
+
+              if (entryDomain === item.checkDomain || (entry.url || '').toLowerCase().includes(item.checkDomain)) {
+                opponentRank = entry.rank_absolute || 1;
+              }
+              // Also check if the OTHER domain appears
+              const otherDomain = item.assignTo === 'kw1' ? cleanDomain1 : cleanDomain2;
+              if (entryDomain === otherDomain || (entry.url || '').toLowerCase().includes(otherDomain)) {
+                ownRank = entry.rank_absolute || 1;
+              }
+            }
+          }
+
+          const kwKey = item.keyword.toLowerCase();
+          if (item.assignTo === 'kw1' && kw1Map.has(kwKey)) {
+            kw1Map.get(kwKey)!.opponent_rank = opponentRank;
+            // Also add to kw2 if opponent is ranked
+            if (typeof opponentRank === 'number' && !kw2Map.has(kwKey)) {
+              kw2Map.set(kwKey, {
+                keyword: item.keyword,
+                volume: kw1Map.get(kwKey)!.volume || 0,
+                difficulty: kw1Map.get(kwKey)!.difficulty || 0,
+                current_rank: opponentRank,
+                opponent_rank: kw1Map.get(kwKey)!.current_rank,
+              });
+            }
+          } else if (item.assignTo === 'kw2' && kw2Map.has(kwKey)) {
+            kw2Map.get(kwKey)!.opponent_rank = opponentRank;
+            if (typeof opponentRank === 'number' && !kw1Map.has(kwKey)) {
+              kw1Map.set(kwKey, {
+                keyword: item.keyword,
+                volume: kw2Map.get(kwKey)!.volume || 0,
+                difficulty: kw2Map.get(kwKey)!.difficulty || 0,
+                current_rank: opponentRank,
+                opponent_rank: kw2Map.get(kwKey)!.current_rank,
+              });
+            }
+          }
+        }
+      } else {
+        await serpResp.text();
+      }
+    } catch (e) {
+      console.warn('[cross-serp] SERP cross-check failed:', e instanceof Error ? e.message : e);
+    }
+  }
+
+  console.log(`[cross-serp] Enriched: ${kw1Map.size} kw for ${domain1}, ${kw2Map.size} kw for ${domain2}`);
+
+  return {
+    site1Keywords: [...kw1Map.values()],
+    site2Keywords: [...kw2Map.values()],
+  };
+}
+
 // ==================== MAIN HANDLER ====================
 
 Deno.serve(async (req) => {
