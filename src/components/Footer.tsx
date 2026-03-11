@@ -70,7 +70,7 @@ function FooterComponent() {
     },
     { 
       icon: ScanSearch, 
-      label: t3(language, 'Audit Multi-Pages', 'Multi-Page Audit', 'Auditoría Multi-Página'),
+      label: t3(language, 'Crawl Multi-Pages', 'Multi-Page Crawl', 'Crawl Multi-Página'),
       href: '/site-crawl',
       description: t3(language, 'Crawl complet jusqu\'à 500 pages', 'Full crawl up to 500 pages', 'Crawl completo hasta 500 páginas'),
       gold: true,
