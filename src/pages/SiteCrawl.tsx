@@ -69,7 +69,7 @@ interface CrawlResult {
 
 export default function SiteCrawl() {
   const { user } = useAuth();
-  const { credits } = useCredits();
+  const { balance: credits } = useCredits();
   const { language } = useLanguage();
   const navigate = useNavigate();
 
