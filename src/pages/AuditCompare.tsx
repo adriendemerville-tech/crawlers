@@ -83,6 +83,7 @@ interface SiteAnalysis {
     recommendations?: string[];
   };
   aeo_score: number;
+  eeat_score?: EEATScore | null;
   expertise_sentiment: { rating: number; justification: string };
 }
 
