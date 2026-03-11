@@ -177,7 +177,11 @@ export function StrategicInsights({
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground leading-relaxed">
-                  {analysis.brand_authority.dna_analysis}
+                  {progressiveReveal ? (
+                    <TypewriterText text={analysis.brand_authority.dna_analysis || ''} speed={10} chunkSize={3} />
+                  ) : (
+                    analysis.brand_authority.dna_analysis
+                  )}
                 </p>
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-2">
