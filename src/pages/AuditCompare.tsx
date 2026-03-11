@@ -431,23 +431,23 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {/* Brand DNA */}
       <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+          <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
             <Globe className="h-4 w-4 text-primary" /> Brand DNA
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground leading-relaxed">{analysis.brand_dna}</p>
-          <div className="grid grid-cols-1 gap-2">
+          <p className="text-sm text-foreground/80 leading-relaxed">{analysis.brand_dna}</p>
+          <div className="grid grid-cols-1 gap-3">
             <div>
-              <p className="text-xs font-semibold text-emerald-500 mb-1 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> {t.strengths}</p>
+              <p className="text-sm font-semibold text-emerald-500 mb-1.5 flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> {t.strengths}</p>
               {(analysis.strengths || []).map((s, i) => (
-                <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-emerald-500/30 mb-1">{s}</p>
+                <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-emerald-500/30 mb-1.5">{s}</p>
               ))}
             </div>
             <div>
-              <p className="text-xs font-semibold text-rose-500 mb-1 flex items-center gap-1"><TrendingDown className="h-3 w-3" /> {t.weaknesses}</p>
+              <p className="text-sm font-semibold text-rose-500 mb-1.5 flex items-center gap-1"><TrendingDown className="h-3.5 w-3.5" /> {t.weaknesses}</p>
               {(analysis.weaknesses || []).map((w, i) => (
-                <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-rose-500/30 mb-1">{w}</p>
+                <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-rose-500/30 mb-1.5">{w}</p>
               ))}
             </div>
           </div>
