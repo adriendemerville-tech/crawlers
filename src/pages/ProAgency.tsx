@@ -162,6 +162,7 @@ const translations = {
     compRows: [
       ['Technical audits', '1 credit / audit', 'Unlimited ∞'],
       ['Strategic AI audits', '2 credits / audit', 'Unlimited ∞'],
+      ['Multi-page crawl', '5-30 credits / crawl', 'Unlimited ∞'],
       ['Corrective code', '1 credit / code', 'Unlimited ∞'],
       ['White label', '—', '✓ Included'],
       ['Multi-accounts', '—', '3 accounts'],
