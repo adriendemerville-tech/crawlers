@@ -400,7 +400,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
                   >
                     {t[q.priority]}
                   </Badge>
-                  {volumes[i] && (
+                  {volumes[i]?.total_llm_volume != null && (
                     <Badge variant="outline" className="text-[10px] border-accent/30 text-accent-foreground gap-1">
                       <BarChart3 className="h-2.5 w-2.5" />
                       ~{volumes[i].total_llm_volume.toLocaleString()} {t.totalLlm}{t.perMonth}
