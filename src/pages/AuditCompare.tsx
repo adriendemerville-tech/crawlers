@@ -404,19 +404,24 @@ const AuditCompare = () => {
                 <div>
                   <label className="text-sm font-medium text-foreground mb-1.5 block">Site 1</label>
                   <div className="flex gap-2">
-                    <Input
-                      placeholder="https://site-a.com"
-                      value={url1}
-                      onChange={e => setUrl1(e.target.value)}
-                      className={`h-12 text-sm ${confirmedUrl1 ? 'border-emerald-500/50 bg-emerald-500/5' : ''}`}
-                      disabled={validation1.isValidating}
-                    />
+                    <div className="relative flex-1">
+                      <Input
+                        placeholder="https://site-a.com"
+                        value={url1}
+                        onChange={e => setUrl1(e.target.value)}
+                        className={`h-12 text-sm pr-10 ${confirmedUrl1 ? 'border-emerald-500/50 bg-emerald-500/5' : ''}`}
+                        disabled={validation1.isValidating}
+                      />
+                      {confirmedUrl1 && (
+                        <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-emerald-500" />
+                      )}
+                    </div>
                     <Button
                       type="button"
                       onClick={handleConfirmUrl1}
                       disabled={!url1.trim() || validation1.isValidating || !!confirmedUrl1}
                       variant={confirmedUrl1 ? 'default' : 'outline'}
-                      className={`h-12 shrink-0 ${confirmedUrl1 ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
+                      className={`h-12 shrink-0 ${confirmedUrl1 ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'border-2 border-violet-500 text-violet-500 hover:bg-violet-500/10'}`}
                     >
                       {validation1.isValidating ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
