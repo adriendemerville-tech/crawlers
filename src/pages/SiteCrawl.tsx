@@ -443,18 +443,18 @@ export default function SiteCrawl() {
           <div className="mb-10 max-w-3xl mx-auto space-y-6">
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
-                Pourquoi auditer plusieurs pages de votre site ?
+                {t.whyTitle}
               </h2>
               <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                Un audit SEO mono-page ne révèle qu'une infime partie de vos problèmes techniques. En analysant l'ensemble de vos URLs, vous identifiez les balises manquantes, les erreurs de maillage interne, les pages orphelines et les contenus dupliqués qui freinent votre indexation. Le crawl multi-pages détecte chaque point de friction pour que Google et les moteurs IA comprennent parfaitement la structure de votre site.
+                {t.whyText}
               </p>
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">
-                Un score SEO/200 par page, une synthèse IA globale
+                {t.scoreTitle}
               </h3>
               <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                Chaque page crawlée reçoit un score sur 200 points couvrant les critères techniques, sémantiques et structurels. L'intelligence artificielle consolide ensuite ces résultats en une synthèse exploitable : recommandations prioritaires, estimation du gain de trafic et identification des pages à corriger en premier. Vous obtenez une feuille de route concrète, pas seulement un diagnostic.
+                {t.scoreText}
               </p>
             </div>
           </div>
