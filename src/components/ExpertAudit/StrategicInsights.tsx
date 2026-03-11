@@ -236,7 +236,7 @@ export function StrategicInsights({
 
 
            {/* LLM Visibility Raw Data (from check-llm) */}
-           {analysis.llm_visibility_raw && (
+           {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
               <>
                 <LLMVisibilityCard data={analysis.llm_visibility_raw} />
                 <ConversationalIntentCard analysis={analysis} />
