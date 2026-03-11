@@ -52,6 +52,7 @@ const GenerativeEngineOptimization = lazy(() => import("./pages/GenerativeEngine
 const GuideAuditSeo = lazy(() => import("./pages/GuideAuditSeo"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const SiteCrawl = lazy(() => import("./pages/SiteCrawl"));
+const AuditCompare = lazy(() => import("./pages/AuditCompare"));
 
 // Loading fallback
 const PageLoader = () => (
