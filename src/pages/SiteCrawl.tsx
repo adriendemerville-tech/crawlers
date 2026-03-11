@@ -222,7 +222,7 @@ export default function SiteCrawl() {
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
   useCanonicalHreflang('/site-crawl');
-
+  const t = crawlI18n[language];
   const [url, setUrl] = useState('');
   const [maxPages, setMaxPages] = useState(50);
   const [isLoading, setIsLoading] = useState(false);
