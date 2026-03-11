@@ -506,7 +506,7 @@ export default function SiteCrawl() {
                     ) : (
                       <>
                         <CreditCoin size="md" />
-                        <span className="text-sm font-semibold">{creditCost} crédits</span>
+                        <span className="text-sm font-semibold">{creditCost} {t.credits}</span>
                       </>
                     )}
                   </div>
