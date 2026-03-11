@@ -252,7 +252,7 @@ function SiteResultCard({ site }: { site: SiteResult }) {
 
 const AuditCompare = () => {
   const { user } = useAuth();
-  const { refreshCredits } = useCredits();
+  const { refreshBalance } = useCredits();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
