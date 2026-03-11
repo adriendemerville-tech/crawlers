@@ -89,3 +89,6 @@ verify_jwt = false
 
 [functions.update-market-trends]
 verify_jwt = false
+
+[functions.audit-compare]
+verify_jwt = false
