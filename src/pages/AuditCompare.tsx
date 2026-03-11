@@ -20,7 +20,7 @@ import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { UrlValidationBanner } from '@/components/UrlValidationBanner';
 import { 
   Swords, Globe, Target, Brain, CheckCircle2, Search, 
-  Music, AlertCircle, Star, TrendingUp, TrendingDown,
+  Music, Star, TrendingUp, TrendingDown,
   MessageSquare, Zap, Loader2, Check
 } from 'lucide-react';
 
