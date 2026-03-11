@@ -324,7 +324,7 @@ function CompareLoadingSteps({ siteName, t }: { siteName: string; t: typeof i18n
         </motion.div>
       </div>
       <p className="text-sm font-medium text-foreground truncate max-w-[260px]">{t.analysisOf} {siteName}</p>
-      <div className="space-y-2.5 w-full max-w-[286px]">
+      <div className="space-y-3 w-full max-w-[372px]">
         {steps.map((step, i) => {
           const StepIcon = step.icon;
           const isActive = i === currentStep;
