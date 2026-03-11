@@ -612,7 +612,7 @@ const AuditCompare = () => {
                 </div>
               </div>
 
-              {/* Mobile Spotify */}
+              {/* Mobile Spotify (reuse same ref via portal-like approach) */}
               <div className="md:hidden mt-6">
                 <div className="flex items-center gap-2 justify-center mb-2">
                   <Music className="h-3.5 w-3.5 text-muted-foreground" />
@@ -620,7 +620,7 @@ const AuditCompare = () => {
                 </div>
                 <div className="max-w-sm mx-auto overflow-hidden rounded-[12px] bg-[#282828] isolate"
                   style={{ clipPath: 'inset(0 round 12px)' }}>
-                  <div ref={embedContainerRef} className="w-full"
+                  <div ref={isMobile ? embedContainerRef : undefined} className="w-full"
                     style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }} />
                 </div>
               </div>
