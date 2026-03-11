@@ -61,6 +61,7 @@ const translations = {
     startCode: 'Iniciar',
     priceRange: '< 6 ... 24 >',
     viewReport: 'Ver informe',
+    auditCompare: 'Auditoría Comparada',
   },
 };
 
