@@ -170,7 +170,7 @@ export default function SiteCrawl() {
         return;
       }
 
-      // Load full result from DB
+      // Load the queued crawl from DB — polling will track progress
       const { data: crawl } = await supabase
         .from('site_crawls')
         .select('*')
@@ -179,13 +179,12 @@ export default function SiteCrawl() {
 
       if (crawl) {
         setCrawlResult(crawl as any);
-        await loadPages(data.crawlId);
+        setPhase(`${data.totalPages} pages découvertes — audit en file d'attente…`);
       }
 
-      toast.success(`Crawl terminé : ${data.totalPages} pages analysées`);
+      toast.success(`${data.totalPages} pages découvertes — audit lancé en arrière-plan`);
     } catch (err: any) {
       toast.error(err.message || 'Erreur inattendue');
-    } finally {
       setIsLoading(false);
       setPhase('');
     }
