@@ -23,7 +23,8 @@ function getCreditCost(pages: number) {
   if (pages <= 50) return 5;
   if (pages <= 100) return 10;
   if (pages <= 200) return 15;
-  return 30;
+  if (pages <= 350) return 25;
+  return 40;
 }
 
 function getScoreColor(score: number) {
