@@ -1419,6 +1419,32 @@ const AuditCompare = () => {
           )}
         </div>
       </main>
+
+      {/* FAQ Section */}
+      <section className="bg-muted/30 py-16 px-4" aria-labelledby="faq-compare-heading">
+        <div className="mx-auto max-w-3xl">
+          <h2 id="faq-compare-heading" className="text-2xl font-bold text-foreground text-center mb-8">
+            {t.faqTitle}
+          </h2>
+          <Accordion type="single" collapsible className="space-y-3">
+            {t.faq.map((item, i) => (
+              <AccordionItem
+                key={i}
+                value={`faq-${i}`}
+                className="border border-border rounded-lg bg-card px-6 data-[state=open]:bg-card/80"
+              >
+                <AccordionTrigger className="text-left font-medium hover:no-underline py-4">
+                  <h3 className="text-base font-medium">{item.q}</h3>
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pb-4">
+                  {item.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
       <Footer />
     </div>
   );
