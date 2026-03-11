@@ -187,12 +187,13 @@ function getLoadingSteps(t: typeof i18n['fr']) {
   ];
 }
 
-function CompareLoadingSteps({ siteName }: { siteName: string }) {
+function CompareLoadingSteps({ siteName, t }: { siteName: string; t: typeof i18n['fr'] }) {
   const [currentStep, setCurrentStep] = useState(0);
+  const steps = getLoadingSteps(t);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentStep(prev => prev < loadingSteps.length - 1 ? prev + 1 : prev);
+      setCurrentStep(prev => prev < steps.length - 1 ? prev + 1 : prev);
     }, 12000);
     return () => clearInterval(interval);
   }, []);
@@ -207,9 +208,9 @@ function CompareLoadingSteps({ siteName }: { siteName: string }) {
           <Brain className="h-6 w-6 text-primary" />
         </motion.div>
       </div>
-      <p className="text-sm font-medium text-foreground truncate max-w-[200px]">Analyse de {siteName}</p>
+      <p className="text-sm font-medium text-foreground truncate max-w-[200px]">{t.analysisOf} {siteName}</p>
       <div className="space-y-2 w-full max-w-[220px]">
-        {loadingSteps.map((step, i) => {
+        {steps.map((step, i) => {
           const StepIcon = step.icon;
           const isActive = i === currentStep;
           const isComplete = i < currentStep;
