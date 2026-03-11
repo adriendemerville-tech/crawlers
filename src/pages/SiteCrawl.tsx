@@ -498,19 +498,21 @@ export default function SiteCrawl() {
                       className="[&_[role=slider]]:bg-violet-500 [&_[role=slider]]:border-violet-500 [&_.relative>div]:bg-violet-500"
                     />
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border">
-                    {isUnlimited ? (
-                      <Badge className="bg-violet-600 text-white gap-1">
-                        <span className="text-base">∞</span>
-                        {t.unlimited}
-                      </Badge>
-                    ) : (
-                      <>
-                        <CreditCoin size="md" />
-                        <span className="text-sm font-semibold">{creditCost} {t.credits}</span>
-                      </>
-                    )}
-                  </div>
+                  <CreditTopUpModal trigger={
+                    <button type="button" className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
+                      {isUnlimited ? (
+                        <Badge className="bg-violet-600 text-white gap-1">
+                          <span className="text-base">∞</span>
+                          {t.unlimited}
+                        </Badge>
+                      ) : (
+                        <>
+                          <CreditCoin size="md" />
+                          <span className="text-sm font-semibold">{creditCost} {t.credits}</span>
+                        </>
+                      )}
+                    </button>
+                  } />
                 </div>
               </form>
 
