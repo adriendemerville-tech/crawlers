@@ -862,6 +862,7 @@ export function ExpertAuditDashboard() {
 
       setResult(strategicData);
       setStrategicResult(strategicData);
+      setStrategicProgressiveReveal(true);
       // Store cached context for fast relaunches (competitor corrections, etc.)
       if (data.data._cachedContext) {
         setStrategicCachedContext(data.data._cachedContext);
