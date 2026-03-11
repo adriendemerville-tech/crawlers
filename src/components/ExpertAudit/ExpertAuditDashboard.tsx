@@ -1553,6 +1553,7 @@ export function ExpertAuditDashboard() {
 
           {/* === STEP 2: STRATEGIC AUDIT SECTION (with Registration Gate) === */}
           {auditMode === 'strategic' && (
+            <StrategicErrorBoundary onReset={handleNewAudit}>
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
