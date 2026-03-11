@@ -12,27 +12,33 @@
    data: LLMVisibilityRaw;
  }
  
- export function LLMVisibilityCard({ data }: LLMVisibilityCardProps) {
-   const getSentimentConfig = (sentiment: string) => {
-     switch (sentiment) {
-       case 'positive':
-         return { label: 'Positif', color: 'text-success', bgColor: 'bg-success/10', icon: ThumbsUp };
-       case 'mostly_positive':
-         return { label: 'Plutôt positif', color: 'text-success/80', bgColor: 'bg-success/5', icon: ThumbsUp };
-       case 'neutral':
-         return { label: 'Neutre', color: 'text-muted-foreground', bgColor: 'bg-muted', icon: MessageSquare };
-       case 'mixed':
-         return { label: 'Mitigé', color: 'text-warning', bgColor: 'bg-warning/10', icon: AlertTriangle };
-       case 'negative':
-         return { label: 'Négatif', color: 'text-destructive', bgColor: 'bg-destructive/10', icon: ThumbsDown };
-       default:
-         return { label: 'Inconnu', color: 'text-muted-foreground', bgColor: 'bg-muted', icon: MessageSquare };
-     }
-   };
- 
-   const sentimentConfig = getSentimentConfig(data.overallSentiment);
-   const SentimentIcon = sentimentConfig.icon;
-   const citationPercent = Math.round((data.citationRate.cited / data.citationRate.total) * 100);
+  export function LLMVisibilityCard({ data }: LLMVisibilityCardProps) {
+    // Guard: if essential data is missing (e.g. check-llm timed out), don't render
+    if (!data || !data.citationRate || !data.citations) {
+      return null;
+    }
+
+    const getSentimentConfig = (sentiment: string) => {
+      switch (sentiment) {
+        case 'positive':
+          return { label: 'Positif', color: 'text-success', bgColor: 'bg-success/10', icon: ThumbsUp };
+        case 'mostly_positive':
+          return { label: 'Plutôt positif', color: 'text-success/80', bgColor: 'bg-success/5', icon: ThumbsUp };
+        case 'neutral':
+          return { label: 'Neutre', color: 'text-muted-foreground', bgColor: 'bg-muted', icon: MessageSquare };
+        case 'mixed':
+          return { label: 'Mitigé', color: 'text-warning', bgColor: 'bg-warning/10', icon: AlertTriangle };
+        case 'negative':
+          return { label: 'Négatif', color: 'text-destructive', bgColor: 'bg-destructive/10', icon: ThumbsDown };
+        default:
+          return { label: 'Inconnu', color: 'text-muted-foreground', bgColor: 'bg-muted', icon: MessageSquare };
+      }
+    };
+  
+    const sentimentConfig = getSentimentConfig(data.overallSentiment || 'neutral');
+    const SentimentIcon = sentimentConfig.icon;
+    const total = data.citationRate.total || 1; // avoid division by zero
+    const citationPercent = Math.round((data.citationRate.cited / total) * 100);
  
    const getScoreColor = (score: number) => {
      if (score >= 70) return 'text-success';
