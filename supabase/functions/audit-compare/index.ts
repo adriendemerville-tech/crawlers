@@ -127,19 +127,37 @@ async function extractPageMetadata(url: string, domain: string): Promise<PageMet
     const bodyContent = bodyMatch ? bodyMatch[1] : '';
     const textOnly = bodyContent.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '').replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     
-    if (textOnly.length < 200 && html.length > 1000) {
+    if (textOnly.length < 200 && html.length > 500) {
       const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY');
       if (RENDERING_KEY) {
         try {
-          const renderResponse = await fetch(`https://chrome.browserless.io/content?token=${RENDERING_KEY}`, {
+          console.log(`[audit-compare] SPA detected for ${normalizedUrl} (textOnly=${textOnly.length} chars), using Browserless v2`);
+          const renderResponse = await fetch(`https://production-sfo.browserless.io/content?token=${RENDERING_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: normalizedUrl, rejectResourceTypes: ['image', 'media', 'font', 'stylesheet'], waitFor: 2000, gotoOptions: { waitUntil: 'networkidle2', timeout: 15000 } }),
-            signal: AbortSignal.timeout(18000),
+            body: JSON.stringify({
+              url: normalizedUrl,
+              rejectResourceTypes: ['image', 'media', 'font', 'stylesheet'],
+              waitForSelector: { selector: 'h1, h2, [data-testid], main, article', timeout: 8000 },
+              gotoOptions: { waitUntil: 'networkidle2', timeout: 20000 },
+            }),
+            signal: AbortSignal.timeout(25000),
           });
-          if (renderResponse.ok) { const rh = await renderResponse.text(); if (rh.length > html.length) html = rh; }
-          else await renderResponse.text();
-        } catch { /* skip */ }
+          if (renderResponse.ok) {
+            const rh = await renderResponse.text();
+            if (rh.length > html.length) {
+              html = rh;
+              console.log(`[audit-compare] Browserless rendered ${rh.length} chars for ${domain}`);
+            }
+          } else {
+            const errText = await renderResponse.text();
+            console.warn(`[audit-compare] Browserless failed (${renderResponse.status}): ${errText.substring(0, 200)}`);
+          }
+        } catch (e) {
+          console.warn(`[audit-compare] Browserless error:`, e instanceof Error ? e.message : e);
+        }
+      } else {
+        console.warn(`[audit-compare] SPA detected but no RENDERING_API_KEY configured`);
       }
     }
     
