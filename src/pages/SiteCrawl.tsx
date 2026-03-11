@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { CreditCoin } from '@/components/ui/CreditCoin';
+import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
@@ -228,6 +229,7 @@ export default function SiteCrawl() {
   const [isLoading, setIsLoading] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
   const [pages, setPages] = useState<CrawlPage[]>([]);
+  const [showTopUp, setShowTopUp] = useState(false);
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState('');
   const [expandedPage, setExpandedPage] = useState<string | null>(null);
@@ -497,7 +499,7 @@ export default function SiteCrawl() {
                       className="[&_[role=slider]]:bg-violet-500 [&_[role=slider]]:border-violet-500 [&_.relative>div]:bg-violet-500"
                     />
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border">
+                  <button type="button" onClick={() => setShowTopUp(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
                     {isUnlimited ? (
                       <Badge className="bg-violet-600 text-white gap-1">
                         <span className="text-base">∞</span>
@@ -509,7 +511,7 @@ export default function SiteCrawl() {
                         <span className="text-sm font-semibold">{creditCost} {t.credits}</span>
                       </>
                     )}
-                  </div>
+                  </button>
                 </div>
               </form>
 
@@ -763,6 +765,7 @@ export default function SiteCrawl() {
         </div>
       </main>
 
+      <CreditTopUpModal open={showTopUp} onOpenChange={setShowTopUp} currentBalance={credits} />
       <Footer />
     </>
   );
