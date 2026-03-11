@@ -14,6 +14,7 @@ import { MyActionPlans } from '@/components/Profile/MyActionPlans';
 import { MyCorrectiveCodes } from '@/components/Profile/MyCorrectiveCodes';
 import { MyWallet } from '@/components/Profile/MyWallet';
 import { MyTracking } from '@/components/Profile/MyTracking';
+import { MyCrawls } from '@/components/Profile/MyCrawls';
 import { AdminDashboard } from '@/components/Admin';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { useAdmin } from '@/hooks/useAdmin';
