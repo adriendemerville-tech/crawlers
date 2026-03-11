@@ -24,6 +24,7 @@ interface CorrectiveCode {
   code: string;
   fixes_applied: CorrectiveCodeFix[];
   created_at: string;
+  validated_at: string | null;
 }
 
 const translations = {
