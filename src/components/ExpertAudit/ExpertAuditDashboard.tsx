@@ -47,6 +47,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSaveReport } from '@/hooks/useSaveReport';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { summarizeStrategicResult } from './expertReportExport';
+import { useAuditState } from './hooks/useAuditState';
+import { mapStrategicData } from './hooks/useStrategicDataMapper';
 
 // Fire-and-forget: trigger CTO Agent asynchronously after audit
 function triggerCtoAgent(auditResult: any, auditType: string, url: string, domain: string) {
