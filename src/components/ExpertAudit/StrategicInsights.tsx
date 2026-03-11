@@ -251,13 +251,6 @@ export function StrategicInsights({
               <>
                 <LLMVisibilityCard data={analysis.llm_visibility_raw} />
                 <ConversationalIntentCard analysis={analysis} />
-                <LLMTargetQueriesCard 
-                  domain={domain} 
-                  coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
-                  citations={analysis.llm_visibility_raw.citations as any}
-                  selfCorrect
-                  strategicAnalysis={analysis}
-                />
 
                 {/* Citabilité & Résilience — avant Matrice de Risque */}
                 {analysis.quotability && <QuotabilityCard data={analysis.quotability} />}
