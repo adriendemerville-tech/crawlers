@@ -370,7 +370,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="p-3 rounded-lg bg-muted/50 text-center">
                   <BarChart3 className="h-4 w-4 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold text-foreground">{marketSummary.total_market_volume.toLocaleString()}</p>
+                  <p className="text-lg font-bold text-foreground">{(marketSummary?.total_market_volume ?? 0).toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">Volume marché/mois</p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/50 text-center">
