@@ -143,6 +143,7 @@ const i18n = {
     badge: 'Audit Comparé',
     h1: 'Comparez deux sites face aux IA',
     subtitle: 'Analysez et comparez la visibilité IA, les mots-clés et la stratégie GEO de deux sites côte à côte.',
+    seoParagraph: 'En 2026, les moteurs de réponse génératifs comme ChatGPT, Perplexity et Google SGE redéfinissent la visibilité en ligne. Notre audit comparé analyse côte à côte le Brand DNA, les backlinks, la profondeur de contenu, le score E\u2011E\u2011A\u2011T et la présence dans les LLM de deux sites concurrents — pour identifier précisément les leviers SEO et GEO à activer.',
     credits: '4 crédits',
     confirm: 'Confirmer',
     launch: 'Lancer l\'audit comparé',
@@ -210,6 +211,7 @@ const i18n = {
     badge: 'Comparative Audit',
     h1: 'Compare two sites against AI',
     subtitle: 'Analyze and compare AI visibility, keywords and GEO strategy of two sites side by side.',
+    seoParagraph: 'In 2026, generative answer engines like ChatGPT, Perplexity and Google SGE are redefining online visibility. Our comparative audit analyzes Brand DNA, backlinks, content depth, E\u2011E\u2011A\u2011T score and LLM presence of two competing sites side by side — to pinpoint the exact SEO and GEO levers to activate.',
     credits: '4 credits',
     confirm: 'Confirm',
     launch: 'Launch comparative audit',
@@ -276,6 +278,7 @@ const i18n = {
     badge: 'Auditoría Comparativa',
     h1: 'Compare dos sitios frente a la IA',
     subtitle: 'Analice y compare la visibilidad IA, las palabras clave y la estrategia GEO de dos sitios lado a lado.',
+    seoParagraph: 'En 2026, los motores de respuesta generativos como ChatGPT, Perplexity y Google SGE están redefiniendo la visibilidad en línea. Nuestra auditoría comparativa analiza el Brand DNA, los backlinks, la profundidad de contenido, la puntuación E\u2011E\u2011A\u2011T y la presencia en los LLM de dos sitios competidores — para identificar con precisión las palancas SEO y GEO a activar.',
     credits: '4 créditos',
     confirm: 'Confirmar',
     launch: 'Lanzar auditoría comparativa',
@@ -1136,7 +1139,9 @@ const AuditCompare = () => {
             <p className="text-muted-foreground text-sm max-w-lg mx-auto">
               {t.subtitle}
             </p>
-            
+            <p className="text-muted-foreground/80 text-xs max-w-2xl mx-auto mt-3 leading-relaxed">
+              {t.seoParagraph}
+            </p>
           </motion.div>
 
           {/* URL Inputs */}
