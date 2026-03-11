@@ -808,30 +808,30 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
           <CardContent className="space-y-3">
             {cross.serp_battlefield.head_to_head && cross.serp_battlefield.head_to_head.length > 0 && (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border/30">
-                      <th className="text-left py-1.5 text-muted-foreground font-medium">{t.keywords}</th>
-                      <th className="text-center py-1.5 text-muted-foreground font-medium">{site1Domain}</th>
-                      <th className="text-center py-1.5 text-muted-foreground font-medium">{site2Domain}</th>
-                      <th className="text-center py-1.5 text-muted-foreground font-medium">🏆</th>
+                      <th className="text-left py-2 text-foreground/60 font-medium">{t.keywords}</th>
+                      <th className="text-center py-2 text-foreground/60 font-medium">{site1Domain}</th>
+                      <th className="text-center py-2 text-foreground/60 font-medium">{site2Domain}</th>
+                      <th className="text-center py-2 text-foreground/60 font-medium">🏆</th>
                     </tr>
                   </thead>
                   <tbody>
                     {cross.serp_battlefield.head_to_head.map((h, i) => (
                       <tr key={i} className="border-b border-border/10">
-                        <td className="py-1.5 text-foreground font-medium">{h.keyword}</td>
-                        <td className="text-center py-1.5">
-                          <Badge variant={h.winner === site1Domain ? 'default' : 'outline'} className="text-[10px] px-1.5">
+                        <td className="py-2 text-foreground font-medium">{h.keyword}</td>
+                        <td className="text-center py-2">
+                          <Badge variant={h.winner === site1Domain ? 'default' : 'outline'} className="text-xs px-2">
                             {typeof h.site1_rank === 'number' ? `#${h.site1_rank}` : h.site1_rank}
                           </Badge>
                         </td>
-                        <td className="text-center py-1.5">
-                          <Badge variant={h.winner === site2Domain ? 'default' : 'outline'} className="text-[10px] px-1.5">
+                        <td className="text-center py-2">
+                          <Badge variant={h.winner === site2Domain ? 'default' : 'outline'} className="text-xs px-2">
                             {typeof h.site2_rank === 'number' ? `#${h.site2_rank}` : h.site2_rank}
                           </Badge>
                         </td>
-                        <td className="text-center py-1.5 text-[10px] text-foreground font-medium truncate max-w-[80px]">{h.winner}</td>
+                        <td className="text-center py-2 text-xs text-foreground font-medium truncate max-w-[80px]">{h.winner}</td>
                       </tr>
                     ))}
                   </tbody>
