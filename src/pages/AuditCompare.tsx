@@ -20,7 +20,7 @@ import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { UrlValidationBanner } from '@/components/UrlValidationBanner';
 import { 
   Swords, Globe, Target, Brain, CheckCircle2, Search, 
-  Music, AlertCircle, Star, TrendingUp, TrendingDown,
+  Music, Star, TrendingUp, TrendingDown,
   MessageSquare, Zap, Loader2, Check
 } from 'lucide-react';
 
@@ -268,7 +268,8 @@ const AuditCompare = () => {
   const [confirmedUrl2, setConfirmedUrl2] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CompareResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const retryCountRef = useRef(0);
+  const MAX_RETRIES = 2;
 
   const validation1 = useUrlValidation(language);
   const validation2 = useUrlValidation(language);
@@ -326,7 +327,7 @@ const AuditCompare = () => {
 
     setIsLoading(true);
     setResult(null);
-    setError(null);
+    retryCountRef.current = 0;
 
     // Track analytics event
     supabase.from('analytics_events').insert({
@@ -336,41 +337,61 @@ const AuditCompare = () => {
       user_id: user?.id || null,
     }).then(() => {});
 
-    try {
-      const { data, error: fnError } = await supabase.functions.invoke('audit-compare', {
-        body: { url1: url1.trim(), url2: url2.trim() },
-      });
+    const attemptAudit = async (): Promise<void> => {
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke('audit-compare', {
+          body: { url1: url1.trim(), url2: url2.trim() },
+        });
 
-      if (fnError) throw new Error(fnError.message);
-      if (!data?.success) throw new Error(data?.error || 'Erreur inconnue');
+        if (fnError) throw new Error(fnError.message);
+        if (!data?.success) throw new Error(data?.error || 'Erreur inconnue');
 
-      // Stop music
-      stopPlayback();
+        // Stop music
+        stopPlayback();
 
-      // 3s silence then ding
-      setTimeout(() => {
-        playDing();
-        setResult(data.data);
-        setIsLoading(false);
-        refreshBalance();
+        // 3s silence then ding
+        setTimeout(() => {
+          playDing();
+          setResult(data.data);
+          setIsLoading(false);
+          refreshBalance();
+          
+          // Fire-and-forget: trigger CTO Agent for audit-compare
+          supabase.functions.invoke('agent-cto', {
+            body: { auditResult: data.data, auditType: 'compare', url: url1.trim(), domain: new URL(url1.trim().startsWith('http') ? url1.trim() : `https://${url1.trim()}`).hostname }
+          }).catch(() => {});
+        }, 3000);
+      } catch (e: any) {
+        const msg = e.message || 'Erreur inconnue';
         
-        // Fire-and-forget: trigger CTO Agent for audit-compare
-        supabase.functions.invoke('agent-cto', {
-          body: { auditResult: data.data, auditType: 'compare', url: url1.trim(), domain: new URL(url1.trim().startsWith('http') ? url1.trim() : `https://${url1.trim()}`).hostname }
-        }).catch(() => {});
-      }, 3000);
-    } catch (e: any) {
-      setIsLoading(false);
-      const msg = e.message || 'Erreur inconnue';
-      if (msg.includes('Insufficient credits')) {
-        setError('Crédits insuffisants (5 requis)');
-      } else if (msg.includes('Authentication')) {
-        navigate('/auth');
-      } else {
-        setError(msg);
+        // Don't retry for auth or credit errors
+        if (msg.includes('Authentication')) {
+          setIsLoading(false);
+          navigate('/auth');
+          return;
+        }
+        if (msg.includes('Insufficient credits')) {
+          setIsLoading(false);
+          toast({ title: 'Crédits insuffisants', description: '5 crédits requis pour un audit comparé.', variant: 'destructive' });
+          return;
+        }
+        
+        // Silent retry for transient errors (timeout, 5xx, etc.)
+        if (retryCountRef.current < MAX_RETRIES) {
+          retryCountRef.current += 1;
+          console.log(`[audit-compare] Retry ${retryCountRef.current}/${MAX_RETRIES}...`);
+          // Wait 2s before retrying
+          await new Promise(r => setTimeout(r, 2000));
+          return attemptAudit();
+        }
+        
+        // All retries exhausted — show a gentle toast, no red banner
+        setIsLoading(false);
+        toast({ title: 'Réessayez', description: 'L\'analyse a pris trop de temps. Veuillez relancer l\'audit.' });
       }
-      toast({ title: 'Erreur', description: msg, variant: 'destructive' });
-    }
+    };
+
+    attemptAudit();
   };
 
   return (
@@ -513,11 +534,6 @@ const AuditCompare = () => {
                   <p className="text-xs text-muted-foreground mt-2">
                     {!confirmedUrl1 && !confirmedUrl2 ? 'Confirmez les deux URLs pour lancer l\'audit' 
                       : !confirmedUrl1 ? 'Confirmez l\'URL du Site 1' : 'Confirmez l\'URL du Site 2'}
-                  </p>
-                )}
-                {error && (
-                  <p className="text-destructive text-sm mt-3 flex items-center justify-center gap-1">
-                    <AlertCircle className="h-3.5 w-3.5" /> {error}
                   </p>
                 )}
               </div>
