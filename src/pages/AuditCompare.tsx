@@ -27,6 +27,26 @@ import {
 
 // ==================== TYPES ====================
 
+interface ContentDepth {
+  wordCount: number;
+  h2Count: number;
+  h3Count: number;
+  hasJsonLd: boolean;
+  hasOpenGraph: boolean;
+  hasFAQ: boolean;
+  internalLinksCount: number;
+  externalLinksCount: number;
+  imagesCount: number;
+  imagesWithoutAlt: number;
+}
+
+interface BacklinkProfile {
+  referringDomains: number;
+  totalBacklinks: number;
+  domainRank: number;
+  topAnchors: string[];
+}
+
 interface SiteAnalysis {
   brand_dna: string;
   strengths: string[];
@@ -45,6 +65,34 @@ interface SiteAnalysis {
   expertise_sentiment: { rating: number; justification: string };
 }
 
+interface CrossComparison {
+  verdict: string;
+  authority_winner: string;
+  authority_gap: {
+    magnitude: string;
+    key_factor: string;
+    domain_rank_delta?: number;
+    referring_domains_ratio?: number;
+  };
+  content_depth_winner: string;
+  content_comparison: {
+    word_count_ratio?: number;
+    structural_advantage: string;
+    technical_seo_edge: string;
+  };
+  serp_battlefield: {
+    overlap_count: number;
+    head_to_head?: { keyword: string; site1_rank: string | number; site2_rank: string | number; winner: string; analysis: string }[];
+    exclusive_strengths_site1?: string[];
+    exclusive_strengths_site2?: string[];
+  };
+  differentiators: { dimension: string; site1_value: string; site2_value: string; advantage: string; impact: string }[];
+  strategic_recommendations: {
+    for_site1: string[];
+    for_site2: string[];
+  };
+}
+
 interface SiteResult {
   url: string;
   domain: string;
@@ -52,11 +100,14 @@ interface SiteResult {
   analysis: SiteAnalysis;
   llm_raw: any;
   keywords: any[];
+  backlinks?: BacklinkProfile | null;
+  contentDepth?: ContentDepth | null;
 }
 
 interface CompareResult {
   site1: SiteResult;
   site2: SiteResult;
+  crossComparison?: CrossComparison | null;
   scannedAt: string;
 }
 
