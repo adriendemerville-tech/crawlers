@@ -311,16 +311,27 @@ export function WorkflowCarousel({
             exit={{ opacity: 0, y: -10 }}
             className="mb-8"
           >
-            <div className="relative max-w-xl mx-auto px-4">
-              <Input
-                type="text"
-                placeholder={t.placeholder}
-                value={url}
-                onChange={(e) => onUrlChange(e.target.value)}
-                className="pl-4 pr-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-sm"
-                disabled={isLoading || isStrategicLoading}
-              />
-              <Search className="absolute right-8 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center gap-6 max-w-3xl mx-auto px-4">
+              <div className="relative flex-1 max-w-xl">
+                <Input
+                  type="text"
+                  placeholder={t.placeholder}
+                  value={url}
+                  onChange={(e) => onUrlChange(e.target.value)}
+                  className="pl-4 pr-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-sm"
+                  disabled={isLoading || isStrategicLoading}
+                />
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              </div>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate('/audit-compare')}
+                className="h-14 px-6 border-2 border-violet-500 text-violet-500 bg-transparent hover:bg-violet-500/10 hover:text-violet-400 font-semibold shrink-0 hidden sm:flex items-center gap-2"
+              >
+                <GitCompareArrows className="h-5 w-5" />
+                {t.auditCompare}
+              </Button>
             </div>
             {validationBanner}
           </motion.div>
