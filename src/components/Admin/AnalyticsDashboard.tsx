@@ -17,7 +17,8 @@ import {
   RefreshCw,
   Cpu,
   Zap,
-  Brain
+  Brain,
+  Flame
 } from 'lucide-react';
 import { 
   LineChart, 
