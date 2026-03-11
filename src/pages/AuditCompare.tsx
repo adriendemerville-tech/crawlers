@@ -328,6 +328,14 @@ const AuditCompare = () => {
     setResult(null);
     setError(null);
 
+    // Track analytics event
+    supabase.from('analytics_events').insert({
+      event_type: 'audit_compare_launched',
+      url: url1.trim(),
+      target_url: url2.trim(),
+      user_id: user?.id || null,
+    }).then(() => {}).catch(() => {});
+
     try {
       const { data, error: fnError } = await supabase.functions.invoke('audit-compare', {
         body: { url1: url1.trim(), url2: url2.trim() },
