@@ -721,7 +721,7 @@ const AuditCompare = () => {
               <div className="mt-6 flex flex-col items-center">
                 <div className="flex items-center gap-2 justify-center mb-2">
                   <Music className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium text-foreground">Playlist Crawlers</span>
+                  <span className="text-xs font-medium text-foreground">{t.playlist}</span>
                 </div>
                 <div className="w-full max-w-[320px] overflow-hidden rounded-[12px] bg-[#282828] isolate"
                   style={{ clipPath: 'inset(0 round 12px)' }}>
