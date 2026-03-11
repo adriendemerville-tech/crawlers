@@ -458,30 +458,30 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {backlinks && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <Link2 className="h-4 w-4 text-blue-500" /> {t.backlinks}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 rounded-lg bg-muted/30 text-center">
-                <p className="text-lg font-bold text-foreground">{backlinks.referringDomains.toLocaleString()}</p>
-                <p className="text-[10px] text-muted-foreground">{t.referringDomains}</p>
+              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+                <p className="text-xl font-bold text-foreground">{backlinks.referringDomains.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">{t.referringDomains}</p>
               </div>
-              <div className="p-2 rounded-lg bg-muted/30 text-center">
-                <p className="text-lg font-bold text-foreground">{backlinks.domainRank}</p>
-                <p className="text-[10px] text-muted-foreground">{t.domainRank}</p>
+              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+                <p className="text-xl font-bold text-foreground">{backlinks.domainRank}</p>
+                <p className="text-xs text-muted-foreground">{t.domainRank}</p>
               </div>
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-sm text-foreground/70">
               <span className="font-medium">{backlinks.totalBacklinks.toLocaleString()}</span> backlinks total
             </div>
             {backlinks.topAnchors.length > 0 && (
               <div>
-                <p className="text-[10px] text-muted-foreground mb-1">{t.topAnchors}</p>
+                <p className="text-xs text-muted-foreground mb-1">{t.topAnchors}</p>
                 <div className="flex flex-wrap gap-1">
                   {backlinks.topAnchors.map((a, i) => (
-                    <Badge key={i} variant="outline" className="text-[9px] px-1.5">{a}</Badge>
+                    <Badge key={i} variant="outline" className="text-[10px] px-1.5">{a}</Badge>
                   ))}
                 </div>
               </div>
