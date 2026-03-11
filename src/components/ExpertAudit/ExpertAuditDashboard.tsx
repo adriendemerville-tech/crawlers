@@ -1047,6 +1047,7 @@ export function ExpertAuditDashboard() {
 
           setResult(strategicData);
           setStrategicResult(strategicData);
+          setStrategicProgressiveReveal(true);
           if (retryData.data._cachedContext) {
             setStrategicCachedContext(retryData.data._cachedContext);
           }
