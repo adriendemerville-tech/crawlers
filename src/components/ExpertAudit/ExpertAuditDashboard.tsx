@@ -501,24 +501,6 @@ export function ExpertAuditDashboard() {
     openReportAndSave();
   };
 
-  const handleNewAudit = () => {
-    // Clear all state
-    setUrl('');
-    setAuditMode(null);
-    setResult(null);
-    setTechnicalResult(null);
-    setStrategicResult(null);
-    setStrategicCachedContext(null);
-    setCurrentStep(1);
-    setCompletedSteps([]);
-    setStrategicProgressiveReveal(false);
-    // Clear session storage
-    sessionStorage.removeItem('audit_url');
-    sessionStorage.removeItem('audit_technical_result');
-    sessionStorage.removeItem('audit_strategic_result');
-    sessionStorage.removeItem('audit_mode');
-    sessionStorage.removeItem('audit_pending_action');
-  };
 
   const handleReportModalClose = () => {
     setIsReportModalOpen(false);
