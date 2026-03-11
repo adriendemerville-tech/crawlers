@@ -302,7 +302,7 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <Target className="h-4 w-4 text-amber-500" /> Mots-clés
+              <Target className="h-4 w-4 text-amber-500" /> {t.keywords}
             </CardTitle>
           </CardHeader>
           <CardContent>
