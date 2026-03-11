@@ -14,10 +14,12 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSpotifyTrackRotation } from '@/components/ExpertAudit/useSpotifyTrackRotation';
+import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
+import { UrlValidationBanner } from '@/components/UrlValidationBanner';
 import { 
   Swords, Globe, Target, Brain, CheckCircle2, Search, 
   Music, AlertCircle, Star, TrendingUp, TrendingDown,
-  MessageSquare, Zap
+  MessageSquare, Zap, Loader2, Check
 } from 'lucide-react';
 
 // ==================== TYPES ====================
