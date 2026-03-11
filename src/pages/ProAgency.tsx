@@ -49,6 +49,11 @@ const translations = {
         description: 'Générez des scripts correctifs personnalisés pour chaque client, sans consommer de crédits.',
       },
       {
+        icon: 'Globe',
+        title: 'Crawl multi-pages illimité',
+        description: 'Analysez l\'intégralité d\'un site (10 à 200 pages) : structure, score SEO/200 par page, liens cassés, synthèse IA globale.',
+      },
+      {
         icon: 'Palette',
         title: 'Marque blanche',
         description: 'Personnalisez vos rapports avec votre logo, vos couleurs et vos coordonnées. Vos clients ne voient que votre marque.',
@@ -76,6 +81,7 @@ const translations = {
     compRows: [
       ['Audits techniques', '1 crédit / audit', 'Illimité ∞'],
       ['Audits stratégiques IA', '2 crédits / audit', 'Illimité ∞'],
+      ['Crawl multi-pages', '5-30 crédits / crawl', 'Illimité ∞'],
       ['Codes correctifs', '1 crédit / code', 'Illimité ∞'],
       ['Marque blanche', '—', '✓ Inclus'],
       ['Multi-comptes', '—', '3 comptes'],
@@ -144,6 +150,7 @@ const translations = {
     features: [
       { icon: 'Infinity', title: 'Unlimited reports', description: 'Run as many technical SEO, strategic, GEO and LLM audits as you want. No caps, no restrictions.' },
       { icon: 'Code2', title: 'Unlimited corrective code', description: 'Generate customized fix scripts for each client without consuming credits.' },
+      { icon: 'Globe', title: 'Unlimited multi-page crawl', description: 'Analyze entire sites (10 to 200 pages): structure, SEO score/200 per page, broken links, global AI summary.' },
       { icon: 'Palette', title: 'White label', description: 'Customize your reports with your logo, colors and contact info. Clients only see your brand.' },
       { icon: 'Users', title: '3 accounts included', description: 'Invite your team members and manage them from a centralized console.' },
       { icon: 'Headphones', title: 'Priority support', description: 'Access dedicated support with reduced response times and personalized assistance.' },
@@ -155,6 +162,7 @@ const translations = {
     compRows: [
       ['Technical audits', '1 credit / audit', 'Unlimited ∞'],
       ['Strategic AI audits', '2 credits / audit', 'Unlimited ∞'],
+      ['Multi-page crawl', '5-30 credits / crawl', 'Unlimited ∞'],
       ['Corrective code', '1 credit / code', 'Unlimited ∞'],
       ['White label', '—', '✓ Included'],
       ['Multi-accounts', '—', '3 accounts'],
@@ -199,6 +207,7 @@ const translations = {
     features: [
       { icon: 'Infinity', title: 'Informes ilimitados', description: 'Lanza todas las auditorías SEO, GEO y LLM que necesites. Sin tope, sin restricción.' },
       { icon: 'Code2', title: 'Código correctivo ilimitado', description: 'Genera scripts de corrección personalizados para cada cliente sin gastar créditos.' },
+      { icon: 'Globe', title: 'Crawl multi-páginas ilimitado', description: 'Analiza sitios enteros (10 a 200 páginas): estructura, puntuación SEO/200 por página, enlaces rotos, resumen IA global.' },
       { icon: 'Palette', title: 'Marca blanca', description: 'Personaliza tus informes con tu logo, colores y datos de contacto.' },
       { icon: 'Users', title: '3 cuentas incluidas', description: 'Invita a tus colaboradores y gestiona tu equipo desde una consola centralizada.' },
       { icon: 'Headphones', title: 'Soporte prioritario', description: 'Accede a soporte dedicado con tiempos de respuesta reducidos.' },
@@ -210,6 +219,7 @@ const translations = {
     compRows: [
       ['Auditorías técnicas', '1 crédito / auditoría', 'Ilimitado ∞'],
       ['Auditorías estratégicas IA', '2 créditos / auditoría', 'Ilimitado ∞'],
+      ['Crawl multi-páginas', '5-30 créditos / crawl', 'Ilimitado ∞'],
       ['Código correctivo', '1 crédito / código', 'Ilimitado ∞'],
       ['Marca blanca', '—', '✓ Incluido'],
       ['Multi-cuentas', '—', '3 cuentas'],
@@ -240,6 +250,7 @@ const translations = {
 const iconMap: Record<string, React.ReactNode> = {
   Infinity: <Infinity className="h-6 w-6" />,
   Code2: <Code2 className="h-6 w-6" />,
+  Globe: <Globe className="h-6 w-6" />,
   Palette: <Palette className="h-6 w-6" />,
   Users: <Users className="h-6 w-6" />,
   Headphones: <Headphones className="h-6 w-6" />,

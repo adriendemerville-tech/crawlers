@@ -78,6 +78,7 @@ const translations = {
     agencyFeatures: [
       'Rapports illimités',
       'Correctifs illimités',
+      'Crawl multi-pages illimité',
       'Marque Blanche (White Label)',
       '3 comptes inclus',
       'Support prioritaire',
@@ -147,6 +148,7 @@ const translations = {
     agencyFeatures: [
       'Unlimited reports',
       'Unlimited fixes',
+      'Unlimited multi-page crawl',
       'White Label option',
       '3 accounts included',
       'Priority support',
@@ -216,6 +218,7 @@ const translations = {
     agencyFeatures: [
       'Informes ilimitados',
       'Correcciones ilimitadas',
+      'Crawl multi-páginas ilimitado',
       'Opción Marca Blanca',
       '3 cuentas incluidas',
       'Soporte prioritario',

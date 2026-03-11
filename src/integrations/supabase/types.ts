@@ -792,6 +792,105 @@ export type Database = {
         }
         Relationships: []
       }
+      observatory_sectors: {
+        Row: {
+          avg_brand_authority: number | null
+          avg_broken_links: number | null
+          avg_cls: number | null
+          avg_content_gap_count: number | null
+          avg_eeat_score: number | null
+          avg_fcp_ms: number | null
+          avg_images_without_alt: number | null
+          avg_lcp_ms: number | null
+          avg_load_time_ms: number | null
+          avg_seo_score: number | null
+          avg_ttfb_ms: number | null
+          avg_word_count: number | null
+          canonical_rate: number | null
+          created_at: string
+          hreflang_rate: number | null
+          https_rate: number | null
+          id: string
+          json_ld_rate: number | null
+          meta_description_rate: number | null
+          mobile_friendly_rate: number | null
+          open_graph_rate: number | null
+          period: string
+          raw_data: Json | null
+          robots_txt_rate: number | null
+          schema_org_rate: number | null
+          sector: string
+          sitemap_rate: number | null
+          source: string
+          total_scans: number
+          updated_at: string
+        }
+        Insert: {
+          avg_brand_authority?: number | null
+          avg_broken_links?: number | null
+          avg_cls?: number | null
+          avg_content_gap_count?: number | null
+          avg_eeat_score?: number | null
+          avg_fcp_ms?: number | null
+          avg_images_without_alt?: number | null
+          avg_lcp_ms?: number | null
+          avg_load_time_ms?: number | null
+          avg_seo_score?: number | null
+          avg_ttfb_ms?: number | null
+          avg_word_count?: number | null
+          canonical_rate?: number | null
+          created_at?: string
+          hreflang_rate?: number | null
+          https_rate?: number | null
+          id?: string
+          json_ld_rate?: number | null
+          meta_description_rate?: number | null
+          mobile_friendly_rate?: number | null
+          open_graph_rate?: number | null
+          period: string
+          raw_data?: Json | null
+          robots_txt_rate?: number | null
+          schema_org_rate?: number | null
+          sector: string
+          sitemap_rate?: number | null
+          source?: string
+          total_scans?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_brand_authority?: number | null
+          avg_broken_links?: number | null
+          avg_cls?: number | null
+          avg_content_gap_count?: number | null
+          avg_eeat_score?: number | null
+          avg_fcp_ms?: number | null
+          avg_images_without_alt?: number | null
+          avg_lcp_ms?: number | null
+          avg_load_time_ms?: number | null
+          avg_seo_score?: number | null
+          avg_ttfb_ms?: number | null
+          avg_word_count?: number | null
+          canonical_rate?: number | null
+          created_at?: string
+          hreflang_rate?: number | null
+          https_rate?: number | null
+          id?: string
+          json_ld_rate?: number | null
+          meta_description_rate?: number | null
+          mobile_friendly_rate?: number | null
+          open_graph_rate?: number | null
+          period?: string
+          raw_data?: Json | null
+          robots_txt_rate?: number | null
+          schema_org_rate?: number | null
+          sector?: string
+          sitemap_rate?: number | null
+          source?: string
+          total_scans?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       patience_cards: {
         Row: {
           card_type: string

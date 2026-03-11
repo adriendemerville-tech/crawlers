@@ -80,6 +80,7 @@ const CGVU = () => {
                 <li>L'audit de performance technique (Core Web Vitals, PageSpeed) sur mobile et desktop ;</li>
                 <li>L'audit stratégique approfondi (EEAT, positionnement concurrentiel, analyse sémantique) ;</li>
                 <li>L'analyse de mots-clés, requêtes cibles et contenu prioritaire ;</li>
+                <li>Le <strong>crawl multi-pages</strong> : analyse récursive de l'ensemble des pages d'un site (structure, SEO par page, score global, synthèse IA) ;</li>
                 <li>La génération de code correctif personnalisé (JSON-LD, balises meta, robots.txt, llms.txt) ;</li>
                 <li>Le suivi de l'évolution technique via un tableau de bord et l'intégration Google Search Console ;</li>
                 <li>La génération de rapports exportables (PDF) et de plans d'action.</li>
@@ -160,7 +161,7 @@ const CGVU = () => {
               <h2 className="text-xl font-bold text-foreground mt-10 mb-3">6. Système de Crédits</h2>
               <h3 className="text-lg font-semibold mt-4 mb-2">6.1. Nature des crédits</h3>
               <p>
-                Les crédits constituent des <strong>unités de consommation numérique</strong> permettant d'accéder aux fonctionnalités d'analyse avancée de la Plateforme. Chaque action d'audit (audit expert, génération de code, analyse LLM approfondie, etc.) consomme un ou plusieurs crédits selon la complexité de l'opération.
+                Les crédits constituent des <strong>unités de consommation numérique</strong> permettant d'accéder aux fonctionnalités d'analyse avancée de la Plateforme. Chaque action d'audit (audit expert, génération de code, analyse LLM approfondie, crawl multi-pages, etc.) consomme un ou plusieurs crédits selon la complexité de l'opération.
               </p>
 
               <h3 className="text-lg font-semibold mt-4 mb-2">6.2. Achat et utilisation</h3>
@@ -198,6 +199,7 @@ const CGVU = () => {
               <h3 className="text-lg font-semibold mt-4 mb-2">7.2. Avantages inclus</h3>
               <ul>
                 <li>Accès illimité à l'ensemble des outils d'analyse et d'audit ;</li>
+                <li><strong>Crawl multi-pages illimité</strong> : analyse récursive complète de sites (10 à 200 pages par crawl) ;</li>
                 <li>Dashboard agence dédié avec gestion multi-clients ;</li>
                 <li>Export de rapports personnalisés au format PDF ;</li>
                 <li>Fonctionnalité Marque Blanche (White Label) — voir Article 8 ;</li>
