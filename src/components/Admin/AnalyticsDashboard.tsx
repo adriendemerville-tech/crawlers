@@ -139,6 +139,8 @@ export function AnalyticsDashboard() {
     expertAuditStep2: 0,
     expertAuditStep3: 0,
     errorCount: 0,
+    auditCompareLaunched: 0,
+    multiPageCrawls: 0,
   });
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [topPages, setTopPages] = useState<PageVisit[]>([]);
