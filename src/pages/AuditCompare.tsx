@@ -354,6 +354,14 @@ const i18n = {
     authority: 'Autoridad',
     trust: 'Confianza',
     radarTitle: 'Radar comparativo',
+    faqTitle: 'Preguntas frecuentes sobre la competencia en línea',
+    faq: [
+      { q: '¿Cómo analizar la competencia SEO de mi sitio?', a: 'El análisis competitivo SEO consiste en comparar el rendimiento técnico (Core Web Vitals, estructura HTML), el perfil de backlinks, la profundidad de contenido y la puntuación E‑E‑A‑T de su sitio frente a sus competidores directos. Nuestra auditoría comparativa automatiza este análisis en minutos.' },
+      { q: '¿Por qué comparar la visibilidad en motores IA generativos?', a: 'En 2026, ChatGPT, Perplexity y Google SGE generan una parte creciente del tráfico cualificado. Un competidor mejor citado por estos LLM capta visitantes que nunca ve en sus estadísticas clásicas. Comparar su presencia IA con la de sus rivales revela oportunidades invisibles en SEO tradicional.' },
+      { q: '¿Qué criterios diferencian dos sitios competidores en línea?', a: 'Los principales criterios son: autoridad de dominio (backlinks y Domain Rank), profundidad semántica (conteo de palabras, estructura H2/H3), datos estructurados (JSON‑LD, FAQ Schema), velocidad de carga (LCP, CLS) y presencia en las respuestas de los LLM. Nuestro radar comparativo visualiza estas brechas de un vistazo.' },
+      { q: '¿Qué es el Brand DNA en una auditoría competitiva?', a: 'El Brand DNA es la huella digital única de una marca: su propuesta de valor, su posicionamiento semántico, sus entidades asociadas en los Knowledge Graphs y su reputación en las respuestas generativas. Comparar el Brand DNA de dos sitios revela las fortalezas y debilidades de cada estrategia de marca en línea.' },
+      { q: '¿Con qué frecuencia debo monitorear a mis competidores?', a: 'Recomendamos una auditoría comparativa mensual para mercados competitivos (e‑commerce, SaaS, finanzas) y trimestral para otros sectores. Los algoritmos de los motores de búsqueda y los LLM evolucionan constantemente: un seguimiento regular permite anticipar movimientos competitivos y ajustar su estrategia GEO.' },
+    ],
   },
 };
 
