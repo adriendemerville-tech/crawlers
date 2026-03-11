@@ -421,7 +421,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                         {kw.is_nugget && (
                           <div className="flex justify-center"><NuggetBadge /></div>
                         )}
-                        <p className="text-lg font-bold text-primary">{kw.volume.toLocaleString()}</p>
+                        <p className="text-lg font-bold text-primary">{(kw.volume ?? 0).toLocaleString()}</p>
                         <p className="text-[10px] text-muted-foreground">rech./mois</p>
                         <Badge
                           variant={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankBadgeVariant(kw.current_rank) : 'outline'}
