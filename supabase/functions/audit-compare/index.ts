@@ -785,7 +785,7 @@ Deno.serve(async (req) => {
     
     console.log(`✅ Audit comparé v2 terminé: site1=${site1.analysis ? 'OK' : 'FAIL'}, site2=${site2.analysis ? 'OK' : 'FAIL'}, cross=${crossComparison ? 'OK' : 'FAIL'}`);
     
-    const fallbackAnalysis = { brand_dna: 'Analyse non disponible', strengths: [], weaknesses: [], aeo_score: 0, expertise_sentiment: { rating: 1, justification: 'Non évalué' } };
+    const fallbackAnalysis = { brand_dna: 'Analyse non disponible', strengths: [], weaknesses: [], aeo_score: 0, eeat_score: null, expertise_sentiment: { rating: 1, justification: 'Non évalué' } };
     
     const resultData = {
       site1: {
@@ -797,6 +797,7 @@ Deno.serve(async (req) => {
         keywords: site1.keywords,
         backlinks: site1.backlinks,
         contentDepth: site1.metadata.contentDepth,
+        pagespeed: site1.pagespeed,
       },
       site2: {
         url: url2,
@@ -807,6 +808,7 @@ Deno.serve(async (req) => {
         keywords: site2.keywords,
         backlinks: site2.backlinks,
         contentDepth: site2.metadata.contentDepth,
+        pagespeed: site2.pagespeed,
       },
       crossComparison,
       scannedAt: new Date().toISOString(),
