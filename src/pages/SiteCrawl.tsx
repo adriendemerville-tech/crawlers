@@ -741,7 +741,7 @@ export default function SiteCrawl() {
                       <div>
                         <div className="text-sm font-medium text-foreground">{c.domain}</div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(c.created_at).toLocaleDateString('fr-FR')} · {c.crawled_pages} pages
+                          {new Date(c.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')} · {c.crawled_pages} {t.pages}
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
