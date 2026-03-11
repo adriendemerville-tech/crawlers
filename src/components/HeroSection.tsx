@@ -165,7 +165,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
 
   // Animated headline for crawlers tab - with SSR-safe fallback
   const renderAnimatedHeadline = () => (
-    <h1 className="mb-4 text-2xl font-extrabold tracking-tight leading-tight sm:text-5xl lg:text-6xl">
+    <h1 className="mb-4 text-2xl font-extrabold tracking-tight leading-tight sm:text-5xl lg:text-6xl font-display">
       <span className="block text-center pb-1">
         {/* Animated word container */}
         <span
