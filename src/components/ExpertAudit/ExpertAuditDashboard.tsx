@@ -687,21 +687,23 @@ export function ExpertAuditDashboard() {
     try {
       await attemptAudit(1);
     } finally {
-      // Wait 3s silence, play ding, then show results after ding ends
+      // Wait 2s, stop Spotify, play microwave ding, then show results
       await new Promise<void>((resolve) => {
         setTimeout(async () => {
           try {
+            // Stop Spotify music
+            stopMusicRef.current?.();
+            
             const { default: dingUrl } = await import('@/assets/sounds/microwave-ding.mp3');
             const audio = new Audio(dingUrl);
             audio.volume = 1.0;
             audio.addEventListener('ended', () => resolve());
-            // Fallback in case 'ended' doesn't fire
             setTimeout(() => resolve(), 3000);
             audio.play().catch(() => resolve());
           } catch {
             resolve();
           }
-        }, 3000);
+        }, 2000);
       });
       setIsLoading(false);
     }
