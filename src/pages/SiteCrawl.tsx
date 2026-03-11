@@ -765,6 +765,7 @@ export default function SiteCrawl() {
         </div>
       </main>
 
+      <CreditTopUpModal open={showTopUp} onOpenChange={setShowTopUp} currentBalance={credits} />
       <Footer />
     </>
   );
