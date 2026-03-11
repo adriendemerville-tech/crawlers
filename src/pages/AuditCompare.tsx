@@ -672,15 +672,15 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {analysis.eeat_score && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <Award className="h-4 w-4 text-indigo-500" /> {t.eeat}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-3">
             <div className="text-center mb-2">
-              <p className="text-2xl font-bold text-foreground">{analysis.eeat_score.overall}<span className="text-xs text-muted-foreground">/10</span></p>
+              <p className="text-3xl font-bold text-foreground">{analysis.eeat_score.overall}<span className="text-sm text-foreground/50">/10</span></p>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {[
                 { label: t.experience, value: analysis.eeat_score.experience },
                 { label: t.expertiseLabel, value: analysis.eeat_score.expertise },
@@ -688,19 +688,19 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
                 { label: t.trust, value: analysis.eeat_score.trustworthiness },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-2">
-                  <span className="text-[10px] text-muted-foreground w-16 shrink-0">{item.label}</span>
-                  <div className="flex-1 h-1.5 rounded-full bg-muted/50 overflow-hidden">
+                  <span className="text-xs text-foreground/60 w-20 shrink-0">{item.label}</span>
+                  <div className="flex-1 h-2 rounded-full bg-muted/50 overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${item.value >= 8 ? 'bg-emerald-500' : item.value >= 5 ? 'bg-amber-500' : 'bg-rose-500'}`}
                       style={{ width: `${(item.value / 10) * 100}%` }}
                     />
                   </div>
-                  <span className="text-[10px] font-medium text-foreground w-5 text-right">{item.value}</span>
+                  <span className="text-xs font-medium text-foreground w-5 text-right">{item.value}</span>
                 </div>
               ))}
             </div>
             {analysis.eeat_score.justification && (
-              <p className="text-[10px] text-muted-foreground italic mt-1">{analysis.eeat_score.justification}</p>
+              <p className="text-xs text-foreground/60 italic mt-1">{analysis.eeat_score.justification}</p>
             )}
           </CardContent>
         </Card>
