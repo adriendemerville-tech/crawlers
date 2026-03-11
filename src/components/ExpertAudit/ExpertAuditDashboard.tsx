@@ -195,6 +195,8 @@ export function ExpertAuditDashboard() {
   const [storedCorrections, setStoredCorrections] = useState<any[]>([]);
   const loadingRef = useRef<HTMLDivElement>(null);
   const stopMusicRef = useRef<(() => void) | null>(null);
+  const auditStartTimeRef = useRef<number>(0);
+  const [strategicProgressiveReveal, setStrategicProgressiveReveal] = useState(false);
   
   const { toast } = useToast();
   const { language } = useLanguage();
