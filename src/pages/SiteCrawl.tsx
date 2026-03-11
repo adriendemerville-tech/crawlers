@@ -17,6 +17,7 @@ import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
 
 function getCreditCost(pages: number) {
   if (pages <= 50) return 5;
