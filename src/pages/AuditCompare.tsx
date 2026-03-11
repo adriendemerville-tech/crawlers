@@ -268,7 +268,8 @@ const AuditCompare = () => {
   const [confirmedUrl2, setConfirmedUrl2] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CompareResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const retryCountRef = useRef(0);
+  const MAX_RETRIES = 2;
 
   const validation1 = useUrlValidation(language);
   const validation2 = useUrlValidation(language);
