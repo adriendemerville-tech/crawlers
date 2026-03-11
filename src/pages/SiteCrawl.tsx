@@ -683,7 +683,7 @@ export default function SiteCrawl() {
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-                                <span className="text-muted-foreground">Mots:</span>
+                                <span className="text-muted-foreground">{t.words}</span>
                                 <span className="text-foreground">{page.word_count}</span>
                               </div>
                               <div className="flex items-center gap-1.5">
