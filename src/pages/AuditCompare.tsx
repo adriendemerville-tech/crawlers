@@ -204,6 +204,14 @@ const i18n = {
     authority: 'Autorité',
     trust: 'Confiance',
     radarTitle: 'Radar comparatif',
+    faqTitle: 'Questions fréquentes sur la concurrence en ligne',
+    faq: [
+      { q: 'Comment analyser la concurrence SEO de mon site ?', a: 'L\'analyse concurrentielle SEO consiste à comparer les performances techniques (Core Web Vitals, structure HTML), le profil de backlinks, la profondeur de contenu et le score E‑E‑A‑T de votre site face à vos concurrents directs. Notre audit comparé automatise cette analyse en quelques minutes.' },
+      { q: 'Pourquoi comparer sa visibilité dans les moteurs IA génératifs ?', a: 'En 2026, ChatGPT, Perplexity et Google SGE génèrent une part croissante du trafic qualifié. Un concurrent mieux cité par ces LLM capte des visiteurs que vous ne voyez jamais dans vos statistiques classiques. Comparer votre présence IA à celle de vos rivaux révèle des opportunités invisibles en SEO traditionnel.' },
+      { q: 'Quels critères différencient deux sites concurrents en ligne ?', a: 'Les principaux critères sont : l\'autorité de domaine (backlinks et Domain Rank), la profondeur sémantique (nombre de mots, structure H2/H3), les données structurées (JSON‑LD, FAQ Schema), la vitesse de chargement (LCP, CLS) et la présence dans les réponses des LLM. Notre radar comparatif visualise ces écarts en un coup d\'œil.' },
+      { q: 'Qu\'est-ce que le Brand DNA en audit concurrentiel ?', a: 'Le Brand DNA est l\'empreinte numérique unique d\'une marque : sa proposition de valeur, son positionnement sémantique, ses entités associées dans les Knowledge Graphs et sa réputation dans les réponses génératives. Comparer le Brand DNA de deux sites révèle les forces et faiblesses de chaque stratégie de marque en ligne.' },
+      { q: 'À quelle fréquence faut-il surveiller ses concurrents ?', a: 'Nous recommandons un audit comparé mensuel pour les marchés compétitifs (e‑commerce, SaaS, finance) et trimestriel pour les autres secteurs. Les algorithmes des moteurs de recherche et des LLM évoluent constamment : un suivi régulier permet d\'anticiper les mouvements concurrentiels et d\'ajuster votre stratégie GEO.' },
+    ],
   },
   en: {
     pageTitle: 'Comparative SEO/GEO Audit — Compare two sites | Crawlers.fr',
