@@ -317,15 +317,7 @@ export function StrategicInsights({
             <PremiumRoadmapCard roadmap={analysis.executive_roadmap} />
           )}
         </>
-          {/* Competitive Landscape (4 Actors) */}
-          {analysis.competitive_landscape && (
-            <CompetitiveLandscapeCard 
-              landscape={analysis.competitive_landscape}
-              onCorrectionSubmit={onCompetitorCorrection}
-              isReanalyzing={isReanalyzing}
-            />
-          )}
-
+      )}
           {/* AEO Score Card — below Brand Authority */}
           {auditResult && (
             <AEOScoreCard result={auditResult} />
