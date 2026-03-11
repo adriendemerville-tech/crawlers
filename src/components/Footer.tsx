@@ -61,6 +61,23 @@ function FooterComponent() {
       gold: true,
       isRoute: true
     },
+    { 
+      icon: GitCompareArrows, 
+      label: t3(language, 'Audit Comparé', 'Compared Audit', 'Auditoría Comparada'),
+      href: '/audit-compare',
+      description: t3(language, 'Comparez deux sites SEO/GEO', 'Compare two SEO/GEO sites', 'Compare dos sitios SEO/GEO'),
+      gold: false,
+      isRoute: true
+    },
+    { 
+      icon: ScanSearch, 
+      label: t3(language, 'Audit Multi-Pages', 'Multi-Page Audit', 'Auditoría Multi-Página'),
+      href: '/site-crawl',
+      description: t3(language, 'Crawl complet jusqu\'à 500 pages', 'Full crawl up to 500 pages', 'Crawl completo hasta 500 páginas'),
+      gold: true,
+      isRoute: true,
+      violet: true
+    },
   ];
 
   const resourcesLinks = [
