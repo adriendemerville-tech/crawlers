@@ -182,6 +182,17 @@ export function StrategicInsights({
           {/* Mots clés (doit apparaître entre Écosystème Concurrentiel et Autorité Sociale & Humaine) */}
           <KeywordModuleSection analysis={analysis} domain={domain} />
 
+          {/* Requêtes LLM à cibler — juste après mots-clés */}
+          {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
+            <LLMTargetQueriesCard 
+              domain={domain} 
+              coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
+              citations={analysis.llm_visibility_raw.citations as any}
+              selfCorrect
+              strategicAnalysis={analysis}
+            />
+          )}
+
           {/* Empreinte Lexicale — avant Autorité Sociale */}
           {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
 
