@@ -350,7 +350,7 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
         <Card className="border-border/50 bg-card/80">
           <CardContent className="pt-4 text-center">
             <Zap className="h-5 w-5 mx-auto text-amber-500 mb-1" />
-            <p className="text-xs text-muted-foreground">Score AEO</p>
+            <p className="text-xs text-muted-foreground">{t.aeoScore}</p>
             <p className="text-2xl font-bold text-foreground">{analysis.aeo_score}<span className="text-xs text-muted-foreground">/100</span></p>
           </CardContent>
         </Card>
