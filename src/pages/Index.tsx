@@ -15,6 +15,7 @@ import { useStructuredData } from '@/hooks/useStructuredData';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link } from 'react-router-dom';
 import { Crown, ArrowRight } from 'lucide-react';
+import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 
 // Lazy load heavy dashboard components
 const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then(m => ({ default: m.ResultsDashboard })));
@@ -539,6 +540,10 @@ const Index = () => {
           onTabChange={handleTabChange}
           currentUrl={currentUrl}
         />
+        {/* Active crawl notification banner */}
+        <div className="max-w-3xl mx-auto px-4 mb-4">
+          <ActiveCrawlBanner />
+        </div>
         <section aria-label="Outils d'analyse">
           <Suspense fallback={<DashboardSkeleton />}>
             {renderDashboard()}

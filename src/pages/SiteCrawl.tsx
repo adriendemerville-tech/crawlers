@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp } from 'lucide-react';
@@ -17,12 +17,14 @@ import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
 
 function getCreditCost(pages: number) {
   if (pages <= 50) return 5;
   if (pages <= 100) return 10;
   if (pages <= 200) return 15;
-  return 30;
+  if (pages <= 350) return 25;
+  return 40;
 }
 
 function getScoreColor(score: number) {
@@ -102,7 +104,7 @@ export default function SiteCrawl() {
       });
   }, [user, crawlResult]);
 
-  // Poll progress while crawling
+  // Poll progress while crawling (every 5s)
   useEffect(() => {
     if (!crawlResult || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
     const interval = setInterval(async () => {
@@ -115,13 +117,41 @@ export default function SiteCrawl() {
         const r = data as any;
         setCrawlResult(r);
         if (r.total_pages > 0) setProgress(Math.round((r.crawled_pages / r.total_pages) * 100));
-        if (r.status === 'analyzing') setPhase('Synthèse IA en cours…');
-        if (r.status === 'completed' || r.status === 'error') {
+        
+        if (r.status === 'queued') setPhase('En file d\'attente…');
+        else if (r.status === 'mapping') setPhase('Mapping du site…');
+        else if (r.status === 'crawling') setPhase(`Analyse en cours : ${r.crawled_pages}/${r.total_pages} pages…`);
+        else if (r.status === 'analyzing') setPhase('Synthèse IA en cours…');
+        
+        if (r.status === 'completed') {
           clearInterval(interval);
+          setIsLoading(false);
+          setPhase('');
           loadPages(r.id);
+          
+          // 🔔 Notification sonore (micro-ondes)
+          try {
+            const audio = new Audio(microwaveDing);
+            audio.volume = 0.6;
+            audio.play().catch(() => {});
+          } catch {}
+          
+          toast.success(`✅ Audit terminé : ${r.crawled_pages} pages analysées !`, {
+            duration: 10000,
+            action: {
+              label: 'Voir le rapport',
+              onClick: () => {},
+            },
+          });
+        }
+        if (r.status === 'error') {
+          clearInterval(interval);
+          setIsLoading(false);
+          setPhase('');
+          toast.error(r.error_message || 'Erreur lors du crawl');
         }
       }
-    }, 3000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [crawlResult]);
 
@@ -170,7 +200,7 @@ export default function SiteCrawl() {
         return;
       }
 
-      // Load full result from DB
+      // Load the queued crawl from DB — polling will track progress
       const { data: crawl } = await supabase
         .from('site_crawls')
         .select('*')
@@ -179,13 +209,12 @@ export default function SiteCrawl() {
 
       if (crawl) {
         setCrawlResult(crawl as any);
-        await loadPages(data.crawlId);
+        setPhase(`${data.totalPages} pages découvertes — audit en file d'attente…`);
       }
 
-      toast.success(`Crawl terminé : ${data.totalPages} pages analysées`);
+      toast.success(`${data.totalPages} pages découvertes — audit lancé en arrière-plan`);
     } catch (err: any) {
       toast.error(err.message || 'Erreur inattendue');
-    } finally {
       setIsLoading(false);
       setPhase('');
     }
@@ -288,7 +317,7 @@ export default function SiteCrawl() {
                       value={[maxPages]}
                       onValueChange={v => setMaxPages(v[0])}
                       min={10}
-                      max={200}
+                      max={500}
                       step={10}
                       disabled={isLoading}
                     />

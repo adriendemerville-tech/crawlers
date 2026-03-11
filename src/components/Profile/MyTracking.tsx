@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -566,6 +567,8 @@ export function MyTracking() {
 
   return (
     <div className="space-y-6">
+      {/* Active crawl progress banner */}
+      <ActiveCrawlBanner />
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
