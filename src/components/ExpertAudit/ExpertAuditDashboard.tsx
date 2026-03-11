@@ -1611,6 +1611,7 @@ export function ExpertAuditDashboard() {
                     domain={result.domain || url}
                     siteName={result.domain || url}
                     onHallucinationData={handleHallucinationCorrectionComplete}
+                    typewriter={strategicProgressiveReveal}
                   />
                   {/* Report button under introduction */}
                   <motion.div 
