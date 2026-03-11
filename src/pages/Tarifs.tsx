@@ -97,7 +97,7 @@ const translations = {
     agencyPrice: '49€',
     agencyPeriod: '/ mois',
     agencyFeatures: [
-      'Rapports illimités',
+      'Audit expert illimité',
       'Correctifs illimités',
       'Crawl multi-pages illimité',
       'Marque Blanche (White Label)',
