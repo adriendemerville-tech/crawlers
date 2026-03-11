@@ -4,7 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, Target, Code, Search, Check, Eye, Lock, RotateCcw } from 'lucide-react';
+import { BarChart3, Target, Code, Search, Check, Eye, Lock, RotateCcw, GitCompareArrows } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -26,6 +27,7 @@ const translations = {
     startCode: 'Démarrer',
     priceRange: '< 6 ... 24 >',
     viewReport: 'Voir rapport',
+    auditCompare: 'Audit Comparé',
   },
   en: {
     step1Title: 'Technical SEO Audit',
@@ -42,6 +44,7 @@ const translations = {
     startCode: 'Start',
     priceRange: '< 6 ... 24 >',
     viewReport: 'View report',
+    auditCompare: 'Compare Audit',
   },
   es: {
     step1Title: 'Auditoría Técnica SEO',
@@ -58,6 +61,7 @@ const translations = {
     startCode: 'Iniciar',
     priceRange: '< 6 ... 24 >',
     viewReport: 'Ver informe',
+    auditCompare: 'Auditoría Comparada',
   },
 };
 
@@ -104,6 +108,7 @@ export function WorkflowCarousel({
 }: WorkflowCarouselProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeStep, setActiveStep] = useState(1);
   const [isCarouselVisible, setIsCarouselVisible] = useState(false);
@@ -306,16 +311,27 @@ export function WorkflowCarousel({
             exit={{ opacity: 0, y: -10 }}
             className="mb-8"
           >
-            <div className="relative max-w-xl mx-auto px-4">
-              <Input
-                type="text"
-                placeholder={t.placeholder}
-                value={url}
-                onChange={(e) => onUrlChange(e.target.value)}
-                className="pl-4 pr-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-sm"
-                disabled={isLoading || isStrategicLoading}
-              />
-              <Search className="absolute right-8 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center gap-6 max-w-3xl mx-auto px-4">
+              <div className="relative flex-1 max-w-xl">
+                <Input
+                  type="text"
+                  placeholder={t.placeholder}
+                  value={url}
+                  onChange={(e) => onUrlChange(e.target.value)}
+                  className="pl-4 pr-12 h-14 text-lg bg-background border-border/60 focus:border-primary/50 shadow-sm"
+                  disabled={isLoading || isStrategicLoading}
+                />
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              </div>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate('/audit-compare')}
+                className="h-14 px-6 border-2 border-violet-500 text-violet-500 bg-transparent hover:bg-violet-500/10 hover:text-violet-400 font-semibold shrink-0 hidden sm:flex items-center gap-2"
+              >
+                <GitCompareArrows className="h-5 w-5" />
+                {t.auditCompare}
+              </Button>
             </div>
             {validationBanner}
           </motion.div>

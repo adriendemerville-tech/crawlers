@@ -17,7 +17,8 @@ import {
   RefreshCw,
   Cpu,
   Zap,
-  Brain
+  Brain,
+  Flame
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -64,6 +65,7 @@ interface TokenUsageStats {
   dataforseoCalls: number;
   openrouterCalls: number;
   browserlessCalls: number;
+  firecrawlCalls: number;
   byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
 }
 
@@ -158,6 +160,7 @@ export function AnalyticsDashboard() {
     dataforseoCalls: 0,
     openrouterCalls: 0,
     browserlessCalls: 0,
+    firecrawlCalls: 0,
     byApiService: {},
   });
 
@@ -298,6 +301,7 @@ export function AnalyticsDashboard() {
       let dataforseoCalls = 0;
       let openrouterCalls = 0;
       let browserlessCalls = 0;
+      let firecrawlCalls = 0;
       
       paidApiEvents.forEach(e => {
         const data = e.event_data as Record<string, unknown> | null;
@@ -311,6 +315,7 @@ export function AnalyticsDashboard() {
           if (service === 'dataforseo') dataforseoCalls++;
           if (service === 'openrouter') openrouterCalls++;
           if (service === 'browserless') browserlessCalls++;
+          if (service === 'firecrawl') firecrawlCalls++;
         }
       });
 
@@ -326,6 +331,7 @@ export function AnalyticsDashboard() {
         dataforseoCalls,
         openrouterCalls,
         browserlessCalls,
+        firecrawlCalls,
         byApiService,
       });
 
@@ -664,6 +670,14 @@ export function AnalyticsDashboard() {
               </p>
               <p className="text-lg font-bold text-teal-600 dark:text-teal-400">
                 {tokenUsage.browserlessCalls.toLocaleString('fr-FR')}
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+              <p className="text-xs text-orange-700 dark:text-orange-400 font-medium flex items-center gap-1">
+                <Flame className="h-3 w-3" /> Firecrawl
+              </p>
+              <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                {tokenUsage.firecrawlCalls.toLocaleString('fr-FR')}
               </p>
             </div>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
