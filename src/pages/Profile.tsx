@@ -182,6 +182,15 @@ export default function Profile() {
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.myReports}</span>
                 </TabsTrigger>
+                <TabsTrigger
+                  value="crawls"
+                  className="flex-1 gap-2"
+                  disabled={!isProUser}
+                >
+                  <Bug className="h-4 w-4 text-purple-500" />
+                  <span className="hidden sm:inline">Crawls</span>
+                  {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
+                </TabsTrigger>
                 <TabsTrigger value="action-plans" className="flex-1 gap-2">
                   <CheckSquare className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.actionPlans}</span>
