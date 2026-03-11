@@ -689,17 +689,17 @@ Deno.serve(async (req) => {
       console.log(`🗑️ Cache invalidated for ${cacheKey}`);
     }
 
-    // Check credits (5 required) — free for admins & subscribers
+    // Check credits (4 required) — free for admins & subscribers
     const { data: profile } = await supabase.from('profiles').select('credits_balance, plan_type, subscription_status').eq('user_id', user.id).single();
     const isProAgency = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
     const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: user.id, _role: 'admin' });
-    const isUnlimited = isProAgency || isAdmin === true;
+    const isUnlimited = isAdmin || isProAgency;
     
     if (!isUnlimited) {
-      if (!profile || profile.credits_balance < 5) {
-        return json({ success: false, error: 'Insufficient credits (5 required)', balance: profile?.credits_balance || 0 }, 402);
+      if (!profile || profile.credits_balance < 4) {
+        return json({ success: false, error: 'Insufficient credits (4 required)', balance: profile?.credits_balance || 0 }, 402);
       }
-      const { data: creditResult } = await supabase.rpc('use_credit', { p_user_id: user.id, p_amount: 5, p_description: 'Audit comparé' });
+      const { data: creditResult } = await supabase.rpc('use_credit', { p_user_id: user.id, p_amount: 4, p_description: 'Audit comparé' });
       if (!creditResult?.success) {
         return json({ success: false, error: creditResult?.error || 'Credit deduction failed' }, 402);
       }
