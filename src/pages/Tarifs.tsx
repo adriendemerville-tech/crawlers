@@ -791,8 +791,8 @@ export default function Tarifs() {
                         const Icon = agencyIcons[index];
                         return (
                           <li key={index} className="flex items-center gap-3 p-2.5 rounded-lg bg-card/50 border border-violet-500/10">
-                            <div className="p-1.5 rounded-md bg-violet-500/10">
-                              <Icon className="h-4 w-4 text-violet-500" />
+                            <div className={`p-1.5 rounded-md ${index === 0 ? 'bg-amber-500/10' : 'bg-violet-500/10'}`}>
+                              <Icon className={`h-4 w-4 ${index === 0 ? 'text-amber-500' : 'text-violet-500'}`} />
                             </div>
                             <span className={`text-sm font-medium ${index === 0 ? 'text-amber-500' : ''}`}>{feature}</span>
                           </li>
