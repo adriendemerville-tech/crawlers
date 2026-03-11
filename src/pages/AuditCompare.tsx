@@ -1130,7 +1130,7 @@ const AuditCompare = () => {
             <Badge variant="outline" className="mb-3 text-xs border-violet-500/30 text-violet-400">
               <Swords className="h-3 w-3 mr-1" /> {t.badge}
             </Badge>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-2">
               {t.h1}
             </h1>
             <p className="text-muted-foreground text-sm max-w-lg mx-auto">
