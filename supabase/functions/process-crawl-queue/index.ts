@@ -269,6 +269,11 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+  // ── Watchdog: force graceful return before platform timeout ──
+  const WATCHDOG_MS = 120_000; // 2 minutes (platform limit ~150s)
+  const startTime = Date.now();
+  const isTimeUp = () => Date.now() - startTime > WATCHDOG_MS;
+
   try {
     const { data: jobs, error: fetchError } = await supabase
       .from('crawl_jobs')
@@ -288,8 +293,9 @@ Deno.serve(async (req) => {
     let globalPagesProcessed = 0;
 
     for (const job of jobs) {
-      if (globalPagesProcessed >= MAX_GLOBAL_CONCURRENT) {
-        console.log(`[Worker] Global limit reached (${MAX_GLOBAL_CONCURRENT}), stopping`);
+      if (globalPagesProcessed >= MAX_GLOBAL_CONCURRENT || isTimeUp()) {
+        if (isTimeUp()) console.log(`[Worker] ⏱️ Watchdog triggered after ${Math.round((Date.now() - startTime) / 1000)}s — stopping gracefully`);
+        else console.log(`[Worker] Global limit reached (${MAX_GLOBAL_CONCURRENT}), stopping`);
         break;
       }
 
@@ -317,7 +323,6 @@ Deno.serve(async (req) => {
       let firstPageResult: PageAnalysis | null = null;
 
       if (alreadyProcessed === 0) {
-        // First batch: probe the first URL to detect SPA
         const probe = await probeSPAStatus(remaining[0], job.domain, firecrawlKey, renderingKey);
         useBrowserless = probe.isSPA;
         firstPageResult = probe.firstPageResult;
@@ -327,8 +332,19 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Check watchdog after SPA probe
+      if (isTimeUp()) {
+        console.log(`[Worker] ⏱️ Watchdog triggered after SPA probe — saving progress`);
+        if (firstPageResult) {
+          await supabase.from('crawl_pages').insert([{ crawl_id: job.crawl_id, ...firstPageResult }]);
+          await supabase.from('crawl_jobs').update({ processed_count: alreadyProcessed + 1 }).eq('id', job.id);
+          await supabase.from('site_crawls').update({ crawled_pages: alreadyProcessed + 1 }).eq('id', job.crawl_id);
+          globalPagesProcessed += 1;
+        }
+        break;
+      }
+
       const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
-      // If first page was already probed, skip it in the batch
       const batchStart = (alreadyProcessed === 0 && firstPageResult) ? 1 : 0;
       const batchSize = Math.min(remaining.length - batchStart, availableSlots - (firstPageResult ? 1 : 0), 20);
       const batch = remaining.slice(batchStart, batchStart + batchSize);
@@ -343,7 +359,6 @@ Deno.serve(async (req) => {
       const results = await Promise.all(scrapePromises);
       const validResults = results.filter(Boolean) as PageAnalysis[];
 
-      // Include first page result if it was probed
       if (firstPageResult) {
         validResults.unshift(firstPageResult);
       }
@@ -368,10 +383,12 @@ Deno.serve(async (req) => {
       }
     }
 
+    const elapsed = Math.round((Date.now() - startTime) / 1000);
     return new Response(JSON.stringify({
       success: true,
       processed: globalPagesProcessed,
       jobs: jobs.length,
+      elapsed_seconds: elapsed,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
