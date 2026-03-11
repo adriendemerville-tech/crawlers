@@ -1017,7 +1017,7 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
 
 const AuditCompare = () => {
   const { user } = useAuth();
-  const { refreshBalance } = useCredits();
+  const { balance, refreshBalance } = useCredits();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
