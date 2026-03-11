@@ -665,7 +665,7 @@ async function fetchKeywordData(
       console.log('🔄 Phase 3: broader single-word expansion...');
       const singleWords = seedKeywords
         .flatMap(s => s.split(/\s+/))
-        .filter(w => w.length >= 4)
+        .filter(w => w.length >= 4 && !STOP_WORDS.has(w.toLowerCase()))
         .slice(0, 5);
       
       if (singleWords.length > 0) {
