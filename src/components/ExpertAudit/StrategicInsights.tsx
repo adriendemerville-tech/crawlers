@@ -193,20 +193,7 @@ export function StrategicInsights({
             />
           )}
 
-          {/* Empreinte Lexicale — avant Autorité Sociale */}
-          {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
-
-          {/* Social Signals & Human Authority */}
-          {analysis.social_signals && (
-            <SocialSignalsCard signals={analysis.social_signals} />
-          )}
-
-          {/* Market Intelligence & Psychology */}
-          {analysis.market_intelligence && (
-            <MarketIntelligenceCard intelligence={analysis.market_intelligence} />
-          )}
-
-          {/* Brand Authority (if available) */}
+          {/* Brand Authority (Brand DNA) — entre Requêtes LLM et Visibilité LLM */}
           {analysis.brand_authority && (
           <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
               <CardHeader className="pb-3">
@@ -245,8 +232,7 @@ export function StrategicInsights({
             </Card>
           )}
 
-
-           {/* LLM Visibility Raw Data (from check-llm) */}
+           {/* LLM Visibility — sous Brand DNA */}
            {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
               <>
                 <LLMVisibilityCard data={analysis.llm_visibility_raw} />
@@ -260,6 +246,9 @@ export function StrategicInsights({
                 <PriorityContentCard domain={domain} />
               </>
             )}
+
+          {/* Empreinte Lexicale — après Visibilité LLM */}
+          {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
 
           {/* Remaining Strategic AI Metrics */}
           {analysis.expertise_sentiment && <ExpertiseSentimentCard data={analysis.expertise_sentiment} />}

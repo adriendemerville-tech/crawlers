@@ -1065,6 +1065,22 @@ export function ExpertAuditDashboard() {
         }
       }
     } finally {
+      // Stop music, wait 3s, play microwave ding, then show results
+      await new Promise<void>((resolve) => {
+        stopMusicRef.current?.();
+        setTimeout(async () => {
+          try {
+            const { default: dingUrl } = await import('@/assets/sounds/microwave-ding.mp3');
+            const audio = new Audio(dingUrl);
+            audio.volume = 1.0;
+            audio.addEventListener('ended', () => resolve());
+            setTimeout(() => resolve(), 3000);
+            audio.play().catch(() => resolve());
+          } catch {
+            resolve();
+          }
+        }, 3000);
+      });
       setIsStrategicLoading(false);
       // Safety net: if no result is set after all attempts, restore technical results
       // This prevents the "black screen" where nothing renders
