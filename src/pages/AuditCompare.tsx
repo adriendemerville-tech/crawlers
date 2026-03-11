@@ -1523,6 +1523,7 @@ const AuditCompare = () => {
       </section>
 
       <Footer />
+      <CreditTopUpModal open={showTopUp} onOpenChange={setShowTopUp} />
     </div>
   );
 };
