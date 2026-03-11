@@ -53,6 +53,8 @@ interface AnalyticsStats {
   expertAuditStep2: number;
   expertAuditStep3: number;
   errorCount: number;
+  auditCompareLaunched: number;
+  multiPageCrawls: number;
 }
 
 interface TokenUsageStats {
