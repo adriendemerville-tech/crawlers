@@ -51,6 +51,7 @@ const AnalyseSiteWebGratuit = lazy(() => import("./pages/AnalyseSiteWebGratuit")
 const GenerativeEngineOptimization = lazy(() => import("./pages/GenerativeEngineOptimization"));
 const GuideAuditSeo = lazy(() => import("./pages/GuideAuditSeo"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const SiteCrawl = lazy(() => import("./pages/SiteCrawl"));
 
 // Loading fallback
 const PageLoader = () => (
