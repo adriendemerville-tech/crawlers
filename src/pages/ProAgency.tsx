@@ -49,6 +49,11 @@ const translations = {
         description: 'Générez des scripts correctifs personnalisés pour chaque client, sans consommer de crédits.',
       },
       {
+        icon: 'Globe',
+        title: 'Crawl multi-pages illimité',
+        description: 'Analysez l\'intégralité d\'un site (10 à 200 pages) : structure, score SEO/200 par page, liens cassés, synthèse IA globale.',
+      },
+      {
         icon: 'Palette',
         title: 'Marque blanche',
         description: 'Personnalisez vos rapports avec votre logo, vos couleurs et vos coordonnées. Vos clients ne voient que votre marque.',
