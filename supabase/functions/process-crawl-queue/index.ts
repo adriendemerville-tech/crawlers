@@ -202,6 +202,7 @@ async function scrapePage(
       const data = await res.json();
       html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
       statusCode = data?.data?.metadata?.statusCode || 200;
+      await trackPaidApiCall('process-crawl-queue', 'firecrawl', '/scrape', pageUrl).catch(() => {});
       if (!html) return null;
     }
 
