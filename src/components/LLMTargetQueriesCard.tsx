@@ -11,7 +11,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Search, Copy, Check, Sparkles, AlertTriangle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Search, Copy, Check, Sparkles, AlertTriangle, BarChart3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,15 +38,22 @@ interface GeneratedData {
   coherenceCheck?: CoherenceCheck;
 }
 
+interface LLMVolumeBreakdown {
+  keyword: string;
+  intent: string;
+  penetration_rate: number;
+  global_volume: number;
+  total_llm_volume: number;
+  breakdown: Record<string, number>;
+}
+
 interface LLMTargetQueriesCardProps {
   domain: string;
   coreValueSummary?: string;
   citations?: LLMCitation[];
   compact?: boolean;
   onCorrection?: (correction: string) => void;
-  /** If true, the card handles correction internally by re-generating queries with the correction context */
   selfCorrect?: boolean;
-  /** Strategic analysis data for cross-validation coherence check */
   strategicAnalysis?: any;
 }
 
@@ -66,6 +74,9 @@ const translations = {
     correctionPlaceholder: 'Ex : Mon activité n\'est pas "agence web" mais "éditeur SaaS de facturation"',
     correctionButton: 'Corriger',
     correcting: 'Correction en cours...',
+    llmVolumes: 'Volumes IA estimés / mois',
+    totalLlm: 'Total IA',
+    perMonth: '/mois',
   },
   en: {
     title: 'Target Queries',
@@ -83,6 +94,9 @@ const translations = {
     correctionPlaceholder: 'E.g.: My business is not "web agency" but "SaaS billing software"',
     correctionButton: 'Correct',
     correcting: 'Correcting...',
+    llmVolumes: 'Estimated AI volumes / month',
+    totalLlm: 'Total AI',
+    perMonth: '/mo',
   },
   es: {
     title: 'Consultas objetivo',
@@ -100,8 +114,59 @@ const translations = {
     correctionPlaceholder: 'Ej: Mi actividad no es "agencia web" sino "editor SaaS de facturación"',
     correctionButton: 'Corregir',
     correcting: 'Corrigiendo...',
+    llmVolumes: 'Volúmenes IA estimados / mes',
+    totalLlm: 'Total IA',
+    perMonth: '/mes',
   },
 };
+
+// LLM brand colors for volume bars
+const LLM_COLORS: Record<string, string> = {
+  ChatGPT: 'bg-emerald-500',
+  Perplexity: 'bg-blue-500',
+  Gemini: 'bg-indigo-500',
+  Google_AI: 'bg-amber-500',
+  Grok: 'bg-rose-500',
+};
+
+const LLM_LABELS: Record<string, string> = {
+  ChatGPT: 'ChatGPT',
+  Perplexity: 'Perplexity',
+  Gemini: 'Gemini',
+  Google_AI: 'Google AI (SGE)',
+  Grok: 'Grok',
+};
+
+function VolumeBar({ volumes }: { volumes: LLMVolumeBreakdown }) {
+  const maxVal = Math.max(...Object.values(volumes.breakdown), 1);
+  const sorted = Object.entries(volumes.breakdown).sort(([, a], [, b]) => b - a);
+
+  return (
+    <TooltipProvider>
+      <div className="flex items-center gap-1 mt-1.5">
+        {sorted.map(([llm, vol]) => {
+          const width = Math.max(8, (vol / maxVal) * 100);
+          return (
+            <Tooltip key={llm}>
+              <TooltipTrigger asChild>
+                <div
+                  className={`h-3 rounded-sm ${LLM_COLORS[llm] || 'bg-muted-foreground'} opacity-80 hover:opacity-100 transition-opacity cursor-help`}
+                  style={{ width: `${width}%`, minWidth: vol > 0 ? '6px' : '2px' }}
+                />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                <span className="font-medium">{LLM_LABELS[llm] || llm}</span>: ~{vol.toLocaleString()}
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+        <span className="text-[10px] text-muted-foreground ml-1 shrink-0">
+          ~{volumes.total_llm_volume.toLocaleString()}
+        </span>
+      </div>
+    </TooltipProvider>
+  );
+}
 
 export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, compact = false, onCorrection, selfCorrect = false, strategicAnalysis }: LLMTargetQueriesCardProps) {
   const { language } = useLanguage();
@@ -114,6 +179,28 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
   const [correctionText, setCorrectionText] = useState('');
   const [isCorrecting, setIsCorrecting] = useState(false);
   const [correctionContext, setCorrectionContext] = useState('');
+  const [volumes, setVolumes] = useState<Record<number, LLMVolumeBreakdown>>({});
+
+  // Estimate a global search volume from strategic analysis keywords or fallback
+  const estimateVolume = (query: string): number => {
+    if (strategicAnalysis?.keyword_positioning?.main_keywords) {
+      const keywords = strategicAnalysis.keyword_positioning.main_keywords;
+      // Try to find a matching keyword with volume data
+      const queryLower = query.toLowerCase();
+      for (const kw of keywords) {
+        if (kw.keyword && kw.volume && queryLower.includes(kw.keyword.toLowerCase())) {
+          return kw.volume;
+        }
+      }
+      // Use average volume of known keywords as fallback
+      const vols = keywords.filter((k: any) => k.volume > 0).map((k: any) => k.volume);
+      if (vols.length > 0) {
+        return Math.round(vols.reduce((a: number, b: number) => a + b, 0) / vols.length);
+      }
+    }
+    // Default fallback estimate
+    return 500;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +208,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
     const generate = async () => {
       setIsLoading(true);
       setError(false);
+      setVolumes({});
 
       try {
         const summaryWithCorrection = correctionContext
@@ -149,6 +237,27 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
           setError(true);
         } else {
           setData(result.data);
+
+          // Fetch LLM volume breakdown for each query (batch)
+          if (result.data?.queries?.length) {
+            const batchKeywords = result.data.queries.map((q: TargetQuery) => ({
+              keyword: q.query,
+              global_volume: estimateVolume(q.query),
+            }));
+
+            supabase.functions.invoke('calculate-llm-volumes', {
+              body: { keywords: batchKeywords },
+            }).then(({ data: volResult }) => {
+              if (cancelled || !volResult?.success) return;
+              const volMap: Record<number, LLMVolumeBreakdown> = {};
+              (volResult.results || []).forEach((v: LLMVolumeBreakdown, i: number) => {
+                volMap[i] = v;
+              });
+              setVolumes(volMap);
+            }).catch(err => {
+              console.warn('Volume calculation failed (non-blocking):', err);
+            });
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -175,11 +284,9 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
     setCorrectionModalOpen(false);
     
     if (selfCorrect) {
-      // Self-contained: re-generate queries with correction context
       setCorrectionContext(correctionText.trim());
       setCorrectionText('');
     } else if (onCorrection) {
-      // Delegate to parent (homepage flow)
       setIsCorrecting(true);
       onCorrection(correctionText.trim());
       setCorrectionText('');
@@ -215,6 +322,8 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
 
   if (!data?.queries?.length) return null;
 
+  const hasVolumes = Object.keys(volumes).length > 0;
+
   return (
     <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
       <CardHeader className={compact ? 'pb-2' : 'pb-3'}>
@@ -225,7 +334,6 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
         {!compact && (
           <p className="text-sm text-muted-foreground">{t.subtitle}</p>
         )}
-        {/* Core business & market leader badges */}
         {(data.coreBusiness || data.marketLeader) && (
           <div className="flex flex-wrap gap-2 mt-2">
             {data.coreBusiness && (
@@ -239,6 +347,20 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
                 {t.marketLeader} : {data.marketLeader}
               </Badge>
             )}
+          </div>
+        )}
+        {hasVolumes && (
+          <div className="flex items-center gap-1.5 mt-2">
+            <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[11px] text-muted-foreground font-medium">{t.llmVolumes}</span>
+            <div className="flex items-center gap-1.5 ml-auto flex-wrap">
+              {Object.entries(LLM_COLORS).map(([llm, color]) => (
+                <span key={llm} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <span className={`inline-block h-2 w-2 rounded-sm ${color}`} />
+                  {LLM_LABELS[llm] || llm}
+                </span>
+              ))}
+            </div>
           </div>
         )}
       </CardHeader>
@@ -278,13 +400,19 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
                   >
                     {t[q.priority]}
                   </Badge>
+                  {volumes[i] && (
+                    <Badge variant="outline" className="text-[10px] border-accent/30 text-accent-foreground gap-1">
+                      <BarChart3 className="h-2.5 w-2.5" />
+                      ~{volumes[i].total_llm_volume.toLocaleString()} {t.totalLlm}{t.perMonth}
+                    </Badge>
+                  )}
                 </div>
+                {volumes[i] && <VolumeBar volumes={volumes[i]} />}
               </div>
             </div>
           </div>
         ))}
 
-        {/* Report hallucination button */}
         {showCorrectionButton && (
           <div className="pt-2 flex justify-end">
             <Button
@@ -301,7 +429,6 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
         <MethodologyPopover variant="target_queries" />
       </CardContent>
 
-      {/* Correction Modal */}
       <Dialog open={correctionModalOpen} onOpenChange={setCorrectionModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
