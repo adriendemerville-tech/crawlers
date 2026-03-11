@@ -870,23 +870,23 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
       {cross.differentiators && cross.differentiators.length > 0 && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <Swords className="h-4 w-4 text-primary" /> {t.differentiators}
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+              <Swords className="h-5 w-5 text-primary" /> {t.differentiators}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2.5">
             {cross.differentiators.map((d, i) => (
-              <div key={i} className={`p-2.5 rounded-lg border ${impactColors[d.impact] || impactColors.mineur}`}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-foreground">{d.dimension}</span>
-                  <Badge variant="outline" className="text-[9px] px-1.5">{d.impact}</Badge>
+              <div key={i} className={`p-3 rounded-lg border ${impactColors[d.impact] || impactColors.mineur}`}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-sm font-semibold text-foreground">{d.dimension}</span>
+                  <Badge variant="outline" className="text-[10px] px-2">{d.impact}</Badge>
                 </div>
-                <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center text-[11px]">
-                  <div className={`text-center p-1 rounded ${d.advantage === site1Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center text-sm">
+                  <div className={`text-center p-1.5 rounded ${d.advantage === site1Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-foreground/60'}`}>
                     {d.site1_value}
                   </div>
-                  <span className="text-muted-foreground text-[9px]">vs</span>
-                  <div className={`text-center p-1 rounded ${d.advantage === site2Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                  <span className="text-foreground/40 text-xs">vs</span>
+                  <div className={`text-center p-1.5 rounded ${d.advantage === site2Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-foreground/60'}`}>
                     {d.site2_value}
                   </div>
                 </div>
