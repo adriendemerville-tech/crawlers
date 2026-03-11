@@ -116,6 +116,7 @@ const App = () => (
                           <Route path="/analyse-site-web-gratuit" element={<AnalyseSiteWebGratuit />} />
                           <Route path="/generative-engine-optimization" element={<GenerativeEngineOptimization />} />
                           <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
+                          <Route path="/site-crawl" element={<SiteCrawl />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
