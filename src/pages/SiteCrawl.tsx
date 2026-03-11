@@ -21,6 +21,150 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { toast } from 'sonner';
 import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
 
+const crawlI18n = {
+  fr: {
+    pageTitle: 'Crawl Multi-Pages SEO — Analysez votre site complet | Crawlers.fr',
+    pageDesc: 'Analysez toutes les pages de votre site en un clic. Score SEO/200 par page, détection d\'erreurs, synthèse IA globale.',
+    badge: 'Crawl Multi-Pages',
+    h1_1: 'Auditez votre site',
+    h1_2: 'page par page',
+    subtitle: 'Crawl complet avec score SEO/200 par page, détection d\'erreurs techniques et synthèse IA globale.',
+    whyTitle: 'Pourquoi auditer plusieurs pages de votre site ?',
+    whyText: 'Un audit SEO mono-page ne révèle qu\'une infime partie de vos problèmes techniques. En analysant l\'ensemble de vos URLs, vous identifiez les balises manquantes, les erreurs de maillage interne, les pages orphelines et les contenus dupliqués qui freinent votre indexation. Le crawl multi-pages détecte chaque point de friction pour que Google et les moteurs IA comprennent parfaitement la structure de votre site.',
+    scoreTitle: 'Un score SEO/200 par page, une synthèse IA globale',
+    scoreText: 'Chaque page crawlée reçoit un score sur 200 points couvrant les critères techniques, sémantiques et structurels. L\'intelligence artificielle consolide ensuite ces résultats en une synthèse exploitable : recommandations prioritaires, estimation du gain de trafic et identification des pages à corriger en premier. Vous obtenez une feuille de route concrète, pas seulement un diagnostic.',
+    placeholder: 'https://votre-site.fr',
+    launchBtn: 'Lancer le crawl',
+    crawling: 'Crawl en cours…',
+    pagesToAnalyze: 'Pages à analyser',
+    unlimited: 'Illimité',
+    credits: 'crédits',
+    insufficientCredits: 'Crédits insuffisants. Requis :',
+    available: 'disponibles :',
+    mapping: 'Mapping du site…',
+    queued: 'En file d\'attente…',
+    analyzing: 'Synthèse IA en cours…',
+    crawlingProgress: 'Analyse en cours :',
+    pages: 'pages',
+    pagesDiscovered: 'pages découvertes — audit lancé en arrière-plan',
+    auditQueued: 'pages découvertes — audit en file d\'attente…',
+    auditDone: 'Audit terminé :',
+    pagesAnalyzed: 'pages analysées !',
+    viewReport: 'Voir le rapport',
+    pagesAnalyzedLabel: 'Pages analysées',
+    avgScore: 'Score moyen',
+    perfectPages: 'Pages parfaites',
+    totalErrors: 'Erreurs totales',
+    aiSummary: 'Synthèse IA',
+    priorityRecs: 'Recommandations prioritaires',
+    pagesAffected: 'pages concernées',
+    topErrors: 'Erreurs les plus fréquentes',
+    crawledPages: 'Pages crawlées',
+    sortScoreAsc: 'Score ↑ (pires d\'abord)',
+    sortScoreDesc: 'Score ↓ (meilleurs)',
+    sortPath: 'Chemin A→Z',
+    noTitle: '(sans titre)',
+    words: 'Mots:',
+    imgsNoAlt: 'Imgs sans alt:',
+    previousCrawls: 'Crawls précédents',
+    errorCrawl: 'Erreur lors du crawl',
+  },
+  en: {
+    pageTitle: 'Multi-Page SEO Crawl — Analyze your full site | Crawlers.fr',
+    pageDesc: 'Analyze all pages of your site in one click. SEO score/200 per page, error detection, global AI synthesis.',
+    badge: 'Multi-Page Crawl',
+    h1_1: 'Audit your site',
+    h1_2: 'page by page',
+    subtitle: 'Full crawl with SEO score/200 per page, technical error detection and global AI synthesis.',
+    whyTitle: 'Why audit multiple pages of your site?',
+    whyText: 'A single-page SEO audit only reveals a tiny part of your technical issues. By analyzing all your URLs, you identify missing tags, internal linking errors, orphan pages and duplicate content that hinder your indexing. Multi-page crawling detects every friction point so Google and AI engines perfectly understand your site structure.',
+    scoreTitle: 'A SEO/200 score per page, a global AI synthesis',
+    scoreText: 'Each crawled page receives a score out of 200 points covering technical, semantic and structural criteria. Artificial intelligence then consolidates these results into an actionable synthesis: priority recommendations, traffic gain estimation and identification of pages to fix first. You get a concrete roadmap, not just a diagnosis.',
+    placeholder: 'https://your-site.com',
+    launchBtn: 'Launch crawl',
+    crawling: 'Crawling…',
+    pagesToAnalyze: 'Pages to analyze',
+    unlimited: 'Unlimited',
+    credits: 'credits',
+    insufficientCredits: 'Insufficient credits. Required:',
+    available: 'available:',
+    mapping: 'Mapping site…',
+    queued: 'Queued…',
+    analyzing: 'AI synthesis in progress…',
+    crawlingProgress: 'Analyzing:',
+    pages: 'pages',
+    pagesDiscovered: 'pages discovered — audit launched in background',
+    auditQueued: 'pages discovered — audit queued…',
+    auditDone: 'Audit complete:',
+    pagesAnalyzed: 'pages analyzed!',
+    viewReport: 'View report',
+    pagesAnalyzedLabel: 'Pages analyzed',
+    avgScore: 'Average score',
+    perfectPages: 'Perfect pages',
+    totalErrors: 'Total errors',
+    aiSummary: 'AI Synthesis',
+    priorityRecs: 'Priority recommendations',
+    pagesAffected: 'pages affected',
+    topErrors: 'Most frequent errors',
+    crawledPages: 'Crawled pages',
+    sortScoreAsc: 'Score ↑ (worst first)',
+    sortScoreDesc: 'Score ↓ (best first)',
+    sortPath: 'Path A→Z',
+    noTitle: '(no title)',
+    words: 'Words:',
+    imgsNoAlt: 'Imgs no alt:',
+    previousCrawls: 'Previous crawls',
+    errorCrawl: 'Crawl error',
+  },
+  es: {
+    pageTitle: 'Crawl Multi-Páginas SEO — Analice su sitio completo | Crawlers.fr',
+    pageDesc: 'Analice todas las páginas de su sitio en un clic. Puntuación SEO/200 por página, detección de errores, síntesis IA global.',
+    badge: 'Crawl Multi-Páginas',
+    h1_1: 'Audite su sitio',
+    h1_2: 'página por página',
+    subtitle: 'Crawl completo con puntuación SEO/200 por página, detección de errores técnicos y síntesis IA global.',
+    whyTitle: '¿Por qué auditar varias páginas de su sitio?',
+    whyText: 'Una auditoría SEO de una sola página solo revela una ínfima parte de sus problemas técnicos. Al analizar todas sus URLs, identifica las etiquetas faltantes, los errores de enlazado interno, las páginas huérfanas y el contenido duplicado que frena su indexación. El crawl multi-páginas detecta cada punto de fricción para que Google y los motores IA comprendan perfectamente la estructura de su sitio.',
+    scoreTitle: 'Una puntuación SEO/200 por página, una síntesis IA global',
+    scoreText: 'Cada página rastreada recibe una puntuación sobre 200 puntos que cubre criterios técnicos, semánticos y estructurales. La inteligencia artificial consolida estos resultados en una síntesis accionable: recomendaciones prioritarias, estimación de ganancia de tráfico e identificación de las páginas a corregir primero. Obtiene una hoja de ruta concreta, no solo un diagnóstico.',
+    placeholder: 'https://su-sitio.es',
+    launchBtn: 'Lanzar crawl',
+    crawling: 'Crawl en curso…',
+    pagesToAnalyze: 'Páginas a analizar',
+    unlimited: 'Ilimitado',
+    credits: 'créditos',
+    insufficientCredits: 'Créditos insuficientes. Requeridos:',
+    available: 'disponibles:',
+    mapping: 'Mapeando sitio…',
+    queued: 'En cola…',
+    analyzing: 'Síntesis IA en curso…',
+    crawlingProgress: 'Analizando:',
+    pages: 'páginas',
+    pagesDiscovered: 'páginas descubiertas — auditoría lanzada en segundo plano',
+    auditQueued: 'páginas descubiertas — auditoría en cola…',
+    auditDone: 'Auditoría completada:',
+    pagesAnalyzed: '¡páginas analizadas!',
+    viewReport: 'Ver informe',
+    pagesAnalyzedLabel: 'Páginas analizadas',
+    avgScore: 'Puntuación media',
+    perfectPages: 'Páginas perfectas',
+    totalErrors: 'Errores totales',
+    aiSummary: 'Síntesis IA',
+    priorityRecs: 'Recomendaciones prioritarias',
+    pagesAffected: 'páginas afectadas',
+    topErrors: 'Errores más frecuentes',
+    crawledPages: 'Páginas rastreadas',
+    sortScoreAsc: 'Puntuación ↑ (peores primero)',
+    sortScoreDesc: 'Puntuación ↓ (mejores)',
+    sortPath: 'Ruta A→Z',
+    noTitle: '(sin título)',
+    words: 'Palabras:',
+    imgsNoAlt: 'Imgs sin alt:',
+    previousCrawls: 'Crawls anteriores',
+    errorCrawl: 'Error de crawl',
+  },
+};
+
 function getCreditCost(pages: number) {
   if (pages <= 50) return 5;
   if (pages <= 100) return 10;
@@ -78,7 +222,7 @@ export default function SiteCrawl() {
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
   useCanonicalHreflang('/site-crawl');
-
+  const t = crawlI18n[language];
   const [url, setUrl] = useState('');
   const [maxPages, setMaxPages] = useState(50);
   const [isLoading, setIsLoading] = useState(false);
@@ -273,8 +417,8 @@ export default function SiteCrawl() {
   return (
     <>
       <Helmet>
-        <title>Crawl Multi-Pages SEO — Analysez votre site complet | Crawlers.fr</title>
-        <meta name="description" content="Analysez toutes les pages de votre site en un clic. Score SEO/200 par page, détection d'erreurs, synthèse IA globale." />
+        <title>{t.pageTitle}</title>
+        <meta name="description" content={t.pageDesc} />
       </Helmet>
       <Header />
 
@@ -285,13 +429,13 @@ export default function SiteCrawl() {
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
               <Bug className="w-4 h-4" />
-              Crawl Multi-Pages
+              {t.badge}
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
-              Auditez votre site <span className="text-primary">page par page</span>
+              {t.h1_1} <span className="text-primary">{t.h1_2}</span>
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Crawl complet avec score SEO/200 par page, détection d'erreurs techniques et synthèse IA globale.
+              {t.subtitle}
             </p>
           </div>
 
@@ -299,18 +443,18 @@ export default function SiteCrawl() {
           <div className="mb-10 max-w-3xl mx-auto space-y-6">
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
-                Pourquoi auditer plusieurs pages de votre site ?
+                {t.whyTitle}
               </h2>
               <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                Un audit SEO mono-page ne révèle qu'une infime partie de vos problèmes techniques. En analysant l'ensemble de vos URLs, vous identifiez les balises manquantes, les erreurs de maillage interne, les pages orphelines et les contenus dupliqués qui freinent votre indexation. Le crawl multi-pages détecte chaque point de friction pour que Google et les moteurs IA comprennent parfaitement la structure de votre site.
+                {t.whyText}
               </p>
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">
-                Un score SEO/200 par page, une synthèse IA globale
+                {t.scoreTitle}
               </h3>
               <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                Chaque page crawlée reçoit un score sur 200 points couvrant les critères techniques, sémantiques et structurels. L'intelligence artificielle consolide ensuite ces résultats en une synthèse exploitable : recommandations prioritaires, estimation du gain de trafic et identification des pages à corriger en premier. Vous obtenez une feuille de route concrète, pas seulement un diagnostic.
+                {t.scoreText}
               </p>
             </div>
           </div>
@@ -325,22 +469,22 @@ export default function SiteCrawl() {
                     <Input
                       value={url}
                       onChange={e => setUrl(e.target.value)}
-                      placeholder="https://votre-site.fr"
-                      className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500"
+                     placeholder={t.placeholder}
+                     className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500"
                       required
                       disabled={isLoading}
                     />
                   </div>
                   <Button type="submit" disabled={isLoading || !url} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white">
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                    {isLoading ? phase || 'Crawl en cours…' : 'Lancer le crawl'}
+                    {isLoading ? phase || t.crawling : t.launchBtn}
                   </Button>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div className="flex-1 space-y-2">
                     <label className="text-sm text-muted-foreground flex items-center justify-between">
-                      <span>Pages à analyser</span>
+                     <span>{t.pagesToAnalyze}</span>
                       <span className="font-semibold text-foreground">{maxPages}</span>
                     </label>
                     <Slider
@@ -357,12 +501,12 @@ export default function SiteCrawl() {
                     {isUnlimited ? (
                       <Badge className="bg-violet-600 text-white gap-1">
                         <span className="text-base">∞</span>
-                        Illimité
+                        {t.unlimited}
                       </Badge>
                     ) : (
                       <>
                         <CreditCoin size="md" />
-                        <span className="text-sm font-semibold">{creditCost} crédits</span>
+                        <span className="text-sm font-semibold">{creditCost} {t.credits}</span>
                       </>
                     )}
                   </div>
@@ -390,7 +534,7 @@ export default function SiteCrawl() {
                 <Card className="border">
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-foreground">{crawlResult.crawled_pages}</div>
-                    <div className="text-xs text-muted-foreground mt-1">Pages analysées</div>
+                    <div className="text-xs text-muted-foreground mt-1">{t.pagesAnalyzedLabel}</div>
                   </CardContent>
                 </Card>
                 <Card className={`border ${getScoreBg(crawlResult.avg_score || 0)}`}>
@@ -398,7 +542,7 @@ export default function SiteCrawl() {
                     <div className={`text-2xl font-bold ${getScoreColor(crawlResult.avg_score || 0)}`}>
                       {crawlResult.avg_score}/200
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">Score moyen</div>
+                    <div className="text-xs text-muted-foreground mt-1">{t.avgScore}</div>
                   </CardContent>
                 </Card>
                 <Card className="border">
@@ -406,7 +550,7 @@ export default function SiteCrawl() {
                     <div className="text-2xl font-bold text-foreground">
                       {pages.filter(p => (p.issues || []).length === 0).length}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">Pages parfaites</div>
+                    <div className="text-xs text-muted-foreground mt-1">{t.perfectPages}</div>
                   </CardContent>
                 </Card>
                 <Card className="border border-destructive/20 bg-destructive/5">
@@ -414,7 +558,7 @@ export default function SiteCrawl() {
                     <div className="text-2xl font-bold text-destructive">
                       {Object.values(issueStats).reduce((s, v) => s + v, 0)}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">Erreurs totales</div>
+                    <div className="text-xs text-muted-foreground mt-1">{t.totalErrors}</div>
                   </CardContent>
                 </Card>
               </div>
@@ -425,7 +569,7 @@ export default function SiteCrawl() {
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <Sparkles className="w-5 h-5 text-primary" />
-                      Synthèse IA
+                      {t.aiSummary}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -433,7 +577,7 @@ export default function SiteCrawl() {
 
                     {crawlResult.ai_recommendations?.length > 0 && (
                       <div className="mt-4 space-y-3">
-                        <h4 className="text-sm font-semibold text-foreground">Recommandations prioritaires</h4>
+                        <h4 className="text-sm font-semibold text-foreground">{t.priorityRecs}</h4>
                         {(crawlResult.ai_recommendations as any[]).map((rec: any, i: number) => (
                           <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                             <Badge variant={rec.priority === 'critical' ? 'destructive' : rec.priority === 'high' ? 'default' : 'secondary'} className="shrink-0 mt-0.5">
@@ -444,7 +588,7 @@ export default function SiteCrawl() {
                               <div className="text-xs text-muted-foreground mt-0.5">{rec.description}</div>
                               {rec.affected_pages && (
                                 <div className="text-xs text-muted-foreground mt-1">
-                                  📄 {rec.affected_pages} pages concernées
+                                  📄 {rec.affected_pages} {t.pagesAffected}
                                 </div>
                               )}
                             </div>
@@ -464,7 +608,7 @@ export default function SiteCrawl() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <AlertTriangle className="w-5 h-5 text-warning" />
-                      Erreurs les plus fréquentes
+                      {t.topErrors}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -489,16 +633,16 @@ export default function SiteCrawl() {
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <FileText className="w-5 h-5 text-muted-foreground" />
-                      Pages crawlées ({pages.length})
+                      {t.crawledPages} ({pages.length})
                     </CardTitle>
                     <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
                       <SelectTrigger className="w-44">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="score_asc">Score ↑ (pires d'abord)</SelectItem>
-                        <SelectItem value="score_desc">Score ↓ (meilleurs)</SelectItem>
-                        <SelectItem value="path">Chemin A→Z</SelectItem>
+                        <SelectItem value="score_asc">{t.sortScoreAsc}</SelectItem>
+                        <SelectItem value="score_desc">{t.sortScoreDesc}</SelectItem>
+                        <SelectItem value="path">{t.sortPath}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -516,7 +660,7 @@ export default function SiteCrawl() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm text-foreground truncate font-medium">{page.path}</div>
-                            <div className="text-xs text-muted-foreground truncate">{page.title || '(sans titre)'}</div>
+                            <div className="text-xs text-muted-foreground truncate">{page.title || t.noTitle}</div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             {(page.issues || []).length > 0 && (
@@ -539,12 +683,12 @@ export default function SiteCrawl() {
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-                                <span className="text-muted-foreground">Mots:</span>
+                                <span className="text-muted-foreground">{t.words}</span>
                                 <span className="text-foreground">{page.word_count}</span>
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Image className="w-3.5 h-3.5 text-muted-foreground" />
-                                <span className="text-muted-foreground">Imgs sans alt:</span>
+                                <span className="text-muted-foreground">{t.imgsNoAlt}</span>
                                 <span className={page.images_without_alt > 0 ? 'text-destructive' : 'text-emerald-500'}>{page.images_without_alt}</span>
                               </div>
                               <div className="flex items-center gap-1.5">
@@ -584,7 +728,7 @@ export default function SiteCrawl() {
           {!crawlResult && pastCrawls.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Crawls précédents</CardTitle>
+                <CardTitle className="text-lg">{t.previousCrawls}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -597,7 +741,7 @@ export default function SiteCrawl() {
                       <div>
                         <div className="text-sm font-medium text-foreground">{c.domain}</div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(c.created_at).toLocaleDateString('fr-FR')} · {c.crawled_pages} pages
+                          {new Date(c.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')} · {c.crawled_pages} {t.pages}
                         </div>
                       </div>
                       <div className="flex items-center gap-3">

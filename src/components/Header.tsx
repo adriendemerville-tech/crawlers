@@ -307,8 +307,9 @@ export function Header() {
           {!isAuditExpertPage && (
             <Link to="/audit-expert">
               <Button
+                variant="ghost"
                 size="sm"
-                className="gap-1.5 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold shadow-md"
+                className="gap-1.5 text-yellow-500 hover:text-yellow-400 hover:bg-transparent font-bold"
               >
                 <Sparkles className="h-4 w-4" />
                 <span className="hidden sm:inline">Audit</span>

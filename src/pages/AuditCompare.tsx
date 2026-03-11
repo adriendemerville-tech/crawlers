@@ -59,22 +59,141 @@ interface CompareResult {
   scannedAt: string;
 }
 
+// ==================== I18N ====================
+
+const i18n = {
+  fr: {
+    pageTitle: 'Audit Comparé SEO/GEO — Comparez deux sites | Crawlers.fr',
+    pageDesc: 'Comparez deux sites web face-à-face : Brand DNA, SWOT, visibilité LLM et score AEO. Analyse concurrentielle SEO & GEO par IA.',
+    badge: 'Audit Comparé',
+    h1: 'Comparez deux sites face aux IA',
+    subtitle: 'Analysez et comparez la visibilité IA, les mots-clés et la stratégie GEO de deux sites côte à côte.',
+    credits: '5 crédits',
+    confirm: 'Confirmer',
+    launch: 'Lancer l\'audit comparé',
+    confirmBoth: 'Confirmez les deux URLs pour lancer l\'audit',
+    confirmSite1: 'Confirmez l\'URL du Site 1',
+    confirmSite2: 'Confirmez l\'URL du Site 2',
+    errorConfirm: 'Veuillez confirmer les deux URLs avant de lancer l\'audit.',
+    insufficientCredits: '5 crédits requis pour un audit comparé.',
+    retry: 'L\'analyse a pris trop de temps. Veuillez relancer l\'audit.',
+    analysisTime: 'L\'analyse peut prendre jusqu\'à 3 minutes.',
+    newAudit: 'Nouvel audit comparé',
+    analysisOf: 'Analyse de',
+    strengths: 'Forces',
+    weaknesses: 'Faiblesses',
+    llmVisibility: 'Visibilité LLM',
+    brandCited: 'Marque citée',
+    brandNotCited: 'Non citée',
+    cited: 'Cité',
+    absent: 'Absent',
+    keywords: 'Mots-clés',
+    llmQueries: 'Requêtes LLM',
+    aeoScore: 'Score AEO',
+    expertise: 'Expertise',
+    playlist: 'Playlist Crawlers',
+    volume: 'Volume : 50%',
+    fetchStep: 'Récupération du contenu...',
+    llmStep: 'Interrogation des IA...',
+    keywordsStep: 'Étude des mots-clés...',
+    analysisStep: 'Analyse comparative...',
+    doneStep: 'Génération du rapport...',
+  },
+  en: {
+    pageTitle: 'Comparative SEO/GEO Audit — Compare two sites | Crawlers.fr',
+    pageDesc: 'Compare two websites head-to-head: Brand DNA, SWOT, LLM visibility and AEO score. AI-powered SEO & GEO competitive analysis.',
+    badge: 'Comparative Audit',
+    h1: 'Compare two sites against AI',
+    subtitle: 'Analyze and compare AI visibility, keywords and GEO strategy of two sites side by side.',
+    credits: '5 credits',
+    confirm: 'Confirm',
+    launch: 'Launch comparative audit',
+    confirmBoth: 'Confirm both URLs to launch the audit',
+    confirmSite1: 'Confirm Site 1 URL',
+    confirmSite2: 'Confirm Site 2 URL',
+    errorConfirm: 'Please confirm both URLs before launching the audit.',
+    insufficientCredits: '5 credits required for a comparative audit.',
+    retry: 'The analysis took too long. Please try again.',
+    analysisTime: 'The analysis can take up to 3 minutes.',
+    newAudit: 'New comparative audit',
+    analysisOf: 'Analyzing',
+    strengths: 'Strengths',
+    weaknesses: 'Weaknesses',
+    llmVisibility: 'LLM Visibility',
+    brandCited: 'Brand cited',
+    brandNotCited: 'Not cited',
+    cited: 'Cited',
+    absent: 'Absent',
+    keywords: 'Keywords',
+    llmQueries: 'LLM Queries',
+    aeoScore: 'AEO Score',
+    expertise: 'Expertise',
+    playlist: 'Crawlers Playlist',
+    volume: 'Volume: 50%',
+    fetchStep: 'Fetching content...',
+    llmStep: 'Querying AI models...',
+    keywordsStep: 'Studying keywords...',
+    analysisStep: 'Comparative analysis...',
+    doneStep: 'Generating report...',
+  },
+  es: {
+    pageTitle: 'Auditoría Comparativa SEO/GEO — Compare dos sitios | Crawlers.fr',
+    pageDesc: 'Compare dos sitios web cara a cara: Brand DNA, SWOT, visibilidad LLM y puntuación AEO. Análisis competitivo SEO & GEO con IA.',
+    badge: 'Auditoría Comparativa',
+    h1: 'Compare dos sitios frente a la IA',
+    subtitle: 'Analice y compare la visibilidad IA, las palabras clave y la estrategia GEO de dos sitios lado a lado.',
+    credits: '5 créditos',
+    confirm: 'Confirmar',
+    launch: 'Lanzar auditoría comparativa',
+    confirmBoth: 'Confirme ambas URLs para lanzar la auditoría',
+    confirmSite1: 'Confirme la URL del Sitio 1',
+    confirmSite2: 'Confirme la URL del Sitio 2',
+    errorConfirm: 'Por favor confirme ambas URLs antes de lanzar la auditoría.',
+    insufficientCredits: '5 créditos necesarios para una auditoría comparativa.',
+    retry: 'El análisis tardó demasiado. Por favor inténtelo de nuevo.',
+    analysisTime: 'El análisis puede tardar hasta 3 minutos.',
+    newAudit: 'Nueva auditoría comparativa',
+    analysisOf: 'Analizando',
+    strengths: 'Fortalezas',
+    weaknesses: 'Debilidades',
+    llmVisibility: 'Visibilidad LLM',
+    brandCited: 'Marca citada',
+    brandNotCited: 'No citada',
+    cited: 'Citado',
+    absent: 'Ausente',
+    keywords: 'Palabras clave',
+    llmQueries: 'Consultas LLM',
+    aeoScore: 'Puntuación AEO',
+    expertise: 'Experiencia',
+    playlist: 'Playlist Crawlers',
+    volume: 'Volumen: 50%',
+    fetchStep: 'Recuperando contenido...',
+    llmStep: 'Consultando modelos IA...',
+    keywordsStep: 'Estudiando palabras clave...',
+    analysisStep: 'Análisis comparativo...',
+    doneStep: 'Generando informe...',
+  },
+};
+
 // ==================== LOADING STEPS ====================
 
-const loadingSteps = [
-  { id: 'fetch', label: 'Récupération du contenu...', icon: Globe },
-  { id: 'llm', label: 'Interrogation des IA...', icon: Brain },
-  { id: 'keywords', label: 'Étude des mots-clés...', icon: Target },
-  { id: 'analysis', label: 'Analyse comparative...', icon: Search },
-  { id: 'done', label: 'Génération du rapport...', icon: CheckCircle2 },
-];
+function getLoadingSteps(t: typeof i18n['fr']) {
+  return [
+    { id: 'fetch', label: t.fetchStep, icon: Globe },
+    { id: 'llm', label: t.llmStep, icon: Brain },
+    { id: 'keywords', label: t.keywordsStep, icon: Target },
+    { id: 'analysis', label: t.analysisStep, icon: Search },
+    { id: 'done', label: t.doneStep, icon: CheckCircle2 },
+  ];
+}
 
-function CompareLoadingSteps({ siteName }: { siteName: string }) {
+function CompareLoadingSteps({ siteName, t }: { siteName: string; t: typeof i18n['fr'] }) {
   const [currentStep, setCurrentStep] = useState(0);
+  const steps = getLoadingSteps(t);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentStep(prev => prev < loadingSteps.length - 1 ? prev + 1 : prev);
+      setCurrentStep(prev => prev < steps.length - 1 ? prev + 1 : prev);
     }, 12000);
     return () => clearInterval(interval);
   }, []);
@@ -89,9 +208,9 @@ function CompareLoadingSteps({ siteName }: { siteName: string }) {
           <Brain className="h-6 w-6 text-primary" />
         </motion.div>
       </div>
-      <p className="text-sm font-medium text-foreground truncate max-w-[200px]">Analyse de {siteName}</p>
+      <p className="text-sm font-medium text-foreground truncate max-w-[200px]">{t.analysisOf} {siteName}</p>
       <div className="space-y-2 w-full max-w-[220px]">
-        {loadingSteps.map((step, i) => {
+        {steps.map((step, i) => {
           const StepIcon = step.icon;
           const isActive = i === currentStep;
           const isComplete = i < currentStep;
@@ -112,7 +231,7 @@ function CompareLoadingSteps({ siteName }: { siteName: string }) {
 
 // ==================== RESULT CARD ====================
 
-function SiteResultCard({ site }: { site: SiteResult }) {
+function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
   const { analysis, llm_raw } = site;
   const llmScore = llm_raw?.overallScore ?? analysis.llm_visibility?.citation_probability ?? 0;
 
@@ -129,13 +248,13 @@ function SiteResultCard({ site }: { site: SiteResult }) {
           <p className="text-sm text-muted-foreground leading-relaxed">{analysis.brand_dna}</p>
           <div className="grid grid-cols-1 gap-2">
             <div>
-              <p className="text-xs font-semibold text-emerald-500 mb-1 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> Forces</p>
+              <p className="text-xs font-semibold text-emerald-500 mb-1 flex items-center gap-1"><TrendingUp className="h-3 w-3" /> {t.strengths}</p>
               {(analysis.strengths || []).map((s, i) => (
                 <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-emerald-500/30 mb-1">{s}</p>
               ))}
             </div>
             <div>
-              <p className="text-xs font-semibold text-rose-500 mb-1 flex items-center gap-1"><TrendingDown className="h-3 w-3" /> Faiblesses</p>
+              <p className="text-xs font-semibold text-rose-500 mb-1 flex items-center gap-1"><TrendingDown className="h-3 w-3" /> {t.weaknesses}</p>
               {(analysis.weaknesses || []).map((w, i) => (
                 <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-rose-500/30 mb-1">{w}</p>
               ))}
@@ -148,7 +267,7 @@ function SiteResultCard({ site }: { site: SiteResult }) {
       <Card className="border-border/50 bg-card/80">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-            <Brain className="h-4 w-4 text-violet-500" /> Visibilité LLM
+            <Brain className="h-4 w-4 text-violet-500" /> {t.llmVisibility}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -156,7 +275,7 @@ function SiteResultCard({ site }: { site: SiteResult }) {
             <div className="text-2xl font-bold text-foreground">{llmScore}<span className="text-sm text-muted-foreground">/100</span></div>
             {llm_raw?.brandMentioned !== undefined && (
               <Badge variant={llm_raw.brandMentioned ? 'default' : 'secondary'} className="text-xs">
-                {llm_raw.brandMentioned ? 'Marque citée' : 'Non citée'}
+                {llm_raw.brandMentioned ? t.brandCited : t.brandNotCited}
               </Badge>
             )}
           </div>
@@ -169,7 +288,7 @@ function SiteResultCard({ site }: { site: SiteResult }) {
                 <div key={i} className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">{m.name}</span>
                   <Badge variant={m.brandMentioned ? 'default' : 'outline'} className="text-[10px] px-1.5">
-                    {m.brandMentioned ? 'Cité' : 'Absent'}
+                    {m.brandMentioned ? t.cited : t.absent}
                   </Badge>
                 </div>
               ))}
@@ -183,7 +302,7 @@ function SiteResultCard({ site }: { site: SiteResult }) {
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <Target className="h-4 w-4 text-amber-500" /> Mots-clés
+              <Target className="h-4 w-4 text-amber-500" /> {t.keywords}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -207,7 +326,7 @@ function SiteResultCard({ site }: { site: SiteResult }) {
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-cyan-500" /> Requêtes LLM
+              <MessageSquare className="h-4 w-4 text-cyan-500" /> {t.llmQueries}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -231,14 +350,14 @@ function SiteResultCard({ site }: { site: SiteResult }) {
         <Card className="border-border/50 bg-card/80">
           <CardContent className="pt-4 text-center">
             <Zap className="h-5 w-5 mx-auto text-amber-500 mb-1" />
-            <p className="text-xs text-muted-foreground">Score AEO</p>
+            <p className="text-xs text-muted-foreground">{t.aeoScore}</p>
             <p className="text-2xl font-bold text-foreground">{analysis.aeo_score}<span className="text-xs text-muted-foreground">/100</span></p>
           </CardContent>
         </Card>
         <Card className="border-border/50 bg-card/80">
           <CardContent className="pt-4 text-center">
             <Star className="h-5 w-5 mx-auto text-yellow-500 mb-1" />
-            <p className="text-xs text-muted-foreground">Expertise</p>
+            <p className="text-xs text-muted-foreground">{t.expertise}</p>
             <div className="flex items-center justify-center gap-0.5 mt-1">
               {[1, 2, 3, 4, 5].map(n => (
                 <Star key={n} className={`h-4 w-4 ${n <= (analysis.expertise_sentiment?.rating || 0) ? 'text-yellow-500 fill-yellow-500' : 'text-muted'}`} />
@@ -261,6 +380,7 @@ const AuditCompare = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   useCanonicalHreflang('/audit-compare');
+  const t = i18n[language];
 
   const [url1, setUrl1] = useState('');
   const [url2, setUrl2] = useState('');
@@ -321,7 +441,7 @@ const AuditCompare = () => {
     }
 
     if (!bothConfirmed) {
-      toast({ title: 'Erreur', description: 'Veuillez confirmer les deux URLs avant de lancer l\'audit.', variant: 'destructive' });
+      toast({ title: 'Error', description: t.errorConfirm, variant: 'destructive' });
       return;
     }
 
@@ -386,7 +506,7 @@ const AuditCompare = () => {
         }
         if (msg.includes('Insufficient credits')) {
           setIsLoading(false);
-          toast({ title: 'Crédits insuffisants', description: '5 crédits requis pour un audit comparé.', variant: 'destructive' });
+          toast({ title: 'Credits', description: t.insufficientCredits, variant: 'destructive' });
           return;
         }
         
@@ -414,7 +534,7 @@ const AuditCompare = () => {
         
         // All retries exhausted — show a gentle toast, no red banner
         setIsLoading(false);
-        toast({ title: 'Réessayez', description: 'L\'analyse a pris trop de temps. Veuillez relancer l\'audit.' });
+        toast({ title: '⏱️', description: t.retry });
       }
     };
 
@@ -424,8 +544,8 @@ const AuditCompare = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Helmet>
-        <title>Audit Comparé SEO/GEO — Comparez deux sites | Crawlers.fr</title>
-        <meta name="description" content="Comparez deux sites web face-à-face : Brand DNA, SWOT, visibilité LLM et score AEO. Analyse concurrentielle SEO & GEO par IA." />
+        <title>{t.pageTitle}</title>
+        <meta name="description" content={t.pageDesc} />
       </Helmet>
       <Header />
       <main className="flex-1">
@@ -433,15 +553,15 @@ const AuditCompare = () => {
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
             <Badge variant="outline" className="mb-3 text-xs border-violet-500/30 text-violet-400">
-              <Swords className="h-3 w-3 mr-1" /> Audit Comparé
+              <Swords className="h-3 w-3 mr-1" /> {t.badge}
             </Badge>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              Comparez deux sites face aux IA
+              {t.h1}
             </h1>
             <p className="text-muted-foreground text-sm max-w-lg mx-auto">
-              Analysez et comparez la visibilité IA, les mots-clés et la stratégie GEO de deux sites côte à côte.
+              {t.subtitle}
             </p>
-            <Badge variant="secondary" className="mt-2 text-xs">5 crédits</Badge>
+            <Badge variant="secondary" className="mt-2 text-xs">{t.credits}</Badge>
           </motion.div>
 
           {/* URL Inputs */}
@@ -476,7 +596,7 @@ const AuditCompare = () => {
                       ) : confirmedUrl1 ? (
                         <Check className="h-4 w-4" />
                       ) : (
-                        'Confirmer'
+                        t.confirm
                       )}
                     </Button>
                   </div>
@@ -527,7 +647,7 @@ const AuditCompare = () => {
                       ) : confirmedUrl2 ? (
                         <Check className="h-4 w-4" />
                       ) : (
-                        'Confirmer'
+                        t.confirm
                       )}
                     </Button>
                   </div>
@@ -555,12 +675,12 @@ const AuditCompare = () => {
                 <Button onClick={handleLaunch} size="lg" disabled={!bothConfirmed}
                   className="bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold px-8 disabled:opacity-50">
                   <Swords className="h-4 w-4 mr-2" />
-                  Lancer l'audit comparé
+                  {t.launch}
                 </Button>
                 {!bothConfirmed && (url1.trim() || url2.trim()) && (
                   <p className="text-xs text-muted-foreground mt-2">
-                    {!confirmedUrl1 && !confirmedUrl2 ? 'Confirmez les deux URLs pour lancer l\'audit' 
-                      : !confirmedUrl1 ? 'Confirmez l\'URL du Site 1' : 'Confirmez l\'URL du Site 2'}
+                    {!confirmedUrl1 && !confirmedUrl2 ? t.confirmBoth 
+                      : !confirmedUrl1 ? t.confirmSite1 : t.confirmSite2}
                   </p>
                 )}
               </div>
@@ -576,7 +696,7 @@ const AuditCompare = () => {
                   <div className="text-center mb-2">
                     <Badge variant="outline" className="text-xs">{url1.replace(/^https?:\/\//, '').substring(0, 30)}</Badge>
                   </div>
-                  <CompareLoadingSteps siteName={new URL(url1.startsWith('http') ? url1 : `https://${url1}`).hostname} />
+                  <CompareLoadingSteps siteName={new URL(url1.startsWith('http') ? url1 : `https://${url1}`).hostname} t={t} />
                 </div>
                 
                 {/* Center: Spotify player on separator (desktop) */}
@@ -593,7 +713,7 @@ const AuditCompare = () => {
                   <div className="text-center mb-2">
                     <Badge variant="outline" className="text-xs">{url2.replace(/^https?:\/\//, '').substring(0, 30)}</Badge>
                   </div>
-                  <CompareLoadingSteps siteName={new URL(url2.startsWith('http') ? url2 : `https://${url2}`).hostname} />
+                  <CompareLoadingSteps siteName={new URL(url2.startsWith('http') ? url2 : `https://${url2}`).hostname} t={t} />
                 </div>
               </div>
 
@@ -601,7 +721,7 @@ const AuditCompare = () => {
               <div className="mt-6 flex flex-col items-center">
                 <div className="flex items-center gap-2 justify-center mb-2">
                   <Music className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium text-foreground">Playlist Crawlers</span>
+                  <span className="text-xs font-medium text-foreground">{t.playlist}</span>
                 </div>
                 <div className="w-full max-w-[320px] overflow-hidden rounded-[12px] bg-[#282828] isolate"
                   style={{ clipPath: 'inset(0 round 12px)' }}>
@@ -609,11 +729,11 @@ const AuditCompare = () => {
                     style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }}
                     aria-label="Playlist Crawlers" />
                 </div>
-                <p className="text-[10px] text-muted-foreground text-center mt-1 opacity-60">Volume : 50%</p>
+                <p className="text-[10px] text-muted-foreground text-center mt-1 opacity-60">{t.volume}</p>
               </div>
 
               <p className="text-sm text-muted-foreground text-center mt-6">
-                L'analyse peut prendre jusqu'à 3 minutes.
+                {t.analysisTime}
               </p>
             </div>
           )}
@@ -628,7 +748,7 @@ const AuditCompare = () => {
                     <Badge className="bg-violet-600 text-white text-xs">{result.site1.domain}</Badge>
                     <p className="text-xs text-muted-foreground mt-1 truncate">{result.site1.metadata.title}</p>
                   </div>
-                  <SiteResultCard site={result.site1} />
+                  <SiteResultCard site={result.site1} t={t} />
                 </div>
 
                 {/* Separator */}
@@ -653,14 +773,14 @@ const AuditCompare = () => {
                     <Badge className="bg-amber-600 text-white text-xs">{result.site2.domain}</Badge>
                     <p className="text-xs text-muted-foreground mt-1 truncate">{result.site2.metadata.title}</p>
                   </div>
-                  <SiteResultCard site={result.site2} />
+                  <SiteResultCard site={result.site2} t={t} />
                 </div>
               </div>
 
               {/* Restart */}
               <div className="text-center mt-8">
                 <Button variant="outline" onClick={() => { setResult(null); setUrl1(''); setUrl2(''); }}>
-                  Nouvel audit comparé
+                  {t.newAudit}
                 </Button>
               </div>
             </motion.div>
