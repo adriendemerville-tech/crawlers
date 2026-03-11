@@ -494,10 +494,45 @@ function buildCrossComparePrompt(
   const cd1 = site1.contentDepth;
   const cd2 = site2.contentDepth;
 
-  // Compute SERP overlap
+  // Compute SERP overlap — now using enriched keywords with cross-domain rankings
   const kw1Set = new Set(site1.keywords.map((k: any) => k.keyword.toLowerCase()));
   const kw2Set = new Set(site2.keywords.map((k: any) => k.keyword.toLowerCase()));
   const overlap = [...kw1Set].filter(k => kw2Set.has(k));
+
+  // Build unified keyword table for the prompt (all keywords with both sites' rankings)
+  const allKwMap = new Map<string, { site1_rank: string | number; site2_rank: string | number; volume: number }>();
+  for (const kw of site1.keywords) {
+    const key = kw.keyword.toLowerCase();
+    allKwMap.set(key, {
+      site1_rank: kw.current_rank ?? 'Non classé',
+      site2_rank: kw.opponent_rank ?? 'Non vérifié',
+      volume: kw.volume || 0,
+    });
+  }
+  for (const kw of site2.keywords) {
+    const key = kw.keyword.toLowerCase();
+    const existing = allKwMap.get(key);
+    if (existing) {
+      existing.site2_rank = kw.current_rank ?? 'Non classé';
+    } else {
+      allKwMap.set(key, {
+        site1_rank: kw.opponent_rank ?? 'Non vérifié',
+        site2_rank: kw.current_rank ?? 'Non classé',
+        volume: kw.volume || 0,
+      });
+    }
+  }
+
+  // Keywords where BOTH sites have a numeric rank = direct competition
+  const directCompetition = [...allKwMap.entries()]
+    .filter(([, v]) => typeof v.site1_rank === 'number' && typeof v.site2_rank === 'number')
+    .sort((a, b) => b[1].volume - a[1].volume);
+
+  const kwTableLines = [...allKwMap.entries()]
+    .sort((a, b) => b[1].volume - a[1].volume)
+    .slice(0, 15)
+    .map(([kw, v]) => `"${kw}": vol=${v.volume}, ${site1.domain}=#${v.site1_rank}, ${site2.domain}=#${v.site2_rank}`)
+    .join('\n');
 
   return `COMPARAISON: ${site1.domain} vs ${site2.domain}
 
@@ -511,9 +546,11 @@ ${site2.domain}: ${cd2.wordCount} mots, ${cd2.h2Count} H2, ${cd2.h3Count} H3, JS
 ${site1.domain}: ${bl1 ? `${bl1.referringDomains} domaines référents, ${bl1.totalBacklinks} backlinks, DR=${bl1.domainRank}, ancres=[${bl1.topAnchors.join(', ')}]` : 'Non disponible'}
 ${site2.domain}: ${bl2 ? `${bl2.referringDomains} domaines référents, ${bl2.totalBacklinks} backlinks, DR=${bl2.domainRank}, ancres=[${bl2.topAnchors.join(', ')}]` : 'Non disponible'}
 
-📊 CHEVAUCHEMENT SERP (mots-clés en commun): ${overlap.length > 0 ? overlap.join(', ') : 'Aucun'}
-${site1.domain} keywords: ${site1.keywords.map((k: any) => `${k.keyword}(pos:${k.current_rank})`).join(', ') || 'N/A'}
-${site2.domain} keywords: ${site2.keywords.map((k: any) => `${k.keyword}(pos:${k.current_rank})`).join(', ') || 'N/A'}
+📊 TABLEAU SERP CROISÉ (positions des deux sites sur le pool commun de mots-clés):
+${kwTableLines || 'Aucune donnée SERP disponible'}
+
+Chevauchement exact: ${overlap.length} mots-clés en commun
+Compétition directe (les deux classés): ${directCompetition.length} mots-clés
 
 🤖 SCORES IA INDIVIDUELS:
 ${site1.domain}: AEO=${site1.analysis?.aeo_score ?? '?'}, Expertise=${site1.analysis?.expertise_sentiment?.rating ?? '?'}/5
@@ -538,10 +575,10 @@ Génère un JSON avec cette structure:
     "technical_seo_edge": "Qui a le meilleur setup technique (JSON-LD, OG, FAQ) et pourquoi"
   },
   "serp_battlefield": {
-    "overlap_count": ${overlap.length},
+    "overlap_count": number,
     "head_to_head": [{"keyword":"...","site1_rank":"...","site2_rank":"...","winner":"...","analysis":"1 phrase"}],
-    "exclusive_strengths_site1": ["mots-clés où seul site1 est positionné"],
-    "exclusive_strengths_site2": ["mots-clés où seul site2 est positionné"]
+    "exclusive_strengths_site1": ["mots-clés où seul ${site1.domain} est positionné"],
+    "exclusive_strengths_site2": ["mots-clés où seul ${site2.domain} est positionné"]
   },
   "differentiators": [
     {"dimension": "...", "site1_value": "...", "site2_value": "...", "advantage": "${site1.domain}|${site2.domain}", "impact": "critique|important|mineur"}
@@ -553,7 +590,7 @@ Génère un JSON avec cette structure:
 }
 
 RÈGLES STRICTES:
-- head_to_head: uniquement les mots-clés en chevauchement RÉEL, max 5
+- head_to_head: utilise le TABLEAU SERP CROISÉ ci-dessus. Prends les mots-clés où les DEUX sites ont un classement numérique, max 8. Si un seul est classé, mets-le dans exclusive_strengths.
 - differentiators: EXACTEMENT 4-6 dimensions, chaque valeur CHIFFRÉE
 - Si un écart est < 15%, dis "marginal" et cherche ce qui les distingue VRAIMENT
 - Recommandations: spécifiques à chaque site, jamais génériques
@@ -695,6 +732,145 @@ async function runCrossComparison(
   }
 }
 
+// ==================== PHASE 2.5: CROSS-SERP CHECK ====================
+
+/**
+ * After both sites have their own keywords, we merge the keyword pools
+ * and check SERP rankings for BOTH domains on the combined set.
+ * This ensures the "SERP Battlefield" has data even when both sites
+ * target the same niche (e.g. twin products).
+ */
+async function crossCheckSerpRankings(
+  kw1: any[], kw2: any[],
+  domain1: string, domain2: string,
+  locationCode: number,
+): Promise<{ site1Keywords: any[]; site2Keywords: any[] }> {
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
+    return { site1Keywords: kw1, site2Keywords: kw2 };
+  }
+
+  const cleanDomain1 = domain1.replace(/^www\./, '').toLowerCase();
+  const cleanDomain2 = domain2.replace(/^www\./, '').toLowerCase();
+
+  // Collect unique keywords from both sites that need cross-checking
+  const kw1Map = new Map(kw1.map(k => [k.keyword.toLowerCase(), k]));
+  const kw2Map = new Map(kw2.map(k => [k.keyword.toLowerCase(), k]));
+
+  // Keywords from site1 that site2 doesn't have (need to check site2's rank)
+  const needCheckForSite2: string[] = [];
+  // Keywords from site2 that site1 doesn't have (need to check site1's rank)
+  const needCheckForSite1: string[] = [];
+
+  for (const [key, kw] of kw1Map) {
+    if (!kw2Map.has(key)) {
+      needCheckForSite2.push(kw.keyword);
+    }
+  }
+  for (const [key, kw] of kw2Map) {
+    if (!kw1Map.has(key)) {
+      needCheckForSite1.push(kw.keyword);
+    }
+  }
+
+  // For overlapping keywords, cross-assign ranks
+  for (const [key] of kw1Map) {
+    if (kw2Map.has(key)) {
+      kw1Map.get(key)!.opponent_rank = kw2Map.get(key)!.current_rank;
+      kw2Map.get(key)!.opponent_rank = kw1Map.get(key)!.current_rank;
+    }
+  }
+
+  // Batch SERP check: site2's rankings on site1's keywords and vice versa
+  const allToCheck = [
+    ...needCheckForSite2.slice(0, 5).map(kw => ({ keyword: kw, checkDomain: cleanDomain2, assignTo: 'kw1' as const })),
+    ...needCheckForSite1.slice(0, 5).map(kw => ({ keyword: kw, checkDomain: cleanDomain1, assignTo: 'kw2' as const })),
+  ];
+
+  if (allToCheck.length > 0) {
+    try {
+      const serpTasks = allToCheck.map(item => ({
+        keyword: item.keyword,
+        location_code: locationCode,
+        language_code: 'fr',
+        depth: 30,
+        se_domain: 'google.fr',
+      }));
+
+      const serpResp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
+        method: 'POST',
+        headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify(serpTasks),
+        signal: AbortSignal.timeout(15000),
+      });
+
+      if (serpResp.ok) {
+        trackPaidApiCall('audit-compare', 'dataforseo', 'serp/organic-cross');
+        const serpData = await serpResp.json();
+
+        for (let i = 0; i < allToCheck.length; i++) {
+          const item = allToCheck[i];
+          const taskResult = serpData.tasks?.[i]?.result?.[0];
+          let opponentRank: number | string = 'Non classé';
+          let ownRank: number | string = 'Non classé';
+
+          if (taskResult?.items) {
+            for (const entry of taskResult.items) {
+              if (entry.type === 'paid') continue;
+              const entryDomain = (entry.domain || '').toLowerCase().replace(/^www\./, '');
+
+              if (entryDomain === item.checkDomain || (entry.url || '').toLowerCase().includes(item.checkDomain)) {
+                opponentRank = entry.rank_absolute || 1;
+              }
+              // Also check if the OTHER domain appears
+              const otherDomain = item.assignTo === 'kw1' ? cleanDomain1 : cleanDomain2;
+              if (entryDomain === otherDomain || (entry.url || '').toLowerCase().includes(otherDomain)) {
+                ownRank = entry.rank_absolute || 1;
+              }
+            }
+          }
+
+          const kwKey = item.keyword.toLowerCase();
+          if (item.assignTo === 'kw1' && kw1Map.has(kwKey)) {
+            kw1Map.get(kwKey)!.opponent_rank = opponentRank;
+            // Also add to kw2 if opponent is ranked
+            if (typeof opponentRank === 'number' && !kw2Map.has(kwKey)) {
+              kw2Map.set(kwKey, {
+                keyword: item.keyword,
+                volume: kw1Map.get(kwKey)!.volume || 0,
+                difficulty: kw1Map.get(kwKey)!.difficulty || 0,
+                current_rank: opponentRank,
+                opponent_rank: kw1Map.get(kwKey)!.current_rank,
+              });
+            }
+          } else if (item.assignTo === 'kw2' && kw2Map.has(kwKey)) {
+            kw2Map.get(kwKey)!.opponent_rank = opponentRank;
+            if (typeof opponentRank === 'number' && !kw1Map.has(kwKey)) {
+              kw1Map.set(kwKey, {
+                keyword: item.keyword,
+                volume: kw2Map.get(kwKey)!.volume || 0,
+                difficulty: kw2Map.get(kwKey)!.difficulty || 0,
+                current_rank: opponentRank,
+                opponent_rank: kw2Map.get(kwKey)!.current_rank,
+              });
+            }
+          }
+        }
+      } else {
+        await serpResp.text();
+      }
+    } catch (e) {
+      console.warn('[cross-serp] SERP cross-check failed:', e instanceof Error ? e.message : e);
+    }
+  }
+
+  console.log(`[cross-serp] Enriched: ${kw1Map.size} kw for ${domain1}, ${kw2Map.size} kw for ${domain2}`);
+
+  return {
+    site1Keywords: [...kw1Map.values()],
+    site2Keywords: [...kw2Map.values()],
+  };
+}
+
 // ==================== MAIN HANDLER ====================
 
 Deno.serve(async (req) => {
@@ -775,11 +951,16 @@ Deno.serve(async (req) => {
       analyzeSite(url2, domain2, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY),
     ]);
     
+    // ═══ Phase 2.5: CROSS-SERP CHECK — enrich both keyword sets with opponent rankings ═══
+    const enrichedKeywords = await crossCheckSerpRankings(
+      site1.keywords, site2.keywords, domain1, domain2, detectLocationCode(domain1),
+    );
+    
     // ═══ Phase 3: CROSS-COMPARISON with both datasets ═══
     console.log(`🔀 Phase 3: Cross-comparison ${domain1} vs ${domain2}`);
     const crossComparison = await runCrossComparison(
-      { domain: domain1, analysis: site1.analysis, backlinks: site1.backlinks, contentDepth: site1.metadata.contentDepth, keywords: site1.keywords },
-      { domain: domain2, analysis: site2.analysis, backlinks: site2.backlinks, contentDepth: site2.metadata.contentDepth, keywords: site2.keywords },
+      { domain: domain1, analysis: site1.analysis, backlinks: site1.backlinks, contentDepth: site1.metadata.contentDepth, keywords: enrichedKeywords.site1Keywords },
+      { domain: domain2, analysis: site2.analysis, backlinks: site2.backlinks, contentDepth: site2.metadata.contentDepth, keywords: enrichedKeywords.site2Keywords },
       OPENROUTER_API_KEY,
     );
     
