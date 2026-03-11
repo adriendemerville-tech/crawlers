@@ -2,29 +2,118 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
-const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || '';
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+/**
+ * Agent CTO v2 — Data-Driven Prompt Optimization
+ * 
+ * Replaces subjective LLM self-evaluation with a correlation engine
+ * based on real-world metrics (GSC, DataForSEO, PageSpeed).
+ * 
+ * Decision flow:
+ * 1. Gather historical reliability data from audit_impact_snapshots
+ * 2. Compute per-function reliability scores
+ * 3. Use real evidence to justify prompt changes
+ * 4. Only modify prompts when statistical evidence supports it
+ */
 
-interface AgentAnalysis {
-  analysis_summary: string;
-  self_critique: string;
-  confidence_score: number;
-  proposed_change: string | null;
-  change_diff_pct: number;
-  decision: 'approved' | 'rejected' | 'needs_review';
+const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') || ''
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ''
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+
+// ─── Types ────────────────────────────────────────────────────────────
+interface ReliabilityProfile {
+  function_name: string
+  total_snapshots: number
+  snapshots_with_gsc: number
+  avg_impact_score: number
+  grade_distribution: Record<string, number>
+  avg_action_plan_progress: number
+  code_deployment_rate: number
+  trend: 'improving' | 'stable' | 'declining' | 'insufficient_data'
 }
 
+interface AgentDecision {
+  analysis_summary: string
+  self_critique: string
+  confidence_score: number
+  proposed_change: string | null
+  change_diff_pct: number
+  decision: 'approved' | 'rejected' | 'needs_review'
+  evidence_basis: 'real_data' | 'heuristic' | 'insufficient_data'
+}
+
+// ─── Reliability engine ───────────────────────────────────────────────
+async function getReliabilityProfile(supabase: any, functionName: string): Promise<ReliabilityProfile> {
+  const { data: snapshots } = await supabase
+    .from('audit_impact_snapshots')
+    .select('impact_score, reliability_grade, action_plan_progress, corrective_code_deployed, gsc_baseline, measurement_phase, created_at')
+    .eq('audit_type', mapFunctionToAuditType(functionName))
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  const all = snapshots || []
+  const withGsc = all.filter((s: any) => s.gsc_baseline != null)
+  const completed = all.filter((s: any) => s.measurement_phase === 'complete' && s.impact_score != null)
+
+  // Grade distribution
+  const grades: Record<string, number> = { A: 0, B: 0, C: 0, D: 0, F: 0, 'N/A': 0 }
+  completed.forEach((s: any) => {
+    const g = s.reliability_grade || 'N/A'
+    grades[g] = (grades[g] || 0) + 1
+  })
+
+  // Trend: compare last 10 vs previous 10
+  let trend: ReliabilityProfile['trend'] = 'insufficient_data'
+  if (completed.length >= 10) {
+    const recent = completed.slice(0, 5)
+    const older = completed.slice(5, 10)
+    const recentAvg = recent.reduce((s: number, r: any) => s + r.impact_score, 0) / recent.length
+    const olderAvg = older.reduce((s: number, r: any) => s + r.impact_score, 0) / older.length
+    const diff = recentAvg - olderAvg
+    if (diff > 5) trend = 'improving'
+    else if (diff < -5) trend = 'declining'
+    else trend = 'stable'
+  }
+
+  return {
+    function_name: functionName,
+    total_snapshots: all.length,
+    snapshots_with_gsc: withGsc.length,
+    avg_impact_score: completed.length > 0
+      ? Math.round(completed.reduce((s: number, r: any) => s + r.impact_score, 0) / completed.length * 10) / 10
+      : 0,
+    grade_distribution: grades,
+    avg_action_plan_progress: all.length > 0
+      ? Math.round(all.reduce((s: number, r: any) => s + (r.action_plan_progress || 0), 0) / all.length)
+      : 0,
+    code_deployment_rate: all.length > 0
+      ? Math.round(all.filter((r: any) => r.corrective_code_deployed).length / all.length * 100)
+      : 0,
+    trend,
+  }
+}
+
+function mapFunctionToAuditType(functionName: string): string {
+  const map: Record<string, string> = {
+    'audit-expert-seo': 'expert',
+    'audit-strategique-ia': 'strategic',
+    'audit-compare': 'compare',
+    'crawl-site': 'crawl',
+  }
+  return map[functionName] || functionName
+}
+
+// ─── Agent config check ──────────────────────────────────────────────
 async function isAgentEnabled(): Promise<boolean> {
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
   const { data } = await supabase
     .from('system_config')
     .select('value')
     .eq('key', 'cto_agent_enabled')
-    .single();
-  return data?.value?.enabled === true;
+    .single()
+  return data?.value?.enabled === true
 }
 
+// ─── Champion prompt ─────────────────────────────────────────────────
 async function getChampionPrompt(supabase: any, functionName: string, promptKey = 'system'): Promise<{ version: number; prompt_text: string } | null> {
   const { data } = await supabase
     .from('prompt_registry')
@@ -32,18 +121,19 @@ async function getChampionPrompt(supabase: any, functionName: string, promptKey 
     .eq('function_name', functionName)
     .eq('prompt_key', promptKey)
     .eq('is_champion', true)
-    .single();
-  return data;
+    .single()
+  return data
 }
 
-async function callClaude(systemPrompt: string, userPrompt: string): Promise<{ content: string; tokens: { input: number; output: number } }> {
+// ─── LLM call ────────────────────────────────────────────────────────
+async function callLLM(systemPrompt: string, userPrompt: string): Promise<{ content: string; tokens: { input: number; output: number } }> {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': 'https://crawlers.fr',
-      'X-Title': 'Crawlers CTO Agent',
+      'X-Title': 'Crawlers CTO Agent v2',
     },
     body: JSON.stringify({
       model: 'anthropic/claude-3.5-sonnet',
@@ -54,35 +144,42 @@ async function callClaude(systemPrompt: string, userPrompt: string): Promise<{ c
       temperature: 0.2,
       max_tokens: 4000,
     }),
-  });
+  })
 
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content || '';
+  const data = await response.json()
+  const content = data.choices?.[0]?.message?.content || ''
   const tokens = {
     input: data.usage?.prompt_tokens || 0,
     output: data.usage?.completion_tokens || 0,
-  };
-  trackPaidApiCall('agent-cto', 'openrouter', 'anthropic/claude-3.5-sonnet');
-  return { content, tokens };
+  }
+  trackPaidApiCall('agent-cto', 'openrouter', 'anthropic/claude-3.5-sonnet')
+  return { content, tokens }
 }
 
-function parseAgentResponse(raw: string): AgentAnalysis {
+// ─── Response parser ─────────────────────────────────────────────────
+function parseAgentResponse(raw: string, evidenceBasis: AgentDecision['evidence_basis']): AgentDecision {
   try {
-    // Extract JSON from response
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    const jsonMatch = raw.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
+      const parsed = JSON.parse(jsonMatch[0])
+      const confidence = Math.min(100, Math.max(0, Number(parsed.confidence_score) || 0))
+      const diffPct = Math.min(100, Math.max(0, Number(parsed.change_diff_pct) || 0))
+
+      // Stricter approval with real data: 95% confidence + ≤10% change + evidence
+      const canApprove = confidence >= 95 && diffPct <= 10 && evidenceBasis === 'real_data'
+
       return {
         analysis_summary: parsed.analysis_summary || 'No summary',
         self_critique: parsed.self_critique || 'No critique',
-        confidence_score: Math.min(100, Math.max(0, Number(parsed.confidence_score) || 0)),
+        confidence_score: confidence,
         proposed_change: parsed.proposed_change || null,
-        change_diff_pct: Math.min(100, Math.max(0, Number(parsed.change_diff_pct) || 0)),
-        decision: parsed.confidence_score >= 95 && parsed.change_diff_pct <= 10 ? 'approved' : 'rejected',
-      };
+        change_diff_pct: diffPct,
+        decision: canApprove ? 'approved' : (confidence >= 80 ? 'needs_review' : 'rejected'),
+        evidence_basis: evidenceBasis,
+      }
     }
   } catch (e) {
-    console.error('[AGENT-CTO] Parse error:', e);
+    console.error('[AGENT-CTO] Parse error:', e)
   }
   return {
     analysis_summary: 'Failed to parse response',
@@ -91,73 +188,97 @@ function parseAgentResponse(raw: string): AgentAnalysis {
     proposed_change: null,
     change_diff_pct: 0,
     decision: 'rejected',
-  };
+    evidence_basis: 'insufficient_data',
+  }
 }
 
+// ─── Main handler ─────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    // Check if agent is enabled
-    const enabled = await isAgentEnabled();
+    const enabled = await isAgentEnabled()
     if (!enabled) {
       return new Response(JSON.stringify({ success: false, reason: 'Agent CTO désactivé' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      })
     }
 
-    const { auditResult, auditType, url, domain } = await req.json();
+    const { auditResult, auditType, url, domain } = await req.json()
 
     if (!auditResult || !auditType) {
       return new Response(JSON.stringify({ success: false, error: 'Missing auditResult or auditType' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      })
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    
-    // Map audit types to function names for prompt registry
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
     const AUDIT_TYPE_TO_FUNCTION: Record<string, string> = {
       'technical': 'audit-expert-seo',
       'strategic': 'audit-strategique-ia',
       'compare': 'audit-compare',
       'crawl': 'crawl-site',
-    };
-    const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType;
+    }
+    const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType
 
-    // Get current champion prompt (if exists)
-    const champion = await getChampionPrompt(supabase, functionName);
-    const currentVersion = champion?.version || 0;
-    const currentPrompt = champion?.prompt_text || 'Aucun prompt enregistré — première analyse.';
+    // ─── Phase 1: Gather real evidence ──────────────────────────────
+    const [champion, reliability] = await Promise.all([
+      getChampionPrompt(supabase, functionName),
+      getReliabilityProfile(supabase, functionName),
+    ])
 
-    // Truncate audit data to stay within context limits
-    const auditSummary = JSON.stringify(auditResult).substring(0, 8000);
+    const currentVersion = champion?.version || 0
+    const currentPrompt = champion?.prompt_text || 'Aucun prompt enregistré — première analyse.'
 
-    const systemPrompt = `Tu es un Agent CTO senior spécialisé en SEO technique et GEO (Generative Engine Optimization).
-Ton rôle : analyser la pertinence d'un audit SEO produit par une de nos fonctions backend et proposer des micro-améliorations au prompt système qui pilote cette fonction.
+    // Determine evidence basis
+    let evidenceBasis: AgentDecision['evidence_basis'] = 'insufficient_data'
+    if (reliability.snapshots_with_gsc >= 5 && reliability.total_snapshots >= 10) {
+      evidenceBasis = 'real_data'
+    } else if (reliability.total_snapshots >= 3) {
+      evidenceBasis = 'heuristic'
+    }
+
+    const auditSummary = JSON.stringify(auditResult).substring(0, 6000)
+
+    // ─── Phase 2: Build evidence-aware prompt ───────────────────────
+    const systemPrompt = `Tu es un Agent CTO v2 spécialisé en SEO/GEO. Tu disposes désormais de DONNÉES RÉELLES provenant de Google Search Console, DataForSEO et PageSpeed pour évaluer la pertinence des audits.
+
+DONNÉES DE FIABILITÉ (statistiques mesurées sur de vrais utilisateurs) :
+- Fonction analysée : ${functionName}
+- Snapshots totaux : ${reliability.total_snapshots}
+- Snapshots avec données GSC : ${reliability.snapshots_with_gsc}
+- Score d'impact moyen : ${reliability.avg_impact_score}/100
+- Distribution des grades : ${JSON.stringify(reliability.grade_distribution)}
+- Progression moyenne des plans d'action : ${reliability.avg_action_plan_progress}%
+- Taux de déploiement de code correctif : ${reliability.code_deployment_rate}%
+- Tendance : ${reliability.trend}
+- Base d'évidence : ${evidenceBasis}
 
 RÈGLES STRICTES :
-1. RÈGLE DES 10% : Tu ne peux modifier que 10% maximum du prompt existant. Micro-réglages uniquement.
-2. SEUIL DE CONFIANCE : Tu ne proposes un changement que si tu es sûr à 95% minimum qu'il n'aura aucun effet négatif.
-3. APPROCHE PARTIELLE : Préfère une petite amélioration stable à une refonte risquée.
-4. AUTO-CRITIQUE : Tu dois critiquer ta propre proposition avant de la valider.
+1. RÈGLE DES 10% : Max 10% de modification du prompt existant.
+2. SEUIL DE CONFIANCE : 95% minimum. Sans données GSC suffisantes (${reliability.snapshots_with_gsc} snapshots), tu ne peux PAS approuver de changement.
+3. CORRÉLATION OBLIGATOIRE : Toute suggestion doit être justifiée par les métriques réelles ci-dessus, pas par ton intuition.
+4. Si le score d'impact moyen est < 0 (grade D/F dominant), concentre-toi sur les corrections majeures.
+5. Si la tendance est "declining", identifie pourquoi et propose un correctif ciblé.
+6. Si "insufficient_data", propose uniquement des observations, AUCUN changement.
 
-Réponds UNIQUEMENT en JSON valide avec cette structure :
+Réponds UNIQUEMENT en JSON :
 {
-  "analysis_summary": "Résumé de l'analyse de pertinence de l'audit",
-  "self_critique": "Critique de ta propre proposition — risques identifiés",
+  "analysis_summary": "Analyse basée sur les données réelles",
+  "self_critique": "Risques identifiés + biais potentiels",
   "confidence_score": 0-100,
-  "proposed_change": "Le nouveau prompt modifié (null si aucun changement proposé)",
-  "change_diff_pct": 0-100
-}`;
+  "proposed_change": "Nouveau prompt (null si aucun)",
+  "change_diff_pct": 0-100,
+  "data_driven_insights": "Ce que les métriques réelles révèlent"
+}`
 
-    const userPrompt = `FONCTION ANALYSÉE : ${functionName}
-TYPE D'AUDIT : ${auditType}
-URL AUDITÉE : ${url || 'N/A'}
+    const userPrompt = `FONCTION : ${functionName}
 DOMAINE : ${domain || 'N/A'}
+URL : ${url || 'N/A'}
 
 PROMPT ACTUEL (v${currentVersion}) :
 ---
@@ -169,20 +290,19 @@ RÉSULTAT DE L'AUDIT (tronqué) :
 ${auditSummary}
 ---
 
-Analyse la pertinence de cet audit. Le score est-il cohérent ? Les recommandations sont-elles actionnables ? Le prompt pourrait-il être micro-amélioré pour de meilleurs résultats futurs ?`;
+Analyse cet audit en te basant UNIQUEMENT sur les données de fiabilité fournies dans ton contexte. Les métriques GSC sont la seule vérité terrain — si tu n'en as pas assez, dis-le clairement.`
 
-    console.log(`[AGENT-CTO] Analyse de ${functionName} pour ${domain}...`);
+    console.log(`[AGENT-CTO v2] Analyse ${functionName} pour ${domain} — evidence: ${evidenceBasis}, impact_avg: ${reliability.avg_impact_score}, trend: ${reliability.trend}`)
 
-    const { content, tokens } = await callClaude(systemPrompt, userPrompt);
+    const { content, tokens } = await callLLM(systemPrompt, userPrompt)
 
-    // Track token usage
-    trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', tokens.input, tokens.output).catch(() => {});
+    trackTokenUsage('agent-cto', 'anthropic/claude-3.5-sonnet', tokens.input, tokens.output).catch(() => {})
 
-    const analysis = parseAgentResponse(content);
+    const analysis = parseAgentResponse(content, evidenceBasis)
 
-    console.log(`[AGENT-CTO] Décision: ${analysis.decision} (confiance: ${analysis.confidence_score}%, diff: ${analysis.change_diff_pct}%)`);
+    console.log(`[AGENT-CTO v2] Décision: ${analysis.decision} (confiance: ${analysis.confidence_score}%, evidence: ${analysis.evidence_basis})`)
 
-    // Log the analysis
+    // ─── Phase 3: Log & optionally update prompt ────────────────────
     const logEntry: any = {
       audit_id: `${domain}_${Date.now()}`,
       function_analyzed: functionName,
@@ -193,24 +313,35 @@ Analyse la pertinence de cet audit. Le score est-il cohérent ? Les recommandati
       change_diff_pct: analysis.change_diff_pct,
       decision: analysis.decision,
       prompt_version_before: currentVersion,
-      metadata: { url, domain, auditType, tokens },
-    };
+      metadata: {
+        url,
+        domain,
+        auditType,
+        tokens,
+        evidence_basis: analysis.evidence_basis,
+        reliability_profile: {
+          total_snapshots: reliability.total_snapshots,
+          snapshots_with_gsc: reliability.snapshots_with_gsc,
+          avg_impact_score: reliability.avg_impact_score,
+          trend: reliability.trend,
+          grade_distribution: reliability.grade_distribution,
+        },
+      },
+    }
 
-    // If approved: create new champion prompt
-    if (analysis.decision === 'approved' && analysis.proposed_change) {
-      const newVersion = currentVersion + 1;
+    // Only approve changes backed by real data
+    if (analysis.decision === 'approved' && analysis.proposed_change && analysis.evidence_basis === 'real_data') {
+      const newVersion = currentVersion + 1
 
-      // Demote old champion
       if (champion) {
         await supabase
           .from('prompt_registry')
           .update({ is_champion: false })
           .eq('function_name', functionName)
           .eq('prompt_key', 'system')
-          .eq('is_champion', true);
+          .eq('is_champion', true)
       }
 
-      // Insert new champion
       const { error: insertError } = await supabase
         .from('prompt_registry')
         .insert({
@@ -219,45 +350,55 @@ Analyse la pertinence de cet audit. Le score est-il cohérent ? Les recommandati
           version: newVersion,
           prompt_text: analysis.proposed_change,
           is_champion: true,
-          created_by: 'agent-cto',
+          created_by: 'agent-cto-v2',
           metadata: {
             confidence_score: analysis.confidence_score,
             change_diff_pct: analysis.change_diff_pct,
-            self_critique: analysis.self_critique,
+            evidence_basis: analysis.evidence_basis,
+            reliability_snapshot: {
+              avg_impact: reliability.avg_impact_score,
+              gsc_samples: reliability.snapshots_with_gsc,
+              trend: reliability.trend,
+            },
           },
-        });
+        })
 
       if (insertError) {
-        console.error('[AGENT-CTO] Erreur insertion prompt:', insertError);
-        logEntry.decision = 'rejected';
-        logEntry.metadata.insert_error = insertError.message;
+        console.error('[AGENT-CTO v2] Erreur insertion prompt:', insertError)
+        logEntry.decision = 'rejected'
+        logEntry.metadata.insert_error = insertError.message
       } else {
-        logEntry.prompt_version_after = newVersion;
-        console.log(`[AGENT-CTO] ✅ Nouveau prompt champion v${newVersion} pour ${functionName}`);
+        logEntry.prompt_version_after = newVersion
+        console.log(`[AGENT-CTO v2] ✅ Nouveau prompt champion v${newVersion} pour ${functionName} (evidence: real_data)`)
       }
     }
 
-    // Save log
-    const { error: logError } = await supabase.from('cto_agent_logs').insert(logEntry);
-    if (logError) console.error('[AGENT-CTO] Erreur log:', logError);
+    const { error: logError } = await supabase.from('cto_agent_logs').insert(logEntry)
+    if (logError) console.error('[AGENT-CTO v2] Erreur log:', logError)
 
     return new Response(JSON.stringify({
       success: true,
       decision: analysis.decision,
       confidence: analysis.confidence_score,
+      evidence_basis: analysis.evidence_basis,
+      reliability: {
+        avg_impact: reliability.avg_impact_score,
+        trend: reliability.trend,
+        gsc_samples: reliability.snapshots_with_gsc,
+      },
       version: logEntry.prompt_version_after || currentVersion,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    })
 
   } catch (error) {
-    console.error('[AGENT-CTO] Erreur:', error);
+    console.error('[AGENT-CTO v2] Erreur:', error)
     return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    })
   }
-});
+})
