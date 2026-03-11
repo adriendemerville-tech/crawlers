@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { CreditCoin } from '@/components/ui/CreditCoin';
+import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
