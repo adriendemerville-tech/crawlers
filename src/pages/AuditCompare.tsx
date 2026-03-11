@@ -506,7 +506,7 @@ const AuditCompare = () => {
         }
         if (msg.includes('Insufficient credits')) {
           setIsLoading(false);
-          toast({ title: 'Crédits insuffisants', description: '5 crédits requis pour un audit comparé.', variant: 'destructive' });
+          toast({ title: 'Credits', description: t.insufficientCredits, variant: 'destructive' });
           return;
         }
         
