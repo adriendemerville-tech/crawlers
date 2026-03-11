@@ -187,7 +187,7 @@ const translations = {
     agencyPrice: '€49',
     agencyPeriod: '/ month',
     agencyFeatures: [
-      'Unlimited reports',
+      'Unlimited expert audit',
       'Unlimited fixes',
       'Unlimited multi-page crawl',
       'White Label option',
