@@ -345,6 +345,11 @@ const AuditCompare = () => {
         setResult(data.data);
         setIsLoading(false);
         refreshBalance();
+        
+        // Fire-and-forget: trigger CTO Agent for audit-compare
+        supabase.functions.invoke('agent-cto', {
+          body: { auditResult: data.data, auditType: 'compare', url: url1.trim(), domain: new URL(url1.trim().startsWith('http') ? url1.trim() : `https://${url1.trim()}`).hostname }
+        }).catch(() => {});
       }, 3000);
     } catch (e: any) {
       setIsLoading(false);
