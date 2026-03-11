@@ -260,6 +260,7 @@ const AuditCompare = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
+  useCanonicalHreflang('/audit-compare');
 
   const [url1, setUrl1] = useState('');
   const [url2, setUrl2] = useState('');
