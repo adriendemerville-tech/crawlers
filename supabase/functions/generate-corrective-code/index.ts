@@ -1524,6 +1524,110 @@ function generateFixCode(
         call: 'applyPageSpeedSuite();'
       };
 
+    case 'fix_hreflang':
+      const hreflangLangs = fix.data?.languages || [
+        { lang: 'fr', url: siteUrl },
+        { lang: 'en', url: siteUrl.replace('.fr', '.com') },
+      ];
+      const hreflangEntries = hreflangLangs.map((l: any) => 
+        `{ lang: '${l.lang}', url: '${l.url}' }`
+      ).join(',\n          ');
+      return {
+        fn: `  // Injection des balises hreflang pour le SEO international
+  function fixHreflang() {
+    if (hasLock('fix_hreflang')) return;
+    try {
+      var langs = [
+          ${hreflangEntries}
+      ];
+      langs.forEach(function(item) {
+        if (!document.querySelector('link[hreflang="' + item.lang + '"]')) {
+          var link = document.createElement('link');
+          link.rel = 'alternate';
+          link.hreflang = item.lang;
+          link.href = item.url;
+          document.head.appendChild(link);
+        }
+      });
+      // x-default
+      if (!document.querySelector('link[hreflang="x-default"]')) {
+        var xdef = document.createElement('link');
+        xdef.rel = 'alternate';
+        xdef.hreflang = 'x-default';
+        xdef.href = '${siteUrl}';
+        document.head.appendChild(xdef);
+      }
+      setLock(document.head, 'fix_hreflang');
+      console.log('[Crawlers.fr] ✅ Hreflang injecté pour', langs.length, 'langues');
+    } catch(e) { console.error('[Crawlers.fr] Erreur fixHreflang:', e); }
+  }`,
+        call: 'fixHreflang();'
+      };
+
+    case 'fix_open_graph':
+      const ogData = fix.data || {};
+      const ogTitle = ogData.title || siteName;
+      const ogDesc = ogData.description || `Découvrez ${siteName}`;
+      const ogImage = ogData.image || `${siteUrl}/og-image.jpg`;
+      return {
+        fn: `  // Injection des balises Open Graph
+  function fixOpenGraph() {
+    if (hasLock('fix_open_graph')) return;
+    try {
+      var ogTags = [
+        { property: 'og:type', content: 'website' },
+        { property: 'og:title', content: '${ogTitle.replace(/'/g, "\\'")}' },
+        { property: 'og:description', content: '${ogDesc.replace(/'/g, "\\'")}' },
+        { property: 'og:url', content: window.location.href },
+        { property: 'og:image', content: '${ogImage}' },
+        { property: 'og:site_name', content: '${siteName.replace(/'/g, "\\'")}' },
+        { property: 'og:locale', content: '${language === 'fr' ? 'fr_FR' : language === 'es' ? 'es_ES' : 'en_US'}' }
+      ];
+      ogTags.forEach(function(tag) {
+        if (!document.querySelector('meta[property="' + tag.property + '"]')) {
+          var meta = document.createElement('meta');
+          meta.setAttribute('property', tag.property);
+          meta.content = tag.content;
+          document.head.appendChild(meta);
+        }
+      });
+      setLock(document.head, 'fix_open_graph');
+      console.log('[Crawlers.fr] ✅ Open Graph injecté (7 balises)');
+    } catch(e) { console.error('[Crawlers.fr] Erreur fixOpenGraph:', e); }
+  }`,
+        call: 'fixOpenGraph();'
+      };
+
+    case 'fix_twitter_cards':
+      const tcData = fix.data || {};
+      const tcTitle = tcData.title || siteName;
+      const tcDesc = tcData.description || `Découvrez ${siteName}`;
+      return {
+        fn: `  // Injection des balises Twitter Card
+  function fixTwitterCards() {
+    if (hasLock('fix_twitter_cards')) return;
+    try {
+      var twitterTags = [
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: '${tcTitle.replace(/'/g, "\\'")}' },
+        { name: 'twitter:description', content: '${tcDesc.replace(/'/g, "\\'")}' },
+        { name: 'twitter:image', content: '${tcData.image || siteUrl + "/og-image.jpg"}' }
+      ];
+      twitterTags.forEach(function(tag) {
+        if (!document.querySelector('meta[name="' + tag.name + '"]')) {
+          var meta = document.createElement('meta');
+          meta.name = tag.name;
+          meta.content = tag.content;
+          document.head.appendChild(meta);
+        }
+      });
+      setLock(document.head, 'fix_twitter_cards');
+      console.log('[Crawlers.fr] ✅ Twitter Cards injecté (4 balises)');
+    } catch(e) { console.error('[Crawlers.fr] Erreur fixTwitterCards:', e); }
+  }`,
+        call: 'fixTwitterCards();'
+      };
+
     default:
       return { fn: '', call: '' };
   }

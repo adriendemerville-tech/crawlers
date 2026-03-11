@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
-import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -84,6 +84,8 @@ export default function SiteCrawl() {
   const [sortBy, setSortBy] = useState<'score_asc' | 'score_desc' | 'path'>('score_asc');
   const [pastCrawls, setPastCrawls] = useState<CrawlResult[]>([]);
   const [viewingCrawlId, setViewingCrawlId] = useState<string | null>(null);
+  const [prediction, setPrediction] = useState<any>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
 
   const creditCost = getCreditCost(maxPages);
 
@@ -186,6 +188,27 @@ export default function SiteCrawl() {
     } finally {
       setIsLoading(false);
       setPhase('');
+    }
+  }
+
+  async function handlePredict() {
+    if (!crawlResult || !user) return;
+    setIsPredicting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('predict-from-crawl', {
+        body: { crawl_id: crawlResult.id, userId: user.id },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setPrediction(data.prediction);
+        toast.success('Prédiction de trafic générée');
+      } else {
+        toast.error(data?.error || 'Erreur prédiction');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur prédiction');
+    } finally {
+      setIsPredicting(false);
     }
   }
 
@@ -357,6 +380,69 @@ export default function SiteCrawl() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Prédiction de trafic */}
+              <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <TrendingUp className="w-5 h-5 text-emerald-500" />
+                      Prédiction de trafic
+                    </CardTitle>
+                    {!prediction && (
+                      <Button size="sm" variant="outline" onClick={handlePredict} disabled={isPredicting} className="gap-2">
+                        {isPredicting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <TrendingUp className="w-3.5 h-3.5" />}
+                        {isPredicting ? 'Analyse…' : 'Estimer le gain'}
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {prediction ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground">{prediction.reasoning}</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="p-3 rounded-lg bg-muted/50 text-center">
+                          <div className="text-xs text-muted-foreground mb-1">Pessimiste</div>
+                          <div className="text-lg font-bold text-foreground">{prediction.scenarios.pessimistic.clicks}</div>
+                          <div className="text-xs text-emerald-600">+{prediction.scenarios.pessimistic.increase_pct}%</div>
+                        </div>
+                        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                          <div className="text-xs text-primary mb-1">Réaliste</div>
+                          <div className="text-lg font-bold text-primary">{prediction.scenarios.realistic.clicks}</div>
+                          <div className="text-xs text-emerald-600 font-semibold">+{prediction.scenarios.realistic.increase_pct}%</div>
+                        </div>
+                        <div className="p-3 rounded-lg bg-muted/50 text-center">
+                          <div className="text-xs text-muted-foreground mb-1">Agressif</div>
+                          <div className="text-lg font-bold text-foreground">{prediction.scenarios.aggressive.clicks}</div>
+                          <div className="text-xs text-emerald-600">+{prediction.scenarios.aggressive.increase_pct}%</div>
+                        </div>
+                      </div>
+                      {prediction.business_impact && (
+                        <div className="flex items-center gap-4 text-sm p-3 rounded-lg bg-muted/30">
+                          <div>
+                            <span className="text-muted-foreground">Impact mensuel : </span>
+                            <span className="font-semibold text-foreground">{prediction.business_impact.monthly_value_euro}€</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Annuel : </span>
+                            <span className="font-semibold text-emerald-600">{prediction.business_impact.annual_value_euro}€</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Risque IA : </span>
+                            <span className="font-semibold text-foreground">{prediction.ai_risk_score}/100</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Estimez l'impact trafic de la correction des erreurs détectées sur vos {pages.length} pages.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
 
               {/* Top erreurs */}
               {Object.keys(issueStats).length > 0 && (
