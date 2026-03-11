@@ -633,16 +633,16 @@ export default function SiteCrawl() {
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <FileText className="w-5 h-5 text-muted-foreground" />
-                      Pages crawlées ({pages.length})
+                      {t.crawledPages} ({pages.length})
                     </CardTitle>
                     <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
                       <SelectTrigger className="w-44">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="score_asc">Score ↑ (pires d'abord)</SelectItem>
-                        <SelectItem value="score_desc">Score ↓ (meilleurs)</SelectItem>
-                        <SelectItem value="path">Chemin A→Z</SelectItem>
+                        <SelectItem value="score_asc">{t.sortScoreAsc}</SelectItem>
+                        <SelectItem value="score_desc">{t.sortScoreDesc}</SelectItem>
+                        <SelectItem value="path">{t.sortPath}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
