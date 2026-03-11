@@ -612,9 +612,9 @@ async function analyzeSite(
   supabaseUrl: string,
   supabaseAnonKey: string,
   openrouterKey: string,
-): Promise<{ metadata: PageMetadata; analysis: any; llm_raw: any; keywords: any[]; backlinks: BacklinkProfile | null }> {
-  // Step 1: Metadata + LLM visibility + Backlinks in parallel
-  const [metadata, llmResult, backlinks] = await Promise.all([
+): Promise<{ metadata: PageMetadata; analysis: any; llm_raw: any; keywords: any[]; backlinks: BacklinkProfile | null; pagespeed: PageSpeedScores | null }> {
+  // Step 1: Metadata + LLM visibility + Backlinks + PageSpeed in parallel
+  const [metadata, llmResult, backlinks, pagespeed] = await Promise.all([
     extractPageMetadata(url, domain),
     (async () => {
       try {
@@ -630,6 +630,7 @@ async function analyzeSite(
       } catch { return null; }
     })(),
     fetchBacklinkProfile(domain),
+    fetchPageSpeedScores(url),
   ]);
 
   // Step 2: Seeds (needs metadata)
@@ -662,7 +663,7 @@ async function analyzeSite(
     console.warn(`LLM analysis failed for ${domain}:`, e instanceof Error ? e.message : e);
   }
 
-  return { metadata, analysis, llm_raw: llmResult, keywords, backlinks };
+  return { metadata, analysis, llm_raw: llmResult, keywords, backlinks, pagespeed };
 }
 
 // ==================== PHASE 3: CROSS-COMPARISON ====================
