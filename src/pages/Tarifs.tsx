@@ -218,6 +218,7 @@ const translations = {
     agencyFeatures: [
       'Informes ilimitados',
       'Correcciones ilimitadas',
+      'Crawl multi-páginas ilimitado',
       'Opción Marca Blanca',
       '3 cuentas incluidas',
       'Soporte prioritario',
