@@ -456,6 +456,14 @@ GÉNÈRE un JSON avec ces modules UNIQUEMENT:
     "recommendations": ["rec 1","rec 2"]
   },
   "aeo_score": 0-100,
+  "eeat_score": {
+    "experience": 0-10,
+    "expertise": 0-10,
+    "authoritativeness": 0-10,
+    "trustworthiness": 0-10,
+    "overall": 0-10,
+    "justification": "1-2 phrases expliquant le score"
+  },
   "expertise_sentiment": {"rating": 1-5, "justification": "1 phrase"}
 }
 
@@ -464,6 +472,7 @@ RÈGLES:
 - strengths & weaknesses: EXACTEMENT 3 chacun, phrases courtes
 - main_keywords: reprends les données DataForSEO fournies avec analyse stratégique
 - aeo_score: estime la capacité du site à apparaître en position zéro / réponse IA
+- eeat_score: évalue chaque pilier E-E-A-T indépendamment (Experience=vécu terrain, Expertise=compétence technique, Authoritativeness=reconnaissance secteur, Trustworthiness=crédibilité/transparence)
 - expertise_sentiment: 1=générique/IA, 5=expert terrain confirmé
 - JSON pur, sans commentaires`;
 }
