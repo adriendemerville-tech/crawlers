@@ -6,8 +6,7 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const t3 = (language: string, fr: string, en: string, es: string) =>
-  language === 'fr' ? fr : language === 'es' ? es : en;
+import { t3 } from '@/utils/i18n';
 
 const MentionsLegales = () => {
   const { language } = useLanguage();

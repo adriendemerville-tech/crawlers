@@ -7,8 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
-const t3 = (lang: string, fr: string, en: string, es: string) =>
-  lang === 'fr' ? fr : lang === 'es' ? es : en;
+import { t3 } from '@/utils/i18n';
 
 export default function Faq() {
   const { language } = useLanguage();

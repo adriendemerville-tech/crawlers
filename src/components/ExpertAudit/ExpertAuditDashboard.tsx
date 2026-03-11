@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +47,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSaveReport } from '@/hooks/useSaveReport';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { summarizeStrategicResult } from './expertReportExport';
+import { useAuditState } from './hooks/useAuditState';
+import { mapStrategicData } from './hooks/useStrategicDataMapper';
 
 // Fire-and-forget: trigger CTO Agent asynchronously after audit
 function triggerCtoAgent(auditResult: any, auditType: string, url: string, domain: string) {
@@ -166,37 +168,38 @@ const translations = {
 };
 
 export function ExpertAuditDashboard() {
-  const [url, setUrl] = useState('');
-  const [auditMode, setAuditMode] = useState<AuditMode>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isStrategicLoading, setIsStrategicLoading] = useState(false);
-  const [result, setResult] = useState<ExpertAuditResult | null>(null);
-  const [technicalResult, setTechnicalResult] = useState<ExpertAuditResult | null>(null);
-  const [strategicResult, setStrategicResult] = useState<ExpertAuditResult | null>(null);
-  const [strategicCachedContext, setStrategicCachedContext] = useState<any>(null);
-  const [preSummarizedResult, setPreSummarizedResult] = useState<ExpertAuditResult | null>(null);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isCodeEditorOpen, setIsCodeEditorOpen] = useState(false);
-  const [isReportAuthGateOpen, setIsReportAuthGateOpen] = useState(false);
-  const [pendingReportOpen, setPendingReportOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  // Hallucination diagnosis data - using any to support both legacy and new formats
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [hallucinationDiagnosis, setHallucinationDiagnosis] = useState<any>(null);
-  // Post-payment state for reopening modal with code
-  const [paidScriptCode, setPaidScriptCode] = useState<string>('');
-  const [paidFixesMetadata, setPaidFixesMetadata] = useState<Array<{id: string; label: string; category: string}>>([]);
-  const [hasVerifiedPayment, setHasVerifiedPayment] = useState(false);
-  const [siteAutoTracked, setSiteAutoTracked] = useState(false);
-  // Stored hallucination corrections from DB (community knowledge)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [storedCorrections, setStoredCorrections] = useState<any[]>([]);
-  const loadingRef = useRef<HTMLDivElement>(null);
-  const stopMusicRef = useRef<(() => void) | null>(null);
-  const auditStartTimeRef = useRef<number>(0);
-  const [strategicProgressiveReveal, setStrategicProgressiveReveal] = useState(false);
+  const state = useAuditState();
+  const {
+    url, setUrl,
+    auditMode, setAuditMode,
+    isLoading, setIsLoading,
+    isStrategicLoading, setIsStrategicLoading,
+    result, setResult,
+    technicalResult, setTechnicalResult,
+    strategicResult, setStrategicResult,
+    strategicCachedContext, setStrategicCachedContext,
+    preSummarizedResult, setPreSummarizedResult,
+    currentStep, setCurrentStep,
+    completedSteps, setCompletedSteps,
+    hallucinationDiagnosis, setHallucinationDiagnosis,
+    strategicProgressiveReveal, setStrategicProgressiveReveal,
+    storedCorrections, setStoredCorrections,
+    siteAutoTracked, setSiteAutoTracked,
+    isReportModalOpen, setIsReportModalOpen,
+    isPaymentModalOpen, setIsPaymentModalOpen,
+    isCodeEditorOpen, setIsCodeEditorOpen,
+    isReportAuthGateOpen, setIsReportAuthGateOpen,
+    pendingReportOpen, setPendingReportOpen,
+    paidScriptCode, setPaidScriptCode,
+    paidFixesMetadata, setPaidFixesMetadata,
+    hasVerifiedPayment, setHasVerifiedPayment,
+    loadingRef,
+    stopMusicRef,
+    auditStartTimeRef,
+    handleNewAudit,
+    handleNavigateToTechnical,
+    handleNavigateToStrategic,
+  } = state;
   
   const { toast } = useToast();
   const { language } = useLanguage();
@@ -498,24 +501,6 @@ export function ExpertAuditDashboard() {
     openReportAndSave();
   };
 
-  const handleNewAudit = () => {
-    // Clear all state
-    setUrl('');
-    setAuditMode(null);
-    setResult(null);
-    setTechnicalResult(null);
-    setStrategicResult(null);
-    setStrategicCachedContext(null);
-    setCurrentStep(1);
-    setCompletedSteps([]);
-    setStrategicProgressiveReveal(false);
-    // Clear session storage
-    sessionStorage.removeItem('audit_url');
-    sessionStorage.removeItem('audit_technical_result');
-    sessionStorage.removeItem('audit_strategic_result');
-    sessionStorage.removeItem('audit_mode');
-    sessionStorage.removeItem('audit_pending_action');
-  };
 
   const handleReportModalClose = () => {
     setIsReportModalOpen(false);
@@ -795,70 +780,7 @@ export function ExpertAuditDashboard() {
 
       if (!data.success) throw new Error(data.error || 'Strategic audit failed');
 
-      // Keyword module normalization (support minor naming variations)
-      const keywordPositioning =
-        data?.data?.keyword_positioning ??
-        data?.data?.keywordPositioning ??
-        data?.data?.keyword_positionnement ??
-        null;
-      const marketDataSummary =
-        data?.data?.market_data_summary ??
-        data?.data?.marketDataSummary ??
-        data?.data?.market_summary ??
-        null;
-
-      const strategicData: ExpertAuditResult = {
-        url: normalizedUrl,
-        domain: new URL(normalizedUrl).hostname,
-        totalScore: data.data.overallScore * 2,
-        maxScore: 200,
-        scores: {
-          performance: { score: 0, maxScore: 40, psiPerformance: 0, lcp: 0, cls: 0, tbt: 0, fcp: 0 },
-          technical: { score: 0, maxScore: 50, psiSeo: 0, httpStatus: 200, isHttps: true },
-          semantic: { score: 0, maxScore: 60, hasTitle: false, titleLength: 0, hasMetaDesc: false, metaDescLength: 0, h1Count: 0, hasUniqueH1: false, wordCount: 0 },
-          aiReady: { score: 0, maxScore: 30, hasSchemaOrg: false, schemaTypes: [], hasRobotsTxt: false, robotsPermissive: false },
-          security: { score: 0, maxScore: 20, isHttps: true, safeBrowsingOk: true, threats: [] },
-        },
-        recommendations: [],
-        rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
-        scannedAt: data.data.scannedAt || new Date().toISOString(),
-        strategicAnalysis: {
-          // New 13 Modules Premium Format
-          introduction: data.data.introduction,
-          brand_authority: data.data.brand_authority,
-          social_signals: data.data.social_signals,
-          market_intelligence: data.data.market_intelligence,
-          competitive_landscape: data.data.competitive_landscape,
-          geo_readiness: data.data.geo_readiness,
-          executive_roadmap: data.data.executive_roadmap,
-          // Keywords module (dedicated)
-          keyword_positioning: keywordPositioning,
-          market_data_summary: marketDataSummary,
-          // Standard Format (backward compatibility)
-          brand_identity: data.data.brand_identity,
-          market_positioning: data.data.market_positioning,
-          geo_score: data.data.geo_score,
-          strategic_roadmap: data.data.strategic_roadmap,
-          executive_summary: data.data.executive_summary,
-          // Legacy format
-          brandPerception: data.data.brandPerception,
-          geoAnalysis: data.data.geoAnalysis,
-          llmVisibility: data.data.llmVisibility,
-          testQueries: data.data.testQueries,
-          executiveSummary: data.data.executiveSummary,
-          overallScore: data.data.overallScore || data.data.geo_readiness?.citability_score || data.data.geo_score?.score,
-          // Store correction data for reference
-          hallucinationCorrections: hallucinationCorrections || null,
-           // NEW: Raw LLM visibility data from check-llm
-           llm_visibility_raw: data.data.llm_visibility_raw || null,
-           // NEW: 5 Strategic Metrics 2026
-           quotability: data.data.quotability || null,
-           summary_resilience: data.data.summary_resilience || null,
-           lexical_footprint: data.data.lexical_footprint || null,
-           expertise_sentiment: data.data.expertise_sentiment || null,
-           red_team: data.data.red_team || null,
-        },
-      };
+      const strategicData = mapStrategicData(data.data, normalizedUrl, hallucinationCorrections);
 
       setResult(strategicData);
       setStrategicResult(strategicData);
@@ -921,62 +843,14 @@ export function ExpertAuditDashboard() {
         
         if (cached?.result_data) {
           const cachedResult = cached.result_data as any;
-          if (cachedResult?.success && cachedResult?.data) {
+        if (cachedResult?.success && cachedResult?.data) {
             console.log('Strategic audit: ✅ Recovered completed result from cache!');
-            const data = cachedResult;
-            const keywordPositioning = data.data?.keyword_positioning ?? data.data?.keywordPositioning ?? null;
-            const marketDataSummary = data.data?.market_data_summary ?? data.data?.marketDataSummary ?? null;
-
-            const strategicData: ExpertAuditResult = {
-              url: normalizedUrl,
-              domain,
-              totalScore: data.data.overallScore * 2,
-              maxScore: 200,
-              scores: {
-                performance: { score: 0, maxScore: 40, psiPerformance: 0, lcp: 0, cls: 0, tbt: 0, fcp: 0 },
-                technical: { score: 0, maxScore: 50, psiSeo: 0, httpStatus: 200, isHttps: true },
-                semantic: { score: 0, maxScore: 60, hasTitle: false, titleLength: 0, hasMetaDesc: false, metaDescLength: 0, h1Count: 0, hasUniqueH1: false, wordCount: 0 },
-                aiReady: { score: 0, maxScore: 30, hasSchemaOrg: false, schemaTypes: [], hasRobotsTxt: false, robotsPermissive: false },
-                security: { score: 0, maxScore: 20, isHttps: true, safeBrowsingOk: true, threats: [] },
-              },
-              recommendations: [],
-              rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
-              scannedAt: data.data.scannedAt || new Date().toISOString(),
-              strategicAnalysis: {
-                introduction: data.data.introduction,
-                brand_authority: data.data.brand_authority,
-                social_signals: data.data.social_signals,
-                market_intelligence: data.data.market_intelligence,
-                competitive_landscape: data.data.competitive_landscape,
-                geo_readiness: data.data.geo_readiness,
-                executive_roadmap: data.data.executive_roadmap,
-                keyword_positioning: keywordPositioning,
-                market_data_summary: marketDataSummary,
-                brand_identity: data.data.brand_identity,
-                market_positioning: data.data.market_positioning,
-                geo_score: data.data.geo_score,
-                strategic_roadmap: data.data.strategic_roadmap,
-                executive_summary: data.data.executive_summary,
-                brandPerception: data.data.brandPerception,
-                geoAnalysis: data.data.geoAnalysis,
-                llmVisibility: data.data.llmVisibility,
-                testQueries: data.data.testQueries,
-                executiveSummary: data.data.executiveSummary,
-                overallScore: data.data.overallScore || data.data.geo_readiness?.citability_score || data.data.geo_score?.score,
-                hallucinationCorrections: hallucinationCorrections || null,
-                llm_visibility_raw: data.data.llm_visibility_raw || null,
-                quotability: data.data.quotability || null,
-                summary_resilience: data.data.summary_resilience || null,
-                lexical_footprint: data.data.lexical_footprint || null,
-                expertise_sentiment: data.data.expertise_sentiment || null,
-                red_team: data.data.red_team || null,
-              },
-            };
+            const strategicData = mapStrategicData(cachedResult.data, normalizedUrl, hallucinationCorrections);
 
             setResult(strategicData);
             setStrategicResult(strategicData);
             setStrategicProgressiveReveal(true);
-            if (data.data._cachedContext) setStrategicCachedContext(data.data._cachedContext);
+            if (cachedResult.data._cachedContext) setStrategicCachedContext(cachedResult.data._cachedContext);
             setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
             setHallucinationDiagnosis(null);
             setPreSummarizedResult(null);
@@ -999,51 +873,7 @@ export function ExpertAuditDashboard() {
             url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
             cachedContext: useCachedContext ? strategicCachedContext : null,
           });
-          if (!retryData?.success) throw new Error(retryData?.error || 'Retry failed');
-
-          const keywordPositioning = retryData?.data?.keyword_positioning ?? retryData?.data?.keywordPositioning ?? null;
-          const marketDataSummary = retryData?.data?.market_data_summary ?? retryData?.data?.marketDataSummary ?? null;
-
-          const strategicData: ExpertAuditResult = {
-            url: normalizedUrl,
-            domain: new URL(normalizedUrl).hostname,
-            totalScore: retryData.data.overallScore * 2,
-            maxScore: 200,
-            scores: {
-              performance: { score: 0, maxScore: 40, psiPerformance: 0, lcp: 0, cls: 0, tbt: 0, fcp: 0 },
-              technical: { score: 0, maxScore: 50, psiSeo: 0, httpStatus: 200, isHttps: true },
-              semantic: { score: 0, maxScore: 60, hasTitle: false, titleLength: 0, hasMetaDesc: false, metaDescLength: 0, h1Count: 0, hasUniqueH1: false, wordCount: 0 },
-              aiReady: { score: 0, maxScore: 30, hasSchemaOrg: false, schemaTypes: [], hasRobotsTxt: false, robotsPermissive: false },
-              security: { score: 0, maxScore: 20, isHttps: true, safeBrowsingOk: true, threats: [] },
-            },
-            recommendations: [],
-            rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
-            scannedAt: retryData.data.scannedAt || new Date().toISOString(),
-            strategicAnalysis: {
-              introduction: retryData.data.introduction,
-              brand_authority: retryData.data.brand_authority,
-              social_signals: retryData.data.social_signals,
-              market_intelligence: retryData.data.market_intelligence,
-              competitive_landscape: retryData.data.competitive_landscape,
-              geo_readiness: retryData.data.geo_readiness,
-              executive_roadmap: retryData.data.executive_roadmap,
-              keyword_positioning: keywordPositioning,
-              market_data_summary: marketDataSummary,
-              brand_identity: retryData.data.brand_identity,
-              market_positioning: retryData.data.market_positioning,
-              geo_score: retryData.data.geo_score,
-              strategic_roadmap: retryData.data.strategic_roadmap,
-              executive_summary: retryData.data.executive_summary,
-              brandPerception: retryData.data.brandPerception,
-              geoAnalysis: retryData.data.geoAnalysis,
-              llmVisibility: retryData.data.llmVisibility,
-              testQueries: retryData.data.testQueries,
-              executiveSummary: retryData.data.executiveSummary,
-              overallScore: retryData.data.overallScore || retryData.data.geo_readiness?.citability_score || retryData.data.geo_score?.score,
-              hallucinationCorrections: hallucinationCorrections || null,
-              llm_visibility_raw: retryData.data.llm_visibility_raw || null,
-            },
-          };
+          const strategicData = mapStrategicData(retryData.data, normalizedUrl, hallucinationCorrections);
 
           setResult(strategicData);
           setStrategicResult(strategicData);
@@ -1139,21 +969,6 @@ export function ExpertAuditDashboard() {
     });
   };
 
-  const handleNavigateToTechnical = useCallback(() => {
-    if (technicalResult) {
-      setAuditMode('technical');
-      setResult(technicalResult);
-    }
-  }, [technicalResult]);
-
-  // Navigate to cached strategic report  
-  const handleNavigateToStrategic = useCallback(() => {
-    if (strategicResult) {
-      setAuditMode('strategic');
-      setResult(strategicResult);
-      setStrategicProgressiveReveal(false);
-    }
-  }, [strategicResult]);
 
   // Fetch stored hallucination corrections for a domain
   const fetchStoredCorrections = useCallback(async (domain: string) => {

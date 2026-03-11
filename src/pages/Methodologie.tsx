@@ -14,8 +14,7 @@ import { Button } from '@/components/ui/button';
 
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
-const t3 = (lang: string, fr: string, en: string, es: string) =>
-  lang === 'fr' ? fr : lang === 'es' ? es : en;
+import { t3 } from '@/utils/i18n';
 
 interface AuditCategory {
   icon: React.ElementType;
