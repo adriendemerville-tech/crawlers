@@ -302,7 +302,7 @@ export default function Tarifs() {
 
   const handleSubscribe = async () => {
     if (!user) {
-      toast.error(t.agencyLoginRequired);
+      navigate('/auth');
       return;
     }
     setSubscribeLoading(true);
