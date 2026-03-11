@@ -185,10 +185,10 @@ Deno.serve(async (req) => {
           const res = await fetch(`${FIRECRAWL_API}/scrape`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: pageUrl, formats: ['html'], onlyMainContent: false, waitFor: 3000 }),
+            body: JSON.stringify({ url: pageUrl, formats: ['rawHtml'], onlyMainContent: false, waitFor: 3000 }),
           });
           const data = await res.json();
-          const html = data?.data?.html || data?.html || '';
+          const html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
           const statusCode = data?.data?.metadata?.statusCode || 200;
 
           if (!html) return null;
