@@ -152,6 +152,26 @@ const translations = {
         'Easy export and integration',
       ],
     },
+    crawlMultiPages: {
+      title: 'Multi-Page Crawl',
+      description: '1 credit per 50 pages (unlimited for Pro Agency)',
+      features: [
+        'Analyze up to 500 pages',
+        'SEO score per page',
+        'Technical error detection',
+        'AI summary and recommendations',
+      ],
+    },
+    auditCompare: {
+      title: 'Compared Audit',
+      description: '5 credits per comparative audit',
+      features: [
+        'Side-by-side comparison of 2 sites',
+        'Brand DNA & backlinks analysis',
+        'SERP Battlefield & keywords',
+        'Multi-axis differential radar',
+      ],
+    },
     creditsSection: 'Credit Packs',
     creditsDescription: 'Top up your account to access premium features',
     packs: [
