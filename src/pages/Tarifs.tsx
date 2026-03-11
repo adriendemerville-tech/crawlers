@@ -78,6 +78,7 @@ const translations = {
     agencyFeatures: [
       'Rapports illimités',
       'Correctifs illimités',
+      'Crawl multi-pages illimité',
       'Marque Blanche (White Label)',
       '3 comptes inclus',
       'Support prioritaire',
