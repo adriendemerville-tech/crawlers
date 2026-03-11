@@ -84,6 +84,8 @@ export default function SiteCrawl() {
   const [sortBy, setSortBy] = useState<'score_asc' | 'score_desc' | 'path'>('score_asc');
   const [pastCrawls, setPastCrawls] = useState<CrawlResult[]>([]);
   const [viewingCrawlId, setViewingCrawlId] = useState<string | null>(null);
+  const [prediction, setPrediction] = useState<any>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
 
   const creditCost = getCreditCost(maxPages);
 
