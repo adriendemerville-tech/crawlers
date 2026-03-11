@@ -18,7 +18,9 @@ import {
   Cpu,
   Zap,
   Brain,
-  Flame
+  Flame,
+  Swords,
+  ScanSearch
 } from 'lucide-react';
 import { 
   LineChart, 
