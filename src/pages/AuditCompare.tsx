@@ -395,7 +395,7 @@ function CompareLoadingSteps({ siteName, t }: { siteName: string; t: typeof i18n
 // ==================== RESULT CARD ====================
 
 function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
-  const { analysis, llm_raw, backlinks, contentDepth } = site;
+  const { analysis, llm_raw, backlinks, contentDepth, pagespeed } = site;
   const llmScore = llm_raw?.overallScore ?? analysis.llm_visibility?.citation_probability ?? 0;
 
   return (
