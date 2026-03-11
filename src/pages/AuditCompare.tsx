@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
