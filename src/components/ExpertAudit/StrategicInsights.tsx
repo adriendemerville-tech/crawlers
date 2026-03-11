@@ -250,6 +250,16 @@ export function StrategicInsights({
           {/* Empreinte Lexicale — après Visibilité LLM */}
           {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
 
+          {/* Social Signals & Human Authority */}
+          {analysis.social_signals && (
+            <SocialSignalsCard signals={analysis.social_signals} />
+          )}
+
+          {/* Market Intelligence & Psychology */}
+          {analysis.market_intelligence && (
+            <MarketIntelligenceCard intelligence={analysis.market_intelligence} />
+          )}
+
           {/* Remaining Strategic AI Metrics */}
           {analysis.expertise_sentiment && <ExpertiseSentimentCard data={analysis.expertise_sentiment} />}
           {analysis.red_team && <RedTeamCard data={analysis.red_team} />}
