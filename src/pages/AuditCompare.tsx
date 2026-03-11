@@ -1109,9 +1109,6 @@ const AuditCompare = () => {
           {/* Loading State */}
           {isLoading && (
             <div className="relative">
-              {/* PatienceCards flanking the content */}
-              <PatienceCards isActive={isLoading} />
-
               <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-0 items-start">
                 {/* Left loading */}
                 <div className="border-r-0 md:border-r border-border/30 pr-0 md:pr-4">
@@ -1139,19 +1136,37 @@ const AuditCompare = () => {
                 </div>
               </div>
 
-              {/* Spotify Player — single instance below the grid */}
-              <div className="mt-6 flex flex-col items-center">
-                <div className="flex items-center gap-2 justify-center mb-2">
-                  <Music className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs font-medium text-foreground">{t.playlist}</span>
+              {/* Spotify Player flanked by PatienceCards */}
+              <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1fr,auto,1fr] gap-4 items-end justify-items-center">
+                {/* Left infotainment card */}
+                <div className="hidden lg:block w-full max-w-[280px] justify-self-end">
+                  <PatienceCards isActive={isLoading} position="left" />
                 </div>
-                <div className="w-full max-w-[448px] overflow-hidden rounded-[12px] bg-[#282828] isolate"
-                  style={{ clipPath: 'inset(0 round 12px)' }}>
-                  <div ref={embedContainerRef} className="w-full"
-                    style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }}
-                    aria-label="Playlist Crawlers" />
+
+                {/* Center: Spotify */}
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-2 justify-center mb-2">
+                    <Music className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs font-medium text-foreground">{t.playlist}</span>
+                  </div>
+                  <div className="w-full max-w-[448px] overflow-hidden rounded-[12px] bg-[#282828] isolate"
+                    style={{ clipPath: 'inset(0 round 12px)' }}>
+                    <div ref={embedContainerRef} className="w-full"
+                      style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }}
+                      aria-label="Playlist Crawlers" />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground text-center mt-1 opacity-60">{t.volume}</p>
                 </div>
-                <p className="text-[10px] text-muted-foreground text-center mt-1 opacity-60">{t.volume}</p>
+
+                {/* Right infotainment card */}
+                <div className="hidden lg:block w-full max-w-[280px] justify-self-start">
+                  <PatienceCards isActive={isLoading} position="right" />
+                </div>
+              </div>
+
+              {/* Mobile: show both cards stacked */}
+              <div className="lg:hidden mt-4">
+                <PatienceCards isActive={isLoading} position="both" />
               </div>
 
               <p className="text-sm text-muted-foreground text-center mt-6">
