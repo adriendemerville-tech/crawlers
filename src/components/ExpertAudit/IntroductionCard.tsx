@@ -102,7 +102,11 @@ export function IntroductionCard({
                 {t.presentation}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed pl-6">
-                {introduction.presentation}
+                {typewriter ? (
+                  <TypewriterText text={introduction.presentation} speed={10} chunkSize={3} />
+                ) : (
+                  introduction.presentation
+                )}
               </p>
             </div>
           )}
