@@ -542,7 +542,7 @@ export default function SiteCrawl() {
                     <div className={`text-2xl font-bold ${getScoreColor(crawlResult.avg_score || 0)}`}>
                       {crawlResult.avg_score}/200
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">Score moyen</div>
+                    <div className="text-xs text-muted-foreground mt-1">{t.avgScore}</div>
                   </CardContent>
                 </Card>
                 <Card className="border">
