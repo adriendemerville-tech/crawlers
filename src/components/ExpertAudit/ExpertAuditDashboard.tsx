@@ -1316,7 +1316,7 @@ export function ExpertAuditDashboard() {
       {/* Loading States Container - scroll target */}
       <div ref={loadingRef}>
         {/* Loading State - Technical */}
-        {isLoading && <LoadingSteps siteName={url} variant="technical" />}
+        {isLoading && <LoadingSteps siteName={url} variant="technical" onStopMusicRef={stopMusicRef} />}
         
         {/* Loading State - Strategic */}
         {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" />}
