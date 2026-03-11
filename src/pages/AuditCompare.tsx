@@ -675,12 +675,12 @@ const AuditCompare = () => {
                 <Button onClick={handleLaunch} size="lg" disabled={!bothConfirmed}
                   className="bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold px-8 disabled:opacity-50">
                   <Swords className="h-4 w-4 mr-2" />
-                  Lancer l'audit comparé
+                  {t.launch}
                 </Button>
                 {!bothConfirmed && (url1.trim() || url2.trim()) && (
                   <p className="text-xs text-muted-foreground mt-2">
-                    {!confirmedUrl1 && !confirmedUrl2 ? 'Confirmez les deux URLs pour lancer l\'audit' 
-                      : !confirmedUrl1 ? 'Confirmez l\'URL du Site 1' : 'Confirmez l\'URL du Site 2'}
+                    {!confirmedUrl1 && !confirmedUrl2 ? t.confirmBoth 
+                      : !confirmedUrl1 ? t.confirmSite1 : t.confirmSite2}
                   </p>
                 )}
               </div>
