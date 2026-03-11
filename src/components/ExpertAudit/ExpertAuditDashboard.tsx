@@ -1710,6 +1710,7 @@ export function ExpertAuditDashboard() {
                 </AnimatePresence>
               </div>
             </motion.div>
+            </StrategicErrorBoundary>
           )}
 
           {/* Timestamp + Premium Report Button */}
