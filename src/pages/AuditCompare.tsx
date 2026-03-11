@@ -1139,7 +1139,9 @@ const AuditCompare = () => {
             <p className="text-muted-foreground text-sm max-w-lg mx-auto">
               {t.subtitle}
             </p>
-            
+            <p className="text-muted-foreground/80 text-xs max-w-2xl mx-auto mt-3 leading-relaxed">
+              {t.seoParagraph}
+            </p>
           </motion.div>
 
           {/* URL Inputs */}
