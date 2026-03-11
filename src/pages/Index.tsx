@@ -15,6 +15,7 @@ import { useStructuredData } from '@/hooks/useStructuredData';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Link } from 'react-router-dom';
 import { Crown, ArrowRight } from 'lucide-react';
+import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 
 // Lazy load heavy dashboard components
 const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then(m => ({ default: m.ResultsDashboard })));
