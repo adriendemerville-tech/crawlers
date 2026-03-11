@@ -692,7 +692,20 @@ const impactColors: Record<string, string> = {
   minor: 'text-muted-foreground bg-muted/30 border-border/30',
 };
 
-function CrossComparisonSection({ cross, site1Domain, site2Domain, t }: { cross: CrossComparison; site1Domain: string; site2Domain: string; t: typeof i18n['fr'] }) {
+function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossComparison; site1: SiteResult; site2: SiteResult; t: typeof i18n['fr'] }) {
+  const site1Domain = site1.domain;
+  const site2Domain = site2.domain;
+
+  // Build radar data
+  const radarData = [
+    { dimension: t.aeoScore, site1: site1.analysis.aeo_score || 0, site2: site2.analysis.aeo_score || 0 },
+    { dimension: t.eeat, site1: (site1.analysis.eeat_score?.overall || 0) * 10, site2: (site2.analysis.eeat_score?.overall || 0) * 10 },
+    { dimension: t.pagespeed, site1: site1.pagespeed?.performanceMobile || 0, site2: site2.pagespeed?.performanceMobile || 0 },
+    { dimension: t.backlinks, site1: Math.min(100, (site1.backlinks?.domainRank || 0)), site2: Math.min(100, (site2.backlinks?.domainRank || 0)) },
+    { dimension: t.contentDepth, site1: Math.min(100, Math.round((site1.contentDepth?.wordCount || 0) / 30)), site2: Math.min(100, Math.round((site2.contentDepth?.wordCount || 0) / 30)) },
+    { dimension: t.expertise, site1: (site1.analysis.expertise_sentiment?.rating || 0) * 20, site2: (site2.analysis.expertise_sentiment?.rating || 0) * 20 },
+  ];
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-8 space-y-4">
       <Separator className="my-6" />
