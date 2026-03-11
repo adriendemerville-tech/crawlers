@@ -50,6 +50,29 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/audit-expert"/>
   </url>
   
+  <!-- Audit Comparé - Analyse concurrentielle Premium -->
+  <url>
+    <loc>https://crawlers.fr/audit-compare</loc>
+    <lastmod>2026-03-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/audit-compare"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/audit-compare?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/audit-compare?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/audit-compare"/>
+  </url>
+  
+  <!-- Crawl Multi-Pages - Analyse récursive Premium -->
+  <url>
+    <loc>https://crawlers.fr/site-crawl</loc>
+    <lastmod>2026-03-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/site-crawl"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/site-crawl?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/site-crawl?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/site-crawl"/>
+  
   <!-- Blog Index -->
   <url>
     <loc>https://crawlers.fr/blog</loc>

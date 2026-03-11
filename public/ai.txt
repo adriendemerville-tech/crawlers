@@ -85,6 +85,20 @@ Patches prêts à l'emploi :
 - Scripts de performance
 - Correctifs d'accessibilité
 
+## 5. AUDIT COMPARÉ (Premium - 5 crédits)
+Analyse concurrentielle face-à-face de deux URLs :
+- Brand DNA (280 caractères par site)
+- SWOT (3 forces / 3 faiblesses par site)
+- Visibilité LLM comparée
+- Score AEO et expertise sentiment
+
+## 6. CRAWL MULTI-PAGES (Premium - 5-40 crédits)
+Analyse récursive de site entier :
+- Jusqu'à 500 pages analysées
+- Score SEO/200 individuel par page
+- Détection d'erreurs (H1, alt, Schema.org, liens cassés)
+- Synthèse IA globale et prédiction de hausse de trafic
+
 # PAGES PRINCIPALES
 Homepage (outils gratuits): https://crawlers.fr/
 Audit Expert (Check-up technique & stratégique): https://crawlers.fr/audit-expert
