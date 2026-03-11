@@ -71,9 +71,10 @@ interface CrawlResult {
 
 export default function SiteCrawl() {
   const { user } = useAuth();
-  const { balance: credits } = useCredits();
+  const { balance: credits, isAgencyPro } = useCredits();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const { isAdmin } = useAdmin();
 
   const [url, setUrl] = useState('');
   const [maxPages, setMaxPages] = useState(50);
@@ -89,7 +90,8 @@ export default function SiteCrawl() {
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
 
-  const creditCost = getCreditCost(maxPages);
+  const isUnlimited = isAgencyPro || isAdmin;
+  const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
 
   // Load past crawls
   useEffect(() => {
