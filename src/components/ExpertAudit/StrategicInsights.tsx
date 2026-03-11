@@ -44,6 +44,7 @@ interface StrategicInsightsProps {
   onCompetitorCorrection?: (corrections: CompetitorCorrections) => void;
   isReanalyzing?: boolean;
   auditResult?: import('@/types/expertAudit').ExpertAuditResult;
+  progressiveReveal?: boolean;
 }
 
 export function StrategicInsights({ 
@@ -54,7 +55,8 @@ export function StrategicInsights({
   onHallucinationData,
   onCompetitorCorrection,
   isReanalyzing = false,
-  auditResult
+  auditResult,
+  progressiveReveal = false
 }: StrategicInsightsProps) {
   const [showHallucinationModal, setShowHallucinationModal] = useState(false);
   
