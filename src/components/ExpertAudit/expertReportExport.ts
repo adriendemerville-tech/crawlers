@@ -1016,16 +1016,20 @@ export function generateExpertReportHTML(
     .footer { text-align: center; margin-top: 40px; padding: 24px; background: ${headerGradient}; border-radius: 16px; break-inside: avoid; page-break-inside: avoid; }
     .footer-brand { color: white; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
     .footer-link { color: white; text-decoration: none; font-weight: 500; padding: 10px 20px; background: rgba(255,255,255,0.2); border-radius: 10px; display: inline-block; }
-    /* Prevent splitting sections/blocks at page boundaries */
-    div[style*="border-radius"], div[style*="break-inside"], table, .score-box { break-inside: avoid; page-break-inside: avoid; }
-    div[style*="border-left:"] { break-inside: avoid; page-break-inside: avoid; }
-    div[style*="margin-bottom: 10px"] { break-inside: avoid; page-break-inside: avoid; }
-    tr { break-inside: avoid; page-break-inside: avoid; }
+    /* ═══ ANTI PAGE-BREAK: prevent ANY card from being split across pages ═══ */
+    div[style*="border-radius"], div[style*="break-inside"], table, .score-box,
+    div[style*="border-left:"], div[style*="margin-bottom"], div[style*="padding:"],
+    blockquote { break-inside: avoid !important; page-break-inside: avoid !important; }
+    tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+    h3 { break-after: avoid !important; page-break-after: avoid !important; }
+    /* Force each section card to start on a new page if it would be split */
+    .content > div { break-inside: avoid !important; page-break-inside: avoid !important; }
     @page { margin: 15mm 10mm; }
     @media print {
       body { background: white; padding: 0; }
       .container { max-width: 100%; }
       .content { box-shadow: none; padding: 20px; }
+      .content > div, .content > table, .content > h3 + div { break-inside: avoid !important; page-break-inside: avoid !important; }
       .header, .footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
     @media (max-width: 700px) {
