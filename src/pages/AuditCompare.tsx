@@ -549,7 +549,7 @@ const AuditCompare = () => {
         
         // All retries exhausted — show a gentle toast, no red banner
         setIsLoading(false);
-        toast({ title: '⏱️', description: t.retry });
+        toast({ title: 'Timeout', description: t.retry });
       }
     };
 
