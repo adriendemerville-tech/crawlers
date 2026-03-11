@@ -118,7 +118,15 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const functionName = auditType === 'technical' ? 'audit-expert-seo' : 'audit-strategique-ia';
+    
+    // Map audit types to function names for prompt registry
+    const AUDIT_TYPE_TO_FUNCTION: Record<string, string> = {
+      'technical': 'audit-expert-seo',
+      'strategic': 'audit-strategique-ia',
+      'compare': 'audit-compare',
+      'crawl': 'crawl-site',
+    };
+    const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType;
 
     // Get current champion prompt (if exists)
     const champion = await getChampionPrompt(supabase, functionName);

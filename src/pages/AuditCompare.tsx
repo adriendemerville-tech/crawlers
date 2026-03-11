@@ -328,6 +328,14 @@ const AuditCompare = () => {
     setResult(null);
     setError(null);
 
+    // Track analytics event
+    supabase.from('analytics_events').insert({
+      event_type: 'audit_compare_launched',
+      url: url1.trim(),
+      target_url: url2.trim(),
+      user_id: user?.id || null,
+    }).then(() => {});
+
     try {
       const { data, error: fnError } = await supabase.functions.invoke('audit-compare', {
         body: { url1: url1.trim(), url2: url2.trim() },
@@ -345,6 +353,11 @@ const AuditCompare = () => {
         setResult(data.data);
         setIsLoading(false);
         refreshBalance();
+        
+        // Fire-and-forget: trigger CTO Agent for audit-compare
+        supabase.functions.invoke('agent-cto', {
+          body: { auditResult: data.data, auditType: 'compare', url: url1.trim(), domain: new URL(url1.trim().startsWith('http') ? url1.trim() : `https://${url1.trim()}`).hostname }
+        }).catch(() => {});
       }, 3000);
     } catch (e: any) {
       setIsLoading(false);

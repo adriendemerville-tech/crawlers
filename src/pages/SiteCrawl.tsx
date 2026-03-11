@@ -148,6 +148,11 @@ export default function SiteCrawl() {
               onClick: () => {},
             },
           });
+          
+          // Fire-and-forget: trigger CTO Agent for crawl analysis
+          supabase.functions.invoke('agent-cto', {
+            body: { auditResult: { ai_summary: r.ai_summary, ai_recommendations: r.ai_recommendations, avg_score: r.avg_score, crawled_pages: r.crawled_pages }, auditType: 'crawl', url: r.url, domain: r.domain }
+          }).catch(() => {});
         }
         if (r.status === 'error') {
           clearInterval(interval);
