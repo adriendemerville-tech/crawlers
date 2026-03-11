@@ -441,7 +441,7 @@ const AuditCompare = () => {
     }
 
     if (!bothConfirmed) {
-      toast({ title: 'Erreur', description: 'Veuillez confirmer les deux URLs avant de lancer l\'audit.', variant: 'destructive' });
+      toast({ title: 'Error', description: t.errorConfirm, variant: 'destructive' });
       return;
     }
 
