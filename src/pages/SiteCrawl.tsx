@@ -558,7 +558,7 @@ export default function SiteCrawl() {
                     <div className="text-2xl font-bold text-destructive">
                       {Object.values(issueStats).reduce((s, v) => s + v, 0)}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">Erreurs totales</div>
+                    <div className="text-xs text-muted-foreground mt-1">{t.totalErrors}</div>
                   </CardContent>
                 </Card>
               </div>
