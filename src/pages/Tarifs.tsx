@@ -7,7 +7,7 @@ import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -297,12 +297,13 @@ const agencyIcons = [Infinity, Infinity, Shield, Shield, Users, Headphones];
 export default function Tarifs() {
   const { language } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const t = translations[language];
   const [subscribeLoading, setSubscribeLoading] = useState(false);
 
   const handleSubscribe = async () => {
     if (!user) {
-      toast.error(t.agencyLoginRequired);
+      navigate('/auth');
       return;
     }
     setSubscribeLoading(true);
