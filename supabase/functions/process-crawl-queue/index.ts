@@ -54,39 +54,71 @@ function analyzeHtml(html: string, pageUrl: string, domain: string): Omit<PageAn
   let path = '/';
   try { path = new URL(pageUrl).pathname; } catch {}
 
-  const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
-  const title = titleMatch ? titleMatch[1].trim() : null;
+  // ── Title: support multiline, entities, nested tags ──
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() || null : null;
 
-  const metaDescMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i)
-    || html.match(/<meta\s+content=["']([^"']+)["']\s+name=["']description["']/i);
-  const meta_description = metaDescMatch ? metaDescMatch[1].trim() : null;
+  // ── Meta description: flexible attribute order, single/double quotes, spaces ──
+  const metaDescPatterns = [
+    /<meta\s[^>]*name\s*=\s*["']description["'][^>]*content\s*=\s*["']([\s\S]*?)["'][^>]*\/?>/i,
+    /<meta\s[^>]*content\s*=\s*["']([\s\S]*?)["'][^>]*name\s*=\s*["']description["'][^>]*\/?>/i,
+  ];
+  let meta_description: string | null = null;
+  for (const pattern of metaDescPatterns) {
+    const m = html.match(pattern);
+    if (m) { meta_description = m[1].replace(/\s+/g, ' ').trim(); break; }
+  }
 
+  // ── H1: support nested tags, classes, etc. ──
   const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-  const h1 = h1Match ? h1Match[1].replace(/<[^>]+>/g, '').trim() : null;
+  const h1 = h1Match ? h1Match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() || null : null;
 
-  const has_schema_org = /application\/ld\+json/i.test(html);
-  const has_canonical = /<link[^>]+rel=["']canonical["']/i.test(html);
+  // ── Structured data & head signals ──
+  const has_schema_org = /application\/ld\+json/i.test(html) || /itemtype\s*=\s*["']https?:\/\/schema\.org/i.test(html);
+  const has_canonical = /<link[^>]+rel\s*=\s*["']canonical["']/i.test(html);
   const has_hreflang = /<link[^>]+hreflang/i.test(html);
-  const has_og = /<meta[^>]+property=["']og:/i.test(html);
+  const has_og = /<meta[^>]+property\s*=\s*["']og:/i.test(html);
 
+  // ── Word count (body only, excluding scripts/styles/nav/footer) ──
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-  const bodyText = bodyMatch ? bodyMatch[1].replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').trim() : '';
-  const word_count = bodyText.split(/\s+/).filter(w => w.length > 0).length;
+  let bodyText = '';
+  if (bodyMatch) {
+    bodyText = bodyMatch[1]
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+      .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+      .replace(/<header[\s\S]*?<\/header>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  const word_count = bodyText.split(/\s+/).filter(w => w.length > 1).length;
 
+  // ── Images ──
   const imgMatches = html.match(/<img[^>]*>/gi) || [];
   const images_total = imgMatches.length;
-  const images_without_alt = imgMatches.filter(img => !(/alt=["'][^"']+["']/i.test(img))).length;
+  const images_without_alt = imgMatches.filter(img => {
+    // Missing alt, empty alt=""  , or alt=" "
+    if (!/alt\s*=/i.test(img)) return true;
+    const altVal = img.match(/alt\s*=\s*["']([\s\S]*?)["']/i);
+    return !altVal || altVal[1].trim().length === 0;
+  }).length;
 
-  const linkMatches = html.match(/<a[^>]+href=["']([^"'#]+)["']/gi) || [];
+  // ── Links ──
+  const linkMatches = html.match(/<a\s[^>]*href\s*=\s*["']([^"'#]+)["'][^>]*/gi) || [];
   let internal_links = 0, external_links = 0;
   for (const link of linkMatches) {
-    const hrefMatch = link.match(/href=["']([^"'#]+)["']/i);
+    const hrefMatch = link.match(/href\s*=\s*["']([^"'#]+)["']/i);
     if (!hrefMatch) continue;
-    const href = hrefMatch[1];
+    const href = hrefMatch[1].trim();
+    if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) continue;
     if (href.startsWith('/') || href.includes(domain)) internal_links++;
     else if (href.startsWith('http')) external_links++;
   }
 
+  // ── Issues detection ──
   const issues: string[] = [];
   if (!title) issues.push('missing_title');
   else if (title.length > 60) issues.push('title_too_long');
@@ -185,10 +217,10 @@ Deno.serve(async (req) => {
           const res = await fetch(`${FIRECRAWL_API}/scrape`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: pageUrl, formats: ['html'], onlyMainContent: false, waitFor: 3000 }),
+            body: JSON.stringify({ url: pageUrl, formats: ['rawHtml'], onlyMainContent: false, waitFor: 3000 }),
           });
           const data = await res.json();
-          const html = data?.data?.html || data?.html || '';
+          const html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
           const statusCode = data?.data?.metadata?.statusCode || 200;
 
           if (!html) return null;
