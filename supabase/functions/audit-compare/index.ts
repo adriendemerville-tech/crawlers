@@ -689,11 +689,13 @@ Deno.serve(async (req) => {
       console.log(`🗑️ Cache invalidated for ${cacheKey}`);
     }
 
-    // Check credits (5 required)
+    // Check credits (5 required) — free for admins & subscribers
     const { data: profile } = await supabase.from('profiles').select('credits_balance, plan_type, subscription_status').eq('user_id', user.id).single();
     const isProAgency = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
+    const { data: isAdmin } = await supabaseAdmin.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+    const isUnlimited = isProAgency || isAdmin === true;
     
-    if (!isProAgency) {
+    if (!isUnlimited) {
       if (!profile || profile.credits_balance < 5) {
         return json({ success: false, error: 'Insufficient credits (5 required)', balance: profile?.credits_balance || 0 }, 402);
       }
