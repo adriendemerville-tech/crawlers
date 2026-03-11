@@ -593,13 +593,12 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {analysis.llm_visibility?.test_queries && analysis.llm_visibility.test_queries.length > 0 && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-cyan-500" /> {t.llmQueries}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-2.5">
             {(() => {
-              // Count how many queries target each LLM
               const queries = analysis.llm_visibility!.test_queries!;
               const llmColors: Record<string, string> = {
                 'ChatGPT': 'text-emerald-400', 'GPT-4': 'text-emerald-400', 'GPT-5': 'text-emerald-400',
@@ -616,14 +615,14 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
                 return 'text-teal-400';
               };
               return queries.slice(0, 3).map((q, i) => (
-                <div key={i} className="p-2 rounded-lg bg-muted/30 border border-border/30">
-                  <p className="text-xs font-medium text-foreground">"{q.query}"</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{q.purpose}</p>
-                  <div className="flex gap-1.5 mt-1 flex-wrap">
+                <div key={i} className="p-2.5 rounded-lg bg-muted/30 border border-border/30">
+                  <p className="text-sm font-medium text-foreground">"{q.query}"</p>
+                  <p className="text-xs text-foreground/60 mt-0.5">{q.purpose}</p>
+                  <div className="flex gap-1.5 mt-1.5 flex-wrap">
                     {q.target_llms?.map((llm, j) => {
                       const count = queries.filter(qq => qq.target_llms?.includes(llm)).length;
                       return (
-                        <Badge key={j} variant="outline" className={`text-[9px] px-1.5 ${getLlmColor(llm)}`}>
+                        <Badge key={j} variant="outline" className={`text-[10px] px-1.5 ${getLlmColor(llm)}`}>
                           {llm} <span className="ml-0.5 opacity-70">({count})</span>
                         </Badge>
                       );
