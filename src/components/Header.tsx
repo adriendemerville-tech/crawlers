@@ -208,32 +208,32 @@ export function Header() {
                 <span className="hidden sm:inline text-lg font-display text-[#7c3aed]" style={{ fontWeight: 900 }}>Crawlers</span>
               </a>
 
-              {/* Language selector - hidden on mobile and profile page */}
+              {/* Language selector below Crawlers - hidden on mobile and profile page */}
               {!isProfilePage && (
-                <div className="hidden sm:flex items-center gap-1" role="group" aria-label="Sélection de la langue">
+                <div className="hidden sm:flex items-center gap-0.5 ml-1" role="group" aria-label="Sélection de la langue">
                   <button
                     onClick={() => setLanguage('fr')}
-                    className={`h-7 w-7 rounded-md flex items-center justify-center transition-opacity ${language === 'fr' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                    className={`h-6 w-6 rounded-md flex items-center justify-center transition-opacity ${language === 'fr' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
                     aria-pressed={language === 'fr'}
                     aria-label="Français"
                   >
-                    <span className="text-base">🇫🇷</span>
+                    <span className="text-sm">🇫🇷</span>
                   </button>
                   <button
                     onClick={() => setLanguage('en')}
-                    className={`h-7 w-7 rounded-md flex items-center justify-center transition-opacity ${language === 'en' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                    className={`h-6 w-6 rounded-md flex items-center justify-center transition-opacity ${language === 'en' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
                     aria-pressed={language === 'en'}
                     aria-label="English"
                   >
-                    <span className="text-base">🇬🇧</span>
+                    <span className="text-sm">🇬🇧</span>
                   </button>
                   <button
                     onClick={() => setLanguage('es')}
-                    className={`h-7 w-7 rounded-md flex items-center justify-center transition-opacity ${language === 'es' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                    className={`h-6 w-6 rounded-md flex items-center justify-center transition-opacity ${language === 'es' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
                     aria-pressed={language === 'es'}
                     aria-label="Español"
                   >
-                    <span className="text-base">🇪🇸</span>
+                    <span className="text-sm">🇪🇸</span>
                   </button>
                 </div>
               )}
