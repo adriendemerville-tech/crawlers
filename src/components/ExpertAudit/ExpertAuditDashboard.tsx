@@ -194,6 +194,7 @@ export function ExpertAuditDashboard() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [storedCorrections, setStoredCorrections] = useState<any[]>([]);
   const loadingRef = useRef<HTMLDivElement>(null);
+  const stopMusicRef = useRef<(() => void) | null>(null);
   
   const { toast } = useToast();
   const { language } = useLanguage();
