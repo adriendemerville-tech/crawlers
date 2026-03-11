@@ -325,6 +325,119 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_impact_snapshots: {
+        Row: {
+          action_plan_progress: number | null
+          audit_report_id: string | null
+          audit_scores: Json
+          audit_type: string
+          corrective_code_deployed: boolean | null
+          correlation_data: Json | null
+          created_at: string
+          dataforseo_baseline: Json | null
+          dataforseo_t90: Json | null
+          domain: string
+          gsc_baseline: Json | null
+          gsc_t30: Json | null
+          gsc_t30_measured_at: string | null
+          gsc_t60: Json | null
+          gsc_t60_measured_at: string | null
+          gsc_t90: Json | null
+          gsc_t90_measured_at: string | null
+          id: string
+          impact_score: number | null
+          measurement_phase: string | null
+          next_measurement_at: string | null
+          pagespeed_baseline: Json | null
+          pagespeed_t90: Json | null
+          recommendations_count: number | null
+          recommendations_data: Json | null
+          recos_applied_count: number | null
+          recos_applied_data: Json | null
+          reliability_grade: string | null
+          tracked_site_id: string | null
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          action_plan_progress?: number | null
+          audit_report_id?: string | null
+          audit_scores?: Json
+          audit_type: string
+          corrective_code_deployed?: boolean | null
+          correlation_data?: Json | null
+          created_at?: string
+          dataforseo_baseline?: Json | null
+          dataforseo_t90?: Json | null
+          domain: string
+          gsc_baseline?: Json | null
+          gsc_t30?: Json | null
+          gsc_t30_measured_at?: string | null
+          gsc_t60?: Json | null
+          gsc_t60_measured_at?: string | null
+          gsc_t90?: Json | null
+          gsc_t90_measured_at?: string | null
+          id?: string
+          impact_score?: number | null
+          measurement_phase?: string | null
+          next_measurement_at?: string | null
+          pagespeed_baseline?: Json | null
+          pagespeed_t90?: Json | null
+          recommendations_count?: number | null
+          recommendations_data?: Json | null
+          recos_applied_count?: number | null
+          recos_applied_data?: Json | null
+          reliability_grade?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          action_plan_progress?: number | null
+          audit_report_id?: string | null
+          audit_scores?: Json
+          audit_type?: string
+          corrective_code_deployed?: boolean | null
+          correlation_data?: Json | null
+          created_at?: string
+          dataforseo_baseline?: Json | null
+          dataforseo_t90?: Json | null
+          domain?: string
+          gsc_baseline?: Json | null
+          gsc_t30?: Json | null
+          gsc_t30_measured_at?: string | null
+          gsc_t60?: Json | null
+          gsc_t60_measured_at?: string | null
+          gsc_t90?: Json | null
+          gsc_t90_measured_at?: string | null
+          id?: string
+          impact_score?: number | null
+          measurement_phase?: string | null
+          next_measurement_at?: string | null
+          pagespeed_baseline?: Json | null
+          pagespeed_t90?: Json | null
+          recommendations_count?: number | null
+          recommendations_data?: Json | null
+          recos_applied_count?: number | null
+          recos_applied_data?: Json | null
+          reliability_grade?: string | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_impact_snapshots_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_recommendations_registry: {
         Row: {
           audit_type: string
