@@ -748,7 +748,7 @@ const AuditCompare = () => {
                     <Badge className="bg-violet-600 text-white text-xs">{result.site1.domain}</Badge>
                     <p className="text-xs text-muted-foreground mt-1 truncate">{result.site1.metadata.title}</p>
                   </div>
-                  <SiteResultCard site={result.site1} />
+                  <SiteResultCard site={result.site1} t={t} />
                 </div>
 
                 {/* Separator */}
