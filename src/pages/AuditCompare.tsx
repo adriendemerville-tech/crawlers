@@ -901,28 +901,28 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="border-violet-500/20 bg-card/80">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
                 <ArrowRight className="h-4 w-4 text-violet-500" /> {t.recommendations} — {site1Domain}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {(cross.strategic_recommendations.for_site1 || []).map((r, i) => (
-                  <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-violet-500/30">{r}</p>
+                  <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-violet-500/30">{r}</p>
                 ))}
               </div>
             </CardContent>
           </Card>
           <Card className="border-amber-500/20 bg-card/80">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
                 <ArrowRight className="h-4 w-4 text-amber-500" /> {t.recommendations} — {site2Domain}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {(cross.strategic_recommendations.for_site2 || []).map((r, i) => (
-                  <p key={i} className="text-xs text-muted-foreground pl-3 border-l-2 border-amber-500/30">{r}</p>
+                  <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-amber-500/30">{r}</p>
                 ))}
               </div>
             </CardContent>
