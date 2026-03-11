@@ -1,5 +1,5 @@
 import { useState, useRef, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe } from 'lucide-react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -300,9 +300,21 @@ export function Header() {
           )}
         </div>
 
-        {/* Right side: Credits (on audit-expert), Theme, User */}
+        {/* Right side: Audit CTA, Credits, Theme, User */}
         <div className="flex items-center gap-3">
 
+          {/* Audit Expert CTA - hidden on audit-expert page */}
+          {!isAuditExpertPage && (
+            <Link to="/audit-expert">
+              <Button
+                size="sm"
+                className="gap-1.5 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold shadow-md"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span className="hidden sm:inline">Audit</span>
+              </Button>
+            </Link>
+          )}
           {/* Credit recharge button - on home and /audit-expert (show for all users) */}
           {(isAuditExpertPage || location.pathname === '/') && (
             <Suspense fallback={null}>
