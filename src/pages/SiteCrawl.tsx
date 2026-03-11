@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdmin } from '@/hooks/useAdmin';
 import { toast } from 'sonner';
 import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
 
@@ -71,9 +72,10 @@ interface CrawlResult {
 
 export default function SiteCrawl() {
   const { user } = useAuth();
-  const { balance: credits } = useCredits();
+  const { balance: credits, isAgencyPro } = useCredits();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const { isAdmin } = useAdmin();
 
   const [url, setUrl] = useState('');
   const [maxPages, setMaxPages] = useState(50);
@@ -89,7 +91,8 @@ export default function SiteCrawl() {
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
 
-  const creditCost = getCreditCost(maxPages);
+  const isUnlimited = isAgencyPro || isAdmin;
+  const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
 
   // Load past crawls
   useEffect(() => {
@@ -176,7 +179,7 @@ export default function SiteCrawl() {
       navigate('/auth');
       return;
     }
-    if (credits < creditCost) {
+    if (!isUnlimited && credits < creditCost) {
       toast.error(`Crédits insuffisants. Requis : ${creditCost}, disponibles : ${credits}`);
       return;
     }
@@ -344,8 +347,17 @@ export default function SiteCrawl() {
                     />
                   </div>
                   <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border">
-                    <CreditCoin size="md" />
-                    <span className="text-sm font-semibold">{creditCost} crédits</span>
+                    {isUnlimited ? (
+                      <Badge className="bg-violet-600 text-white gap-1">
+                        <span className="text-base">∞</span>
+                        Illimité
+                      </Badge>
+                    ) : (
+                      <>
+                        <CreditCoin size="md" />
+                        <span className="text-sm font-semibold">{creditCost} crédits</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </form>
