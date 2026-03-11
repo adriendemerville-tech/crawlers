@@ -577,7 +577,7 @@ export default function SiteCrawl() {
 
                     {crawlResult.ai_recommendations?.length > 0 && (
                       <div className="mt-4 space-y-3">
-                        <h4 className="text-sm font-semibold text-foreground">Recommandations prioritaires</h4>
+                        <h4 className="text-sm font-semibold text-foreground">{t.priorityRecs}</h4>
                         {(crawlResult.ai_recommendations as any[]).map((rec: any, i: number) => (
                           <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                             <Badge variant={rec.priority === 'critical' ? 'destructive' : rec.priority === 'high' ? 'default' : 'secondary'} className="shrink-0 mt-0.5">
