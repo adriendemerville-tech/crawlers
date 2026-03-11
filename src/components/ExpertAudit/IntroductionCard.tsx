@@ -5,6 +5,7 @@ import { Globe, CheckCircle2, AlertCircle, Lightbulb, Zap, Users, BrainCircuit }
 import { StrategicIntroduction } from '@/types/expertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
+import { TypewriterText } from './TypewriterText';
 
 interface IntroductionCardProps {
   introduction: StrategicIntroduction;
@@ -13,6 +14,7 @@ interface IntroductionCardProps {
   siteName?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onHallucinationData?: (data: any) => void;
+  typewriter?: boolean;
 }
 
 const translations = {
