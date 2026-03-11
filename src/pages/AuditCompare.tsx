@@ -261,9 +261,14 @@ const AuditCompare = () => {
 
   const [url1, setUrl1] = useState('');
   const [url2, setUrl2] = useState('');
+  const [confirmedUrl1, setConfirmedUrl1] = useState<string | null>(null);
+  const [confirmedUrl2, setConfirmedUrl2] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CompareResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const validation1 = useUrlValidation(language);
+  const validation2 = useUrlValidation(language);
 
   const { embedContainerRef, stopPlayback } = useSpotifyTrackRotation();
   const dingAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -271,7 +276,6 @@ const AuditCompare = () => {
   // Preload ding
   useEffect(() => {
     dingAudioRef.current = new Audio('/assets/sounds/microwave-ding.mp3');
-    // Try src/assets path too
     dingAudioRef.current.onerror = () => {
       dingAudioRef.current = new Audio('/sounds/microwave-ding.mp3');
     };
@@ -284,14 +288,36 @@ const AuditCompare = () => {
     }
   }, []);
 
+  // Reset confirmed URL when input changes
+  useEffect(() => { setConfirmedUrl1(null); validation1.resetValidation(); }, [url1]);
+  useEffect(() => { setConfirmedUrl2(null); validation2.resetValidation(); }, [url2]);
+
+  const handleConfirmUrl1 = () => {
+    if (!url1.trim()) return;
+    validation1.validateAndCorrect(url1, (validUrl) => {
+      setUrl1(validUrl);
+      setConfirmedUrl1(validUrl);
+    });
+  };
+
+  const handleConfirmUrl2 = () => {
+    if (!url2.trim()) return;
+    validation2.validateAndCorrect(url2, (validUrl) => {
+      setUrl2(validUrl);
+      setConfirmedUrl2(validUrl);
+    });
+  };
+
+  const bothConfirmed = !!confirmedUrl1 && !!confirmedUrl2;
+
   const handleLaunch = async () => {
     if (!user) {
       navigate('/auth');
       return;
     }
 
-    if (!url1.trim() || !url2.trim()) {
-      toast({ title: 'Erreur', description: 'Veuillez saisir les deux URLs.', variant: 'destructive' });
+    if (!bothConfirmed) {
+      toast({ title: 'Erreur', description: 'Veuillez confirmer les deux URLs avant de lancer l\'audit.', variant: 'destructive' });
       return;
     }
 
