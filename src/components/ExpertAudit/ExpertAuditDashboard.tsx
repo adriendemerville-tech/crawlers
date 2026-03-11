@@ -843,62 +843,14 @@ export function ExpertAuditDashboard() {
         
         if (cached?.result_data) {
           const cachedResult = cached.result_data as any;
-          if (cachedResult?.success && cachedResult?.data) {
+        if (cachedResult?.success && cachedResult?.data) {
             console.log('Strategic audit: ✅ Recovered completed result from cache!');
-            const data = cachedResult;
-            const keywordPositioning = data.data?.keyword_positioning ?? data.data?.keywordPositioning ?? null;
-            const marketDataSummary = data.data?.market_data_summary ?? data.data?.marketDataSummary ?? null;
-
-            const strategicData: ExpertAuditResult = {
-              url: normalizedUrl,
-              domain,
-              totalScore: data.data.overallScore * 2,
-              maxScore: 200,
-              scores: {
-                performance: { score: 0, maxScore: 40, psiPerformance: 0, lcp: 0, cls: 0, tbt: 0, fcp: 0 },
-                technical: { score: 0, maxScore: 50, psiSeo: 0, httpStatus: 200, isHttps: true },
-                semantic: { score: 0, maxScore: 60, hasTitle: false, titleLength: 0, hasMetaDesc: false, metaDescLength: 0, h1Count: 0, hasUniqueH1: false, wordCount: 0 },
-                aiReady: { score: 0, maxScore: 30, hasSchemaOrg: false, schemaTypes: [], hasRobotsTxt: false, robotsPermissive: false },
-                security: { score: 0, maxScore: 20, isHttps: true, safeBrowsingOk: true, threats: [] },
-              },
-              recommendations: [],
-              rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
-              scannedAt: data.data.scannedAt || new Date().toISOString(),
-              strategicAnalysis: {
-                introduction: data.data.introduction,
-                brand_authority: data.data.brand_authority,
-                social_signals: data.data.social_signals,
-                market_intelligence: data.data.market_intelligence,
-                competitive_landscape: data.data.competitive_landscape,
-                geo_readiness: data.data.geo_readiness,
-                executive_roadmap: data.data.executive_roadmap,
-                keyword_positioning: keywordPositioning,
-                market_data_summary: marketDataSummary,
-                brand_identity: data.data.brand_identity,
-                market_positioning: data.data.market_positioning,
-                geo_score: data.data.geo_score,
-                strategic_roadmap: data.data.strategic_roadmap,
-                executive_summary: data.data.executive_summary,
-                brandPerception: data.data.brandPerception,
-                geoAnalysis: data.data.geoAnalysis,
-                llmVisibility: data.data.llmVisibility,
-                testQueries: data.data.testQueries,
-                executiveSummary: data.data.executiveSummary,
-                overallScore: data.data.overallScore || data.data.geo_readiness?.citability_score || data.data.geo_score?.score,
-                hallucinationCorrections: hallucinationCorrections || null,
-                llm_visibility_raw: data.data.llm_visibility_raw || null,
-                quotability: data.data.quotability || null,
-                summary_resilience: data.data.summary_resilience || null,
-                lexical_footprint: data.data.lexical_footprint || null,
-                expertise_sentiment: data.data.expertise_sentiment || null,
-                red_team: data.data.red_team || null,
-              },
-            };
+            const strategicData = mapStrategicData(cachedResult.data, normalizedUrl, hallucinationCorrections);
 
             setResult(strategicData);
             setStrategicResult(strategicData);
             setStrategicProgressiveReveal(true);
-            if (data.data._cachedContext) setStrategicCachedContext(data.data._cachedContext);
+            if (cachedResult.data._cachedContext) setStrategicCachedContext(cachedResult.data._cachedContext);
             setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
             setHallucinationDiagnosis(null);
             setPreSummarizedResult(null);
