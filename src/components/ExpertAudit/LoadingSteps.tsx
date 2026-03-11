@@ -69,12 +69,19 @@ const strategicSteps = [
 interface LoadingStepsProps {
   siteName?: string;
   variant?: 'technical' | 'strategic';
+  onStopMusicRef?: React.MutableRefObject<(() => void) | null>;
 }
 
-export function LoadingSteps({ siteName, variant = 'technical' }: LoadingStepsProps) {
+export function LoadingSteps({ siteName, variant = 'technical', onStopMusicRef }: LoadingStepsProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const steps = variant === 'strategic' ? strategicSteps : technicalSteps;
-  const { embedContainerRef } = useSpotifyTrackRotation();
+  const { embedContainerRef, stopPlayback } = useSpotifyTrackRotation();
+
+  useEffect(() => {
+    if (onStopMusicRef) {
+      onStopMusicRef.current = stopPlayback;
+    }
+  }, [onStopMusicRef, stopPlayback]);
 
   useEffect(() => {
     const interval = setInterval(() => {

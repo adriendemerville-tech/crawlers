@@ -194,6 +194,7 @@ export function ExpertAuditDashboard() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [storedCorrections, setStoredCorrections] = useState<any[]>([]);
   const loadingRef = useRef<HTMLDivElement>(null);
+  const stopMusicRef = useRef<(() => void) | null>(null);
   
   const { toast } = useToast();
   const { language } = useLanguage();
@@ -686,21 +687,23 @@ export function ExpertAuditDashboard() {
     try {
       await attemptAudit(1);
     } finally {
-      // Wait 3s silence, play ding, then show results after ding ends
+      // Wait 2s, stop Spotify, play microwave ding, then show results
       await new Promise<void>((resolve) => {
         setTimeout(async () => {
           try {
+            // Stop Spotify music
+            stopMusicRef.current?.();
+            
             const { default: dingUrl } = await import('@/assets/sounds/microwave-ding.mp3');
             const audio = new Audio(dingUrl);
             audio.volume = 1.0;
             audio.addEventListener('ended', () => resolve());
-            // Fallback in case 'ended' doesn't fire
             setTimeout(() => resolve(), 3000);
             audio.play().catch(() => resolve());
           } catch {
             resolve();
           }
-        }, 3000);
+        }, 2000);
       });
       setIsLoading(false);
     }
@@ -1313,7 +1316,7 @@ export function ExpertAuditDashboard() {
       {/* Loading States Container - scroll target */}
       <div ref={loadingRef}>
         {/* Loading State - Technical */}
-        {isLoading && <LoadingSteps siteName={url} variant="technical" />}
+        {isLoading && <LoadingSteps siteName={url} variant="technical" onStopMusicRef={stopMusicRef} />}
         
         {/* Loading State - Strategic */}
         {isStrategicLoading && <LoadingSteps siteName={url} variant="strategic" />}
