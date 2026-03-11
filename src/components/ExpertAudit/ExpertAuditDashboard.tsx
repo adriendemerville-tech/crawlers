@@ -1049,13 +1049,28 @@ export function ExpertAuditDashboard() {
           toast({ title: t.strategicComplete, description: t.strategicDesc2 });
         } catch (retryError) {
           console.error('Strategic audit retry also failed:', retryError);
+          // Restore technical results so user doesn't see a blank screen
+          if (technicalResult) {
+            setResult(technicalResult);
+            setAuditMode('technical');
+          }
           toast({
-            title: 'Erreur de chargement',
+            title: 'Analyse stratégique indisponible',
+            description: 'L\'analyse n\'a pas pu aboutir. Vos résultats techniques sont restaurés. Réessayez dans quelques instants.',
           });
         }
       }
     } finally {
       setIsStrategicLoading(false);
+      // Safety net: if no result is set after all attempts, restore technical results
+      // This prevents the "black screen" where nothing renders
+      setResult(prev => {
+        if (!prev && technicalResult) {
+          setAuditMode('technical');
+          return technicalResult;
+        }
+        return prev;
+      });
     }
   };
 
