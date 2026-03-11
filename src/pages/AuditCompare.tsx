@@ -842,21 +842,21 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
             {/* Exclusive keywords */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {cross.serp_battlefield.exclusive_strengths_site1 && cross.serp_battlefield.exclusive_strengths_site1.length > 0 && (
-                <div className="p-2 rounded-lg bg-violet-500/5 border border-violet-500/20">
-                  <p className="text-[10px] text-muted-foreground mb-1">{t.exclusiveKeywords} — <span className="font-medium text-violet-400">{site1Domain}</span></p>
-                  <div className="flex flex-wrap gap-1">
+                <div className="p-3 rounded-lg bg-violet-500/5 border border-violet-500/20">
+                  <p className="text-xs text-foreground/60 mb-1.5">{t.exclusiveKeywords} — <span className="font-medium text-violet-400">{site1Domain}</span></p>
+                  <div className="flex flex-wrap gap-1.5">
                     {cross.serp_battlefield.exclusive_strengths_site1.map((k, i) => (
-                      <Badge key={i} variant="outline" className="text-[9px] px-1.5 border-violet-500/30">{k}</Badge>
+                      <Badge key={i} variant="outline" className="text-[10px] px-2 border-violet-500/30">{k}</Badge>
                     ))}
                   </div>
                 </div>
               )}
               {cross.serp_battlefield.exclusive_strengths_site2 && cross.serp_battlefield.exclusive_strengths_site2.length > 0 && (
-                <div className="p-2 rounded-lg bg-amber-500/5 border border-amber-500/20">
-                  <p className="text-[10px] text-muted-foreground mb-1">{t.exclusiveKeywords} — <span className="font-medium text-amber-400">{site2Domain}</span></p>
-                  <div className="flex flex-wrap gap-1">
+                <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                  <p className="text-xs text-foreground/60 mb-1.5">{t.exclusiveKeywords} — <span className="font-medium text-amber-400">{site2Domain}</span></p>
+                  <div className="flex flex-wrap gap-1.5">
                     {cross.serp_battlefield.exclusive_strengths_site2.map((k, i) => (
-                      <Badge key={i} variant="outline" className="text-[9px] px-1.5 border-amber-500/30">{k}</Badge>
+                      <Badge key={i} variant="outline" className="text-[10px] px-2 border-amber-500/30">{k}</Badge>
                     ))}
                   </div>
                 </div>
