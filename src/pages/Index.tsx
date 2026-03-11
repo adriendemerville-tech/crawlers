@@ -540,6 +540,10 @@ const Index = () => {
           onTabChange={handleTabChange}
           currentUrl={currentUrl}
         />
+        {/* Active crawl notification banner */}
+        <div className="max-w-3xl mx-auto px-4 mb-4">
+          <ActiveCrawlBanner />
+        </div>
         <section aria-label="Outils d'analyse">
           <Suspense fallback={<DashboardSkeleton />}>
             {renderDashboard()}
