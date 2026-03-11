@@ -78,7 +78,7 @@ function CompetitorCard({
             {actor.authority_factor}
           </p>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-            {actor.analysis}
+            {actor.analysis && actor.analysis.length > 400 ? `${actor.analysis.slice(0, 397)}…` : actor.analysis}
           </p>
         </div>
       </div>
