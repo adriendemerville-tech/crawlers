@@ -102,7 +102,7 @@ export default function SiteCrawl() {
       });
   }, [user, crawlResult]);
 
-  // Poll progress while crawling
+  // Poll progress while crawling (every 5s)
   useEffect(() => {
     if (!crawlResult || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
     const interval = setInterval(async () => {
@@ -115,13 +115,41 @@ export default function SiteCrawl() {
         const r = data as any;
         setCrawlResult(r);
         if (r.total_pages > 0) setProgress(Math.round((r.crawled_pages / r.total_pages) * 100));
-        if (r.status === 'analyzing') setPhase('Synthèse IA en cours…');
-        if (r.status === 'completed' || r.status === 'error') {
+        
+        if (r.status === 'queued') setPhase('En file d\'attente…');
+        else if (r.status === 'mapping') setPhase('Mapping du site…');
+        else if (r.status === 'crawling') setPhase(`Analyse en cours : ${r.crawled_pages}/${r.total_pages} pages…`);
+        else if (r.status === 'analyzing') setPhase('Synthèse IA en cours…');
+        
+        if (r.status === 'completed') {
           clearInterval(interval);
+          setIsLoading(false);
+          setPhase('');
           loadPages(r.id);
+          
+          // 🔔 Notification sonore (micro-ondes)
+          try {
+            const audio = new Audio('/assets/sounds/microwave-ding.mp3');
+            audio.volume = 0.6;
+            audio.play().catch(() => {});
+          } catch {}
+          
+          toast.success(`✅ Audit terminé : ${r.crawled_pages} pages analysées !`, {
+            duration: 10000,
+            action: {
+              label: 'Voir le rapport',
+              onClick: () => {},
+            },
+          });
+        }
+        if (r.status === 'error') {
+          clearInterval(interval);
+          setIsLoading(false);
+          setPhase('');
+          toast.error(r.error_message || 'Erreur lors du crawl');
         }
       }
-    }, 3000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [crawlResult]);
 
