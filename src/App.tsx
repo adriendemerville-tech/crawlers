@@ -118,6 +118,7 @@ const App = () => (
                           <Route path="/generative-engine-optimization" element={<GenerativeEngineOptimization />} />
                           <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
                           <Route path="/site-crawl" element={<SiteCrawl />} />
+                          <Route path="/audit-compare" element={<AuditCompare />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>

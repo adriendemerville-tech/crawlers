@@ -313,7 +313,7 @@ const AuditCompare = () => {
         playDing();
         setResult(data.data);
         setIsLoading(false);
-        refreshCredits();
+        refreshBalance();
       }, 3000);
     } catch (e: any) {
       setIsLoading(false);
