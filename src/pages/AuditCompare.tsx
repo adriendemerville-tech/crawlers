@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -258,6 +260,7 @@ const AuditCompare = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
+  useCanonicalHreflang('/audit-compare');
 
   const [url1, setUrl1] = useState('');
   const [url2, setUrl2] = useState('');
@@ -359,6 +362,10 @@ const AuditCompare = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <Helmet>
+        <title>Audit Comparé SEO/GEO — Comparez deux sites | Crawlers.fr</title>
+        <meta name="description" content="Comparez deux sites web face-à-face : Brand DNA, SWOT, visibilité LLM et score AEO. Analyse concurrentielle SEO & GEO par IA." />
+      </Helmet>
       <Header />
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8 max-w-6xl">
