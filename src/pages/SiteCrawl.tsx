@@ -484,7 +484,7 @@ export default function SiteCrawl() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div className="flex-1 space-y-2">
                     <label className="text-sm text-muted-foreground flex items-center justify-between">
-                      <span>Pages à analyser</span>
+                     <span>{t.pagesToAnalyze}</span>
                       <span className="font-semibold text-foreground">{maxPages}</span>
                     </label>
                     <Slider
