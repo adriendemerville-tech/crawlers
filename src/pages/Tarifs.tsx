@@ -98,7 +98,7 @@ const translations = {
     agencyPeriod: '/ mois',
     agencyFeatures: [
       'Audit expert illimité',
-      'Correctifs illimités',
+      'Code correctif illimité',
       'Crawl multi-pages illimité',
       'Marque Blanche (White Label)',
       '3 comptes inclus',
