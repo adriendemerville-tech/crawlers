@@ -248,7 +248,16 @@ export function useSpotifyTrackRotation() {
     };
   }, []);
 
+  const stopPlayback = () => {
+    controllerRef.current?.destroy?.();
+    controllerRef.current = null;
+    if (embedContainerRef.current) {
+      embedContainerRef.current.innerHTML = '';
+    }
+  };
+
   return {
     embedContainerRef,
+    stopPlayback,
   };
 }
