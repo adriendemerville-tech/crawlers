@@ -205,7 +205,7 @@ export function Header() {
                   </g>
                 </svg>
                 {/* Hide site name on mobile */}
-                <span className="hidden sm:inline text-lg font-bold font-display text-[#7c3aed]">Crawlers</span>
+                <span className="hidden sm:inline text-lg font-extrabold font-display text-[#7c3aed]">Crawlers</span>
               </a>
 
               {/* Language selector - hidden on mobile and profile page */}
