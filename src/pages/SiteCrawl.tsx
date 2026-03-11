@@ -728,7 +728,7 @@ export default function SiteCrawl() {
           {!crawlResult && pastCrawls.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Crawls précédents</CardTitle>
+                <CardTitle className="text-lg">{t.previousCrawls}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
