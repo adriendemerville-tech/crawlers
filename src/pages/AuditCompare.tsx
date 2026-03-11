@@ -879,6 +879,30 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
           </Card>
         </div>
       )}
+
+      {/* Radar Comparatif */}
+      <Card className="border-border/50 bg-card/80">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-primary" /> {t.radarTitle}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-violet-500" /><span className="text-[10px] text-muted-foreground">{site1Domain}</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-amber-500" /><span className="text-[10px] text-muted-foreground">{site2Domain}</span></div>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+              <PolarGrid stroke="hsl(var(--border))" />
+              <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+              <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+              <Radar name={site1Domain} dataKey="site1" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15} strokeWidth={2} />
+              <Radar name={site2Domain} dataKey="site2" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.15} strokeWidth={2} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }
