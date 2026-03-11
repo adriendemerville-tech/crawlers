@@ -34,6 +34,55 @@ function detectLocationCode(domain: string): number {
   return KNOWN_LOCATIONS[locKey]?.code || 2250;
 }
 
+// ==================== PAGESPEED ====================
+
+interface PageSpeedScores {
+  performanceMobile: number;
+  performanceDesktop: number;
+  fcpMs: number;
+  lcpMs: number;
+  cls: number;
+  ttfbMs: number;
+}
+
+async function fetchPageSpeedScores(url: string): Promise<PageSpeedScores | null> {
+  const API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY');
+  if (!API_KEY) return null;
+  
+  const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
+  
+  try {
+    const [mobileResp, desktopResp] = await Promise.all([
+      fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=mobile&category=performance&key=${API_KEY}`, { signal: AbortSignal.timeout(20000) }),
+      fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=desktop&category=performance&key=${API_KEY}`, { signal: AbortSignal.timeout(20000) }),
+    ]);
+    
+    let performanceMobile = 0, performanceDesktop = 0;
+    let fcpMs = 0, lcpMs = 0, cls = 0, ttfbMs = 0;
+    
+    if (mobileResp.ok) {
+      const d = await mobileResp.json();
+      performanceMobile = Math.round((d.lighthouseResult?.categories?.performance?.score || 0) * 100);
+      const audits = d.lighthouseResult?.audits || {};
+      fcpMs = Math.round(audits['first-contentful-paint']?.numericValue || 0);
+      lcpMs = Math.round(audits['largest-contentful-paint']?.numericValue || 0);
+      cls = parseFloat((audits['cumulative-layout-shift']?.numericValue || 0).toFixed(3));
+      ttfbMs = Math.round(audits['server-response-time']?.numericValue || 0);
+    } else { await mobileResp.text(); }
+    
+    if (desktopResp.ok) {
+      const d = await desktopResp.json();
+      performanceDesktop = Math.round((d.lighthouseResult?.categories?.performance?.score || 0) * 100);
+    } else { await desktopResp.text(); }
+    
+    trackPaidApiCall('audit-compare', 'google', 'pagespeed');
+    return { performanceMobile, performanceDesktop, fcpMs, lcpMs, cls, ttfbMs };
+  } catch (e) {
+    console.warn('PageSpeed fetch failed:', e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
 // ==================== CONTENT DEPTH EXTRACTION ====================
 
 interface ContentDepth {
