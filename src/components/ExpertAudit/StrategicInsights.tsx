@@ -318,13 +318,7 @@ export function StrategicInsights({
           )}
         </>
       )}
-          {/* AEO Score Card — below Brand Authority */}
-          {auditResult && (
-            <AEOScoreCard result={auditResult} />
-          )}
 
-          {/* Mots clés (doit apparaître entre Écosystème Concurrentiel et Autorité Sociale & Humaine) */}
-          <KeywordModuleSection analysis={analysis} domain={domain} />
 
           {/* Requêtes LLM à cibler — juste après mots-clés */}
           {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
