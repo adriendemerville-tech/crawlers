@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, memo, lazy, Suspense, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Zap, Bot, Sparkles, Brain, Gauge, FileSearch } from 'lucide-react';
+import { Search, Zap, Bot, Sparkles, Brain, Gauge, FileSearch, GitCompareArrows } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -344,8 +344,8 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
           {language === 'es' ? 'Audit Expert: 168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? 'Expert Audit: 168 SEO/GEO criteria verified, cross-referenced and contextualized.' : 'Audit Expert : 168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
 
-        {/* Expert Audit Button */}
-        <div className="mt-4 flex justify-center" data-tour="audit-expert">
+        {/* Expert Audit + Compared Audit Buttons */}
+        <div className="mt-4 flex justify-center gap-3" data-tour="audit-expert">
           <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}` : '/audit-expert'}>
             <Button
               variant="outline"
@@ -355,6 +355,18 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               <FileSearch className="h-5 w-5 text-primary" />
               <span className="font-bold text-foreground">
                 {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
+              </span>
+            </Button>
+          </Link>
+          <Link to="/audit-compare">
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-10 px-4 border border-violet-500 text-violet-500 bg-transparent hover:bg-violet-500/10 hover:text-violet-400 font-medium text-sm gap-1.5"
+            >
+              <GitCompareArrows className="h-4 w-4" />
+              <span>
+                {language === 'fr' ? 'Audit Comparé' : language === 'es' ? 'Auditoría Comparada' : 'Compared Audit'}
               </span>
             </Button>
           </Link>
