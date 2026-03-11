@@ -2002,7 +2002,7 @@ Deno.serve(async (req) => {
                   method: 'POST',
                   headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' },
                   body: JSON.stringify({ url, lang: 'fr' }),
-                  signal: AbortSignal.timeout(25000),
+                  signal: AbortSignal.timeout(40000),
                 });
                 if (!llmResponse.ok) { await llmResponse.text(); return null; }
                 const llmResult = await llmResponse.json();
