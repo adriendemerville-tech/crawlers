@@ -246,6 +246,12 @@ export default function Profile() {
                 <MyCorrectiveCodes />
               </TabsContent>
 
+              {isProUser && (
+                <TabsContent value="crawls">
+                  <MyCrawls />
+                </TabsContent>
+              )}
+
 
               {isAdmin && (
                 <TabsContent value="admin">
