@@ -495,9 +495,17 @@ ${cc.topIssues.length > 0 ? `- Top issues:\n${cc.topIssues.map((r: any) => `  �
   let fixesBlock = '';
   if (intel.fixesImplemented) {
     fixesBlock = `
-## CORRECTIVE ACTIONS DETECTED
-- ${intel.fixesCount} corrective code(s) generated and implemented for this domain
-- This indicates active optimization — factor in a HIGHER growth expectation (+5-10% on realistic)`;
+## VERIFIED CORRECTIVE ACTIONS (DEPLOYED)
+- ${intel.fixesCount} corrective code(s) **confirmed deployed** for this domain
+- Deployment verified via: user validation ("It works!" feedback) or WordPress plugin sync
+- This is NOT an assumption — these fixes are actively running on the site
+- Factor in a HIGHER growth expectation (+5-10% on realistic scenario)`;
+  } else {
+    // Check if codes exist but are NOT validated
+    fixesBlock = `
+## CORRECTIVE CODES STATUS
+- Corrective codes may have been generated but are NOT confirmed as deployed
+- Do NOT factor any optimization boost — treat the site as if no fixes are in place`;
   }
 
   let reportsBlock = '';
