@@ -7,13 +7,11 @@ interface LexicalFootprintCardProps {
 }
 
 export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
-  // Normalize: ensure jargon + concrete = 100 for visual consistency
   const rawJargon = data.jargonRatio ?? 0;
   const rawConcrete = data.concreteRatio ?? 0;
   const total = rawJargon + rawConcrete;
   const jargonRatio = total > 0 ? Math.round((rawJargon / total) * 100) : 50;
   const concreteRatio = 100 - jargonRatio;
-  // Score = concreteRatio for consistency
   const score = concreteRatio;
   const scoreColor = score >= 80 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-destructive';
 
@@ -34,23 +32,31 @@ export function LexicalFootprintCard({ data }: LexicalFootprintCardProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Horizontal bar showing jargon vs concrete */}
+        {/* Slim gradient bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Jargon corporate</span>
             <span>Terminologie concrète</span>
           </div>
-          <div className="relative h-4 w-full rounded-full bg-muted overflow-hidden">
+          <div className="relative h-2 w-full rounded-full overflow-hidden bg-muted/50">
             <div 
-              className="absolute left-0 top-0 h-full bg-destructive/60 rounded-l-full transition-all duration-700" 
-              style={{ width: `${jargonRatio}%` }} 
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: `linear-gradient(to right, 
+                  hsl(0 72% 55%) 0%, 
+                  hsl(0 72% 55%) ${Math.max(0, jargonRatio - 8)}%, 
+                  hsl(45 93% 55%) ${jargonRatio}%, 
+                  hsl(142 71% 45%) ${Math.min(100, jargonRatio + 8)}%, 
+                  hsl(142 71% 45%) 100%)`,
+              }}
             />
+            {/* Position indicator */}
             <div 
-              className="absolute right-0 top-0 h-full bg-success/60 rounded-r-full transition-all duration-700" 
-              style={{ width: `${concreteRatio}%` }} 
+              className="absolute top-1/2 -translate-y-1/2 h-3.5 w-0.5 bg-foreground/80 rounded-full shadow-sm"
+              style={{ left: `${jargonRatio}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs font-medium">
+          <div className="flex justify-between text-[11px] font-semibold">
             <span className="text-destructive">{jargonRatio}%</span>
             <span className="text-success">{concreteRatio}%</span>
           </div>

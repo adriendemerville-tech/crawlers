@@ -1538,7 +1538,7 @@ RÈGLES:
 - NE PRÉTENDS PAS connaître: nb abonnés, existence GMB, fraîcheur posts. analysis thought_leadership: sépare "Signaux vérifiés" vs "Signaux estimés".
 - quotability: phrases factuelles autonomes citables. +33pts/citation.
 - summary_resilience: résumé ≤10 mots. Score similarité H1/contenu.
-- lexical_footprint: jargonRatio+concreteRatio=100.
+- lexical_footprint: jargonRatio+concreteRatio=100. ATTENTION: "jargon" = UNIQUEMENT les formules vides/corporate sans substance (ex: "solutions innovantes", "accompagnement sur-mesure", "leader de la transformation"). La terminologie métier précise (ex: "assurance vie", "prévoyance collective", "taux de rendement", "SCPI") est du vocabulaire CONCRET, PAS du jargon. Un site professionnel avec du vocabulaire technique spécifique à son secteur doit avoir un concreteRatio élevé (75-95). Seuls les buzzwords creux sans valeur informative comptent comme jargon.
 - expertise_sentiment: 1(générique/IA) à 5(expert terrain).
 - red_team: 3 failles/objections client sceptique.
 - Base recommandations sur état des lieux SEO réel si fourni.
