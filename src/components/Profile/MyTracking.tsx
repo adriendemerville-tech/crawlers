@@ -567,6 +567,8 @@ export function MyTracking() {
 
   return (
     <div className="space-y-6">
+      {/* Active crawl progress banner */}
+      <ActiveCrawlBanner />
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
