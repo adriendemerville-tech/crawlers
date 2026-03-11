@@ -1374,8 +1374,8 @@ const AuditCompare = () => {
               {result.crossComparison && (
                 <CrossComparisonSection 
                   cross={result.crossComparison} 
-                  site1Domain={result.site1.domain} 
-                  site2Domain={result.site2.domain} 
+                  site1={result.site1} 
+                  site2={result.site2} 
                   t={t} 
                 />
               )}
