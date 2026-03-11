@@ -341,7 +341,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
 
         {/* "Plus de 150 critères" */}
         <p className="mt-4 text-xs sm:text-sm text-muted-foreground max-w-2xl mx-auto text-center">
-          {language === 'es' ? 'Más de 150 criterios SEO/GEO analizados en cada auditoría completa, por unos pocos euros.' : language === 'en' ? 'Over 150 SEO/GEO criteria analyzed per full audit, for just a few euros.' : 'Plus de 150 critères SEO/GEO analysés à chaque audit complet, pour quelques euros.'}
+          {language === 'es' ? 'Audit Expert: 168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? 'Expert Audit: 168 SEO/GEO criteria verified, cross-referenced and contextualized.' : 'Audit Expert : 168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
 
         {/* Expert Audit Button */}
