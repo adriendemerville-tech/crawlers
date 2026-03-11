@@ -161,7 +161,7 @@ const CGVU = () => {
               <h2 className="text-xl font-bold text-foreground mt-10 mb-3">6. Système de Crédits</h2>
               <h3 className="text-lg font-semibold mt-4 mb-2">6.1. Nature des crédits</h3>
               <p>
-                Les crédits constituent des <strong>unités de consommation numérique</strong> permettant d'accéder aux fonctionnalités d'analyse avancée de la Plateforme. Chaque action d'audit (audit expert, génération de code, analyse LLM approfondie, etc.) consomme un ou plusieurs crédits selon la complexité de l'opération.
+                Les crédits constituent des <strong>unités de consommation numérique</strong> permettant d'accéder aux fonctionnalités d'analyse avancée de la Plateforme. Chaque action d'audit (audit expert, génération de code, analyse LLM approfondie, crawl multi-pages, etc.) consomme un ou plusieurs crédits selon la complexité de l'opération.
               </p>
 
               <h3 className="text-lg font-semibold mt-4 mb-2">6.2. Achat et utilisation</h3>
