@@ -52,7 +52,8 @@ export function IntroductionCard({
   variant,
   domain = '',
   siteName = '',
-  onHallucinationData
+  onHallucinationData,
+  typewriter = false
 }: IntroductionCardProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
