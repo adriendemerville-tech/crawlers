@@ -123,7 +123,7 @@ export function SolutionSection() {
                   {language === 'fr' ? 'Passez en illimité avec Pro Agency' : language === 'es' ? 'Pase a ilimitado con Pro Agency' : 'Go unlimited with Pro Agency'}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {language === 'fr' ? 'Rapports, correctifs & marque blanche — 49€/mois' : language === 'es' ? 'Informes, correcciones y marca blanca — 49€/mes' : 'Reports, fixes & white label — €49/month'}
+                  {language === 'fr' ? 'Rapports, correctifs, audit crawl multi-pages & marque blanche — 49€/mois' : language === 'es' ? 'Informes, correcciones, auditoría crawl multi-páginas y marca blanca — 49€/mes' : 'Reports, fixes, multi-page crawl audit & white label — €49/month'}
                 </p>
               </div>
             </div>
