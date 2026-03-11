@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
     });
 
     const mapData = await mapResponse.json();
+    await trackPaidApiCall('crawl-site', 'firecrawl', '/map', normalizedUrl).catch(() => {});
     if (!mapResponse.ok || !mapData.links?.length) {
       await supabase.from('site_crawls').update({ status: 'error', error_message: 'Impossible de mapper le site' }).eq('id', crawlId);
       return new Response(JSON.stringify({ success: false, error: 'Map échoué', crawlId }), {
