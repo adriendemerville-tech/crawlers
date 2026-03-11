@@ -828,7 +828,7 @@ export default function Tarifs() {
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground text-center">
                   {language === 'fr' 
-                    ? 'Tous les prix sont affichés en euros TTC. Les paiements sont sécurisés par Stripe. Droit de rétractation de 14 jours sur les crédits non utilisés conformément à l\'article L.221-18 du Code de la consommation. Les contenus numériques (rapports et codes) dont l\'exécution a commencé ne sont pas remboursables (art. L.221-28).'
+                    ? 'Tous les prix sont affichés en euros TTC. Les paiements sont sécurisés par Stripe. Droit de rétractation de 14 jours sur les crédits non utilisés conformément à l\'article L.221-18 du Code de la consommation. Les contenus numériques (audits, crawl, rapports et codes) dont l\'exécution a commencé ne sont pas remboursables (art. L.221-28).'
                     : 'All prices are displayed in euros including VAT. Payments are secured by Stripe. 14-day withdrawal right on unused credits in accordance with article L.221-18 of the French Consumer Code. Digital content (reports and codes) whose execution has begun is non-refundable (art. L.221-28).'}
                 </p>
                 <div className="flex justify-center gap-4 mt-4 text-xs text-muted-foreground">
