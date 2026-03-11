@@ -53,19 +53,19 @@ function FooterComponent() {
       isRoute: true
     },
     { 
-      icon: Radar, 
-      label: t3(language, 'Audit Expert', 'Expert Audit', 'Auditoría Experta'),
-      href: '/audit-expert',
-      description: t3(language, 'Audit SEO/GEO approfondi par IA', 'In-depth AI-powered SEO/GEO audit', 'Auditoría SEO/GEO en profundidad con IA'),
-      gold: true,
-      isRoute: true
-    },
-    { 
       icon: GitCompareArrows, 
       label: t3(language, 'Audit Comparé', 'Compared Audit', 'Auditoría Comparada'),
       href: '/audit-compare',
       description: t3(language, 'Comparez deux sites SEO/GEO', 'Compare two SEO/GEO sites', 'Compare dos sitios SEO/GEO'),
       gold: false,
+      isRoute: true
+    },
+    { 
+      icon: Radar, 
+      label: t3(language, 'Audit Expert', 'Expert Audit', 'Auditoría Experta'),
+      href: '/audit-expert',
+      description: t3(language, 'Audit SEO/GEO approfondi par IA', 'In-depth AI-powered SEO/GEO audit', 'Auditoría SEO/GEO en profundidad con IA'),
+      gold: true,
       isRoute: true
     },
     { 
