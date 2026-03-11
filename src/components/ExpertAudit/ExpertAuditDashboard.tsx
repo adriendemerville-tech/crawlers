@@ -168,37 +168,38 @@ const translations = {
 };
 
 export function ExpertAuditDashboard() {
-  const [url, setUrl] = useState('');
-  const [auditMode, setAuditMode] = useState<AuditMode>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isStrategicLoading, setIsStrategicLoading] = useState(false);
-  const [result, setResult] = useState<ExpertAuditResult | null>(null);
-  const [technicalResult, setTechnicalResult] = useState<ExpertAuditResult | null>(null);
-  const [strategicResult, setStrategicResult] = useState<ExpertAuditResult | null>(null);
-  const [strategicCachedContext, setStrategicCachedContext] = useState<any>(null);
-  const [preSummarizedResult, setPreSummarizedResult] = useState<ExpertAuditResult | null>(null);
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [isCodeEditorOpen, setIsCodeEditorOpen] = useState(false);
-  const [isReportAuthGateOpen, setIsReportAuthGateOpen] = useState(false);
-  const [pendingReportOpen, setPendingReportOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  // Hallucination diagnosis data - using any to support both legacy and new formats
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [hallucinationDiagnosis, setHallucinationDiagnosis] = useState<any>(null);
-  // Post-payment state for reopening modal with code
-  const [paidScriptCode, setPaidScriptCode] = useState<string>('');
-  const [paidFixesMetadata, setPaidFixesMetadata] = useState<Array<{id: string; label: string; category: string}>>([]);
-  const [hasVerifiedPayment, setHasVerifiedPayment] = useState(false);
-  const [siteAutoTracked, setSiteAutoTracked] = useState(false);
-  // Stored hallucination corrections from DB (community knowledge)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [storedCorrections, setStoredCorrections] = useState<any[]>([]);
-  const loadingRef = useRef<HTMLDivElement>(null);
-  const stopMusicRef = useRef<(() => void) | null>(null);
-  const auditStartTimeRef = useRef<number>(0);
-  const [strategicProgressiveReveal, setStrategicProgressiveReveal] = useState(false);
+  const state = useAuditState();
+  const {
+    url, setUrl,
+    auditMode, setAuditMode,
+    isLoading, setIsLoading,
+    isStrategicLoading, setIsStrategicLoading,
+    result, setResult,
+    technicalResult, setTechnicalResult,
+    strategicResult, setStrategicResult,
+    strategicCachedContext, setStrategicCachedContext,
+    preSummarizedResult, setPreSummarizedResult,
+    currentStep, setCurrentStep,
+    completedSteps, setCompletedSteps,
+    hallucinationDiagnosis, setHallucinationDiagnosis,
+    strategicProgressiveReveal, setStrategicProgressiveReveal,
+    storedCorrections, setStoredCorrections,
+    siteAutoTracked, setSiteAutoTracked,
+    isReportModalOpen, setIsReportModalOpen,
+    isPaymentModalOpen, setIsPaymentModalOpen,
+    isCodeEditorOpen, setIsCodeEditorOpen,
+    isReportAuthGateOpen, setIsReportAuthGateOpen,
+    pendingReportOpen, setPendingReportOpen,
+    paidScriptCode, setPaidScriptCode,
+    paidFixesMetadata, setPaidFixesMetadata,
+    hasVerifiedPayment, setHasVerifiedPayment,
+    loadingRef,
+    stopMusicRef,
+    auditStartTimeRef,
+    handleNewAudit,
+    handleNavigateToTechnical,
+    handleNavigateToStrategic,
+  } = state;
   
   const { toast } = useToast();
   const { language } = useLanguage();
