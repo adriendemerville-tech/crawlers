@@ -492,7 +492,31 @@ const AuditCompare = () => {
           body: { url1: url1.trim(), url2: url2.trim() },
         });
 
-        if (fnError) throw new Error(fnError.message);
+        if (fnError) {
+          let detailedMessage = fnError.message || 'Erreur inconnue';
+          const fnContext = (fnError as { context?: Response }).context;
+
+          if (fnContext?.status === 401 || fnContext?.status === 403) {
+            detailedMessage = 'Authentication required';
+          } else if (fnContext?.status === 402) {
+            detailedMessage = 'Insufficient credits';
+          } else if (fnContext) {
+            try {
+              const payload = await fnContext.clone().json();
+              if (payload?.error) detailedMessage = payload.error;
+            } catch {
+              try {
+                const raw = await fnContext.text();
+                if (raw) detailedMessage = raw;
+              } catch {
+                // keep fallback message
+              }
+            }
+          }
+
+          throw new Error(detailedMessage);
+        }
+
         if (!data?.success) throw new Error(data?.error || 'Erreur inconnue');
 
         // Stop music
