@@ -417,8 +417,8 @@ export default function SiteCrawl() {
   return (
     <>
       <Helmet>
-        <title>Crawl Multi-Pages SEO — Analysez votre site complet | Crawlers.fr</title>
-        <meta name="description" content="Analysez toutes les pages de votre site en un clic. Score SEO/200 par page, détection d'erreurs, synthèse IA globale." />
+        <title>{t.pageTitle}</title>
+        <meta name="description" content={t.pageDesc} />
       </Helmet>
       <Header />
 
