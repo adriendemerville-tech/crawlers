@@ -44,6 +44,7 @@ const translations = {
     startCode: 'Start',
     priceRange: '< 6 ... 24 >',
     viewReport: 'View report',
+    auditCompare: 'Compare Audit',
   },
   es: {
     step1Title: 'Auditoría Técnica SEO',
