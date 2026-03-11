@@ -160,6 +160,7 @@ export function AnalyticsDashboard() {
     dataforseoCalls: 0,
     openrouterCalls: 0,
     browserlessCalls: 0,
+    firecrawlCalls: 0,
     byApiService: {},
   });
 
