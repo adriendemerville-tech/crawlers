@@ -501,7 +501,7 @@ export default function SiteCrawl() {
                     {isUnlimited ? (
                       <Badge className="bg-violet-600 text-white gap-1">
                         <span className="text-base">∞</span>
-                        Illimité
+                        {t.unlimited}
                       </Badge>
                     ) : (
                       <>
