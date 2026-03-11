@@ -412,9 +412,24 @@ const AuditCompare = () => {
     }
   }, []);
 
-  // Reset confirmed URL when input changes
-  useEffect(() => { setConfirmedUrl1(null); validation1.resetValidation(); }, [url1]);
-  useEffect(() => { setConfirmedUrl2(null); validation2.resetValidation(); }, [url2]);
+  // Reset confirmed URL when input changes (track previous to avoid resetting on confirm)
+  const url1Ref = React.useRef(url1);
+  const url2Ref = React.useRef(url2);
+  useEffect(() => {
+    // Only reset if the change was NOT from a confirm action
+    if (url1 !== url1Ref.current && url1 !== confirmedUrl1) {
+      setConfirmedUrl1(null);
+      validation1.resetValidation();
+    }
+    url1Ref.current = url1;
+  }, [url1]);
+  useEffect(() => {
+    if (url2 !== url2Ref.current && url2 !== confirmedUrl2) {
+      setConfirmedUrl2(null);
+      validation2.resetValidation();
+    }
+    url2Ref.current = url2;
+  }, [url2]);
 
   const handleConfirmUrl1 = () => {
     if (!url1.trim()) return;
