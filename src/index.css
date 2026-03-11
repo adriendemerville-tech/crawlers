@@ -1,5 +1,6 @@
 /* Import only the latin subset for French content (critical font — already uses font-display: swap) */
 @import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/quicksand';
 
 @tailwind base;
 @tailwind components;

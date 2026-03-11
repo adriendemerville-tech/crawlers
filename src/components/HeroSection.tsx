@@ -195,7 +195,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
           )}
         </span>
         {' '}
-        <span className="bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase leading-tight">
+        <span className="font-display bg-gradient-to-r from-primary via-blue-500 to-primary bg-clip-text text-transparent lowercase leading-tight">
           {getIgnoreText()} {getSiteText()}
         </span>
         {' '}
