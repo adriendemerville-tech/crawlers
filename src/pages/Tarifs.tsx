@@ -148,6 +148,7 @@ const translations = {
     agencyFeatures: [
       'Unlimited reports',
       'Unlimited fixes',
+      'Unlimited multi-page crawl',
       'White Label option',
       '3 accounts included',
       'Priority support',
