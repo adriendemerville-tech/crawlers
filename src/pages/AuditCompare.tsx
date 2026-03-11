@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSpotifyTrackRotation } from '@/components/ExpertAudit/useSpotifyTrackRotation';
+import { PatienceCards } from '@/components/ExpertAudit/PatienceCards';
 import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { UrlValidationBanner } from '@/components/UrlValidationBanner';
 import { 
