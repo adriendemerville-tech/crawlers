@@ -108,6 +108,7 @@ export function WorkflowCarousel({
 }: WorkflowCarouselProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeStep, setActiveStep] = useState(1);
   const [isCarouselVisible, setIsCarouselVisible] = useState(false);
