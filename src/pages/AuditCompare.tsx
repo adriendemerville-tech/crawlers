@@ -1361,14 +1361,16 @@ const AuditCompare = () => {
                   <Swords className="h-4 w-4 mr-2" />
                   {t.launch}
                 </Button>
-                <button
-                  type="button"
-                  onClick={() => setShowTopUp(true)}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-500 hover:text-amber-400 transition-colors cursor-pointer"
-                >
-                  <CreditCoin size="sm" />
-                  <span>{t.credits}</span>
-                </button>
+                {!user && (
+                  <button
+                    type="button"
+                    onClick={() => setShowTopUp(true)}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-500 hover:text-amber-400 transition-colors cursor-pointer"
+                  >
+                    <CreditCoin size="sm" />
+                    <span>{t.credits}</span>
+                  </button>
+                )}
                 {!bothConfirmed && (url1.trim() || url2.trim()) && (
                   <p className="text-xs text-muted-foreground">
                     {!confirmedUrl1 && !confirmedUrl2 ? t.confirmBoth 
