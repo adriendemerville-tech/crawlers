@@ -1136,7 +1136,7 @@ const AuditCompare = () => {
             <p className="text-muted-foreground text-sm max-w-lg mx-auto">
               {t.subtitle}
             </p>
-            <Badge variant="secondary" className="mt-2 text-xs">{t.credits}</Badge>
+            
           </motion.div>
 
           {/* URL Inputs */}
