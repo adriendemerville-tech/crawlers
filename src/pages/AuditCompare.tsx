@@ -23,9 +23,10 @@ import {
   Swords, Globe, Target, Brain, CheckCircle2, Search, 
   Music, Star, TrendingUp, TrendingDown,
   MessageSquare, Zap, Loader2, Check, Link2, FileText,
-  Trophy, BarChart3, Shield, ArrowRight
+  Trophy, BarChart3, Shield, ArrowRight, Gauge, Award
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 
 // ==================== TYPES ====================
 
