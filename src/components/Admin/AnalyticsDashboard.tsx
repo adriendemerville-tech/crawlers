@@ -620,6 +620,18 @@ export function AnalyticsDashboard() {
           icon={AlertTriangle}
           variant={stats.errorCount > 0 ? 'error' : 'default'}
         />
+        <StatCard 
+          title="Audits comparés" 
+          value={stats.auditCompareLaunched} 
+          icon={Swords}
+          description="Analyses face-à-face"
+        />
+        <StatCard 
+          title="Crawls multi-pages" 
+          value={stats.multiPageCrawls} 
+          icon={ScanSearch}
+          description="Sites entiers analysés"
+        />
       </div>
 
       {/* Token Usage Card */}
