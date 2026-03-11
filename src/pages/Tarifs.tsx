@@ -97,7 +97,7 @@ const translations = {
     agencyPrice: '49€',
     agencyPeriod: '/ mois',
     agencyFeatures: [
-      'Rapports illimités',
+      'Audit expert illimité',
       'Correctifs illimités',
       'Crawl multi-pages illimité',
       'Marque Blanche (White Label)',
@@ -187,7 +187,7 @@ const translations = {
     agencyPrice: '€49',
     agencyPeriod: '/ month',
     agencyFeatures: [
-      'Unlimited reports',
+      'Unlimited expert audit',
       'Unlimited fixes',
       'Unlimited multi-page crawl',
       'White Label option',
@@ -277,7 +277,7 @@ const translations = {
     agencyPrice: '49€',
     agencyPeriod: '/ mes',
     agencyFeatures: [
-      'Informes ilimitados',
+      'Auditoría experta ilimitada',
       'Correcciones ilimitadas',
       'Crawl multi-páginas ilimitado',
       'Opción Marca Blanca',
@@ -794,7 +794,7 @@ export default function Tarifs() {
                             <div className="p-1.5 rounded-md bg-violet-500/10">
                               <Icon className="h-4 w-4 text-violet-500" />
                             </div>
-                            <span className="text-sm font-medium">{feature}</span>
+                            <span className={`text-sm font-medium ${index === 0 ? 'text-amber-500' : ''}`}>{feature}</span>
                           </li>
                         );
                       })}
