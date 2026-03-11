@@ -23,9 +23,10 @@ import {
   Swords, Globe, Target, Brain, CheckCircle2, Search, 
   Music, Star, TrendingUp, TrendingDown,
   MessageSquare, Zap, Loader2, Check, Link2, FileText,
-  Trophy, BarChart3, Shield, ArrowRight
+  Trophy, BarChart3, Shield, ArrowRight, Gauge, Award
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 
 // ==================== TYPES ====================
 
@@ -49,6 +50,24 @@ interface BacklinkProfile {
   topAnchors: string[];
 }
 
+interface PageSpeedScores {
+  performanceMobile: number;
+  performanceDesktop: number;
+  fcpMs: number;
+  lcpMs: number;
+  cls: number;
+  ttfbMs: number;
+}
+
+interface EEATScore {
+  experience: number;
+  expertise: number;
+  authoritativeness: number;
+  trustworthiness: number;
+  overall: number;
+  justification: string;
+}
+
 interface SiteAnalysis {
   brand_dna: string;
   strengths: string[];
@@ -64,6 +83,7 @@ interface SiteAnalysis {
     recommendations?: string[];
   };
   aeo_score: number;
+  eeat_score?: EEATScore | null;
   expertise_sentiment: { rating: number; justification: string };
 }
 
@@ -104,6 +124,7 @@ interface SiteResult {
   keywords: any[];
   backlinks?: BacklinkProfile | null;
   contentDepth?: ContentDepth | null;
+  pagespeed?: PageSpeedScores | null;
 }
 
 interface CompareResult {
@@ -173,6 +194,15 @@ const i18n = {
     exclusiveKeywords: 'Mots-clés exclusifs',
     impact: 'Impact',
     advantage: 'Avantage',
+    pagespeed: 'Performance',
+    mobile: 'Mobile',
+    desktop: 'Desktop',
+    eeat: 'Score E-E-A-T',
+    experience: 'Expérience',
+    expertiseLabel: 'Expertise',
+    authority: 'Autorité',
+    trust: 'Confiance',
+    radarTitle: 'Radar comparatif',
   },
   en: {
     pageTitle: 'Comparative SEO/GEO Audit — Compare two sites | Crawlers.fr',
@@ -230,6 +260,15 @@ const i18n = {
     exclusiveKeywords: 'Exclusive keywords',
     impact: 'Impact',
     advantage: 'Advantage',
+    pagespeed: 'Performance',
+    mobile: 'Mobile',
+    desktop: 'Desktop',
+    eeat: 'E-E-A-T Score',
+    experience: 'Experience',
+    expertiseLabel: 'Expertise',
+    authority: 'Authority',
+    trust: 'Trust',
+    radarTitle: 'Comparative Radar',
   },
   es: {
     pageTitle: 'Auditoría Comparativa SEO/GEO — Compare dos sitios | Crawlers.fr',
@@ -287,6 +326,15 @@ const i18n = {
     exclusiveKeywords: 'Palabras clave exclusivas',
     impact: 'Impacto',
     advantage: 'Ventaja',
+    pagespeed: 'Rendimiento',
+    mobile: 'Móvil',
+    desktop: 'Escritorio',
+    eeat: 'Puntuación E-E-A-T',
+    experience: 'Experiencia',
+    expertiseLabel: 'Expertise',
+    authority: 'Autoridad',
+    trust: 'Confianza',
+    radarTitle: 'Radar comparativo',
   },
 };
 
@@ -347,7 +395,7 @@ function CompareLoadingSteps({ siteName, t }: { siteName: string; t: typeof i18n
 // ==================== RESULT CARD ====================
 
 function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
-  const { analysis, llm_raw, backlinks, contentDepth } = site;
+  const { analysis, llm_raw, backlinks, contentDepth, pagespeed } = site;
   const llmScore = llm_raw?.overallScore ?? analysis.llm_visibility?.citation_probability ?? 0;
 
   return (
@@ -537,6 +585,77 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
         </Card>
       )}
 
+      {/* PageSpeed */}
+      {pagespeed && (pagespeed.performanceMobile > 0 || pagespeed.performanceDesktop > 0) && (
+        <Card className="border-border/50 bg-card/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Gauge className="h-4 w-4 text-orange-500" /> {t.pagespeed}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2 rounded-lg bg-muted/30 text-center">
+                <p className={`text-2xl font-bold ${pagespeed.performanceMobile >= 90 ? 'text-emerald-500' : pagespeed.performanceMobile >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+                  {pagespeed.performanceMobile}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{t.mobile}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-muted/30 text-center">
+                <p className={`text-2xl font-bold ${pagespeed.performanceDesktop >= 90 ? 'text-emerald-500' : pagespeed.performanceDesktop >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+                  {pagespeed.performanceDesktop}
+                </p>
+                <p className="text-[10px] text-muted-foreground">{t.desktop}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
+              <span>FCP: {(pagespeed.fcpMs / 1000).toFixed(1)}s</span>
+              <span>LCP: {(pagespeed.lcpMs / 1000).toFixed(1)}s</span>
+              <span>CLS: {pagespeed.cls}</span>
+              <span>TTFB: {pagespeed.ttfbMs}ms</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* E-E-A-T Score */}
+      {analysis.eeat_score && (
+        <Card className="border-border/50 bg-card/80">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+              <Award className="h-4 w-4 text-indigo-500" /> {t.eeat}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="text-center mb-2">
+              <p className="text-2xl font-bold text-foreground">{analysis.eeat_score.overall}<span className="text-xs text-muted-foreground">/10</span></p>
+            </div>
+            <div className="space-y-1.5">
+              {[
+                { label: t.experience, value: analysis.eeat_score.experience },
+                { label: t.expertiseLabel, value: analysis.eeat_score.expertise },
+                { label: t.authority, value: analysis.eeat_score.authoritativeness },
+                { label: t.trust, value: analysis.eeat_score.trustworthiness },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground w-16 shrink-0">{item.label}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-muted/50 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${item.value >= 8 ? 'bg-emerald-500' : item.value >= 5 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                      style={{ width: `${(item.value / 10) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-medium text-foreground w-5 text-right">{item.value}</span>
+                </div>
+              ))}
+            </div>
+            {analysis.eeat_score.justification && (
+              <p className="text-[10px] text-muted-foreground italic mt-1">{analysis.eeat_score.justification}</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* AEO Score + Expertise Sentiment */}
       <div className="grid grid-cols-2 gap-3">
         <Card className="border-border/50 bg-card/80">
@@ -573,7 +692,20 @@ const impactColors: Record<string, string> = {
   minor: 'text-muted-foreground bg-muted/30 border-border/30',
 };
 
-function CrossComparisonSection({ cross, site1Domain, site2Domain, t }: { cross: CrossComparison; site1Domain: string; site2Domain: string; t: typeof i18n['fr'] }) {
+function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossComparison; site1: SiteResult; site2: SiteResult; t: typeof i18n['fr'] }) {
+  const site1Domain = site1.domain;
+  const site2Domain = site2.domain;
+
+  // Build radar data
+  const radarData = [
+    { dimension: t.aeoScore, site1: site1.analysis.aeo_score || 0, site2: site2.analysis.aeo_score || 0 },
+    { dimension: t.eeat, site1: (site1.analysis.eeat_score?.overall || 0) * 10, site2: (site2.analysis.eeat_score?.overall || 0) * 10 },
+    { dimension: t.pagespeed, site1: site1.pagespeed?.performanceMobile || 0, site2: site2.pagespeed?.performanceMobile || 0 },
+    { dimension: t.backlinks, site1: Math.min(100, (site1.backlinks?.domainRank || 0)), site2: Math.min(100, (site2.backlinks?.domainRank || 0)) },
+    { dimension: t.contentDepth, site1: Math.min(100, Math.round((site1.contentDepth?.wordCount || 0) / 30)), site2: Math.min(100, Math.round((site2.contentDepth?.wordCount || 0) / 30)) },
+    { dimension: t.expertise, site1: (site1.analysis.expertise_sentiment?.rating || 0) * 20, site2: (site2.analysis.expertise_sentiment?.rating || 0) * 20 },
+  ];
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-8 space-y-4">
       <Separator className="my-6" />
@@ -747,6 +879,30 @@ function CrossComparisonSection({ cross, site1Domain, site2Domain, t }: { cross:
           </Card>
         </div>
       )}
+
+      {/* Radar Comparatif */}
+      <Card className="border-border/50 bg-card/80">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-primary" /> {t.radarTitle}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-violet-500" /><span className="text-[10px] text-muted-foreground">{site1Domain}</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-amber-500" /><span className="text-[10px] text-muted-foreground">{site2Domain}</span></div>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+              <PolarGrid stroke="hsl(var(--border))" />
+              <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+              <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+              <Radar name={site1Domain} dataKey="site1" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15} strokeWidth={2} />
+              <Radar name={site2Domain} dataKey="site2" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.15} strokeWidth={2} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }
@@ -1218,8 +1374,8 @@ const AuditCompare = () => {
               {result.crossComparison && (
                 <CrossComparisonSection 
                   cross={result.crossComparison} 
-                  site1Domain={result.site1.domain} 
-                  site2Domain={result.site2.domain} 
+                  site1={result.site1} 
+                  site2={result.site2} 
                   t={t} 
                 />
               )}

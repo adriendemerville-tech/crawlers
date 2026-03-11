@@ -34,6 +34,55 @@ function detectLocationCode(domain: string): number {
   return KNOWN_LOCATIONS[locKey]?.code || 2250;
 }
 
+// ==================== PAGESPEED ====================
+
+interface PageSpeedScores {
+  performanceMobile: number;
+  performanceDesktop: number;
+  fcpMs: number;
+  lcpMs: number;
+  cls: number;
+  ttfbMs: number;
+}
+
+async function fetchPageSpeedScores(url: string): Promise<PageSpeedScores | null> {
+  const API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY');
+  if (!API_KEY) return null;
+  
+  const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
+  
+  try {
+    const [mobileResp, desktopResp] = await Promise.all([
+      fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=mobile&category=performance&key=${API_KEY}`, { signal: AbortSignal.timeout(20000) }),
+      fetch(`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=desktop&category=performance&key=${API_KEY}`, { signal: AbortSignal.timeout(20000) }),
+    ]);
+    
+    let performanceMobile = 0, performanceDesktop = 0;
+    let fcpMs = 0, lcpMs = 0, cls = 0, ttfbMs = 0;
+    
+    if (mobileResp.ok) {
+      const d = await mobileResp.json();
+      performanceMobile = Math.round((d.lighthouseResult?.categories?.performance?.score || 0) * 100);
+      const audits = d.lighthouseResult?.audits || {};
+      fcpMs = Math.round(audits['first-contentful-paint']?.numericValue || 0);
+      lcpMs = Math.round(audits['largest-contentful-paint']?.numericValue || 0);
+      cls = parseFloat((audits['cumulative-layout-shift']?.numericValue || 0).toFixed(3));
+      ttfbMs = Math.round(audits['server-response-time']?.numericValue || 0);
+    } else { await mobileResp.text(); }
+    
+    if (desktopResp.ok) {
+      const d = await desktopResp.json();
+      performanceDesktop = Math.round((d.lighthouseResult?.categories?.performance?.score || 0) * 100);
+    } else { await desktopResp.text(); }
+    
+    trackPaidApiCall('audit-compare', 'google', 'pagespeed');
+    return { performanceMobile, performanceDesktop, fcpMs, lcpMs, cls, ttfbMs };
+  } catch (e) {
+    console.warn('PageSpeed fetch failed:', e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
 // ==================== CONTENT DEPTH EXTRACTION ====================
 
 interface ContentDepth {
@@ -407,6 +456,14 @@ GÉNÈRE un JSON avec ces modules UNIQUEMENT:
     "recommendations": ["rec 1","rec 2"]
   },
   "aeo_score": 0-100,
+  "eeat_score": {
+    "experience": 0-10,
+    "expertise": 0-10,
+    "authoritativeness": 0-10,
+    "trustworthiness": 0-10,
+    "overall": 0-10,
+    "justification": "1-2 phrases expliquant le score"
+  },
   "expertise_sentiment": {"rating": 1-5, "justification": "1 phrase"}
 }
 
@@ -415,6 +472,7 @@ RÈGLES:
 - strengths & weaknesses: EXACTEMENT 3 chacun, phrases courtes
 - main_keywords: reprends les données DataForSEO fournies avec analyse stratégique
 - aeo_score: estime la capacité du site à apparaître en position zéro / réponse IA
+- eeat_score: évalue chaque pilier E-E-A-T indépendamment (Experience=vécu terrain, Expertise=compétence technique, Authoritativeness=reconnaissance secteur, Trustworthiness=crédibilité/transparence)
 - expertise_sentiment: 1=générique/IA, 5=expert terrain confirmé
 - JSON pur, sans commentaires`;
 }
@@ -554,9 +612,9 @@ async function analyzeSite(
   supabaseUrl: string,
   supabaseAnonKey: string,
   openrouterKey: string,
-): Promise<{ metadata: PageMetadata; analysis: any; llm_raw: any; keywords: any[]; backlinks: BacklinkProfile | null }> {
-  // Step 1: Metadata + LLM visibility + Backlinks in parallel
-  const [metadata, llmResult, backlinks] = await Promise.all([
+): Promise<{ metadata: PageMetadata; analysis: any; llm_raw: any; keywords: any[]; backlinks: BacklinkProfile | null; pagespeed: PageSpeedScores | null }> {
+  // Step 1: Metadata + LLM visibility + Backlinks + PageSpeed in parallel
+  const [metadata, llmResult, backlinks, pagespeed] = await Promise.all([
     extractPageMetadata(url, domain),
     (async () => {
       try {
@@ -572,6 +630,7 @@ async function analyzeSite(
       } catch { return null; }
     })(),
     fetchBacklinkProfile(domain),
+    fetchPageSpeedScores(url),
   ]);
 
   // Step 2: Seeds (needs metadata)
@@ -604,7 +663,7 @@ async function analyzeSite(
     console.warn(`LLM analysis failed for ${domain}:`, e instanceof Error ? e.message : e);
   }
 
-  return { metadata, analysis, llm_raw: llmResult, keywords, backlinks };
+  return { metadata, analysis, llm_raw: llmResult, keywords, backlinks, pagespeed };
 }
 
 // ==================== PHASE 3: CROSS-COMPARISON ====================
@@ -726,7 +785,7 @@ Deno.serve(async (req) => {
     
     console.log(`✅ Audit comparé v2 terminé: site1=${site1.analysis ? 'OK' : 'FAIL'}, site2=${site2.analysis ? 'OK' : 'FAIL'}, cross=${crossComparison ? 'OK' : 'FAIL'}`);
     
-    const fallbackAnalysis = { brand_dna: 'Analyse non disponible', strengths: [], weaknesses: [], aeo_score: 0, expertise_sentiment: { rating: 1, justification: 'Non évalué' } };
+    const fallbackAnalysis = { brand_dna: 'Analyse non disponible', strengths: [], weaknesses: [], aeo_score: 0, eeat_score: null, expertise_sentiment: { rating: 1, justification: 'Non évalué' } };
     
     const resultData = {
       site1: {
@@ -738,6 +797,7 @@ Deno.serve(async (req) => {
         keywords: site1.keywords,
         backlinks: site1.backlinks,
         contentDepth: site1.metadata.contentDepth,
+        pagespeed: site1.pagespeed,
       },
       site2: {
         url: url2,
@@ -748,6 +808,7 @@ Deno.serve(async (req) => {
         keywords: site2.keywords,
         backlinks: site2.backlinks,
         contentDepth: site2.metadata.contentDepth,
+        pagespeed: site2.pagespeed,
       },
       crossComparison,
       scannedAt: new Date().toISOString(),
