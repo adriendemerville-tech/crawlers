@@ -579,28 +579,13 @@ const AuditCompare = () => {
                   <CompareLoadingSteps siteName={new URL(url1.startsWith('http') ? url1 : `https://${url1}`).hostname} />
                 </div>
                 
-                {/* Center: Spotify player on separator */}
+                {/* Center: Spotify player on separator (desktop) */}
                 <div className="hidden md:flex flex-col items-center px-4 pt-16">
                   <div className="w-px h-16 bg-gradient-to-b from-transparent via-border to-transparent" />
                   <div className="w-12 h-12 rounded-full bg-gradient-to-r from-violet-600 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg my-3">
                     VS
                   </div>
                   <div className="w-px h-16 bg-gradient-to-b from-transparent via-border to-transparent mb-4" />
-                  
-                  {/* Spotify */}
-                  <div className="w-[280px]">
-                    <div className="flex items-center gap-2 justify-center mb-2">
-                      <Music className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-xs font-medium text-foreground">Playlist Crawlers</span>
-                    </div>
-                    <div className="w-full overflow-hidden rounded-[12px] bg-[#282828] isolate"
-                      style={{ clipPath: 'inset(0 round 12px)' }}>
-                      <div ref={embedContainerRef} className="w-full"
-                        style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }}
-                        aria-label="Playlist Crawlers" />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground text-center mt-1 opacity-60">Volume : 50%</p>
-                  </div>
                 </div>
 
                 {/* Right loading */}
@@ -612,17 +597,19 @@ const AuditCompare = () => {
                 </div>
               </div>
 
-              {/* Mobile Spotify */}
-              <div className="md:hidden mt-6">
+              {/* Spotify Player — single instance below the grid */}
+              <div className="mt-6 flex flex-col items-center">
                 <div className="flex items-center gap-2 justify-center mb-2">
                   <Music className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-xs font-medium text-foreground">Playlist Crawlers</span>
                 </div>
-                <div className="max-w-sm mx-auto overflow-hidden rounded-[12px] bg-[#282828] isolate"
+                <div className="w-full max-w-[320px] overflow-hidden rounded-[12px] bg-[#282828] isolate"
                   style={{ clipPath: 'inset(0 round 12px)' }}>
                   <div ref={embedContainerRef} className="w-full"
-                    style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }} />
+                    style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }}
+                    aria-label="Playlist Crawlers" />
                 </div>
+                <p className="text-[10px] text-muted-foreground text-center mt-1 opacity-60">Volume : 50%</p>
               </div>
 
               <p className="text-sm text-muted-foreground text-center mt-6">
