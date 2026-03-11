@@ -231,7 +231,7 @@ export function useSpotifyTrackRotation(active = true) {
     return () => {
       isCancelled = true;
     };
-  }, [currentTrackId]);
+  }, [currentTrackId, active]);
 
   useEffect(() => {
     return () => {
