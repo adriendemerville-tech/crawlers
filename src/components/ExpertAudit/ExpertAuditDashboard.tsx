@@ -387,6 +387,7 @@ export function ExpertAuditDashboard() {
       setStrategicResult(parsed);
       setResult(parsed);
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+      setStrategicProgressiveReveal(false);
     }
     if (savedAuditMode) {
       setAuditMode(savedAuditMode as AuditMode);
