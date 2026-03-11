@@ -19,7 +19,7 @@ import { MarketIntelligenceCard } from './MarketIntelligenceCard';
 import { PremiumRoadmapCard } from './PremiumRoadmapCard';
 import { KeywordModuleSection } from './KeywordModuleSection';
 import { HallucinationCorrectionModal, HallucinationDiagnosis } from './HallucinationCorrectionModal';
- import { LLMVisibilityCard } from './LLMVisibilityCard';
+import { LLMVisibilityCard } from './LLMVisibilityCard';
 import { LLMTargetQueriesCard } from '@/components/LLMTargetQueriesCard';
 import { PriorityContentCard } from './PriorityContentCard';
 import { PainScoreCard } from './PainScoreCard';
@@ -74,7 +74,6 @@ export function StrategicInsights({
   };
 
   // Check for PREMIUM format (new 13 modules)
-  // Include the keywords module so “Mots clés” can render immediately when provided.
   const hasPremiumFormat = analysis.brand_authority || 
                            analysis.social_signals || 
                            analysis.market_intelligence || 
@@ -132,7 +131,6 @@ export function StrategicInsights({
                   Score Citabilité 2026 : {analysis.overallScore}/100
                 </Badge>
               )}
-              {/* Hallucination IA Button */}
               <Button
                 variant="outline"
                 size="sm"
@@ -157,45 +155,14 @@ export function StrategicInsights({
         onHallucinationDataReady={onHallucinationData}
       />
 
-      {/* PREMIUM FORMAT: Full 13 Modules Display */}
+      {/* ═══════════════════════════════════════════════════════════
+          PREMIUM FORMAT — Ordre stratégique 2026
+         ═══════════════════════════════════════════════════════════ */}
       {hasPremiumFormat && (
         <>
-          {/* GEO Score Visualization */}
-          {geoScoreForVisualization && (
-            <GeoScoreVisualization geoScore={geoScoreForVisualization} />
-          )}
-
-          {/* Competitive Landscape (4 Actors) */}
-          {analysis.competitive_landscape && (
-            <CompetitiveLandscapeCard 
-              landscape={analysis.competitive_landscape}
-              onCorrectionSubmit={onCompetitorCorrection}
-              isReanalyzing={isReanalyzing}
-            />
-          )}
-
-          {/* AEO Score Card — below Brand Authority */}
-          {auditResult && (
-            <AEOScoreCard result={auditResult} />
-          )}
-
-          {/* Mots clés (doit apparaître entre Écosystème Concurrentiel et Autorité Sociale & Humaine) */}
-          <KeywordModuleSection analysis={analysis} domain={domain} />
-
-          {/* Requêtes LLM à cibler — juste après mots-clés */}
-          {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
-            <LLMTargetQueriesCard 
-              domain={domain} 
-              coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
-              citations={analysis.llm_visibility_raw.citations as any}
-              selfCorrect
-              strategicAnalysis={analysis}
-            />
-          )}
-
-          {/* Brand Authority (Brand DNA) — entre Requêtes LLM et Visibilité LLM */}
+          {/* 1. Autorité de Marque (Brand DNA) */}
           {analysis.brand_authority && (
-          <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+            <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
@@ -232,44 +199,60 @@ export function StrategicInsights({
             </Card>
           )}
 
-           {/* LLM Visibility — sous Brand DNA */}
-           {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
-              <>
-                <LLMVisibilityCard data={analysis.llm_visibility_raw} />
-                <ConversationalIntentCard analysis={analysis} />
-
-                {/* Citabilité & Résilience — avant Matrice de Risque */}
-                {analysis.quotability && <QuotabilityCard data={analysis.quotability} />}
-                {analysis.summary_resilience && <SummaryResilienceCard data={analysis.summary_resilience} />}
-
-                <ZeroClickRiskCard analysis={analysis} domain={domain} />
-                <PriorityContentCard domain={domain} />
-              </>
-            )}
-
-          {/* Empreinte Lexicale — après Visibilité LLM */}
-          {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
-
-          {/* Social Signals & Human Authority */}
-          {analysis.social_signals && (
-            <SocialSignalsCard signals={analysis.social_signals} />
-          )}
-
-          {/* Market Intelligence & Psychology */}
+          {/* 2. Intelligence Marché & Psychologie */}
           {analysis.market_intelligence && (
             <MarketIntelligenceCard intelligence={analysis.market_intelligence} />
           )}
 
-          {/* Remaining Strategic AI Metrics */}
+          {/* 3. Écosystème Concurrentiel */}
+          {analysis.competitive_landscape && (
+            <CompetitiveLandscapeCard 
+              landscape={analysis.competitive_landscape}
+              onCorrectionSubmit={onCompetitorCorrection}
+              isReanalyzing={isReanalyzing}
+            />
+          )}
+
+          {/* 4. Sentiment d'Expertise (E-E-A-T Tone) & Red Team */}
           {analysis.expertise_sentiment && <ExpertiseSentimentCard data={analysis.expertise_sentiment} />}
           {analysis.red_team && <RedTeamCard data={analysis.red_team} />}
 
-          {/* Premium Executive Roadmap (Narrative) */}
-          {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (
-            <PremiumRoadmapCard roadmap={analysis.executive_roadmap} />
+          {/* 5-7. Analyse comparative DataForSEO + Mots-clés + Gaps */}
+          <KeywordModuleSection analysis={analysis} domain={domain} />
+
+          {/* 8. Score AEO (Answer Engine Optimization) */}
+          {auditResult && (
+            <AEOScoreCard result={auditResult} />
           )}
 
-          {/* GEO Readiness Details */}
+          {/* 9. Visibilité LLMs */}
+          {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
+            <LLMVisibilityCard data={analysis.llm_visibility_raw} />
+          )}
+
+          {/* 10. Matrice de Risque Zéro-Clic */}
+          <ZeroClickRiskCard analysis={analysis} domain={domain} />
+
+          {/* 11. Requêtes LLM à cibler */}
+          {analysis.llm_visibility_raw && analysis.llm_visibility_raw.citations && analysis.llm_visibility_raw.citationRate && (
+            <LLMTargetQueriesCard 
+              domain={domain} 
+              coreValueSummary={analysis.llm_visibility_raw.coreValueSummary}
+              citations={analysis.llm_visibility_raw.citations as any}
+              selfCorrect
+              strategicAnalysis={analysis}
+            />
+          )}
+
+          {/* 12. Thought Leadership + Sentiment & Polarité */}
+          <ConversationalIntentCard analysis={analysis} />
+
+          {/* 13. Autorité Sociale & Humaine */}
+          {analysis.social_signals && (
+            <SocialSignalsCard signals={analysis.social_signals} />
+          )}
+
+          {/* 14. Sémantique IA & Reformulations */}
           {analysis.geo_readiness && (
             <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
               <CardHeader className="pb-3">
@@ -277,7 +260,7 @@ export function StrategicInsights({
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                     <Globe className="h-4.5 w-4.5 text-primary" />
                   </div>
-                  GEO Readiness 2026
+                  Sémantique IA & Reformulations
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -313,26 +296,41 @@ export function StrategicInsights({
               </CardContent>
             </Card>
           )}
+
+          {/* 15. Indice de Citabilité & Résilience au Résumé */}
+          {analysis.quotability && <QuotabilityCard data={analysis.quotability} />}
+          {analysis.summary_resilience && <SummaryResilienceCard data={analysis.summary_resilience} />}
+
+          {/* 16. Empreinte Lexicale */}
+          {analysis.lexical_footprint && <LexicalFootprintCard data={analysis.lexical_footprint} />}
+
+          {/* 17. Matrice de Gap Sémantique */}
+          {geoScoreForVisualization && (
+            <GeoScoreVisualization geoScore={geoScoreForVisualization} />
+          )}
+
+          {/* 18. Contenus à produire en priorité */}
+          <PriorityContentCard domain={domain} />
+
+          {/* 19. Feuille de Route Exécutive 2026 */}
+          {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (
+            <PremiumRoadmapCard roadmap={analysis.executive_roadmap} />
+          )}
         </>
       )}
 
       {/* STANDARD NEW FORMAT (backward compatibility) */}
       {!hasPremiumFormat && hasNewFormat && (
         <>
-          {/* GEO Score Visualization */}
           {analysis.geo_score && (
             <GeoScoreVisualization geoScore={analysis.geo_score} />
           )}
-
-          {/* Brand Identity Card */}
           {analysis.brand_identity && (
             <BrandIdentityCard 
               brandIdentity={analysis.brand_identity} 
               marketPositioning={analysis.market_positioning}
             />
           )}
-
-          {/* Strategic Roadmap */}
           {analysis.strategic_roadmap && analysis.strategic_roadmap.length > 0 && (
             <StrategicRoadmapCard roadmap={analysis.strategic_roadmap} />
           )}
@@ -342,7 +340,6 @@ export function StrategicInsights({
       {/* LEGACY FORMAT: Only show if no new format */}
       {!hasPremiumFormat && !hasNewFormat && (
         <div className="grid gap-4 md:grid-cols-2">
-          {/* Brand Perception (Legacy) */}
           {analysis.brandPerception && (
             <Card>
               <CardHeader className="pb-3">
@@ -375,7 +372,6 @@ export function StrategicInsights({
             </Card>
           )}
 
-          {/* GEO Analysis (Legacy) */}
           {analysis.geoAnalysis && (
             <Card>
               <CardHeader className="pb-3">
