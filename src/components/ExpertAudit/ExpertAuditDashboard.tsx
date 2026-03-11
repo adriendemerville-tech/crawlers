@@ -35,6 +35,7 @@ import { DarkSocialCard } from './DarkSocialCard';
 import { FreshnessSignalsCard } from './FreshnessSignalsCard';
 import { ConversionFrictionCard } from './ConversionFrictionCard';
 import { AEOScoreCard } from './AEOScoreCard';
+import { StrategicErrorBoundary } from './StrategicErrorBoundary';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -1552,6 +1553,7 @@ export function ExpertAuditDashboard() {
 
           {/* === STEP 2: STRATEGIC AUDIT SECTION (with Registration Gate) === */}
           {auditMode === 'strategic' && (
+            <StrategicErrorBoundary onReset={handleNewAudit}>
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1639,18 +1641,21 @@ export function ExpertAuditDashboard() {
                   )}
                 >
                   {/* Strategic Insights */}
-                  {result.strategicAnalysis && (
-                    <StrategicInsights 
-                      analysis={result.strategicAnalysis} 
-                      hideExecutiveSummary={true}
-                      domain={result.domain || url}
-                      siteName={result.domain || url}
-                      onHallucinationData={handleHallucinationCorrectionComplete}
-                      onCompetitorCorrection={handleCompetitorCorrectionComplete}
-                      isReanalyzing={isStrategicLoading}
-                      auditResult={result}
-                    />
-                  )}
+                  {result.strategicAnalysis && (() => {
+                    console.log('[Strategic] Rendering StrategicInsights, keys:', Object.keys(result.strategicAnalysis || {}));
+                    return (
+                      <StrategicInsights 
+                        analysis={result.strategicAnalysis!} 
+                        hideExecutiveSummary={true}
+                        domain={result.domain || url}
+                        siteName={result.domain || url}
+                        onHallucinationData={handleHallucinationCorrectionComplete}
+                        onCompetitorCorrection={handleCompetitorCorrectionComplete}
+                        isReanalyzing={isStrategicLoading}
+                        auditResult={result}
+                      />
+                    );
+                  })()}
 
                   {/* Strategic Roadmap as Action Plan */}
                   {result.strategicAnalysis && (() => {
@@ -1708,6 +1713,7 @@ export function ExpertAuditDashboard() {
                 </AnimatePresence>
               </div>
             </motion.div>
+            </StrategicErrorBoundary>
           )}
 
           {/* Timestamp + Premium Report Button */}
