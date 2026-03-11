@@ -75,18 +75,26 @@ Deno.serve(async (req) => {
     // Homepage
     pages.push({ loc: SITE_URL, lastmod: today });
     
-    // Audit Expert
+    // Outils principaux
     pages.push({ loc: `${SITE_URL}/audit-expert`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/audit-compare`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/site-crawl`, lastmod: today });
     
-    // Lexique
+    // Pages produit & info
     pages.push({ loc: `${SITE_URL}/lexique`, lastmod: today });
-    
-    // Tarifs
     pages.push({ loc: `${SITE_URL}/tarifs`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/pro-agency`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/observatoire`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/faq`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/methodologie`, lastmod: today });
     
-    // Pages comparatives
-    
+    // Landing pages SEO
+    pages.push({ loc: `${SITE_URL}/audit-seo-gratuit`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/analyse-site-web-gratuit`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/generative-engine-optimization`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/guide-audit-seo`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/comparatif-crawlers-semrush`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/modifier-code-wordpress`, lastmod: today });
 
     // ========================================
     // BLOG INDEX
