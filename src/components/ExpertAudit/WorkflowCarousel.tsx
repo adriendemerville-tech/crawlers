@@ -27,6 +27,7 @@ const translations = {
     startCode: 'Démarrer',
     priceRange: '< 6 ... 24 >',
     viewReport: 'Voir rapport',
+    auditCompare: 'Audit Comparé',
   },
   en: {
     step1Title: 'Technical SEO Audit',
