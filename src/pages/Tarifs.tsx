@@ -297,6 +297,7 @@ const agencyIcons = [Infinity, Infinity, Shield, Shield, Users, Headphones];
 export default function Tarifs() {
   const { language } = useLanguage();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const t = translations[language];
   const [subscribeLoading, setSubscribeLoading] = useState(false);
 
