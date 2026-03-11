@@ -780,7 +780,7 @@ const AuditCompare = () => {
               {/* Restart */}
               <div className="text-center mt-8">
                 <Button variant="outline" onClick={() => { setResult(null); setUrl1(''); setUrl2(''); }}>
-                  Nouvel audit comparé
+                  {t.newAudit}
                 </Button>
               </div>
             </motion.div>
