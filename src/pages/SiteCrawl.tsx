@@ -179,7 +179,7 @@ export default function SiteCrawl() {
       navigate('/auth');
       return;
     }
-    if (credits < creditCost) {
+    if (!isUnlimited && credits < creditCost) {
       toast.error(`Crédits insuffisants. Requis : ${creditCost}, disponibles : ${credits}`);
       return;
     }
