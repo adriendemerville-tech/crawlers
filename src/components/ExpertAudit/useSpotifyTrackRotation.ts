@@ -124,7 +124,7 @@ function loadSpotifyIframeApi() {
   return spotifyIframeApiPromise;
 }
 
-export function useSpotifyTrackRotation() {
+export function useSpotifyTrackRotation(active = true) {
   const embedContainerRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<SpotifyEmbedController | null>(null);
   const playTimeoutRef = useRef<number | null>(null);
