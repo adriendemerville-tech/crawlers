@@ -639,26 +639,26 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {pagespeed && (pagespeed.performanceMobile > 0 || pagespeed.performanceDesktop > 0) && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <Gauge className="h-4 w-4 text-orange-500" /> {t.pagespeed}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 rounded-lg bg-muted/30 text-center">
-                <p className={`text-2xl font-bold ${pagespeed.performanceMobile >= 90 ? 'text-emerald-500' : pagespeed.performanceMobile >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+                <p className={`text-3xl font-bold ${pagespeed.performanceMobile >= 90 ? 'text-emerald-500' : pagespeed.performanceMobile >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
                   {pagespeed.performanceMobile}
                 </p>
-                <p className="text-[10px] text-muted-foreground">{t.mobile}</p>
+                <p className="text-xs text-muted-foreground">{t.mobile}</p>
               </div>
-              <div className="p-2 rounded-lg bg-muted/30 text-center">
-                <p className={`text-2xl font-bold ${pagespeed.performanceDesktop >= 90 ? 'text-emerald-500' : pagespeed.performanceDesktop >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+                <p className={`text-3xl font-bold ${pagespeed.performanceDesktop >= 90 ? 'text-emerald-500' : pagespeed.performanceDesktop >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
                   {pagespeed.performanceDesktop}
                 </p>
-                <p className="text-[10px] text-muted-foreground">{t.desktop}</p>
+                <p className="text-xs text-muted-foreground">{t.desktop}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-foreground/60">
               <span>FCP: {(pagespeed.fcpMs / 1000).toFixed(1)}s</span>
               <span>LCP: {(pagespeed.lcpMs / 1000).toFixed(1)}s</span>
               <span>CLS: {pagespeed.cls}</span>
