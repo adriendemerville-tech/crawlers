@@ -337,6 +337,20 @@ const AuditCompare = () => {
       user_id: user?.id || null,
     }).then(() => {});
 
+    const checkCache = async (): Promise<any | null> => {
+      try {
+        const sorted = [url1.trim(), url2.trim()].map(u => u.startsWith('http') ? u : `https://${u}`).sort().join('|');
+        const cacheKey = `compare:${sorted}`;
+        const { data } = await supabase
+          .from('audit_cache')
+          .select('result_data')
+          .eq('cache_key', cacheKey)
+          .gt('expires_at', new Date().toISOString())
+          .single();
+        return data?.result_data || null;
+      } catch { return null; }
+    };
+
     const attemptAudit = async (): Promise<void> => {
       try {
         const { data, error: fnError } = await supabase.functions.invoke('audit-compare', {
@@ -376,12 +390,25 @@ const AuditCompare = () => {
           return;
         }
         
-        // Silent retry for transient errors (timeout, 5xx, etc.)
+        // Silent retry: first check if result was saved to cache despite timeout
         if (retryCountRef.current < MAX_RETRIES) {
           retryCountRef.current += 1;
-          console.log(`[audit-compare] Retry ${retryCountRef.current}/${MAX_RETRIES}...`);
-          // Wait 2s before retrying
-          await new Promise(r => setTimeout(r, 2000));
+          console.log(`[audit-compare] Retry ${retryCountRef.current}/${MAX_RETRIES} — checking cache first...`);
+          await new Promise(r => setTimeout(r, 3000));
+
+          // Try cache recovery before re-invoking the function
+          const cached = await checkCache();
+          if (cached) {
+            console.log('[audit-compare] ✅ Recovered from cache');
+            stopPlayback();
+            setTimeout(() => {
+              playDing();
+              setResult(cached);
+              setIsLoading(false);
+            }, 1500);
+            return;
+          }
+
           return attemptAudit();
         }
         
