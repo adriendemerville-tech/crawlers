@@ -1641,18 +1641,21 @@ export function ExpertAuditDashboard() {
                   )}
                 >
                   {/* Strategic Insights */}
-                  {result.strategicAnalysis && (
-                    <StrategicInsights 
-                      analysis={result.strategicAnalysis} 
-                      hideExecutiveSummary={true}
-                      domain={result.domain || url}
-                      siteName={result.domain || url}
-                      onHallucinationData={handleHallucinationCorrectionComplete}
-                      onCompetitorCorrection={handleCompetitorCorrectionComplete}
-                      isReanalyzing={isStrategicLoading}
-                      auditResult={result}
-                    />
-                  )}
+                  {result.strategicAnalysis && (() => {
+                    console.log('[Strategic] Rendering StrategicInsights, keys:', Object.keys(result.strategicAnalysis || {}));
+                    return (
+                      <StrategicInsights 
+                        analysis={result.strategicAnalysis!} 
+                        hideExecutiveSummary={true}
+                        domain={result.domain || url}
+                        siteName={result.domain || url}
+                        onHallucinationData={handleHallucinationCorrectionComplete}
+                        onCompetitorCorrection={handleCompetitorCorrectionComplete}
+                        isReanalyzing={isStrategicLoading}
+                        auditResult={result}
+                      />
+                    );
+                  })()}
 
                   {/* Strategic Roadmap as Action Plan */}
                   {result.strategicAnalysis && (() => {
