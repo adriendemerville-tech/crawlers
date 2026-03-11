@@ -873,51 +873,7 @@ export function ExpertAuditDashboard() {
             url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
             cachedContext: useCachedContext ? strategicCachedContext : null,
           });
-          if (!retryData?.success) throw new Error(retryData?.error || 'Retry failed');
-
-          const keywordPositioning = retryData?.data?.keyword_positioning ?? retryData?.data?.keywordPositioning ?? null;
-          const marketDataSummary = retryData?.data?.market_data_summary ?? retryData?.data?.marketDataSummary ?? null;
-
-          const strategicData: ExpertAuditResult = {
-            url: normalizedUrl,
-            domain: new URL(normalizedUrl).hostname,
-            totalScore: retryData.data.overallScore * 2,
-            maxScore: 200,
-            scores: {
-              performance: { score: 0, maxScore: 40, psiPerformance: 0, lcp: 0, cls: 0, tbt: 0, fcp: 0 },
-              technical: { score: 0, maxScore: 50, psiSeo: 0, httpStatus: 200, isHttps: true },
-              semantic: { score: 0, maxScore: 60, hasTitle: false, titleLength: 0, hasMetaDesc: false, metaDescLength: 0, h1Count: 0, hasUniqueH1: false, wordCount: 0 },
-              aiReady: { score: 0, maxScore: 30, hasSchemaOrg: false, schemaTypes: [], hasRobotsTxt: false, robotsPermissive: false },
-              security: { score: 0, maxScore: 20, isHttps: true, safeBrowsingOk: true, threats: [] },
-            },
-            recommendations: [],
-            rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
-            scannedAt: retryData.data.scannedAt || new Date().toISOString(),
-            strategicAnalysis: {
-              introduction: retryData.data.introduction,
-              brand_authority: retryData.data.brand_authority,
-              social_signals: retryData.data.social_signals,
-              market_intelligence: retryData.data.market_intelligence,
-              competitive_landscape: retryData.data.competitive_landscape,
-              geo_readiness: retryData.data.geo_readiness,
-              executive_roadmap: retryData.data.executive_roadmap,
-              keyword_positioning: keywordPositioning,
-              market_data_summary: marketDataSummary,
-              brand_identity: retryData.data.brand_identity,
-              market_positioning: retryData.data.market_positioning,
-              geo_score: retryData.data.geo_score,
-              strategic_roadmap: retryData.data.strategic_roadmap,
-              executive_summary: retryData.data.executive_summary,
-              brandPerception: retryData.data.brandPerception,
-              geoAnalysis: retryData.data.geoAnalysis,
-              llmVisibility: retryData.data.llmVisibility,
-              testQueries: retryData.data.testQueries,
-              executiveSummary: retryData.data.executiveSummary,
-              overallScore: retryData.data.overallScore || retryData.data.geo_readiness?.citability_score || retryData.data.geo_score?.score,
-              hallucinationCorrections: hallucinationCorrections || null,
-              llm_visibility_raw: retryData.data.llm_visibility_raw || null,
-            },
-          };
+          const strategicData = mapStrategicData(retryData.data, normalizedUrl, hallucinationCorrections);
 
           setResult(strategicData);
           setStrategicResult(strategicData);
