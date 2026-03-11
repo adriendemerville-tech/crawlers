@@ -61,7 +61,7 @@ async function extractPageMetadata(url: string): Promise<{ title: string; h1: st
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: normalizedUrl, rejectResourceTypes: ['image', 'media', 'font', 'stylesheet'], waitFor: 2000, gotoOptions: { waitUntil: 'networkidle2', timeout: 15000 } }),
-            signal: AbortSignal.timeout(20000),
+            signal: AbortSignal.timeout(18000),
           });
           if (renderResponse.ok) { const rh = await renderResponse.text(); if (rh.length > html.length) html = rh; }
           else await renderResponse.text();
@@ -255,6 +255,111 @@ RÈGLES:
 - JSON pur, sans commentaires`;
 }
 
+// ==================== JSON PARSER ====================
+
+function parseAIResponse(content: string | null): any {
+  if (!content) return null;
+  try {
+    let jsonStr = content;
+    if (content.includes('```json')) jsonStr = content.split('```json')[1].split('```')[0].trim();
+    else if (content.includes('```')) jsonStr = content.split('```')[1].split('```')[0].trim();
+    jsonStr = jsonStr.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+    return JSON.parse(jsonStr);
+  } catch {
+    try {
+      const first = content.indexOf('{');
+      const last = content.lastIndexOf('}');
+      if (first !== -1 && last > first) {
+        let s = content.substring(first, last + 1).replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+        return JSON.parse(s);
+      }
+    } catch { /* skip */ }
+    return null;
+  }
+}
+
+// ==================== CACHE HELPERS ====================
+
+function buildCacheKey(url1: string, url2: string): string {
+  const sorted = [url1, url2].sort().join('|');
+  return `compare:${sorted}`;
+}
+
+async function saveToCache(supabase: any, cacheKey: string, resultData: any): Promise<void> {
+  try {
+    const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(); // 2h
+    await supabase.from('audit_cache').upsert({
+      cache_key: cacheKey,
+      function_name: 'audit-compare',
+      result_data: resultData,
+      expires_at: expiresAt,
+    }, { onConflict: 'cache_key' });
+  } catch (e) {
+    console.warn('Cache save failed:', e);
+  }
+}
+
+// ==================== SINGLE-SITE PIPELINE ====================
+
+/** Runs the full pipeline for one site: metadata → seeds → keywords → LLM analysis */
+async function analyzeSite(
+  url: string,
+  domain: string,
+  supabaseUrl: string,
+  supabaseAnonKey: string,
+  openrouterKey: string,
+): Promise<{ metadata: any; analysis: any; llm_raw: any; keywords: any[] }> {
+  // Step 1: Metadata + LLM visibility in parallel
+  const [metadata, llmResult] = await Promise.all([
+    extractPageMetadata(url),
+    (async () => {
+      try {
+        const resp = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, lang: 'fr' }),
+          signal: AbortSignal.timeout(35000),
+        });
+        if (!resp.ok) { await resp.text(); return null; }
+        const r = await resp.json();
+        return r.success && r.data ? r.data : null;
+      } catch { return null; }
+    })(),
+  ]);
+
+  // Step 2: Seeds (needs metadata)
+  const seeds = await generateSeedsWithAI(url, metadata.context, domain);
+
+  // Step 3: Keywords (needs seeds)
+  const locCode = detectLocationCode(domain);
+  const keywords = await fetchKeywordData(seeds, locCode, domain);
+
+  // Step 4: LLM analysis (needs all above)
+  const prompt = buildComparePrompt(url, domain, metadata, keywords, llmResult);
+  let analysis: any = null;
+  try {
+    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${openrouterKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [{ role: 'system', content: COMPARE_SYSTEM_PROMPT }, { role: 'user', content: prompt }],
+        temperature: 0.3,
+      }),
+      signal: AbortSignal.timeout(55000),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      trackTokenUsage('audit-compare', 'google/gemini-2.5-flash', data.usage, url);
+      analysis = parseAIResponse(data.choices?.[0]?.message?.content || null);
+    } else { await resp.text(); }
+  } catch (e) {
+    console.warn(`LLM analysis failed for ${domain}:`, e instanceof Error ? e.message : e);
+  }
+
+  return { metadata, analysis, llm_raw: llmResult, keywords };
+}
+
 // ==================== MAIN HANDLER ====================
 
 Deno.serve(async (req) => {
@@ -275,14 +380,34 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization') || '';
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) return json({ success: false, error: 'Authentication required' }, 401);
     
+    const normalize = (u: string) => u.startsWith('http') ? u : `https://${u}`;
+    const normalizedUrl1 = normalize(url1);
+    const normalizedUrl2 = normalize(url2);
+    const cacheKey = buildCacheKey(normalizedUrl1, normalizedUrl2);
+
+    // Check cache first (recover from previous timeout)
+    const { data: cached } = await supabaseAdmin
+      .from('audit_cache')
+      .select('result_data')
+      .eq('cache_key', cacheKey)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (cached?.result_data) {
+      console.log(`✅ Audit comparé: cache hit for ${url1} vs ${url2}`);
+      return json({ success: true, data: cached.result_data, fromCache: true });
+    }
+
     // Check credits (5 required)
     const { data: profile } = await supabase.from('profiles').select('credits_balance, plan_type, subscription_status').eq('user_id', user.id).single();
     
@@ -300,158 +425,43 @@ Deno.serve(async (req) => {
       }
     }
     
-    const normalize = (u: string) => u.startsWith('http') ? u : `https://${u}`;
-    const normalizedUrl1 = normalize(url1);
-    const normalizedUrl2 = normalize(url2);
     const domain1 = new URL(normalizedUrl1).hostname.replace(/^www\./, '');
     const domain2 = new URL(normalizedUrl2).hostname.replace(/^www\./, '');
     
     console.log(`🔄 Audit comparé: ${domain1} vs ${domain2}`);
     
-    // ═══ WAVE 1: Metadata + LLM check for both URLs (parallel) ═══
-    const [meta1, meta2, llm1Result, llm2Result] = await Promise.all([
-      extractPageMetadata(url1),
-      extractPageMetadata(url2),
-      // LLM visibility check for URL1
-      (async () => {
-        try {
-          const resp = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: url1, lang: 'fr' }),
-            signal: AbortSignal.timeout(40000),
-          });
-          if (!resp.ok) { await resp.text(); return null; }
-          const r = await resp.json();
-          return r.success && r.data ? r.data : null;
-        } catch { return null; }
-      })(),
-      // LLM visibility check for URL2
-      (async () => {
-        try {
-          const resp = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${supabaseAnonKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: url2, lang: 'fr' }),
-            signal: AbortSignal.timeout(40000),
-          });
-          if (!resp.ok) { await resp.text(); return null; }
-          const r = await resp.json();
-          return r.success && r.data ? r.data : null;
-        } catch { return null; }
-      })(),
+    // ═══ Run both site pipelines in PARALLEL ═══
+    const [site1, site2] = await Promise.all([
+      analyzeSite(url1, domain1, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY),
+      analyzeSite(url2, domain2, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY),
     ]);
     
-    console.log(`✅ Wave 1 done: meta1="${meta1.title.substring(0,30)}", meta2="${meta2.title.substring(0,30)}", llm1=${llm1Result?.overallScore ?? 'null'}, llm2=${llm2Result?.overallScore ?? 'null'}`);
+    console.log(`✅ Audit comparé terminé: site1=${site1.analysis ? 'OK' : 'FAIL'}, site2=${site2.analysis ? 'OK' : 'FAIL'}`);
     
-    // ═══ WAVE 2: AI Seeds + Keyword data (parallel) ═══
-    const locCode1 = detectLocationCode(domain1);
-    const locCode2 = detectLocationCode(domain2);
-    
-    const [seeds1, seeds2] = await Promise.all([
-      generateSeedsWithAI(url1, meta1.context, domain1),
-      generateSeedsWithAI(url2, meta2.context, domain2),
-    ]);
-    
-    const [keywords1, keywords2] = await Promise.all([
-      fetchKeywordData(seeds1, locCode1, domain1),
-      fetchKeywordData(seeds2, locCode2, domain2),
-    ]);
-    
-    console.log(`✅ Wave 2 done: kw1=${keywords1.length}, kw2=${keywords2.length}`);
-    
-    // ═══ WAVE 3: LLM Analysis for both (parallel) ═══
-    const prompt1 = buildComparePrompt(url1, domain1, meta1, keywords1, llm1Result);
-    const prompt2 = buildComparePrompt(url2, domain2, meta2, keywords2, llm2Result);
-    
-    const [analysis1, analysis2] = await Promise.all([
-      (async () => {
-        try {
-          const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              messages: [{ role: 'system', content: COMPARE_SYSTEM_PROMPT }, { role: 'user', content: prompt1 }],
-              temperature: 0.3,
-            }),
-            signal: AbortSignal.timeout(60000),
-          });
-          if (!resp.ok) { await resp.text(); return null; }
-          const data = await resp.json();
-          trackTokenUsage('audit-compare', 'google/gemini-2.5-flash', data.usage, url1);
-          return data.choices?.[0]?.message?.content || null;
-        } catch { return null; }
-      })(),
-      (async () => {
-        try {
-          const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              messages: [{ role: 'system', content: COMPARE_SYSTEM_PROMPT }, { role: 'user', content: prompt2 }],
-              temperature: 0.3,
-            }),
-            signal: AbortSignal.timeout(60000),
-          });
-          if (!resp.ok) { await resp.text(); return null; }
-          const data = await resp.json();
-          trackTokenUsage('audit-compare', 'google/gemini-2.5-flash', data.usage, url2);
-          return data.choices?.[0]?.message?.content || null;
-        } catch { return null; }
-      })(),
-    ]);
-    
-    // Parse JSON responses
-    function parseAIResponse(content: string | null): any {
-      if (!content) return null;
-      try {
-        let jsonStr = content;
-        if (content.includes('```json')) jsonStr = content.split('```json')[1].split('```')[0].trim();
-        else if (content.includes('```')) jsonStr = content.split('```')[1].split('```')[0].trim();
-        jsonStr = jsonStr.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
-        return JSON.parse(jsonStr);
-      } catch {
-        try {
-          const first = content.indexOf('{');
-          const last = content.lastIndexOf('}');
-          if (first !== -1 && last > first) {
-            let s = content.substring(first, last + 1).replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
-            return JSON.parse(s);
-          }
-        } catch { /* skip */ }
-        return null;
-      }
-    }
-    
-    const parsed1 = parseAIResponse(analysis1);
-    const parsed2 = parseAIResponse(analysis2);
-    
-    console.log(`✅ Audit comparé terminé: site1=${parsed1 ? 'OK' : 'FAIL'}, site2=${parsed2 ? 'OK' : 'FAIL'}`);
-    
-    return json({
-      success: true,
-      data: {
-        site1: {
-          url: url1,
-          domain: domain1,
-          metadata: meta1,
-          analysis: parsed1 || { brand_dna: 'Analyse non disponible', strengths: [], weaknesses: [], aeo_score: 0, expertise_sentiment: { rating: 1, justification: 'Non évalué' } },
-          llm_raw: llm1Result,
-          keywords: keywords1,
-        },
-        site2: {
-          url: url2,
-          domain: domain2,
-          metadata: meta2,
-          analysis: parsed2 || { brand_dna: 'Analyse non disponible', strengths: [], weaknesses: [], aeo_score: 0, expertise_sentiment: { rating: 1, justification: 'Non évalué' } },
-          llm_raw: llm2Result,
-          keywords: keywords2,
-        },
-        scannedAt: new Date().toISOString(),
+    const resultData = {
+      site1: {
+        url: url1,
+        domain: domain1,
+        metadata: site1.metadata,
+        analysis: site1.analysis || { brand_dna: 'Analyse non disponible', strengths: [], weaknesses: [], aeo_score: 0, expertise_sentiment: { rating: 1, justification: 'Non évalué' } },
+        llm_raw: site1.llm_raw,
+        keywords: site1.keywords,
       },
-    });
+      site2: {
+        url: url2,
+        domain: domain2,
+        metadata: site2.metadata,
+        analysis: site2.analysis || { brand_dna: 'Analyse non disponible', strengths: [], weaknesses: [], aeo_score: 0, expertise_sentiment: { rating: 1, justification: 'Non évalué' } },
+        llm_raw: site2.llm_raw,
+        keywords: site2.keywords,
+      },
+      scannedAt: new Date().toISOString(),
+    };
+
+    // Save to cache preemptively (smart cache pattern)
+    await saveToCache(supabaseAdmin, cacheKey, resultData);
+
+    return json({ success: true, data: resultData });
   } catch (e) {
     console.error('audit-compare error:', e);
     return json({ success: false, error: e instanceof Error ? e.message : 'Unknown error' }, 500);
