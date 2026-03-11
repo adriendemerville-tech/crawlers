@@ -420,314 +420,368 @@ function CompareLoadingSteps({ siteName, t }: { siteName: string; t: typeof i18n
   );
 }
 
-// ==================== RESULT CARD ====================
+// ==================== COMPARISON ROW WRAPPER ====================
 
-function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
-  const { analysis, llm_raw, backlinks, contentDepth, pagespeed } = site;
+function ComparisonRow({ children, separator = true }: { children: [React.ReactNode, React.ReactNode]; separator?: boolean }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-4 items-stretch">
+      <div className="min-w-0">{children[0]}</div>
+      {separator && (
+        <div className="hidden md:flex items-stretch justify-center">
+          <div className="w-px bg-border/30" />
+        </div>
+      )}
+      <div className="min-w-0">{children[1]}</div>
+    </div>
+  );
+}
+
+// ==================== INDIVIDUAL CARD RENDERERS ====================
+
+function BrandDnaCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
+  const { analysis } = site;
+  return (
+    <Card className="border-border/50 bg-card/80 backdrop-blur-sm h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+          <Globe className="h-4 w-4 text-primary" /> Brand DNA
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-foreground/80 leading-relaxed">{analysis.brand_dna}</p>
+        <div className="grid grid-cols-1 gap-3">
+          <div>
+            <p className="text-sm font-semibold text-emerald-500 mb-1.5 flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> {t.strengths}</p>
+            {(analysis.strengths || []).map((s, i) => (
+              <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-emerald-500/30 mb-1.5">{s}</p>
+            ))}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-rose-500 mb-1.5 flex items-center gap-1"><TrendingDown className="h-3.5 w-3.5" /> {t.weaknesses}</p>
+            {(analysis.weaknesses || []).map((w, i) => (
+              <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-rose-500/30 mb-1.5">{w}</p>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function BacklinksCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
+  const { backlinks } = site;
+  if (!backlinks) return <div />;
+  return (
+    <Card className="border-border/50 bg-card/80 h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+          <Link2 className="h-4 w-4 text-blue-500" /> {t.backlinks}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+            <p className="text-xl font-bold text-foreground">{backlinks.referringDomains.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">{t.referringDomains}</p>
+          </div>
+          <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+            <p className="text-xl font-bold text-foreground">{backlinks.domainRank}</p>
+            <p className="text-xs text-muted-foreground">{t.domainRank}</p>
+          </div>
+        </div>
+        <div className="text-sm text-foreground/70">
+          <span className="font-medium">{backlinks.totalBacklinks.toLocaleString()}</span> backlinks total
+        </div>
+        {backlinks.topAnchors.length > 0 && (
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">{t.topAnchors}</p>
+            <div className="flex flex-wrap gap-1">
+              {backlinks.topAnchors.map((a, i) => (
+                <Badge key={i} variant="outline" className="text-[10px] px-1.5">{a}</Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ContentDepthCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
+  const { contentDepth } = site;
+  if (!contentDepth) return <div />;
+  return (
+    <Card className="border-border/50 bg-card/80 h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+          <FileText className="h-4 w-4 text-teal-500" /> {t.contentDepth}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="p-2 rounded bg-muted/30">
+            <p className="text-base font-bold text-foreground">{contentDepth.wordCount.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">{t.words}</p>
+          </div>
+          <div className="p-2 rounded bg-muted/30">
+            <p className="text-base font-bold text-foreground">{contentDepth.h2Count}</p>
+            <p className="text-xs text-muted-foreground">H2</p>
+          </div>
+          <div className="p-2 rounded bg-muted/30">
+            <p className="text-base font-bold text-foreground">{contentDepth.h3Count}</p>
+            <p className="text-xs text-muted-foreground">H3</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {contentDepth.hasJsonLd && <Badge variant="default" className="text-[10px] px-1.5">JSON-LD</Badge>}
+          {contentDepth.hasOpenGraph && <Badge variant="default" className="text-[10px] px-1.5">Open Graph</Badge>}
+          {contentDepth.hasFAQ && <Badge variant="default" className="text-[10px] px-1.5">FAQ Schema</Badge>}
+          {!contentDepth.hasJsonLd && <Badge variant="outline" className="text-[10px] px-1.5 opacity-50">JSON-LD ✗</Badge>}
+          {!contentDepth.hasOpenGraph && <Badge variant="outline" className="text-[10px] px-1.5 opacity-50">OG ✗</Badge>}
+        </div>
+        <div className="flex justify-between text-xs text-foreground/60">
+          <span>{t.internalLinks}: {contentDepth.internalLinksCount}</span>
+          <span>{t.externalLinks}: {contentDepth.externalLinksCount}</span>
+        </div>
+        {contentDepth.imagesWithoutAlt > 0 && (
+          <p className="text-xs text-rose-400">{contentDepth.imagesWithoutAlt}/{contentDepth.imagesCount} {t.images} {t.withoutAlt}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function LlmVisibilityCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
+  const { analysis, llm_raw } = site;
   const llmScore = llm_raw?.overallScore ?? analysis.llm_visibility?.citation_probability ?? 0;
+  return (
+    <Card className="border-border/50 bg-card/80 h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+          <Brain className="h-4 w-4 text-violet-500" /> {t.llmVisibility}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="text-3xl font-bold text-foreground">{llmScore}<span className="text-sm text-foreground/50">/100</span></div>
+          {llm_raw?.brandMentioned !== undefined && (
+            <Badge variant={llm_raw.brandMentioned ? 'default' : 'secondary'} className="text-xs">
+              {llm_raw.brandMentioned ? t.brandCited : t.brandNotCited}
+            </Badge>
+          )}
+        </div>
+        {analysis.llm_visibility?.analysis && (
+          <p className="text-sm text-foreground/70 leading-relaxed">{analysis.llm_visibility.analysis}</p>
+        )}
+        {llm_raw?.models && Array.isArray(llm_raw.models) && (
+          <div className="space-y-1.5">
+            {llm_raw.models.map((m: any, i: number) => (
+              <div key={i} className="flex items-center justify-between text-sm">
+                <span className="text-foreground/70">{m.name}</span>
+                <Badge variant={m.brandMentioned ? 'default' : 'outline'} className="text-xs px-2">
+                  {m.brandMentioned ? t.cited : t.absent}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
+function KeywordsCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
+  const { analysis } = site;
+  if (!analysis.keyword_positioning?.main_keywords?.length) return <div />;
+  return (
+    <Card className="border-border/50 bg-card/80 h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+          <Target className="h-4 w-4 text-amber-500" /> {t.keywords}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {analysis.keyword_positioning.main_keywords.slice(0, 6).map((kw, i) => (
+            <div key={i} className="flex items-center justify-between text-sm gap-2">
+              <span className="text-foreground truncate flex-1">{kw.keyword}</span>
+              <span className="text-foreground/50 whitespace-nowrap">{kw.volume} vol</span>
+              <Badge variant={typeof kw.current_rank === 'number' && kw.current_rank <= 10 ? 'default' : 'outline'} className="text-xs px-2 whitespace-nowrap">
+                {typeof kw.current_rank === 'number' ? `#${kw.current_rank}` : 'N/C'}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LlmQueriesCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
+  const { analysis } = site;
+  if (!analysis.llm_visibility?.test_queries?.length) return <div />;
+  const queries = analysis.llm_visibility.test_queries;
+  const llmColors: Record<string, string> = {
+    'ChatGPT': 'text-emerald-400', 'GPT-4': 'text-emerald-400', 'GPT-5': 'text-emerald-400',
+    'Gemini': 'text-blue-400', 'Google': 'text-blue-400',
+    'Perplexity': 'text-violet-400',
+    'Claude': 'text-amber-400',
+    'Mistral': 'text-rose-400',
+    'Copilot': 'text-cyan-400',
+  };
+  const getLlmColor = (name: string) => {
+    for (const [key, color] of Object.entries(llmColors)) {
+      if (name.toLowerCase().includes(key.toLowerCase())) return color;
+    }
+    return 'text-teal-400';
+  };
+  return (
+    <Card className="border-border/50 bg-card/80 h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-cyan-500" /> {t.llmQueries}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2.5">
+        {queries.slice(0, 3).map((q, i) => (
+          <div key={i} className="p-2.5 rounded-lg bg-muted/30 border border-border/30">
+            <p className="text-sm font-medium text-foreground">"{q.query}"</p>
+            <p className="text-xs text-foreground/60 mt-0.5">{q.purpose}</p>
+            <div className="flex gap-1.5 mt-1.5 flex-wrap">
+              {q.target_llms?.map((llm, j) => {
+                const count = queries.filter(qq => qq.target_llms?.includes(llm)).length;
+                return (
+                  <Badge key={j} variant="outline" className={`text-[10px] px-1.5 ${getLlmColor(llm)}`}>
+                    {llm} <span className="ml-0.5 opacity-70">({count})</span>
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function PageSpeedCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
+  const { pagespeed } = site;
+  if (!pagespeed || (pagespeed.performanceMobile === 0 && pagespeed.performanceDesktop === 0)) return <div />;
+  return (
+    <Card className="border-border/50 bg-card/80 h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+          <Gauge className="h-4 w-4 text-orange-500" /> {t.pagespeed}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+            <p className={`text-3xl font-bold ${pagespeed.performanceMobile >= 90 ? 'text-emerald-500' : pagespeed.performanceMobile >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+              {pagespeed.performanceMobile}
+            </p>
+            <p className="text-xs text-muted-foreground">{t.mobile}</p>
+          </div>
+          <div className="p-2.5 rounded-lg bg-muted/30 text-center">
+            <p className={`text-3xl font-bold ${pagespeed.performanceDesktop >= 90 ? 'text-emerald-500' : pagespeed.performanceDesktop >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
+              {pagespeed.performanceDesktop}
+            </p>
+            <p className="text-xs text-muted-foreground">{t.desktop}</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-foreground/60">
+          <span>FCP: {(pagespeed.fcpMs / 1000).toFixed(1)}s</span>
+          <span>LCP: {(pagespeed.lcpMs / 1000).toFixed(1)}s</span>
+          <span>CLS: {pagespeed.cls}</span>
+          <span>TTFB: {pagespeed.ttfbMs}ms</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EeatCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
+  const { analysis } = site;
+  if (!analysis.eeat_score) return <div />;
+  return (
+    <Card className="border-border/50 bg-card/80 h-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+          <Award className="h-4 w-4 text-indigo-500" /> {t.eeat}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="text-center mb-2">
+          <p className="text-3xl font-bold text-foreground">{analysis.eeat_score.overall}<span className="text-sm text-foreground/50">/10</span></p>
+        </div>
+        <div className="space-y-2">
+          {[
+            { label: t.experience, value: analysis.eeat_score.experience },
+            { label: t.expertiseLabel, value: analysis.eeat_score.expertise },
+            { label: t.authority, value: analysis.eeat_score.authoritativeness },
+            { label: t.trust, value: analysis.eeat_score.trustworthiness },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-2">
+              <span className="text-xs text-foreground/60 w-20 shrink-0">{item.label}</span>
+              <div className="flex-1 h-2 rounded-full bg-muted/50 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${item.value >= 8 ? 'bg-emerald-500' : item.value >= 5 ? 'bg-amber-500' : 'bg-rose-500'}`}
+                  style={{ width: `${(item.value / 10) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs font-medium text-foreground w-5 text-right">{item.value}</span>
+            </div>
+          ))}
+        </div>
+        {analysis.eeat_score.justification && (
+          <p className="text-xs text-foreground/60 italic mt-1">{analysis.eeat_score.justification}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function AeoExpertiseRow({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
+  const { analysis } = site;
+  return (
+    <div className="grid grid-cols-2 gap-3 h-full">
+      <Card className="border-border/50 bg-card/80">
+        <CardContent className="pt-4 text-center">
+          <Zap className="h-5 w-5 mx-auto text-amber-500 mb-1" />
+          <p className="text-xs text-foreground/60">{t.aeoScore}</p>
+          <p className="text-3xl font-bold text-foreground">{analysis.aeo_score}<span className="text-sm text-foreground/50">/100</span></p>
+        </CardContent>
+      </Card>
+      <Card className="border-border/50 bg-card/80">
+        <CardContent className="pt-4 text-center">
+          <Star className="h-5 w-5 mx-auto text-yellow-500 mb-1" />
+          <p className="text-xs text-foreground/60">{t.expertise}</p>
+          <div className="flex items-center justify-center gap-0.5 mt-1">
+            {[1, 2, 3, 4, 5].map(n => (
+              <Star key={n} className={`h-4 w-4 ${n <= (analysis.expertise_sentiment?.rating || 0) ? 'text-yellow-500 fill-yellow-500' : 'text-muted'}`} />
+            ))}
+          </div>
+          <p className="text-xs text-foreground/60 mt-1">{analysis.expertise_sentiment?.justification}</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ==================== SITE COMPARISON GRID (row-based) ====================
+
+function SiteComparisonGrid({ site1, site2, t }: { site1: SiteResult; site2: SiteResult; t: typeof i18n['fr'] }) {
   return (
     <div className="space-y-4">
-      {/* Brand DNA */}
-      <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-            <Globe className="h-4 w-4 text-primary" /> Brand DNA
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-foreground/80 leading-relaxed">{analysis.brand_dna}</p>
-          <div className="grid grid-cols-1 gap-3">
-            <div>
-              <p className="text-sm font-semibold text-emerald-500 mb-1.5 flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> {t.strengths}</p>
-              {(analysis.strengths || []).map((s, i) => (
-                <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-emerald-500/30 mb-1.5">{s}</p>
-              ))}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-rose-500 mb-1.5 flex items-center gap-1"><TrendingDown className="h-3.5 w-3.5" /> {t.weaknesses}</p>
-              {(analysis.weaknesses || []).map((w, i) => (
-                <p key={i} className="text-sm text-foreground/70 pl-3 border-l-2 border-rose-500/30 mb-1.5">{w}</p>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Backlinks */}
-      {backlinks && (
-        <Card className="border-border/50 bg-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-              <Link2 className="h-4 w-4 text-blue-500" /> {t.backlinks}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
-                <p className="text-xl font-bold text-foreground">{backlinks.referringDomains.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">{t.referringDomains}</p>
-              </div>
-              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
-                <p className="text-xl font-bold text-foreground">{backlinks.domainRank}</p>
-                <p className="text-xs text-muted-foreground">{t.domainRank}</p>
-              </div>
-            </div>
-            <div className="text-sm text-foreground/70">
-              <span className="font-medium">{backlinks.totalBacklinks.toLocaleString()}</span> backlinks total
-            </div>
-            {backlinks.topAnchors.length > 0 && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">{t.topAnchors}</p>
-                <div className="flex flex-wrap gap-1">
-                  {backlinks.topAnchors.map((a, i) => (
-                    <Badge key={i} variant="outline" className="text-[10px] px-1.5">{a}</Badge>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Content Depth */}
-      {contentDepth && (
-        <Card className="border-border/50 bg-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-              <FileText className="h-4 w-4 text-teal-500" /> {t.contentDepth}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2 rounded bg-muted/30">
-                <p className="text-base font-bold text-foreground">{contentDepth.wordCount.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">{t.words}</p>
-              </div>
-              <div className="p-2 rounded bg-muted/30">
-                <p className="text-base font-bold text-foreground">{contentDepth.h2Count}</p>
-                <p className="text-xs text-muted-foreground">H2</p>
-              </div>
-              <div className="p-2 rounded bg-muted/30">
-                <p className="text-base font-bold text-foreground">{contentDepth.h3Count}</p>
-                <p className="text-xs text-muted-foreground">H3</p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {contentDepth.hasJsonLd && <Badge variant="default" className="text-[10px] px-1.5">JSON-LD</Badge>}
-              {contentDepth.hasOpenGraph && <Badge variant="default" className="text-[10px] px-1.5">Open Graph</Badge>}
-              {contentDepth.hasFAQ && <Badge variant="default" className="text-[10px] px-1.5">FAQ Schema</Badge>}
-              {!contentDepth.hasJsonLd && <Badge variant="outline" className="text-[10px] px-1.5 opacity-50">JSON-LD ✗</Badge>}
-              {!contentDepth.hasOpenGraph && <Badge variant="outline" className="text-[10px] px-1.5 opacity-50">OG ✗</Badge>}
-            </div>
-            <div className="flex justify-between text-xs text-foreground/60">
-              <span>{t.internalLinks}: {contentDepth.internalLinksCount}</span>
-              <span>{t.externalLinks}: {contentDepth.externalLinksCount}</span>
-            </div>
-            {contentDepth.imagesWithoutAlt > 0 && (
-              <p className="text-xs text-rose-400">{contentDepth.imagesWithoutAlt}/{contentDepth.imagesCount} {t.images} {t.withoutAlt}</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* LLM Visibility */}
-      <Card className="border-border/50 bg-card/80">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-            <Brain className="h-4 w-4 text-violet-500" /> {t.llmVisibility}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="text-3xl font-bold text-foreground">{llmScore}<span className="text-sm text-foreground/50">/100</span></div>
-            {llm_raw?.brandMentioned !== undefined && (
-              <Badge variant={llm_raw.brandMentioned ? 'default' : 'secondary'} className="text-xs">
-                {llm_raw.brandMentioned ? t.brandCited : t.brandNotCited}
-              </Badge>
-            )}
-          </div>
-          {analysis.llm_visibility?.analysis && (
-            <p className="text-sm text-foreground/70 leading-relaxed">{analysis.llm_visibility.analysis}</p>
-          )}
-          {llm_raw?.models && Array.isArray(llm_raw.models) && (
-            <div className="space-y-1.5">
-              {llm_raw.models.map((m: any, i: number) => (
-                <div key={i} className="flex items-center justify-between text-sm">
-                  <span className="text-foreground/70">{m.name}</span>
-                  <Badge variant={m.brandMentioned ? 'default' : 'outline'} className="text-xs px-2">
-                    {m.brandMentioned ? t.cited : t.absent}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Keywords */}
-      {analysis.keyword_positioning?.main_keywords && analysis.keyword_positioning.main_keywords.length > 0 && (
-        <Card className="border-border/50 bg-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-              <Target className="h-4 w-4 text-amber-500" /> {t.keywords}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {analysis.keyword_positioning.main_keywords.slice(0, 6).map((kw, i) => (
-                <div key={i} className="flex items-center justify-between text-sm gap-2">
-                  <span className="text-foreground truncate flex-1">{kw.keyword}</span>
-                  <span className="text-foreground/50 whitespace-nowrap">{kw.volume} vol</span>
-                  <Badge variant={typeof kw.current_rank === 'number' && kw.current_rank <= 10 ? 'default' : 'outline'} className="text-xs px-2 whitespace-nowrap">
-                    {typeof kw.current_rank === 'number' ? `#${kw.current_rank}` : 'N/C'}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* LLM Target Queries */}
-      {analysis.llm_visibility?.test_queries && analysis.llm_visibility.test_queries.length > 0 && (
-        <Card className="border-border/50 bg-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-cyan-500" /> {t.llmQueries}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2.5">
-            {(() => {
-              const queries = analysis.llm_visibility!.test_queries!;
-              const llmColors: Record<string, string> = {
-                'ChatGPT': 'text-emerald-400', 'GPT-4': 'text-emerald-400', 'GPT-5': 'text-emerald-400',
-                'Gemini': 'text-blue-400', 'Google': 'text-blue-400',
-                'Perplexity': 'text-violet-400',
-                'Claude': 'text-amber-400',
-                'Mistral': 'text-rose-400',
-                'Copilot': 'text-cyan-400',
-              };
-              const getLlmColor = (name: string) => {
-                for (const [key, color] of Object.entries(llmColors)) {
-                  if (name.toLowerCase().includes(key.toLowerCase())) return color;
-                }
-                return 'text-teal-400';
-              };
-              return queries.slice(0, 3).map((q, i) => (
-                <div key={i} className="p-2.5 rounded-lg bg-muted/30 border border-border/30">
-                  <p className="text-sm font-medium text-foreground">"{q.query}"</p>
-                  <p className="text-xs text-foreground/60 mt-0.5">{q.purpose}</p>
-                  <div className="flex gap-1.5 mt-1.5 flex-wrap">
-                    {q.target_llms?.map((llm, j) => {
-                      const count = queries.filter(qq => qq.target_llms?.includes(llm)).length;
-                      return (
-                        <Badge key={j} variant="outline" className={`text-[10px] px-1.5 ${getLlmColor(llm)}`}>
-                          {llm} <span className="ml-0.5 opacity-70">({count})</span>
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                </div>
-              ));
-            })()}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* PageSpeed */}
-      {pagespeed && (pagespeed.performanceMobile > 0 || pagespeed.performanceDesktop > 0) && (
-        <Card className="border-border/50 bg-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-              <Gauge className="h-4 w-4 text-orange-500" /> {t.pagespeed}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
-                <p className={`text-3xl font-bold ${pagespeed.performanceMobile >= 90 ? 'text-emerald-500' : pagespeed.performanceMobile >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
-                  {pagespeed.performanceMobile}
-                </p>
-                <p className="text-xs text-muted-foreground">{t.mobile}</p>
-              </div>
-              <div className="p-2.5 rounded-lg bg-muted/30 text-center">
-                <p className={`text-3xl font-bold ${pagespeed.performanceDesktop >= 90 ? 'text-emerald-500' : pagespeed.performanceDesktop >= 50 ? 'text-amber-500' : 'text-rose-500'}`}>
-                  {pagespeed.performanceDesktop}
-                </p>
-                <p className="text-xs text-muted-foreground">{t.desktop}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-foreground/60">
-              <span>FCP: {(pagespeed.fcpMs / 1000).toFixed(1)}s</span>
-              <span>LCP: {(pagespeed.lcpMs / 1000).toFixed(1)}s</span>
-              <span>CLS: {pagespeed.cls}</span>
-              <span>TTFB: {pagespeed.ttfbMs}ms</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* E-E-A-T Score */}
-      {analysis.eeat_score && (
-        <Card className="border-border/50 bg-card/80">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-              <Award className="h-4 w-4 text-indigo-500" /> {t.eeat}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="text-center mb-2">
-              <p className="text-3xl font-bold text-foreground">{analysis.eeat_score.overall}<span className="text-sm text-foreground/50">/10</span></p>
-            </div>
-            <div className="space-y-2">
-              {[
-                { label: t.experience, value: analysis.eeat_score.experience },
-                { label: t.expertiseLabel, value: analysis.eeat_score.expertise },
-                { label: t.authority, value: analysis.eeat_score.authoritativeness },
-                { label: t.trust, value: analysis.eeat_score.trustworthiness },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center gap-2">
-                  <span className="text-xs text-foreground/60 w-20 shrink-0">{item.label}</span>
-                  <div className="flex-1 h-2 rounded-full bg-muted/50 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${item.value >= 8 ? 'bg-emerald-500' : item.value >= 5 ? 'bg-amber-500' : 'bg-rose-500'}`}
-                      style={{ width: `${(item.value / 10) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-medium text-foreground w-5 text-right">{item.value}</span>
-                </div>
-              ))}
-            </div>
-            {analysis.eeat_score.justification && (
-              <p className="text-xs text-foreground/60 italic mt-1">{analysis.eeat_score.justification}</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* AEO Score + Expertise Sentiment */}
-      <div className="grid grid-cols-2 gap-3">
-        <Card className="border-border/50 bg-card/80">
-          <CardContent className="pt-4 text-center">
-            <Zap className="h-5 w-5 mx-auto text-amber-500 mb-1" />
-            <p className="text-xs text-foreground/60">{t.aeoScore}</p>
-            <p className="text-3xl font-bold text-foreground">{analysis.aeo_score}<span className="text-sm text-foreground/50">/100</span></p>
-          </CardContent>
-        </Card>
-        <Card className="border-border/50 bg-card/80">
-          <CardContent className="pt-4 text-center">
-            <Star className="h-5 w-5 mx-auto text-yellow-500 mb-1" />
-            <p className="text-xs text-foreground/60">{t.expertise}</p>
-            <div className="flex items-center justify-center gap-0.5 mt-1">
-              {[1, 2, 3, 4, 5].map(n => (
-                <Star key={n} className={`h-4 w-4 ${n <= (analysis.expertise_sentiment?.rating || 0) ? 'text-yellow-500 fill-yellow-500' : 'text-muted'}`} />
-              ))}
-            </div>
-            <p className="text-xs text-foreground/60 mt-1">{analysis.expertise_sentiment?.justification}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <ComparisonRow><BrandDnaCard site={site1} t={t} /><BrandDnaCard site={site2} t={t} /></ComparisonRow>
+      <ComparisonRow><BacklinksCard site={site1} t={t} /><BacklinksCard site={site2} t={t} /></ComparisonRow>
+      <ComparisonRow><ContentDepthCard site={site1} t={t} /><ContentDepthCard site={site2} t={t} /></ComparisonRow>
+      <ComparisonRow><LlmVisibilityCard site={site1} t={t} /><LlmVisibilityCard site={site2} t={t} /></ComparisonRow>
+      <ComparisonRow><KeywordsCard site={site1} t={t} /><KeywordsCard site={site2} t={t} /></ComparisonRow>
+      <ComparisonRow><LlmQueriesCard site={site1} t={t} /><LlmQueriesCard site={site2} t={t} /></ComparisonRow>
+      <ComparisonRow><PageSpeedCard site={site1} t={t} /><PageSpeedCard site={site2} t={t} /></ComparisonRow>
+      <ComparisonRow><EeatCard site={site1} t={t} /><EeatCard site={site2} t={t} /></ComparisonRow>
+      <ComparisonRow><AeoExpertiseRow site={site1} t={t} /><AeoExpertiseRow site={site2} t={t} /></ComparisonRow>
     </div>
   );
 }
@@ -1386,41 +1440,30 @@ const AuditCompare = () => {
           {/* Results */}
           {result && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-              <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-4 items-start">
-                {/* Site 1 */}
-                <div>
-                  <div className="text-center mb-4">
-                    <Badge className="bg-violet-600 text-white text-xs">{result.site1.domain}</Badge>
-                    <p className="text-xs text-muted-foreground mt-1 truncate">{result.site1.metadata.title}</p>
-                  </div>
-                  <SiteResultCard site={result.site1} t={t} />
+              {/* Site headers */}
+              <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-4 items-center mb-6">
+                <div className="text-center">
+                  <Badge className="bg-violet-600 text-white text-xs">{result.site1.domain}</Badge>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">{result.site1.metadata.title}</p>
                 </div>
-
-                {/* Separator */}
-                <div className="hidden md:flex flex-col items-center pt-8">
-                  <div className="w-px h-full min-h-[400px] bg-gradient-to-b from-violet-500/20 via-amber-500/30 to-violet-500/20 relative">
-                    <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 left-1/2 w-10 h-10 rounded-full bg-gradient-to-r from-violet-600 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
-                      VS
-                    </div>
-                  </div>
-                </div>
-
-                {/* Mobile VS */}
-                <div className="md:hidden flex justify-center py-4">
+                <div className="hidden md:flex items-center justify-center">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-r from-violet-600 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
                     VS
                   </div>
                 </div>
-
-                {/* Site 2 */}
-                <div>
-                  <div className="text-center mb-4">
-                    <Badge className="bg-amber-600 text-white text-xs">{result.site2.domain}</Badge>
-                    <p className="text-xs text-muted-foreground mt-1 truncate">{result.site2.metadata.title}</p>
+                <div className="md:hidden flex justify-center py-2">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-violet-600 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                    VS
                   </div>
-                  <SiteResultCard site={result.site2} t={t} />
+                </div>
+                <div className="text-center">
+                  <Badge className="bg-amber-600 text-white text-xs">{result.site2.domain}</Badge>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">{result.site2.metadata.title}</p>
                 </div>
               </div>
+
+              {/* Row-based comparison */}
+              <SiteComparisonGrid site1={result.site1} site2={result.site2} t={t} />
 
               {/* Cross-Comparison Section */}
               {result.crossComparison && (
