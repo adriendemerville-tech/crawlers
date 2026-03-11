@@ -34,17 +34,91 @@ function detectLocationCode(domain: string): number {
   return KNOWN_LOCATIONS[locKey]?.code || 2250;
 }
 
+// ==================== CONTENT DEPTH EXTRACTION ====================
+
+interface ContentDepth {
+  wordCount: number;
+  h2Count: number;
+  h3Count: number;
+  hasJsonLd: boolean;
+  hasOpenGraph: boolean;
+  hasFAQ: boolean;
+  internalLinksCount: number;
+  externalLinksCount: number;
+  imagesCount: number;
+  imagesWithoutAlt: number;
+}
+
+function extractContentDepth(html: string, domain: string): ContentDepth {
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  const body = bodyMatch ? bodyMatch[1] : html;
+  const textOnly = body
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+
+  const h2Matches = body.match(/<h2[\s>]/gi);
+  const h3Matches = body.match(/<h3[\s>]/gi);
+
+  const hasJsonLd = /<script[^>]*type=["']application\/ld\+json["'][^>]*>/i.test(html);
+  const hasOpenGraph = /<meta[^>]*property=["']og:/i.test(html);
+  const hasFAQ = /FAQPage/i.test(html) || (/<h[23][^>]*>[^<]*(FAQ|question|foire aux questions)/i.test(html));
+
+  // Count links
+  const linkMatches = html.match(/<a[^>]*href=["']([^"'#]+)["'][^>]*>/gi) || [];
+  let internal = 0, external = 0;
+  const cleanDomain = domain.replace(/^www\./, '').toLowerCase();
+  for (const link of linkMatches) {
+    const hrefMatch = link.match(/href=["']([^"'#]+)["']/i);
+    if (!hrefMatch) continue;
+    const href = hrefMatch[1];
+    if (href.startsWith('/') || href.includes(cleanDomain)) internal++;
+    else if (href.startsWith('http')) external++;
+  }
+
+  // Count images
+  const imgMatches = html.match(/<img[^>]*>/gi) || [];
+  let imagesWithoutAlt = 0;
+  for (const img of imgMatches) {
+    if (!/alt=["'][^"']+["']/i.test(img)) imagesWithoutAlt++;
+  }
+
+  return {
+    wordCount: textOnly.split(/\s+/).filter(w => w.length > 1).length,
+    h2Count: h2Matches?.length || 0,
+    h3Count: h3Matches?.length || 0,
+    hasJsonLd,
+    hasOpenGraph,
+    hasFAQ,
+    internalLinksCount: internal,
+    externalLinksCount: external,
+    imagesCount: imgMatches.length,
+    imagesWithoutAlt,
+  };
+}
+
 // ==================== PAGE METADATA EXTRACTION ====================
 
-async function extractPageMetadata(url: string): Promise<{ title: string; h1: string; desc: string; context: string }> {
+interface PageMetadata {
+  title: string;
+  h1: string;
+  desc: string;
+  context: string;
+  contentDepth: ContentDepth;
+  rawHtml: string;
+}
+
+async function extractPageMetadata(url: string, domain: string): Promise<PageMetadata> {
   const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
+  const emptyDepth: ContentDepth = { wordCount: 0, h2Count: 0, h3Count: 0, hasJsonLd: false, hasOpenGraph: false, hasFAQ: false, internalLinksCount: 0, externalLinksCount: 0, imagesCount: 0, imagesWithoutAlt: 0 };
   try {
     const resp = await fetch(normalizedUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Accept': 'text/html' },
       redirect: 'follow',
       signal: AbortSignal.timeout(8000),
     });
-    if (!resp.ok) { await resp.text(); return { title: '', h1: '', desc: '', context: '' }; }
+    if (!resp.ok) { await resp.text(); return { title: '', h1: '', desc: '', context: '', contentDepth: emptyDepth, rawHtml: '' }; }
     
     let html = await resp.text();
     
@@ -77,12 +151,66 @@ async function extractPageMetadata(url: string): Promise<{ title: string; h1: st
     const title = titleMatch?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
     const h1 = h1Match?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
     const desc = descMatch?.[1]?.trim() || '';
+    const contentDepth = extractContentDepth(html, domain);
     
     const context = `CONTENU PAGE: Titre="${title||'?'}", Desc="${(desc||'?').substring(0,200)}", H1="${h1||'?'}"`;
-    return { title, h1, desc, context };
+    return { title, h1, desc, context, contentDepth, rawHtml: html };
   } catch (e) {
     console.warn('Page fetch failed:', e instanceof Error ? e.message : e);
-    return { title: '', h1: '', desc: '', context: '' };
+    return { title: '', h1: '', desc: '', context: '', contentDepth: emptyDepth, rawHtml: '' };
+  }
+}
+
+// ==================== BACKLINKS (DataForSEO) ====================
+
+interface BacklinkProfile {
+  referringDomains: number;
+  totalBacklinks: number;
+  domainRank: number;
+  topAnchors: string[];
+}
+
+async function fetchBacklinkProfile(domain: string): Promise<BacklinkProfile | null> {
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
+  try {
+    const resp = await fetch('https://api.dataforseo.com/v3/backlinks/summary/live', {
+      method: 'POST',
+      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify([{ target: domain, internal_list_limit: 0, external_list_limit: 0 }]),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!resp.ok) { await resp.text(); return null; }
+    trackPaidApiCall('audit-compare', 'dataforseo', 'backlinks/summary');
+    const data = await resp.json();
+    const result = data.tasks?.[0]?.result?.[0];
+    if (!result) return null;
+
+    // Fetch top anchors
+    let topAnchors: string[] = [];
+    try {
+      const anchorResp = await fetch('https://api.dataforseo.com/v3/backlinks/anchors/live', {
+        method: 'POST',
+        headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify([{ target: domain, limit: 5, order_by: ['backlinks,desc'] }]),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (anchorResp.ok) {
+        trackPaidApiCall('audit-compare', 'dataforseo', 'backlinks/anchors');
+        const anchorData = await anchorResp.json();
+        const items = anchorData.tasks?.[0]?.result?.[0]?.items || [];
+        topAnchors = items.map((i: any) => i.anchor || '').filter((a: string) => a.length > 0).slice(0, 5);
+      } else { await anchorResp.text(); }
+    } catch { /* skip anchors */ }
+
+    return {
+      referringDomains: result.referring_domains || 0,
+      totalBacklinks: result.backlinks || 0,
+      domainRank: result.rank || 0,
+      topAnchors,
+    };
+  } catch (e) {
+    console.warn('Backlinks fetch failed:', e instanceof Error ? e.message : e);
+    return null;
   }
 }
 
@@ -133,7 +261,6 @@ async function fetchKeywordData(seeds: string[], locationCode: number, domain: s
   const seen = new Set<string>();
   
   try {
-    // Fetch keyword volumes
     const response = await fetch('https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live', {
       method: 'POST',
       headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
@@ -194,15 +321,16 @@ async function fetchKeywordData(seeds: string[], locationCode: number, domain: s
   }
 }
 
-// ==================== LIGHTWEIGHT LLM ANALYSIS ====================
+// ==================== INDIVIDUAL SITE ANALYSIS (Phase 1 & 2) ====================
 
-const COMPARE_SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé GEO & Visibilité IA. Analyse comparative focalisée.
+const SITE_ANALYSIS_PROMPT = `RÔLE: Senior Digital Strategist spécialisé GEO & Visibilité IA. Analyse individuelle d'un site.
 
 POSTURE: Analytique, factuel, concis. Jargon expert (E-E-A-T, Topical Authority, Citabilité).
 
-Tu analyses UN site web pour un audit comparatif. Concentre-toi sur la perception des LLMs, les mots-clés et la stratégie de visibilité IA.`;
+Tu analyses UN site web. Concentre-toi sur des observations FACTUELLES et MESURABLES.`;
 
-function buildComparePrompt(url: string, domain: string, metadata: { title: string; h1: string; desc: string }, keywords: any[], llmData: any): string {
+function buildSitePrompt(url: string, domain: string, metadata: PageMetadata, keywords: any[], llmData: any, backlinks: BacklinkProfile | null): string {
+  const cd = metadata.contentDepth;
   let kwSection = '';
   if (keywords.length > 0) {
     kwSection = `\n📊 MOTS-CLÉS (DataForSEO):\n${keywords.map(kw => `"${kw.keyword}": ${kw.volume}vol, diff${kw.difficulty}, pos:${kw.current_rank || 'Non classé'}`).join('\n')}`;
@@ -217,9 +345,27 @@ function buildComparePrompt(url: string, domain: string, metadata: { title: stri
       }
     }
   }
+
+  let blSection = '';
+  if (backlinks) {
+    blSection = `\n🔗 BACKLINKS (DataForSEO):
+- Domaines référents: ${backlinks.referringDomains}
+- Total backlinks: ${backlinks.totalBacklinks}
+- Domain Rank: ${backlinks.domainRank}
+- Top ancres: ${backlinks.topAnchors.join(', ') || 'N/A'}`;
+  }
+
+  let depthSection = `\n📄 PROFONDEUR CONTENU (HTML réel):
+- Mots: ${cd.wordCount}
+- H2: ${cd.h2Count}, H3: ${cd.h3Count}
+- JSON-LD: ${cd.hasJsonLd ? 'Oui' : 'Non'}, Open Graph: ${cd.hasOpenGraph ? 'Oui' : 'Non'}, FAQ: ${cd.hasFAQ ? 'Oui' : 'Non'}
+- Liens internes: ${cd.internalLinksCount}, externes: ${cd.externalLinksCount}
+- Images: ${cd.imagesCount} (${cd.imagesWithoutAlt} sans alt)`;
   
   return `Analyse "${url}" (${domain}).
 Titre="${metadata.title||'?'}", H1="${metadata.h1||'?'}", Desc="${metadata.desc?.substring(0,200)||'?'}"
+${depthSection}
+${blSection}
 ${kwSection}
 ${llmSection}
 
@@ -255,6 +401,89 @@ RÈGLES:
 - JSON pur, sans commentaires`;
 }
 
+// ==================== CROSS-COMPARISON PROMPT (Phase 3) ====================
+
+const CROSS_COMPARE_SYSTEM = `RÔLE: Analyste comparatif senior. Tu reçois les données FACTUELLES de deux sites concurrents et tu produis une analyse DIFFÉRENTIELLE.
+
+RÈGLE CARDINALE: Tes observations doivent s'appuyer sur les ÉCARTS MESURABLES entre les deux sites. Ne répète jamais les mêmes conclusions pour les deux. Si une métrique est proche, dis-le explicitement et explique CE QUI les différencie RÉELLEMENT.
+
+POSTURE: Tranchant, factuel, utile. Chaque phrase doit apporter une information qu'on ne pourrait pas deviner sans les données.`;
+
+function buildCrossComparePrompt(
+  site1: { domain: string; analysis: any; backlinks: BacklinkProfile | null; contentDepth: ContentDepth; keywords: any[] },
+  site2: { domain: string; analysis: any; backlinks: BacklinkProfile | null; contentDepth: ContentDepth; keywords: any[] },
+): string {
+  const bl1 = site1.backlinks;
+  const bl2 = site2.backlinks;
+  const cd1 = site1.contentDepth;
+  const cd2 = site2.contentDepth;
+
+  // Compute SERP overlap
+  const kw1Set = new Set(site1.keywords.map((k: any) => k.keyword.toLowerCase()));
+  const kw2Set = new Set(site2.keywords.map((k: any) => k.keyword.toLowerCase()));
+  const overlap = [...kw1Set].filter(k => kw2Set.has(k));
+
+  return `COMPARAISON: ${site1.domain} vs ${site2.domain}
+
+═══ DONNÉES FACTUELLES ═══
+
+📄 PROFONDEUR CONTENU:
+${site1.domain}: ${cd1.wordCount} mots, ${cd1.h2Count} H2, ${cd1.h3Count} H3, JSON-LD=${cd1.hasJsonLd}, OG=${cd1.hasOpenGraph}, FAQ=${cd1.hasFAQ}, liens internes=${cd1.internalLinksCount}, images sans alt=${cd1.imagesWithoutAlt}/${cd1.imagesCount}
+${site2.domain}: ${cd2.wordCount} mots, ${cd2.h2Count} H2, ${cd2.h3Count} H3, JSON-LD=${cd2.hasJsonLd}, OG=${cd2.hasOpenGraph}, FAQ=${cd2.hasFAQ}, liens internes=${cd2.internalLinksCount}, images sans alt=${cd2.imagesWithoutAlt}/${cd2.imagesCount}
+
+🔗 BACKLINKS:
+${site1.domain}: ${bl1 ? `${bl1.referringDomains} domaines référents, ${bl1.totalBacklinks} backlinks, DR=${bl1.domainRank}, ancres=[${bl1.topAnchors.join(', ')}]` : 'Non disponible'}
+${site2.domain}: ${bl2 ? `${bl2.referringDomains} domaines référents, ${bl2.totalBacklinks} backlinks, DR=${bl2.domainRank}, ancres=[${bl2.topAnchors.join(', ')}]` : 'Non disponible'}
+
+📊 CHEVAUCHEMENT SERP (mots-clés en commun): ${overlap.length > 0 ? overlap.join(', ') : 'Aucun'}
+${site1.domain} keywords: ${site1.keywords.map((k: any) => `${k.keyword}(pos:${k.current_rank})`).join(', ') || 'N/A'}
+${site2.domain} keywords: ${site2.keywords.map((k: any) => `${k.keyword}(pos:${k.current_rank})`).join(', ') || 'N/A'}
+
+🤖 SCORES IA INDIVIDUELS:
+${site1.domain}: AEO=${site1.analysis?.aeo_score ?? '?'}, Expertise=${site1.analysis?.expertise_sentiment?.rating ?? '?'}/5
+${site2.domain}: AEO=${site2.analysis?.aeo_score ?? '?'}, Expertise=${site2.analysis?.expertise_sentiment?.rating ?? '?'}/5
+
+═══ ANALYSE DEMANDÉE ═══
+
+Génère un JSON avec cette structure:
+{
+  "verdict": "Qui a l'avantage et POURQUOI, en 2 phrases maximum basées sur des données.",
+  "authority_winner": "${site1.domain}" | "${site2.domain}",
+  "authority_gap": {
+    "magnitude": "écrasant|significatif|modéré|marginal",
+    "key_factor": "Le facteur décisif en 1 phrase",
+    "domain_rank_delta": number,
+    "referring_domains_ratio": number
+  },
+  "content_depth_winner": "${site1.domain}" | "${site2.domain}",
+  "content_comparison": {
+    "word_count_ratio": number,
+    "structural_advantage": "Qui a la meilleure hiérarchie H2/H3 et pourquoi",
+    "technical_seo_edge": "Qui a le meilleur setup technique (JSON-LD, OG, FAQ) et pourquoi"
+  },
+  "serp_battlefield": {
+    "overlap_count": ${overlap.length},
+    "head_to_head": [{"keyword":"...","site1_rank":"...","site2_rank":"...","winner":"...","analysis":"1 phrase"}],
+    "exclusive_strengths_site1": ["mots-clés où seul site1 est positionné"],
+    "exclusive_strengths_site2": ["mots-clés où seul site2 est positionné"]
+  },
+  "differentiators": [
+    {"dimension": "...", "site1_value": "...", "site2_value": "...", "advantage": "${site1.domain}|${site2.domain}", "impact": "critique|important|mineur"}
+  ],
+  "strategic_recommendations": {
+    "for_site1": ["Recommandation spécifique 1", "Recommandation spécifique 2"],
+    "for_site2": ["Recommandation spécifique 1", "Recommandation spécifique 2"]
+  }
+}
+
+RÈGLES STRICTES:
+- head_to_head: uniquement les mots-clés en chevauchement RÉEL, max 5
+- differentiators: EXACTEMENT 4-6 dimensions, chaque valeur CHIFFRÉE
+- Si un écart est < 15%, dis "marginal" et cherche ce qui les distingue VRAIMENT
+- Recommandations: spécifiques à chaque site, jamais génériques
+- JSON pur, sans commentaires`;
+}
+
 // ==================== JSON PARSER ====================
 
 function parseAIResponse(content: string | null): any {
@@ -287,7 +516,7 @@ function buildCacheKey(url1: string, url2: string): string {
 
 async function saveToCache(supabase: any, cacheKey: string, resultData: any): Promise<void> {
   try {
-    const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(); // 2h
+    const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
     await supabase.from('audit_cache').upsert({
       cache_key: cacheKey,
       function_name: 'audit-compare',
@@ -301,17 +530,16 @@ async function saveToCache(supabase: any, cacheKey: string, resultData: any): Pr
 
 // ==================== SINGLE-SITE PIPELINE ====================
 
-/** Runs the full pipeline for one site: metadata → seeds → keywords → LLM analysis */
 async function analyzeSite(
   url: string,
   domain: string,
   supabaseUrl: string,
   supabaseAnonKey: string,
   openrouterKey: string,
-): Promise<{ metadata: any; analysis: any; llm_raw: any; keywords: any[] }> {
-  // Step 1: Metadata + LLM visibility in parallel
-  const [metadata, llmResult] = await Promise.all([
-    extractPageMetadata(url),
+): Promise<{ metadata: PageMetadata; analysis: any; llm_raw: any; keywords: any[]; backlinks: BacklinkProfile | null }> {
+  // Step 1: Metadata + LLM visibility + Backlinks in parallel
+  const [metadata, llmResult, backlinks] = await Promise.all([
+    extractPageMetadata(url, domain),
     (async () => {
       try {
         const resp = await fetch(`${supabaseUrl}/functions/v1/check-llm`, {
@@ -325,6 +553,7 @@ async function analyzeSite(
         return r.success && r.data ? r.data : null;
       } catch { return null; }
     })(),
+    fetchBacklinkProfile(domain),
   ]);
 
   // Step 2: Seeds (needs metadata)
@@ -334,8 +563,8 @@ async function analyzeSite(
   const locCode = detectLocationCode(domain);
   const keywords = await fetchKeywordData(seeds, locCode, domain);
 
-  // Step 4: LLM analysis (needs all above)
-  const prompt = buildComparePrompt(url, domain, metadata, keywords, llmResult);
+  // Step 4: Individual LLM analysis
+  const prompt = buildSitePrompt(url, domain, metadata, keywords, llmResult, backlinks);
   let analysis: any = null;
   try {
     const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -343,7 +572,7 @@ async function analyzeSite(
       headers: { 'Authorization': `Bearer ${openrouterKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'system', content: COMPARE_SYSTEM_PROMPT }, { role: 'user', content: prompt }],
+        messages: [{ role: 'system', content: SITE_ANALYSIS_PROMPT }, { role: 'user', content: prompt }],
         temperature: 0.3,
       }),
       signal: AbortSignal.timeout(55000),
@@ -357,7 +586,36 @@ async function analyzeSite(
     console.warn(`LLM analysis failed for ${domain}:`, e instanceof Error ? e.message : e);
   }
 
-  return { metadata, analysis, llm_raw: llmResult, keywords };
+  return { metadata, analysis, llm_raw: llmResult, keywords, backlinks };
+}
+
+// ==================== PHASE 3: CROSS-COMPARISON ====================
+
+async function runCrossComparison(
+  site1: { domain: string; analysis: any; backlinks: BacklinkProfile | null; contentDepth: ContentDepth; keywords: any[] },
+  site2: { domain: string; analysis: any; backlinks: BacklinkProfile | null; contentDepth: ContentDepth; keywords: any[] },
+  openrouterKey: string,
+): Promise<any> {
+  const prompt = buildCrossComparePrompt(site1, site2);
+  try {
+    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${openrouterKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [{ role: 'system', content: CROSS_COMPARE_SYSTEM }, { role: 'user', content: prompt }],
+        temperature: 0.2,
+      }),
+      signal: AbortSignal.timeout(55000),
+    });
+    if (!resp.ok) { await resp.text(); return null; }
+    const data = await resp.json();
+    trackTokenUsage('audit-compare-cross', 'google/gemini-2.5-flash', data.usage, `${site1.domain} vs ${site2.domain}`);
+    return parseAIResponse(data.choices?.[0]?.message?.content || null);
+  } catch (e) {
+    console.warn('Cross-comparison failed:', e instanceof Error ? e.message : e);
+    return null;
+  }
 }
 
 // ==================== MAIN HANDLER ====================
@@ -376,7 +634,6 @@ Deno.serve(async (req) => {
     const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
     if (!OPENROUTER_API_KEY) return json({ success: false, error: 'AI service not configured' }, 500);
     
-    // Verify auth & deduct credits
     const authHeader = req.headers.get('Authorization') || '';
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
@@ -395,7 +652,7 @@ Deno.serve(async (req) => {
     const normalizedUrl2 = normalize(url2);
     const cacheKey = buildCacheKey(normalizedUrl1, normalizedUrl2);
 
-    // Check cache first (recover from previous timeout)
+    // Check cache
     const { data: cached } = await supabaseAdmin
       .from('audit_cache')
       .select('result_data')
@@ -410,15 +667,12 @@ Deno.serve(async (req) => {
 
     // Check credits (5 required)
     const { data: profile } = await supabase.from('profiles').select('credits_balance, plan_type, subscription_status').eq('user_id', user.id).single();
-    
     const isProAgency = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
     
     if (!isProAgency) {
       if (!profile || profile.credits_balance < 5) {
         return json({ success: false, error: 'Insufficient credits (5 required)', balance: profile?.credits_balance || 0 }, 402);
       }
-      
-      // Deduct 5 credits
       const { data: creditResult } = await supabase.rpc('use_credit', { p_user_id: user.id, p_amount: 5, p_description: 'Audit comparé' });
       if (!creditResult?.success) {
         return json({ success: false, error: creditResult?.error || 'Credit deduction failed' }, 402);
@@ -428,37 +682,51 @@ Deno.serve(async (req) => {
     const domain1 = new URL(normalizedUrl1).hostname.replace(/^www\./, '');
     const domain2 = new URL(normalizedUrl2).hostname.replace(/^www\./, '');
     
-    console.log(`🔄 Audit comparé: ${domain1} vs ${domain2}`);
+    console.log(`🔄 Audit comparé v2: ${domain1} vs ${domain2}`);
     
-    // ═══ Run both site pipelines in PARALLEL ═══
+    // ═══ Phase 1 & 2: Both site pipelines in PARALLEL ═══
     const [site1, site2] = await Promise.all([
       analyzeSite(url1, domain1, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY),
       analyzeSite(url2, domain2, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY),
     ]);
     
-    console.log(`✅ Audit comparé terminé: site1=${site1.analysis ? 'OK' : 'FAIL'}, site2=${site2.analysis ? 'OK' : 'FAIL'}`);
+    // ═══ Phase 3: CROSS-COMPARISON with both datasets ═══
+    console.log(`🔀 Phase 3: Cross-comparison ${domain1} vs ${domain2}`);
+    const crossComparison = await runCrossComparison(
+      { domain: domain1, analysis: site1.analysis, backlinks: site1.backlinks, contentDepth: site1.metadata.contentDepth, keywords: site1.keywords },
+      { domain: domain2, analysis: site2.analysis, backlinks: site2.backlinks, contentDepth: site2.metadata.contentDepth, keywords: site2.keywords },
+      OPENROUTER_API_KEY,
+    );
+    
+    console.log(`✅ Audit comparé v2 terminé: site1=${site1.analysis ? 'OK' : 'FAIL'}, site2=${site2.analysis ? 'OK' : 'FAIL'}, cross=${crossComparison ? 'OK' : 'FAIL'}`);
+    
+    const fallbackAnalysis = { brand_dna: 'Analyse non disponible', strengths: [], weaknesses: [], aeo_score: 0, expertise_sentiment: { rating: 1, justification: 'Non évalué' } };
     
     const resultData = {
       site1: {
         url: url1,
         domain: domain1,
-        metadata: site1.metadata,
-        analysis: site1.analysis || { brand_dna: 'Analyse non disponible', strengths: [], weaknesses: [], aeo_score: 0, expertise_sentiment: { rating: 1, justification: 'Non évalué' } },
+        metadata: { title: site1.metadata.title, h1: site1.metadata.h1, desc: site1.metadata.desc },
+        analysis: site1.analysis || fallbackAnalysis,
         llm_raw: site1.llm_raw,
         keywords: site1.keywords,
+        backlinks: site1.backlinks,
+        contentDepth: site1.metadata.contentDepth,
       },
       site2: {
         url: url2,
         domain: domain2,
-        metadata: site2.metadata,
-        analysis: site2.analysis || { brand_dna: 'Analyse non disponible', strengths: [], weaknesses: [], aeo_score: 0, expertise_sentiment: { rating: 1, justification: 'Non évalué' } },
+        metadata: { title: site2.metadata.title, h1: site2.metadata.h1, desc: site2.metadata.desc },
+        analysis: site2.analysis || fallbackAnalysis,
         llm_raw: site2.llm_raw,
         keywords: site2.keywords,
+        backlinks: site2.backlinks,
+        contentDepth: site2.metadata.contentDepth,
       },
+      crossComparison,
       scannedAt: new Date().toISOString(),
     };
 
-    // Save to cache preemptively (smart cache pattern)
     await saveToCache(supabaseAdmin, cacheKey, resultData);
 
     return json({ success: true, data: resultData });
