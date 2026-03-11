@@ -50,6 +50,24 @@ interface BacklinkProfile {
   topAnchors: string[];
 }
 
+interface PageSpeedScores {
+  performanceMobile: number;
+  performanceDesktop: number;
+  fcpMs: number;
+  lcpMs: number;
+  cls: number;
+  ttfbMs: number;
+}
+
+interface EEATScore {
+  experience: number;
+  expertise: number;
+  authoritativeness: number;
+  trustworthiness: number;
+  overall: number;
+  justification: string;
+}
+
 interface SiteAnalysis {
   brand_dna: string;
   strengths: string[];
