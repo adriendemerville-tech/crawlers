@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSpotifyTrackRotation } from '@/components/ExpertAudit/useSpotifyTrackRotation';
+import { PatienceCards } from '@/components/ExpertAudit/PatienceCards';
 import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { UrlValidationBanner } from '@/components/UrlValidationBanner';
 import { 
@@ -199,17 +200,17 @@ function CompareLoadingSteps({ siteName, t }: { siteName: string; t: typeof i18n
   }, []);
 
   return (
-    <div className="flex flex-col items-center py-8 space-y-4">
+    <div className="flex flex-col items-center py-8 space-y-5">
       <div className="relative">
-        <div className="h-14 w-14 rounded-full border-4 border-muted" />
-        <div className="absolute inset-0 h-14 w-14 rounded-full border-4 border-t-transparent border-primary animate-spin" />
+        <div className="h-[72px] w-[72px] rounded-full border-4 border-muted" />
+        <div className="absolute inset-0 h-[72px] w-[72px] rounded-full border-4 border-t-transparent border-primary animate-spin" />
         <motion.div className="absolute inset-0 flex items-center justify-center"
           animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}>
-          <Brain className="h-6 w-6 text-primary" />
+          <Brain className="h-8 w-8 text-primary" />
         </motion.div>
       </div>
-      <p className="text-sm font-medium text-foreground truncate max-w-[200px]">{t.analysisOf} {siteName}</p>
-      <div className="space-y-2 w-full max-w-[220px]">
+      <p className="text-sm font-medium text-foreground truncate max-w-[260px]">{t.analysisOf} {siteName}</p>
+      <div className="space-y-2.5 w-full max-w-[286px]">
         {steps.map((step, i) => {
           const StepIcon = step.icon;
           const isActive = i === currentStep;
@@ -217,10 +218,10 @@ function CompareLoadingSteps({ siteName, t }: { siteName: string; t: typeof i18n
           return (
             <motion.div key={step.id}
               initial={{ opacity: 0, x: -10 }} animate={{ opacity: isActive || isComplete ? 1 : 0.3, x: 0 }}
-              className={`flex items-center gap-2 p-2 rounded-lg text-xs ${isActive ? 'bg-primary/10 border border-primary/30' : isComplete ? 'bg-emerald-500/10' : 'bg-muted/30'}`}>
-              <StepIcon className={`h-3.5 w-3.5 ${isComplete ? 'text-emerald-500' : isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+              className={`flex items-center gap-2.5 p-2.5 rounded-lg text-[13px] ${isActive ? 'bg-primary/10 border border-primary/30' : isComplete ? 'bg-emerald-500/10' : 'bg-muted/30'}`}>
+              <StepIcon className={`h-[18px] w-[18px] ${isComplete ? 'text-emerald-500' : isActive ? 'text-primary' : 'text-muted-foreground'}`} />
               <span className={isActive ? 'font-medium text-foreground' : 'text-muted-foreground'}>{step.label}</span>
-              {isComplete && <CheckCircle2 className="h-3 w-3 text-emerald-500 ml-auto" />}
+              {isComplete && <CheckCircle2 className="h-4 w-4 text-emerald-500 ml-auto" />}
             </motion.div>
           );
         })}
@@ -729,6 +730,9 @@ const AuditCompare = () => {
           {/* Loading State */}
           {isLoading && (
             <div className="relative">
+              {/* PatienceCards flanking the content */}
+              <PatienceCards isActive={isLoading} />
+
               <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-0 items-start">
                 {/* Left loading */}
                 <div className="border-r-0 md:border-r border-border/30 pr-0 md:pr-4">
@@ -738,7 +742,7 @@ const AuditCompare = () => {
                   <CompareLoadingSteps siteName={new URL(url1.startsWith('http') ? url1 : `https://${url1}`).hostname} t={t} />
                 </div>
                 
-                {/* Center: Spotify player on separator (desktop) */}
+                {/* Center: VS separator (desktop) */}
                 <div className="hidden md:flex flex-col items-center px-4 pt-16">
                   <div className="w-px h-16 bg-gradient-to-b from-transparent via-border to-transparent" />
                   <div className="w-12 h-12 rounded-full bg-gradient-to-r from-violet-600 to-amber-500 flex items-center justify-center text-white font-bold text-sm shadow-lg my-3">
