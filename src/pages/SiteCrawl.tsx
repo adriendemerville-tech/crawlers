@@ -130,7 +130,7 @@ export default function SiteCrawl() {
           
           // 🔔 Notification sonore (micro-ondes)
           try {
-            const audio = new Audio('/assets/sounds/microwave-ding.mp3');
+            const audio = new Audio(microwaveDing);
             audio.volume = 0.6;
             audio.play().catch(() => {});
           } catch {}
