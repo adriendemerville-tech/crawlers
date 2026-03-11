@@ -775,11 +775,16 @@ Deno.serve(async (req) => {
       analyzeSite(url2, domain2, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY),
     ]);
     
+    // ═══ Phase 2.5: CROSS-SERP CHECK — enrich both keyword sets with opponent rankings ═══
+    const enrichedKeywords = await crossCheckSerpRankings(
+      site1.keywords, site2.keywords, domain1, domain2, detectLocationCode(domain1),
+    );
+    
     // ═══ Phase 3: CROSS-COMPARISON with both datasets ═══
     console.log(`🔀 Phase 3: Cross-comparison ${domain1} vs ${domain2}`);
     const crossComparison = await runCrossComparison(
-      { domain: domain1, analysis: site1.analysis, backlinks: site1.backlinks, contentDepth: site1.metadata.contentDepth, keywords: site1.keywords },
-      { domain: domain2, analysis: site2.analysis, backlinks: site2.backlinks, contentDepth: site2.metadata.contentDepth, keywords: site2.keywords },
+      { domain: domain1, analysis: site1.analysis, backlinks: site1.backlinks, contentDepth: site1.metadata.contentDepth, keywords: enrichedKeywords.site1Keywords },
+      { domain: domain2, analysis: site2.analysis, backlinks: site2.backlinks, contentDepth: site2.metadata.contentDepth, keywords: enrichedKeywords.site2Keywords },
       OPENROUTER_API_KEY,
     );
     
