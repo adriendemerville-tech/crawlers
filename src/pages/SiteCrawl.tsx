@@ -285,23 +285,43 @@ export default function SiteCrawl() {
             </p>
           </div>
 
+          {/* SEO / GEO content */}
+          <div className="mb-10 max-w-3xl mx-auto space-y-6">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
+                Pourquoi auditer plusieurs pages de votre site ?
+              </h2>
+              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                Un audit SEO mono-page ne révèle qu'une infime partie de vos problèmes techniques. En analysant l'ensemble de vos URLs, vous identifiez les balises manquantes, les erreurs de maillage interne, les pages orphelines et les contenus dupliqués qui freinent votre indexation. Le crawl multi-pages détecte chaque point de friction pour que Google et les moteurs IA comprennent parfaitement la structure de votre site.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">
+                Un score SEO/200 par page, une synthèse IA globale
+              </h3>
+              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
+                Chaque page crawlée reçoit un score sur 200 points couvrant les critères techniques, sémantiques et structurels. L'intelligence artificielle consolide ensuite ces résultats en une synthèse exploitable : recommandations prioritaires, estimation du gain de trafic et identification des pages à corriger en premier. Vous obtenez une feuille de route concrète, pas seulement un diagnostic.
+              </p>
+            </div>
+          </div>
+
           {/* Formulaire */}
-          <Card className="mb-8 border-primary/20">
+          <Card className="mb-8 border-violet-500/30">
             <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 relative">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-400" />
                     <Input
                       value={url}
                       onChange={e => setUrl(e.target.value)}
                       placeholder="https://votre-site.fr"
-                      className="pl-10"
+                      className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500"
                       required
                       disabled={isLoading}
                     />
                   </div>
-                  <Button type="submit" disabled={isLoading || !url} className="gap-2">
+                  <Button type="submit" disabled={isLoading || !url} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white">
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                     {isLoading ? phase || 'Crawl en cours…' : 'Lancer le crawl'}
                   </Button>
@@ -320,6 +340,7 @@ export default function SiteCrawl() {
                       max={500}
                       step={10}
                       disabled={isLoading}
+                      className="[&_[role=slider]]:bg-violet-500 [&_[role=slider]]:border-violet-500 [&_.relative>div]:bg-violet-500"
                     />
                   </div>
                   <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border">
@@ -335,7 +356,7 @@ export default function SiteCrawl() {
                     <span className="text-muted-foreground">{phase}</span>
                     <span className="font-mono text-foreground">{progress}%</span>
                   </div>
-                  <Progress value={progress} className="h-2" />
+                  <Progress value={progress} className="h-2 [&>div]:bg-violet-500" />
                 </div>
               )}
             </CardContent>
