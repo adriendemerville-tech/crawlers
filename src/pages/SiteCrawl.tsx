@@ -608,7 +608,7 @@ export default function SiteCrawl() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <AlertTriangle className="w-5 h-5 text-warning" />
-                      Erreurs les plus fréquentes
+                      {t.topErrors}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
