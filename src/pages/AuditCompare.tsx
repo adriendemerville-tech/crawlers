@@ -149,7 +149,7 @@ const i18n = {
     seoParagraph: 'En 2026, les moteurs de réponse génératifs comme ChatGPT, Perplexity et Google SGE redéfinissent la visibilité en ligne. Notre audit comparé analyse côte à côte le Brand DNA, les backlinks, la profondeur de contenu, le score E\u2011E\u2011A\u2011T et la présence dans les LLM de deux sites concurrents — pour identifier précisément les leviers SEO et GEO à activer.',
     credits: '4 crédits',
     confirm: 'Confirmer',
-    launch: 'Lancer l\'audit comparé',
+    launch: 'Démarrer',
     confirmBoth: 'Confirmez les deux URLs pour lancer l\'audit',
     confirmSite1: 'Confirmez l\'URL du Site 1',
     confirmSite2: 'Confirmez l\'URL du Site 2',
@@ -225,7 +225,7 @@ const i18n = {
     seoParagraph: 'In 2026, generative answer engines like ChatGPT, Perplexity and Google SGE are redefining online visibility. Our comparative audit analyzes Brand DNA, backlinks, content depth, E\u2011E\u2011A\u2011T score and LLM presence of two competing sites side by side — to pinpoint the exact SEO and GEO levers to activate.',
     credits: '4 credits',
     confirm: 'Confirm',
-    launch: 'Launch comparative audit',
+    launch: 'Start',
     confirmBoth: 'Confirm both URLs to launch the audit',
     confirmSite1: 'Confirm Site 1 URL',
     confirmSite2: 'Confirm Site 2 URL',
@@ -300,7 +300,7 @@ const i18n = {
     seoParagraph: 'En 2026, los motores de respuesta generativos como ChatGPT, Perplexity y Google SGE están redefiniendo la visibilidad en línea. Nuestra auditoría comparativa analiza el Brand DNA, los backlinks, la profundidad de contenido, la puntuación E\u2011E\u2011A\u2011T y la presencia en los LLM de dos sitios competidores — para identificar con precisión las palancas SEO y GEO a activar.',
     credits: '4 créditos',
     confirm: 'Confirmar',
-    launch: 'Lanzar auditoría comparativa',
+    launch: 'Iniciar',
     confirmBoth: 'Confirme ambas URLs para lanzar la auditoría',
     confirmSite1: 'Confirme la URL del Sitio 1',
     confirmSite2: 'Confirme la URL del Sitio 2',
@@ -1355,22 +1355,24 @@ const AuditCompare = () => {
                 </div>
               </div>
 
-              <div className="text-center flex flex-col items-center gap-3">
-                <Button onClick={handleLaunch} size="lg" disabled={!bothConfirmed}
-                  className="bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold px-8 disabled:opacity-50">
-                  <Swords className="h-4 w-4 mr-2" />
-                  {t.launch}
-                </Button>
-                {!user && (
-                  <button
-                    type="button"
-                    onClick={() => setShowTopUp(true)}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-500 hover:text-amber-400 transition-colors cursor-pointer"
-                  >
-                    <CreditCoin size="sm" />
-                    <span>{t.credits}</span>
-                  </button>
-                )}
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center gap-3">
+                  <Button onClick={handleLaunch} size="lg" disabled={!bothConfirmed}
+                    className="bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold px-8 disabled:opacity-50">
+                    <Swords className="h-4 w-4 mr-2" />
+                    {t.launch}
+                  </Button>
+                  {!user && (
+                    <button
+                      type="button"
+                      onClick={() => setShowTopUp(true)}
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-500 hover:text-amber-400 transition-colors cursor-pointer border border-amber-500/40 rounded-lg px-3 py-2"
+                    >
+                      <CreditCoin size="sm" />
+                      <span>{t.credits}</span>
+                    </button>
+                  )}
+                </div>
                 {!bothConfirmed && (url1.trim() || url2.trim()) && (
                   <p className="text-xs text-muted-foreground">
                     {!confirmedUrl1 && !confirmedUrl2 ? t.confirmBoth 
