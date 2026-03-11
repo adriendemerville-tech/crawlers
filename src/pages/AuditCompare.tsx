@@ -598,17 +598,40 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {analysis.llm_visibility.test_queries.slice(0, 3).map((q, i) => (
-              <div key={i} className="p-2 rounded-lg bg-muted/30 border border-border/30">
-                <p className="text-xs font-medium text-foreground">"{q.query}"</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{q.purpose}</p>
-                <div className="flex gap-1 mt-1">
-                  {q.target_llms?.map((llm, j) => (
-                    <Badge key={j} variant="outline" className="text-[9px] px-1">{llm}</Badge>
-                  ))}
+            {(() => {
+              // Count how many queries target each LLM
+              const queries = analysis.llm_visibility!.test_queries!;
+              const llmColors: Record<string, string> = {
+                'ChatGPT': 'text-emerald-400', 'GPT-4': 'text-emerald-400', 'GPT-5': 'text-emerald-400',
+                'Gemini': 'text-blue-400', 'Google': 'text-blue-400',
+                'Perplexity': 'text-violet-400',
+                'Claude': 'text-amber-400',
+                'Mistral': 'text-rose-400',
+                'Copilot': 'text-cyan-400',
+              };
+              const getLlmColor = (name: string) => {
+                for (const [key, color] of Object.entries(llmColors)) {
+                  if (name.toLowerCase().includes(key.toLowerCase())) return color;
+                }
+                return 'text-teal-400';
+              };
+              return queries.slice(0, 3).map((q, i) => (
+                <div key={i} className="p-2 rounded-lg bg-muted/30 border border-border/30">
+                  <p className="text-xs font-medium text-foreground">"{q.query}"</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{q.purpose}</p>
+                  <div className="flex gap-1.5 mt-1 flex-wrap">
+                    {q.target_llms?.map((llm, j) => {
+                      const count = queries.filter(qq => qq.target_llms?.includes(llm)).length;
+                      return (
+                        <Badge key={j} variant="outline" className={`text-[9px] px-1.5 ${getLlmColor(llm)}`}>
+                          {llm} <span className="ml-0.5 opacity-70">({count})</span>
+                        </Badge>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ));
+            })()}
           </CardContent>
         </Card>
       )}
@@ -1325,7 +1348,7 @@ const AuditCompare = () => {
               {/* Spotify Player flanked by PatienceCards */}
               <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1fr,auto,1fr] gap-4 items-end justify-items-center">
                 {/* Left infotainment card */}
-                <div className="hidden lg:block w-full max-w-[280px] justify-self-end">
+                <div className="hidden lg:block w-full justify-self-end">
                   <PatienceCards isActive={isLoading} position="left" />
                 </div>
 
@@ -1335,7 +1358,7 @@ const AuditCompare = () => {
                     <Music className="h-3.5 w-3.5 text-muted-foreground" />
                     <span className="text-xs font-medium text-foreground">{t.playlist}</span>
                   </div>
-                  <div className="w-full max-w-[448px] overflow-hidden rounded-[12px] bg-[#282828] isolate"
+                  <div className="w-full max-w-[672px] overflow-hidden rounded-[12px] bg-[#282828] isolate"
                     style={{ clipPath: 'inset(0 round 12px)' }}>
                     <div ref={embedContainerRef} className="w-full"
                       style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }}
@@ -1345,7 +1368,7 @@ const AuditCompare = () => {
                 </div>
 
                 {/* Right infotainment card */}
-                <div className="hidden lg:block w-full max-w-[280px] justify-self-start">
+                <div className="hidden lg:block w-full justify-self-start">
                   <PatienceCards isActive={isLoading} position="right" />
                 </div>
               </div>
