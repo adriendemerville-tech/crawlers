@@ -50,27 +50,27 @@ export function AdminDashboard() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="users">
+        <TabsContent value="users" forceMount className="data-[state=inactive]:hidden">
           <UserManagement />
         </TabsContent>
 
-        <TabsContent value="blog">
+        <TabsContent value="blog" forceMount className="data-[state=inactive]:hidden">
           <BlogManagement />
         </TabsContent>
 
-        <TabsContent value="analytics">
+        <TabsContent value="analytics" forceMount className="data-[state=inactive]:hidden">
           <AnalyticsDashboard />
         </TabsContent>
 
-        <TabsContent value="predictions">
+        <TabsContent value="predictions" forceMount className="data-[state=inactive]:hidden">
           <PredictionsDashboard />
         </TabsContent>
 
-        <TabsContent value="cto-agent">
+        <TabsContent value="cto-agent" forceMount className="data-[state=inactive]:hidden">
           <CtoAgentDashboard />
         </TabsContent>
 
-        <TabsContent value="support">
+        <TabsContent value="support" forceMount className="data-[state=inactive]:hidden">
           <SupportManagement />
         </TabsContent>
       </Tabs>
