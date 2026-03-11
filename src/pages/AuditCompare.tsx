@@ -569,17 +569,17 @@ function SiteResultCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] })
       {analysis.keyword_positioning?.main_keywords && analysis.keyword_positioning.main_keywords.length > 0 && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
               <Target className="h-4 w-4 text-amber-500" /> {t.keywords}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {analysis.keyword_positioning.main_keywords.slice(0, 6).map((kw, i) => (
-                <div key={i} className="flex items-center justify-between text-xs gap-2">
+                <div key={i} className="flex items-center justify-between text-sm gap-2">
                   <span className="text-foreground truncate flex-1">{kw.keyword}</span>
-                  <span className="text-muted-foreground whitespace-nowrap">{kw.volume} vol</span>
-                  <Badge variant={typeof kw.current_rank === 'number' && kw.current_rank <= 10 ? 'default' : 'outline'} className="text-[10px] px-1.5 whitespace-nowrap">
+                  <span className="text-foreground/50 whitespace-nowrap">{kw.volume} vol</span>
+                  <Badge variant={typeof kw.current_rank === 'number' && kw.current_rank <= 10 ? 'default' : 'outline'} className="text-xs px-2 whitespace-nowrap">
                     {typeof kw.current_rank === 'number' ? `#${kw.current_rank}` : 'N/C'}
                   </Badge>
                 </div>
