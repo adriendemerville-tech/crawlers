@@ -412,22 +412,28 @@ async function gatherIntelligence(
     }
   }
 
-  // ─── Source 5: Corrective codes implementation detection ───
+  // ─── Source 5: Corrective codes VERIFIED deployment detection ───
+  // RULE: A code is only "deployed" if:
+  //   (a) The user explicitly clicked "It works!" (validated_at IS NOT NULL), OR
+  //   (b) The code was synced to a WordPress site via the plugin (tracked_sites.current_config.last_sync)
+  // Simply generating a code does NOT count as deployed.
   let fixesImplemented = false;
   let fixesCount = 0;
   if (domain) {
-    const { data: codes } = await supabase
+    // (a) Check for user-validated codes ("It works!" button sets validated_at)
+    const { data: validatedCodes } = await supabase
       .from('saved_corrective_codes')
-      .select('id, created_at')
-      .ilike('url', `%${domain}%`);
+      .select('id')
+      .ilike('url', `%${domain}%`)
+      .not('validated_at', 'is', null);
     
-    if (codes && codes.length > 0) {
-      fixesCount = codes.length;
+    if (validatedCodes && validatedCodes.length > 0) {
+      fixesCount = validatedCodes.length;
       fixesImplemented = true;
-      source += '+fixes';
+      source += '+validated_fixes';
     }
 
-    // Also check WordPress tracked sites for deployed fixes
+    // (b) Check WordPress tracked sites for plugin-deployed fixes
     if (!fixesImplemented) {
       const { data: wpSites } = await supabase
         .from('tracked_sites')
@@ -436,10 +442,11 @@ async function gatherIntelligence(
         .limit(1);
       if (wpSites && wpSites.length > 0) {
         const cfg = wpSites[0].current_config as Record<string, any> | null;
-        if (cfg && (cfg.fixes?.length > 0 || cfg.last_sync)) {
+        // Only count as deployed if there's evidence of actual sync
+        if (cfg && cfg.last_sync && cfg.fixes?.length > 0) {
           fixesImplemented = true;
-          fixesCount = cfg.fixes?.length || 1;
-          source += '+wp';
+          fixesCount = cfg.fixes.length;
+          source += '+wp_deployed';
         }
       }
     }

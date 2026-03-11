@@ -166,6 +166,12 @@ export function MyCorrectiveCodes() {
         }
       }
 
+      // Mark the corrective code itself as validated (used by prediction engine)
+      await supabase
+        .from('saved_corrective_codes')
+        .update({ validated_at: new Date().toISOString() })
+        .eq('id', code.id);
+
       setValidatedIds(prev => new Set(prev).add(code.id));
       toast.success(t.validatedToast);
     } catch (error) {
