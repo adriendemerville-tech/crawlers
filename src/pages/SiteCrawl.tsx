@@ -588,7 +588,7 @@ export default function SiteCrawl() {
                               <div className="text-xs text-muted-foreground mt-0.5">{rec.description}</div>
                               {rec.affected_pages && (
                                 <div className="text-xs text-muted-foreground mt-1">
-                                  📄 {rec.affected_pages} pages concernées
+                                  📄 {rec.affected_pages} {t.pagesAffected}
                                 </div>
                               )}
                             </div>
