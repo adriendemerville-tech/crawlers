@@ -169,7 +169,7 @@ function ExplorationCard({
                       {kw.keyword}
                       {kw.is_nugget && <NuggetBadge />}
                     </td>
-                    <td className="text-center px-3 py-2 text-muted-foreground">{kw.volume.toLocaleString()}</td>
+                    <td className="text-center px-3 py-2 text-muted-foreground">{(kw.volume ?? 0).toLocaleString()}</td>
                     <td className="text-center px-3 py-2">
                       <Badge variant="outline" className={`text-xs ${
                         kw.difficulty <= 30 ? 'text-success border-success/30' :
@@ -321,7 +321,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
                     <Zap className="h-4 w-4 text-warning mx-auto mb-1" />
-                    <p className="text-lg font-bold text-foreground">{rankingOverview.etv.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-foreground">{(rankingOverview?.etv ?? 0).toLocaleString()}</p>
                     <p className="text-xs text-muted-foreground">Trafic estimé/mois</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
@@ -370,7 +370,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="p-3 rounded-lg bg-muted/50 text-center">
                   <BarChart3 className="h-4 w-4 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold text-foreground">{marketSummary.total_market_volume.toLocaleString()}</p>
+                  <p className="text-lg font-bold text-foreground">{(marketSummary?.total_market_volume ?? 0).toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">Volume marché/mois</p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/50 text-center">
@@ -421,7 +421,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                         {kw.is_nugget && (
                           <div className="flex justify-center"><NuggetBadge /></div>
                         )}
-                        <p className="text-lg font-bold text-primary">{kw.volume.toLocaleString()}</p>
+                        <p className="text-lg font-bold text-primary">{(kw.volume ?? 0).toLocaleString()}</p>
                         <p className="text-[10px] text-muted-foreground">rech./mois</p>
                         <Badge
                           variant={typeof kw.current_rank === 'number' && kw.current_rank <= 50 ? getRankBadgeVariant(kw.current_rank) : 'outline'}
@@ -497,7 +497,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                                 </Badge>
                               )}
                             </td>
-                            <td className="text-center px-3 py-2 text-muted-foreground">{kw.volume.toLocaleString()}</td>
+                            <td className="text-center px-3 py-2 text-muted-foreground">{(kw.volume ?? 0).toLocaleString()}</td>
                             <td className="text-center px-3 py-2">
                               <Badge variant="outline" className={`text-xs ${
                                 kw.difficulty <= 30 ? 'text-success border-success/30' :
@@ -587,7 +587,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                         <span className="font-medium text-foreground">"{qw.keyword}"</span>
                         <Badge variant="outline" className="text-warning border-warning/50">#{qw.current_rank}</Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground mb-1">{qw.volume.toLocaleString()} recherches/mois</p>
+                      <p className="text-xs text-muted-foreground mb-1">{(qw.volume ?? 0).toLocaleString()} recherches/mois</p>
                       <p className="text-xs text-foreground">{qw.action}</p>
                     </div>
                   ))}
@@ -608,7 +608,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-foreground">"{gap.keyword}"</span>
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">{gap.volume.toLocaleString()} vol.</Badge>
+                          <Badge variant="outline" className="text-xs">{(gap.volume ?? 0).toLocaleString()} vol.</Badge>
                           <Badge variant="outline" className={`text-xs ${getPriorityColor(gap.priority)}`}>
                             {gap.priority === 'high' ? 'Priorité haute' : gap.priority === 'medium' ? 'Priorité moyenne' : 'Opportunité'}
                           </Badge>
