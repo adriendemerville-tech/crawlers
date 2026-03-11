@@ -122,6 +122,14 @@ const translations = {
 
 // LLM brand colors for volume bars
 const LLM_COLORS: Record<string, string> = {
+  ChatGPT: 'text-emerald-600 dark:text-emerald-400',
+  Perplexity: 'text-blue-600 dark:text-blue-400',
+  Gemini: 'text-indigo-600 dark:text-indigo-400',
+  Google_AI: 'text-amber-600 dark:text-amber-400',
+  Grok: 'text-rose-600 dark:text-rose-400',
+};
+
+const LLM_DOT_COLORS: Record<string, string> = {
   ChatGPT: 'bg-emerald-500',
   Perplexity: 'bg-blue-500',
   Gemini: 'bg-indigo-500',
@@ -137,34 +145,20 @@ const LLM_LABELS: Record<string, string> = {
   Grok: 'Grok',
 };
 
-function VolumeBar({ volumes }: { volumes: LLMVolumeBreakdown }) {
-  const maxVal = Math.max(...Object.values(volumes.breakdown), 1);
+function VolumeBreakdownText({ volumes }: { volumes: LLMVolumeBreakdown }) {
   const sorted = Object.entries(volumes.breakdown).sort(([, a], [, b]) => b - a);
 
   return (
-    <TooltipProvider>
-      <div className="flex items-center gap-1 mt-1.5">
-        {sorted.map(([llm, vol]) => {
-          const width = Math.max(8, (vol / maxVal) * 100);
-          return (
-            <Tooltip key={llm}>
-              <TooltipTrigger asChild>
-                <div
-                  className={`h-3 rounded-sm ${LLM_COLORS[llm] || 'bg-muted-foreground'} opacity-80 hover:opacity-100 transition-opacity cursor-help`}
-                  style={{ width: `${width}%`, minWidth: vol > 0 ? '6px' : '2px' }}
-                />
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                <span className="font-medium">{LLM_LABELS[llm] || llm}</span>: ~{vol.toLocaleString()}
-              </TooltipContent>
-            </Tooltip>
-          );
-        })}
-        <span className="text-[10px] text-muted-foreground ml-1 shrink-0">
-          ~{volumes.total_llm_volume.toLocaleString()}
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
+      {sorted.map(([llm, vol]) => (
+        <span key={llm} className="inline-flex items-center gap-1 text-[11px]">
+          <span className={`font-semibold ${LLM_COLORS[llm] || 'text-muted-foreground'}`}>
+            {LLM_LABELS[llm] || llm}
+          </span>
+          <span className="text-muted-foreground font-medium">{(vol ?? 0).toLocaleString()}</span>
         </span>
-      </div>
-    </TooltipProvider>
+      ))}
+    </div>
   );
 }
 
@@ -354,9 +348,8 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
             <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-[11px] text-muted-foreground font-medium">{t.llmVolumes}</span>
             <div className="flex items-center gap-1.5 ml-auto flex-wrap">
-              {Object.entries(LLM_COLORS).map(([llm, color]) => (
-                <span key={llm} className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <span className={`inline-block h-2 w-2 rounded-sm ${color}`} />
+              {Object.entries(LLM_COLORS).map(([llm, colorClass]) => (
+                <span key={llm} className={`text-[10px] font-semibold ${colorClass}`}>
                   {LLM_LABELS[llm] || llm}
                 </span>
               ))}
@@ -407,7 +400,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
                     </Badge>
                   )}
                 </div>
-                {volumes[i]?.breakdown && <VolumeBar volumes={volumes[i]} />}
+                {volumes[i]?.breakdown && <VolumeBreakdownText volumes={volumes[i]} />}
               </div>
             </div>
           </div>
