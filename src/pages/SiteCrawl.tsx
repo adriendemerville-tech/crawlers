@@ -191,6 +191,27 @@ export default function SiteCrawl() {
     }
   }
 
+  async function handlePredict() {
+    if (!crawlResult || !user) return;
+    setIsPredicting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('predict-from-crawl', {
+        body: { crawl_id: crawlResult.id, userId: user.id },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setPrediction(data.prediction);
+        toast.success('Prédiction de trafic générée');
+      } else {
+        toast.error(data?.error || 'Erreur prédiction');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur prédiction');
+    } finally {
+      setIsPredicting(false);
+    }
+  }
+
   const sortedPages = [...pages].sort((a, b) => {
     if (sortBy === 'score_asc') return (a.seo_score || 0) - (b.seo_score || 0);
     if (sortBy === 'score_desc') return (b.seo_score || 0) - (a.seo_score || 0);
