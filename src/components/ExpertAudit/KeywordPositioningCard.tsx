@@ -169,7 +169,7 @@ function ExplorationCard({
                       {kw.keyword}
                       {kw.is_nugget && <NuggetBadge />}
                     </td>
-                    <td className="text-center px-3 py-2 text-muted-foreground">{kw.volume.toLocaleString()}</td>
+                    <td className="text-center px-3 py-2 text-muted-foreground">{(kw.volume ?? 0).toLocaleString()}</td>
                     <td className="text-center px-3 py-2">
                       <Badge variant="outline" className={`text-xs ${
                         kw.difficulty <= 30 ? 'text-success border-success/30' :
