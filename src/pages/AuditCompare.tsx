@@ -801,8 +801,8 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
       {cross.serp_battlefield && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-violet-500" /> {t.serpBattlefield}
+            <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-violet-500" /> {t.serpBattlefield}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
