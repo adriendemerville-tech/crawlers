@@ -413,8 +413,8 @@ const AuditCompare = () => {
   }, []);
 
   // Reset confirmed URL when input changes (track previous to avoid resetting on confirm)
-  const url1Ref = React.useRef(url1);
-  const url2Ref = React.useRef(url2);
+  const url1Ref = useRef(url1);
+  const url2Ref = useRef(url2);
   useEffect(() => {
     // Only reset if the change was NOT from a confirm action
     if (url1 !== url1Ref.current && url1 !== confirmedUrl1) {
