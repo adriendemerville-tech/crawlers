@@ -244,7 +244,6 @@ async function translateText(text: string, targetLang: string): Promise<string> 
 
 // Batch translate multiple texts
 async function batchTranslate(texts: string[], targetLang: string): Promise<string[]> {
-  if (targetLang === 'fr') return texts;
   
   // Translate in parallel with concurrency limit
   const BATCH_SIZE = 5;
