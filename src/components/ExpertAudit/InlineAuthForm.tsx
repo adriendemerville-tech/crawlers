@@ -524,5 +524,17 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
         </button>
       </div>
     </div>
+
+      <VerificationCodeModal
+        open={showVerification}
+        email={verificationEmail}
+        onVerified={() => {
+          setShowVerification(false);
+          toast.success(t.signupSuccess);
+          onSuccess?.();
+        }}
+        onClose={() => setShowVerification(false)}
+      />
+    </>
   );
 }
