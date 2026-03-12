@@ -1,7 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Globe, Code, Shield, Brain, CheckCircle2, Target, Link2, Users, Search, Music } from 'lucide-react';
+import { Globe, Code, Shield, Brain, CheckCircle2, Target, Link2, Users, Search, Music, ListMusic, X } from 'lucide-react';
 import { useSpotifyTrackRotation } from './useSpotifyTrackRotation';
+import { useCustomPlaylist } from '@/hooks/useCustomPlaylist';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 // Track IDs from the "Chill out 🐈" playlist
 const PLAYLIST_TRACK_IDS = [
