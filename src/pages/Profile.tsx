@@ -1,8 +1,8 @@
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect, lazy, Suspense, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock } from 'lucide-react';
+import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +20,7 @@ import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
+import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 
 const translations = {
   fr: {
@@ -118,10 +119,11 @@ export default function Profile() {
   const { user, profile, signOut, loading } = useAuth();
   const { language } = useLanguage();
   const { isAdmin, loading: adminLoading } = useAdmin();
-  const { isAgencyPro } = useCredits();
+  const { isAgencyPro, balance } = useCredits();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const t = translations[language];
+  const [showCreditModal, setShowCreditModal] = useState(false);
 
   const initialTab = searchParams.get('tab') || 'tracking';
   const isProUser = isAgencyPro || isAdmin;
@@ -175,6 +177,16 @@ export default function Profile() {
                     <Crown className="h-4 w-4 text-yellow-500" />
                     <span className="hidden sm:inline text-yellow-500 font-semibold">Pro Agency</span>
                   </TabsTrigger>
+                )}
+                {isProUser && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCreditModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-amber-500 hover:bg-amber-500/10 transition-colors"
+                  >
+                    <Bot className="h-4 w-4 text-amber-500" />
+                    <span className="hidden sm:inline">Crédits</span>
+                  </button>
                 )}
                 <TabsTrigger value="tracking" className="flex-1 gap-2">
                   <Radar className="h-4 w-4" />
@@ -273,6 +285,13 @@ export default function Profile() {
         <Suspense fallback={null}>
           <Footer />
         </Suspense>
+        {showCreditModal && (
+          <CreditTopUpModal
+            open={showCreditModal}
+            onOpenChange={setShowCreditModal}
+            currentBalance={balance}
+          />
+        )}
       </div>
     </>
   );

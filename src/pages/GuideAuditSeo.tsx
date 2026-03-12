@@ -116,11 +116,11 @@ export default function GuideAuditSeo() {
   return (
     <>
       <Helmet>
-        <title>Audit SEO en 2026 : Outils Gratuits, Tarifs et Guide Complet</title>
-        <meta name="description" content="Découvrez comment réaliser un audit SEO complet en 2026. Comparatif des meilleurs logiciels gratuits, prix des agences et analyse des 4 piliers fondamentaux." />
+        <title>Audit SEO en 2026 : Outils, Tarifs et Guide Complet</title>
+        <meta name="description" content="Découvrez comment réaliser un audit SEO complet en 2026. Comparatif des meilleurs logiciels, prix des agences et analyse des 4 piliers fondamentaux." />
         <link rel="canonical" href="https://crawlers.fr/guide-audit-seo" />
         <meta property="og:title" content="Guide Ultime de l'Audit SEO en 2026" />
-        <meta property="og:description" content="Outils gratuits, tarifs des agences et méthodologie complète pour auditer votre site en 2026." />
+        <meta property="og:description" content="Outils, tarifs des agences et méthodologie complète pour auditer votre site en 2026." />
         <meta property="og:type" content="article" />
         <meta property="og:url" content="https://crawlers.fr/guide-audit-seo" />
       </Helmet>

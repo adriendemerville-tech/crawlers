@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock } from 'lucide-react';
+import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -356,6 +356,10 @@ export default function SiteCrawl() {
   const [isComparing, setIsComparing] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [isButtonShaking, setIsButtonShaking] = useState(false);
+  const [crawlPagesThisMonth, setCrawlPagesThisMonth] = useState(0);
+  const FAIR_USE_LIMIT = 5000;
 
   const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
@@ -367,7 +371,7 @@ export default function SiteCrawl() {
     return () => clearTimeout(timer);
   }, [isUnlimitedUser]);
 
-  // Load past crawls
+  // Load past crawls & crawl_pages_this_month
   useEffect(() => {
     if (!user) return;
     supabase
@@ -377,6 +381,15 @@ export default function SiteCrawl() {
       .limit(20)
       .then(({ data }) => {
         if (data) setPastCrawls(data as any);
+      });
+    // Fetch crawl_pages_this_month from profile
+    supabase
+      .from('profiles')
+      .select('crawl_pages_this_month')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) setCrawlPagesThisMonth(data.crawl_pages_this_month || 0);
       });
   }, [user, crawlResult]);
 
@@ -456,6 +469,17 @@ export default function SiteCrawl() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) { navigate('/auth'); return; }
+    
+    // Fair-use limit check for subscribed users
+    if (isUnlimited && (crawlPagesThisMonth >= FAIR_USE_LIMIT || crawlPagesThisMonth + maxPages > FAIR_USE_LIMIT)) {
+      setIsButtonShaking(true);
+      setTimeout(() => {
+        setIsButtonShaking(false);
+        setShowLimitModal(true);
+      }, 600);
+      return;
+    }
+    
     if (!isUnlimited && credits < creditCost) {
       toast.error(`${t.insufficientCredits} ${creditCost}, ${t.available} ${credits}`);
       return;
@@ -725,7 +749,7 @@ export default function SiteCrawl() {
                       disabled={isLoading}
                     />
                   </div>
-                  <Button type="submit" disabled={isLoading || !url} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white">
+                  <Button type="submit" disabled={isLoading || !url} className={`gap-2 bg-violet-600 hover:bg-violet-700 text-white ${isButtonShaking ? 'animate-shake' : ''}`}>
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                     {isLoading ? phase || t.crawling : t.launchBtn}
                   </Button>
@@ -1268,6 +1292,51 @@ export default function SiteCrawl() {
       </main>
 
       <CreditTopUpModal open={showTopUp} onOpenChange={setShowTopUp} currentBalance={credits} />
+
+      {/* Fair-use 5000 pages limit modal */}
+      {showLimitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowLimitModal(false)}>
+          <div className="relative w-full max-w-md mx-4 rounded-xl border-2 border-amber-500/50 bg-card shadow-2xl shadow-amber-500/10 p-6 space-y-5" onClick={e => e.stopPropagation()}>
+            <div className="text-center">
+              <div className="mx-auto w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
+                <Bot className="h-7 w-7 text-amber-500" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground">
+                {language === 'fr' ? '5 000 pages déjà consommées' : language === 'es' ? '5 000 páginas ya consumidas' : '5,000 pages already consumed'}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                {language === 'fr' 
+                  ? `Vous avez utilisé ${crawlPagesThisMonth.toLocaleString()} pages sur vos 5 000 incluses ce mois-ci. Rechargez des crédits pour continuer.`
+                  : language === 'es'
+                  ? `Ha utilizado ${crawlPagesThisMonth.toLocaleString()} páginas de sus 5 000 incluidas este mes. Recargue créditos para continuar.`
+                  : `You've used ${crawlPagesThisMonth.toLocaleString()} pages out of your 5,000 included this month. Top up credits to continue.`}
+              </p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/5 to-amber-600/10 border border-amber-500/20 space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{language === 'fr' ? 'Pages utilisées' : language === 'es' ? 'Páginas usadas' : 'Pages used'}</span>
+                <span className="font-bold text-amber-500">{crawlPagesThisMonth.toLocaleString()} / 5 000</span>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${Math.min(100, (crawlPagesThisMonth / FAIR_USE_LIMIT) * 100)}%` }} />
+              </div>
+            </div>
+
+            <Button
+              className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-black font-bold"
+              onClick={() => { setShowLimitModal(false); setShowTopUp(true); }}
+            >
+              <CreditCoin size="sm" />
+              {language === 'fr' ? 'Recharger des crédits' : language === 'es' ? 'Recargar créditos' : 'Top up credits'}
+            </Button>
+            <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setShowLimitModal(false)}>
+              {language === 'fr' ? 'Fermer' : language === 'es' ? 'Cerrar' : 'Close'}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </>
   );

@@ -13,7 +13,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { trackAnalyticsEvent, storeAnalyzedUrl } from '@/hooks/useAnalytics';
 import { useStructuredData } from '@/hooks/useStructuredData';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCredits } from '@/contexts/CreditsContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { Crown, ArrowRight } from 'lucide-react';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 
@@ -96,6 +99,17 @@ const Index = () => {
     }
     metaDesc.setAttribute('content', descriptions[language] || descriptions.fr);
   }, [language]);
+
+  // Auto-redirect subscribed users to console
+  const { user: authUser } = useAuth();
+  const { isAgencyPro: isSubscribed } = useCredits();
+  const { isAdmin: isAdminUser } = useAdmin();
+  const navTo = useNavigate();
+  useEffect(() => {
+    if (authUser && (isSubscribed || isAdminUser)) {
+      navTo('/console?tab=tracking', { replace: true });
+    }
+  }, [authUser, isSubscribed, isAdminUser, navTo]);
 
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
   useStructuredData();
