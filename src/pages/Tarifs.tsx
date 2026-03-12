@@ -270,6 +270,7 @@ const translations = {
       { name: 'Esencial', credits: 10, price: 5, pricePerCredit: 0.50 },
       { name: 'Pro', credits: 50, price: 19, pricePerCredit: 0.38, popular: true, savings: '24%' },
       { name: 'Premium', credits: 150, price: 45, pricePerCredit: 0.30, savings: '40%' },
+      { name: 'Último', credits: 500, price: 99, pricePerCredit: 0.198, savings: '60%' },
     ],
     linkedinOffer: '¡50 créditos gratis si publicas un resumen de tu informe Crawlers.fr en LinkedIn!',
     getStarted: 'Comenzar gratis',
