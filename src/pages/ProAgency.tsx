@@ -125,6 +125,10 @@ const translations = {
         q: 'Y a-t-il un engagement minimum ?',
         a: 'Non, l\'abonnement est sans engagement. Vous payez au mois et pouvez arrêter quand vous le souhaitez.',
       },
+      {
+        q: 'Que signifie la Fair Use Policy sur le crawl multi-pages ?',
+        a: 'Votre abonnement Pro Agency inclut 5 000 pages crawlées par mois. Au-delà de ce quota, vous pouvez continuer en achetant des packs de crédits supplémentaires (Pay-As-You-Go). Le compteur se réinitialise chaque mois.',
+      },
     ],
     ctaBottomTitle: 'Prêt à passer en illimité ?',
     ctaBottomSubtitle: 'Commencez dès aujourd\'hui et accélérez votre activité SEO/GEO.',
