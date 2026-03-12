@@ -495,7 +495,7 @@ const translations: Record<Language, Translations> = {
     },
     faq: {
       badge: 'Frequently Asked Questions',
-      title: 'Everything about AI crawlers and GEO',
+      title: 'Frequently asked questions about SEO audit, GEO and AI visibility',
       items: [
         {
           question: 'Is Crawlers.AI free or paid?',
