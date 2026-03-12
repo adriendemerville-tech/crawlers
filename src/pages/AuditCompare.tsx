@@ -1186,7 +1186,7 @@ const AuditCompare = () => {
         // Don't retry for auth or credit errors
         if (msg.includes('Authentication')) {
           setIsLoading(false);
-          navigate('/auth');
+          setShowAuthDialog(true);
           return;
         }
         if (msg.includes('Insufficient credits')) {
