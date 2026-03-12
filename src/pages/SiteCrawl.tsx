@@ -354,6 +354,7 @@ export default function SiteCrawl() {
   const [compareCrawlB, setCompareCrawlB] = useState('');
   const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
   const [isComparing, setIsComparing] = useState(false);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
 
   const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
@@ -640,12 +641,35 @@ export default function SiteCrawl() {
                   </span>
                   <span className="text-sm text-muted-foreground">/ {language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
                 </div>
-                <Link to="/tarifs">
-                  <Button size="lg" className="w-full gap-2 font-bold bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white shadow-lg shadow-violet-500/25">
-                    <Crown className="h-4 w-4 text-yellow-300" />
-                    {language === 'fr' ? 'S\'abonner' : language === 'es' ? 'Suscribirse' : 'Subscribe'}
-                  </Button>
-                </Link>
+                <Button
+                  size="lg"
+                  className="w-full gap-2 font-bold bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white shadow-lg shadow-violet-500/25"
+                  disabled={subscribeLoading}
+                  onClick={async () => {
+                    if (!user) {
+                      navigate('/auth?returnTo=/site-crawl');
+                      return;
+                    }
+                    setSubscribeLoading(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke('create-subscription-session', {
+                        body: { returnUrl: window.location.href }
+                      });
+                      if (error) throw error;
+                      if (data?.url) window.location.href = data.url;
+                    } catch (e: any) {
+                      toast.error(e.message || 'Erreur');
+                    } finally {
+                      setSubscribeLoading(false);
+                    }
+                  }}
+                >
+                  <Crown className="h-4 w-4 text-yellow-300" />
+                  {subscribeLoading
+                    ? (language === 'fr' ? 'Redirection…' : language === 'es' ? 'Redirigiendo…' : 'Redirecting…')
+                    : (language === 'fr' ? 'S\'abonner' : language === 'es' ? 'Suscribirse' : 'Subscribe')
+                  }
+                </Button>
               </CardContent>
             </Card>
           </div>
