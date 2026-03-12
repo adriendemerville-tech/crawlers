@@ -265,6 +265,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
   };
 
   return (
+    <>
     <div className="space-y-4">
       {/* Google OAuth Button */}
       <Button
