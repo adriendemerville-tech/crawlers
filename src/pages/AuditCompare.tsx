@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -1026,12 +1027,14 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
 
 const AuditCompare = () => {
   const { user } = useAuth();
-  const { balance, refreshBalance } = useCredits();
+  const { balance, refreshBalance, isAgencyPro } = useCredits();
+  const { isAdmin } = useAdmin();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   useCanonicalHreflang('/audit-compare');
   const t = i18n[language];
+  const isUnlimited = isAgencyPro || isAdmin;
 
   const [url1, setUrl1] = useState('');
   const [url2, setUrl2] = useState('');
@@ -1109,6 +1112,30 @@ const AuditCompare = () => {
     if (!bothConfirmed) {
       toast({ title: 'Error', description: t.errorConfirm, variant: 'destructive' });
       return;
+    }
+
+    // Credit check (skip for unlimited users)
+    if (!isUnlimited) {
+      if (balance < 4) {
+        setShowTopUp(true);
+        return;
+      }
+      // Deduct 4 credits
+      const { data: creditResult, error: creditError } = await supabase.rpc('use_credit', {
+        p_user_id: user.id,
+        p_amount: 4,
+        p_description: 'Audit comparé',
+      });
+      if (creditError || !(creditResult as any)?.success) {
+        const errMsg = (creditResult as any)?.error || creditError?.message || t.insufficientCredits;
+        if (errMsg.includes('Insufficient')) {
+          setShowTopUp(true);
+        } else {
+          toast({ title: 'Error', description: errMsg, variant: 'destructive' });
+        }
+        return;
+      }
+      refreshBalance();
     }
 
     setIsLoading(true);
@@ -1370,7 +1397,7 @@ const AuditCompare = () => {
                     <Swords className="h-4 w-4 mr-2" />
                     {t.launch}
                   </Button>
-                  {!user && (
+                  {!isUnlimited && (
                     <button
                       type="button"
                       onClick={() => setShowTopUp(true)}
