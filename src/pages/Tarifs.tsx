@@ -366,7 +366,7 @@ export default function Tarifs() {
     "offers": {
       "@type": "AggregateOffer",
       "lowPrice": "0",
-      "highPrice": "49",
+      "highPrice": "99",
       "priceCurrency": "EUR",
       "offerCount": 5,
       "offers": [
