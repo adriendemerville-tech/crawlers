@@ -199,12 +199,61 @@ export function LoadingSteps({ siteName, variant = 'technical', onStopMusicRef }
         </AnimatePresence>
       </div>
 
-      {/* Spotify Playlist - Crawlers */}
+      {/* Spotify Playlist */}
       <div className="w-full max-w-md mt-4">
         <div className="flex items-center gap-2 justify-center mb-3">
           <Music className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-foreground">Playlist Crawlers</span>
+          <span className="text-sm font-medium text-foreground">
+            {isCustomPlaylist ? 'Ma Playlist' : 'Playlist Crawlers'}
+          </span>
+          <button
+            onClick={() => setShowPlaylistInput(!showPlaylistInput)}
+            className="ml-1 p-1 rounded-md hover:bg-muted/60 transition-colors"
+            title="Changer de playlist"
+          >
+            <ListMusic className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+          {isCustomPlaylist && (
+            <button
+              onClick={() => { clearPlaylist(); window.location.reload(); }}
+              className="p-1 rounded-md hover:bg-destructive/10 transition-colors"
+              title="Revenir à la playlist Crawlers"
+            >
+              <X className="h-3 w-3 text-muted-foreground" />
+            </button>
+          )}
         </div>
+
+        {showPlaylistInput && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mb-3 flex gap-2"
+          >
+            <Input
+              placeholder="https://open.spotify.com/playlist/..."
+              value={playlistInputValue}
+              onChange={(e) => setPlaylistInputValue(e.target.value)}
+              className="text-xs h-8"
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-3 text-xs shrink-0"
+              onClick={() => {
+                if (savePlaylist(playlistInputValue)) {
+                  toast.success('Playlist enregistrée ! Rechargement...');
+                  setTimeout(() => window.location.reload(), 800);
+                } else {
+                  toast.error('URL Spotify invalide');
+                }
+              }}
+            >
+              OK
+            </Button>
+          </motion.div>
+        )}
+
         <div
           className="w-full overflow-hidden rounded-[12px] bg-[#282828] isolate"
           style={{ clipPath: 'inset(0 round 12px)' }}
@@ -213,7 +262,7 @@ export function LoadingSteps({ siteName, variant = 'technical', onStopMusicRef }
             ref={embedContainerRef}
             className="w-full"
             style={{ transform: 'scale(1.05)', transformOrigin: 'center center' }}
-            aria-label="Playlist Crawlers"
+            aria-label={isCustomPlaylist ? 'Ma Playlist' : 'Playlist Crawlers'}
           />
         </div>
         <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">

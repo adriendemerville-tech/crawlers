@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Save, Loader2, Globe } from 'lucide-react';
+import { User, Save, Loader2, Globe, Music, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { WordPressIntegrationCard } from '@/components/Profile/WordPressIntegrationCard';
+import { useCustomPlaylist, parseSpotifyUri } from '@/hooks/useCustomPlaylist';
 
 const translations = {
   fr: {
