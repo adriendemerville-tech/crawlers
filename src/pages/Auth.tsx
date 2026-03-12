@@ -76,6 +76,7 @@ const translations = {
     loginError: 'Invalid credentials',
     signupError: 'Error during signup',
     userExists: 'An account already exists with this email',
+    or: 'or',
   },
   es: {
     login: 'Iniciar sesión',
