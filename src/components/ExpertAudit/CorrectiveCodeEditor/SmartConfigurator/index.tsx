@@ -398,22 +398,21 @@ export function SmartConfigurator({
       priority: 'optional',
     });
 
-    // Tracking fixes - only propose if NOT already detected on the site
+    // Tracking fixes - GTM: enabled by default if missing, greyed out if already present
     if (technicalResult) {
       const hasGTM = (technicalResult.scores.semantic as any)?.hasGTM ?? false;
       const hasGA4 = (technicalResult.scores.semantic as any)?.hasGA4 ?? false;
 
-      if (!hasGTM) {
-        fixes.push({
-          id: 'fix_gtm',
-          category: 'tracking',
-          label: 'Intégrer Google Tag Manager',
-          description: 'GTM non détecté — injecte le snippet GTM',
-          enabled: false,
-          priority: 'optional',
-          data: { gtmId: 'GTM-XXXXXXX' }
-        });
-      }
+      fixes.push({
+        id: 'fix_gtm',
+        category: 'tracking',
+        label: 'Intégrer Google Tag Manager',
+        description: hasGTM ? 'GTM déjà détecté sur votre site' : 'GTM non détecté — injecte le snippet GTM',
+        enabled: !hasGTM,
+        priority: hasGTM ? 'installed' as any : 'optional',
+        data: { gtmId: 'GTM-XXXXXXX' },
+        locked: hasGTM,
+      } as any);
 
       if (!hasGA4) {
         fixes.push({
