@@ -348,7 +348,15 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
                 <Button type="submit" className="w-full h-9 text-sm" disabled={isLoading}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
                 </Button>
-              </form>
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {language === 'fr' ? 'Mot de passe oublié ?' : language === 'es' ? '¿Contraseña olvidada?' : 'Forgot password?'}
+                  </button>
+                </div>
             </Form>
           </motion.div>
         ) : (
