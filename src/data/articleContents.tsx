@@ -1913,11 +1913,6 @@ Allow: /`}</pre>
           <strong>La vraie question n'est pas "combien de fois ChatGPT me cite".</strong> La vraie question est : <strong>"est-ce que ChatGPT peut techniquement accéder à mon contenu, le comprendre et le citer ?"</strong> Et ça, c'est mesurable. Aujourd'hui. Gratuitement. Sur <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a>. Arrêtez de payer pour des dashboards d'hallucinations. Investissez dans un code parfait.
         </p>
 
-        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
-          <h3 className="text-lg font-bold text-foreground mb-2">Votre site est-il accessible aux IA ?</h3>
-          <p className="text-sm text-muted-foreground mb-4">Diagnostic technique expert — pas de métrique estimée, juste des faits.</p>
-          <RichLinkCard href="/audit-expert" title="Lancer mon Audit Expert" titleHighlight="Audit Expert" description="Vérifiez si votre site est techniquement prêt pour les LLMs" />
-        </div>
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
       </>
@@ -1984,11 +1979,6 @@ Allow: /`}</pre>
           <strong>The real question isn't "how often does ChatGPT cite me."</strong> It's: <strong>"can ChatGPT technically access, understand, and cite my content?"</strong> And that's measurable. Today. For free. On Crawlers.fr.
         </p>
 
-        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
-          <h3 className="text-lg font-bold text-foreground mb-2">Is your site accessible to AI?</h3>
-          <p className="text-sm text-muted-foreground mb-4">Free technical diagnostic — no estimated metrics, just facts.</p>
-          <RichLinkCard href="/audit-expert" title="Run my free GEO audit" description="Check if your site is technically ready for LLMs" />
-        </div>
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
       </>
@@ -2035,11 +2025,6 @@ Allow: /`}</pre>
           <strong>Cada punto diagnosticado es un hecho técnico binario</strong>, no una estimación probabilística.
         </p>
 
-        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
-          <h3 className="text-lg font-bold text-foreground mb-2">¿Tu sitio es accesible para las IA?</h3>
-          <p className="text-sm text-muted-foreground mb-4">Diagnóstico técnico gratuito — sin métricas estimadas, solo hechos.</p>
-          <RichLinkCard href="/audit-expert" title="Ejecutar mi auditoría GEO gratuita" description="Verifica si tu sitio está técnicamente listo para los LLMs" />
-        </div>
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
       </>
