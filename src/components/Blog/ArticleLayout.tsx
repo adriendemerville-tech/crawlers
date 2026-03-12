@@ -189,13 +189,15 @@ function ArticleLayoutComponent({
         <main>
           <article className="pb-16">
           {/* Hero Section */}
-          <div className="relative w-full h-[300px] sm:h-[400px] lg:h-[500px] overflow-hidden">
-            <ResponsiveHeroImage
-              src={heroImage}
-              alt={heroAlt}
-            />
+          <figure className="relative w-full h-[300px] sm:h-[400px] lg:h-[500px] overflow-hidden">
+            <picture>
+              <ResponsiveHeroImage
+                src={heroImage}
+                alt={heroAlt}
+              />
+            </picture>
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-          </div>
+          </figure>
 
           {/* Content Container */}
           <div className="max-w-3xl mx-auto px-4 sm:px-6 -mt-32 relative z-10">
