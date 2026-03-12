@@ -2436,6 +2436,7 @@ Deno.serve(async (req) => {
       data: {
         url, domain,
         scannedAt: new Date().toISOString(),
+        isContentMode,
         ...parsedAnalysis,
         raw_market_data: marketData,
         ranking_overview: rankingOverview,
