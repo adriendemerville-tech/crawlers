@@ -413,6 +413,8 @@ function analyzeHtml(
     issues.push('canonical_mismatch');
   }
 
+  const html_size_bytes = new TextEncoder().encode(html).length;
+
   return {
     url: pageUrl, path, http_status: 200, title, meta_description, h1,
     h2_count, h3_count, h4_h6_count,
@@ -429,6 +431,7 @@ function analyzeHtml(
     schema_org_errors: schemaValidation.errors,
     custom_extraction,
     crawl_depth: depth,
+    html_size_bytes,
   };
 }
 
