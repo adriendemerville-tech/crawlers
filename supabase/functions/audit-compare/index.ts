@@ -736,7 +736,7 @@ async function analyzeSite(
       headers: { 'Authorization': `Bearer ${openrouterKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'system', content: SITE_ANALYSIS_PROMPT }, { role: 'user', content: prompt }],
+        messages: [{ role: 'system', content: SITE_ANALYSIS_PROMPT + `\n\nLANGUE DE RÉDACTION: ${langLabel}. Rédige TOUTES les analyses en ${langLabel}.` }, { role: 'user', content: prompt }],
         temperature: 0.3,
       }),
       signal: AbortSignal.timeout(55000),
