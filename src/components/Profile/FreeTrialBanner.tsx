@@ -11,9 +11,8 @@ export function FreeTrialBanner() {
   // Detect if user is on a gifted 6-month trial:
   // The welcome trigger sets subscription_expires_at = created_at + 6 months
   // and stripe_subscription_id remains null (no Stripe sub)
-  const profileData = profile as any;
-  const expiresAt = profileData.subscription_expires_at;
-  const stripeSubId = profileData.stripe_subscription_id;
+  const expiresAt = profile.subscription_expires_at;
+  const stripeSubId = profile.stripe_subscription_id;
   
   // If user has a Stripe subscription, it's a paid plan — no banner
   if (stripeSubId) return null;
