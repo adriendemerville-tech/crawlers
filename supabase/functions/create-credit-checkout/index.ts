@@ -14,6 +14,7 @@ const CREDIT_PACKAGES = {
   essential: { credits: 10, price_cents: 500, name: "Essentiel", stripe_product_id: "prod_Tt71HPd497Zx9V" },
   pro:       { credits: 50, price_cents: 1900, name: "Pro",       stripe_product_id: "prod_U4yjVH7b8EhmQF" },
   premium:   { credits: 150, price_cents: 4500, name: "Premium",  stripe_product_id: "prod_U4ykI3KfQMFKNe" },
+  ultimate:  { credits: 500, price_cents: 9900, name: "Ultime",   stripe_product_id: "prod_ULTIMATE_TODO" }, // TODO: Create Stripe product and replace ID
 } as const;
 
 type PackageType = keyof typeof CREDIT_PACKAGES;
@@ -57,7 +58,7 @@ Deno.serve(async (req) => {
 
     if (!package_type || !CREDIT_PACKAGES[package_type as PackageType]) {
       return new Response(
-        JSON.stringify({ error: "Invalid package type. Must be: essential, pro, or premium" }),
+        JSON.stringify({ error: "Invalid package type. Must be: essential, pro, premium, or ultimate" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

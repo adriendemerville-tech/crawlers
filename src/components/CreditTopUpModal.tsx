@@ -51,6 +51,17 @@ const packages = [
     popular: false,
     savings: '40%',
   },
+  {
+    id: 'ultimate',
+    name: 'Ultime',
+    credits: 500,
+    price: 99,
+    pricePerCredit: 0.198,
+    color: 'from-violet-500 to-fuchsia-500',
+    borderColor: 'border-violet-500/40',
+    popular: false,
+    savings: '60%',
+  },
 ];
 
 const translations = {
@@ -222,7 +233,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 pt-2 sm:grid-cols-3">
+        <div className="grid gap-4 pt-2 sm:grid-cols-2 lg:grid-cols-4">
           <AnimatePresence>
             {packages.map((pkg, index) => {
               const isLoading = loadingPackage === pkg.id;
