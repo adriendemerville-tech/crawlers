@@ -1919,9 +1919,17 @@ Deno.serve(async (req) => {
     };
 
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
-    const domain = new URL(normalizedUrl).hostname;
+    const parsedUrl = new URL(normalizedUrl);
+    const domain = parsedUrl.hostname;
     const domainWithoutWww = domain.replace(/^www\./, '');
     const domainSlug = domainWithoutWww.split('.')[0];
+
+    // ═══ CONTENT MODE: Detect /blog or /article in path ═══
+    const urlPath = parsedUrl.pathname.toLowerCase();
+    const isContentMode = /\/(blog|article|articles|post|posts|news|actualite|actualites)\b/.test(urlPath) && urlPath !== '/blog' && urlPath !== '/blog/';
+    if (isContentMode) {
+      console.log(`📝 CONTENT MODE activated for path: ${parsedUrl.pathname}`);
+    }
 
     // ==================== SMART CACHE: Skip expensive calls if cachedContext provided ====================
     const useCache = !!cachedContext;
