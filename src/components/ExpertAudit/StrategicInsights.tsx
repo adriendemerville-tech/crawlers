@@ -268,8 +268,8 @@ export function StrategicInsights({
             <ConversationalIntentCard analysis={analysis} />
           </RevealWrapper>
 
-          {/* 13. Autorité Sociale & Humaine */}
-          {analysis.social_signals && (
+          {/* 13. Autorité Sociale & Humaine — hidden in content mode */}
+          {!isContentMode && analysis.social_signals && (
             <RevealWrapper delay={14000} isDataCard enabled={progressiveReveal}>
               <SocialSignalsCard signals={analysis.social_signals} />
             </RevealWrapper>
