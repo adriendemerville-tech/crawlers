@@ -599,7 +599,16 @@ function LlmVisibilityCard({ site, t }: { site: SiteResult; t: typeof i18n['fr']
 
 function KeywordsCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
   const { analysis } = site;
-  if (!analysis.keyword_positioning?.main_keywords?.length) {
+  // Use analysis.keyword_positioning first, fallback to site.keywords array
+  const mainKeywords = analysis.keyword_positioning?.main_keywords?.length
+    ? analysis.keyword_positioning.main_keywords
+    : (site.keywords || []).map((kw: any) => ({
+        keyword: kw.keyword || kw.term || kw,
+        volume: kw.volume || kw.search_volume || 0,
+        current_rank: kw.current_rank || kw.rank || kw.position || 'N/C',
+      }));
+
+  if (!mainKeywords.length) {
     return (
       <Card className="border-border/50 bg-card/80 h-full">
         <CardHeader className="pb-2">
@@ -622,7 +631,7 @@ function KeywordsCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {analysis.keyword_positioning.main_keywords.slice(0, 6).map((kw, i) => (
+          {mainKeywords.slice(0, 6).map((kw: any, i: number) => (
             <div key={i} className="flex items-center justify-between text-sm gap-2">
               <span className="text-foreground truncate flex-1">{kw.keyword}</span>
               <span className="text-foreground/50 whitespace-nowrap">{kw.volume} vol</span>
@@ -835,34 +844,7 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-8 space-y-4">
-      <Separator className="my-6" />
-
-      {/* Radar Comparatif — FIRST */}
-      <Card className="border-border/50 bg-card/80">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-primary" /> {t.radarTitle}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center gap-6 mb-3">
-            <div className="flex items-center gap-2"><div className="w-4 h-2 rounded-full" style={{ backgroundColor: site1Color }} /><span className="text-xs font-medium text-white">{site1Domain}</span></div>
-            <div className="flex items-center gap-2"><div className="w-4 h-2 rounded-full" style={{ backgroundColor: site2Color }} /><span className="text-xs font-medium text-white">{site2Domain}</span></div>
-          </div>
-          <ResponsiveContainer width="100%" height={392}>
-            <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
-              <PolarGrid stroke="hsl(var(--border))" />
-              <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 12, fill: 'white', fontWeight: 500 }} />
-              <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-              <Radar name={site1Domain} dataKey="site1" stroke={site1Color} fill={site1Color} fillOpacity={0.2} strokeWidth={2.5} />
-              <Radar name={site2Domain} dataKey="site2" stroke={site2Color} fill={site2Color} fillOpacity={0.2} strokeWidth={2.5} />
-            </RadarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Verdict */}
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-4 space-y-4">
       <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
@@ -1531,47 +1513,48 @@ const AuditCompare = () => {
               {/* Row-based comparison */}
               <SiteComparisonGrid site1={result.site1} site2={result.site2} t={t} />
 
-              {/* Cross-Comparison Section — always render radar even without full cross data */}
-              {result.crossComparison ? (
+              {/* Always render Radar first */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-8 space-y-4">
+                <Separator className="my-6" />
+                <Card className="border-border/50 bg-card/80">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5 text-primary" /> {t.radarTitle}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-center gap-6 mb-3">
+                      <div className="flex items-center gap-2"><div className="w-4 h-2 rounded-full" style={{ backgroundColor: result.site1.brandColor || '#8b5cf6' }} /><span className="text-xs font-medium text-white">{result.site1.domain}</span></div>
+                      <div className="flex items-center gap-2"><div className="w-4 h-2 rounded-full" style={{ backgroundColor: result.site2.brandColor || '#f59e0b' }} /><span className="text-xs font-medium text-white">{result.site2.domain}</span></div>
+                    </div>
+                    <ResponsiveContainer width="100%" height={392}>
+                      <RadarChart data={[
+                        { dimension: t.aeoScore, site1: result.site1.analysis.aeo_score || 0, site2: result.site2.analysis.aeo_score || 0 },
+                        { dimension: t.eeat, site1: (result.site1.analysis.eeat_score?.overall || 0) * 10, site2: (result.site2.analysis.eeat_score?.overall || 0) * 10 },
+                        { dimension: t.pagespeed, site1: result.site1.pagespeed?.performanceMobile || 0, site2: result.site2.pagespeed?.performanceMobile || 0 },
+                        { dimension: t.backlinks, site1: Math.min(100, (result.site1.backlinks?.domainRank || 0)), site2: Math.min(100, (result.site2.backlinks?.domainRank || 0)) },
+                        { dimension: t.contentDepth, site1: Math.min(100, Math.round((result.site1.contentDepth?.wordCount || 0) / 30)), site2: Math.min(100, Math.round((result.site2.contentDepth?.wordCount || 0) / 30)) },
+                        { dimension: t.expertise, site1: (result.site1.analysis.expertise_sentiment?.rating || 0) * 20, site2: (result.site2.analysis.expertise_sentiment?.rating || 0) * 20 },
+                      ]} cx="50%" cy="50%" outerRadius="75%">
+                        <PolarGrid stroke="hsl(var(--border))" />
+                        <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 12, fill: 'white', fontWeight: 500 }} />
+                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                        <Radar name={result.site1.domain} dataKey="site1" stroke={result.site1.brandColor || '#8b5cf6'} fill={result.site1.brandColor || '#8b5cf6'} fillOpacity={0.2} strokeWidth={2.5} />
+                        <Radar name={result.site2.domain} dataKey="site2" stroke={result.site2.brandColor || '#f59e0b'} fill={result.site2.brandColor || '#f59e0b'} fillOpacity={0.2} strokeWidth={2.5} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Cross-Comparison Section (verdict, SERP, differentiators) */}
+              {result.crossComparison && (
                 <CrossComparisonSection 
                   cross={result.crossComparison} 
                   site1={result.site1} 
                   site2={result.site2} 
                   t={t} 
                 />
-              ) : (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-8 space-y-4">
-                  <Separator className="my-6" />
-                  <Card className="border-border/50 bg-card/80">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-                        <BarChart3 className="h-5 w-5 text-primary" /> {t.radarTitle}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-center gap-6 mb-3">
-                        <div className="flex items-center gap-2"><div className="w-4 h-2 rounded-full" style={{ backgroundColor: result.site1.brandColor || '#8b5cf6' }} /><span className="text-xs font-medium text-white">{result.site1.domain}</span></div>
-                        <div className="flex items-center gap-2"><div className="w-4 h-2 rounded-full" style={{ backgroundColor: result.site2.brandColor || '#f59e0b' }} /><span className="text-xs font-medium text-white">{result.site2.domain}</span></div>
-                      </div>
-                      <ResponsiveContainer width="100%" height={392}>
-                        <RadarChart data={[
-                          { dimension: t.aeoScore, site1: result.site1.analysis.aeo_score || 0, site2: result.site2.analysis.aeo_score || 0 },
-                          { dimension: t.eeat, site1: (result.site1.analysis.eeat_score?.overall || 0) * 10, site2: (result.site2.analysis.eeat_score?.overall || 0) * 10 },
-                          { dimension: t.pagespeed, site1: result.site1.pagespeed?.performanceMobile || 0, site2: result.site2.pagespeed?.performanceMobile || 0 },
-                          { dimension: t.backlinks, site1: Math.min(100, (result.site1.backlinks?.domainRank || 0)), site2: Math.min(100, (result.site2.backlinks?.domainRank || 0)) },
-                          { dimension: t.contentDepth, site1: Math.min(100, Math.round((result.site1.contentDepth?.wordCount || 0) / 30)), site2: Math.min(100, Math.round((result.site2.contentDepth?.wordCount || 0) / 30)) },
-                          { dimension: t.expertise, site1: (result.site1.analysis.expertise_sentiment?.rating || 0) * 20, site2: (result.site2.analysis.expertise_sentiment?.rating || 0) * 20 },
-                        ]} cx="50%" cy="50%" outerRadius="75%">
-                          <PolarGrid stroke="hsl(var(--border))" />
-                          <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 12, fill: 'white', fontWeight: 500 }} />
-                          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                          <Radar name={result.site1.domain} dataKey="site1" stroke={result.site1.brandColor || '#8b5cf6'} fill={result.site1.brandColor || '#8b5cf6'} fillOpacity={0.2} strokeWidth={2.5} />
-                          <Radar name={result.site2.domain} dataKey="site2" stroke={result.site2.brandColor || '#f59e0b'} fill={result.site2.brandColor || '#f59e0b'} fillOpacity={0.2} strokeWidth={2.5} />
-                        </RadarChart>
-                      </ResponsiveContainer>
-                    </CardContent>
-                  </Card>
-                </motion.div>
               )}
 
               {/* Restart */}
