@@ -715,13 +715,20 @@ export type Database = {
       }
       crawl_pages: {
         Row: {
+          anchor_texts: Json | null
           broken_links: Json | null
+          canonical_url: string | null
           crawl_id: string
           created_at: string
           external_links: number | null
           h1: string | null
+          h2_count: number | null
+          h3_count: number | null
+          h4_h6_count: number | null
           has_canonical: boolean | null
           has_hreflang: boolean | null
+          has_nofollow: boolean | null
+          has_noindex: boolean | null
           has_og: boolean | null
           has_schema_org: boolean | null
           http_status: number | null
@@ -732,19 +739,28 @@ export type Database = {
           issues: Json | null
           meta_description: string | null
           path: string
+          redirect_url: string | null
+          response_time_ms: number | null
           seo_score: number | null
           title: string | null
           url: string
           word_count: number | null
         }
         Insert: {
+          anchor_texts?: Json | null
           broken_links?: Json | null
+          canonical_url?: string | null
           crawl_id: string
           created_at?: string
           external_links?: number | null
           h1?: string | null
+          h2_count?: number | null
+          h3_count?: number | null
+          h4_h6_count?: number | null
           has_canonical?: boolean | null
           has_hreflang?: boolean | null
+          has_nofollow?: boolean | null
+          has_noindex?: boolean | null
           has_og?: boolean | null
           has_schema_org?: boolean | null
           http_status?: number | null
@@ -755,19 +771,28 @@ export type Database = {
           issues?: Json | null
           meta_description?: string | null
           path?: string
+          redirect_url?: string | null
+          response_time_ms?: number | null
           seo_score?: number | null
           title?: string | null
           url: string
           word_count?: number | null
         }
         Update: {
+          anchor_texts?: Json | null
           broken_links?: Json | null
+          canonical_url?: string | null
           crawl_id?: string
           created_at?: string
           external_links?: number | null
           h1?: string | null
+          h2_count?: number | null
+          h3_count?: number | null
+          h4_h6_count?: number | null
           has_canonical?: boolean | null
           has_hreflang?: boolean | null
+          has_nofollow?: boolean | null
+          has_noindex?: boolean | null
           has_og?: boolean | null
           has_schema_org?: boolean | null
           http_status?: number | null
@@ -778,6 +803,8 @@ export type Database = {
           issues?: Json | null
           meta_description?: string | null
           path?: string
+          redirect_url?: string | null
+          response_time_ms?: number | null
           seo_score?: number | null
           title?: string | null
           url?: string
