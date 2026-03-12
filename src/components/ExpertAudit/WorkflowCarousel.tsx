@@ -326,7 +326,7 @@ export function WorkflowCarousel({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate('/audit-compare')}
+                onClick={() => window.open('/audit-compare', '_blank')}
                 className="h-10 px-4 border border-violet-500 text-violet-500 bg-transparent hover:bg-violet-500/10 hover:text-violet-400 font-medium shrink-0 hidden sm:flex items-center gap-1.5 text-sm ml-2"
               >
                 <GitCompareArrows className="h-4 w-4" />
