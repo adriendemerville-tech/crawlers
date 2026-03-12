@@ -6,10 +6,11 @@ export interface FixConfig {
   label: string;
   description: string;
   enabled: boolean;
-  priority: 'critical' | 'important' | 'optional';
+  priority: 'critical' | 'important' | 'optional' | 'installed';
   data?: Record<string, any>;
   isRecommended?: boolean;
   isPremium?: boolean; // Nécessite paiement
+  locked?: boolean; // Grisé et non modifiable (ex: déjà installé)
 }
 
 export interface AttributionConfig {
