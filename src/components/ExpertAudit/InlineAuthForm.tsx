@@ -243,6 +243,22 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
     }
   };
 
+  const handleForgotPassword = async () => {
+    const email = loginForm.getValues('email');
+    if (!email) {
+      toast.error(language === 'fr' ? 'Saisissez votre email d\'abord' : 'Enter your email first');
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    if (error) {
+      toast.error(language === 'fr' ? 'Erreur, réessayez' : 'Error, try again');
+    } else {
+      toast.success(language === 'fr' ? 'Email de réinitialisation envoyé !' : 'Password reset email sent!');
+    }
+  };
+
   const handleSignupEmailChange = (value: string, onChange: (v: string) => void) => {
     onChange(value);
     debouncedEmailCheck(value);
