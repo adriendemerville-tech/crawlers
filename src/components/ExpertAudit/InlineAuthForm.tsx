@@ -120,8 +120,8 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
       return true; // fail open
     }
   };
-  const { language } = useLanguage();
-  const t = translations[language] || translations.fr;
+
+
 
   const loginSchema = z.object({
     email: z.string().min(1, t.emailRequired).email(t.emailInvalid),
