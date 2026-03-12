@@ -1292,6 +1292,51 @@ export default function SiteCrawl() {
       </main>
 
       <CreditTopUpModal open={showTopUp} onOpenChange={setShowTopUp} currentBalance={credits} />
+
+      {/* Fair-use 5000 pages limit modal */}
+      {showLimitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowLimitModal(false)}>
+          <div className="relative w-full max-w-md mx-4 rounded-xl border-2 border-amber-500/50 bg-card shadow-2xl shadow-amber-500/10 p-6 space-y-5" onClick={e => e.stopPropagation()}>
+            <div className="text-center">
+              <div className="mx-auto w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mb-3">
+                <Bot className="h-7 w-7 text-amber-500" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground">
+                {language === 'fr' ? '5 000 pages déjà consommées' : language === 'es' ? '5 000 páginas ya consumidas' : '5,000 pages already consumed'}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                {language === 'fr' 
+                  ? `Vous avez utilisé ${crawlPagesThisMonth.toLocaleString()} pages sur vos 5 000 incluses ce mois-ci. Rechargez des crédits pour continuer.`
+                  : language === 'es'
+                  ? `Ha utilizado ${crawlPagesThisMonth.toLocaleString()} páginas de sus 5 000 incluidas este mes. Recargue créditos para continuar.`
+                  : `You've used ${crawlPagesThisMonth.toLocaleString()} pages out of your 5,000 included this month. Top up credits to continue.`}
+              </p>
+            </div>
+
+            <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/5 to-amber-600/10 border border-amber-500/20 space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{language === 'fr' ? 'Pages utilisées' : language === 'es' ? 'Páginas usadas' : 'Pages used'}</span>
+                <span className="font-bold text-amber-500">{crawlPagesThisMonth.toLocaleString()} / 5 000</span>
+              </div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${Math.min(100, (crawlPagesThisMonth / FAIR_USE_LIMIT) * 100)}%` }} />
+              </div>
+            </div>
+
+            <Button
+              className="w-full gap-2 bg-amber-500 hover:bg-amber-600 text-black font-bold"
+              onClick={() => { setShowLimitModal(false); setShowTopUp(true); }}
+            >
+              <CreditCoin size="sm" />
+              {language === 'fr' ? 'Recharger des crédits' : language === 'es' ? 'Recargar créditos' : 'Top up credits'}
+            </Button>
+            <Button variant="ghost" className="w-full text-muted-foreground" onClick={() => setShowLimitModal(false)}>
+              {language === 'fr' ? 'Fermer' : language === 'es' ? 'Cerrar' : 'Close'}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </>
   );
