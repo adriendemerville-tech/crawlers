@@ -1390,6 +1390,7 @@ export function SmartConfigurator({
               </Popover>
 
               {/* Right side actions */}
+              <div className="flex items-center gap-3">
 
                 {/* Copy + Save buttons - visible after unlock */}
                 {generatedCode && viewMode === 'code' && hasPaid && (
