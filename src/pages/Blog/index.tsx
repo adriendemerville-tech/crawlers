@@ -112,7 +112,7 @@ function BlogIndexComponent() {
       <Helmet>
         <title>{t.metaTitle}</title>
         <meta name="description" content={t.metaDescription} />
-        <link rel="canonical" href="https://crawlers.fr/blog" />
+        {/* canonical managed by useCanonicalHreflang */}
         <meta property="og:title" content={t.metaTitle} />
         <meta property="og:description" content={t.metaDescription} />
         <meta property="og:url" content="https://crawlers.fr/blog" />

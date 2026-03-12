@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { ExpertAuditDashboard, ExpertAuditContent, ExpertAuditFAQ } from '@/components/ExpertAudit';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -8,6 +7,7 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 // Lazy load components
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
 const SEOComparisonTable = lazy(() => import('@/components/SEOComparisonTable').then(m => ({ default: m.SEOComparisonTable })));
+const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 // FAQ data for Schema.org
 const faqSchemaData = {
@@ -190,7 +190,9 @@ const ExpertAudit = () => {
         <ExpertAuditContent />
         <ExpertAuditFAQ />
       </main>
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };

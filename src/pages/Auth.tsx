@@ -46,6 +46,7 @@ const translations = {
     loginError: 'Identifiants incorrects',
     signupError: 'Erreur lors de l\'inscription',
     userExists: 'Un compte existe déjà avec cet email',
+    or: 'ou',
   },
   en: {
     login: 'Login',
@@ -75,6 +76,7 @@ const translations = {
     loginError: 'Invalid credentials',
     signupError: 'Error during signup',
     userExists: 'An account already exists with this email',
+    or: 'or',
   },
   es: {
     login: 'Iniciar sesión',
@@ -104,6 +106,7 @@ const translations = {
     loginError: 'Credenciales inválidas',
     signupError: 'Error durante el registro',
     userExists: 'Ya existe una cuenta con este correo',
+    or: 'o',
   },
 };
 
@@ -308,7 +311,7 @@ export default function Auth() {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">ou</span>
+                <span className="bg-card px-2 text-muted-foreground">{t.or}</span>
               </div>
             </div>
 
@@ -373,13 +376,13 @@ export default function Auth() {
                     >
                       <AlertCircle className="h-4 w-4 text-warning shrink-0" />
                       <p className="text-sm text-foreground flex-1">
-                        Déjà inscrit, voulez-vous vous{' '}
+                        {language === 'en' ? 'Already registered, would you like to ' : language === 'es' ? 'Ya registrado, ¿desea ' : 'Déjà inscrit, voulez-vous vous '}{' '}
                         <button
                           type="button"
                           onClick={handleSwitchToLogin}
                           className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
                         >
-                          connecter
+                          {language === 'en' ? 'sign in' : language === 'es' ? 'iniciar sesión' : 'connecter'}
                         </button>
                         {' '}?
                       </p>

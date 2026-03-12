@@ -74,7 +74,7 @@ const translations = {
     },
     auditCompare: {
       title: 'Audit Comparé',
-      description: '5 crédits par audit comparatif',
+      description: '4 crédits par audit comparatif',
       features: [
         'Comparaison côte à côte de 2 sites',
         'Analyse Brand DNA & backlinks',
@@ -165,7 +165,7 @@ const translations = {
     },
     auditCompare: {
       title: 'Compared Audit',
-      description: '5 credits per comparative audit',
+      description: '4 credits per comparative audit',
       features: [
         'Side-by-side comparison of 2 sites',
         'Brand DNA & backlinks analysis',
@@ -256,7 +256,7 @@ const translations = {
     },
     auditCompare: {
       title: 'Auditoría Comparada',
-      description: '5 créditos por auditoría comparativa',
+      description: '4 créditos por auditoría comparativa',
       features: [
         'Comparación lado a lado de 2 sitios',
         'Análisis Brand DNA y backlinks',
@@ -366,7 +366,7 @@ export default function Tarifs() {
     "offers": {
       "@type": "AggregateOffer",
       "lowPrice": "0",
-      "highPrice": "49",
+      "highPrice": "99",
       "priceCurrency": "EUR",
       "offerCount": 5,
       "offers": [
@@ -458,13 +458,13 @@ export default function Tarifs() {
           "@type": "Offer",
           "name": "Pro Agency — Monthly Subscription",
           "description": "Unlimited SEO/GEO reports, unlimited corrective code generation, White Label branding, 3 team accounts, priority support, Google Search Console integration, AI visibility monitoring dashboard.",
-          "price": "50.00",
+          "price": "59.00",
           "priceCurrency": "EUR",
           "availability": "https://schema.org/InStock",
           "priceValidUntil": "2027-12-31",
           "priceSpecification": {
             "@type": "UnitPriceSpecification",
-            "price": "50.00",
+            "price": "59.00",
             "priceCurrency": "EUR",
             "billingDuration": "P1M",
             "unitText": "MONTH",
