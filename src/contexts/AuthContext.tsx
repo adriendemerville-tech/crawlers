@@ -31,7 +31,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUpWithEmail: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null }>;
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
+  signInWithGoogle: (customRedirectUrl?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
