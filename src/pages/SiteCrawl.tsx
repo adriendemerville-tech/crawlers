@@ -1169,7 +1169,7 @@ export default function SiteCrawl() {
 
                         {expandedPage === page.id && (
                           <div className="px-4 pb-3 pt-1 border-t bg-muted/30 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
                               <div className="flex items-center gap-1.5">
                                 <Code2 className="w-3.5 h-3.5 text-muted-foreground" />
                                 <span className="text-muted-foreground">H1:</span>
@@ -1190,6 +1190,17 @@ export default function SiteCrawl() {
                                 <span className="text-muted-foreground">Status:</span>
                                 <span className={page.http_status === 200 ? 'text-emerald-500' : 'text-destructive'}>{page.http_status}</span>
                               </div>
+                              {(page as any).html_size_bytes > 0 && (() => {
+                                const sizeKB = Math.round((page as any).html_size_bytes / 1024);
+                                const weightColor = sizeKB < 100 ? 'text-emerald-500' : sizeKB < 500 ? 'text-amber-500' : 'text-destructive';
+                                return (
+                                  <div className="flex items-center gap-1.5">
+                                    <FileCode2 className="w-3.5 h-3.5 text-muted-foreground" />
+                                    <span className="text-muted-foreground">{t.weight}</span>
+                                    <span className={weightColor}>{sizeKB} Ko</span>
+                                  </div>
+                                );
+                              })()}
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                               {page.has_schema_org && <Badge variant="secondary" className="text-[10px]">Schema.org ✓</Badge>}
