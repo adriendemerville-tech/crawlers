@@ -656,16 +656,19 @@ export type Database = {
           completed_at: string | null
           crawl_id: string
           created_at: string
+          custom_selectors: Json | null
           domain: string
           error_message: string | null
           id: string
           max_concurrent: number
+          max_depth: number | null
           priority: number
           processed_count: number
           started_at: string | null
           status: string
           total_count: number
           url: string
+          url_filter: string | null
           urls_to_process: Json
           user_id: string
         }
@@ -673,16 +676,19 @@ export type Database = {
           completed_at?: string | null
           crawl_id: string
           created_at?: string
+          custom_selectors?: Json | null
           domain: string
           error_message?: string | null
           id?: string
           max_concurrent?: number
+          max_depth?: number | null
           priority?: number
           processed_count?: number
           started_at?: string | null
           status?: string
           total_count?: number
           url: string
+          url_filter?: string | null
           urls_to_process?: Json
           user_id: string
         }
@@ -690,16 +696,19 @@ export type Database = {
           completed_at?: string | null
           crawl_id?: string
           created_at?: string
+          custom_selectors?: Json | null
           domain?: string
           error_message?: string | null
           id?: string
           max_concurrent?: number
+          max_depth?: number | null
           priority?: number
           processed_count?: number
           started_at?: string | null
           status?: string
           total_count?: number
           url?: string
+          url_filter?: string | null
           urls_to_process?: Json
           user_id?: string
         }
@@ -718,8 +727,11 @@ export type Database = {
           anchor_texts: Json | null
           broken_links: Json | null
           canonical_url: string | null
+          content_hash: string | null
+          crawl_depth: number | null
           crawl_id: string
           created_at: string
+          custom_extraction: Json | null
           external_links: number | null
           h1: string | null
           h2_count: number | null
@@ -741,6 +753,8 @@ export type Database = {
           path: string
           redirect_url: string | null
           response_time_ms: number | null
+          schema_org_errors: Json | null
+          schema_org_types: Json | null
           seo_score: number | null
           title: string | null
           url: string
@@ -750,8 +764,11 @@ export type Database = {
           anchor_texts?: Json | null
           broken_links?: Json | null
           canonical_url?: string | null
+          content_hash?: string | null
+          crawl_depth?: number | null
           crawl_id: string
           created_at?: string
+          custom_extraction?: Json | null
           external_links?: number | null
           h1?: string | null
           h2_count?: number | null
@@ -773,6 +790,8 @@ export type Database = {
           path?: string
           redirect_url?: string | null
           response_time_ms?: number | null
+          schema_org_errors?: Json | null
+          schema_org_types?: Json | null
           seo_score?: number | null
           title?: string | null
           url: string
@@ -782,8 +801,11 @@ export type Database = {
           anchor_texts?: Json | null
           broken_links?: Json | null
           canonical_url?: string | null
+          content_hash?: string | null
+          crawl_depth?: number | null
           crawl_id?: string
           created_at?: string
+          custom_extraction?: Json | null
           external_links?: number | null
           h1?: string | null
           h2_count?: number | null
@@ -805,6 +827,8 @@ export type Database = {
           path?: string
           redirect_url?: string | null
           response_time_ms?: number | null
+          schema_org_errors?: Json | null
+          schema_org_types?: Json | null
           seo_score?: number | null
           title?: string | null
           url?: string
@@ -1618,9 +1642,11 @@ export type Database = {
           domain: string
           error_message: string | null
           id: string
+          max_depth: number | null
           status: string
           total_pages: number
           url: string
+          url_filter: string | null
           user_id: string
         }
         Insert: {
@@ -1634,9 +1660,11 @@ export type Database = {
           domain: string
           error_message?: string | null
           id?: string
+          max_depth?: number | null
           status?: string
           total_pages?: number
           url: string
+          url_filter?: string | null
           user_id: string
         }
         Update: {
@@ -1650,9 +1678,11 @@ export type Database = {
           domain?: string
           error_message?: string | null
           id?: string
+          max_depth?: number | null
           status?: string
           total_pages?: number
           url?: string
+          url_filter?: string | null
           user_id?: string
         }
         Relationships: []
