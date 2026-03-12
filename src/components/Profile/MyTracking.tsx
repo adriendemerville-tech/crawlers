@@ -114,6 +114,7 @@ interface TrackedSite {
   last_audit_at: string | null;
   api_key?: string;
   current_config?: Record<string, unknown>;
+  previous_config?: Record<string, unknown>;
 }
 
 interface StatsEntry {
