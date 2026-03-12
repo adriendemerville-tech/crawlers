@@ -85,19 +85,23 @@ const PAIN_POINTS = [
 
 const FAQ_ITEMS = [
   {
-    q: 'Est-ce que le plugin ralentit mon site ?',
-    a: 'Non. Le plugin Crawlers.fr pèse moins de 50 Ko et n\'exécute aucun JavaScript côté visiteur. Il se contente d\'injecter des balises HTML statiques (meta tags, JSON-LD) dans le <head> de vos pages, ce qui n\'impacte pas les performances.',
+    q: 'Est-ce que le plugin / widget ralentit mon site ?',
+    a: 'Non. Le plugin WordPress pèse moins de 50 Ko et n\'exécute aucun JavaScript côté visiteur. Le widget GTM pèse ~2 Ko et s\'exécute en mode différé (defer). Aucun impact sur les performances.',
+  },
+  {
+    q: 'Quelle est la différence entre le plugin WordPress et le snippet GTM ?',
+    a: 'Le plugin WordPress se synchronise automatiquement toutes les 6h via WP Cron et injecte les correctifs dans wp_head/wp_footer. Le snippet GTM/Script universel fonctionne sur tous les CMS (Shopify, React, HTML statique…) et se connecte en temps réel via le widget Crawlers.AI.',
   },
   {
     q: 'Ai-je besoin d\'une clé API ?',
-    a: 'Non. Le système de Lien Magique connecte automatiquement votre WordPress à votre compte Crawlers.fr en un clic. Aucune clé à copier-coller.',
+    a: 'Non. Pour WordPress, le Lien Magique connecte automatiquement en un clic. Pour GTM, le snippet contient déjà votre clé API pré-remplie.',
   },
   {
     q: 'Le plugin fonctionne-t-il avec tous les thèmes WordPress ?',
     a: 'Oui. Le plugin utilise les hooks WordPress standards (wp_head) et ne modifie aucun fichier de thème. Il est compatible avec tous les thèmes et builders (Elementor, Divi, GeneratePress, Astra…).',
   },
   {
-    q: 'Que se passe-t-il si je désactive le plugin ?',
+    q: 'Que se passe-t-il si je désactive le plugin ou retire le snippet ?',
     a: 'Les balises injectées disparaissent proprement. Votre site revient à son état d\'origine. Aucune modification permanente n\'est effectuée sur vos fichiers.',
   },
   {
@@ -106,7 +110,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Le plugin est-il gratuit ?',
-    a: 'Le plugin est gratuit. L\'Audit Expert qui génère les correctifs personnalisés fonctionne avec un système de crédits à partir de 5€ — soit 20 à 50 fois moins cher qu\'un outil comme Semrush.',
+    a: 'Le plugin et le widget sont gratuits. L\'Audit Expert qui génère les correctifs personnalisés fonctionne avec un système de crédits à partir de 5€ — soit 20 à 50 fois moins cher qu\'un outil comme Semrush.',
   },
 ];
 
