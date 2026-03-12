@@ -990,7 +990,7 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
         </div>
       )}
 
-      {/* Radar Comparatif */}
+      {/* Radar Comparatif — FIRST */}
       <Card className="border-border/50 bg-card/80">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
@@ -998,17 +998,17 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-violet-500" /><span className="text-[10px] text-muted-foreground">{site1Domain}</span></div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-amber-500" /><span className="text-[10px] text-muted-foreground">{site2Domain}</span></div>
+          <div className="flex items-center justify-center gap-6 mb-3">
+            <div className="flex items-center gap-2"><div className="w-4 h-2 rounded-full" style={{ backgroundColor: site1Color }} /><span className="text-xs font-medium text-white">{site1Domain}</span></div>
+            <div className="flex items-center gap-2"><div className="w-4 h-2 rounded-full" style={{ backgroundColor: site2Color }} /><span className="text-xs font-medium text-white">{site2Domain}</span></div>
           </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+          <ResponsiveContainer width="100%" height={392}>
+            <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
               <PolarGrid stroke="hsl(var(--border))" />
-              <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+              <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 12, fill: 'white', fontWeight: 500 }} />
               <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-              <Radar name={site1Domain} dataKey="site1" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.15} strokeWidth={2} />
-              <Radar name={site2Domain} dataKey="site2" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.15} strokeWidth={2} />
+              <Radar name={site1Domain} dataKey="site1" stroke={site1Color} fill={site1Color} fillOpacity={0.2} strokeWidth={2.5} />
+              <Radar name={site2Domain} dataKey="site2" stroke={site2Color} fill={site2Color} fillOpacity={0.2} strokeWidth={2.5} />
             </RadarChart>
           </ResponsiveContainer>
         </CardContent>
