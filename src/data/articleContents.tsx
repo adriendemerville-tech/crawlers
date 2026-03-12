@@ -1979,11 +1979,6 @@ Allow: /`}</pre>
           <strong>The real question isn't "how often does ChatGPT cite me."</strong> It's: <strong>"can ChatGPT technically access, understand, and cite my content?"</strong> And that's measurable. Today. For free. On Crawlers.fr.
         </p>
 
-        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
-          <h3 className="text-lg font-bold text-foreground mb-2">Is your site accessible to AI?</h3>
-          <p className="text-sm text-muted-foreground mb-4">Free technical diagnostic — no estimated metrics, just facts.</p>
-          <RichLinkCard href="/audit-expert" title="Run my free GEO audit" description="Check if your site is technically ready for LLMs" />
-        </div>
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
       </>
