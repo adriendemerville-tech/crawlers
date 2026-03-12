@@ -1397,11 +1397,18 @@ export function ExpertAuditDashboard() {
               {/* Technical Narrative Section - 3 pedagogical blocs */}
               <TechnicalNarrativeSection result={result} />
 
-              {/* Image Quality Card — always visible at bottom of technical section */}
-              <ImageQualityCard 
-                imagesTotal={result.rawData?.htmlAnalysis?.imagesTotal ?? 0} 
-                imagesMissingAlt={result.rawData?.htmlAnalysis?.imagesMissingAlt ?? 0} 
-              />
+              {/* Image Quality & Page Weight Cards */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <ImageQualityCard 
+                  imagesTotal={result.rawData?.htmlAnalysis?.imagesTotal ?? 0} 
+                  imagesMissingAlt={result.rawData?.htmlAnalysis?.imagesMissingAlt ?? 0} 
+                />
+                {(result.rawData?.htmlAnalysis?.htmlSizeBytes > 0 || result.insights?.contentDensity?.htmlSize > 0) && (
+                  <PageWeightCard 
+                    htmlSizeBytes={result.rawData?.htmlAnalysis?.htmlSizeBytes || result.insights?.contentDensity?.htmlSize || 0} 
+                  />
+                )}
+              </div>
 
               {/* Action Plan (refactored from RecommendationList) */}
               <ActionPlan recommendations={result.recommendations} url={result.url} />
