@@ -2234,7 +2234,8 @@ Deno.serve(async (req) => {
 
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode);
 
-    // Inject entity name & page type context
+    // Inject language instruction
+    userPrompt = `🌐 LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes, analyses, recommandations et descriptions en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
     const pageTypeLabels: Record<PageType, string> = {
       editorial: '📝 MODE ÉDITORIAL',
       product: '🛒 MODE PRODUIT',
