@@ -131,6 +131,7 @@ interface SiteResult {
   backlinks?: BacklinkProfile | null;
   contentDepth?: ContentDepth | null;
   pagespeed?: PageSpeedScores | null;
+  brandColor?: string | null;
 }
 
 interface CompareResult {
