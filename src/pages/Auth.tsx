@@ -106,6 +106,7 @@ const translations = {
     loginError: 'Credenciales inválidas',
     signupError: 'Error durante el registro',
     userExists: 'Ya existe una cuenta con este correo',
+    or: 'o',
   },
 };
 
