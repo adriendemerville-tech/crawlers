@@ -122,6 +122,7 @@ const App = () => (
                           <Route path="/site-crawl" element={<SiteCrawl />} />
                           <Route path="/audit-compare" element={<AuditCompare />} />
                           <Route path="/integration-gtm" element={<IntegrationGTM />} />
+                          <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
