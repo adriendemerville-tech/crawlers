@@ -2354,7 +2354,12 @@ Deno.serve(async (req) => {
         try { return new URL(actor.url || '').hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; }
       })();
       const actorNameLower = (actor.name || '').toLowerCase().replace(/\s+/g, '');
-      return (actorDomain && (actorDomain === cleanTargetDomain || actorDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(actorDomain))) ||
+      // Also compare full URL to catch exact same page
+      const actorUrlNorm = (actor.url || '').toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/+$/, '');
+      const targetUrlNorm = normalizedUrl.toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/\/+$/, '');
+      // Self if: same domain, name matches brand/slug, or exact same URL
+      return (actorUrlNorm && actorUrlNorm === targetUrlNorm) ||
+             (actorDomain && (actorDomain === cleanTargetDomain || actorDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(actorDomain))) ||
              (actorNameLower && (actorNameLower === brandNameLower || actorNameLower === domainSlugLower || actorNameLower.includes(domainSlugLower) || domainSlugLower.includes(actorNameLower)));
     }
 
