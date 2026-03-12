@@ -2023,7 +2023,7 @@ Allow: /`}</pre>
     es: (
       <>
         <SummaryBox
-          title="Lo esencial en 30 segundos"
+          
           points={[
             "No existe 'Search Console' para los LLMs: OpenAI, Anthropic y Perplexity no comparten datos de volumen reales.",
             "Herramientas como Meteoria, Qwairy o GetMint usan simulaciones sintéticas sin ponderación por volumen real.",
