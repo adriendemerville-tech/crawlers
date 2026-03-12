@@ -1,6 +1,6 @@
 /**
  * Tracks AI token usage by inserting into analytics_events.
- * Used by edge functions that call the Lovable AI gateway or other paid APIs.
+ * Uses SERVICE_ROLE_KEY to bypass RLS and avoid silent data loss.
  */
 export async function trackTokenUsage(
   functionName: string,
@@ -11,7 +11,7 @@ export async function trackTokenUsage(
   if (!usage) return;
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
   if (!supabaseUrl || !supabaseKey) return;
 
   try {
@@ -42,6 +42,7 @@ export async function trackTokenUsage(
 
 /**
  * Tracks a paid API call (DataForSEO, Google APIs, etc.)
+ * Uses SERVICE_ROLE_KEY to bypass RLS and avoid silent data loss.
  */
 export async function trackPaidApiCall(
   functionName: string,
@@ -50,7 +51,7 @@ export async function trackPaidApiCall(
   targetUrl?: string,
 ) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
   if (!supabaseUrl || !supabaseKey) return;
 
   try {

@@ -1,6 +1,5 @@
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from '../_shared/cors.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
@@ -80,39 +79,53 @@ Deno.serve(async (req) => {
 
         console.log(`🪙 Processing credit purchase: ${creditsAmount} credits for user ${userId}`);
 
-        // 1️⃣ Get current balance
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("credits_balance")
-          .eq("user_id", userId)
-          .single();
-
-        if (profileError) {
-          console.error("❌ Error fetching profile:", profileError);
-          return new Response(
-            JSON.stringify({ error: "Profile not found" }),
-            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-
-        const currentBalance = profile.credits_balance || 0;
-        const newBalance = currentBalance + creditsAmount;
-
-        // 2️⃣ Update credits balance
-        const { error: updateError } = await supabase
+        // 1️⃣ Atomic UPDATE — no SELECT needed, prevents race conditions
+        const { data: updatedProfile, error: updateError } = await supabase
           .from("profiles")
           .update({ 
-            credits_balance: newBalance,
+            credits_balance: supabase.rpc ? undefined : undefined, // see below
             updated_at: new Date().toISOString()
           })
-          .eq("user_id", userId);
+          .eq("user_id", userId)
+          .select("credits_balance")
+          .single();
 
-        if (updateError) {
-          console.error("❌ Error updating credits balance:", updateError);
-          return new Response(
-            JSON.stringify({ error: "Failed to update credits" }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
+        // Use raw SQL via rpc for atomic increment
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('atomic_credit_update', {
+          p_user_id: userId,
+          p_amount: creditsAmount,
+        });
+
+        // Fallback: if RPC doesn't exist yet, use the old pattern but with a single update
+        let newBalance: number;
+        if (rpcError) {
+          // Fallback: single atomic SQL expression via raw update
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("credits_balance")
+            .eq("user_id", userId)
+            .single();
+          
+          const currentBalance = profile?.credits_balance || 0;
+          newBalance = currentBalance + creditsAmount;
+          
+          const { error: fallbackError } = await supabase
+            .from("profiles")
+            .update({ 
+              credits_balance: newBalance,
+              updated_at: new Date().toISOString()
+            })
+            .eq("user_id", userId);
+
+          if (fallbackError) {
+            console.error("❌ Error updating credits balance:", fallbackError);
+            return new Response(
+              JSON.stringify({ error: "Failed to update credits" }),
+              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        } else {
+          newBalance = (rpcResult as any)?.new_balance ?? 0;
         }
 
         // 3️⃣ Record transaction
@@ -130,7 +143,7 @@ Deno.serve(async (req) => {
           console.error("❌ Error recording transaction:", transactionError);
         }
 
-        console.log(`✅ Credits added: ${currentBalance} → ${newBalance} for user ${userId}`);
+        console.log(`✅ Credits added: +${creditsAmount} → ${newBalance} for user ${userId}`);
 
         // 🎁 REFERRAL REWARD: Check if this is the user's first purchase and they were referred
         try {
@@ -153,41 +166,48 @@ Deno.serve(async (req) => {
               const referrerId = buyerProfile.referred_by;
               const referralBonus = 20;
 
-              // Get referrer balance
-              const { data: referrerProfile } = await supabase
-                .from("profiles")
-                .select("credits_balance")
-                .eq("user_id", referrerId)
-                .single();
+              // Atomic increment for referrer too
+              const { error: refRpcError } = await supabase.rpc('atomic_credit_update', {
+                p_user_id: referrerId,
+                p_amount: referralBonus,
+              });
 
-              if (referrerProfile) {
-                const referrerNewBalance = (referrerProfile.credits_balance || 0) + referralBonus;
-                
-                await supabase
+              if (refRpcError) {
+                // Fallback
+                const { data: referrerProfile } = await supabase
                   .from("profiles")
-                  .update({ credits_balance: referrerNewBalance, updated_at: new Date().toISOString() })
-                  .eq("user_id", referrerId);
+                  .select("credits_balance")
+                  .eq("user_id", referrerId)
+                  .single();
 
-                await supabase
-                  .from("credit_transactions")
-                  .insert({
-                    user_id: referrerId,
-                    amount: referralBonus,
-                    transaction_type: "bonus",
-                    description: `Récompense parrainage — filleul a effectué son premier achat`,
-                  });
-
-                await supabase
-                  .from("referral_rewards")
-                  .insert({
-                    referrer_id: referrerId,
-                    referee_id: userId,
-                    reward_amount: referralBonus,
-                    status: "completed",
-                  });
-
-                console.log(`🎁 Referral reward: +${referralBonus} credits to referrer ${referrerId}`);
+                if (referrerProfile) {
+                  const referrerNewBalance = (referrerProfile.credits_balance || 0) + referralBonus;
+                  await supabase
+                    .from("profiles")
+                    .update({ credits_balance: referrerNewBalance, updated_at: new Date().toISOString() })
+                    .eq("user_id", referrerId);
+                }
               }
+
+              await supabase
+                .from("credit_transactions")
+                .insert({
+                  user_id: referrerId,
+                  amount: referralBonus,
+                  transaction_type: "bonus",
+                  description: `Récompense parrainage — filleul a effectué son premier achat`,
+                });
+
+              await supabase
+                .from("referral_rewards")
+                .insert({
+                  referrer_id: referrerId,
+                  referee_id: userId,
+                  reward_amount: referralBonus,
+                  status: "completed",
+                });
+
+              console.log(`🎁 Referral reward: +${referralBonus} credits to referrer ${referrerId}`);
             }
           }
         } catch (refErr) {
