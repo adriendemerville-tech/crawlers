@@ -1027,12 +1027,14 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
 
 const AuditCompare = () => {
   const { user } = useAuth();
-  const { balance, refreshBalance } = useCredits();
+  const { balance, refreshBalance, isAgencyPro } = useCredits();
+  const { isAdmin } = useAdmin();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   useCanonicalHreflang('/audit-compare');
   const t = i18n[language];
+  const isUnlimited = isAgencyPro || isAdmin;
 
   const [url1, setUrl1] = useState('');
   const [url2, setUrl2] = useState('');
