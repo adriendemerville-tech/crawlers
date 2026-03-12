@@ -289,12 +289,20 @@ export function Header() {
             )
           ) : null}
           {isAuditExpertPage ? (
-            <a href="/modifier-code-wordpress" target="_blank" rel="noopener noreferrer">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                <Puzzle className="h-4 w-4" />
-                <span className="text-sm">WordPress</span>
-              </Button>
-            </a>
+            <>
+              <a href="/modifier-code-wordpress" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <Puzzle className="h-4 w-4" />
+                  <span className="text-sm">WordPress</span>
+                </Button>
+              </a>
+              <a href="/site-crawl" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <Globe className="h-4 w-4" />
+                  <span className="text-sm">Crawl</span>
+                </Button>
+              </a>
+            </>
           ) : (
             <>
               <Link to="/observatoire">
