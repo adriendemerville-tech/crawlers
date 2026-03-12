@@ -1359,7 +1359,7 @@ RÈGLE SOURCE D'INSPIRATION: L'inspiration_source DOIT avoir le même core busin
 
 RÈGLE MOTS-CLÉS STRATÉGIQUES: La liste de mots-clés DOIT OBLIGATOIREMENT contenir au moins une requête directement liée au core business du site. Ex: pour un agent IA → "agent IA", "agent IA entreprise", "automatisation IA TPE" ; pour un plombier → "plombier Paris", "dépannage plomberie". Si aucun mot-clé core business n'apparaît dans les données DataForSEO, AJOUTE-LE manuellement avec volume estimé et rank "non classé".
 
-DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS. Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (non classé, volume>200).
+DONNÉES DE MARCHÉ RÉELLES (DataForSEO): Utilise les volumes, difficultés et positions RÉELS. Identifie Quick Wins (position 11-20, volume>100), Contenus manquants (mots-clés pertinents où le site n'est PAS classé, volume>50). IMPORTANT: Tu DOIS TOUJOURS générer au moins 2-3 content_gaps en analysant les thématiques du secteur où le site n'a pas de contenu, même si les données DataForSEO ne montrent pas ces mots-clés explicitement. Déduis-les du secteur d'activité et des concurrents.
 
 13 MODULES D'ANALYSE:
 A. ÉCOSYSTÈME: 1.Market Leader 2.Concurrent Direct 3.Challenger 4.Source d'Inspiration
