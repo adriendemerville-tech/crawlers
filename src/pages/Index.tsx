@@ -635,7 +635,7 @@ const Index = () => {
         </section>
 
         <Suspense fallback={<SectionSkeleton />}>
-          <GEOFAQSection />
+          <FAQSection />
         </Suspense>
       </main>
       <Suspense fallback={<div className="h-48 bg-muted/10" />}>
