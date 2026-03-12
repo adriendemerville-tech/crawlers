@@ -358,15 +358,6 @@ export default function SiteCrawl() {
   const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
 
-  // Gate: restrict to paying subscribers
-  useEffect(() => {
-    if (!loading && !adminLoading) {
-      if (!user || !isUnlimitedUser) {
-        navigate('/tarifs', { replace: true });
-      }
-    }
-  }, [user, loading, adminLoading, isUnlimitedUser, navigate]);
-
   // Load past crawls
   useEffect(() => {
     if (!user) return;
@@ -419,8 +410,7 @@ export default function SiteCrawl() {
     return () => clearInterval(interval);
   }, [crawlResult]);
 
-  // Early return AFTER all hooks
-  if (loading || adminLoading || !user || !isUnlimitedUser) {
+  if (loading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
