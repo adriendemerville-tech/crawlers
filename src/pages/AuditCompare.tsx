@@ -22,7 +22,8 @@ import { useSpotifyTrackRotation } from '@/components/ExpertAudit/useSpotifyTrac
 import { PatienceCards } from '@/components/ExpertAudit/PatienceCards';
 import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { UrlValidationBanner } from '@/components/UrlValidationBanner';
-import { 
+import { InlineAuthForm } from '@/components/ExpertAudit/InlineAuthForm';
+import {
   Swords, Globe, Target, Brain, CheckCircle2, Search, 
   Music, Star, TrendingUp, TrendingDown,
   MessageSquare, Zap, Loader2, Check, Link2, FileText,
