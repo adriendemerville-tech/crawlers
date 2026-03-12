@@ -180,6 +180,14 @@ Deno.serve(async (req) => {
       status: 'queued',
     }).eq('id', crawlId);
 
+    // Update monthly page counter with ACTUAL urls discovered (not the max limit)
+    if (!isUnlimited) {
+      await supabase
+        .from('profiles')
+        .update({ crawl_pages_this_month: usedThisMonth + urls.length } as any)
+        .eq('user_id', userId);
+    }
+
     // Create the crawl job with advanced options
     const { data: job, error: jobError } = await supabase
       .from('crawl_jobs')
