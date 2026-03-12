@@ -190,7 +190,9 @@ const ExpertAudit = () => {
         <ExpertAuditContent />
         <ExpertAuditFAQ />
       </main>
-      <Footer />
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };
