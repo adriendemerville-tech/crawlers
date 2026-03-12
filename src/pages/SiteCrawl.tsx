@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot } from 'lucide-react';
+import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot, FileCode2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -68,6 +68,7 @@ const crawlI18n = {
     noTitle: '(sans titre)',
     words: 'Mots:',
     imgsNoAlt: 'Imgs sans alt:',
+    weight: 'Poids:',
     previousCrawls: 'Crawls précédents',
     errorCrawl: 'Erreur lors du crawl',
     advancedOptions: 'Options avancées',
@@ -137,6 +138,7 @@ const crawlI18n = {
     noTitle: '(no title)',
     words: 'Words:',
     imgsNoAlt: 'Imgs no alt:',
+    weight: 'Weight:',
     previousCrawls: 'Previous crawls',
     errorCrawl: 'Crawl error',
     advancedOptions: 'Advanced options',
@@ -206,6 +208,7 @@ const crawlI18n = {
     noTitle: '(sin título)',
     words: 'Palabras:',
     imgsNoAlt: 'Imgs sin alt:',
+    weight: 'Peso:',
     previousCrawls: 'Crawls anteriores',
     errorCrawl: 'Error de crawl',
     advancedOptions: 'Opciones avanzadas',
@@ -987,7 +990,7 @@ export default function SiteCrawl() {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
               {/* Métriques globales */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                 <Card className="border">
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-foreground">{crawlResult.crawled_pages}</div>
@@ -1018,6 +1021,21 @@ export default function SiteCrawl() {
                     <div className="text-xs text-muted-foreground mt-1">{t.totalErrors}</div>
                   </CardContent>
                 </Card>
+                {/* Weight benchmark */}
+                {(() => {
+                  const pagesWithWeight = pages.filter(p => (p as any).html_size_bytes > 0);
+                  if (pagesWithWeight.length === 0) return null;
+                  const avgWeightKB = Math.round(pagesWithWeight.reduce((s, p) => s + ((p as any).html_size_bytes || 0), 0) / pagesWithWeight.length / 1024);
+                  const weightColor = avgWeightKB < 100 ? 'text-emerald-500' : avgWeightKB < 500 ? 'text-amber-500' : 'text-destructive';
+                  return (
+                    <Card className="border">
+                      <CardContent className="p-4 text-center">
+                        <div className={`text-2xl font-bold ${weightColor}`}>{avgWeightKB} Ko</div>
+                        <div className="text-xs text-muted-foreground mt-1">{language === 'fr' ? 'Poids moyen' : language === 'es' ? 'Peso medio' : 'Avg weight'}</div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
               </div>
 
               {/* Near-duplicate & Schema.org alerts */}
@@ -1166,7 +1184,7 @@ export default function SiteCrawl() {
 
                         {expandedPage === page.id && (
                           <div className="px-4 pb-3 pt-1 border-t bg-muted/30 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
                               <div className="flex items-center gap-1.5">
                                 <Code2 className="w-3.5 h-3.5 text-muted-foreground" />
                                 <span className="text-muted-foreground">H1:</span>
@@ -1187,6 +1205,17 @@ export default function SiteCrawl() {
                                 <span className="text-muted-foreground">Status:</span>
                                 <span className={page.http_status === 200 ? 'text-emerald-500' : 'text-destructive'}>{page.http_status}</span>
                               </div>
+                              {(page as any).html_size_bytes > 0 && (() => {
+                                const sizeKB = Math.round((page as any).html_size_bytes / 1024);
+                                const weightColor = sizeKB < 100 ? 'text-emerald-500' : sizeKB < 500 ? 'text-amber-500' : 'text-destructive';
+                                return (
+                                  <div className="flex items-center gap-1.5">
+                                    <FileCode2 className="w-3.5 h-3.5 text-muted-foreground" />
+                                    <span className="text-muted-foreground">{t.weight}</span>
+                                    <span className={weightColor}>{sizeKB} Ko</span>
+                                  </div>
+                                );
+                              })()}
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                               {page.has_schema_org && <Badge variant="secondary" className="text-[10px]">Schema.org ✓</Badge>}

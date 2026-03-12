@@ -79,13 +79,16 @@ interface HtmlAnalysis {
   metaDescContent: string;
   h1Count: number;
   h1Contents: string[];
-  h2Count: number;       // NOUVEAU: Comptage des H2
-  h2Contents: string[];  // NOUVEAU: Contenu des H2
+  h2Count: number;
+  h2Contents: string[];
   wordCount: number;
   hasSchemaOrg: boolean;
   schemaTypes: string[];
   isHttps: boolean;
   insights: ExpertInsights;
+  imagesTotal: number;
+  imagesMissingAlt: number;
+  htmlSizeBytes: number;
 }
 
 interface RobotsAnalysis {
@@ -604,11 +607,25 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
   // === ÉTAPE 3 : Analyse du profil de liens (DOM complet) ===
   const linkProfile = analyzeLinkProfile(doc, url);
   
-  // === ÉTAPE 4 : Nettoyage du DOM pour calcul du texte ===
-  const scriptsAndStyles = doc.querySelectorAll('script, style, noscript');
+  // === ÉTAPE 4 : Analyse des images AVANT nettoyage DOM ===
+  const imgElements = doc.querySelectorAll('img, amp-img, image');
+  let imagesTotal = imgElements.length;
+  let imagesMissingAlt = 0;
+  for (let i = 0; i < imgElements.length; i++) {
+    const el = imgElements[i] as Element;
+    const alt = el.getAttribute('alt');
+    if (!alt || alt.trim().length === 0) imagesMissingAlt++;
+  }
+  // Also count <source> with image types
+  const sourceElements = doc.querySelectorAll('source[type^="image/"], source[srcset]');
+  imagesTotal += sourceElements.length;
+  console.log(`[analyzeHtml] 🖼️ Images: ${imagesTotal} total, ${imagesMissingAlt} missing alt`);
+
+  // === ÉTAPE 5 : Nettoyage du DOM pour calcul du texte ===
+  const scriptsAndStyles = doc.querySelectorAll('script, style, noscript, template');
   scriptsAndStyles.forEach(el => (el as Element).remove());
   
-  // === ÉTAPE 5 : Calcul du word count sur le texte propre ===
+  // === ÉTAPE 6 : Calcul du word count sur le texte propre ===
   const bodyText = doc.body?.textContent || '';
   const cleanText = bodyText.replace(/\s+/g, ' ').trim();
   const wordCount = cleanText.split(' ').filter(w => w.length > 2).length;
@@ -618,6 +635,9 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
   
   // Content density (code vs text ratio)
   const contentDensity = analyzeContentDensity(html, cleanText);
+
+  // HTML size in bytes
+  const htmlSizeBytes = new TextEncoder().encode(html).length;
   
   const insights: ExpertInsights = {
     semanticConsistency,
@@ -641,7 +661,10 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
     hasSchemaOrg: jsonLdValidation.valid && jsonLdValidation.count > 0,
     schemaTypes: jsonLdValidation.types,
     isHttps: url.startsWith('https://'),
-    insights
+    insights,
+    imagesTotal,
+    imagesMissingAlt,
+    htmlSizeBytes,
   };
 }
 
@@ -682,7 +705,10 @@ function createEmptyAnalysis(url: string): HtmlAnalysis {
       contentDensity: { ratio: 0, verdict: 'unknown', htmlSize: 0, textSize: 0 },
       linkProfile: { internal: 0, external: 0, total: 0, toxicAnchors: [], toxicAnchorsCount: 0 },
       jsonLdValidation: { valid: false, types: [], parseErrors: [], count: 0 }
-    }
+    },
+    imagesTotal: 0,
+    imagesMissingAlt: 0,
+    htmlSizeBytes: 0,
   };
 }
 
