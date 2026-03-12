@@ -1455,7 +1455,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const { url, lang } = await req.json();
+    const outputLang = lang || 'fr';
     
     if (!url) {
       return new Response(
