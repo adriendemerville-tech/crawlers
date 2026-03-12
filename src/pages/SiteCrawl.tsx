@@ -324,21 +324,6 @@ export default function SiteCrawl() {
   const t = crawlI18n[language];
 
   const isUnlimitedUser = isAgencyPro || isAdmin;
-  useEffect(() => {
-    if (!loading && !adminLoading) {
-      if (!user || !isUnlimitedUser) {
-        navigate('/tarifs', { replace: true });
-      }
-    }
-  }, [user, loading, adminLoading, isUnlimitedUser, navigate]);
-
-  if (loading || adminLoading || !user || !isUnlimitedUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   const [url, setUrl] = useState('');
   const [maxPages, setMaxPages] = useState(50);
