@@ -40,6 +40,8 @@ Deno.serve(async (req) => {
     const resetLink = data?.properties?.action_link || '';
     
     const emailPayload = {
+      run_id: crypto.randomUUID(),
+      message_id: crypto.randomUUID(),
       to: email,
       subject: 'Réinitialisation de votre mot de passe — Crawlers',
       html: `
@@ -59,11 +61,15 @@ Deno.serve(async (req) => {
         </div>
       `,
       from: 'noreply@notify.crawlers.fr',
+      sender_domain: 'notify.crawlers.fr',
       purpose: 'transactional',
+      label: 'password-reset',
+      text: `Réinitialiser votre mot de passe Crawlers: ${resetLink}`,
+      queued_at: new Date().toISOString(),
     };
 
     const { error: queueError } = await supabase.rpc('enqueue_email', {
-      queue_name: 'transactional_email_queue',
+      queue_name: 'transactional_emails',
       payload: emailPayload,
     });
 

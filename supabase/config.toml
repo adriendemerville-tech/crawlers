@@ -1,106 +1,75 @@
 project_id = "tutlimtasnjabdfhpewu"
 
-[functions.fetch-news]
-verify_jwt = false
-
-[functions.audit-expert-seo]
-verify_jwt = false
-
-[functions.sitemap]
-verify_jwt = false
-
-[functions.expert-audit]
-verify_jwt = false
-
-[functions.audit-strategique-ia]
-verify_jwt = false
-
-[functions.diagnose-hallucination]
-verify_jwt = false
-
-[functions.share-report]
-verify_jwt = false
-
-[functions.resolve-share]
-verify_jwt = false
-
-[functions.audit-local-seo]
-verify_jwt = false
-
-[functions.generate-corrective-code]
-verify_jwt = false
-
-[functions.create-checkout]
-verify_jwt = false
-
-[functions.stripe-webhook]
-verify_jwt = false
-
-[functions.get-final-script]
-verify_jwt = false
-
-[functions.save-audit]
-verify_jwt = false
-
-[functions.ensure-profile]
-verify_jwt = false
-
-[functions.create-credit-checkout]
-verify_jwt = false
-
-[functions.generate-more-keywords]
-verify_jwt = false
-
-[functions.track-analytics]
-verify_jwt = false
-
-[functions.wpsync]
-verify_jwt = false
-
-[functions.update-config]
-verify_jwt = false
-
-[functions.apply-referral]
-verify_jwt = false
-
-[functions.track-share-click]
-verify_jwt = false
-
-[functions.summarize-report]
-verify_jwt = false
-
-[functions.gsc-auth]
-verify_jwt = false
-
-[functions.sdk-status]
-verify_jwt = false
-
-[functions.generate-patience-cards]
-verify_jwt = false
-
-[functions.generate-blog-from-news]
-verify_jwt = false
-
-[functions.rss-feed]
-verify_jwt = false
-
-[functions.calculate-llm-volumes]
-verify_jwt = false
-
-[functions.update-market-trends]
-verify_jwt = false
-
-[functions.audit-compare]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = false
-
-[functions.send-verification-code]
-verify_jwt = false
-
-[functions.verify-email-code]
-verify_jwt = false
-
-[functions.send-password-reset]
-verify_jwt = false
+[functions]
+  [functions.apply-referral]
+    verify_jwt = false
+  [functions.audit-compare]
+    verify_jwt = false
+  [functions.audit-expert-seo]
+    verify_jwt = false
+  [functions.audit-local-seo]
+    verify_jwt = false
+  [functions.audit-strategique-ia]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.calculate-llm-volumes]
+    verify_jwt = false
+  [functions.create-checkout]
+    verify_jwt = false
+  [functions.create-credit-checkout]
+    verify_jwt = false
+  [functions.diagnose-hallucination]
+    verify_jwt = false
+  [functions.ensure-profile]
+    verify_jwt = false
+  [functions.expert-audit]
+    verify_jwt = false
+  [functions.fetch-news]
+    verify_jwt = false
+  [functions.generate-blog-from-news]
+    verify_jwt = false
+  [functions.generate-corrective-code]
+    verify_jwt = false
+  [functions.generate-more-keywords]
+    verify_jwt = false
+  [functions.generate-patience-cards]
+    verify_jwt = false
+  [functions.get-final-script]
+    verify_jwt = false
+  [functions.gsc-auth]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = false
+  [functions.resolve-share]
+    verify_jwt = false
+  [functions.rss-feed]
+    verify_jwt = false
+  [functions.save-audit]
+    verify_jwt = false
+  [functions.sdk-status]
+    verify_jwt = false
+  [functions.send-password-reset]
+    verify_jwt = false
+  [functions.send-verification-code]
+    verify_jwt = false
+  [functions.share-report]
+    verify_jwt = false
+  [functions.sitemap]
+    verify_jwt = false
+  [functions.stripe-webhook]
+    verify_jwt = false
+  [functions.summarize-report]
+    verify_jwt = false
+  [functions.track-analytics]
+    verify_jwt = false
+  [functions.track-share-click]
+    verify_jwt = false
+  [functions.update-config]
+    verify_jwt = false
+  [functions.update-market-trends]
+    verify_jwt = false
+  [functions.verify-email-code]
+    verify_jwt = false
+  [functions.wpsync]
+    verify_jwt = false
