@@ -62,6 +62,52 @@ interface FixMetadata {
   category: string;
 }
 
+/** Card noire avec le snippet à copier-coller pour brancher le site */
+function PlugSnippetCard({ apiKey, siteDomain }: { apiKey?: string; siteDomain: string }) {
+  const [snippetCopied, setSnippetCopied] = useState(false);
+  const displayKey = apiKey || 'VOTRE-CLE-API';
+  const snippet = `<script>\n  window.CRAWLERS_API_KEY = "${displayKey}";\n</script>\n<script src="https://crawlers.fr/widget.js" defer></script>`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(snippet);
+    setSnippetCopied(true);
+    setTimeout(() => setSnippetCopied(false), 2000);
+  };
+
+  return (
+    <div className="rounded-lg overflow-hidden border border-border">
+      <div className="bg-zinc-950 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Cable className="w-4 h-4 text-violet-400" />
+            <span className="text-sm font-semibold text-white">Branchez {siteDomain}</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopy}
+            className="h-7 px-2 text-zinc-400 hover:text-white hover:bg-zinc-800"
+          >
+            {snippetCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+            <span className="ml-1 text-[11px]">{snippetCopied ? 'Copié !' : 'Copier'}</span>
+          </Button>
+        </div>
+        <pre className="text-[11px] leading-relaxed font-mono text-emerald-400 bg-zinc-900 rounded-md p-3 overflow-x-auto whitespace-pre border border-zinc-800">
+{`<script>
+  window.CRAWLERS_API_KEY = "${displayKey}";
+</script>
+<script src="https://crawlers.fr/widget.js"
+        defer></script>`}
+        </pre>
+        <p className="text-[10px] text-zinc-500 leading-snug">
+          Collez ce code avant <code className="text-zinc-400 bg-zinc-800 px-1 rounded">&lt;/head&gt;</code> ou dans une balise HTML personnalisée GTM.
+          {!apiKey && <span className="block mt-1 text-amber-500">⚠ Ajoutez d'abord ce site dans Mon Espace → Mes Sites pour obtenir votre clé API.</span>}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 interface SmartConfiguratorProps {
   isOpen: boolean;
   onClose: () => void;
