@@ -1438,23 +1438,18 @@ export function SmartConfigurator({
                     </Button>
                     {/* Inject rejection inline notification */}
                     {injectRejected && (
-                      <motion.a
-                        href="/modifier-code-wordpress"
+                      <motion.div
                         initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0 }}
-                        className="flex items-center gap-1.5 text-xs font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2.5 py-1.5 cursor-pointer hover:bg-destructive/20 transition-colors whitespace-nowrap"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          window.open('/modifier-code-wordpress', '_blank');
-                        }}
+                        className="flex items-center gap-1.5 text-xs font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2.5 py-1.5 whitespace-nowrap"
                       >
                         <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                        <span>Plugin non connecté</span>
-                        <Plug className="w-3 h-3 flex-shrink-0 opacity-60" />
-                      </motion.a>
+                        <span>Aucune connexion détectée (GTM / WordPress)</span>
+                        <Cable className="w-3 h-3 flex-shrink-0 opacity-60" />
+                      </motion.div>
                     )}
-                    {/* Inject to WordPress button */}
+                    {/* Inject to site button */}
                     <motion.div
                       animate={shakeInject ? { x: [0, -6, 6, -5, 5, -3, 3, -1, 1, 0] } : {}}
                       transition={shakeInject ? { duration: 1.5, ease: 'easeInOut' } : {}}
@@ -1468,7 +1463,7 @@ export function SmartConfigurator({
                       {isApplying ? (
                         <>
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          Injection...
+                          Vérification...
                         </>
                       ) : applySuccess ? (
                         <>
@@ -1483,14 +1478,14 @@ export function SmartConfigurator({
                       )}
                     </Button>
                     </motion.div>
-                    {applySuccess && (
+                    {applySuccess && connectionMethod && (
                       <motion.span
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0 }}
                         className="text-xs font-medium text-emerald-500 whitespace-nowrap"
                       >
-                        ✅ Injecté avec succès !
+                        ✅ Injecté via {connectionMethod === 'wordpress' ? 'WordPress' : 'GTM Widget'}
                       </motion.span>
                     )}
                   </>
