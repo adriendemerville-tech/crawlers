@@ -36,7 +36,7 @@ const translations = {
     cta: 'See an example of a fix',
   },
   es: {
-    title: 'Sus correcciones técnicas, generadas en 3 clics.',
+    title: 'Código correctivo SEO & GEO: sus correcciones técnicas generadas en 3 clics',
     subtitlePart1: 'Identificar un problema sin solución es frustrante.',
     subtitleHighlight: 'Auditoría Experta',
     subtitlePart2: ', reciba el',

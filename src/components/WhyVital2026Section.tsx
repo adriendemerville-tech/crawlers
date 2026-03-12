@@ -42,7 +42,7 @@ const translations = {
   },
   en: {
     badge: 'Alert 2026',
-    title: 'Why is this vital in 2026?',
+    title: 'Why optimizing your SEO and AI visibility is vital in 2026',
     subtitle: 'The rules have changed. Here\'s what you\'re risking.',
     points: [
       {
