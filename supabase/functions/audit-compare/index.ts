@@ -147,6 +147,47 @@ function extractContentDepth(html: string, domain: string): ContentDepth {
   };
 }
 
+// ==================== BRAND COLOR EXTRACTION ====================
+
+function extractBrandColor(html: string): string | null {
+  // 1. <meta name="theme-color" content="#xxx">
+  const themeColorMatch = html.match(/<meta\s+name=["']theme-color["']\s+content=["']([^"']+)["']/i) ||
+                          html.match(/<meta\s+content=["']([^"']+)["']\s+name=["']theme-color["']/i);
+  if (themeColorMatch?.[1] && /^#[0-9a-fA-F]{3,8}$/.test(themeColorMatch[1].trim())) {
+    return themeColorMatch[1].trim();
+  }
+  
+  // 2. <meta property="og:color" ...> (less common)
+  const ogColorMatch = html.match(/<meta\s+property=["']og:color["']\s+content=["']([^"']+)["']/i);
+  if (ogColorMatch?.[1] && /^#[0-9a-fA-F]{3,8}$/.test(ogColorMatch[1].trim())) {
+    return ogColorMatch[1].trim();
+  }
+
+  // 3. Most frequently used non-white/black/gray hex color in inline styles & CSS
+  const colorMatches = html.match(/#[0-9a-fA-F]{6}/g) || [];
+  const colorCounts = new Map<string, number>();
+  for (const c of colorMatches) {
+    const lower = c.toLowerCase();
+    // Skip white, black, grays, near-white, near-black
+    if (['#ffffff', '#000000', '#f5f5f5', '#333333', '#666666', '#999999', '#cccccc', '#eeeeee', '#fafafa', '#f0f0f0', '#e5e5e5', '#d4d4d4', '#a3a3a3', '#737373', '#525252', '#404040', '#262626', '#171717'].includes(lower)) continue;
+    // Skip near-gray (all channels within 30 of each other)
+    const r = parseInt(lower.slice(1, 3), 16);
+    const g = parseInt(lower.slice(3, 5), 16);
+    const b = parseInt(lower.slice(5, 7), 16);
+    const maxC = Math.max(r, g, b);
+    const minC = Math.min(r, g, b);
+    if (maxC - minC < 30) continue; // too gray
+    colorCounts.set(lower, (colorCounts.get(lower) || 0) + 1);
+  }
+  
+  if (colorCounts.size > 0) {
+    const sorted = [...colorCounts.entries()].sort((a, b) => b[1] - a[1]);
+    return sorted[0][0];
+  }
+  
+  return null;
+}
+
 // ==================== PAGE METADATA EXTRACTION ====================
 
 interface PageMetadata {
@@ -156,6 +197,7 @@ interface PageMetadata {
   context: string;
   contentDepth: ContentDepth;
   rawHtml: string;
+  brandColor: string | null;
 }
 
 async function extractPageMetadata(url: string, domain: string): Promise<PageMetadata> {
