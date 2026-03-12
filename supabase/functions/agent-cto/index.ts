@@ -346,6 +346,7 @@ Analyse cet audit en te basant UNIQUEMENT sur les données de fiabilité fournie
           avg_impact_score: reliability.avg_impact_score,
           trend: reliability.trend,
           grade_distribution: reliability.grade_distribution,
+          widget_connection_rate: reliability.widget_connection_rate,
         },
       },
     }
