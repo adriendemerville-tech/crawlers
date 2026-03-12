@@ -150,8 +150,9 @@ Deno.serve(async (req) => {
     // Fetch robots.txt
     let robotsTxt: string | null = null;
     try {
-      const robotsResponse = await fetch(robotsTxtUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AIBotChecker/1.0)' }
+      const { response: robotsResponse } = await stealthFetch(robotsTxtUrl, {
+        timeout: 8000,
+        maxRetries: 1,
       });
       if (robotsResponse.ok) {
         robotsTxt = await robotsResponse.text();
