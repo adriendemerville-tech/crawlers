@@ -31,6 +31,7 @@ import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
 import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { AIBotsCard } from './AIBotsCard';
 import { ImageQualityCard } from './ImageQualityCard';
+import { PageWeightCard } from './PageWeightCard';
 import { MethodologyPopover } from './MethodologyPopover';
 import { DarkSocialCard } from './DarkSocialCard';
 import { FreshnessSignalsCard } from './FreshnessSignalsCard';
