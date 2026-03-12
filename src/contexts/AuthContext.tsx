@@ -19,6 +19,8 @@ interface Profile {
   agency_report_header_text: string | null;
   agency_report_footer_text: string | null;
   plan_type: string;
+  subscription_expires_at: string | null;
+  stripe_subscription_id: string | null;
   gsc_access_token: string | null;
   created_at: string;
   updated_at: string;

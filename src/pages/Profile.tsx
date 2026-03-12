@@ -19,6 +19,7 @@ import { AdminDashboard } from '@/components/Admin';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
+import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
 
 const translations = {
   fr: {
@@ -166,6 +167,7 @@ export default function Profile() {
               </h1>
             </div>
 
+            <FreeTrialBanner />
             <Tabs defaultValue={initialTab} className="space-y-6">
               <TabsList className="w-full flex">
                 {isProUser && (
