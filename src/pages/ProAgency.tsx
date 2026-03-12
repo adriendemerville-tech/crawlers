@@ -186,6 +186,7 @@ const translations = {
       { q: 'What exactly is white label?', a: 'You can customize reports with your own logo, colors and contact details. Your clients will never see the Crawlers.fr brand.' },
       { q: 'Are the 3 accounts independent?', a: 'Yes, each team member has their own login. The main account manages permissions from the console.' },
       { q: 'Is there a minimum commitment?', a: 'No, the subscription has no commitment. You pay monthly and can stop whenever you want.' },
+      { q: 'What is the Fair Use Policy for multi-page crawl?', a: 'Your Pro Agency subscription includes 5,000 crawled pages per month. Beyond this quota, you can continue by purchasing additional credit packs (Pay-As-You-Go). The counter resets each month.' },
     ],
     ctaBottomTitle: 'Ready to go unlimited?',
     ctaBottomSubtitle: 'Start today and accelerate your SEO/GEO business.',
