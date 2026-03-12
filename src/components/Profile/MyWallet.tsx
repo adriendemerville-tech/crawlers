@@ -131,7 +131,7 @@ export function MyWallet() {
         setShowFreeOfferModal(true);
         return;
       }
-      if (data?.url) window.location.href = data.url;
+      if (data?.url) window.open(data.url, '_blank', 'noopener');
     } catch (err) {
       // Fallback: if any error, show the free offer modal for Pro users without Stripe
       if (isAgencyPro) {
