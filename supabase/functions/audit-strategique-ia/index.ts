@@ -2276,7 +2276,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             model: 'google/gemini-2.5-pro',
             messages: [
-              { role: 'system', content: isContentMode ? CONTENT_MODE_SYSTEM_PROMPT : SYSTEM_PROMPT },
+              { role: 'system', content: pageType === 'editorial' ? EDITORIAL_MODE_SYSTEM_PROMPT : pageType === 'product' ? PRODUCT_MODE_SYSTEM_PROMPT : pageType === 'deep' ? DEEP_PAGE_SYSTEM_PROMPT : SYSTEM_PROMPT },
               { role: 'user', content: userPrompt },
             ],
             temperature: 0.3,
