@@ -64,6 +64,7 @@ Deno.serve(async (req) => {
       sender_domain: 'notify.crawlers.fr',
       purpose: 'transactional',
       label: 'password-reset',
+      text: `Réinitialiser votre mot de passe Crawlers: ${resetLink}`,
       queued_at: new Date().toISOString(),
     };
 
