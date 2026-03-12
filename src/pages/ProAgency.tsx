@@ -224,7 +224,7 @@ const translations = {
     compRows: [
       ['Auditorías técnicas', '1 crédito / auditoría', 'Ilimitado ∞'],
       ['Auditorías estratégicas IA', '2 créditos / auditoría', 'Ilimitado ∞'],
-      ['Crawl multi-páginas', '5-30 créditos / crawl', 'Ilimitado ∞'],
+      ['Crawl multi-páginas', '5-30 créditos / crawl', '5 000 páginas/mes incluidas *'],
       ['Código correctivo', '1 crédito / código', 'Ilimitado ∞'],
       ['Marca blanca', '—', '✓ Incluido'],
       ['Multi-cuentas', '—', '3 cuentas'],
