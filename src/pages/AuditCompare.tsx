@@ -1531,6 +1531,22 @@ const AuditCompare = () => {
 
       <Footer />
       <CreditTopUpModal open={showTopUp} onOpenChange={setShowTopUp} currentBalance={balance} />
+      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-lg font-bold text-foreground">
+              {language === 'fr' ? 'Connectez-vous pour continuer' : language === 'es' ? 'Inicie sesión para continuar' : 'Sign in to continue'}
+            </DialogTitle>
+          </DialogHeader>
+          <InlineAuthForm 
+            defaultMode="signup" 
+            onSuccess={() => {
+              setShowAuthDialog(false);
+              refreshBalance();
+            }} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
