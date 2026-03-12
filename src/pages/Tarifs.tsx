@@ -409,6 +409,16 @@ export default function Tarifs() {
           "availability": "https://schema.org/InStock",
           "priceValidUntil": "2027-12-31",
           "category": "Credit Pack"
+        },
+        {
+          "@type": "Offer",
+          "name": "Pack Ultime — 500 Crédits",
+          "description": "500 crédits à 0.20€/unité. Volume maximal pour crawl intensif et audits à grande échelle. Économie de 60%.",
+          "price": "99.00",
+          "priceCurrency": "EUR",
+          "availability": "https://schema.org/InStock",
+          "priceValidUntil": "2027-12-31",
+          "category": "Credit Pack"
         }
       ]
     },
