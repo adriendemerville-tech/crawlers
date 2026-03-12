@@ -23,6 +23,7 @@ import { PatienceCards } from '@/components/ExpertAudit/PatienceCards';
 import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { UrlValidationBanner } from '@/components/UrlValidationBanner';
 import { InlineAuthForm } from '@/components/ExpertAudit/InlineAuthForm';
+import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
 import {
   Swords, Globe, Target, Brain, CheckCircle2, Search, 
   Music, Star, TrendingUp, TrendingDown,
