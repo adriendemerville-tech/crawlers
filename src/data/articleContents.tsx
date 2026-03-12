@@ -2025,11 +2025,6 @@ Allow: /`}</pre>
           <strong>Cada punto diagnosticado es un hecho técnico binario</strong>, no una estimación probabilística.
         </p>
 
-        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
-          <h3 className="text-lg font-bold text-foreground mb-2">¿Tu sitio es accesible para las IA?</h3>
-          <p className="text-sm text-muted-foreground mb-4">Diagnóstico técnico gratuito — sin métricas estimadas, solo hechos.</p>
-          <RichLinkCard href="/audit-expert" title="Ejecutar mi auditoría GEO gratuita" description="Verifica si tu sitio está técnicamente listo para los LLMs" />
-        </div>
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
       </>
