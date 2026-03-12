@@ -465,6 +465,9 @@ export default function Auth() {
               </Form>
             )}
 
+            {/* Turnstile CAPTCHA */}
+            <div ref={containerRef} className="flex justify-center" />
+
             <div className="text-center text-sm">
               <span className="text-muted-foreground">
                 {isLogin ? t.noAccount : t.hasAccount}{' '}
