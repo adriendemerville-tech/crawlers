@@ -138,6 +138,7 @@ Deno.serve(async (req) => {
         'tableau-comparatif-seo-geo-2026',
         'liste-user-agents-ia-2026',
         'eeat-expertise-algorithme',
+        'share-of-voice-llm-illusion',
       ];
       
       for (const slug of staticBlogSlugs) {

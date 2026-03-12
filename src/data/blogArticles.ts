@@ -683,6 +683,58 @@ export const blogArticles: BlogArticle[] = [
       { title: 'Marie Haynes Consulting', url: 'https://www.mariehaynes.com/' },
     ],
   },
+  // --- ARTICLE SHARE OF VOICE LLM ---
+  {
+    slug: 'share-of-voice-llm-illusion',
+    type: 'pillar',
+    title: {
+      fr: 'Non, il n\'est pas encore possible de tracker précisément la share of voice sur les LLMs',
+      en: 'No, It\'s Not Yet Possible to Accurately Track Share of Voice on LLMs',
+      es: 'No, aún no es posible rastrear con precisión la share of voice en los LLMs',
+    },
+    description: {
+      fr: 'La "Share of Voice" sur les LLMs est une illusion statistique. Sans données de volume réelles d\'OpenAI ou Anthropic, les outils vendent de l\'estimation en laboratoire. Analyse technique.',
+      en: 'LLM "Share of Voice" is a statistical illusion. Without real volume data from OpenAI or Anthropic, tools sell lab-grade estimates. Technical analysis.',
+      es: 'La "Share of Voice" en los LLMs es una ilusión estadística. Sin datos de volumen reales de OpenAI o Anthropic, las herramientas venden estimaciones de laboratorio. Análisis técnico.',
+    },
+    heroImage: sovLlmHero,
+    heroAlt: {
+      fr: 'Loupe révélant des métriques fictives sur un dashboard de share of voice LLM - illusion statistique',
+      en: 'Magnifying glass revealing fake metrics on an LLM share of voice dashboard - statistical illusion',
+      es: 'Lupa revelando métricas ficticias en un dashboard de share of voice LLM - ilusión estadística',
+    },
+    author: 'Adrien de Volontat',
+    date: '2026-03-12',
+    summaryPoints: {
+      fr: [
+        'Aucune "Search Console" pour les LLMs : OpenAI, Anthropic et Perplexity ne partagent aucune donnée de volume réel.',
+        'Les outils comme Meteoria, Qwairy ou GetMint utilisent des simulations synthétiques sans pondération par le volume réel.',
+        'Un prompt générique tapé 100 000 fois a le même poids qu\'un prompt ultra-niché dans ces outils.',
+        'La seule action vérifiable est la compliance technique : robots.txt, JSON-LD, architecture AI-ready.',
+        'Crawlers.fr ne vend pas de la donnée estimée mais du diagnostic d\'accessibilité et de la correction immédiate.',
+      ],
+      en: [
+        'No "Search Console" for LLMs: OpenAI, Anthropic, and Perplexity share zero real volume data.',
+        'Tools like Meteoria, Qwairy, or GetMint use synthetic simulations without real volume weighting.',
+        'A generic prompt typed 100,000 times weighs the same as an ultra-niche prompt in these tools.',
+        'The only verifiable action is technical compliance: robots.txt, JSON-LD, AI-ready architecture.',
+        'Crawlers.fr doesn\'t sell estimated data but accessibility diagnostics and immediate fixes.',
+      ],
+      es: [
+        'No existe "Search Console" para los LLMs: OpenAI, Anthropic y Perplexity no comparten datos de volumen reales.',
+        'Herramientas como Meteoria, Qwairy o GetMint usan simulaciones sintéticas sin ponderación por volumen real.',
+        'Un prompt genérico tecleado 100.000 veces tiene el mismo peso que uno ultra-nicho en estas herramientas.',
+        'La única acción verificable es el cumplimiento técnico: robots.txt, JSON-LD, arquitectura AI-ready.',
+        'Crawlers.fr no vende datos estimados sino diagnóstico de accesibilidad y corrección inmediata.',
+      ],
+    },
+    sources: [
+      { title: 'OpenAI API Documentation', url: 'https://platform.openai.com/docs' },
+      { title: 'Anthropic API Reference', url: 'https://docs.anthropic.com/' },
+      { title: 'Perplexity AI', url: 'https://www.perplexity.ai/' },
+      { title: 'Google Search Generative Experience', url: 'https://blog.google/products/search/' },
+    ],
+  },
 ];
 
 // Fonction helper pour récupérer un article par son slug
