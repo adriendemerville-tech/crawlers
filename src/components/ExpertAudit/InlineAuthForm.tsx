@@ -147,11 +147,14 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
 
   const handleLogin = async (data: { email: string; password: string }) => {
     setIsLoading(true);
+    const verified = await verifyTurnstile();
+    if (!verified) { setIsLoading(false); return; }
     const { error } = await signInWithEmail(data.email, data.password);
     setIsLoading(false);
 
     if (error) {
       toast.error(t.loginError);
+      resetTurnstile();
     } else {
       toast.success(t.loginSuccess);
       onSuccess?.();
