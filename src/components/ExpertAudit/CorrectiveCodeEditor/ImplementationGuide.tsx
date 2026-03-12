@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   ChevronDown, BookOpen, Code, Globe, 
   Lightbulb, ExternalLink, ShoppingBag, Tag,
-  FileCode
+  FileCode, Cable, Plug
 } from 'lucide-react';
 
 interface ImplementationGuideProps {
@@ -21,13 +21,55 @@ const translations = {
 
 **Avantages :**
 • Aucune modification serveur requise
-• Déploiement instantané via GTM ou copier-coller
+• Déploiement instantané via le plugin Crawlers.AI, GTM ou copier-coller
 • Réversible à tout moment
 • Compatible avec tous les CMS et hébergeurs`,
     howTitle: 'Comment l\'implémenter ?',
+    recommended: 'Recommandé',
     methods: {
+      crawlersPlugin: {
+        title: 'Plugin Crawlers.AI',
+        icon: Cable,
+        description: 'Branchez votre site depuis Mon Espace → Mes Sites pour une injection automatique.',
+        steps: [
+          'Allez dans Mon Espace → Mes Sites',
+          'Cliquez sur l\'icône de branchement (prise) de votre site',
+          'Choisissez WordPress (plugin) ou GTM (snippet)',
+          'Le code correctif s\'injecte automatiquement à chaque génération'
+        ],
+        link: '/profil',
+        linkLabel: 'Accéder à Mes Sites',
+        recommended: true,
+      },
+      wordpress: {
+        title: 'WordPress (manuel)',
+        icon: FileCode,
+        description: 'Utilisez un plugin tiers pour injecter le script manuellement.',
+        steps: [
+          'Installez le plugin "Insert Headers and Footers" (WPCode)',
+          'Allez dans Outils → En-têtes et pieds de page',
+          'Collez le script dans la section "Footer"',
+          'Sauvegardez'
+        ],
+        link: 'https://wordpress.org/plugins/insert-headers-and-footers/',
+        linkLabel: 'Voir le plugin WPCode',
+      },
+      gtm: {
+        title: 'Google Tag Manager',
+        icon: Tag,
+        description: 'Créez une balise HTML personnalisée pour un déploiement sans code.',
+        steps: [
+          'Connectez-vous à Google Tag Manager',
+          'Créez une nouvelle balise de type "HTML personnalisé"',
+          'Collez le script dans le champ HTML',
+          'Configurez le déclencheur sur "Toutes les pages"',
+          'Publiez les modifications'
+        ],
+        link: 'https://tagmanager.google.com/',
+        linkLabel: 'Ouvrir Google Tag Manager',
+      },
       general: {
-        title: 'Méthode Générale',
+        title: 'Injection directe',
         icon: Code,
         description: 'Insérez le script juste avant la balise </body> de votre page.',
         steps: [
@@ -36,19 +78,6 @@ const translations = {
           'Collez le script juste avant </body>',
           'Sauvegardez et testez'
         ],
-      },
-      wordpress: {
-        title: 'WordPress',
-        icon: FileCode,
-        description: 'Utilisez un plugin pour injecter le script sans toucher au code.',
-        steps: [
-          'Installez le plugin "Insert Headers and Footers" (WPCode)',
-          'Allez dans Outils → En-têtes et pieds de page',
-          'Collez le script dans la section "Footer"',
-          'Sauvegardez'
-        ],
-        link: 'https://wordpress.org/plugins/insert-headers-and-footers/',
-        linkLabel: 'Voir le plugin WordPress',
       },
       shopify: {
         title: 'Shopify',
@@ -63,22 +92,8 @@ const translations = {
         link: 'https://help.shopify.com/en/manual/online-store/themes/theme-structure/extend/edit-theme-code',
         linkLabel: 'Documentation Shopify',
       },
-      gtm: {
-        title: 'Google Tag Manager',
-        icon: Tag,
-        description: 'Créez une balise HTML personnalisé pour un déploiement sans code.',
-        steps: [
-          'Connectez-vous à Google Tag Manager',
-          'Créez une nouvelle balise de type "HTML personnalisé"',
-          'Collez le script dans le champ HTML',
-          'Configurez le déclencheur sur "Toutes les pages"',
-          'Publiez les modifications'
-        ],
-        link: 'https://tagmanager.google.com/',
-        linkLabel: 'Ouvrir Google Tag Manager',
-      },
     },
-    tip: 'Conseil : Testez toujours en environnement de staging avant de déployer en production.',
+    tip: 'Conseil : Pour un déploiement automatique, branchez votre site depuis Mon Espace → Mes Sites. Le code correctif sera injecté à chaque génération.',
   },
   en: {
     title: 'Implementation Guide',
@@ -87,26 +102,30 @@ const translations = {
 
 **Benefits:**
 • No server modifications required
-• Instant deployment via GTM or copy-paste
+• Instant deployment via Crawlers.AI plugin, GTM or copy-paste
 • Reversible at any time
 • Compatible with all CMS and hosts`,
     howTitle: 'How to implement?',
+    recommended: 'Recommended',
     methods: {
-      general: {
-        title: 'General Method',
-        icon: Code,
-        description: 'Insert the script just before the </body> tag of your page.',
+      crawlersPlugin: {
+        title: 'Crawlers.AI Plugin',
+        icon: Cable,
+        description: 'Connect your site from My Account → My Sites for automatic injection.',
         steps: [
-          'Copy the generated script above',
-          'Open your page\'s HTML file (often index.html)',
-          'Paste the script just before </body>',
-          'Save and test'
+          'Go to My Account → My Sites',
+          'Click the plug icon on your site',
+          'Choose WordPress (plugin) or GTM (snippet)',
+          'Corrective code is automatically injected on each generation'
         ],
+        link: '/profil',
+        linkLabel: 'Go to My Sites',
+        recommended: true,
       },
       wordpress: {
-        title: 'WordPress',
+        title: 'WordPress (manual)',
         icon: FileCode,
-        description: 'Use a plugin to inject the script without touching the code.',
+        description: 'Use a third-party plugin to manually inject the script.',
         steps: [
           'Install the "Insert Headers and Footers" plugin (WPCode)',
           'Go to Tools → Headers and Footers',
@@ -114,20 +133,7 @@ const translations = {
           'Save'
         ],
         link: 'https://wordpress.org/plugins/insert-headers-and-footers/',
-        linkLabel: 'View WordPress plugin',
-      },
-      shopify: {
-        title: 'Shopify',
-        icon: ShoppingBag,
-        description: 'Modify your theme.liquid file to include the script.',
-        steps: [
-          'Go to Online Store → Themes → Actions → Edit code',
-          'Open the theme.liquid file',
-          'Paste the script just before </body>',
-          'Save'
-        ],
-        link: 'https://help.shopify.com/en/manual/online-store/themes/theme-structure/extend/edit-theme-code',
-        linkLabel: 'Shopify Documentation',
+        linkLabel: 'View WPCode plugin',
       },
       gtm: {
         title: 'Google Tag Manager',
@@ -143,8 +149,32 @@ const translations = {
         link: 'https://tagmanager.google.com/',
         linkLabel: 'Open Google Tag Manager',
       },
+      general: {
+        title: 'Direct injection',
+        icon: Code,
+        description: 'Insert the script just before the </body> tag of your page.',
+        steps: [
+          'Copy the generated script above',
+          'Open your page\'s HTML file (often index.html)',
+          'Paste the script just before </body>',
+          'Save and test'
+        ],
+      },
+      shopify: {
+        title: 'Shopify',
+        icon: ShoppingBag,
+        description: 'Modify your theme.liquid file to include the script.',
+        steps: [
+          'Go to Online Store → Themes → Actions → Edit code',
+          'Open the theme.liquid file',
+          'Paste the script just before </body>',
+          'Save'
+        ],
+        link: 'https://help.shopify.com/en/manual/online-store/themes/theme-structure/extend/edit-theme-code',
+        linkLabel: 'Shopify Documentation',
+      },
     },
-    tip: 'Tip: Always test in a staging environment before deploying to production.',
+    tip: 'Tip: For automatic deployment, connect your site from My Account → My Sites. Corrective code will be injected on each generation.',
   },
   es: {
     title: 'Guía de implementación',
@@ -153,26 +183,30 @@ const translations = {
 
 **Ventajas:**
 • No requiere modificaciones del servidor
-• Despliegue instantáneo vía GTM o copiar-pegar
+• Despliegue instantáneo vía plugin Crawlers.AI, GTM o copiar-pegar
 • Reversible en cualquier momento
 • Compatible con todos los CMS y hosts`,
     howTitle: '¿Cómo implementarlo?',
+    recommended: 'Recomendado',
     methods: {
-      general: {
-        title: 'Método General',
-        icon: Code,
-        description: 'Inserte el script justo antes de la etiqueta </body> de su página.',
+      crawlersPlugin: {
+        title: 'Plugin Crawlers.AI',
+        icon: Cable,
+        description: 'Conecte su sitio desde Mi Cuenta → Mis Sitios para inyección automática.',
         steps: [
-          'Copie el script generado arriba',
-          'Abra el archivo HTML de su página (a menudo index.html)',
-          'Pegue el script justo antes de </body>',
-          'Guarde y pruebe'
+          'Vaya a Mi Cuenta → Mis Sitios',
+          'Haga clic en el icono de conexión (enchufe) de su sitio',
+          'Elija WordPress (plugin) o GTM (snippet)',
+          'El código correctivo se inyecta automáticamente en cada generación'
         ],
+        link: '/profil',
+        linkLabel: 'Ir a Mis Sitios',
+        recommended: true,
       },
       wordpress: {
-        title: 'WordPress',
+        title: 'WordPress (manual)',
         icon: FileCode,
-        description: 'Use un plugin para inyectar el script sin tocar el código.',
+        description: 'Use un plugin de terceros para inyectar el script manualmente.',
         steps: [
           'Instale el plugin "Insert Headers and Footers" (WPCode)',
           'Vaya a Herramientas → Headers and Footers',
@@ -180,20 +214,7 @@ const translations = {
           'Guarde'
         ],
         link: 'https://wordpress.org/plugins/insert-headers-and-footers/',
-        linkLabel: 'Ver plugin de WordPress',
-      },
-      shopify: {
-        title: 'Shopify',
-        icon: ShoppingBag,
-        description: 'Modifique su archivo theme.liquid para incluir el script.',
-        steps: [
-          'Vaya a Tienda online → Temas → Acciones → Editar código',
-          'Abra el archivo theme.liquid',
-          'Pegue el script justo antes de </body>',
-          'Guarde'
-        ],
-        link: 'https://help.shopify.com/en/manual/online-store/themes/theme-structure/extend/edit-theme-code',
-        linkLabel: 'Documentación Shopify',
+        linkLabel: 'Ver plugin WPCode',
       },
       gtm: {
         title: 'Google Tag Manager',
@@ -209,8 +230,32 @@ const translations = {
         link: 'https://tagmanager.google.com/',
         linkLabel: 'Abrir Google Tag Manager',
       },
+      general: {
+        title: 'Inyección directa',
+        icon: Code,
+        description: 'Inserte el script justo antes de la etiqueta </body> de su página.',
+        steps: [
+          'Copie el script generado arriba',
+          'Abra el archivo HTML de su página (a menudo index.html)',
+          'Pegue el script justo antes de </body>',
+          'Guarde y pruebe'
+        ],
+      },
+      shopify: {
+        title: 'Shopify',
+        icon: ShoppingBag,
+        description: 'Modifique su archivo theme.liquid para incluir el script.',
+        steps: [
+          'Vaya a Tienda online → Temas → Acciones → Editar código',
+          'Abra el archivo theme.liquid',
+          'Pegue el script justo antes de </body>',
+          'Guarde'
+        ],
+        link: 'https://help.shopify.com/en/manual/online-store/themes/theme-structure/extend/edit-theme-code',
+        linkLabel: 'Documentación Shopify',
+      },
     },
-    tip: 'Consejo: Siempre pruebe en un entorno de staging antes de desplegar en producción.',
+    tip: 'Consejo: Para un despliegue automático, conecte su sitio desde Mi Cuenta → Mis Sitios. El código correctivo se inyectará en cada generación.',
   },
 };
 
@@ -278,14 +323,20 @@ export function ImplementationGuide({ language }: ImplementationGuideProps) {
             <CardContent className="grid gap-3 sm:grid-cols-2">
               {Object.entries(t.methods).map(([key, method]) => {
                 const Icon = method.icon;
+                const isRecommended = 'recommended' in method && method.recommended;
                 return (
                   <div 
                     key={key}
-                    className="p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
+                    className={`p-3 rounded-lg border transition-colors ${isRecommended ? 'border-primary/40 bg-primary/5 hover:bg-primary/10' : 'bg-muted/30 hover:bg-muted/50'}`}
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <Icon className="w-4 h-4 text-primary" />
                       <span className="font-medium text-sm">{method.title}</span>
+                      {isRecommended && (
+                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-primary/40 text-primary">
+                          {'recommended' in t ? (t as any).recommended : '★'}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mb-2">{method.description}</p>
                     <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
@@ -296,7 +347,7 @@ export function ImplementationGuide({ language }: ImplementationGuideProps) {
                     {'link' in method && method.link && (
                       <a
                         href={method.link}
-                        target="_blank"
+                        target={method.link.startsWith('/') ? '_self' : '_blank'}
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
                       >

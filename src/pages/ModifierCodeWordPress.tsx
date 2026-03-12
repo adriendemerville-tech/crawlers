@@ -23,8 +23,8 @@ const PLUGIN_URL = `https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/downlo
 
 const SEO_META = {
   title: 'Comment modifier le code de son site WordPress facilement ? | Crawlers.fr',
-  description: "Optimisez le code de votre site WordPress sans toucher au PHP. Le plugin Crawlers.fr injecte automatiquement les balises SEO, JSON-LD et métadonnées GEO pour les moteurs de réponse IA.",
-  ogTitle: 'Modifier le Code WordPress Sans Coder — Plugin Crawlers.fr',
+  description: "Optimisez le code de votre site WordPress sans toucher au PHP. Le plugin Crawlers.fr ou le widget GTM injecte automatiquement les balises SEO, JSON-LD et métadonnées GEO pour les moteurs de réponse IA.",
+  ogTitle: 'Modifier le Code WordPress Sans Coder — Plugin & Widget Crawlers.fr',
   canonical: `${SITE_URL}/modifier-code-wordpress`,
 };
 
@@ -55,21 +55,21 @@ const STEPS = [
   },
   {
     icon: Download,
-    title: 'Téléchargez le plugin .zip',
-    desc: 'Un fichier léger (<50 Ko) à installer en 30 secondes via Extensions → Ajouter → Téléverser.',
+    title: 'Branchez votre site',
+    desc: 'Depuis Mon Espace → Mes Sites, cliquez sur l\'icône de branchement. Choisissez le plugin WordPress (.php) ou le snippet GTM/Script universel.',
     color: 'text-blue-500',
     bg: 'bg-blue-500/10',
   },
   {
     icon: Link2,
-    title: 'Activez via le Lien Magique',
-    desc: 'Un clic suffit. Le Lien Magique connecte automatiquement votre WordPress à votre compte Crawlers.fr — sans clé API à copier.',
+    title: 'Activez la connexion',
+    desc: 'WordPress : Lien Magique en un clic. GTM / Autres CMS : collez le snippet dans Google Tag Manager ou directement avant </head>.',
     color: 'text-emerald-500',
     bg: 'bg-emerald-500/10',
   },
   {
     icon: RefreshCw,
-    title: 'Synchronisation automatique',
+    title: 'Injection automatique',
     desc: 'Les balises Meta, le JSON-LD structuré et le code correctif GEO sont injectés automatiquement. Votre site parle aux LLMs.',
     color: 'text-amber-500',
     bg: 'bg-amber-500/10',
@@ -85,19 +85,23 @@ const PAIN_POINTS = [
 
 const FAQ_ITEMS = [
   {
-    q: 'Est-ce que le plugin ralentit mon site ?',
-    a: 'Non. Le plugin Crawlers.fr pèse moins de 50 Ko et n\'exécute aucun JavaScript côté visiteur. Il se contente d\'injecter des balises HTML statiques (meta tags, JSON-LD) dans le <head> de vos pages, ce qui n\'impacte pas les performances.',
+    q: 'Est-ce que le plugin / widget ralentit mon site ?',
+    a: 'Non. Le plugin WordPress pèse moins de 50 Ko et n\'exécute aucun JavaScript côté visiteur. Le widget GTM pèse ~2 Ko et s\'exécute en mode différé (defer). Aucun impact sur les performances.',
+  },
+  {
+    q: 'Quelle est la différence entre le plugin WordPress et le snippet GTM ?',
+    a: 'Le plugin WordPress se synchronise automatiquement toutes les 6h via WP Cron et injecte les correctifs dans wp_head/wp_footer. Le snippet GTM/Script universel fonctionne sur tous les CMS (Shopify, React, HTML statique…) et se connecte en temps réel via le widget Crawlers.AI.',
   },
   {
     q: 'Ai-je besoin d\'une clé API ?',
-    a: 'Non. Le système de Lien Magique connecte automatiquement votre WordPress à votre compte Crawlers.fr en un clic. Aucune clé à copier-coller.',
+    a: 'Non. Pour WordPress, le Lien Magique connecte automatiquement en un clic. Pour GTM, le snippet contient déjà votre clé API pré-remplie.',
   },
   {
     q: 'Le plugin fonctionne-t-il avec tous les thèmes WordPress ?',
     a: 'Oui. Le plugin utilise les hooks WordPress standards (wp_head) et ne modifie aucun fichier de thème. Il est compatible avec tous les thèmes et builders (Elementor, Divi, GeneratePress, Astra…).',
   },
   {
-    q: 'Que se passe-t-il si je désactive le plugin ?',
+    q: 'Que se passe-t-il si je désactive le plugin ou retire le snippet ?',
     a: 'Les balises injectées disparaissent proprement. Votre site revient à son état d\'origine. Aucune modification permanente n\'est effectuée sur vos fichiers.',
   },
   {
@@ -106,7 +110,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Le plugin est-il gratuit ?',
-    a: 'Le plugin est gratuit. L\'Audit Expert qui génère les correctifs personnalisés fonctionne avec un système de crédits à partir de 5€ — soit 20 à 50 fois moins cher qu\'un outil comme Semrush.',
+    a: 'Le plugin et le widget sont gratuits. L\'Audit Expert qui génère les correctifs personnalisés fonctionne avec un système de crédits à partir de 5€ — soit 20 à 50 fois moins cher qu\'un outil comme Semrush.',
   },
 ];
 
@@ -200,7 +204,7 @@ const ModifierCodeWordPress = () => {
               </h1>
               <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
                 Optimiser votre site pour les <strong className="text-white">moteurs de réponse IA</strong> (ChatGPT, Perplexity, Gemini) ne nécessite plus de savoir coder.
-                Le plugin Crawlers.fr injecte automatiquement les balises <strong className="text-white">JSON-LD</strong>, les métadonnées SEO et le code GEO — sans toucher à votre thème.
+                Le plugin WordPress ou le widget GTM Crawlers.fr injecte automatiquement les balises <strong className="text-white">JSON-LD</strong>, les métadonnées SEO et le code GEO — sans toucher à votre thème.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <Button
@@ -293,19 +297,19 @@ const ModifierCodeWordPress = () => {
                 Zéro Code
               </Badge>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-                Le plugin Crawlers.fr : un pont intelligent entre l'IA et WordPress
+                Le plugin &amp; widget Crawlers.fr : un pont intelligent entre l'IA et votre site
               </h2>
               <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-                Notre plugin agit comme un <strong className="text-foreground">intermédiaire invisible</strong> entre votre site et la plateforme Crawlers.fr.
-                Il récupère les correctifs générés par l'Audit Expert et les injecte proprement dans votre <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">&lt;head&gt;</code> — sans modifier vos fichiers PHP.
+                Notre plugin WordPress et notre widget GTM agissent comme un <strong className="text-foreground">intermédiaire invisible</strong> entre votre site et la plateforme Crawlers.fr.
+                Ils récupèrent les correctifs générés par l'Audit Expert et les injectent proprement dans votre <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">&lt;head&gt;</code> — sans modifier vos fichiers source.
               </p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
               {[
-                { icon: FileCode, title: 'Injection propre', desc: 'Les balises sont ajoutées via wp_head, le hook standard WordPress. Aucun fichier de thème n\'est modifié.', color: 'text-violet-500' },
-                { icon: Cloud, title: 'Synchronisation cloud', desc: 'Le plugin interroge l\'API Crawlers.fr toutes les 5 minutes pour appliquer les dernières optimisations.', color: 'text-blue-500' },
-                { icon: ShieldCheck, title: 'Réversible à 100%', desc: 'Désactivez le plugin et tout disparaît. Pas de résidus, pas de modifications permanentes.', color: 'text-emerald-500' },
+                { icon: FileCode, title: 'Injection propre', desc: 'WordPress : via wp_head (hook standard). GTM/Script : via le widget Crawlers.AI. Aucun fichier de thème modifié.', color: 'text-violet-500' },
+                { icon: Cloud, title: 'Synchronisation cloud', desc: 'Le plugin interroge l\'API toutes les 6h. Le widget GTM se connecte en temps réel. Dernières optimisations toujours appliquées.', color: 'text-blue-500' },
+                { icon: ShieldCheck, title: 'Réversible à 100%', desc: 'Désactivez le plugin ou retirez le snippet — tout disparaît. Pas de résidus, pas de modifications permanentes.', color: 'text-emerald-500' },
               ].map((feature, i) => (
                 <Card key={i} className="text-center border-border/50 hover:border-primary/30 transition-colors">
                   <CardContent className="pt-8 pb-6 space-y-3">
@@ -390,7 +394,7 @@ const ModifierCodeWordPress = () => {
                     'Génération automatique de JSON-LD Schema.org',
                     'Analyse de la présence GTM / GA4',
                     'Score de "citabilité" par les moteurs de réponse IA',
-                    'Corrections injectables en un clic via le plugin',
+                    'Corrections injectables en un clic via le plugin WordPress ou le widget GTM',
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm">
                       <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -454,8 +458,8 @@ const ModifierCodeWordPress = () => {
                 Contrairement au SEO classique qui optimise pour les pages de résultats Google, le GEO optimise pour les <strong className="text-foreground">réponses générées par les LLMs</strong>. Ces modèles de langage ne "crawlent" pas votre site comme Googlebot : ils s'appuient sur des <strong className="text-foreground">données structurées JSON-LD</strong>, des balises sémantiques claires et des métadonnées enrichies pour décider de vous citer.
               </p>
               <p>
-                Le plugin Crawlers.fr automatise cette optimisation sur WordPress en injectant les bonnes balises SEO, le JSON-LD automatique et les signaux sémantiques que les crawlers IA (GPTBot, PerplexityBot, ClaudeBot) recherchent.
-                Le résultat : un <strong className="text-foreground">gain de performance LLM</strong> mesurable dès la première synchronisation, sans toucher une ligne de code PHP.
+                Le plugin WordPress et le widget GTM Crawlers.fr automatisent cette optimisation en injectant les bonnes balises SEO, le JSON-LD automatique et les signaux sémantiques que les crawlers IA (GPTBot, PerplexityBot, ClaudeBot) recherchent.
+                Le résultat : un <strong className="text-foreground">gain de performance LLM</strong> mesurable dès la première synchronisation, sans toucher une ligne de code.
               </p>
             </div>
           </div>
@@ -490,7 +494,7 @@ const ModifierCodeWordPress = () => {
               Prêt à rendre votre WordPress visible pour l'IA ?
             </h2>
             <p className="text-slate-300 text-lg max-w-xl mx-auto">
-              Téléchargez le plugin, lancez votre Audit Expert et laissez Crawlers.fr optimiser votre code automatiquement.
+              Téléchargez le plugin, collez le snippet GTM ou lancez votre Audit Expert et laissez Crawlers.fr optimiser votre code automatiquement.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
               <Button
@@ -510,7 +514,7 @@ const ModifierCodeWordPress = () => {
               </Button>
             </div>
             <p className="text-xs text-slate-500 pt-4">
-              Plugin compatible WordPress 5.0+ · Aucune dépendance · Licence GPL · <Link to="/blog" className="underline hover:text-slate-300">Documentation technique</Link>
+              Plugin compatible WordPress 5.0+ · Widget GTM compatible tous CMS · Aucune dépendance · Licence GPL · <Link to="/blog" className="underline hover:text-slate-300">Documentation technique</Link>
             </p>
           </div>
         </section>
