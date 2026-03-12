@@ -279,7 +279,7 @@ const translations = {
     agencyFeatures: [
       'Auditoría experta ilimitada',
       'Código correctivo ilimitado',
-      'Crawl multi-páginas ilimitado',
+      'Crawl: 5 000 páginas/mes incluidas',
       'Opción Marca Blanca',
       '3 cuentas incluidas',
       'Soporte prioritario',

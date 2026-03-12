@@ -326,7 +326,7 @@ export default function ProAgency() {
     "brand": { "@type": "Brand", "name": "Crawlers.fr" },
     "offers": {
       "@type": "Offer",
-      "price": "49.00",
+      "price": "59.00",
       "priceCurrency": "EUR",
       "availability": "https://schema.org/InStock",
       "priceValidUntil": "2026-12-31",
