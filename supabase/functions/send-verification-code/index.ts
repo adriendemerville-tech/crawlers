@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     };
 
     const { error: queueError } = await supabase.rpc('enqueue_email', {
-      queue_name: 'transactional_email_queue',
+      queue_name: 'transactional_emails',
       payload: emailPayload,
     });
 
