@@ -297,11 +297,11 @@ const ModifierCodeWordPress = () => {
                 Zéro Code
               </Badge>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-                Le plugin Crawlers.fr : un pont intelligent entre l'IA et WordPress
+                Le plugin &amp; widget Crawlers.fr : un pont intelligent entre l'IA et votre site
               </h2>
               <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-                Notre plugin agit comme un <strong className="text-foreground">intermédiaire invisible</strong> entre votre site et la plateforme Crawlers.fr.
-                Il récupère les correctifs générés par l'Audit Expert et les injecte proprement dans votre <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">&lt;head&gt;</code> — sans modifier vos fichiers PHP.
+                Notre plugin WordPress et notre widget GTM agissent comme un <strong className="text-foreground">intermédiaire invisible</strong> entre votre site et la plateforme Crawlers.fr.
+                Ils récupèrent les correctifs générés par l'Audit Expert et les injectent proprement dans votre <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">&lt;head&gt;</code> — sans modifier vos fichiers source.
               </p>
             </div>
 
