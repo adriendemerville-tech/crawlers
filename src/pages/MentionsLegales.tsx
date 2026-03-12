@@ -45,7 +45,7 @@ const MentionsLegales = () => {
               </h2>
               <div className="bg-muted/50 rounded-lg p-6 space-y-2 text-muted-foreground">
                 <p><strong className="text-foreground">{t3(language, 'Raison sociale :', 'Company name:', 'Razón social:')}</strong> Adrien de Volontat (Entrepreneur individuel)</p>
-                <p><strong className="text-foreground">{t3(language, 'Nom commercial :', 'Trade name:', 'Nombre comercial:')}</strong> Crawlers AI</p>
+                <p><strong className="text-foreground">{t3(language, 'Nom commercial :', 'Trade name:', 'Nombre comercial:')}</strong> Crawlers</p>
                 <p><strong className="text-foreground">SIRET :</strong> 992 399 667 00011</p>
                 <p><strong className="text-foreground">{t3(language, 'Directeur de la publication :', 'Publication Director:', 'Director de la publicación:')}</strong> Adrien de Volontat</p>
                 <p><strong className="text-foreground">{t3(language, 'URL du site :', 'Website URL:', 'URL del sitio:')}</strong> <a href="https://crawlers.fr" className="text-primary hover:underline">https://crawlers.fr</a></p>
@@ -167,7 +167,7 @@ const MentionsLegales = () => {
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {t3(language, 'Dernière mise à jour : 31 janvier 2026', 'Last updated: January 31, 2026', 'Última actualización: 31 de enero de 2026')}
+              {t3(language, 'Dernière mise à jour : 12 mars 2026', 'Last updated: March 12, 2026', 'Última actualización: 12 de marzo de 2026')}
             </p>
           </article>
         </div>
