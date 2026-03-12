@@ -46,6 +46,7 @@ const translations = {
     loginError: 'Identifiants incorrects',
     signupError: 'Erreur lors de l\'inscription',
     userExists: 'Un compte existe déjà avec cet email',
+    or: 'ou',
   },
   en: {
     login: 'Login',
