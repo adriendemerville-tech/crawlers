@@ -51,6 +51,7 @@ const AnalyseSiteWebGratuit = lazy(() => import("./pages/AnalyseSiteWebGratuit")
 const GenerativeEngineOptimization = lazy(() => import("./pages/GenerativeEngineOptimization"));
 const GuideAuditSeo = lazy(() => import("./pages/GuideAuditSeo"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const IntegrationGTM = lazy(() => import("./pages/IntegrationGTM"));
 const SiteCrawl = lazy(() => import("./pages/SiteCrawl"));
 const AuditCompare = lazy(() => import("./pages/AuditCompare"));
 
@@ -119,6 +120,7 @@ const App = () => (
                           <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
                           <Route path="/site-crawl" element={<SiteCrawl />} />
                           <Route path="/audit-compare" element={<AuditCompare />} />
+                          <Route path="/integration-gtm" element={<IntegrationGTM />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
