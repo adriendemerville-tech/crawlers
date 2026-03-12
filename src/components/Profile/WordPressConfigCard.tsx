@@ -383,22 +383,27 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
             <p className="text-xs font-medium text-muted-foreground">
               {t3(language, '1. Copiez ce code', '1. Copy this code', '1. Copie este código')}
             </p>
-            <div className="relative group">
-              <pre className="bg-muted rounded-md p-3 text-[11px] leading-relaxed overflow-x-auto font-mono border">
+            <div className="relative group rounded-lg bg-zinc-950 border border-zinc-800 overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-800 bg-zinc-900/60">
+                <span className="text-[10px] font-mono text-zinc-400">&lt;script&gt;</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 px-1.5 text-[10px] text-zinc-400 hover:text-white hover:bg-zinc-800 gap-1"
+                  onClick={handleCopyGtmSnippet}
+                >
+                  {gtmSnippetCopied ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
+                  {gtmSnippetCopied ? 'OK' : t3(language, 'Copier', 'Copy', 'Copiar')}
+                </Button>
+              </div>
+              <pre className="p-3 text-[11px] leading-relaxed overflow-x-auto font-mono text-emerald-400 whitespace-pre">
 {`<script>
+  // ${t3(language, 'Votre clé secrète', 'Your secret key', 'Su clave secreta')}
   window.CRAWLERS_API_KEY = "${siteApiKey}";
 </script>
 <script src="https://crawlers.fr/widget.js"
         defer></script>`}
               </pre>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-1.5 right-1.5 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={handleCopyGtmSnippet}
-              >
-                {gtmSnippetCopied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-              </Button>
             </div>
           </div>
 
