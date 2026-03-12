@@ -10,12 +10,25 @@ interface RichLinkCardProps {
   titleHighlight?: string;
 }
 
-function RichLinkCardComponent({ href, title, description, imageUrl }: RichLinkCardProps) {
+function RichLinkCardComponent({ href, title, description, imageUrl, titleHighlight }: RichLinkCardProps) {
   const isExternal = href.startsWith('http');
   const Component = isExternal ? 'a' : Link;
   const linkProps = isExternal 
     ? { href, target: '_blank', rel: 'noopener noreferrer' }
     : { to: href };
+
+  const renderTitle = () => {
+    if (!titleHighlight) return title;
+    const idx = title.indexOf(titleHighlight);
+    if (idx === -1) return title;
+    return (
+      <>
+        {title.slice(0, idx)}
+        <span className="text-amber-500">{titleHighlight}</span>
+        {title.slice(idx + titleHighlight.length)}
+      </>
+    );
+  };
 
   return (
     <Component
@@ -34,7 +47,7 @@ function RichLinkCardComponent({ href, title, description, imageUrl }: RichLinkC
       {/* Contenu */}
       <div className="flex-1 min-w-0 flex flex-col justify-center">
         <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors text-base mb-1 line-clamp-1">
-          {title}
+          {renderTitle()}
         </h4>
         <p className="text-sm text-muted-foreground line-clamp-2 m-0">
           {description}
