@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert } from 'lucide-react';
+import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -358,15 +358,6 @@ export default function SiteCrawl() {
   const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
 
-  // Gate: restrict to paying subscribers
-  useEffect(() => {
-    if (!loading && !adminLoading) {
-      if (!user || !isUnlimitedUser) {
-        navigate('/tarifs', { replace: true });
-      }
-    }
-  }, [user, loading, adminLoading, isUnlimitedUser, navigate]);
-
   // Load past crawls
   useEffect(() => {
     if (!user) return;
@@ -419,8 +410,7 @@ export default function SiteCrawl() {
     return () => clearInterval(interval);
   }, [crawlResult]);
 
-  // Early return AFTER all hooks
-  if (loading || adminLoading || !user || !isUnlimitedUser) {
+  if (loading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -595,8 +585,73 @@ export default function SiteCrawl() {
       </Helmet>
       <Header />
 
-      <main className="min-h-screen bg-background pt-20 pb-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <main className="min-h-screen bg-background pt-20 pb-16 relative">
+        {/* Pro Agency upsell overlay for non-subscribers */}
+        {!isUnlimitedUser && (
+          <div className="absolute inset-0 z-30 flex items-start justify-center pt-32 sm:pt-40">
+            <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
+            <Card className="relative z-10 w-full max-w-lg mx-4 border-2 border-violet-500 ring-2 ring-violet-500/30 bg-gradient-to-br from-violet-500/5 via-background to-yellow-500/5 shadow-xl shadow-violet-500/10">
+              <div className="absolute top-0 left-0">
+                <Badge className="rounded-none rounded-br-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-black border-0 px-3 py-1 text-xs font-bold gap-1.5 shadow-lg">
+                  <Star className="h-3 w-3 fill-current" />
+                  Pro Agency
+                </Badge>
+              </div>
+              <div className="absolute top-0 right-0">
+                <Badge className="rounded-none rounded-bl-lg bg-violet-600 text-white border-0 px-3 py-1 text-xs font-bold gap-1.5">
+                  <Lock className="h-3 w-3" />
+                  {language === 'fr' ? 'Réservé aux abonnés' : language === 'es' ? 'Solo suscriptores' : 'Subscribers only'}
+                </Badge>
+              </div>
+              <CardHeader className="pb-3 pt-10">
+                <CardTitle className="text-xl flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-yellow-500/10 border border-violet-500/20">
+                    <Crown className="h-5 w-5 text-yellow-500" />
+                  </div>
+                  <span>{language === 'fr' ? 'Crawl Multi-Pages' : language === 'es' ? 'Crawl Multi-Páginas' : 'Multi-Page Crawl'}</span>
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  {language === 'fr' 
+                    ? 'Analysez jusqu\'à 500 pages de votre site avec un score SEO/200 par page, détection de contenu dupliqué, validation Schema.org et synthèse IA.' 
+                    : language === 'es'
+                    ? 'Analice hasta 500 páginas de su sitio con puntuación SEO/200 por página, detección de contenido duplicado, validación Schema.org y síntesis IA.'
+                    : 'Analyze up to 500 pages with SEO/200 score per page, duplicate content detection, Schema.org validation and AI synthesis.'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="grid gap-2">
+                  {[
+                    language === 'fr' ? 'Audit expert illimité' : language === 'es' ? 'Auditoría experta ilimitada' : 'Unlimited expert audit',
+                    language === 'fr' ? 'Code correctif illimité' : language === 'es' ? 'Código correctivo ilimitado' : 'Unlimited corrective code',
+                    language === 'fr' ? 'Crawl multi-pages illimité' : language === 'es' ? 'Crawl multi-páginas ilimitado' : 'Unlimited multi-page crawl',
+                    language === 'fr' ? 'Marque Blanche (White Label)' : language === 'es' ? 'Marca Blanca (White Label)' : 'White Label branding',
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 p-2 rounded-lg bg-card/50 border border-violet-500/10">
+                      <div className={`p-1 rounded-md ${i === 0 ? 'bg-amber-500/10' : 'bg-violet-500/10'}`}>
+                        <CheckCircle2 className={`h-3.5 w-3.5 ${i === 0 ? 'text-amber-500' : 'text-violet-500'}`} />
+                      </div>
+                      <span className={`text-sm font-medium ${i === 0 ? 'text-amber-500' : ''}`}>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex items-baseline gap-1 justify-center">
+                  <span className="text-3xl font-extrabold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent">
+                    {language === 'fr' ? '50€' : '€50'}
+                  </span>
+                  <span className="text-sm text-muted-foreground">/ {language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
+                </div>
+                <Link to="/tarifs">
+                  <Button size="lg" className="w-full gap-2 font-bold bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white shadow-lg shadow-violet-500/25">
+                    <Crown className="h-4 w-4 text-yellow-300" />
+                    {language === 'fr' ? 'S\'abonner' : language === 'es' ? 'Suscribirse' : 'Subscribe'}
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        <div className={`max-w-6xl mx-auto px-4 sm:px-6 ${!isUnlimitedUser ? 'pointer-events-none select-none opacity-40' : ''}`}>
           
           {/* Hero */}
           <div className="text-center mb-10">
