@@ -195,10 +195,18 @@ export async function fetchAndRenderPage(
     const renderingKey = Deno.env.get('RENDERING_API_KEY');
     if (renderingKey) {
       const rendered = await renderWithBrowserless(url, renderingKey);
-      if (rendered && rendered.length > html.length) {
-        console.log(`[renderPage] ✅ JS rendering success (${rendered.length} chars vs ${html.length} static)`);
-        html = rendered;
-        usedRendering = true;
+      if (rendered) {
+        // Compare visible text content, not raw HTML length (rendered HTML strips JS bundles)
+        const renderedText = extractVisibleText(rendered);
+        const renderedWords = renderedText.split(/\s+/).filter(w => w.length > 2).length;
+        const staticWords = visibleText.split(/\s+/).filter(w => w.length > 2).length;
+        if (renderedWords > staticWords || rendered.length > html.length) {
+          console.log(`[renderPage] ✅ JS rendering success (${renderedWords} words vs ${staticWords} static, ${rendered.length} chars vs ${html.length})`);
+          html = rendered;
+          usedRendering = true;
+        } else {
+          console.log(`[renderPage] ⚠️ Rendered HTML not richer (${renderedWords} words vs ${staticWords} static). Keeping original.`);
+        }
       }
     } else {
       console.log('[renderPage] ⚠️ RENDERING_API_KEY not configured');
