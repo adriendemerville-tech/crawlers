@@ -631,7 +631,7 @@ const ComparatifCrawlersSemrush = () => {
                     <li>• <strong>Pack Essentiel</strong> : 10 crédits pour 5€</li>
                     <li>• <strong>Pack Pro</strong> : 50 crédits pour 19€</li>
                     <li>• <strong>Pack Premium</strong> : 150 crédits pour 45€</li>
-                    <li>• <strong>Pro Agency</strong> : 49€/mois — illimité, marque blanche, dashboard agence</li>
+                    <li>• <strong>Pro Agency</strong> : 59€/mois — illimité, marque blanche, dashboard agence</li>
                   </ul>
                   <p className="text-xs text-muted-foreground mt-3">
                     * Pas d'abonnement obligatoire pour les packs. Les crédits n'expirent pas.
