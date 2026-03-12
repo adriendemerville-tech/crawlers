@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
       sender_domain: 'notify.crawlers.fr',
       purpose: 'transactional',
       label: 'verification-code',
+      text: `Votre code de vérification Crawlers : ${code}`,
       queued_at: new Date().toISOString(),
     };
 
