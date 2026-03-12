@@ -212,7 +212,7 @@ async function translateText(text: string, targetLang: string): Promise<string> 
         messages: [
           {
             role: 'system',
-            content: `You are a professional translator. Translate the following text to ${targetLangName}. Only return the translated text, nothing else. Keep any technical terms (SEO, LLM, GEO, ChatGPT, etc.) unchanged.`
+            content: `You are a professional translator. Translate the following text to ${targetLangName}. If the text is already in ${targetLangName}, return it unchanged. Only return the translated text, nothing else. Keep any technical terms (SEO, LLM, GEO, ChatGPT, etc.) unchanged.`
           },
           {
             role: 'user',
