@@ -736,6 +736,19 @@ export function MyTracking() {
                           {language === 'fr' ? 'Optimiser' : language === 'es' ? 'Optimizar' : 'Optimize'}
                         </Button>
                       )}
+
+                      {/* Rollback button — only visible if a previous config exists */}
+                      {currentSite.previous_config && Object.keys(currentSite.previous_config).length > 0 && (
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          className="gap-1.5 font-semibold"
+                          onClick={() => handleRollback(currentSite)}
+                        >
+                          <Undo2 className="h-3.5 w-3.5" />
+                          Rollback
+                        </Button>
+                      )}
                     </div>
                   </div>
 
