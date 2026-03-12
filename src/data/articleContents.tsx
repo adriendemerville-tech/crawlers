@@ -1837,4 +1837,239 @@ Allow: /`}</pre>
       </>
     ),
   },
+
+  // ========== ARTICLE SHARE OF VOICE LLM ==========
+  'share-of-voice-llm-illusion': {
+    fr: (
+      <>
+        <SummaryBox
+          
+          points={[
+            "Aucune 'Search Console' pour les LLMs : OpenAI, Anthropic et Perplexity ne partagent aucune donnée de volume réel.",
+            "Les outils comme Meteoria, Qwairy ou GetMint utilisent des simulations synthétiques sans pondération par le volume réel.",
+            "Un prompt générique tapé 100 000 fois a le même poids qu'un prompt ultra-niché dans ces outils.",
+            "La seule action vérifiable est la compliance technique : robots.txt, JSON-LD, architecture AI-ready.",
+            "Crawlers.fr ne vend pas de la donnée estimée mais du diagnostic d'accessibilité et de la correction immédiate.",
+          ]}
+        />
+
+        <h2>Le GEO remplace le SEO : bienvenue dans l'ère de la citation</h2>
+        <p>
+          En 2026, le paradigme a basculé. Le <strong>Generative Engine Optimization (GEO)</strong> n'est plus un buzzword de conférence : c'est la réalité opérationnelle de toute stratégie de visibilité digitale. L'enjeu n'est plus d'apparaître en position 1 sur Google, mais d'<strong>être cité nommément par ChatGPT, Claude, Perplexity ou Google SGE</strong> lorsqu'un utilisateur pose une question liée à votre domaine d'expertise.
+        </p>
+        <p>
+          Face à cette ruée vers l'or, un marché entier s'est structuré autour d'une promesse séduisante : mesurer votre <strong>"Part de Voix" (Share of Voice)</strong> sur les réponses des IA génératives. Des dashboards flamboyants, des pourcentages rassurants, des courbes de progression. Le problème ? <strong>C'est techniquement une illusion.</strong> Et le promettre à un client relève, au mieux, de l'approximation grossière, au pire, de la tromperie commerciale.
+        </p>
+
+        <h2>La boîte noire des LLMs : aucune donnée disponible</h2>
+        <p>
+          C'est le cœur du problème et il est implacable : <strong>il n'existe aucune "Search Console" pour les LLMs</strong>.
+        </p>
+        <p>
+          Quand Google vous dit que votre page a été vue 10 000 fois pour la requête "meilleur CRM B2B", c'est une donnée fiable, vérifiable, assise sur un volume réel d'impressions. Vous pouvez bâtir une stratégie dessus.
+        </p>
+        <p>
+          Avec les LLMs ? <strong>Rien.</strong> OpenAI ne publie aucune donnée sur les volumes de requêtes réels de ses utilisateurs. Anthropic ne communique pas sur les impressions ou les taux de clics vers les sources citées par Claude. Perplexity, malgré son modèle basé sur les citations, ne fournit aucune API de données agrégées sur les marques recommandées. <strong>Les données sont totalement aveugles.</strong>
+        </p>
+        <p>
+          Ce n'est pas un choix temporaire en attendant la maturité du marché. C'est un <strong>choix structurel</strong>. Ces entreprises n'ont aucun intérêt commercial à partager ces données, qui sont leur avantage concurrentiel le plus précieux. Et même si elles le faisaient, la nature non-déterministe des LLMs (une même question peut générer une réponse différente à chaque fois) rend la notion même de "volume d'impression" conceptuellement fragile.
+        </p>
+
+        <h2>Le mirage de la "Share of Voice" : comment font les concurrents</h2>
+        <p>
+          Puisque les vraies données n'existent pas, comment des outils comme <strong>Meteoria</strong>, <strong>Qwairy</strong> ou <strong>GetMint</strong> affichent-ils des pourcentages de visibilité ? Par la <strong>simulation synthétique</strong>.
+        </p>
+        <p>
+          Leur méthodologie est la suivante : ils définissent une liste de prompts prédéfinis (parfois des centaines), les envoient massivement via les API de chaque LLM, collectent les réponses, et comptent le nombre de fois où votre marque apparaît dans les résultats. Ils en tirent un pourcentage qu'ils appellent "Share of Voice".
+        </p>
+        <p>
+          <strong>Le problème est fondamental :</strong> sans volume de recherche réel pour pondérer les résultats, cette donnée n'a <em>aucune valeur statistique fiable</em>. Un prompt générique comme "quel est le meilleur outil SEO" — tapé peut-être 100 000 fois par de vrais humains — aura <strong>exactement le même poids</strong> dans leur outil qu'un prompt ultra-niché comme "quel outil GEO pour cabinet d'avocats à Rennes" que strictement personne ne tape.
+        </p>
+        <p>
+          C'est comme si un institut de sondage vous annonçait les résultats d'une élection sans savoir combien de personnes ont voté, ni dans quelle circonscription. <strong>C'est de l'estimation en laboratoire</strong>, pas de la mesure de marché.
+        </p>
+
+        <SgeSummaryBox
+          
+          points={[
+            "Les prompts sont choisis par l'outil, pas par les vrais utilisateurs",
+            "Aucune pondération par le volume réel de recherche",
+            "La non-déterminisme des LLMs rend les résultats instables d'un jour à l'autre",
+            "Le contexte utilisateur (historique, localisation, langue) est ignoré",
+            "Le pourcentage affiché mesure la visibilité sur un jeu de prompts arbitraire, pas sur le marché réel",
+          ]}
+        />
+
+        <h2>L'approche pragmatique : la technique est la seule vérité mesurable</h2>
+        <p>
+          Si on ne peut pas tracker l'audience des IA — et c'est un fait, pas une opinion — alors quelle est la stratégie rationnelle ? <strong>Investir dans ce qui est mesurable et actionnable : la compliance technique.</strong>
+        </p>
+        <p>
+          C'est exactement l'approche de <strong>Crawlers.fr</strong>. Plutôt que de vendre des métriques fictives dans un dashboard cosmétique, la plateforme se concentre sur ce qui produit des résultats concrets et vérifiables :
+        </p>
+        <ul>
+          <li><strong>Diagnostic d'accessibilité (Score GEO)</strong> — Votre <code>robots.txt</code> bloque-t-il GPTBot, ClaudeBot, PerplexityBot ? Si oui, aucune chance d'être cité, et c'est mesurable en une seconde.</li>
+          <li><strong>Validation des données structurées</strong> — Vos <code>JSON-LD</code> sont-ils correctement formatés pour l'extraction par les LLMs ? Un schéma <code>Organization</code>, <code>Article</code>, <code>FAQPage</code> bien structuré est la langue maternelle des IA.</li>
+          <li><strong>Architecture AI-ready</strong> — Présence de <code>llms.txt</code>, <code>ai-plugin.json</code>, sitemaps XML accessibles, contenu extractible sans JavaScript.</li>
+          <li><strong>Correction immédiate</strong> — Pas juste un rapport : un code correctif déployable qui résout les problèmes en quelques clics.</li>
+        </ul>
+        <p>
+          La différence fondamentale ? <strong>Chaque point diagnostiqué par Crawlers.fr est un fait technique binaire</strong> (votre robots.txt bloque ou ne bloque pas GPTBot) — pas une estimation probabiliste basée sur un échantillon arbitraire de prompts.
+        </p>
+
+        <h2>Conclusion : investissez dans le code, pas dans les hallucinations statistiques</h2>
+        <p>
+          Le marché de la "Share of Voice IA" est séduisant. Il répond à un besoin réel des CMOs et des agences : avoir des chiffres à mettre dans un deck. Mais promettre une mesure précise d'une donnée qui n'existe pas, c'est construire une stratégie sur du sable.
+        </p>
+        <p>
+          <strong>La vraie question n'est pas "combien de fois ChatGPT me cite".</strong> La vraie question est : <strong>"est-ce que ChatGPT peut techniquement accéder à mon contenu, le comprendre et le citer ?"</strong> Et ça, c'est mesurable. Aujourd'hui. Gratuitement. Sur Crawlers.fr.
+        </p>
+        <p>
+          Arrêtez de payer pour des dashboards d'hallucinations. Investissez dans un code parfait.
+        </p>
+
+        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
+          <h3 className="text-lg font-bold text-foreground mb-2">Votre site est-il accessible aux IA ?</h3>
+          <p className="text-sm text-muted-foreground mb-4">Diagnostic technique gratuit — pas de métrique estimée, juste des faits.</p>
+          <RichLinkCard href="/audit-expert" title="Lancer mon audit GEO gratuit" description="Vérifiez gratuitement si votre site est techniquement prêt pour les LLMs" />
+        </div>
+
+        <AuthorCard name="Adrien de Volontat" position="bottom" />
+      </>
+    ),
+    en: (
+      <>
+        <SummaryBox
+          
+          points={[
+            "No 'Search Console' for LLMs: OpenAI, Anthropic, and Perplexity share zero real volume data.",
+            "Tools like Meteoria, Qwairy, or GetMint use synthetic simulations without real volume weighting.",
+            "A generic prompt typed 100,000 times weighs the same as an ultra-niche prompt in these tools.",
+            "The only verifiable action is technical compliance: robots.txt, JSON-LD, AI-ready architecture.",
+            "Crawlers.fr doesn't sell estimated data but accessibility diagnostics and immediate fixes.",
+          ]}
+        />
+
+        <h2>GEO replaces SEO: welcome to the citation era</h2>
+        <p>
+          In 2026, the paradigm has shifted. <strong>Generative Engine Optimization (GEO)</strong> is no longer a conference buzzword — it's the operational reality of every digital visibility strategy. The goal is no longer to rank #1 on Google, but to <strong>be cited by name by ChatGPT, Claude, Perplexity, or Google SGE</strong> when a user asks a question related to your domain.
+        </p>
+        <p>
+          Facing this gold rush, an entire market has emerged around a seductive promise: measuring your <strong>"Share of Voice"</strong> on generative AI responses. Flashy dashboards, reassuring percentages, growth curves. The problem? <strong>It's technically an illusion.</strong> And promising it to clients ranges from gross approximation to outright deception.
+        </p>
+
+        <h2>The LLM black box: no data available</h2>
+        <p>
+          This is the core issue and it's ironclad: <strong>there is no "Search Console" for LLMs</strong>.
+        </p>
+        <p>
+          When Google tells you your page was seen 10,000 times for "best B2B CRM," that's reliable, verifiable data backed by real impression volume. You can build a strategy on it.
+        </p>
+        <p>
+          With LLMs? <strong>Nothing.</strong> OpenAI publishes no data on actual user query volumes. Anthropic doesn't disclose impressions or click-through rates to sources cited by Claude. Perplexity provides no aggregated data API on recommended brands. <strong>The data is completely blind.</strong>
+        </p>
+        <p>
+          This isn't a temporary choice while the market matures. It's a <strong>structural decision</strong>. These companies have zero commercial incentive to share this data — it's their most valuable competitive advantage. And even if they did, the non-deterministic nature of LLMs makes the very concept of "impression volume" conceptually fragile.
+        </p>
+
+        <h2>The "Share of Voice" mirage: how competitors do it</h2>
+        <p>
+          Since real data doesn't exist, how do tools like <strong>Meteoria</strong>, <strong>Qwairy</strong>, or <strong>GetMint</strong> display visibility percentages? Through <strong>synthetic simulation</strong>.
+        </p>
+        <p>
+          Their methodology: they define a list of predefined prompts (sometimes hundreds), send them en masse via each LLM's API, collect responses, and count how often your brand appears. They derive a percentage they call "Share of Voice."
+        </p>
+        <p>
+          <strong>The problem is fundamental:</strong> without real search volume to weight results, this data has <em>no reliable statistical value</em>. A generic prompt like "what's the best SEO tool" — typed perhaps 100,000 times by real humans — carries <strong>exactly the same weight</strong> as an ultra-niche prompt like "which GEO tool for law firms in Rennes" that virtually nobody types.
+        </p>
+        <p>
+          It's like a polling institute announcing election results without knowing how many people voted, or in which district. <strong>It's lab-grade estimation</strong>, not market measurement.
+        </p>
+
+        <h2>The pragmatic approach: technology is the only measurable truth</h2>
+        <p>
+          If you can't track AI audiences — and that's a fact, not an opinion — then what's the rational strategy? <strong>Invest in what's measurable and actionable: technical compliance.</strong>
+        </p>
+        <p>
+          That's exactly the <strong>Crawlers.fr</strong> approach. Rather than selling fictitious metrics in a cosmetic dashboard, the platform focuses on what produces concrete, verifiable results:
+        </p>
+        <ul>
+          <li><strong>Accessibility diagnostics (GEO Score)</strong> — Does your <code>robots.txt</code> block GPTBot, ClaudeBot, PerplexityBot? If so, zero chance of being cited — and it's measurable in one second.</li>
+          <li><strong>Structured data validation</strong> — Are your <code>JSON-LD</code> schemas properly formatted for LLM extraction?</li>
+          <li><strong>AI-ready architecture</strong> — Presence of <code>llms.txt</code>, <code>ai-plugin.json</code>, accessible XML sitemaps, JavaScript-free extractable content.</li>
+          <li><strong>Immediate fixes</strong> — Not just a report: deployable corrective code that solves problems in clicks.</li>
+        </ul>
+        <p>
+          The fundamental difference? <strong>Every point diagnosed by Crawlers.fr is a binary technical fact</strong> — not a probabilistic estimate based on an arbitrary prompt sample.
+        </p>
+
+        <h2>Conclusion: invest in code, not statistical hallucinations</h2>
+        <p>
+          The "AI Share of Voice" market is seductive. It answers a real CMO need: numbers for a deck. But promising precise measurement of data that doesn't exist is building strategy on sand.
+        </p>
+        <p>
+          <strong>The real question isn't "how often does ChatGPT cite me."</strong> It's: <strong>"can ChatGPT technically access, understand, and cite my content?"</strong> And that's measurable. Today. For free. On Crawlers.fr.
+        </p>
+
+        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
+          <h3 className="text-lg font-bold text-foreground mb-2">Is your site accessible to AI?</h3>
+          <p className="text-sm text-muted-foreground mb-4">Free technical diagnostic — no estimated metrics, just facts.</p>
+          <RichLinkCard href="/audit-expert" title="Run my free GEO audit" description="Check if your site is technically ready for LLMs" />
+        </div>
+
+        <AuthorCard name="Adrien de Volontat" position="bottom" />
+      </>
+    ),
+    es: (
+      <>
+        <SummaryBox
+          
+          points={[
+            "No existe 'Search Console' para los LLMs: OpenAI, Anthropic y Perplexity no comparten datos de volumen reales.",
+            "Herramientas como Meteoria, Qwairy o GetMint usan simulaciones sintéticas sin ponderación por volumen real.",
+            "Un prompt genérico tecleado 100.000 veces tiene el mismo peso que uno ultra-nicho en estas herramientas.",
+            "La única acción verificable es el cumplimiento técnico: robots.txt, JSON-LD, arquitectura AI-ready.",
+            "Crawlers.fr no vende datos estimados sino diagnóstico de accesibilidad y corrección inmediata.",
+          ]}
+        />
+
+        <h2>El GEO reemplaza al SEO: bienvenidos a la era de la citación</h2>
+        <p>
+          En 2026, el paradigma ha cambiado. El <strong>Generative Engine Optimization (GEO)</strong> ya no es un buzzword de conferencia: es la realidad operativa de toda estrategia de visibilidad digital. El objetivo ya no es aparecer en la posición 1 de Google, sino <strong>ser citado por nombre por ChatGPT, Claude, Perplexity o Google SGE</strong>.
+        </p>
+        <p>
+          Ante esta fiebre del oro, un mercado entero se ha estructurado alrededor de una promesa seductora: medir tu <strong>"Share of Voice"</strong> en las respuestas de las IA generativas. Dashboards llamativos, porcentajes tranquilizadores, curvas de progreso. ¿El problema? <strong>Es técnicamente una ilusión.</strong>
+        </p>
+
+        <h2>La caja negra de los LLMs: ningún dato disponible</h2>
+        <p>
+          Este es el núcleo del problema: <strong>no existe ninguna "Search Console" para los LLMs</strong>. OpenAI no publica datos sobre volúmenes reales de consultas. Anthropic no comunica sobre impresiones ni tasas de clics hacia las fuentes citadas por Claude. Perplexity no proporciona ninguna API de datos agregados. <strong>Los datos están completamente ciegos.</strong>
+        </p>
+
+        <h2>El espejismo de la "Share of Voice"</h2>
+        <p>
+          ¿Cómo muestran herramientas como <strong>Meteoria</strong>, <strong>Qwairy</strong> o <strong>GetMint</strong> porcentajes de visibilidad? Mediante <strong>simulación sintética</strong>: envían masivamente prompts predefinidos vía API, recogen respuestas y cuentan cuántas veces aparece tu marca.
+        </p>
+        <p>
+          <strong>El problema es fundamental:</strong> sin volumen de búsqueda real para ponderar los resultados, un prompt genérico tecleado 100.000 veces tiene <strong>exactamente el mismo peso</strong> que un prompt ultra-nicho que nadie teclea. <strong>Es estimación de laboratorio</strong>, no medición de mercado.
+        </p>
+
+        <h2>El enfoque pragmático: la técnica es la única verdad medible</h2>
+        <p>
+          La estrategia racional es invertir en lo medible: <strong>el cumplimiento técnico</strong>. <strong>Crawlers.fr</strong> se centra en diagnósticos concretos y verificables: accesibilidad del <code>robots.txt</code>, validación de <code>JSON-LD</code>, arquitectura AI-ready y corrección inmediata.
+        </p>
+        <p>
+          <strong>Cada punto diagnosticado es un hecho técnico binario</strong>, no una estimación probabilística.
+        </p>
+
+        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
+          <h3 className="text-lg font-bold text-foreground mb-2">¿Tu sitio es accesible para las IA?</h3>
+          <p className="text-sm text-muted-foreground mb-4">Diagnóstico técnico gratuito — sin métricas estimadas, solo hechos.</p>
+          <RichLinkCard href="/audit-expert" title="Ejecutar mi auditoría GEO gratuita" description="Verifica si tu sitio está técnicamente listo para los LLMs" />
+        </div>
+
+        <AuthorCard name="Adrien de Volontat" position="bottom" />
+      </>
+    ),
+  },
 };

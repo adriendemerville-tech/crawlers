@@ -96,6 +96,11 @@ const ARTICLE_SEO_OVERRIDES: Record<string, {
     description: "Google domine l'infrastructure avec 96% de part de marché, mais le GEO capte 45% de l'intention de recherche. Analyse du paradoxe et stratégies pour 2026.",
     ogTitle: "Paradoxe Google & GEO 2026"
   },
+  'share-of-voice-llm-illusion': {
+    title: "Share of Voice LLM : pourquoi c'est une illusion statistique en 2026 | Crawlers.fr",
+    description: "La Share of Voice sur les LLMs est une illusion. Sans données de volume réelles d'OpenAI ou Anthropic, les outils vendent de l'estimation en laboratoire. Analyse technique.",
+    ogTitle: "Share of Voice LLM : L'Illusion Statistique"
+  },
 };
 
 const SITE_URL = 'https://crawlers.fr';
