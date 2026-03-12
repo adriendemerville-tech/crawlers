@@ -34,6 +34,173 @@ interface PageAnalysis {
   redirect_url: string | null;
   seo_score: number;
   issues: string[];
+  content_hash: string | null;
+  schema_org_types: string[];
+  schema_org_errors: string[];
+  custom_extraction: Record<string, string>;
+  crawl_depth: number;
+}
+
+interface CustomSelector {
+  name: string;
+  selector: string;
+  type: 'css' | 'xpath';
+}
+
+// ── Simple hash for near-duplicate detection ───────────────
+function simpleHash(text: string): string {
+  // Normalize: lowercase, collapse whitespace, remove punctuation
+  const normalized = text.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+  // Simple FNV-1a-like hash
+  let hash = 2166136261;
+  for (let i = 0; i < normalized.length; i++) {
+    hash ^= normalized.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+// ── Schema.org Validation ──────────────────────────────────
+function validateSchemaOrg(html: string): { types: string[]; errors: string[] } {
+  const types: string[] = [];
+  const errors: string[] = [];
+
+  // Extract JSON-LD blocks
+  const jsonLdRegex = /<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+  let blockCount = 0;
+
+  while ((match = jsonLdRegex.exec(html)) !== null) {
+    blockCount++;
+    try {
+      const data = JSON.parse(match[1].trim());
+      const items = Array.isArray(data) ? data : [data];
+      
+      for (const item of items) {
+        // Check @graph
+        const entities = item['@graph'] ? item['@graph'] : [item];
+        for (const entity of entities) {
+          const type = entity['@type'];
+          if (type) {
+            const typeStr = Array.isArray(type) ? type.join(', ') : type;
+            types.push(typeStr);
+          } else {
+            errors.push('missing_@type');
+          }
+
+          // Validate required fields per type
+          if (!entity['@context'] && !item['@context']) {
+            errors.push('missing_@context');
+          }
+
+          const t = Array.isArray(entity['@type']) ? entity['@type'][0] : entity['@type'];
+          if (t === 'Organization' || t === 'LocalBusiness') {
+            if (!entity.name) errors.push(`${t}: missing name`);
+            if (!entity.url) errors.push(`${t}: missing url`);
+          }
+          if (t === 'Article' || t === 'BlogPosting' || t === 'NewsArticle') {
+            if (!entity.headline) errors.push(`${t}: missing headline`);
+            if (!entity.author) errors.push(`${t}: missing author`);
+            if (!entity.datePublished) errors.push(`${t}: missing datePublished`);
+          }
+          if (t === 'Product') {
+            if (!entity.name) errors.push(`Product: missing name`);
+            if (!entity.offers) errors.push(`Product: missing offers`);
+          }
+          if (t === 'BreadcrumbList') {
+            if (!entity.itemListElement || !Array.isArray(entity.itemListElement) || entity.itemListElement.length === 0) {
+              errors.push('BreadcrumbList: empty itemListElement');
+            }
+          }
+          if (t === 'FAQPage') {
+            if (!entity.mainEntity || !Array.isArray(entity.mainEntity) || entity.mainEntity.length === 0) {
+              errors.push('FAQPage: empty mainEntity');
+            }
+          }
+        }
+      }
+    } catch (e) {
+      errors.push(`json_ld_parse_error: block ${blockCount}`);
+    }
+  }
+
+  // Check microdata
+  const microdataRegex = /itemtype\s*=\s*["']https?:\/\/schema\.org\/([^"']+)["']/gi;
+  let mdMatch;
+  while ((mdMatch = microdataRegex.exec(html)) !== null) {
+    types.push(mdMatch[1]);
+  }
+
+  if (blockCount === 0 && types.length === 0) {
+    errors.push('no_structured_data_found');
+  }
+
+  return { types: [...new Set(types)], errors: [...new Set(errors)] };
+}
+
+// ── Custom CSS selector extraction ─────────────────────────
+function extractCustomSelectors(html: string, selectors: CustomSelector[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  
+  for (const sel of selectors) {
+    if (sel.type !== 'css') continue; // Only CSS selectors supported server-side
+    
+    try {
+      // Simple CSS selector extraction via regex patterns for common selectors
+      let extracted = '';
+      const s = sel.selector.trim();
+      
+      // ID selector: #myid
+      if (s.startsWith('#')) {
+        const id = s.slice(1).replace(/[^\w-]/g, '');
+        const regex = new RegExp(`<[^>]+id\\s*=\\s*["']${id}["'][^>]*>([\\s\\S]*?)<\\/`, 'i');
+        const m = html.match(regex);
+        if (m) extracted = m[1].replace(/<[^>]+>/g, '').trim().substring(0, 500);
+      }
+      // Class selector: .myclass
+      else if (s.startsWith('.')) {
+        const cls = s.slice(1).replace(/[^\w-]/g, '');
+        const regex = new RegExp(`<[^>]+class\\s*=\\s*["'][^"']*\\b${cls}\\b[^"']*["'][^>]*>([\\s\\S]*?)<\\/`, 'i');
+        const m = html.match(regex);
+        if (m) extracted = m[1].replace(/<[^>]+>/g, '').trim().substring(0, 500);
+      }
+      // Tag selector
+      else if (/^[a-z]+$/i.test(s)) {
+        const regex = new RegExp(`<${s}[^>]*>([\\s\\S]*?)<\\/${s}>`, 'i');
+        const m = html.match(regex);
+        if (m) extracted = m[1].replace(/<[^>]+>/g, '').trim().substring(0, 500);
+      }
+      // Attribute selector: [data-x="y"]
+      else if (s.startsWith('[')) {
+        const attrMatch = s.match(/\[([^\]=]+)(?:=["']([^"']*)["'])?\]/);
+        if (attrMatch) {
+          const attrName = attrMatch[1];
+          const attrVal = attrMatch[2];
+          const pattern = attrVal 
+            ? `<[^>]+${attrName}\\s*=\\s*["']${attrVal}["'][^>]*>([\\s\\S]*?)<\\/`
+            : `<[^>]+${attrName}[^>]*>([\\s\\S]*?)<\\/`;
+          const regex = new RegExp(pattern, 'i');
+          const m = html.match(regex);
+          if (m) extracted = m[1].replace(/<[^>]+>/g, '').trim().substring(0, 500);
+        }
+      }
+      // meta[name="x"] → extract content attribute
+      else if (s.includes('meta[name=')) {
+        const nameMatch = s.match(/meta\[name=["']([^"']+)["']\]/);
+        if (nameMatch) {
+          const regex = new RegExp(`<meta[^>]+name\\s*=\\s*["']${nameMatch[1]}["'][^>]+content\\s*=\\s*["']([^"']+)["']`, 'i');
+          const m = html.match(regex);
+          if (m) extracted = m[1].trim();
+        }
+      }
+      
+      result[sel.name] = extracted || '';
+    } catch {
+      result[sel.name] = '';
+    }
+  }
+  
+  return result;
 }
 
 // ── SPA Detection ──────────────────────────────────────────
@@ -85,71 +252,49 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
 // ── Score SEO (sur 200) ────────────────────────────────────
 function computePageScore(page: Omit<PageAnalysis, 'seo_score'>): number {
   let score = 0;
-
-  // Title (15 pts)
   if (page.title && page.title.length > 0 && page.title.length <= 60) score += 15;
   else if (page.title) score += 8;
-
-  // Meta description (15 pts)
   if (page.meta_description && page.meta_description.length >= 50 && page.meta_description.length <= 160) score += 15;
   else if (page.meta_description) score += 8;
-
-  // H1 (15 pts)
   if (page.h1) score += 15;
-
-  // Heading structure bonus (10 pts) — SF-style
   if (page.h2_count >= 2) score += 5;
   else if (page.h2_count >= 1) score += 3;
   if (page.h3_count >= 1) score += 3;
   if (page.h4_h6_count >= 1) score += 2;
-
-  // Word count (15 pts)
   if (page.word_count >= 300) score += 15;
   else if (page.word_count >= 100) score += 8;
-
-  // HTTP status (15 pts)
   if (page.http_status === 200) score += 15;
-
-  // Canonical (15 pts)
   if (page.has_canonical) score += 15;
-
-  // Schema.org (15 pts)
   if (page.has_schema_org) score += 15;
-
-  // OG tags (10 pts)
+  // Bonus: validated schema with no errors
+  if (page.schema_org_errors.length === 0 && page.schema_org_types.length > 0) score += 5;
   if (page.has_og) score += 10;
-
-  // Images alt (25 pts)
   if (page.images_total === 0 || page.images_without_alt === 0) score += 25;
   else score += Math.max(0, 25 - (page.images_without_alt / page.images_total) * 25);
-
-  // Internal links (10 pts)
   if (page.internal_links >= 3) score += 10;
   else if (page.internal_links >= 1) score += 5;
-
-  // External links (5 pts)
   if (page.external_links >= 1) score += 5;
-
-  // Hreflang (10 pts)
   if (page.has_hreflang) score += 10;
-
-  // Robots directives penalty (-20 pts)
   if (page.has_noindex) score -= 10;
   if (page.has_nofollow) score -= 10;
-
   return Math.round(Math.min(200, Math.max(0, score)));
 }
 
 // ── HTML Analysis (Screaming Frog-level) ───────────────────
-function analyzeHtml(html: string, pageUrl: string, domain: string, responseTime: number | null): Omit<PageAnalysis, 'seo_score'> {
+function analyzeHtml(
+  html: string, 
+  pageUrl: string, 
+  domain: string, 
+  responseTime: number | null,
+  customSelectors: CustomSelector[] = [],
+  depth: number = 0,
+): Omit<PageAnalysis, 'seo_score'> {
   let path = '/';
   try { path = new URL(pageUrl).pathname; } catch {}
 
-  // ── Title ──
   const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() || null : null;
 
-  // ── Meta description ──
   const metaDescPatterns = [
     /<meta\s[^>]*name\s*=\s*["']description["'][^>]*content\s*=\s*["']([\s\S]*?)["'][^>]*\/?>/i,
     /<meta\s[^>]*content\s*=\s*["']([\s\S]*?)["'][^>]*name\s*=\s*["']description["'][^>]*\/?>/i,
@@ -160,34 +305,26 @@ function analyzeHtml(html: string, pageUrl: string, domain: string, responseTime
     if (m) { meta_description = m[1].replace(/\s+/g, ' ').trim(); break; }
   }
 
-  // ── Headings H1–H6 ──
   const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
   const h1 = h1Match ? h1Match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim() || null : null;
-
   const h2_count = (html.match(/<h2[\s>]/gi) || []).length;
   const h3_count = (html.match(/<h3[\s>]/gi) || []).length;
-  const h4Matches = (html.match(/<h4[\s>]/gi) || []).length;
-  const h5Matches = (html.match(/<h5[\s>]/gi) || []).length;
-  const h6Matches = (html.match(/<h6[\s>]/gi) || []).length;
-  const h4_h6_count = h4Matches + h5Matches + h6Matches;
+  const h4_h6_count = (html.match(/<h4[\s>]/gi) || []).length + (html.match(/<h5[\s>]/gi) || []).length + (html.match(/<h6[\s>]/gi) || []).length;
 
-  // ── Schema.org ──
   const has_schema_org = /application\/ld\+json/i.test(html) || /itemtype\s*=\s*["']https?:\/\/schema\.org/i.test(html);
+  
+  // Detailed Schema.org validation
+  const schemaValidation = validateSchemaOrg(html);
 
-  // ── Canonical ──
   const has_canonical = /<link[^>]+rel\s*=\s*["']canonical["']/i.test(html);
   let canonical_url: string | null = null;
   const canonicalMatch = html.match(/<link[^>]+rel\s*=\s*["']canonical["'][^>]+href\s*=\s*["']([^"']+)["']/i)
     || html.match(/<link[^>]+href\s*=\s*["']([^"']+)["'][^>]+rel\s*=\s*["']canonical["']/i);
   if (canonicalMatch) canonical_url = canonicalMatch[1].trim();
 
-  // ── Hreflang ──
   const has_hreflang = /<link[^>]+hreflang/i.test(html);
-
-  // ── Open Graph ──
   const has_og = /<meta[^>]+property\s*=\s*["']og:/i.test(html);
 
-  // ── Robots directives (meta robots + X-Robots-Tag equivalent in HTML) ──
   const robotsMetaPatterns = [
     /<meta\s[^>]*name\s*=\s*["']robots["'][^>]*content\s*=\s*["']([^"']+)["']/i,
     /<meta\s[^>]*content\s*=\s*["']([^"']+)["'][^>]*name\s*=\s*["']robots["']/i,
@@ -200,7 +337,6 @@ function analyzeHtml(html: string, pageUrl: string, domain: string, responseTime
   const has_noindex = robotsContent.includes('noindex');
   const has_nofollow = robotsContent.includes('nofollow');
 
-  // ── Body text & word count ──
   const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
   let bodyText = '';
   if (bodyMatch) {
@@ -217,7 +353,9 @@ function analyzeHtml(html: string, pageUrl: string, domain: string, responseTime
   }
   const word_count = bodyText.split(/\s+/).filter(w => w.length > 1).length;
 
-  // ── Images ──
+  // Content hash for near-duplicate detection
+  const content_hash = bodyText.length > 50 ? simpleHash(bodyText) : null;
+
   const imgMatches = html.match(/<img[^>]*>/gi) || [];
   const images_total = imgMatches.length;
   const images_without_alt = imgMatches.filter(img => {
@@ -226,7 +364,6 @@ function analyzeHtml(html: string, pageUrl: string, domain: string, responseTime
     return !altVal || altVal[1].trim().length === 0;
   }).length;
 
-  // ── Links with anchor texts (Screaming Frog-style) ──
   const linkRegex = /<a\s[^>]*href\s*=\s*["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi;
   let internal_links = 0, external_links = 0;
   const anchor_texts: { href: string; text: string; type: 'internal' | 'external' }[] = [];
@@ -235,9 +372,7 @@ function analyzeHtml(html: string, pageUrl: string, domain: string, responseTime
   while ((linkMatch = linkRegex.exec(html)) !== null) {
     const href = linkMatch[1].trim();
     const anchorText = linkMatch[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-
     if (href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) continue;
-
     if (href.startsWith('/') || href.includes(domain)) {
       internal_links++;
       if (anchorText && anchor_texts.length < 50) {
@@ -251,7 +386,9 @@ function analyzeHtml(html: string, pageUrl: string, domain: string, responseTime
     }
   }
 
-  // ── Issues detection ──
+  // Custom extraction
+  const custom_extraction = customSelectors.length > 0 ? extractCustomSelectors(html, customSelectors) : {};
+
   const issues: string[] = [];
   if (!title) issues.push('missing_title');
   else if (title.length > 60) issues.push('title_too_long');
@@ -264,6 +401,7 @@ function analyzeHtml(html: string, pageUrl: string, domain: string, responseTime
   if (h2_count === 0 && word_count > 200) issues.push('missing_h2');
   if (word_count < 100) issues.push('thin_content');
   if (!has_schema_org) issues.push('missing_schema_org');
+  if (has_schema_org && schemaValidation.errors.length > 0) issues.push('schema_org_errors');
   if (!has_canonical) issues.push('missing_canonical');
   if (!has_og) issues.push('missing_og');
   if (has_noindex) issues.push('noindex');
@@ -285,6 +423,11 @@ function analyzeHtml(html: string, pageUrl: string, domain: string, responseTime
     response_time_ms: responseTime,
     redirect_url: null,
     issues,
+    content_hash,
+    schema_org_types: schemaValidation.types,
+    schema_org_errors: schemaValidation.errors,
+    custom_extraction,
+    crawl_depth: depth,
   };
 }
 
@@ -295,6 +438,8 @@ async function scrapePage(
   firecrawlKey: string,
   useBrowserless: boolean,
   renderingKey: string | null,
+  customSelectors: CustomSelector[] = [],
+  depth: number = 0,
 ): Promise<PageAnalysis | null> {
   try {
     let html = '';
@@ -319,7 +464,6 @@ async function scrapePage(
       html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
       statusCode = data?.data?.metadata?.statusCode || 200;
 
-      // Detect redirect from Firecrawl metadata
       const sourceUrl = data?.data?.metadata?.sourceURL;
       if (sourceUrl && sourceUrl !== pageUrl) {
         redirectUrl = sourceUrl;
@@ -329,7 +473,7 @@ async function scrapePage(
       if (!html) return null;
     }
 
-    const analysis = analyzeHtml(html, pageUrl, domain, responseTime);
+    const analysis = analyzeHtml(html, pageUrl, domain, responseTime, customSelectors, depth);
     analysis.http_status = statusCode;
     if (redirectUrl) analysis.redirect_url = redirectUrl;
     const seo_score = computePageScore(analysis);
@@ -370,11 +514,12 @@ async function probeSPAStatus(
   return { isSPA: false, firstPageResult: result };
 }
 
-// ── Cross-page duplicate detection ─────────────────────────
+// ── Cross-page duplicate detection (title/meta + content hash) ──
 function detectDuplicates(pages: PageAnalysis[]): Record<string, string[]> {
   const titleMap: Record<string, string[]> = {};
   const metaMap: Record<string, string[]> = {};
-  const duplicateIssues: Record<string, string[]> = {}; // url -> additional issues
+  const hashMap: Record<string, string[]> = {};
+  const duplicateIssues: Record<string, string[]> = {};
 
   for (const page of pages) {
     if (page.title) {
@@ -387,9 +532,12 @@ function detectDuplicates(pages: PageAnalysis[]): Record<string, string[]> {
       if (!metaMap[key]) metaMap[key] = [];
       metaMap[key].push(page.url);
     }
+    if (page.content_hash) {
+      if (!hashMap[page.content_hash]) hashMap[page.content_hash] = [];
+      hashMap[page.content_hash].push(page.url);
+    }
   }
 
-  // Flag duplicates
   for (const [, urls] of Object.entries(titleMap)) {
     if (urls.length > 1) {
       for (const url of urls) {
@@ -406,8 +554,35 @@ function detectDuplicates(pages: PageAnalysis[]): Record<string, string[]> {
       }
     }
   }
+  // Near-duplicate content detection via hash
+  for (const [, urls] of Object.entries(hashMap)) {
+    if (urls.length > 1) {
+      for (const url of urls) {
+        if (!duplicateIssues[url]) duplicateIssues[url] = [];
+        duplicateIssues[url].push('near_duplicate_content');
+      }
+    }
+  }
 
   return duplicateIssues;
+}
+
+// ── Compute crawl depth from URL structure ─────────────────
+function computeDepth(pageUrl: string, baseUrl: string): number {
+  try {
+    const basePath = new URL(baseUrl).pathname.replace(/\/$/, '');
+    const pagePath = new URL(pageUrl).pathname.replace(/\/$/, '');
+    
+    if (pagePath === basePath || pagePath === '') return 0;
+    
+    const relativePath = pagePath.startsWith(basePath) 
+      ? pagePath.slice(basePath.length) 
+      : pagePath;
+    
+    return relativePath.split('/').filter(Boolean).length;
+  } catch {
+    return 0;
+  }
 }
 
 /**
@@ -455,8 +630,26 @@ Deno.serve(async (req) => {
       }
 
       const urlsToProcess: string[] = (job.urls_to_process as string[]) || [];
+      const customSelectors: CustomSelector[] = (job.custom_selectors as CustomSelector[]) || [];
+      const maxDepth: number = job.max_depth || 0;
+      const urlFilter: string | null = job.url_filter || null;
       const alreadyProcessed = job.processed_count || 0;
-      const remaining = urlsToProcess.slice(alreadyProcessed);
+      let remaining = urlsToProcess.slice(alreadyProcessed);
+
+      // Apply URL regex filter if set
+      if (urlFilter) {
+        try {
+          const regex = new RegExp(urlFilter);
+          remaining = remaining.filter(u => regex.test(u));
+        } catch {
+          console.warn(`[Worker] Invalid URL filter regex: ${urlFilter}`);
+        }
+      }
+
+      // Apply max depth filter if set (> 0)
+      if (maxDepth > 0) {
+        remaining = remaining.filter(u => computeDepth(u, job.url) <= maxDepth);
+      }
 
       if (remaining.length === 0) {
         await finalizeJob(supabase, job, firecrawlKey);
@@ -479,6 +672,9 @@ Deno.serve(async (req) => {
         const probe = await probeSPAStatus(remaining[0], job.domain, firecrawlKey, renderingKey);
         useBrowserless = probe.isSPA;
         firstPageResult = probe.firstPageResult;
+        if (firstPageResult) {
+          firstPageResult.crawl_depth = computeDepth(remaining[0], job.url);
+        }
         if (useBrowserless) {
           console.log(`[Worker] Job ${job.id}: 🌐 SPA mode enabled`);
         }
@@ -503,7 +699,7 @@ Deno.serve(async (req) => {
       console.log(`[Worker] Job ${job.id}: processing ${firstPageResult ? '1+' : ''}${batch.length} pages (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA mode]' : ''}`);
 
       const scrapePromises = batch.map(pageUrl =>
-        scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey)
+        scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url))
       );
 
       const results = await Promise.all(scrapePromises);
@@ -550,7 +746,7 @@ Deno.serve(async (req) => {
 });
 
 /**
- * Finalize a completed job: compute scores, detect duplicates, AI summary
+ * Finalize a completed job: compute scores, detect duplicates (title+meta+content hash), AI summary
  */
 async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
   console.log(`[Worker] Finalizing job ${job.id}...`);
@@ -568,7 +764,7 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
     ? Math.round(pages.reduce((s: number, p: any) => s + (p.seo_score || 0), 0) / pages.length)
     : 0;
 
-  // ── Cross-page duplicate detection ──
+  // ── Cross-page duplicate detection (title + meta + content hash) ──
   const duplicateIssues = detectDuplicates(pages as PageAnalysis[]);
   if (Object.keys(duplicateIssues).length > 0) {
     console.log(`[Worker] Found duplicates on ${Object.keys(duplicateIssues).length} pages`);
@@ -593,11 +789,11 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
       issuesSummary[issue] = (issuesSummary[issue] || 0) + 1;
     }));
 
-    // Add duplicate counts
-    let duplicateTitleCount = 0, duplicateMetaCount = 0;
+    let duplicateTitleCount = 0, duplicateMetaCount = 0, nearDuplicateCount = 0;
     for (const issues of Object.values(duplicateIssues)) {
       if (issues.includes('duplicate_title')) duplicateTitleCount++;
       if (issues.includes('duplicate_meta_description')) duplicateMetaCount++;
+      if (issues.includes('near_duplicate_content')) nearDuplicateCount++;
     }
 
     const topIssues = Object.entries(issuesSummary)
@@ -612,6 +808,10 @@ async function finalizeJob(supabase: any, job: any, _firecrawlKey: string) {
       ? Math.round(pages.filter((p: any) => p.response_time_ms).reduce((s: number, p: any) => s + (p.response_time_ms || 0), 0) / pages.filter((p: any) => p.response_time_ms).length)
       : null;
 
+    // Schema.org summary
+    const schemaPages = pages.filter((p: any) => p.schema_org_types?.length > 0);
+    const schemaErrorPages = pages.filter((p: any) => p.schema_org_errors?.length > 0);
+
     const prompt = `Tu es un expert SEO senior. Analyse ce crawl de ${job.domain} (${pages.length} pages, score moyen: ${avgScore}/200).
 
 PROBLÈMES DÉTECTÉS:
@@ -625,12 +825,15 @@ ${worstPages.map((p: any) => `- ${p.path} (${p.seo_score}/200) — Problèmes: $
 
 STATS DÉTAILLÉES:
 - Pages avec Schema.org: ${pages.filter((p: any) => p.has_schema_org).length}/${pages.length}
+- Pages avec Schema.org valide (sans erreurs): ${schemaPages.length - schemaErrorPages.length}/${pages.length}
+- Pages avec erreurs Schema.org: ${schemaErrorPages.length}
 - Pages avec canonical: ${pages.filter((p: any) => p.has_canonical).length}/${pages.length}
 - Pages avec OG: ${pages.filter((p: any) => p.has_og).length}/${pages.length}
 - Pages noindex: ${pages.filter((p: any) => p.has_noindex).length}
 - Pages nofollow: ${pages.filter((p: any) => p.has_nofollow).length}
 - Titres dupliqués: ${duplicateTitleCount} pages
 - Meta descriptions dupliquées: ${duplicateMetaCount} pages
+- Contenu quasi-dupliqué (hash): ${nearDuplicateCount} pages
 - Contenu fin (<100 mots): ${pages.filter((p: any) => (p.word_count || 0) < 100).length}
 - Images sans alt: ${pages.reduce((s: number, p: any) => s + (p.images_without_alt || 0), 0)}
 - Pages orphelines (0 liens internes): ${pages.filter((p: any) => (p.internal_links || 0) === 0).length}
