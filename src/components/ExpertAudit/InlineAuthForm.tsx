@@ -358,6 +358,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
                     {language === 'fr' ? 'Mot de passe oublié ?' : language === 'es' ? '¿Contraseña olvidada?' : 'Forgot password?'}
                   </button>
                 </div>
+              </form>
             </Form>
           </motion.div>
         ) : (
