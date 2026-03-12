@@ -351,8 +351,8 @@ export function StrategicInsights({
             </RevealWrapper>
           )}
 
-          {/* 18. Contenus à produire en priorité — hidden in content mode */}
-          {!isContentMode && (
+          {/* 18. Contenus à produire en priorité — hidden for editorial pages */}
+          {!hidePriorityContent && (
             <RevealWrapper delay={24000} isDataCard enabled={progressiveReveal}>
               <PriorityContentCard domain={domain} />
             </RevealWrapper>
