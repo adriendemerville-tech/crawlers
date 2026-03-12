@@ -77,6 +77,14 @@ function FooterComponent() {
       isRoute: true,
       violet: true
     },
+    { 
+      icon: Radar, 
+      label: t3(language, '<code correctif>', '<corrective code>', '<código correctivo>'),
+      href: '/audit-expert',
+      description: t3(language, 'Code correctif SEO/GEO automatique', 'Automatic SEO/GEO corrective code', 'Código correctivo SEO/GEO automático'),
+      gold: false,
+      isRoute: true
+    },
   ];
 
   const resourcesLinks = [
