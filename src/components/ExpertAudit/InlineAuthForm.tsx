@@ -445,7 +445,28 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-9 text-sm" disabled={isLoading}>
+                {/* CGVU Checkbox — only for new signups */}
+                {!existingUser && (
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="cgvu-accept"
+                      checked={cgvuAccepted}
+                      onCheckedChange={(v) => setCgvuAccepted(v === true)}
+                      className="mt-0.5"
+                    />
+                    <label htmlFor="cgvu-accept" className="text-[11px] leading-tight text-muted-foreground cursor-pointer">
+                      {language === 'fr' ? (
+                        <>J'accepte les <Link to="/cgvu" target="_blank" className="text-primary hover:underline">CGVU</Link></>
+                      ) : language === 'es' ? (
+                        <>Acepto los <Link to="/cgvu" target="_blank" className="text-primary hover:underline">términos y condiciones</Link></>
+                      ) : (
+                        <>I accept the <Link to="/cgvu" target="_blank" className="text-primary hover:underline">Terms & Conditions</Link></>
+                      )}
+                    </label>
+                  </div>
+                )}
+
+                <Button type="submit" className="w-full h-9 text-sm" disabled={isLoading || (!existingUser && !cgvuAccepted)}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (existingUser ? t.loginButton : t.signupButton)}
                 </Button>
               </form>
