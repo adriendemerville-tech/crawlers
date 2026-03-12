@@ -1890,7 +1890,7 @@ Allow: /`}</pre>
         </p>
 
         <SgeSummaryBox
-          title="Le biais de la simulation synthétique"
+          
           points={[
             "Les prompts sont choisis par l'outil, pas par les vrais utilisateurs",
             "Aucune pondération par le volume réel de recherche",
