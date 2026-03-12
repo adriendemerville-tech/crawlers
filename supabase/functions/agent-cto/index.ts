@@ -28,6 +28,7 @@ interface ReliabilityProfile {
   grade_distribution: Record<string, number>
   avg_action_plan_progress: number
   code_deployment_rate: number
+  widget_connection_rate: number  // % of tracked sites with active GTM/widget ping
   trend: 'improving' | 'stable' | 'declining' | 'insufficient_data'
 }
 
