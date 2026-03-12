@@ -2398,7 +2398,16 @@ Deno.serve(async (req) => {
               redirect: 'follow',
               signal: AbortSignal.timeout(4000),
             });
-            if (res.ok || res.status === 403) {
+            // After redirect, re-check if resolved URL is self
+            const resolvedDomain = (() => {
+              try { return new URL(res.url || href).hostname.replace(/^www\./, '').toLowerCase(); } catch { return ''; }
+            })();
+            if (resolvedDomain && (resolvedDomain === cleanTargetDomain || resolvedDomain.includes(cleanTargetDomain) || cleanTargetDomain.includes(resolvedDomain))) {
+              console.log(`⚠️ ${role} URL resolved to self-domain (${resolvedDomain}) — removing`);
+              actor.name = 'Non identifié';
+              actor.url = null;
+              actor.analysis = 'Auto-référence détectée après redirection et supprimée.';
+            } else if (res.ok || res.status === 403) {
               actor.url = res.url || href;
               console.log(`✅ ${role} URL valid: ${actor.url}`);
             } else {

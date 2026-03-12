@@ -598,7 +598,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       isHttps: url.startsWith('https://'),
       hasGTM,
       hasGA4,
-      imagesTotal: allImages.length,
+      imagesTotal: totalImageElements,
       imagesMissingAlt,
       // Content freshness
       mostRecentDate,
