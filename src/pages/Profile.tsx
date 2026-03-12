@@ -119,10 +119,11 @@ export default function Profile() {
   const { user, profile, signOut, loading } = useAuth();
   const { language } = useLanguage();
   const { isAdmin, loading: adminLoading } = useAdmin();
-  const { isAgencyPro } = useCredits();
+  const { isAgencyPro, balance } = useCredits();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const t = translations[language];
+  const [showCreditModal, setShowCreditModal] = useState(false);
 
   const initialTab = searchParams.get('tab') || 'tracking';
   const isProUser = isAgencyPro || isAdmin;
