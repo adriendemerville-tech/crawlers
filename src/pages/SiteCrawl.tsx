@@ -371,7 +371,7 @@ export default function SiteCrawl() {
     return () => clearTimeout(timer);
   }, [isUnlimitedUser]);
 
-  // Load past crawls
+  // Load past crawls & crawl_pages_this_month
   useEffect(() => {
     if (!user) return;
     supabase
@@ -381,6 +381,15 @@ export default function SiteCrawl() {
       .limit(20)
       .then(({ data }) => {
         if (data) setPastCrawls(data as any);
+      });
+    // Fetch crawl_pages_this_month from profile
+    supabase
+      .from('profiles')
+      .select('crawl_pages_this_month')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) setCrawlPagesThisMonth(data.crawl_pages_this_month || 0);
       });
   }, [user, crawlResult]);
 
