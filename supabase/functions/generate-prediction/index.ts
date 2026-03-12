@@ -433,20 +433,33 @@ async function gatherIntelligence(
       source += '+validated_fixes';
     }
 
-    // (b) Check WordPress tracked sites for plugin-deployed fixes
+    // (b) Check tracked sites for plugin OR GTM widget deployment
     if (!fixesImplemented) {
       const { data: wpSites } = await supabase
         .from('tracked_sites')
-        .select('id, current_config')
+        .select('id, current_config, last_widget_ping')
         .ilike('domain', `%${domain}%`)
         .limit(1);
       if (wpSites && wpSites.length > 0) {
-        const cfg = wpSites[0].current_config as Record<string, any> | null;
-        // Only count as deployed if there's evidence of actual sync
+        const site = wpSites[0];
+        const cfg = site.current_config as Record<string, any> | null;
+
+        // (b1) WordPress plugin sync
         if (cfg && cfg.last_sync && cfg.fixes?.length > 0) {
           fixesImplemented = true;
           fixesCount = cfg.fixes.length;
           source += '+wp_deployed';
+        }
+
+        // (b2) GTM widget connected (last_widget_ping < 24h = active connection)
+        if (!fixesImplemented && site.last_widget_ping) {
+          const pingAge = Date.now() - new Date(site.last_widget_ping).getTime();
+          const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+          if (pingAge < TWENTY_FOUR_HOURS) {
+            fixesImplemented = true;
+            fixesCount = 1; // GTM widget = 1 active deployment channel
+            source += '+gtm_widget';
+          }
         }
       }
     }
@@ -497,7 +510,7 @@ ${cc.topIssues.length > 0 ? `- Top issues:\n${cc.topIssues.map((r: any) => `  â€
     fixesBlock = `
 ## VERIFIED CORRECTIVE ACTIONS (DEPLOYED)
 - ${intel.fixesCount} corrective code(s) **confirmed deployed** for this domain
-- Deployment verified via: user validation ("It works!" feedback) or WordPress plugin sync
+- Deployment verified via: user validation ("It works!"), WordPress plugin sync, or GTM widget active connection
 - This is NOT an assumption â€” these fixes are actively running on the site
 - Factor in a HIGHER growth expectation (+5-10% on realistic scenario)`;
   } else {

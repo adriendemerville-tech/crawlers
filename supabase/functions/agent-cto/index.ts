@@ -28,6 +28,7 @@ interface ReliabilityProfile {
   grade_distribution: Record<string, number>
   avg_action_plan_progress: number
   code_deployment_rate: number
+  widget_connection_rate: number  // % of tracked sites with active GTM/widget ping
   trend: 'improving' | 'stable' | 'declining' | 'insufficient_data'
 }
 
@@ -43,12 +44,19 @@ interface AgentDecision {
 
 // ─── Reliability engine ───────────────────────────────────────────────
 async function getReliabilityProfile(supabase: any, functionName: string): Promise<ReliabilityProfile> {
-  const { data: snapshots } = await supabase
-    .from('audit_impact_snapshots')
-    .select('impact_score, reliability_grade, action_plan_progress, corrective_code_deployed, gsc_baseline, measurement_phase, created_at')
-    .eq('audit_type', mapFunctionToAuditType(functionName))
-    .order('created_at', { ascending: false })
-    .limit(100)
+  // Fetch snapshots + widget connection stats in parallel
+  const [{ data: snapshots }, { data: trackedSites }] = await Promise.all([
+    supabase
+      .from('audit_impact_snapshots')
+      .select('impact_score, reliability_grade, action_plan_progress, corrective_code_deployed, gsc_baseline, measurement_phase, created_at')
+      .eq('audit_type', mapFunctionToAuditType(functionName))
+      .order('created_at', { ascending: false })
+      .limit(100),
+    supabase
+      .from('tracked_sites')
+      .select('last_widget_ping')
+      .not('last_widget_ping', 'is', null),
+  ])
 
   const all = snapshots || []
   const withGsc = all.filter((s: any) => s.gsc_baseline != null)
@@ -60,6 +68,17 @@ async function getReliabilityProfile(supabase: any, functionName: string): Promi
     const g = s.reliability_grade || 'N/A'
     grades[g] = (grades[g] || 0) + 1
   })
+
+  // Widget connection rate: % of tracked sites with a recent ping (<7 days)
+  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+  const allTracked = trackedSites || []
+  const activeWidgets = allTracked.filter((s: any) => {
+    if (!s.last_widget_ping) return false
+    return (Date.now() - new Date(s.last_widget_ping).getTime()) < SEVEN_DAYS
+  })
+  const widgetConnectionRate = allTracked.length > 0
+    ? Math.round(activeWidgets.length / allTracked.length * 100)
+    : 0
 
   // Trend: compare last 10 vs previous 10
   let trend: ReliabilityProfile['trend'] = 'insufficient_data'
@@ -88,6 +107,7 @@ async function getReliabilityProfile(supabase: any, functionName: string): Promi
     code_deployment_rate: all.length > 0
       ? Math.round(all.filter((r: any) => r.corrective_code_deployed).length / all.length * 100)
       : 0,
+    widget_connection_rate: widgetConnectionRate,
     trend,
   }
 }
@@ -255,6 +275,7 @@ DONNÉES DE FIABILITÉ (statistiques mesurées sur de vrais utilisateurs) :
 - Distribution des grades : ${JSON.stringify(reliability.grade_distribution)}
 - Progression moyenne des plans d'action : ${reliability.avg_action_plan_progress}%
 - Taux de déploiement de code correctif : ${reliability.code_deployment_rate}%
+- Taux de connexion widget (GTM/script) : ${reliability.widget_connection_rate}% des sites suivis ont un widget actif (<7j)
 - Tendance : ${reliability.trend}
 - Base d'évidence : ${evidenceBasis}
 
@@ -325,6 +346,7 @@ Analyse cet audit en te basant UNIQUEMENT sur les données de fiabilité fournie
           avg_impact_score: reliability.avg_impact_score,
           trend: reliability.trend,
           grade_distribution: reliability.grade_distribution,
+          widget_connection_rate: reliability.widget_connection_rate,
         },
       },
     }
