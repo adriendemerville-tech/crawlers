@@ -1,7 +1,6 @@
 import { assertSafeUrl } from '../_shared/ssrf.ts';
 import { corsHeaders } from '../_shared/cors.ts';
-
-const MODERN_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+import { stealthFetch } from '../_shared/stealthFetch.ts';
 
 const TIMEOUT_MS = 15_000;
 
