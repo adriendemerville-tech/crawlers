@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
+import { useTurnstile } from '@/hooks/useTurnstile';
 
 const translations = {
   fr: {
@@ -117,6 +118,26 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const t = translations[language];
   const inviteToken = searchParams.get('invite');
+  const { containerRef, token, reset: resetTurnstile } = useTurnstile();
+
+  const verifyTurnstile = async (): Promise<boolean> => {
+    if (!token) {
+      toast.error(language === 'fr' ? 'Veuillez compléter la vérification' : 'Please complete the verification');
+      return false;
+    }
+    if (token === 'TURNSTILE_UNAVAILABLE') return true;
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-turnstile', { body: { token } });
+      if (error || !data?.success) {
+        toast.error(language === 'fr' ? 'Vérification échouée, réessayez' : 'Verification failed, please retry');
+        resetTurnstile();
+        return false;
+      }
+      return true;
+    } catch {
+      return true;
+    }
+  };
 
   // Accept invitation after login
   useEffect(() => {
@@ -177,20 +198,24 @@ export default function Auth() {
 
   const handleLogin = async (data: { email: string; password: string }) => {
     setIsLoading(true);
+    const verified = await verifyTurnstile();
+    if (!verified) { setIsLoading(false); return; }
     const { error } = await signInWithEmail(data.email, data.password);
     setIsLoading(false);
 
     if (error) {
       toast.error(t.loginError);
+      resetTurnstile();
     } else {
       toast.success(t.loginSuccess);
-      // Navigation handled by useEffect when user state updates
     }
   };
 
   const handleSignup = async (data: { email: string; password: string; firstName: string; lastName: string }) => {
     setIsLoading(true);
     setShowExistsBanner(false);
+    const verified = await verifyTurnstile();
+    if (!verified) { setIsLoading(false); return; }
     const { error } = await signUpWithEmail(data.email, data.password, data.firstName, data.lastName);
     setIsLoading(false);
 
@@ -200,6 +225,7 @@ export default function Auth() {
       } else {
         toast.error(t.signupError);
       }
+      resetTurnstile();
     } else {
       trackAnalyticsEvent('signup_complete');
       toast.success(t.signupSuccess);
@@ -438,6 +464,9 @@ export default function Auth() {
                 </form>
               </Form>
             )}
+
+            {/* Turnstile CAPTCHA */}
+            <div ref={containerRef} className="flex justify-center" />
 
             <div className="text-center text-sm">
               <span className="text-muted-foreground">

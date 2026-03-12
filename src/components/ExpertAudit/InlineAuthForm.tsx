@@ -10,6 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
+import { useTurnstile } from '@/hooks/useTurnstile';
+import { supabase } from '@/integrations/supabase/client';
 
 const translations = {
   fr: {
@@ -98,6 +100,28 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
   const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
+  const { containerRef, token, reset: resetTurnstile } = useTurnstile();
+
+  const verifyTurnstile = async (): Promise<boolean> => {
+    if (!token) {
+      toast.error(language === 'fr' ? 'Veuillez compléter la vérification' : 'Please complete the verification');
+      return false;
+    }
+    if (token === 'TURNSTILE_UNAVAILABLE') return true;
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-turnstile', { body: { token } });
+      if (error || !data?.success) {
+        toast.error(language === 'fr' ? 'Vérification échouée, réessayez' : 'Verification failed, please retry');
+        resetTurnstile();
+        return false;
+      }
+      return true;
+    } catch {
+      return true; // fail open
+    }
+  };
+
+
 
   const loginSchema = z.object({
     email: z.string().min(1, t.emailRequired).email(t.emailInvalid),
@@ -123,11 +147,14 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
 
   const handleLogin = async (data: { email: string; password: string }) => {
     setIsLoading(true);
+    const verified = await verifyTurnstile();
+    if (!verified) { setIsLoading(false); return; }
     const { error } = await signInWithEmail(data.email, data.password);
     setIsLoading(false);
 
     if (error) {
       toast.error(t.loginError);
+      resetTurnstile();
     } else {
       toast.success(t.loginSuccess);
       onSuccess?.();
@@ -136,6 +163,8 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
 
   const handleSignup = async (data: { email: string; password: string; firstName: string; lastName: string }) => {
     setIsLoading(true);
+    const verified = await verifyTurnstile();
+    if (!verified) { setIsLoading(false); return; }
     const { error } = await signUpWithEmail(data.email, data.password, data.firstName, data.lastName);
     setIsLoading(false);
 
@@ -145,6 +174,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
       } else {
         toast.error(t.signupError);
       }
+      resetTurnstile();
     } else {
       toast.success(t.signupSuccess);
       onSuccess?.();
@@ -355,6 +385,9 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Turnstile CAPTCHA */}
+      <div ref={containerRef} className="flex justify-center" />
 
       <div className="text-center text-xs">
         <span className="text-muted-foreground">
