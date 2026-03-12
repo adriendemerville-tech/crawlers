@@ -285,6 +285,13 @@ export default function Profile() {
         <Suspense fallback={null}>
           <Footer />
         </Suspense>
+        {showCreditModal && (
+          <CreditTopUpModal
+            open={showCreditModal}
+            onOpenChange={setShowCreditModal}
+            currentBalance={balance}
+          />
+        )}
       </div>
     </>
   );
