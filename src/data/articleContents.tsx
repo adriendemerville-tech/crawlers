@@ -1940,7 +1940,7 @@ Allow: /`}</pre>
     en: (
       <>
         <SummaryBox
-          title="Key takeaways in 30 seconds"
+          
           points={[
             "No 'Search Console' for LLMs: OpenAI, Anthropic, and Perplexity share zero real volume data.",
             "Tools like Meteoria, Qwairy, or GetMint use synthetic simulations without real volume weighting.",
