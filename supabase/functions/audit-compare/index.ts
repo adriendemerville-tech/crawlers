@@ -1014,7 +1014,7 @@ Deno.serve(async (req) => {
     const crossComparison = await runCrossComparison(
       { domain: domain1, analysis: site1.analysis, backlinks: site1.backlinks, contentDepth: site1.metadata.contentDepth, keywords: enrichedKeywords.site1Keywords },
       { domain: domain2, analysis: site2.analysis, backlinks: site2.backlinks, contentDepth: site2.metadata.contentDepth, keywords: enrichedKeywords.site2Keywords },
-      OPENROUTER_API_KEY,
+      OPENROUTER_API_KEY, langLabel,
     );
     
     console.log(`✅ Audit comparé v2 terminé: site1=${site1.analysis ? 'OK' : 'FAIL'}, site2=${site2.analysis ? 'OK' : 'FAIL'}, cross=${crossComparison ? 'OK' : 'FAIL'}`);
