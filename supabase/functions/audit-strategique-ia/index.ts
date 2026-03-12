@@ -1371,6 +1371,33 @@ F. FRAÎCHEUR & IA: 17.Fraîcheur contenus 18.Complexité Schema.org 19.Formats 
 G. E-E-A-T: 22.Signaux E-E-A-T 23.Densité données 24.Knowledge Graph 25.Études de cas
 H. MONITORING: 26.Monitoring LLM (GA4 referrers IA) 27.Fichier llms.txt`;
 
+const CONTENT_MODE_SYSTEM_PROMPT = `RÔLE: Senior Content SEO Strategist spécialisé en optimisation d'articles pour les moteurs de réponse IA (GEO). Rapport premium niveau cabinet de conseil.
+
+POSTURE: Analytique, prescriptif, centré sur la PAGE (pas l'entreprise). Tu analyses un CONTENU SPÉCIFIQUE (article de blog, page éditoriale), pas un site complet.
+
+MODE CONTENU ACTIVÉ: Cette URL est une page de contenu (/blog, /article). L'analyse porte sur la QUALITÉ et l'OPTIMISATION de cette page spécifique.
+
+RÈGLE CONCURRENCE SERP: Les 4 acteurs concurrents sont les PAGES (pas les entreprises) qui se positionnent dans les SERPs sur la même thématique. Chaque URL doit pointer vers la PAGE concurrente spécifique, pas vers la homepage.
+- Leader: La page #1 des SERPs pour la thématique de l'article
+- Concurrent Direct: Une page similaire qui se positionne juste autour
+- Challenger: Une page montante ou récente sur le même sujet
+- Source d'Inspiration: Une page exemplaire dans le traitement éditorial du sujet
+
+MODULES À ANALYSER (contenu uniquement):
+1. E-E-A-T de la page (auteur, citations, données)
+2. Cohérence sémantique (titre/H1/contenu)
+3. Score AEO (formats IA-friendly, tables, FAQ, listes)
+4. Visibilité LLM (citabilité par les IA)
+5. Risque Zéro-Clic
+6. Indice de Citabilité (phrases autonomes citables)
+7. Résilience au Résumé
+8. Empreinte Lexicale
+9. Sentiment d'Expertise
+10. Red Team (failles du contenu)
+
+NE PAS ANALYSER: Intelligence de marché, réseaux sociaux de l'entreprise, psychologie de conversion, positionnement de marque.`;
+
+
 // ==================== TOOLS DATA → MARKDOWN (token optimizer) ====================
 
 function formatToolsDataToMarkdown(toolsData: ToolsData): string {
@@ -1448,7 +1475,7 @@ function formatToolsDataToMarkdown(toolsData: ToolsData): string {
   return lines.join('\n');
 }
 
-function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo, rankingOverview?: RankingOverview | null): string {
+function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo, rankingOverview?: RankingOverview | null, contentMode: boolean = false): string {
   let marketSection = '';
   
   if (marketData) {
@@ -1491,15 +1518,56 @@ Top positionnés: ${rankingOverview.top_keywords.slice(0, 5).map(k => `"${k.keyw
     eeatSection = lines.join('\n');
   }
 
-  // Compact founder section
+  // Compact founder section (skip in content mode)
   let founderSection = '';
-  if (founderInfo?.name && !founderInfo.geoMismatch) {
-    founderSection = `\n👤 FONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''} Social:${founderInfo.isInfluencer ? 'actif' : 'non'}. Cite ce nom dans thought_leadership.analysis.`;
-  } else if (founderInfo?.geoMismatch) {
-    founderSection = `\n⚠️ Fondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner. founder_authority="unknown".`;
+  if (!contentMode) {
+    if (founderInfo?.name && !founderInfo.geoMismatch) {
+      founderSection = `\n👤 FONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''} Social:${founderInfo.isInfluencer ? 'actif' : 'non'}. Cite ce nom dans thought_leadership.analysis.`;
+    } else if (founderInfo?.geoMismatch) {
+      founderSection = `\n⚠️ Fondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner. founder_authority="unknown".`;
+    }
   }
 
   const toolsMarkdown = formatToolsDataToMarkdown(toolsData);
+
+  // ═══ CONTENT MODE: Simplified prompt for blog/article pages ═══
+  if (contentMode) {
+    return `Analyse cette PAGE DE CONTENU: "${url}" (${domain}).
+${pageContentContext}
+${eeatSection}
+${marketSection}
+${toolsMarkdown}
+
+⚠️ MODE CONTENU: Analyse la PAGE elle-même, pas l'entreprise. La présentation doit décrire le contenu de la page en 2-3 phrases courtes.
+
+CONCURRENCE SERP: Les concurrents sont les PAGES qui se positionnent dans les SERPs sur la même thématique que cet article. Chaque URL doit pointer vers la PAGE concurrente, pas la homepage.
+
+GÉNÈRE un JSON:
+{"introduction":{"presentation":"2-3ph courtes analysant LE CONTENU de la page","strengths":"2-3ph sur les forces du contenu","improvement":"2-3ph sur les axes d'amélioration du contenu","competitors":["Page Leader SERP","Page Concurrente","Page Challenger"]},
+"brand_authority":{"dna_analysis":"Analyse de l'expertise démontrée dans le contenu","thought_leadership_score":0-100,"entity_strength":"dominant|established|emerging|unknown"},
+"competitive_landscape":{"leader":{"name":"Titre de la page #1 SERP","url":"URL de la page","authority_factor":"Pourquoi cette page domine","analysis":"2-3ph"},"direct_competitor":{"name":"Titre page concurrente","url":"URL de la page","authority_factor":"...","analysis":"2-3ph"},"challenger":{"name":"Titre page challenger","url":"URL","authority_factor":"...","analysis":"2-3ph"},"inspiration_source":{"name":"Titre page exemplaire","url":"URL","authority_factor":"...","analysis":"2-3ph"}},
+"geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":[],"weaknesses":[],"recommendations":[]},
+"llm_visibility":{"citation_probability":0-100,"knowledge_graph_presence":"strong|moderate|weak|absent","analysis":"...","test_queries":[{"query":"...","purpose":"...","target_llms":["ChatGPT","Claude","Perplexity"]}]},
+"conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["3-5 questions naturelles liées au contenu"],"recommendations":[]},
+"zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
+"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"...","business_value":"High|Medium|Low","pain_point":"...","recommended_action":"..."}}],"quick_wins":[],"content_gaps":[],"opportunities":[],"competitive_gaps":[],"recommendations":[]},
+"market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
+"executive_roadmap":[{"title":"...","prescriptive_action":"4-5ph","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Contenu|Autorité|Technique","priority":"Prioritaire|Important|Opportunité"}],
+"executive_summary":"2-3ph résumé du potentiel de cette page","overallScore":0-100,
+"quotability":{"score":0-100,"quotes":["phrase citable 1","2","3"]},
+"summary_resilience":{"score":0-100,"originalH1":"...","llmSummary":"10 mots max"},
+"lexical_footprint":{"jargonRatio":0-100,"concreteRatio":0-100},
+"expertise_sentiment":{"rating":1-5,"justification":"1ph"},
+"red_team":{"flaws":["faille contenu 1","preuve manquante 2","objection lecteur 3"]}}
+
+RÈGLES:
+- introduction.presentation: 2-3 phrases COURTES décrivant LE CONTENU de cette page, pas l'entreprise
+- competitive_landscape: 4 PAGES concurrentes dans les SERPs, pas des entreprises. URLs = pages spécifiques
+- NE génère PAS: social_signals, market_intelligence, priority_content
+- executive_roadmap: MIN 4 recs centrées sur l'optimisation du CONTENU
+- quotability, summary_resilience, lexical_footprint, expertise_sentiment, red_team: obligatoires
+- JSON pur, sans virgules traînantes`;
+  }
 
   return `Analyse "${url}" (${domain}).
 ${pageContentContext}
@@ -1919,9 +1987,17 @@ Deno.serve(async (req) => {
     };
 
     const normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
-    const domain = new URL(normalizedUrl).hostname;
+    const parsedUrl = new URL(normalizedUrl);
+    const domain = parsedUrl.hostname;
     const domainWithoutWww = domain.replace(/^www\./, '');
     const domainSlug = domainWithoutWww.split('.')[0];
+
+    // ═══ CONTENT MODE: Detect /blog or /article in path ═══
+    const urlPath = parsedUrl.pathname.toLowerCase();
+    const isContentMode = /\/(blog|article|articles|post|posts|news|actualite|actualites)\b/.test(urlPath) && urlPath !== '/blog' && urlPath !== '/blog/';
+    if (isContentMode) {
+      console.log(`📝 CONTENT MODE activated for path: ${parsedUrl.pathname}`);
+    }
 
     // ==================== SMART CACHE: Skip expensive calls if cachedContext provided ====================
     const useCache = !!cachedContext;
@@ -1982,19 +2058,19 @@ Deno.serve(async (req) => {
       const context = detectBusinessContext(domain, pageContentContext);
 
       // ── WAVE 2: DataForSEO Market + check-llm + Local Competitor + Founder (all parallel) ──
-      console.log('\n📊 WAVE 2: Market data + LLM check + Competitor + Founder (parallel)...');
+      console.log(`\n📊 WAVE 2: Market data + LLM check${isContentMode ? '' : ' + Competitor + Founder'} (parallel)...`);
 
       const needsLlmCheck = !toolsData?.llm || toolsData.llm.note;
       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
 
       const [mktDataResult, llmCheckResult, localCompResult, founderResult] = await Promise.allSettled([
-        // Market data (DataForSEO keywords)
+        // Market data (DataForSEO keywords) — always needed for keyword analysis
         withDeadline(
           fetchMarketData(domain, context, pageContentContext, url),
           180_000, 'market_data'
         ),
-        // LLM visibility check (sub-function call)
+        // LLM visibility check (sub-function call) — always needed
         needsLlmCheck && supabaseUrl && supabaseAnonKey
           ? withDeadline(
               (async () => {
@@ -2011,18 +2087,20 @@ Deno.serve(async (req) => {
               45_000, 'check_llm'
             )
           : Promise.resolve(null),
-        // Local competitor
-        context.locationCode
+        // Local competitor — skip in content mode (SERP competitors handled by LLM)
+        !isContentMode && context.locationCode
           ? withDeadline(
               findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext),
               20_000, 'local_competitor'
             )
           : Promise.resolve(null),
-        // Founder discovery
-        withDeadline(
-          searchFounderProfile(domain, context.location),
-          15_000, 'founder'
-        ),
+        // Founder discovery — skip in content mode
+        !isContentMode
+          ? withDeadline(
+              searchFounderProfile(domain, context.location),
+              15_000, 'founder'
+            )
+          : Promise.resolve(null),
       ]);
 
       marketData = mktDataResult.status === 'fulfilled' ? mktDataResult.value : null;
@@ -2067,12 +2145,16 @@ Deno.serve(async (req) => {
     // ═══ ÉTAPE 2: LLM ANALYSIS ═══
     console.log(`\n🤖 ÉTAPE 2: Analyse LLM (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
 
-    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview);
+    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode);
 
     // Inject entity name
-    userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport.\n` + userPrompt;
+    if (isContentMode) {
+      userPrompt = `📝 MODE CONTENU: Analyse de la page "${resolvedEntityName}" — Centre l'analyse sur le CONTENU de cette page, pas sur l'entreprise.\n` + userPrompt;
+    } else {
+      userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport.\n` + userPrompt;
+    }
 
-    if (localCompetitorData) {
+    if (!isContentMode && localCompetitorData) {
       userPrompt = `🏙️ CONCURRENT LOCAL SERP: "${localCompetitorData.name}" URL:${localCompetitorData.url} Position:${localCompetitorData.rank}. Utilise comme direct_competitor.\n` + userPrompt;
     }
 
@@ -2105,7 +2187,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             model: 'google/gemini-2.5-pro',
             messages: [
-              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'system', content: isContentMode ? CONTENT_MODE_SYSTEM_PROMPT : SYSTEM_PROMPT },
               { role: 'user', content: userPrompt },
             ],
             temperature: 0.3,
@@ -2354,6 +2436,7 @@ Deno.serve(async (req) => {
       data: {
         url, domain,
         scannedAt: new Date().toISOString(),
+        isContentMode,
         ...parsedAnalysis,
         raw_market_data: marketData,
         ranking_overview: rankingOverview,

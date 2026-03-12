@@ -59,6 +59,7 @@ export function StrategicInsights({
   progressiveReveal = false
 }: StrategicInsightsProps) {
   const [showHallucinationModal, setShowHallucinationModal] = useState(false);
+  const isContentMode = analysis.isContentMode || false;
   
   const getAuthorityColor = (authority: string) => {
     switch (authority) {
@@ -207,8 +208,8 @@ export function StrategicInsights({
             </Card>
           )}
 
-          {/* 2. Intelligence Marché & Psychologie */}
-          {analysis.market_intelligence && (
+          {/* 2. Intelligence Marché & Psychologie — hidden in content mode */}
+          {!isContentMode && analysis.market_intelligence && (
             <MarketIntelligenceCard intelligence={analysis.market_intelligence} />
           )}
 
@@ -267,8 +268,8 @@ export function StrategicInsights({
             <ConversationalIntentCard analysis={analysis} />
           </RevealWrapper>
 
-          {/* 13. Autorité Sociale & Humaine */}
-          {analysis.social_signals && (
+          {/* 13. Autorité Sociale & Humaine — hidden in content mode */}
+          {!isContentMode && analysis.social_signals && (
             <RevealWrapper delay={14000} isDataCard enabled={progressiveReveal}>
               <SocialSignalsCard signals={analysis.social_signals} />
             </RevealWrapper>
@@ -345,10 +346,12 @@ export function StrategicInsights({
             </RevealWrapper>
           )}
 
-          {/* 18. Contenus à produire en priorité */}
-          <RevealWrapper delay={24000} isDataCard enabled={progressiveReveal}>
-            <PriorityContentCard domain={domain} />
-          </RevealWrapper>
+          {/* 18. Contenus à produire en priorité — hidden in content mode */}
+          {!isContentMode && (
+            <RevealWrapper delay={24000} isDataCard enabled={progressiveReveal}>
+              <PriorityContentCard domain={domain} />
+            </RevealWrapper>
+          )}
 
           {/* 19. Feuille de Route Exécutive 2026 */}
           {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (

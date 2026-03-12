@@ -43,6 +43,8 @@ export function mapStrategicData(
     rawData: { psi: null, safeBrowsing: null, htmlAnalysis: null },
     scannedAt: data.scannedAt || new Date().toISOString(),
     strategicAnalysis: {
+      // Content mode flag
+      isContentMode: data.isContentMode || false,
       // New 13 Modules Premium Format
       introduction: data.introduction,
       brand_authority: data.brand_authority,
