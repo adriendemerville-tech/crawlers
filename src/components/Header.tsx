@@ -303,12 +303,14 @@ export function Header() {
                   <span className="text-sm">{language === 'fr' ? 'Observatoire' : language === 'es' ? 'Observatorio' : 'Observatory'}</span>
                 </Button>
               </Link>
-              <Link to="/site-crawl">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  <Globe className="h-4 w-4" />
-                  <span className="text-sm">Crawl</span>
-                </Button>
-              </Link>
+              {(isAgencyPro || user) && (
+                <Link to="/site-crawl">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <Globe className="h-4 w-4" />
+                    <span className="text-sm">Crawl</span>
+                  </Button>
+                </Link>
+              )}
             </>
           )}
         </div>
@@ -343,7 +345,7 @@ export function Header() {
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
-                <DropdownMenu open={isProfileOpen} onOpenChange={(open) => {
+                <DropdownMenu open={isProfileOpen} modal={false} onOpenChange={(open) => {
                   if (open) {
                     if (closeTimeoutRef.current) {
                       clearTimeout(closeTimeoutRef.current);
