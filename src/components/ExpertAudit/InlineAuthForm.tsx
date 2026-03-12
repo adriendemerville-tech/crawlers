@@ -386,7 +386,9 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
         )}
       </AnimatePresence>
 
-      <div className="text-center text-xs">
+      {/* Turnstile CAPTCHA */}
+      <div ref={containerRef} className="flex justify-center" />
+
         <span className="text-muted-foreground">
           {isLogin ? t.noAccount : t.hasAccount}{' '}
         </span>
