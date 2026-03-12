@@ -54,6 +54,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const IntegrationGTM = lazy(() => import("./pages/IntegrationGTM"));
 const SiteCrawl = lazy(() => import("./pages/SiteCrawl"));
 const AuditCompare = lazy(() => import("./pages/AuditCompare"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 // Loading fallback
 const PageLoader = () => (
@@ -121,6 +122,7 @@ const App = () => (
                           <Route path="/site-crawl" element={<SiteCrawl />} />
                           <Route path="/audit-compare" element={<AuditCompare />} />
                           <Route path="/integration-gtm" element={<IntegrationGTM />} />
+                          <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
