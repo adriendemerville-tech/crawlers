@@ -137,7 +137,7 @@ const translations = {
     heroTitle: 'Take your business to the next level',
     heroTitleAccent: 'with Pro Agency',
     heroSubtitle: 'The all-in-one subscription for SEO and GEO professionals who want to scale without limits.',
-    price: '€49',
+    price: '€59',
     period: '/month',
     badgeText: 'All unlimited',
     ctaSubscribe: 'Subscribe now',
