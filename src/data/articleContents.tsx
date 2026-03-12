@@ -1913,11 +1913,6 @@ Allow: /`}</pre>
           <strong>La vraie question n'est pas "combien de fois ChatGPT me cite".</strong> La vraie question est : <strong>"est-ce que ChatGPT peut techniquement accéder à mon contenu, le comprendre et le citer ?"</strong> Et ça, c'est mesurable. Aujourd'hui. Gratuitement. Sur <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a>. Arrêtez de payer pour des dashboards d'hallucinations. Investissez dans un code parfait.
         </p>
 
-        <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
-          <h3 className="text-lg font-bold text-foreground mb-2">Votre site est-il accessible aux IA ?</h3>
-          <p className="text-sm text-muted-foreground mb-4">Diagnostic technique expert — pas de métrique estimée, juste des faits.</p>
-          <RichLinkCard href="/audit-expert" title="Lancer mon Audit Expert" titleHighlight="Audit Expert" description="Vérifiez si votre site est techniquement prêt pour les LLMs" />
-        </div>
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
       </>
