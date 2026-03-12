@@ -522,9 +522,9 @@ export default function Tarifs() {
     <>
       <Helmet>
         <title>{t.pageTitle}</title>
-        <meta name="description" content={`${t.subtitle}. Audit SEO technique gratuit, Score GEO IA, packs de crédits dès 5€, abonnement Pro Agency 50€/mois avec marque blanche.`} />
+        <meta name="description" content={`${t.subtitle}. Audit SEO technique, Score GEO IA, packs de crédits dès 5€, abonnement Pro Agency 50€/mois avec marque blanche.`} />
         <meta property="og:title" content={t.pageTitle} />
-        <meta property="og:description" content={`${t.subtitle}. Audit Flash gratuit, packs crédits, abonnement Pro Agency illimité.`} />
+        <meta property="og:description" content={`${t.subtitle}. Audit Flash, packs crédits, abonnement Pro Agency illimité.`} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://crawlers.fr/tarifs" />
         {/* Open Graph pricing for main offer */}
