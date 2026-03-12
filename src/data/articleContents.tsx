@@ -1915,8 +1915,8 @@ Allow: /`}</pre>
 
         <div className="my-8 p-6 bg-primary/5 border border-primary/20 rounded-xl text-center">
           <h3 className="text-lg font-bold text-foreground mb-2">Votre site est-il accessible aux IA ?</h3>
-          <p className="text-sm text-muted-foreground mb-4">Diagnostic technique gratuit — pas de métrique estimée, juste des faits.</p>
-          <RichLinkCard href="/audit-expert" title="Lancer mon audit GEO gratuit" description="Vérifiez gratuitement si votre site est techniquement prêt pour les LLMs" />
+          <p className="text-sm text-muted-foreground mb-4">Diagnostic technique expert — pas de métrique estimée, juste des faits.</p>
+          <RichLinkCard href="/audit-expert" title="Lancer mon Audit Expert" titleHighlight="Audit Expert" description="Vérifiez si votre site est techniquement prêt pour les LLMs" />
         </div>
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />

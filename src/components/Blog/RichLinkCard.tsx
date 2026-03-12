@@ -7,6 +7,7 @@ interface RichLinkCardProps {
   title: string;
   description: string;
   imageUrl?: string;
+  titleHighlight?: string;
 }
 
 function RichLinkCardComponent({ href, title, description, imageUrl }: RichLinkCardProps) {
