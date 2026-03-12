@@ -2148,9 +2148,13 @@ Deno.serve(async (req) => {
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode);
 
     // Inject entity name
-    userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport.\n` + userPrompt;
+    if (isContentMode) {
+      userPrompt = `📝 MODE CONTENU: Analyse de la page "${resolvedEntityName}" — Centre l'analyse sur le CONTENU de cette page, pas sur l'entreprise.\n` + userPrompt;
+    } else {
+      userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport.\n` + userPrompt;
+    }
 
-    if (localCompetitorData) {
+    if (!isContentMode && localCompetitorData) {
       userPrompt = `🏙️ CONCURRENT LOCAL SERP: "${localCompetitorData.name}" URL:${localCompetitorData.url} Position:${localCompetitorData.rank}. Utilise comme direct_competitor.\n` + userPrompt;
     }
 
