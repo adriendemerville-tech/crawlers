@@ -749,7 +749,7 @@ export default function SiteCrawl() {
                       disabled={isLoading}
                     />
                   </div>
-                  <Button type="submit" disabled={isLoading || !url} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white">
+                  <Button type="submit" disabled={isLoading || !url} className={`gap-2 bg-violet-600 hover:bg-violet-700 text-white ${isButtonShaking ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                     {isLoading ? phase || t.crawling : t.launchBtn}
                   </Button>
