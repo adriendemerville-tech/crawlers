@@ -356,6 +356,10 @@ export default function SiteCrawl() {
   const [isComparing, setIsComparing] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [isButtonShaking, setIsButtonShaking] = useState(false);
+  const [crawlPagesThisMonth, setCrawlPagesThisMonth] = useState(0);
+  const FAIR_USE_LIMIT = 5000;
 
   const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
