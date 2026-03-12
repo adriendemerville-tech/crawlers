@@ -1165,7 +1165,7 @@ const AuditCompare = () => {
     const attemptAudit = async (): Promise<void> => {
       try {
         const { data, error: fnError } = await supabase.functions.invoke('audit-compare', {
-          body: { url1: url1.trim(), url2: url2.trim(), skipCache: true },
+          body: { url1: url1.trim(), url2: url2.trim(), skipCache: true, lang: language },
         });
 
         if (fnError) {

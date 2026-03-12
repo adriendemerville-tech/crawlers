@@ -778,6 +778,7 @@ export function ExpertAuditDashboard() {
         hallucinationCorrections: hallucinationCorrections || null,
         competitorCorrections: competitorCorrections || null,
         cachedContext: useCachedContext ? strategicCachedContext : null,
+        lang: language,
       });
 
       if (!data.success) throw new Error(data.error || 'Strategic audit failed');
