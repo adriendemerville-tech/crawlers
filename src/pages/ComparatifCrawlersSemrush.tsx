@@ -716,7 +716,7 @@ const ComparatifCrawlersSemrush = () => {
                   <li>
                     <strong>Marque Blanche (White Label)</strong> : L'offre{' '}
                     <Link to="/pro-agency" className="text-primary hover:underline font-medium">Pro Agency</Link>
-                    {' '}à 49€/mois permet de personnaliser entièrement les rapports avec votre propre logo, 
+                    {' '}à 59€/mois permet de personnaliser entièrement les rapports avec votre propre logo, 
                     vos couleurs et votre nom de marque. Idéal pour les consultants et agences qui veulent 
                     présenter des livrables professionnels sous leur propre identité à leurs clients finaux.
                   </li>

@@ -571,7 +571,7 @@ export function MyWallet() {
           </div>
           <div className="flex items-center justify-between pt-1">
             <p className="text-2xl font-bold text-foreground">
-              49€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
+              59€<span className="text-sm font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
             </p>
             <Button
               onClick={async () => {
