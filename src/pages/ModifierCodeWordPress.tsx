@@ -394,7 +394,7 @@ const ModifierCodeWordPress = () => {
                     'Génération automatique de JSON-LD Schema.org',
                     'Analyse de la présence GTM / GA4',
                     'Score de "citabilité" par les moteurs de réponse IA',
-                    'Corrections injectables en un clic via le plugin',
+                    'Corrections injectables en un clic via le plugin WordPress ou le widget GTM',
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm">
                       <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
