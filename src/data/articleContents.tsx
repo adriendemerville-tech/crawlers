@@ -1935,60 +1935,48 @@ Allow: /`}</pre>
           ]}
         />
 
-        <h2>GEO replaces SEO: welcome to the citation era</h2>
+        <h3 className="text-xl font-bold mt-10 mb-4">GEO replaces SEO: welcome to the citation era</h3>
         <p>
-          In 2026, the paradigm has shifted. <strong>Generative Engine Optimization (GEO)</strong> is no longer a conference buzzword — it's the operational reality of every digital visibility strategy. The goal is no longer to rank #1 on Google, but to <strong>be cited by name by ChatGPT, Claude, Perplexity, or Google SGE</strong> when a user asks a question related to your domain.
+          In 2026, the paradigm has shifted. <strong>Generative Engine Optimization (GEO)</strong> is no longer a conference buzzword — it's the operational reality of every digital visibility strategy. The goal is no longer to rank #1 on Google, but to <strong>be cited by name by <a href="https://openai.com/chatgpt" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">ChatGPT</a>, <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Claude</a>, <a href="https://www.perplexity.ai" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Perplexity</a>, or Google SGE</strong> when a user asks a question related to your domain.
         </p>
         <p>
-          Facing this gold rush, an entire market has emerged around a seductive promise: measuring your <strong>"Share of Voice"</strong> on generative AI responses. Flashy dashboards, reassuring percentages, growth curves. The problem? <strong>It's technically an illusion.</strong> And promising it to clients ranges from gross approximation to outright deception.
+          Facing this gold rush, an entire market has emerged around a seductive promise: measuring your <strong>"Share of Voice"</strong> on generative AI responses. Flashy dashboards, reassuring percentages, growth curves. The problem? <strong>It's technically an illusion.</strong> And promising it to clients ranges from gross approximation to outright deception. For context, read our piece on <a href="/blog/comprendre-geo-vs-seo" className="text-primary hover:underline">the fundamental difference between SEO and GEO</a>.
         </p>
 
-        <h2>The LLM black box: no data available</h2>
+        <h3 className="text-xl font-bold mt-10 mb-4">The LLM black box: no data available</h3>
         <p>
-          This is the core issue and it's ironclad: <strong>there is no "Search Console" for LLMs</strong>.
+          This is the core issue and it's ironclad: <strong>there is no "Search Console" for LLMs</strong>. When Google tells you your page was seen 10,000 times for "best B2B CRM," that's reliable, verifiable data backed by real impression volume. You can build a strategy on it.
         </p>
         <p>
-          When Google tells you your page was seen 10,000 times for "best B2B CRM," that's reliable, verifiable data backed by real impression volume. You can build a strategy on it.
-        </p>
-        <p>
-          With LLMs? <strong>Nothing.</strong> OpenAI publishes no data on actual user query volumes. Anthropic doesn't disclose impressions or click-through rates to sources cited by Claude. Perplexity provides no aggregated data API on recommended brands. <strong>The data is completely blind.</strong>
+          With LLMs? <strong>Nothing.</strong> <a href="https://openai.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenAI</a> publishes no data on actual user query volumes. <a href="https://www.anthropic.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Anthropic</a> doesn't disclose impressions or click-through rates to sources cited by Claude. Perplexity provides no aggregated data API on recommended brands. <strong>The data is completely blind.</strong>
         </p>
         <p>
           This isn't a temporary choice while the market matures. It's a <strong>structural decision</strong>. These companies have zero commercial incentive to share this data — it's their most valuable competitive advantage. And even if they did, the non-deterministic nature of LLMs makes the very concept of "impression volume" conceptually fragile.
         </p>
 
-        <h2>The "Share of Voice" mirage: how competitors do it</h2>
+        <h3 className="text-xl font-bold mt-10 mb-4">The "Share of Voice" mirage: how competitors do it</h3>
         <p>
-          Since real data doesn't exist, how do tools like <strong>Meteoria</strong>, <strong>Qwairy</strong>, or <strong>GetMint</strong> display visibility percentages? Through <strong>synthetic simulation</strong>.
+          Since real data doesn't exist, how do tools like <strong>Meteoria</strong>, <strong>Qwairy</strong>, or <strong>GetMint</strong> display visibility percentages? Through <strong>synthetic simulation</strong>. Their methodology: they define a list of predefined prompts (sometimes hundreds), send them en masse via each LLM's API, collect responses, and count how often your brand appears. They derive a percentage they call "Share of Voice."
         </p>
         <p>
-          Their methodology: they define a list of predefined prompts (sometimes hundreds), send them en masse via each LLM's API, collect responses, and count how often your brand appears. They derive a percentage they call "Share of Voice."
-        </p>
-        <p>
-          <strong>The problem is fundamental:</strong> without real search volume to weight results, this data has <em>no reliable statistical value</em>. A generic prompt like "what's the best SEO tool" — typed perhaps 100,000 times by real humans — carries <strong>exactly the same weight</strong> as an ultra-niche prompt like "which GEO tool for law firms in Rennes" that virtually nobody types.
-        </p>
-        <p>
-          It's like a polling institute announcing election results without knowing how many people voted, or in which district. <strong>It's lab-grade estimation</strong>, not market measurement.
+          <strong>The problem is fundamental:</strong> without real search volume to weight results, this data has <em>no reliable statistical value</em>. A generic prompt like "what's the best SEO tool" — typed perhaps 100,000 times by real humans — carries <strong>exactly the same weight</strong> as an ultra-niche prompt like "which GEO tool for law firms in Rennes" that virtually nobody types. It's like a polling institute announcing election results without knowing how many people voted, or in which district. <strong>It's lab-grade estimation</strong>, not market measurement.
         </p>
 
-        <h2>The pragmatic approach: technology is the only measurable truth</h2>
+        <h3 className="text-xl font-bold mt-10 mb-4">The pragmatic approach: technology is the only measurable truth</h3>
         <p>
-          If you can't track AI audiences — and that's a fact, not an opinion — then what's the rational strategy? <strong>Invest in what's measurable and actionable: technical compliance.</strong>
-        </p>
-        <p>
-          That's exactly the <strong>Crawlers.fr</strong> approach. Rather than selling fictitious metrics in a cosmetic dashboard, the platform focuses on what produces concrete, verifiable results:
+          If you can't track AI audiences — and that's a fact, not an opinion — then what's the rational strategy? <strong>Invest in what's measurable and actionable: technical compliance.</strong> That's exactly the <a href="/" className="text-primary hover:underline font-semibold">Crawlers.fr</a> approach. Rather than selling fictitious metrics in a cosmetic dashboard, the platform focuses on what produces concrete, verifiable results:
         </p>
         <ul>
-          <li><strong>Accessibility diagnostics (GEO Score)</strong> — Does your <code>robots.txt</code> block GPTBot, ClaudeBot, PerplexityBot? If so, zero chance of being cited — and it's measurable in one second.</li>
-          <li><strong>Structured data validation</strong> — Are your <code>JSON-LD</code> schemas properly formatted for LLM extraction?</li>
-          <li><strong>AI-ready architecture</strong> — Presence of <code>llms.txt</code>, <code>ai-plugin.json</code>, accessible XML sitemaps, JavaScript-free extractable content.</li>
-          <li><strong>Immediate fixes</strong> — Not just a report: deployable corrective code that solves problems in clicks.</li>
+          <li><strong>Accessibility diagnostics (<a href="/audit-expert" className="text-primary hover:underline">GEO Score</a>)</strong> — Does your <code>robots.txt</code> block GPTBot, ClaudeBot, PerplexityBot? If so, zero chance of being cited — and it's measurable in one second.</li>
+          <li><strong>Structured data validation</strong> — Are your <code>JSON-LD</code> schemas properly formatted for LLM extraction? Read our <a href="/blog/guide-visibilite-technique-ia" className="text-primary hover:underline">complete technical guide</a>.</li>
+          <li><strong>AI-ready architecture</strong> — Presence of <code>llms.txt</code>, <code>ai-plugin.json</code>, accessible XML sitemaps, JavaScript-free extractable content. See the <a href="https://schema.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Schema.org documentation</a>.</li>
+          <li><strong>Immediate fixes</strong> — Not just a report: <a href="/audit-expert" className="text-primary hover:underline">deployable corrective code</a> that solves problems in clicks.</li>
         </ul>
         <p>
           The fundamental difference? <strong>Every point diagnosed by Crawlers.fr is a binary technical fact</strong> — not a probabilistic estimate based on an arbitrary prompt sample.
         </p>
 
-        <h2>Conclusion: invest in code, not statistical hallucinations</h2>
+        <h3 className="text-xl font-bold mt-10 mb-4">Conclusion: invest in code, not statistical hallucinations</h3>
         <p>
           The "AI Share of Voice" market is seductive. It answers a real CMO need: numbers for a deck. But promising precise measurement of data that doesn't exist is building strategy on sand.
         </p>
