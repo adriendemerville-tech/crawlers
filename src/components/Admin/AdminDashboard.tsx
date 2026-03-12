@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot, BookOpen } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -7,6 +7,7 @@ import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { PredictionsDashboard } from './PredictionEngine';
 import { BrowserlessAlert } from './BrowserlessAlert';
 import { CtoAgentDashboard } from './CtoAgentDashboard';
+import { BackendDocumentation } from './BackendDocumentation';
 
 export function AdminDashboard() {
   return (
@@ -23,7 +24,7 @@ export function AdminDashboard() {
       </div>
 
       <Tabs defaultValue="analytics" className="space-y-6">
-        <TabsList className="w-full flex">
+        <TabsList className="w-full flex flex-wrap h-auto gap-1">
           <TabsTrigger value="users" className="flex-1 gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Utilisateurs</span>
@@ -43,6 +44,10 @@ export function AdminDashboard() {
           <TabsTrigger value="cto-agent" className="flex-1 gap-2">
             <Bot className="h-4 w-4" />
             <span className="hidden sm:inline">Agent CTO</span>
+          </TabsTrigger>
+          <TabsTrigger value="docs" className="flex-1 gap-2">
+            <BookOpen className="h-4 w-4" />
+            <span className="hidden sm:inline">Documentation</span>
           </TabsTrigger>
           <TabsTrigger value="support" className="flex-1 gap-2">
             <MessageCircle className="h-4 w-4" />
@@ -68,6 +73,10 @@ export function AdminDashboard() {
 
         <TabsContent value="cto-agent" forceMount className="data-[state=inactive]:hidden">
           <CtoAgentDashboard />
+        </TabsContent>
+
+        <TabsContent value="docs" forceMount className="data-[state=inactive]:hidden">
+          <BackendDocumentation />
         </TabsContent>
 
         <TabsContent value="support" forceMount className="data-[state=inactive]:hidden">
