@@ -30,6 +30,7 @@ import { PatienceCards } from './PatienceCards';
 import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
 import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { AIBotsCard } from './AIBotsCard';
+import { ImageQualityCard } from './ImageQualityCard';
 import { MethodologyPopover } from './MethodologyPopover';
 import { DarkSocialCard } from './DarkSocialCard';
 import { FreshnessSignalsCard } from './FreshnessSignalsCard';
