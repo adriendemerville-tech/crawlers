@@ -112,6 +112,7 @@ Homepage (outils gratuits): https://crawlers.fr/
 Audit Expert (Check-up technique & stratégique): https://crawlers.fr/audit-expert
 Audit Comparé (Analyse concurrentielle face-à-face): https://crawlers.fr/audit-compare
 Crawl Multi-Pages (Analyse récursive de site entier): https://crawlers.fr/site-crawl
+Intégration GTM (Déploiement automatique des correctifs SEO): https://crawlers.fr/integration-gtm
 Lexique SEO/GEO/IA: https://crawlers.fr/lexique
 Tarifs: https://crawlers.fr/tarifs
 
