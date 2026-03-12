@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Helmet } from 'react-helmet-async';
@@ -21,7 +22,8 @@ import { useSpotifyTrackRotation } from '@/components/ExpertAudit/useSpotifyTrac
 import { PatienceCards } from '@/components/ExpertAudit/PatienceCards';
 import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { UrlValidationBanner } from '@/components/UrlValidationBanner';
-import { 
+import { InlineAuthForm } from '@/components/ExpertAudit/InlineAuthForm';
+import {
   Swords, Globe, Target, Brain, CheckCircle2, Search, 
   Music, Star, TrendingUp, TrendingDown,
   MessageSquare, Zap, Loader2, Check, Link2, FileText,
@@ -1031,6 +1033,7 @@ const AuditCompare = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CompareResult | null>(null);
   const [showTopUp, setShowTopUp] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const retryCountRef = useRef(0);
   const MAX_RETRIES = 2;
 
@@ -1094,7 +1097,7 @@ const AuditCompare = () => {
 
   const handleLaunch = async () => {
     if (!user) {
-      navigate('/auth');
+      setShowAuthDialog(true);
       return;
     }
 
@@ -1183,7 +1186,7 @@ const AuditCompare = () => {
         // Don't retry for auth or credit errors
         if (msg.includes('Authentication')) {
           setIsLoading(false);
-          navigate('/auth');
+          setShowAuthDialog(true);
           return;
         }
         if (msg.includes('Insufficient credits')) {
@@ -1528,6 +1531,22 @@ const AuditCompare = () => {
 
       <Footer />
       <CreditTopUpModal open={showTopUp} onOpenChange={setShowTopUp} currentBalance={balance} />
+      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-lg font-bold text-foreground">
+              {language === 'fr' ? 'Connectez-vous pour continuer' : language === 'es' ? 'Inicie sesión para continuar' : 'Sign in to continue'}
+            </DialogTitle>
+          </DialogHeader>
+          <InlineAuthForm 
+            defaultMode="signup" 
+            onSuccess={() => {
+              setShowAuthDialog(false);
+              refreshBalance();
+            }} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

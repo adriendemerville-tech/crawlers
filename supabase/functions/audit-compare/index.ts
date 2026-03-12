@@ -283,11 +283,16 @@ async function fetchBacklinkProfile(domain: string): Promise<BacklinkProfile | n
 
 // ==================== KEYWORD SEED GENERATION (AI) ====================
 
-async function generateSeedsWithAI(url: string, context: string, domain: string): Promise<string[]> {
+async function generateSeedsWithAI(url: string, context: string, domain: string, opponentDomain?: string): Promise<string[]> {
   const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
   if (!OPENROUTER_API_KEY) return [];
   
   const domainClean = domain.replace(/^www\./, '').split('.')[0];
+  const opponentClean = opponentDomain?.replace(/^www\./, '').split('.')[0] || '';
+  
+  const excludeBrands = opponentClean 
+    ? `SANS les noms de marque "${domainClean}" et "${opponentClean}"` 
+    : `SANS le nom de marque "${domainClean}"`;
   
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -295,7 +300,7 @@ async function generateSeedsWithAI(url: string, context: string, domain: string)
       headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash-lite',
-        messages: [{ role: 'user', content: `Analyse cette page:\nURL: ${url}\n${context}\n\nGénère 10 mots-clés génériques (SANS le nom de marque "${domainClean}") que des clients taperaient. Expressions de 2-4 mots, intention commerciale ou informationnelle.\nRéponds UNIQUEMENT JSON: {"seeds":["mot clé 1","mot clé 2",...]}` }],
+        messages: [{ role: 'user', content: `Analyse cette page:\nURL: ${url}\n${context}\n\nGénère 10 mots-clés SPÉCIFIQUES à ce site (${excludeBrands}) que des clients de CE site précisément taperaient. Les mots-clés doivent refléter l'activité PROPRE de ${domain}, pas des termes génériques du secteur. Expressions de 2-4 mots, intention commerciale ou informationnelle.\n${opponentDomain ? `IMPORTANT: Ce site est comparé à ${opponentDomain}. Les mots-clés doivent être DIFFÉRENCIANTS pour ${domain}, pas des termes communs aux deux.` : ''}\nRéponds UNIQUEMENT JSON: {"seeds":["mot clé 1","mot clé 2",...]}` }],
         temperature: 0.5,
       }),
       signal: AbortSignal.timeout(12000),
@@ -649,6 +654,7 @@ async function analyzeSite(
   supabaseUrl: string,
   supabaseAnonKey: string,
   openrouterKey: string,
+  opponentDomain?: string,
 ): Promise<{ metadata: PageMetadata; analysis: any; llm_raw: any; keywords: any[]; backlinks: BacklinkProfile | null; pagespeed: PageSpeedScores | null }> {
   // Step 1: Metadata + LLM visibility + Backlinks + PageSpeed in parallel
   const [metadata, llmResult, backlinks, pagespeed] = await Promise.all([
@@ -671,7 +677,7 @@ async function analyzeSite(
   ]);
 
   // Step 2: Seeds (needs metadata)
-  const seeds = await generateSeedsWithAI(url, metadata.context, domain);
+  const seeds = await generateSeedsWithAI(url, metadata.context, domain, opponentDomain);
 
   // Step 3: Keywords (needs seeds)
   const locCode = detectLocationCode(domain);
@@ -947,8 +953,8 @@ Deno.serve(async (req) => {
     
     // ═══ Phase 1 & 2: Both site pipelines in PARALLEL ═══
     const [site1, site2] = await Promise.all([
-      analyzeSite(url1, domain1, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY),
-      analyzeSite(url2, domain2, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY),
+      analyzeSite(url1, domain1, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY, domain2),
+      analyzeSite(url2, domain2, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY, domain1),
     ]);
     
     // ═══ Phase 2.5: CROSS-SERP CHECK — enrich both keyword sets with opponent rankings ═══
