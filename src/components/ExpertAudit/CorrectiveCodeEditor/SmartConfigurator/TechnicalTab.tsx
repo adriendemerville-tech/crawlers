@@ -51,6 +51,11 @@ const priorityConfig = {
     color: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/30',
     icon: Info 
   },
+  installed: {
+    label: 'Déjà installé',
+    color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+    icon: Info
+  },
 };
 
 export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
@@ -84,7 +89,9 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
 
             <div className="space-y-1">
               {categoryFixes.map((fix, index) => {
-                const PriorityIcon = priorityConfig[fix.priority].icon;
+                const pConfig = priorityConfig[fix.priority as keyof typeof priorityConfig] || priorityConfig.optional;
+                const PriorityIcon = pConfig.icon;
+                const isLocked = !!fix.locked;
                 
                 return (
                   <motion.div
@@ -93,24 +100,33 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.03 }}
                     className={`rounded-md border transition-all ${
-                      fix.enabled 
-                        ? 'p-2 border-primary/30 bg-primary/5' 
-                        : 'p-1.5 px-2 border-border hover:border-primary/30'
+                      isLocked
+                        ? 'p-1.5 px-2 border-border opacity-50 cursor-not-allowed'
+                        : fix.enabled 
+                          ? 'p-2 border-primary/30 bg-primary/5' 
+                          : 'p-1.5 px-2 border-border hover:border-primary/30'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 flex-1">
-                        {fix.enabled && (
+                        {fix.enabled && !isLocked && (
                           <div className={`p-1 rounded bg-primary/10 ${colorClass}`}>
                             <Icon className="w-3 h-3" />
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className={`text-xs ${fix.enabled ? 'font-medium' : 'text-muted-foreground'}`}>
+                            <span className={`text-xs ${isLocked ? 'text-muted-foreground line-through' : fix.enabled ? 'font-medium' : 'text-muted-foreground'}`}>
                               {fix.label}
                             </span>
-                             {fix.isRecommended ? (
+                            {isLocked ? (
+                              <Badge 
+                                variant="outline" 
+                                className={`text-[9px] px-1 py-0 h-4 ${pConfig.color}`}
+                              >
+                                {pConfig.label}
+                              </Badge>
+                            ) : fix.isRecommended ? (
                                <Badge 
                                  variant="outline" 
                                  className="text-[9px] px-1 py-0 h-4 bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30"
@@ -120,10 +136,10 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                              ) : fix.enabled && (
                                <Badge 
                                  variant="outline" 
-                                 className={`text-[9px] px-1 py-0 h-4 ${priorityConfig[fix.priority].color}`}
+                                 className={`text-[9px] px-1 py-0 h-4 ${pConfig.color}`}
                                >
                                  <PriorityIcon className="w-2 h-2 mr-0.5" />
-                                 {priorityConfig[fix.priority].label}
+                                 {pConfig.label}
                                </Badge>
                              )}
                           </div>
@@ -132,6 +148,7 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                       <Switch
                         checked={fix.enabled}
                         onCheckedChange={() => onToggle(fix.id)}
+                        disabled={isLocked}
                         className="data-[state=checked]:bg-violet-600 scale-75"
                       />
                     </div>
