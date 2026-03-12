@@ -1249,6 +1249,8 @@ export type Database = {
           agency_report_header_text: string | null
           api_key: string
           avatar_url: string | null
+          crawl_month_reset: string
+          crawl_pages_this_month: number
           created_at: string
           credits_balance: number
           email: string
@@ -1280,6 +1282,8 @@ export type Database = {
           agency_report_header_text?: string | null
           api_key?: string
           avatar_url?: string | null
+          crawl_month_reset?: string
+          crawl_pages_this_month?: number
           created_at?: string
           credits_balance?: number
           email: string
@@ -1311,6 +1315,8 @@ export type Database = {
           agency_report_header_text?: string | null
           api_key?: string
           avatar_url?: string | null
+          crawl_month_reset?: string
+          crawl_pages_this_month?: number
           created_at?: string
           credits_balance?: number
           email?: string
@@ -1905,6 +1911,7 @@ export type Database = {
           id: string
           last_audit_at: string | null
           last_widget_ping: string | null
+          previous_config: Json
           site_name: string
           user_id: string
         }
@@ -1916,6 +1923,7 @@ export type Database = {
           id?: string
           last_audit_at?: string | null
           last_widget_ping?: string | null
+          previous_config?: Json
           site_name?: string
           user_id: string
         }
@@ -1927,6 +1935,7 @@ export type Database = {
           id?: string
           last_audit_at?: string | null
           last_widget_ping?: string | null
+          previous_config?: Json
           site_name?: string
           user_id?: string
         }

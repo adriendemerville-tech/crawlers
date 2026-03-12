@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -114,6 +114,7 @@ interface TrackedSite {
   last_audit_at: string | null;
   api_key?: string;
   current_config?: Record<string, unknown>;
+  previous_config?: Record<string, unknown>;
 }
 
 interface StatsEntry {
@@ -505,6 +506,37 @@ export function MyTracking() {
     toast.success(t.removeConfirm);
   };
 
+  // Rollback: restore previous_config → current_config, clear previous_config
+  const handleRollback = async (site: TrackedSite) => {
+    if (!user || !site.previous_config || Object.keys(site.previous_config).length === 0) {
+      toast.error(language === 'fr' ? 'Aucune configuration précédente à restaurer' : 'No previous configuration to restore');
+      return;
+    }
+
+    try {
+      await supabase
+        .from('tracked_sites')
+        .update({
+          current_config: site.previous_config,
+          previous_config: {},
+        } as any)
+        .eq('id', site.id)
+        .eq('user_id', user.id);
+
+      // Update local state
+      setSites(prev => prev.map(s => 
+        s.id === site.id 
+          ? { ...s, current_config: site.previous_config, previous_config: {} }
+          : s
+      ));
+
+      toast.success(language === 'fr' ? 'Rollback effectué — configuration précédente restaurée' : 'Rollback done — previous config restored');
+    } catch (err) {
+      console.error('Rollback error:', err);
+      toast.error(language === 'fr' ? 'Erreur lors du rollback' : 'Rollback error');
+    }
+  };
+
   const currentSite = sites.find(s => s.id === selectedSite);
   const currentStats = selectedSite ? (statsMap[selectedSite] || []) : [];
   const latestStats = currentStats.length > 0 ? currentStats[currentStats.length - 1] : null;
@@ -702,6 +734,19 @@ export function MyTracking() {
                         >
                           <Wrench className="h-3.5 w-3.5" />
                           {language === 'fr' ? 'Optimiser' : language === 'es' ? 'Optimizar' : 'Optimize'}
+                        </Button>
+                      )}
+
+                      {/* Rollback button — only visible if a previous config exists */}
+                      {currentSite.previous_config && Object.keys(currentSite.previous_config).length > 0 && (
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          className="gap-1.5 font-semibold"
+                          onClick={() => handleRollback(currentSite)}
+                        >
+                          <Undo2 className="h-3.5 w-3.5" />
+                          Rollback
                         </Button>
                       )}
                     </div>
