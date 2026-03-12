@@ -458,8 +458,8 @@ const ModifierCodeWordPress = () => {
                 Contrairement au SEO classique qui optimise pour les pages de résultats Google, le GEO optimise pour les <strong className="text-foreground">réponses générées par les LLMs</strong>. Ces modèles de langage ne "crawlent" pas votre site comme Googlebot : ils s'appuient sur des <strong className="text-foreground">données structurées JSON-LD</strong>, des balises sémantiques claires et des métadonnées enrichies pour décider de vous citer.
               </p>
               <p>
-                Le plugin Crawlers.fr automatise cette optimisation sur WordPress en injectant les bonnes balises SEO, le JSON-LD automatique et les signaux sémantiques que les crawlers IA (GPTBot, PerplexityBot, ClaudeBot) recherchent.
-                Le résultat : un <strong className="text-foreground">gain de performance LLM</strong> mesurable dès la première synchronisation, sans toucher une ligne de code PHP.
+                Le plugin WordPress et le widget GTM Crawlers.fr automatisent cette optimisation en injectant les bonnes balises SEO, le JSON-LD automatique et les signaux sémantiques que les crawlers IA (GPTBot, PerplexityBot, ClaudeBot) recherchent.
+                Le résultat : un <strong className="text-foreground">gain de performance LLM</strong> mesurable dès la première synchronisation, sans toucher une ligne de code.
               </p>
             </div>
           </div>
