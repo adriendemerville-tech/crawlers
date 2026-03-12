@@ -11,7 +11,7 @@ import {
   CheckCircle2, XCircle, AlertCircle, Lightbulb,
   Globe, Building2, Users, BrainCircuit
 } from 'lucide-react';
-import { StrategicAnalysis } from '@/types/expertAudit';
+import { StrategicAnalysis, AuditPageType } from '@/types/expertAudit';
 import { GeoScoreVisualization } from './GeoScoreVisualization';
 import { StrategicRoadmapCard } from './StrategicRoadmapCard';
 import { BrandIdentityCard } from './BrandIdentityCard';
