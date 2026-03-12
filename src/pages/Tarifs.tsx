@@ -94,7 +94,7 @@ const translations = {
     perCredit: '/ crédit',
     agencyTitle: 'Pro Agency',
     agencySubtitle: 'Pour les professionnels et agences SEO',
-    agencyPrice: '49€',
+    agencyPrice: '59€',
     agencyPeriod: '/ mois',
     agencyFeatures: [
       'Audit expert illimité',
