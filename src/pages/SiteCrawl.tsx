@@ -360,6 +360,13 @@ export default function SiteCrawl() {
   const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
 
+  // Delayed upsell reveal
+  useEffect(() => {
+    if (isUnlimitedUser) return;
+    const timer = setTimeout(() => setShowUpsell(true), 5000);
+    return () => clearTimeout(timer);
+  }, [isUnlimitedUser]);
+
   // Load past crawls
   useEffect(() => {
     if (!user) return;
