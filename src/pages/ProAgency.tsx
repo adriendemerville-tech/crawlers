@@ -244,6 +244,7 @@ const translations = {
       { q: '¿Qué es exactamente la marca blanca?', a: 'Puedes personalizar los informes con tu logo, colores y datos de contacto. Tus clientes nunca verán la marca Crawlers.fr.' },
       { q: '¿Las 3 cuentas son independientes?', a: 'Sí, cada colaborador tiene su propio acceso. La cuenta principal gestiona los permisos desde la consola.' },
       { q: '¿Hay un compromiso mínimo?', a: 'No, la suscripción es sin compromiso. Pagas mensualmente y puedes parar cuando quieras.' },
+      { q: '¿Qué es la Fair Use Policy del crawl multi-páginas?', a: 'Tu suscripción Pro Agency incluye 5 000 páginas rastreadas al mes. Más allá de esta cuota, puedes continuar comprando packs de créditos adicionales (Pay-As-You-Go). El contador se reinicia cada mes.' },
     ],
     ctaBottomTitle: '¿Listo para pasar a ilimitado?',
     ctaBottomSubtitle: 'Empieza hoy y acelera tu actividad SEO/GEO.',
