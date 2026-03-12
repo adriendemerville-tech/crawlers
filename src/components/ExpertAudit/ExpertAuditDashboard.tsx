@@ -626,7 +626,7 @@ export function ExpertAuditDashboard() {
     const attemptAudit = async (attempt: number): Promise<void> => {
       try {
         const { data, error } = await supabase.functions.invoke('audit-expert-seo', {
-          body: { url: normalizedUrl }
+          body: { url: normalizedUrl, lang: language }
         });
 
         if (error) throw new Error(error.message);
