@@ -2230,9 +2230,15 @@ Deno.serve(async (req) => {
 
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode);
 
-    // Inject entity name
+    // Inject entity name & page type context
+    const pageTypeLabels: Record<PageType, string> = {
+      editorial: '📝 MODE ÉDITORIAL',
+      product: '🛒 MODE PRODUIT',
+      deep: '📄 MODE PAGE PROFONDE',
+      homepage: '🏷️',
+    };
     if (isContentMode) {
-      userPrompt = `📝 MODE CONTENU: Analyse de la page "${resolvedEntityName}" — Centre l'analyse sur le CONTENU de cette page, pas sur l'entreprise.\n` + userPrompt;
+      userPrompt = `${pageTypeLabels[pageType]}: Analyse de la page "${resolvedEntityName}" (type: ${pageType}) — Centre l'analyse sur le CONTENU de cette page, pas sur l'entreprise.\n` + userPrompt;
     } else {
       userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport.\n` + userPrompt;
     }
