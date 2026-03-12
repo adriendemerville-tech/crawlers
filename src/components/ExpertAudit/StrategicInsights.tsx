@@ -346,10 +346,12 @@ export function StrategicInsights({
             </RevealWrapper>
           )}
 
-          {/* 18. Contenus à produire en priorité */}
-          <RevealWrapper delay={24000} isDataCard enabled={progressiveReveal}>
-            <PriorityContentCard domain={domain} />
-          </RevealWrapper>
+          {/* 18. Contenus à produire en priorité — hidden in content mode */}
+          {!isContentMode && (
+            <RevealWrapper delay={24000} isDataCard enabled={progressiveReveal}>
+              <PriorityContentCard domain={domain} />
+            </RevealWrapper>
+          )}
 
           {/* 19. Feuille de Route Exécutive 2026 */}
           {analysis.executive_roadmap && analysis.executive_roadmap.length > 0 && (
