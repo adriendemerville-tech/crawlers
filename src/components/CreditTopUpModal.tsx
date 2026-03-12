@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Crown, Linkedin, Handshake, Infinity, FileText, Code, Stamp, Users, Copy, Gift, Share2 } from 'lucide-react';
+import { Check, Loader2, Crown, Linkedin, Handshake, Infinity, FileText, Code, Stamp, Users, Copy, Gift, Share2, Globe, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -334,6 +334,8 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
               <div className="flex flex-wrap gap-3 pt-1">
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Rapports ∞' : language === 'es' ? 'Informes ∞' : 'Reports ∞'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Code className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Correctifs ∞' : language === 'es' ? 'Correctivos ∞' : 'Fixes ∞'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Globe className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '5 000 pages crawl/mois' : language === 'es' ? '5 000 páginas crawl/mes' : '5,000 crawl pages/mo'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Zap className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Auto-fix en 1 clic' : language === 'es' ? 'Auto-fix en 1 clic' : '1-click auto-fix'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Stamp className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Marque blanche' : language === 'es' ? 'Marca blanca' : 'White label'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Users className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '3 comptes inclus' : language === 'es' ? '3 cuentas' : '3 accounts'}</span>
               </div>
