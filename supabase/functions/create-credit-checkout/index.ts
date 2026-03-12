@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
 
     if (!package_type || !CREDIT_PACKAGES[package_type as PackageType]) {
       return new Response(
-        JSON.stringify({ error: "Invalid package type. Must be: essential, pro, or premium" }),
+        JSON.stringify({ error: "Invalid package type. Must be: essential, pro, premium, or ultimate" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
