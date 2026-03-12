@@ -39,6 +39,7 @@ interface PageAnalysis {
   schema_org_errors: string[];
   custom_extraction: Record<string, string>;
   crawl_depth: number;
+  html_size_bytes: number;
 }
 
 interface CustomSelector {
