@@ -23,8 +23,8 @@ const PLUGIN_URL = `https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/downlo
 
 const SEO_META = {
   title: 'Comment modifier le code de son site WordPress facilement ? | Crawlers.fr',
-  description: "Optimisez le code de votre site WordPress sans toucher au PHP. Le plugin Crawlers.fr injecte automatiquement les balises SEO, JSON-LD et métadonnées GEO pour les moteurs de réponse IA.",
-  ogTitle: 'Modifier le Code WordPress Sans Coder — Plugin Crawlers.fr',
+  description: "Optimisez le code de votre site WordPress sans toucher au PHP. Le plugin Crawlers.fr ou le widget GTM injecte automatiquement les balises SEO, JSON-LD et métadonnées GEO pour les moteurs de réponse IA.",
+  ogTitle: 'Modifier le Code WordPress Sans Coder — Plugin & Widget Crawlers.fr',
   canonical: `${SITE_URL}/modifier-code-wordpress`,
 };
 
