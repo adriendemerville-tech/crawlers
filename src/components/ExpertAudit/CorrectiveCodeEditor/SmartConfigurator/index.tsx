@@ -100,7 +100,7 @@ function PlugSnippetCard({ apiKey, siteDomain }: { apiKey?: string; siteDomain: 
         defer></script>`}
         </pre>
         <p className="text-[10px] text-zinc-500 leading-snug">
-          Collez ce code avant <code className="text-zinc-400 bg-zinc-800 px-1 rounded">&lt;/head&gt;</code> ou dans une balise HTML personnalisée GTM.
+          Collez ce code avant <code className="text-zinc-400 bg-zinc-800 px-1 rounded">&lt;/head&gt;</code> ou dans une balise HTML personnalisée Google Tag Manager.
           {!apiKey && <span className="block mt-1 text-amber-500">⚠ Ajoutez d'abord ce site dans Mon Espace → Mes Sites pour obtenir votre clé API.</span>}
         </p>
       </div>
@@ -1635,7 +1635,7 @@ export function SmartConfigurator({
               <p className="text-xs font-medium mb-1.5">1. Récupérez votre clé API dans <span className="text-violet-600 dark:text-violet-400">Mon Profil → Mes Sites</span></p>
             </div>
             <div>
-              <p className="text-xs font-medium mb-1.5">2. Ajoutez ce code dans une balise HTML personnalisée GTM :</p>
+              <p className="text-xs font-medium mb-1.5">2. Ajoutez ce code dans une balise HTML personnalisée Google Tag Manager :</p>
               <div className="relative group">
                 <pre className="bg-muted rounded-md p-3 text-[11px] leading-relaxed overflow-x-auto font-mono border">
 {`<script>
@@ -1659,10 +1659,13 @@ export function SmartConfigurator({
             <div>
               <p className="text-xs font-medium mb-1">3. Déclenchez sur <span className="font-mono text-[11px] bg-muted px-1 py-0.5 rounded">All Pages</span></p>
             </div>
+            <div>
+              <p className="text-xs font-medium mb-1">4. Enregistrer puis publier la balise</p>
+            </div>
             <Separator />
             <div className="flex items-start gap-2 text-xs text-muted-foreground">
               <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-500" />
-              <span>Sans GTM ? Collez le snippet juste avant la balise <code className="font-mono bg-muted px-1 py-0.5 rounded">&lt;/head&gt;</code> de votre site.</span>
+              <span>Sans Google Tag Manager ? Collez le snippet juste avant la balise <code className="font-mono bg-muted px-1 py-0.5 rounded">&lt;/head&gt;</code> de votre site.</span>
             </div>
           </div>
         </DialogContent>

@@ -334,19 +334,24 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     const hasGA4 = /googletagmanager\.com\/gtag\/js\?id=G-/i.test(html) || /gtag\s*\(\s*['"]config['"]\s*,\s*['"]G-/i.test(html);
     
     // Detect images missing alt text
-    // Strip script/style/noscript/template to avoid counting non-visible <img> tags
+    // Strip script/style/noscript/template to avoid counting non-visible tags
     const htmlForImages = html
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
       .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
       .replace(/<template[^>]*>[\s\S]*?<\/template>/gi, '');
-    const allImages = htmlForImages.match(/<img\s[^>]*>/gi) || [];
+    // Match <img>, <img/>, data-src lazy images, <picture> source, <amp-img>, <image> (SVG)
+    const imgTagRegex = /<(?:img|amp-img|image)\b[^>]*(?:src|data-src|srcset|xlink:href)\s*=\s*[^>]*>/gi;
+    const allImages = htmlForImages.match(imgTagRegex) || [];
+    // Also count <source> inside <picture> with image srcset (type="image/...")
+    const pictureSourceImages = htmlForImages.match(/<source\b[^>]*(?:type\s*=\s*["']image\/[^"']*["']|srcset\s*=\s*["'][^"']+\.(?:webp|avif|png|jpe?g|gif|svg)[^"']*["'])[^>]*>/gi) || [];
+    const totalImageElements = allImages.length + pictureSourceImages.length;
     const imagesMissingAlt = allImages.filter(img => {
       // Match alt with non-empty content (quoted or unquoted)
       const hasAlt = /\balt\s*=\s*["'][^"']+["']/i.test(img) || /\balt\s*=\s*[^\s"'>]+/i.test(img);
       return !hasAlt;
     }).length;
-    console.log(`[analyzeHtml] 🖼️ Images: ${allImages.length} total, ${imagesMissingAlt} missing alt`);
+    console.log(`[analyzeHtml] 🖼️ Images: ${totalImageElements} total (${allImages.length} img + ${pictureSourceImages.length} picture/source), ${imagesMissingAlt} missing alt`);
 
     // ═══ CONTENT FRESHNESS DETECTION ═══
     // Check for date signals in meta tags and HTML
@@ -593,7 +598,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       isHttps: url.startsWith('https://'),
       hasGTM,
       hasGA4,
-      imagesTotal: allImages.length,
+      imagesTotal: totalImageElements,
       imagesMissingAlt,
       // Content freshness
       mostRecentDate,
