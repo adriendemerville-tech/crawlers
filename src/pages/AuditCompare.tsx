@@ -1036,7 +1036,10 @@ const AuditCompare = () => {
   const t = i18n[language];
   const isUnlimited = isAgencyPro || isAdmin;
 
-  const [url1, setUrl1] = useState('');
+  // Pre-fill url1 from expert audit session if available
+  const [url1, setUrl1] = useState(() => {
+    return sessionStorage.getItem('audit_url') || '';
+  });
   const [url2, setUrl2] = useState('');
   const [confirmedUrl1, setConfirmedUrl1] = useState<string | null>(null);
   const [confirmedUrl2, setConfirmedUrl2] = useState<string | null>(null);
