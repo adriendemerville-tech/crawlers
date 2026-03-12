@@ -163,6 +163,8 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
 
   const handleSignup = async (data: { email: string; password: string; firstName: string; lastName: string }) => {
     setIsLoading(true);
+    const verified = await verifyTurnstile();
+    if (!verified) { setIsLoading(false); return; }
     const { error } = await signUpWithEmail(data.email, data.password, data.firstName, data.lastName);
     setIsLoading(false);
 
@@ -172,6 +174,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
       } else {
         toast.error(t.signupError);
       }
+      resetTurnstile();
     } else {
       toast.success(t.signupSuccess);
       onSuccess?.();
