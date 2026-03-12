@@ -133,7 +133,7 @@ const translations = {
   },
   en: {
     pageTitle: 'Pro Agency - Unlimited SEO & GEO Subscription | Crawlers.fr',
-    metaDescription: 'Discover Crawlers.fr Pro Agency: unlimited SEO/GEO reports, unlimited corrective code, white label and multi-accounts for agencies and freelancers. €49/month.',
+    metaDescription: 'Discover Crawlers.fr Pro Agency: unlimited SEO/GEO reports, unlimited corrective code, white label and multi-accounts for agencies and freelancers. €59/month.',
     heroTitle: 'Take your business to the next level',
     heroTitleAccent: 'with Pro Agency',
     heroSubtitle: 'The all-in-one subscription for SEO and GEO professionals who want to scale without limits.',
