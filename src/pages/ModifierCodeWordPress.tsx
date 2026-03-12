@@ -494,7 +494,7 @@ const ModifierCodeWordPress = () => {
               Prêt à rendre votre WordPress visible pour l'IA ?
             </h2>
             <p className="text-slate-300 text-lg max-w-xl mx-auto">
-              Téléchargez le plugin, lancez votre Audit Expert et laissez Crawlers.fr optimiser votre code automatiquement.
+              Téléchargez le plugin, collez le snippet GTM ou lancez votre Audit Expert et laissez Crawlers.fr optimiser votre code automatiquement.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
               <Button
