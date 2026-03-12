@@ -35,6 +35,7 @@ export function UserManagement() {
   const [kpiUser, setKpiUser] = useState<UserProfile | null>(null);
   const [kpiModalOpen, setKpiModalOpen] = useState(false);
   const [adminUserIds, setAdminUserIds] = useState<Set<string>>(new Set());
+  const [stripDialogOpen, setStripDialogOpen] = useState(false);
 
   const fetchAdminRoles = async () => {
     const { data } = await supabase
