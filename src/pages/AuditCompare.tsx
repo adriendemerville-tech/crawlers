@@ -806,6 +806,10 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
   const site1Domain = site1.domain;
   const site2Domain = site2.domain;
 
+  // Brand colors — fallback to violet/amber if not detected
+  const site1Color = site1.brandColor || '#8b5cf6';
+  const site2Color = site2.brandColor || '#f59e0b';
+
   // Build radar data
   const radarData = [
     { dimension: t.aeoScore, site1: site1.analysis.aeo_score || 0, site2: site2.analysis.aeo_score || 0 },
@@ -819,8 +823,6 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-8 space-y-4">
       <Separator className="my-6" />
-      
-      {/* Verdict */}
       <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
