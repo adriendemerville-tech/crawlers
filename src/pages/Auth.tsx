@@ -234,7 +234,26 @@ export default function Auth() {
       resetTurnstile();
     } else {
       trackAnalyticsEvent('signup_complete');
-      toast.success(t.signupSuccess);
+      // Send verification code and show modal
+      setVerificationEmail(data.email);
+      supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
+      setShowVerification(true);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const email = loginForm.getValues('email');
+    if (!email) {
+      toast.error(language === 'fr' ? 'Saisissez votre email d\'abord' : language === 'es' ? 'Ingrese su email primero' : 'Enter your email first');
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    if (error) {
+      toast.error(language === 'fr' ? 'Erreur, réessayez' : 'Error, try again');
+    } else {
+      toast.success(language === 'fr' ? 'Email de réinitialisation envoyé !' : language === 'es' ? '¡Email de restablecimiento enviado!' : 'Password reset email sent!');
     }
   };
 
