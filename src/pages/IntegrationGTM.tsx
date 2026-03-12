@@ -137,7 +137,7 @@ export default function IntegrationGTM() {
     ],
   };
 
-  useStructuredData(structuredData);
+  // Inject structured data via Helmet script tag
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
