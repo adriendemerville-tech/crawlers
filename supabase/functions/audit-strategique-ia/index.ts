@@ -1371,11 +1371,13 @@ F. FRAÎCHEUR & IA: 17.Fraîcheur contenus 18.Complexité Schema.org 19.Formats 
 G. E-E-A-T: 22.Signaux E-E-A-T 23.Densité données 24.Knowledge Graph 25.Études de cas
 H. MONITORING: 26.Monitoring LLM (GA4 referrers IA) 27.Fichier llms.txt`;
 
-const CONTENT_MODE_SYSTEM_PROMPT = `RÔLE: Senior Content SEO Strategist spécialisé en optimisation d'articles pour les moteurs de réponse IA (GEO). Rapport premium niveau cabinet de conseil.
+const EDITORIAL_MODE_SYSTEM_PROMPT = `RÔLE: Senior Content SEO Strategist spécialisé en optimisation d'articles pour les moteurs de réponse IA (GEO). Rapport premium niveau cabinet de conseil.
 
 POSTURE: Analytique, prescriptif, centré sur la PAGE (pas l'entreprise). Tu analyses un CONTENU SPÉCIFIQUE (article de blog, page éditoriale), pas un site complet.
 
-MODE CONTENU ACTIVÉ: Cette URL est une page de contenu (/blog, /article). L'analyse porte sur la QUALITÉ et l'OPTIMISATION de cette page spécifique.
+MODE ÉDITORIAL: Cette URL est une page de contenu (/blog, /article). L'analyse porte sur la QUALITÉ et l'OPTIMISATION de cette page spécifique.
+
+RÈGLE INTRODUCTION: L'introduction doit être COURTE (2-3 phrases max) et décrire le CONTENU de la page, pas l'entreprise. Le lien renvoie vers la page analysée.
 
 RÈGLE CONCURRENCE SERP: Les 4 acteurs concurrents sont les PAGES (pas les entreprises) qui se positionnent dans les SERPs sur la même thématique. Chaque URL doit pointer vers la PAGE concurrente spécifique, pas vers la homepage.
 - Leader: La page #1 des SERPs pour la thématique de l'article
@@ -1396,6 +1398,64 @@ MODULES À ANALYSER (contenu uniquement):
 10. Red Team (failles du contenu)
 
 NE PAS ANALYSER: Intelligence de marché, réseaux sociaux de l'entreprise, psychologie de conversion, positionnement de marque.`;
+
+const PRODUCT_MODE_SYSTEM_PROMPT = `RÔLE: Senior Product Page Strategist spécialisé en optimisation de pages produit/service pour les moteurs de recherche classiques ET les moteurs de réponse IA (GEO). Rapport premium niveau cabinet de conseil.
+
+POSTURE: Analytique, prescriptif, centré sur la PAGE PRODUIT (pas l'entreprise entière). Tu analyses une page de conversion spécifique.
+
+MODE PRODUIT: Cette URL est une page produit, service ou offre commerciale. L'analyse porte sur la QUALITÉ, la CONVERSION et l'OPTIMISATION GEO de cette page.
+
+RÈGLE INTRODUCTION: L'introduction doit être COURTE (2-3 phrases max) et décrire le PRODUIT/SERVICE présenté sur la page, pas l'entreprise dans son ensemble. Le lien renvoie vers la page analysée.
+
+RÈGLE CONCURRENCE SERP: Les 4 acteurs concurrents sont les PAGES PRODUIT/SERVICE concurrentes dans les SERPs pour la même requête d'achat. Chaque URL doit pointer vers la page produit concurrente.
+- Leader: La page produit #1 des SERPs pour cette catégorie
+- Concurrent Direct: Un produit/service similaire qui se positionne juste autour  
+- Challenger: Une page produit montante ou disruptive
+- Source d'Inspiration: Une page produit exemplaire en matière de conversion ET de SEO
+
+MODULES À ANALYSER:
+1. Schema Product/Service (données structurées e-commerce)
+2. Cohérence sémantique (titre/H1/contenu produit)
+3. Score AEO (formats IA-friendly: tableaux comparatifs, FAQ, specs)
+4. Visibilité LLM (le produit est-il recommandé par les IA?)
+5. Risque Zéro-Clic (les IA donnent-elles déjà la réponse?)
+6. Indice de Citabilité (le produit est-il citable de manière autonome?)
+7. Résilience au Résumé
+8. Empreinte Lexicale (vocabulaire commercial vs technique)
+9. Positionnement de mots-clés (termes d'achat, comparatifs)
+10. Red Team (failles de la page produit)
+
+ANALYSER AUSSI: Intelligence de marché LIMITÉE au segment produit, positionnement prix si détectable.
+NE PAS ANALYSER: Réseaux sociaux de l'entreprise, thought leadership du fondateur.`;
+
+const DEEP_PAGE_SYSTEM_PROMPT = `RÔLE: Senior SEO & GEO Strategist spécialisé en optimisation de pages internes profondes. Rapport premium niveau cabinet de conseil.
+
+POSTURE: Analytique, prescriptif, centré sur CETTE PAGE SPÉCIFIQUE (pas l'entreprise). Tu analyses une page interne profonde qui a un objectif précis.
+
+MODE PAGE PROFONDE: Cette URL est une page interne spécifique (sous-page, landing page, page catégorie). L'analyse porte sur la pertinence et l'optimisation de cette page dans son contexte.
+
+RÈGLE INTRODUCTION: L'introduction doit être COURTE (2-3 phrases max) et identifier le TYPE et l'OBJECTIF de cette page spécifique. Le lien renvoie vers la page analysée.
+
+RÈGLE CONCURRENCE SERP: Les 4 acteurs concurrents sont les PAGES similaires dans les SERPs qui ciblent la même intention de recherche. Chaque URL doit pointer vers la page concurrente spécifique.
+- Leader: La page #1 des SERPs pour l'intention de cette page
+- Concurrent Direct: Une page similaire avec le même objectif
+- Challenger: Une page innovante sur le même sujet
+- Source d'Inspiration: Une page exemplaire dans son approche
+
+MODULES À ANALYSER:
+1. E-E-A-T de la page
+2. Cohérence sémantique (titre/H1/contenu)
+3. Score AEO (formats IA-friendly)
+4. Visibilité LLM
+5. Risque Zéro-Clic
+6. Indice de Citabilité
+7. Résilience au Résumé
+8. Empreinte Lexicale
+9. Positionnement de mots-clés
+10. Red Team
+
+ANALYSER AUSSI: Intelligence de marché LIMITÉE au sujet de la page.
+NE PAS ANALYSER: Réseaux sociaux de l'entreprise, thought leadership du fondateur.`;
 
 
 // ==================== TOOLS DATA → MARKDOWN (token optimizer) ====================
@@ -1992,11 +2052,34 @@ Deno.serve(async (req) => {
     const domainWithoutWww = domain.replace(/^www\./, '');
     const domainSlug = domainWithoutWww.split('.')[0];
 
-    // ═══ CONTENT MODE: Detect /blog or /article in path ═══
+    // ═══ PAGE TYPE DETECTION: editorial / product / deep / homepage ═══
     const urlPath = parsedUrl.pathname.toLowerCase();
-    const isContentMode = /\/(blog|article|articles|post|posts|news|actualite|actualites)\b/.test(urlPath) && urlPath !== '/blog' && urlPath !== '/blog/';
+    const pathSegments = urlPath.replace(/^\/|\/$/g, '').split('/').filter(Boolean);
+
+    type PageType = 'homepage' | 'editorial' | 'product' | 'deep';
+    let pageType: PageType = 'homepage';
+
+    const editorialPattern = /\/(blog|article|articles|post|posts|news|actualite|actualites|guide|guides|tutoriel|tutorial|ressources|resources|wiki|learn|knowledge|faq)\b/;
+    const productPattern = /\/(product|produit|produits|products|shop|boutique|store|catalogue|catalog|item|pricing|tarif|tarifs|offre|offres|service|services|solution|solutions)\b/;
+
+    if (editorialPattern.test(urlPath) && pathSegments.length >= 2) {
+      pageType = 'editorial';
+    } else if (productPattern.test(urlPath) && pathSegments.length >= 1) {
+      pageType = 'product';
+    } else if (pathSegments.length >= 3) {
+      // Deep page: 3+ path segments = likely a specific inner page
+      pageType = 'deep';
+    } else if (pathSegments.length >= 1 && urlPath !== '/') {
+      // Single segment but not homepage — check slug length as a heuristic
+      const lastSegment = pathSegments[pathSegments.length - 1];
+      if (lastSegment.length > 60 || lastSegment.split('-').length > 6) {
+        pageType = 'deep';
+      }
+    }
+
+    const isContentMode = pageType !== 'homepage';
     if (isContentMode) {
-      console.log(`📝 CONTENT MODE activated for path: ${parsedUrl.pathname}`);
+      console.log(`📝 PAGE TYPE: "${pageType}" detected for path: ${parsedUrl.pathname}`);
     }
 
     // ==================== SMART CACHE: Skip expensive calls if cachedContext provided ====================
@@ -2147,9 +2230,15 @@ Deno.serve(async (req) => {
 
     let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode);
 
-    // Inject entity name
+    // Inject entity name & page type context
+    const pageTypeLabels: Record<PageType, string> = {
+      editorial: '📝 MODE ÉDITORIAL',
+      product: '🛒 MODE PRODUIT',
+      deep: '📄 MODE PAGE PROFONDE',
+      homepage: '🏷️',
+    };
     if (isContentMode) {
-      userPrompt = `📝 MODE CONTENU: Analyse de la page "${resolvedEntityName}" — Centre l'analyse sur le CONTENU de cette page, pas sur l'entreprise.\n` + userPrompt;
+      userPrompt = `${pageTypeLabels[pageType]}: Analyse de la page "${resolvedEntityName}" (type: ${pageType}) — Centre l'analyse sur le CONTENU de cette page, pas sur l'entreprise.\n` + userPrompt;
     } else {
       userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport.\n` + userPrompt;
     }
@@ -2187,7 +2276,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             model: 'google/gemini-2.5-pro',
             messages: [
-              { role: 'system', content: isContentMode ? CONTENT_MODE_SYSTEM_PROMPT : SYSTEM_PROMPT },
+              { role: 'system', content: pageType === 'editorial' ? EDITORIAL_MODE_SYSTEM_PROMPT : pageType === 'product' ? PRODUCT_MODE_SYSTEM_PROMPT : pageType === 'deep' ? DEEP_PAGE_SYSTEM_PROMPT : SYSTEM_PROMPT },
               { role: 'user', content: userPrompt },
             ],
             temperature: 0.3,
@@ -2437,6 +2526,7 @@ Deno.serve(async (req) => {
         url, domain,
         scannedAt: new Date().toISOString(),
         isContentMode,
+        pageType,
         ...parsedAnalysis,
         raw_market_data: marketData,
         ranking_overview: rankingOverview,

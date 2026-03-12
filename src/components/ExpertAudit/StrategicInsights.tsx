@@ -11,7 +11,7 @@ import {
   CheckCircle2, XCircle, AlertCircle, Lightbulb,
   Globe, Building2, Users, BrainCircuit
 } from 'lucide-react';
-import { StrategicAnalysis } from '@/types/expertAudit';
+import { StrategicAnalysis, AuditPageType } from '@/types/expertAudit';
 import { GeoScoreVisualization } from './GeoScoreVisualization';
 import { StrategicRoadmapCard } from './StrategicRoadmapCard';
 import { BrandIdentityCard } from './BrandIdentityCard';
@@ -59,7 +59,12 @@ export function StrategicInsights({
   progressiveReveal = false
 }: StrategicInsightsProps) {
   const [showHallucinationModal, setShowHallucinationModal] = useState(false);
-  const isContentMode = analysis.isContentMode || false;
+  const pageType: AuditPageType = analysis.pageType || (analysis.isContentMode ? 'editorial' : 'homepage');
+  const isContentMode = pageType !== 'homepage';
+  // Product pages keep market intelligence & keywords but hide social signals
+  const hideMarketIntel = pageType === 'editorial';
+  const hideSocialSignals = pageType !== 'homepage';
+  const hidePriorityContent = pageType === 'editorial';
   
   const getAuthorityColor = (authority: string) => {
     switch (authority) {
@@ -208,8 +213,8 @@ export function StrategicInsights({
             </Card>
           )}
 
-          {/* 2. Intelligence Marché & Psychologie — hidden in content mode */}
-          {!isContentMode && analysis.market_intelligence && (
+          {/* 2. Intelligence Marché & Psychologie — hidden for editorial pages */}
+          {!hideMarketIntel && analysis.market_intelligence && (
             <MarketIntelligenceCard intelligence={analysis.market_intelligence} />
           )}
 
@@ -268,8 +273,8 @@ export function StrategicInsights({
             <ConversationalIntentCard analysis={analysis} />
           </RevealWrapper>
 
-          {/* 13. Autorité Sociale & Humaine — hidden in content mode */}
-          {!isContentMode && analysis.social_signals && (
+          {/* 13. Autorité Sociale & Humaine — only on homepage */}
+          {!hideSocialSignals && analysis.social_signals && (
             <RevealWrapper delay={14000} isDataCard enabled={progressiveReveal}>
               <SocialSignalsCard signals={analysis.social_signals} />
             </RevealWrapper>
@@ -346,8 +351,8 @@ export function StrategicInsights({
             </RevealWrapper>
           )}
 
-          {/* 18. Contenus à produire en priorité — hidden in content mode */}
-          {!isContentMode && (
+          {/* 18. Contenus à produire en priorité — hidden for editorial pages */}
+          {!hidePriorityContent && (
             <RevealWrapper delay={24000} isDataCard enabled={progressiveReveal}>
               <PriorityContentCard domain={domain} />
             </RevealWrapper>

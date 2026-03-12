@@ -416,11 +416,14 @@ export interface HallucinationCorrections {
 }
 
 // UPDATED: Premium Strategic Analysis
+export type AuditPageType = 'homepage' | 'editorial' | 'product' | 'deep';
+
 export interface StrategicAnalysis {
   introduction?: StrategicIntroduction;
   
-  // Content mode flag (true when URL is /blog or /article)
+  // Page type detection (replaces simple isContentMode boolean)
   isContentMode?: boolean;
+  pageType?: AuditPageType;
   
   // NEW PREMIUM FORMAT
   brand_authority?: BrandAuthority;
