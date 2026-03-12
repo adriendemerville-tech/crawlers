@@ -50,8 +50,8 @@ const translations = {
       },
       {
         icon: 'Globe',
-        title: 'Crawl multi-pages illimité',
-        description: 'Analysez l\'intégralité d\'un site (10 à 200 pages) : structure, score SEO/200 par page, liens cassés, synthèse IA globale.',
+        title: 'Crawl multi-pages inclus',
+        description: '5 000 pages crawlées par mois incluses (Fair Use). Au-delà, achat de crédits supplémentaires en Pay-As-You-Go. Structure, score SEO/200, liens cassés, synthèse IA.',
       },
       {
         icon: 'Palette',
