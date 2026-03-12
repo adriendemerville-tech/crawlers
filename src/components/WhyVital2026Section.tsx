@@ -79,7 +79,7 @@ const translations = {
   },
   es: {
     badge: 'Alerta 2026',
-    title: '¿Por qué es vital en 2026?',
+    title: '¿Por qué optimizar tu SEO y visibilidad IA es vital en 2026?',
     subtitle: 'Las reglas han cambiado. Esto es lo que arriesgas.',
     points: [
       {
