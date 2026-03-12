@@ -97,36 +97,48 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 4. Welcome bonus: +10 credits to referee
-    const { data: currentProfile } = await supabase
-      .from('profiles')
-      .select('credits_balance')
-      .eq('user_id', userId)
-      .single();
+    // 4. Welcome bonus: +10 credits to referee — atomic via RPC, fallback to SELECT+UPDATE
+    const REFERRAL_BONUS = 10;
+    let newBalance: number;
 
-    const currentBalance = currentProfile?.credits_balance || 0;
-    const newBalance = currentBalance + 10;
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('atomic_credit_update', {
+      p_user_id: userId,
+      p_amount: REFERRAL_BONUS,
+    });
 
-    await supabase
-      .from('profiles')
-      .update({ credits_balance: newBalance, updated_at: new Date().toISOString() })
-      .eq('user_id', userId);
+    if (rpcError) {
+      // Fallback: non-atomic but still functional
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('credits_balance')
+        .eq('user_id', userId)
+        .single();
+
+      newBalance = (currentProfile?.credits_balance || 0) + REFERRAL_BONUS;
+
+      await supabase
+        .from('profiles')
+        .update({ credits_balance: newBalance, updated_at: new Date().toISOString() })
+        .eq('user_id', userId);
+    } else {
+      newBalance = (rpcResult as any)?.new_balance ?? 0;
+    }
 
     // Record transaction
     await supabase
       .from('credit_transactions')
       .insert({
         user_id: userId,
-        amount: 10,
+        amount: REFERRAL_BONUS,
         transaction_type: 'bonus',
         description: 'Bonus de bienvenue parrainage — 10 crédits',
       });
 
-    console.log(`✅ Referral applied: ${userId} referred by ${referrer.user_id}, +10 credits`);
+    console.log(`✅ Referral applied: ${userId} referred by ${referrer.user_id}, +${REFERRAL_BONUS} credits`);
 
     return new Response(JSON.stringify({ 
       success: true, 
-      credits_added: 10, 
+      credits_added: REFERRAL_BONUS, 
       new_balance: newBalance 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

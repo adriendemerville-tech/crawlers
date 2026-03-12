@@ -102,13 +102,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update monthly page counter
-    if (!isUnlimited) {
-      await supabase
-        .from('profiles')
-        .update({ crawl_pages_this_month: usedThisMonth + pageLimit } as any)
-        .eq('user_id', userId);
-    }
+    // Note: monthly page counter is updated AFTER mapping, using actual urls.length
+    // (moved below the map step for accuracy)
 
     if (isUnlimited) {
       console.log(`[${domain}] Crawl illimité (Admin)`);
@@ -184,6 +179,14 @@ Deno.serve(async (req) => {
       total_pages: urls.length,
       status: 'queued',
     }).eq('id', crawlId);
+
+    // Update monthly page counter with ACTUAL urls discovered (not the max limit)
+    if (!isUnlimited) {
+      await supabase
+        .from('profiles')
+        .update({ crawl_pages_this_month: usedThisMonth + urls.length } as any)
+        .eq('user_id', userId);
+    }
 
     // Create the crawl job with advanced options
     const { data: job, error: jobError } = await supabase

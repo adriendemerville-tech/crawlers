@@ -182,25 +182,27 @@ async function fetchSupplementaryArticles(
   return results;
 }
 
-// Translate text using Lovable AI Gateway
-async function translateText(text: string, targetLang: string): Promise<string> {
-  // Don't skip any language — RSS feeds may contain articles in any language
+// Batch translate multiple texts in a SINGLE LLM call (saves ~14 API calls per invocation)
+async function batchTranslate(texts: string[], targetLang: string): Promise<string[]> {
+  if (!texts.length) return [];
   
   const langNames: Record<string, string> = {
     en: 'English',
     es: 'Spanish',
     fr: 'French',
   };
-  
   const targetLangName = langNames[targetLang] || 'English';
-  
+
   try {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       console.log('LOVABLE_API_KEY not found, skipping translation');
-      return text;
+      return texts;
     }
-    
+
+    // Build a numbered list for batch translation
+    const numberedInput = texts.map((t, i) => `[${i}] ${t}`).join('\n');
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -212,50 +214,45 @@ async function translateText(text: string, targetLang: string): Promise<string> 
         messages: [
           {
             role: 'system',
-            content: `You are a professional translator. Translate the following text to ${targetLangName}. If the text is already in ${targetLangName}, return it unchanged. Only return the translated text, nothing else. Keep any technical terms (SEO, LLM, GEO, ChatGPT, etc.) unchanged.`
+            content: `You are a professional translator. Translate each numbered line to ${targetLangName}. If a line is already in ${targetLangName}, return it unchanged. Keep technical terms (SEO, LLM, GEO, ChatGPT, etc.) unchanged. Return ONLY the translated lines, one per line, keeping the [N] prefix. No extra text.`
           },
           {
             role: 'user',
-            content: text
+            content: numberedInput
           }
         ],
-        max_tokens: 500,
+        max_tokens: 2000,
       }),
     });
-    
-    if (!response.ok) {
-      console.log('Translation API error:', response.status);
-      return text;
-    }
-    
-    const data = await response.json();
-    const translated = data.choices?.[0]?.message?.content?.trim();
-    
-    if (translated) {
-      return translated;
-    }
-    
-    return text;
-  } catch (error) {
-    console.log('Translation error:', error);
-    return text;
-  }
-}
 
-// Batch translate multiple texts
-async function batchTranslate(texts: string[], targetLang: string): Promise<string[]> {
-  
-  // Translate in parallel with concurrency limit
-  const BATCH_SIZE = 5;
-  const results: string[] = [];
-  
-  for (let i = 0; i < texts.length; i += BATCH_SIZE) {
-    const batch = texts.slice(i, i + BATCH_SIZE);
-    const translated = await Promise.all(batch.map(text => translateText(text, targetLang)));
-    results.push(...translated);
+    if (!response.ok) {
+      console.log('Batch translation API error:', response.status);
+      return texts;
+    }
+
+    const data = await response.json();
+    const rawOutput = data.choices?.[0]?.message?.content?.trim();
+
+    if (!rawOutput) return texts;
+
+    // Parse numbered output back into array
+    const result = [...texts]; // clone as fallback
+    const lines = rawOutput.split('\n');
+    for (const line of lines) {
+      const match = line.match(/^\[(\d+)\]\s*(.+)$/);
+      if (match) {
+        const idx = parseInt(match[1], 10);
+        if (idx >= 0 && idx < texts.length) {
+          result[idx] = match[2].trim();
+        }
+      }
+    }
+
+    return result;
+  } catch (error) {
+    console.log('Batch translation error:', error);
+    return texts;
   }
-  
-  return results;
 }
 
 function calculateRelevanceScore(text: string): number {
