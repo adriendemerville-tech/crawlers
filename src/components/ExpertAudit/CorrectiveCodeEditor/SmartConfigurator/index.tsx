@@ -1445,7 +1445,7 @@ export function SmartConfigurator({
                         className="flex items-center gap-1.5 text-xs font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2.5 py-1.5 whitespace-nowrap"
                       >
                         <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                        <span>Aucune connexion détectée (GTM / WordPress)</span>
+                        <span>Branchez votre site</span>
                         <Cable className="w-3 h-3 flex-shrink-0 opacity-60" />
                       </motion.div>
                     )}
