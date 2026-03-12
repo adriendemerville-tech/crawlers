@@ -415,7 +415,7 @@ function FairUseLimitModal({ language, crawlPagesThisMonth, fairUseLimit, onClos
   );
 }
 
-
+export default function SiteCrawl() {
   const { user, loading } = useAuth();
   const { balance: credits, isAgencyPro } = useCredits();
   const { language } = useLanguage();
