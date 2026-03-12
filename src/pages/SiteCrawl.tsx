@@ -367,15 +367,6 @@ export default function SiteCrawl() {
     }
   }, [user, loading, adminLoading, isUnlimitedUser, navigate]);
 
-  if (loading || adminLoading || !user || !isUnlimitedUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-
   // Load past crawls
   useEffect(() => {
     if (!user) return;
@@ -427,6 +418,15 @@ export default function SiteCrawl() {
     }, 5000);
     return () => clearInterval(interval);
   }, [crawlResult]);
+
+  // Early return AFTER all hooks
+  if (loading || adminLoading || !user || !isUnlimitedUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   async function loadPages(crawlId: string) {
     const { data } = await supabase
