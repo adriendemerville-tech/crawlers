@@ -52,6 +52,8 @@ Deno.serve(async (req) => {
 
     // Enqueue the verification email via the email queue
     const emailPayload = {
+      run_id: crypto.randomUUID(),
+      message_id: crypto.randomUUID(),
       to: email,
       subject: 'Votre code de vérification Crawlers',
       html: `
@@ -69,7 +71,10 @@ Deno.serve(async (req) => {
         </div>
       `,
       from: 'noreply@notify.crawlers.fr',
+      sender_domain: 'notify.crawlers.fr',
       purpose: 'transactional',
+      label: 'verification-code',
+      queued_at: new Date().toISOString(),
     };
 
     const { error: queueError } = await supabase.rpc('enqueue_email', {
