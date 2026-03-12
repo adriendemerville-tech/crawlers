@@ -74,7 +74,7 @@ const translations = {
     },
     auditCompare: {
       title: 'Audit Comparé',
-      description: '5 crédits par audit comparatif',
+      description: '4 crédits par audit comparatif',
       features: [
         'Comparaison côte à côte de 2 sites',
         'Analyse Brand DNA & backlinks',
