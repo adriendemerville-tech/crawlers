@@ -34,8 +34,6 @@ const WhyVital2026Section = lazy(() => import('@/components/WhyVital2026Section'
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
 const GEOComparisonTable = lazy(() => import('@/components/GEOComparisonTable').then(m => ({ default: m.GEOComparisonTable })));
 const SolutionSection = lazy(() => import('@/components/SolutionSection').then(m => ({ default: m.SolutionSection })));
-const MarketingBudgetSection = lazy(() => import('@/components/MarketingBudgetSection').then(m => ({ default: m.MarketingBudgetSection })));
-const SEOvsGEOSection = lazy(() => import('@/components/SEOvsGEOSection').then(m => ({ default: m.SEOvsGEOSection })));
 
 // Lazy load Footer - not needed for initial render
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
