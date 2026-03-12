@@ -159,6 +159,7 @@ export function SmartConfigurator({
   const [isApplying, setIsApplying] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
   const [showWpConfigModal, setShowWpConfigModal] = useState(false);
+  const [showConnectSiteModal, setShowConnectSiteModal] = useState(false);
   const [wpSiteData, setWpSiteData] = useState<{ id: string; domain: string; apiKey: string; hasConfig: boolean } | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   
