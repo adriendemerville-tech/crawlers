@@ -283,11 +283,16 @@ async function fetchBacklinkProfile(domain: string): Promise<BacklinkProfile | n
 
 // ==================== KEYWORD SEED GENERATION (AI) ====================
 
-async function generateSeedsWithAI(url: string, context: string, domain: string): Promise<string[]> {
+async function generateSeedsWithAI(url: string, context: string, domain: string, opponentDomain?: string): Promise<string[]> {
   const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
   if (!OPENROUTER_API_KEY) return [];
   
   const domainClean = domain.replace(/^www\./, '').split('.')[0];
+  const opponentClean = opponentDomain?.replace(/^www\./, '').split('.')[0] || '';
+  
+  const excludeBrands = opponentClean 
+    ? `SANS les noms de marque "${domainClean}" et "${opponentClean}"` 
+    : `SANS le nom de marque "${domainClean}"`;
   
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -295,7 +300,7 @@ async function generateSeedsWithAI(url: string, context: string, domain: string)
       headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash-lite',
-        messages: [{ role: 'user', content: `Analyse cette page:\nURL: ${url}\n${context}\n\nGénère 10 mots-clés génériques (SANS le nom de marque "${domainClean}") que des clients taperaient. Expressions de 2-4 mots, intention commerciale ou informationnelle.\nRéponds UNIQUEMENT JSON: {"seeds":["mot clé 1","mot clé 2",...]}` }],
+        messages: [{ role: 'user', content: `Analyse cette page:\nURL: ${url}\n${context}\n\nGénère 10 mots-clés SPÉCIFIQUES à ce site (${excludeBrands}) que des clients de CE site précisément taperaient. Les mots-clés doivent refléter l'activité PROPRE de ${domain}, pas des termes génériques du secteur. Expressions de 2-4 mots, intention commerciale ou informationnelle.\n${opponentDomain ? `IMPORTANT: Ce site est comparé à ${opponentDomain}. Les mots-clés doivent être DIFFÉRENCIANTS pour ${domain}, pas des termes communs aux deux.` : ''}\nRéponds UNIQUEMENT JSON: {"seeds":["mot clé 1","mot clé 2",...]}` }],
         temperature: 0.5,
       }),
       signal: AbortSignal.timeout(12000),
