@@ -425,7 +425,7 @@ export function MyWallet() {
                         </div>
                         <div>
                           <p className="text-sm font-medium">
-                            Pro Agency — 49€<span className="text-xs font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
+                            Pro Agency — 59€<span className="text-xs font-normal text-muted-foreground">/{language === 'fr' ? 'mois' : language === 'es' ? 'mes' : 'month'}</span>
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {language === 'fr' ? 'Gérer, modifier ou résilier votre abonnement' : language === 'es' ? 'Gestionar, modificar o cancelar su suscripción' : 'Manage, update or cancel your subscription'}
