@@ -30,7 +30,6 @@ const QuotaExceeded = lazy(() => import('@/components/QuotaExceeded').then(m => 
 
 // Lazy load below-the-fold components with higher priority grouping
 const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
-const GEOFAQSection = lazy(() => import('@/components/GEOFAQSection').then(m => ({ default: m.GEOFAQSection })));
 const WhyVital2026Section = lazy(() => import('@/components/WhyVital2026Section').then(m => ({ default: m.WhyVital2026Section })));
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
 const GEOComparisonTable = lazy(() => import('@/components/GEOComparisonTable').then(m => ({ default: m.GEOComparisonTable })));
