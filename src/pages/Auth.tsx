@@ -523,6 +523,16 @@ export default function Auth() {
           </CardContent>
         </Card>
       </motion.div>
+
+      <VerificationCodeModal
+        open={showVerification}
+        email={verificationEmail}
+        onVerified={() => {
+          setShowVerification(false);
+          toast.success(t.signupSuccess);
+        }}
+        onClose={() => setShowVerification(false)}
+      />
     </div>
   );
 }
