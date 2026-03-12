@@ -1388,7 +1388,7 @@ async function generateNarrativeIntroduction(
         messages: [
           { 
             role: 'system', 
-            content: `Tu es un consultant SEO senior. Tu dois générer une introduction structurée en 3 paragraphes pour un audit technique SEO Expert. RÈGLE ABSOLUE: Tu DOIS désigner le site analysé EXCLUSIVEMENT par son NOM DE DOMAINE fourni dans le prompt. Ne jamais inventer, déduire ou halluciner un nom de marque ou une description générique. Réponds UNIQUEMENT en JSON valide.`
+            content: `Tu es un consultant SEO senior. Tu dois générer une introduction structurée en 3 paragraphes pour un audit technique SEO Expert. RÈGLE ABSOLUE: Tu DOIS désigner le site analysé EXCLUSIVEMENT par son NOM DE DOMAINE fourni dans le prompt. Ne jamais inventer, déduire ou halluciner un nom de marque ou une description générique. Réponds UNIQUEMENT en JSON valide. LANGUE DE RÉDACTION: ${lang === 'fr' ? 'français' : lang === 'es' ? 'espagnol' : 'anglais'}. Rédige TOUT le contenu dans cette langue.`
           },
           { 
             role: 'user', 
@@ -1411,6 +1411,8 @@ INSIGHTS EXPERTS:
 
 Titre: "${htmlAnalysis.titleContent}"
 Meta: "${htmlAnalysis.metaDescContent?.substring(0, 100) || 'absente'}"
+
+LANGUE: Rédige en ${lang === 'fr' ? 'français' : lang === 'es' ? 'espagnol' : 'anglais'}.
 
 Réponds avec ce JSON:
 {
