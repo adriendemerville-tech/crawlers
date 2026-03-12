@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -101,6 +103,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [existingUser, setExistingUser] = useState(false);
+  const [cgvuAccepted, setCgvuAccepted] = useState(false);
   const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
@@ -443,7 +446,28 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full h-9 text-sm" disabled={isLoading}>
+                {/* CGVU Checkbox — only for new signups */}
+                {!existingUser && (
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="cgvu-accept"
+                      checked={cgvuAccepted}
+                      onCheckedChange={(v) => setCgvuAccepted(v === true)}
+                      className="mt-0.5"
+                    />
+                    <label htmlFor="cgvu-accept" className="text-[11px] leading-tight text-muted-foreground cursor-pointer">
+                      {language === 'fr' ? (
+                        <>J'accepte les <Link to="/cgvu" target="_blank" className="text-primary hover:underline">CGVU</Link></>
+                      ) : language === 'es' ? (
+                        <>Acepto los <Link to="/cgvu" target="_blank" className="text-primary hover:underline">términos y condiciones</Link></>
+                      ) : (
+                        <>I accept the <Link to="/cgvu" target="_blank" className="text-primary hover:underline">Terms & Conditions</Link></>
+                      )}
+                    </label>
+                  </div>
+                )}
+
+                <Button type="submit" className="w-full h-9 text-sm" disabled={isLoading || (!existingUser && !cgvuAccepted)}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : (existingUser ? t.loginButton : t.signupButton)}
                 </Button>
               </form>

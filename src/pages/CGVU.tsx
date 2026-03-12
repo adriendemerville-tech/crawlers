@@ -11,6 +11,7 @@ const sections = [
   { id: 'description', title: '3. Description du Service' },
   { id: 'garantie', title: '4. Absence de Garantie de Résultat' },
   { id: 'code', title: '5. Responsabilité sur l\'Implémentation du Code' },
+  { id: 'injection', title: '5 bis. Injection de Code via Widget / GTM' },
   { id: 'credits', title: '6. Système de Crédits' },
   { id: 'abonnement', title: '7. Abonnement Pro Agency' },
   { id: 'whitelabel', title: '8. Offre Marque Blanche (White Label)' },
@@ -153,6 +154,27 @@ const CGVU = () => {
               </p>
               <p>
                 Il est expressément recommandé à l'utilisateur de tester toute modification dans un environnement de staging avant mise en production.
+              </p>
+            </section>
+
+            {/* Article 5 bis */}
+            <section id="injection">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">5 bis. Injection de Code via Widget / GTM — Consentement de l'Utilisateur</h2>
+              <p>
+                Lorsque l'utilisateur choisit de <strong>brancher son site</strong> à Crawlers.fr — que ce soit via le widget GTM (Google Tag Manager), le snippet JavaScript direct ou le plugin WordPress — il autorise expressément la Plateforme à <strong>injecter du code côté client</strong> sur les pages de son site web.
+              </p>
+              <p className="font-semibold">
+                L'utilisateur reconnaît et accepte que :
+              </p>
+              <ul>
+                <li>L'injection de code est <strong>initiée exclusivement par l'utilisateur</strong> lui-même, qui en fait la demande explicite via l'interface de la Plateforme (bouton « Brancher mon site ») ;</li>
+                <li>Le code injecté est <strong>encapsulé et sandboxé</strong> : il s'exécute dans un périmètre isolé et n'interagit qu'avec les éléments HTML ciblés par les correctifs (données structurées, balises meta, attributs Open Graph, etc.), sans pouvoir modifier d'autres composants du site ;</li>
+                <li>Le code injecté <strong>ne collecte aucune donnée personnelle</strong> des visiteurs du site et ne dépose aucun cookie ;</li>
+                <li>L'utilisateur peut <strong>débrancher son site à tout moment</strong>, en un clic, depuis son espace personnel (Console → Mes Sites). La déconnexion est immédiate et supprime tout code injecté ;</li>
+                <li>Crawlers.fr <strong>ne saurait être tenu responsable</strong> des éventuels conflits entre le code injecté et d'autres scripts tiers présents sur le site de l'utilisateur.</li>
+              </ul>
+              <p>
+                Il est recommandé à l'utilisateur de <strong>tester les correctifs dans un environnement de staging</strong> avant de les déployer en production, et de vérifier la compatibilité avec son environnement technique.
               </p>
             </section>
 
