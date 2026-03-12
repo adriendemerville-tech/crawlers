@@ -307,9 +307,9 @@ const ModifierCodeWordPress = () => {
 
             <div className="grid md:grid-cols-3 gap-6">
               {[
-                { icon: FileCode, title: 'Injection propre', desc: 'Les balises sont ajoutées via wp_head, le hook standard WordPress. Aucun fichier de thème n\'est modifié.', color: 'text-violet-500' },
-                { icon: Cloud, title: 'Synchronisation cloud', desc: 'Le plugin interroge l\'API Crawlers.fr toutes les 5 minutes pour appliquer les dernières optimisations.', color: 'text-blue-500' },
-                { icon: ShieldCheck, title: 'Réversible à 100%', desc: 'Désactivez le plugin et tout disparaît. Pas de résidus, pas de modifications permanentes.', color: 'text-emerald-500' },
+                { icon: FileCode, title: 'Injection propre', desc: 'WordPress : via wp_head (hook standard). GTM/Script : via le widget Crawlers.AI. Aucun fichier de thème modifié.', color: 'text-violet-500' },
+                { icon: Cloud, title: 'Synchronisation cloud', desc: 'Le plugin interroge l\'API toutes les 6h. Le widget GTM se connecte en temps réel. Dernières optimisations toujours appliquées.', color: 'text-blue-500' },
+                { icon: ShieldCheck, title: 'Réversible à 100%', desc: 'Désactivez le plugin ou retirez le snippet — tout disparaît. Pas de résidus, pas de modifications permanentes.', color: 'text-emerald-500' },
               ].map((feature, i) => (
                 <Card key={i} className="text-center border-border/50 hover:border-primary/30 transition-colors">
                   <CardContent className="pt-8 pb-6 space-y-3">
