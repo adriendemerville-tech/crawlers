@@ -50,8 +50,8 @@ const translations = {
       },
       {
         icon: 'Globe',
-        title: 'Crawl multi-pages illimité',
-        description: 'Analysez l\'intégralité d\'un site (10 à 200 pages) : structure, score SEO/200 par page, liens cassés, synthèse IA globale.',
+        title: 'Crawl multi-pages inclus',
+        description: '5 000 pages crawlées par mois incluses (Fair Use). Au-delà, achat de crédits supplémentaires en Pay-As-You-Go. Structure, score SEO/200, liens cassés, synthèse IA.',
       },
       {
         icon: 'Palette',
@@ -81,7 +81,7 @@ const translations = {
     compRows: [
       ['Audits techniques', '1 crédit / audit', 'Illimité ∞'],
       ['Audits stratégiques IA', '2 crédits / audit', 'Illimité ∞'],
-      ['Crawl multi-pages', '5-30 crédits / crawl', 'Illimité ∞'],
+      ['Crawl multi-pages', '5-30 crédits / crawl', '5 000 pages/mois incluses *'],
       ['Codes correctifs', '1 crédit / code', 'Illimité ∞'],
       ['Marque blanche', '—', '✓ Inclus'],
       ['Multi-comptes', '—', '3 comptes'],
@@ -125,6 +125,10 @@ const translations = {
         q: 'Y a-t-il un engagement minimum ?',
         a: 'Non, l\'abonnement est sans engagement. Vous payez au mois et pouvez arrêter quand vous le souhaitez.',
       },
+      {
+        q: 'Que signifie la Fair Use Policy sur le crawl multi-pages ?',
+        a: 'Votre abonnement Pro Agency inclut 5 000 pages crawlées par mois. Au-delà de ce quota, vous pouvez continuer en achetant des packs de crédits supplémentaires (Pay-As-You-Go). Le compteur se réinitialise chaque mois.',
+      },
     ],
     ctaBottomTitle: 'Prêt à passer en illimité ?',
     ctaBottomSubtitle: 'Commencez dès aujourd\'hui et accélérez votre activité SEO/GEO.',
@@ -150,7 +154,7 @@ const translations = {
     features: [
       { icon: 'Infinity', title: 'Unlimited reports', description: 'Run as many technical SEO, strategic, GEO and LLM audits as you want. No caps, no restrictions.' },
       { icon: 'Code2', title: 'Unlimited corrective code', description: 'Generate customized fix scripts for each client without consuming credits.' },
-      { icon: 'Globe', title: 'Unlimited multi-page crawl', description: 'Analyze entire sites (10 to 200 pages): structure, SEO score/200 per page, broken links, global AI summary.' },
+      { icon: 'Globe', title: 'Multi-page crawl included', description: '5,000 crawled pages/month included (Fair Use). Beyond that, purchase additional credits Pay-As-You-Go. Structure, SEO score/200, broken links, AI summary.' },
       { icon: 'Palette', title: 'White label', description: 'Customize your reports with your logo, colors and contact info. Clients only see your brand.' },
       { icon: 'Users', title: '3 accounts included', description: 'Invite your team members and manage them from a centralized console.' },
       { icon: 'Headphones', title: 'Priority support', description: 'Access dedicated support with reduced response times and personalized assistance.' },
@@ -162,7 +166,7 @@ const translations = {
     compRows: [
       ['Technical audits', '1 credit / audit', 'Unlimited ∞'],
       ['Strategic AI audits', '2 credits / audit', 'Unlimited ∞'],
-      ['Multi-page crawl', '5-30 credits / crawl', 'Unlimited ∞'],
+      ['Multi-page crawl', '5-30 credits / crawl', '5,000 pages/month included *'],
       ['Corrective code', '1 credit / code', 'Unlimited ∞'],
       ['White label', '—', '✓ Included'],
       ['Multi-accounts', '—', '3 accounts'],
@@ -182,6 +186,7 @@ const translations = {
       { q: 'What exactly is white label?', a: 'You can customize reports with your own logo, colors and contact details. Your clients will never see the Crawlers.fr brand.' },
       { q: 'Are the 3 accounts independent?', a: 'Yes, each team member has their own login. The main account manages permissions from the console.' },
       { q: 'Is there a minimum commitment?', a: 'No, the subscription has no commitment. You pay monthly and can stop whenever you want.' },
+      { q: 'What is the Fair Use Policy for multi-page crawl?', a: 'Your Pro Agency subscription includes 5,000 crawled pages per month. Beyond this quota, you can continue by purchasing additional credit packs (Pay-As-You-Go). The counter resets each month.' },
     ],
     ctaBottomTitle: 'Ready to go unlimited?',
     ctaBottomSubtitle: 'Start today and accelerate your SEO/GEO business.',
@@ -207,7 +212,7 @@ const translations = {
     features: [
       { icon: 'Infinity', title: 'Informes ilimitados', description: 'Lanza todas las auditorías SEO, GEO y LLM que necesites. Sin tope, sin restricción.' },
       { icon: 'Code2', title: 'Código correctivo ilimitado', description: 'Genera scripts de corrección personalizados para cada cliente sin gastar créditos.' },
-      { icon: 'Globe', title: 'Crawl multi-páginas ilimitado', description: 'Analiza sitios enteros (10 a 200 páginas): estructura, puntuación SEO/200 por página, enlaces rotos, resumen IA global.' },
+      { icon: 'Globe', title: 'Crawl multi-páginas incluido', description: '5 000 páginas rastreadas/mes incluidas (Fair Use). Más allá, compra de créditos adicionales Pay-As-You-Go. Estructura, puntuación SEO/200, enlaces rotos, resumen IA.' },
       { icon: 'Palette', title: 'Marca blanca', description: 'Personaliza tus informes con tu logo, colores y datos de contacto.' },
       { icon: 'Users', title: '3 cuentas incluidas', description: 'Invita a tus colaboradores y gestiona tu equipo desde una consola centralizada.' },
       { icon: 'Headphones', title: 'Soporte prioritario', description: 'Accede a soporte dedicado con tiempos de respuesta reducidos.' },
@@ -219,7 +224,7 @@ const translations = {
     compRows: [
       ['Auditorías técnicas', '1 crédito / auditoría', 'Ilimitado ∞'],
       ['Auditorías estratégicas IA', '2 créditos / auditoría', 'Ilimitado ∞'],
-      ['Crawl multi-páginas', '5-30 créditos / crawl', 'Ilimitado ∞'],
+      ['Crawl multi-páginas', '5-30 créditos / crawl', '5 000 páginas/mes incluidas *'],
       ['Código correctivo', '1 crédito / código', 'Ilimitado ∞'],
       ['Marca blanca', '—', '✓ Incluido'],
       ['Multi-cuentas', '—', '3 cuentas'],
@@ -239,6 +244,7 @@ const translations = {
       { q: '¿Qué es exactamente la marca blanca?', a: 'Puedes personalizar los informes con tu logo, colores y datos de contacto. Tus clientes nunca verán la marca Crawlers.fr.' },
       { q: '¿Las 3 cuentas son independientes?', a: 'Sí, cada colaborador tiene su propio acceso. La cuenta principal gestiona los permisos desde la consola.' },
       { q: '¿Hay un compromiso mínimo?', a: 'No, la suscripción es sin compromiso. Pagas mensualmente y puedes parar cuando quieras.' },
+      { q: '¿Qué es la Fair Use Policy del crawl multi-páginas?', a: 'Tu suscripción Pro Agency incluye 5 000 páginas rastreadas al mes. Más allá de esta cuota, puedes continuar comprando packs de créditos adicionales (Pay-As-You-Go). El contador se reinicia cada mes.' },
     ],
     ctaBottomTitle: '¿Listo para pasar a ilimitado?',
     ctaBottomSubtitle: 'Empieza hoy y acelera tu actividad SEO/GEO.',
@@ -320,7 +326,7 @@ export default function ProAgency() {
     "brand": { "@type": "Brand", "name": "Crawlers.fr" },
     "offers": {
       "@type": "Offer",
-      "price": "49.00",
+      "price": "59.00",
       "priceCurrency": "EUR",
       "availability": "https://schema.org/InStock",
       "priceValidUntil": "2026-12-31",

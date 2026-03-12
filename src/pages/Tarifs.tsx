@@ -99,7 +99,7 @@ const translations = {
     agencyFeatures: [
       'Audit expert illimité',
       'Code correctif illimité',
-      'Crawl multi-pages illimité',
+      'Crawl : 5 000 pages/mois incluses',
       'Marque Blanche (White Label)',
       '3 comptes inclus',
       'Support prioritaire',
@@ -189,7 +189,7 @@ const translations = {
     agencyFeatures: [
       'Unlimited expert audit',
       'Unlimited corrective code',
-      'Unlimited multi-page crawl',
+      'Crawl: 5,000 pages/month included',
       'White Label option',
       '3 accounts included',
       'Priority support',
@@ -279,7 +279,7 @@ const translations = {
     agencyFeatures: [
       'Auditoría experta ilimitada',
       'Código correctivo ilimitado',
-      'Crawl multi-páginas ilimitado',
+      'Crawl: 5 000 páginas/mes incluidas',
       'Opción Marca Blanca',
       '3 cuentas incluidas',
       'Soporte prioritario',
