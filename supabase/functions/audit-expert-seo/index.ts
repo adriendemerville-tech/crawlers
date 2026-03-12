@@ -607,19 +607,26 @@ function analyzeHtmlWithDOM(html: string, url: string): HtmlAnalysis {
   // === ÉTAPE 3 : Analyse du profil de liens (DOM complet) ===
   const linkProfile = analyzeLinkProfile(doc, url);
   
-  // === ÉTAPE 4 : Analyse des images AVANT nettoyage DOM ===
-  const imgElements = doc.querySelectorAll('img, amp-img, image');
-  let imagesTotal = imgElements.length;
+  // === ÉTAPE 4 : Analyse des images via REGEX (Deno DOMParser ne supporte pas querySelectorAll pour img) ===
+  const imgRegex = /<(?:img|amp-img|image)\b([^>]*)(?:\/?>|>[^<]*<\/(?:img|amp-img|image)>)/gi;
+  let imagesTotal = 0;
   let imagesMissingAlt = 0;
-  for (let i = 0; i < imgElements.length; i++) {
-    const el = imgElements[i] as Element;
-    const alt = el.getAttribute('alt');
-    if (!alt || alt.trim().length === 0) imagesMissingAlt++;
+  let imgMatch;
+  while ((imgMatch = imgRegex.exec(html)) !== null) {
+    imagesTotal++;
+    const attrs = imgMatch[1] || '';
+    // Check for alt attribute with non-empty value
+    const altMatch = attrs.match(/\balt\s*=\s*(?:"([^"]*)"|'([^']*)'|(\S+))/i);
+    if (!altMatch || (altMatch[1] ?? altMatch[2] ?? altMatch[3] ?? '').trim().length === 0) {
+      imagesMissingAlt++;
+    }
   }
-  // Also count <source> with image types
-  const sourceElements = doc.querySelectorAll('source[type^="image/"], source[srcset]');
-  imagesTotal += sourceElements.length;
-  console.log(`[analyzeHtml] 🖼️ Images: ${imagesTotal} total, ${imagesMissingAlt} missing alt`);
+  // Also count <source> with image types or srcset
+  const sourceRegex = /<source\b[^>]*(?:type\s*=\s*["']image\/|srcset\s*=)[^>]*\/?>/gi;
+  let sourceCount = 0;
+  while (sourceRegex.exec(html) !== null) sourceCount++;
+  imagesTotal += sourceCount;
+  console.log(`[analyzeHtml] 🖼️ Images (regex): ${imagesTotal} total, ${imagesMissingAlt} missing alt`);
 
   // === ÉTAPE 5 : Nettoyage du DOM pour calcul du texte ===
   const scriptsAndStyles = doc.querySelectorAll('script, style, noscript, template');
