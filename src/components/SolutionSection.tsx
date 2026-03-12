@@ -21,7 +21,7 @@ const translations = {
     cta: 'Voir un exemple de correctif',
   },
   en: {
-    title: 'Your technical fixes, generated in 3 clicks.',
+    title: 'SEO & GEO corrective code: your technical fixes generated in 3 clicks',
     subtitlePart1: 'Identifying a problem without a solution is frustrating.',
     subtitleHighlight: 'Expert Audit',
     subtitlePart2: ', receive the',
