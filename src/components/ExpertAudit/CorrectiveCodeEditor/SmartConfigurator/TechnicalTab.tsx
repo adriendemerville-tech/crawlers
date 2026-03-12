@@ -51,6 +51,11 @@ const priorityConfig = {
     color: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/30',
     icon: Info 
   },
+  installed: {
+    label: 'Déjà installé',
+    color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
+    icon: Info
+  },
 };
 
 export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
