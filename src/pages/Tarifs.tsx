@@ -464,7 +464,7 @@ export default function Tarifs() {
           "priceValidUntil": "2027-12-31",
           "priceSpecification": {
             "@type": "UnitPriceSpecification",
-            "price": "50.00",
+            "price": "59.00",
             "priceCurrency": "EUR",
             "billingDuration": "P1M",
             "unitText": "MONTH",
