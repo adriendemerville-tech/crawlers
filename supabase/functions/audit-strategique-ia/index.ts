@@ -2032,7 +2032,11 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   try {
-    const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext } = await req.json();
+    const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, lang } = await req.json();
+    const outputLang = lang || 'fr';
+    const langLabel = outputLang === 'fr' ? 'français' : outputLang === 'es' ? 'espagnol' : 'anglais';
+    const dfLangCode = outputLang === 'es' ? 'es' : outputLang === 'en' ? 'en' : 'fr';
+    const dfSeDomain = outputLang === 'es' ? 'google.es' : outputLang === 'en' ? 'google.com' : 'google.fr';
 
     if (!url) return json({ success: false, error: 'URL is required' }, 400);
 
