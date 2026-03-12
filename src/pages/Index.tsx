@@ -543,6 +543,9 @@ const Index = () => {
   };
 
 
+  // Check if any scan has results
+  const hasResults = !!(crawlResult || geoResult || llmResult || mobilePageSpeedResult || desktopPageSpeedResult);
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
@@ -563,6 +566,39 @@ const Index = () => {
             {renderDashboard()}
           </Suspense>
         </section>
+
+        {/* Contextual CTA → Audit Expert after scan */}
+        {hasResults && (
+          <section className="py-8 px-4">
+            <div className="mx-auto max-w-2xl rounded-2xl border-2 border-amber-400/60 bg-gradient-to-r from-primary/5 via-amber-500/5 to-primary/5 p-6 sm:p-8 text-center shadow-lg shadow-amber-500/5">
+              <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-400/30 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400 mb-3">
+                <Crown className="h-3.5 w-3.5" />
+                {language === 'fr' ? 'Aller plus loin' : language === 'es' ? 'Ir más allá' : 'Go further'}
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2 font-display">
+                {language === 'fr' ? 'Obtenez votre audit complet sur 168 critères' : language === 'es' ? 'Obtenga su auditoría completa con 168 criterios' : 'Get your full audit across 168 criteria'}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-5 max-w-lg mx-auto">
+                {language === 'fr'
+                  ? 'Diagnostic SEO & GEO approfondi, plan d\'action personnalisé et code correctif prêt à déployer.'
+                  : language === 'es'
+                  ? 'Diagnóstico SEO & GEO profundo, plan de acción personalizado y código correctivo listo para implementar.'
+                  : 'In-depth SEO & GEO diagnosis, personalized action plan & corrective code ready to deploy.'}
+              </p>
+              <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}` : '/audit-expert'}>
+                <Button
+                  variant="default"
+                  size="lg"
+                  className="gap-2 bg-gradient-to-r from-primary to-violet-600 hover:from-primary/90 hover:to-violet-600/90 text-primary-foreground px-8 py-3 text-base font-bold shadow-md"
+                >
+                  <FileSearch className="h-5 w-5" />
+                  {language === 'fr' ? 'Lancer l\'Audit Expert' : language === 'es' ? 'Iniciar Auditoría Experta' : 'Launch Expert Audit'}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </section>
+        )}
         
         {/* Mobile-only Lexique button */}
         <MobileLexiqueButton />
@@ -579,12 +615,6 @@ const Index = () => {
         </Suspense>
         <Suspense fallback={<SectionSkeleton />}>
           <GEOComparisonTable />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <MarketingBudgetSection />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <SEOvsGEOSection />
         </Suspense>
 
         {/* CTA Observatoire */}
@@ -608,9 +638,6 @@ const Index = () => {
 
         <Suspense fallback={<SectionSkeleton />}>
           <GEOFAQSection />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <FAQSection />
         </Suspense>
       </main>
       <Suspense fallback={<div className="h-48 bg-muted/10" />}>
