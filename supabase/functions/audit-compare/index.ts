@@ -1028,6 +1028,7 @@ Deno.serve(async (req) => {
         backlinks: site1.backlinks,
         contentDepth: site1.metadata.contentDepth,
         pagespeed: site1.pagespeed,
+        brandColor: site1.metadata.brandColor,
       },
       site2: {
         url: url2,
@@ -1039,6 +1040,7 @@ Deno.serve(async (req) => {
         backlinks: site2.backlinks,
         contentDepth: site2.metadata.contentDepth,
         pagespeed: site2.pagespeed,
+        brandColor: site2.metadata.brandColor,
       },
       crossComparison,
       scannedAt: new Date().toISOString(),
