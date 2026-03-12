@@ -275,6 +275,7 @@ DONNÉES DE FIABILITÉ (statistiques mesurées sur de vrais utilisateurs) :
 - Distribution des grades : ${JSON.stringify(reliability.grade_distribution)}
 - Progression moyenne des plans d'action : ${reliability.avg_action_plan_progress}%
 - Taux de déploiement de code correctif : ${reliability.code_deployment_rate}%
+- Taux de connexion widget (GTM/script) : ${reliability.widget_connection_rate}% des sites suivis ont un widget actif (<7j)
 - Tendance : ${reliability.trend}
 - Base d'évidence : ${evidenceBasis}
 

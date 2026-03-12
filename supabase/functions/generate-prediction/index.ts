@@ -510,7 +510,7 @@ ${cc.topIssues.length > 0 ? `- Top issues:\n${cc.topIssues.map((r: any) => `  â€
     fixesBlock = `
 ## VERIFIED CORRECTIVE ACTIONS (DEPLOYED)
 - ${intel.fixesCount} corrective code(s) **confirmed deployed** for this domain
-- Deployment verified via: user validation ("It works!" feedback) or WordPress plugin sync
+- Deployment verified via: user validation ("It works!"), WordPress plugin sync, or GTM widget active connection
 - This is NOT an assumption â€” these fixes are actively running on the site
 - Factor in a HIGHER growth expectation (+5-10% on realistic scenario)`;
   } else {
