@@ -664,7 +664,7 @@ export default function SiteCrawl() {
                         body: { returnUrl: window.location.href }
                       });
                       if (error) throw error;
-                      if (data?.url) window.location.href = data.url;
+                      if (data?.url) window.open(data.url, '_blank', 'noopener');
                     } catch (e: any) {
                       toast.error(e.message || 'Erreur');
                     } finally {

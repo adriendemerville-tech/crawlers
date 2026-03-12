@@ -314,7 +314,7 @@ export default function Tarifs() {
       const { data, error } = await supabase.functions.invoke('create-subscription-session');
       if (error) throw error;
       if (data?.url) {
-        window.location.href = data.url;
+        window.open(data.url, '_blank', 'noopener');
       } else if (data?.error) {
         toast.error(data.error);
       }

@@ -278,7 +278,7 @@ export default function ProAgency() {
     try {
       const { data, error } = await supabase.functions.invoke('create-subscription-session');
       if (error) throw error;
-      if (data?.url) window.location.href = data.url;
+      if (data?.url) window.open(data.url, '_blank', 'noopener');
     } catch (err: any) {
       toast.error(err.message || 'Erreur');
     } finally {
