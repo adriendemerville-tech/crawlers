@@ -419,6 +419,15 @@ export default function SiteCrawl() {
     return () => clearInterval(interval);
   }, [crawlResult]);
 
+  // Early return AFTER all hooks
+  if (loading || adminLoading || !user || !isUnlimitedUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   async function loadPages(crawlId: string) {
     const { data } = await supabase
       .from('crawl_pages')
