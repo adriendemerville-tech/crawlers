@@ -1843,7 +1843,7 @@ Allow: /`}</pre>
     fr: (
       <>
         <SummaryBox
-          title="L'essentiel en 30 secondes"
+          
           points={[
             "Aucune 'Search Console' pour les LLMs : OpenAI, Anthropic et Perplexity ne partagent aucune donnée de volume réel.",
             "Les outils comme Meteoria, Qwairy ou GetMint utilisent des simulations synthétiques sans pondération par le volume réel.",
