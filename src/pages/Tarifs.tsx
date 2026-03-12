@@ -189,7 +189,7 @@ const translations = {
     agencyFeatures: [
       'Unlimited expert audit',
       'Unlimited corrective code',
-      'Unlimited multi-page crawl',
+      'Crawl: 5,000 pages/month included',
       'White Label option',
       '3 accounts included',
       'Priority support',
