@@ -990,7 +990,7 @@ export default function SiteCrawl() {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
               {/* Métriques globales */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                 <Card className="border">
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-foreground">{crawlResult.crawled_pages}</div>
@@ -1021,6 +1021,21 @@ export default function SiteCrawl() {
                     <div className="text-xs text-muted-foreground mt-1">{t.totalErrors}</div>
                   </CardContent>
                 </Card>
+                {/* Weight benchmark */}
+                {(() => {
+                  const pagesWithWeight = pages.filter(p => (p as any).html_size_bytes > 0);
+                  if (pagesWithWeight.length === 0) return null;
+                  const avgWeightKB = Math.round(pagesWithWeight.reduce((s, p) => s + ((p as any).html_size_bytes || 0), 0) / pagesWithWeight.length / 1024);
+                  const weightColor = avgWeightKB < 100 ? 'text-emerald-500' : avgWeightKB < 500 ? 'text-amber-500' : 'text-destructive';
+                  return (
+                    <Card className="border">
+                      <CardContent className="p-4 text-center">
+                        <div className={`text-2xl font-bold ${weightColor}`}>{avgWeightKB} Ko</div>
+                        <div className="text-xs text-muted-foreground mt-1">{language === 'fr' ? 'Poids moyen' : language === 'es' ? 'Peso medio' : 'Avg weight'}</div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
               </div>
 
               {/* Near-duplicate & Schema.org alerts */}
