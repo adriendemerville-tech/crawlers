@@ -79,13 +79,16 @@ interface HtmlAnalysis {
   metaDescContent: string;
   h1Count: number;
   h1Contents: string[];
-  h2Count: number;       // NOUVEAU: Comptage des H2
-  h2Contents: string[];  // NOUVEAU: Contenu des H2
+  h2Count: number;
+  h2Contents: string[];
   wordCount: number;
   hasSchemaOrg: boolean;
   schemaTypes: string[];
   isHttps: boolean;
   insights: ExpertInsights;
+  imagesTotal: number;
+  imagesMissingAlt: number;
+  htmlSizeBytes: number;
 }
 
 interface RobotsAnalysis {
