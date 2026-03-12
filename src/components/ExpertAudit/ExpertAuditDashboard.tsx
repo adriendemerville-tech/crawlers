@@ -1396,6 +1396,12 @@ export function ExpertAuditDashboard() {
               {/* Technical Narrative Section - 3 pedagogical blocs */}
               <TechnicalNarrativeSection result={result} />
 
+              {/* Image Quality Card — always visible at bottom of technical section */}
+              <ImageQualityCard 
+                imagesTotal={result.rawData?.htmlAnalysis?.imagesTotal ?? result.scores?.semantic?.imagesTotal ?? 0} 
+                imagesMissingAlt={result.rawData?.htmlAnalysis?.imagesMissingAlt ?? result.scores?.semantic?.imagesMissingAlt ?? 0} 
+              />
+
               {/* Action Plan (refactored from RecommendationList) */}
               <ActionPlan recommendations={result.recommendations} url={result.url} />
             </>
