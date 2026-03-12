@@ -345,6 +345,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       // Match alt with non-empty content (quoted or unquoted)
       const hasAlt = /\balt\s*=\s*["'][^"']+["']/i.test(img) || /\balt\s*=\s*[^\s"'>]+/i.test(img);
       return !hasAlt;
+    }).length;
     console.log(`[analyzeHtml] 🖼️ Images: ${allImages.length} total, ${imagesMissingAlt} missing alt`);
 
     // ═══ CONTENT FRESHNESS DETECTION ═══
