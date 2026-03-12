@@ -103,6 +103,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [existingUser, setExistingUser] = useState(false);
+  const [cgvuAccepted, setCgvuAccepted] = useState(false);
   const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;

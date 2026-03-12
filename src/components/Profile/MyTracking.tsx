@@ -640,12 +640,18 @@ export function MyTracking() {
                         </Button>
                       )}
 
-                      {/* Connect site button → opens modal */}
+                      {/* Connect/Disconnect site button → opens modal */}
                       <Button 
                         variant="outline" 
                         size="icon"
-                        className="h-8 w-8 relative"
-                        title={language === 'fr' ? 'Brancher mon site' : language === 'es' ? 'Conectar mi sitio' : 'Connect my site'}
+                        className={cn(
+                          "h-8 w-8 relative",
+                          isSiteSynced(currentSite.current_config as Record<string, unknown>) && "border-destructive/50 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        )}
+                        title={isSiteSynced(currentSite.current_config as Record<string, unknown>)
+                          ? (language === 'fr' ? 'Débrancher mon site' : language === 'es' ? 'Desconectar mi sitio' : 'Disconnect my site')
+                          : (language === 'fr' ? 'Brancher mon site' : language === 'es' ? 'Conectar mi sitio' : 'Connect my site')
+                        }
                         onClick={() => {
                           setWpConnectSiteId(currentSite.id);
                           setShowWpModal(true);
@@ -653,9 +659,13 @@ export function MyTracking() {
                           setWpApiKeyCopied(false);
                         }}
                       >
-                        <Plug className="h-3.5 w-3.5" />
-                        {!isSiteSynced(currentSite.current_config as Record<string, unknown>) && (
-                          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-orange-500 border-2 border-background" />
+                        {isSiteSynced(currentSite.current_config as Record<string, unknown>) ? (
+                          <Unplug className="h-3.5 w-3.5" />
+                        ) : (
+                          <>
+                            <Plug className="h-3.5 w-3.5" />
+                            <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-orange-500 border-2 border-background" />
+                          </>
                         )}
                       </Button>
 
