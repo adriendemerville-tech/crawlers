@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
+import { useTurnstile } from '@/hooks/useTurnstile';
 
 const translations = {
   fr: {
