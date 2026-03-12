@@ -469,6 +469,17 @@ export default function SiteCrawl() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) { navigate('/auth'); return; }
+    
+    // Fair-use limit check for subscribed users
+    if (isUnlimited && (crawlPagesThisMonth >= FAIR_USE_LIMIT || crawlPagesThisMonth + maxPages > FAIR_USE_LIMIT)) {
+      setIsButtonShaking(true);
+      setTimeout(() => {
+        setIsButtonShaking(false);
+        setShowLimitModal(true);
+      }, 600);
+      return;
+    }
+    
     if (!isUnlimited && credits < creditCost) {
       toast.error(`${t.insufficientCredits} ${creditCost}, ${t.available} ${credits}`);
       return;
