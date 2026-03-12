@@ -305,7 +305,7 @@ const translations: Record<Language, Translations> = {
     },
     faq: {
       badge: 'Questions Fréquentes',
-      title: 'Tout savoir sur les crawlers IA et le GEO',
+      title: 'Questions fréquentes sur l\'audit SEO, le GEO et la visibilité IA',
       items: [
         {
           question: "Crawlers.AI est-il gratuit ou payant ?",
