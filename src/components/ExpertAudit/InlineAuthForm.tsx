@@ -153,13 +153,10 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    // For Google OAuth, we need to handle it differently since it redirects
-    // We'll store the current URL so after OAuth redirect, user comes back here
-    // Use the actual current path to support both /audit-expert and /audit-strategique
-    const currentPath = window.location.pathname;
-    sessionStorage.setItem('audit_return_path', currentPath);
-    sessionStorage.setItem('audit_pending_action', 'unblur_strategic');
-    const { error } = await signInWithGoogle();
+    // Redirect back to current page after OAuth — the onAuthStateChange listener
+    // will update the user state and the auth gate will fade away automatically
+    const currentUrl = window.location.href;
+    const { error } = await signInWithGoogle(currentUrl);
     if (error) {
       toast.error(t.loginError);
       setIsLoading(false);
