@@ -146,8 +146,8 @@ function BlogIndexComponent() {
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {/* Static articles */}
-              {blogArticles.map((article) => (
+              {/* Static articles — reverse chronological */}
+              {[...blogArticles].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((article) => (
                 <Link key={article.slug} to={`/blog/${article.slug}`} className="group">
                   <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/30">
                     <div className="aspect-video overflow-hidden">
