@@ -1097,7 +1097,7 @@ const AuditCompare = () => {
 
   const handleLaunch = async () => {
     if (!user) {
-      navigate('/auth');
+      setShowAuthDialog(true);
       return;
     }
 
