@@ -749,8 +749,8 @@ export default function SiteCrawl() {
                   </div>
                   <button type="button" onClick={() => setShowTopUp(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
                     {isUnlimited ? (
-                      <Badge className="bg-violet-600 text-white gap-1">
-                        <span className="text-base">∞</span>
+                      <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 gap-1">
+                        <span className="text-base text-amber-500">∞</span>
                         {t.unlimited}
                       </Badge>
                     ) : (
