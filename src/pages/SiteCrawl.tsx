@@ -354,6 +354,7 @@ export default function SiteCrawl() {
   const [compareCrawlB, setCompareCrawlB] = useState('');
   const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
   const [isComparing, setIsComparing] = useState(false);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
 
   const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
