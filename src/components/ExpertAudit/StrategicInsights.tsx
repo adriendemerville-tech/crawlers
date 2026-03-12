@@ -59,7 +59,12 @@ export function StrategicInsights({
   progressiveReveal = false
 }: StrategicInsightsProps) {
   const [showHallucinationModal, setShowHallucinationModal] = useState(false);
-  const isContentMode = analysis.isContentMode || false;
+  const pageType: AuditPageType = analysis.pageType || (analysis.isContentMode ? 'editorial' : 'homepage');
+  const isContentMode = pageType !== 'homepage';
+  // Product pages keep market intelligence & keywords but hide social signals
+  const hideMarketIntel = pageType === 'editorial';
+  const hideSocialSignals = pageType !== 'homepage';
+  const hidePriorityContent = pageType === 'editorial';
   
   const getAuthorityColor = (authority: string) => {
     switch (authority) {
