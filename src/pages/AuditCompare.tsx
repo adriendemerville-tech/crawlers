@@ -1397,7 +1397,7 @@ const AuditCompare = () => {
                     <Swords className="h-4 w-4 mr-2" />
                     {t.launch}
                   </Button>
-                  {!user && (
+                  {!isUnlimited && (
                     <button
                       type="button"
                       onClick={() => setShowTopUp(true)}
