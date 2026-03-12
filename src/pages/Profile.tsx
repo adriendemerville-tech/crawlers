@@ -268,7 +268,9 @@ export default function Profile() {
             </div>
           </motion.div>
         </main>
-        <Footer />
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
       </div>
     </>
   );
