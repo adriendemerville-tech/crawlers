@@ -1992,11 +1992,34 @@ Deno.serve(async (req) => {
     const domainWithoutWww = domain.replace(/^www\./, '');
     const domainSlug = domainWithoutWww.split('.')[0];
 
-    // ═══ CONTENT MODE: Detect /blog or /article in path ═══
+    // ═══ PAGE TYPE DETECTION: editorial / product / deep / homepage ═══
     const urlPath = parsedUrl.pathname.toLowerCase();
-    const isContentMode = /\/(blog|article|articles|post|posts|news|actualite|actualites)\b/.test(urlPath) && urlPath !== '/blog' && urlPath !== '/blog/';
+    const pathSegments = urlPath.replace(/^\/|\/$/g, '').split('/').filter(Boolean);
+
+    type PageType = 'homepage' | 'editorial' | 'product' | 'deep';
+    let pageType: PageType = 'homepage';
+
+    const editorialPattern = /\/(blog|article|articles|post|posts|news|actualite|actualites|guide|guides|tutoriel|tutorial|ressources|resources|wiki|learn|knowledge|faq)\b/;
+    const productPattern = /\/(product|produit|produits|products|shop|boutique|store|catalogue|catalog|item|pricing|tarif|tarifs|offre|offres|service|services|solution|solutions)\b/;
+
+    if (editorialPattern.test(urlPath) && pathSegments.length >= 2) {
+      pageType = 'editorial';
+    } else if (productPattern.test(urlPath) && pathSegments.length >= 1) {
+      pageType = 'product';
+    } else if (pathSegments.length >= 3) {
+      // Deep page: 3+ path segments = likely a specific inner page
+      pageType = 'deep';
+    } else if (pathSegments.length >= 1 && urlPath !== '/') {
+      // Single segment but not homepage — check slug length as a heuristic
+      const lastSegment = pathSegments[pathSegments.length - 1];
+      if (lastSegment.length > 60 || lastSegment.split('-').length > 6) {
+        pageType = 'deep';
+      }
+    }
+
+    const isContentMode = pageType !== 'homepage';
     if (isContentMode) {
-      console.log(`📝 CONTENT MODE activated for path: ${parsedUrl.pathname}`);
+      console.log(`📝 PAGE TYPE: "${pageType}" detected for path: ${parsedUrl.pathname}`);
     }
 
     // ==================== SMART CACHE: Skip expensive calls if cachedContext provided ====================
