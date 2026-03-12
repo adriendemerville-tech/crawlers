@@ -1475,7 +1475,7 @@ function formatToolsDataToMarkdown(toolsData: ToolsData): string {
   return lines.join('\n');
 }
 
-function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo, rankingOverview?: RankingOverview | null): string {
+function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo, rankingOverview?: RankingOverview | null, contentMode: boolean = false): string {
   let marketSection = '';
   
   if (marketData) {
@@ -1518,15 +1518,56 @@ Top positionnés: ${rankingOverview.top_keywords.slice(0, 5).map(k => `"${k.keyw
     eeatSection = lines.join('\n');
   }
 
-  // Compact founder section
+  // Compact founder section (skip in content mode)
   let founderSection = '';
-  if (founderInfo?.name && !founderInfo.geoMismatch) {
-    founderSection = `\n👤 FONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''} Social:${founderInfo.isInfluencer ? 'actif' : 'non'}. Cite ce nom dans thought_leadership.analysis.`;
-  } else if (founderInfo?.geoMismatch) {
-    founderSection = `\n⚠️ Fondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner. founder_authority="unknown".`;
+  if (!contentMode) {
+    if (founderInfo?.name && !founderInfo.geoMismatch) {
+      founderSection = `\n👤 FONDATEUR: ${founderInfo.name} (${founderInfo.platform || '?'})${founderInfo.profileUrl ? ` URL:${founderInfo.profileUrl}` : ''} Social:${founderInfo.isInfluencer ? 'actif' : 'non'}. Cite ce nom dans thought_leadership.analysis.`;
+    } else if (founderInfo?.geoMismatch) {
+      founderSection = `\n⚠️ Fondateur homonyme étranger (${founderInfo.detectedCountry}) — NE PAS mentionner. founder_authority="unknown".`;
+    }
   }
 
   const toolsMarkdown = formatToolsDataToMarkdown(toolsData);
+
+  // ═══ CONTENT MODE: Simplified prompt for blog/article pages ═══
+  if (contentMode) {
+    return `Analyse cette PAGE DE CONTENU: "${url}" (${domain}).
+${pageContentContext}
+${eeatSection}
+${marketSection}
+${toolsMarkdown}
+
+⚠️ MODE CONTENU: Analyse la PAGE elle-même, pas l'entreprise. La présentation doit décrire le contenu de la page en 2-3 phrases courtes.
+
+CONCURRENCE SERP: Les concurrents sont les PAGES qui se positionnent dans les SERPs sur la même thématique que cet article. Chaque URL doit pointer vers la PAGE concurrente, pas la homepage.
+
+GÉNÈRE un JSON:
+{"introduction":{"presentation":"2-3ph courtes analysant LE CONTENU de la page","strengths":"2-3ph sur les forces du contenu","improvement":"2-3ph sur les axes d'amélioration du contenu","competitors":["Page Leader SERP","Page Concurrente","Page Challenger"]},
+"brand_authority":{"dna_analysis":"Analyse de l'expertise démontrée dans le contenu","thought_leadership_score":0-100,"entity_strength":"dominant|established|emerging|unknown"},
+"competitive_landscape":{"leader":{"name":"Titre de la page #1 SERP","url":"URL de la page","authority_factor":"Pourquoi cette page domine","analysis":"2-3ph"},"direct_competitor":{"name":"Titre page concurrente","url":"URL de la page","authority_factor":"...","analysis":"2-3ph"},"challenger":{"name":"Titre page challenger","url":"URL","authority_factor":"...","analysis":"2-3ph"},"inspiration_source":{"name":"Titre page exemplaire","url":"URL","authority_factor":"...","analysis":"2-3ph"}},
+"geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":[],"weaknesses":[],"recommendations":[]},
+"llm_visibility":{"citation_probability":0-100,"knowledge_graph_presence":"strong|moderate|weak|absent","analysis":"...","test_queries":[{"query":"...","purpose":"...","target_llms":["ChatGPT","Claude","Perplexity"]}]},
+"conversational_intent":{"ratio":0-100,"analysis":"...","question_titles_detected":0,"total_titles_analyzed":0,"examples":["3-5 questions naturelles liées au contenu"],"recommendations":[]},
+"zero_click_risk":{"at_risk_keywords":[{"keyword":"...","volume":0,"risk_level":"high|medium|low","sge_threat":"...","defense_strategy":"..."}],"overall_risk_score":0-100,"analysis":"..."},
+"keyword_positioning":{"main_keywords":[{"keyword":"...","volume":0,"difficulty":0,"current_rank":"...","strategic_analysis":{"intent":"...","business_value":"High|Medium|Low","pain_point":"...","recommended_action":"..."}}],"quick_wins":[],"content_gaps":[],"opportunities":[],"competitive_gaps":[],"recommendations":[]},
+"market_data_summary":{"total_market_volume":0,"keywords_ranked":0,"keywords_analyzed":0,"average_position":0,"data_source":"dataforseo|fallback"},
+"executive_roadmap":[{"title":"...","prescriptive_action":"4-5ph","strategic_rationale":"...","expected_roi":"High|Medium|Low","category":"Contenu|Autorité|Technique","priority":"Prioritaire|Important|Opportunité"}],
+"executive_summary":"2-3ph résumé du potentiel de cette page","overallScore":0-100,
+"quotability":{"score":0-100,"quotes":["phrase citable 1","2","3"]},
+"summary_resilience":{"score":0-100,"originalH1":"...","llmSummary":"10 mots max"},
+"lexical_footprint":{"jargonRatio":0-100,"concreteRatio":0-100},
+"expertise_sentiment":{"rating":1-5,"justification":"1ph"},
+"red_team":{"flaws":["faille contenu 1","preuve manquante 2","objection lecteur 3"]}}
+
+RÈGLES:
+- introduction.presentation: 2-3 phrases COURTES décrivant LE CONTENU de cette page, pas l'entreprise
+- competitive_landscape: 4 PAGES concurrentes dans les SERPs, pas des entreprises. URLs = pages spécifiques
+- NE génère PAS: social_signals, market_intelligence, priority_content
+- executive_roadmap: MIN 4 recs centrées sur l'optimisation du CONTENU
+- quotability, summary_resilience, lexical_footprint, expertise_sentiment, red_team: obligatoires
+- JSON pur, sans virgules traînantes`;
+  }
 
   return `Analyse "${url}" (${domain}).
 ${pageContentContext}
