@@ -261,12 +261,13 @@ async function extractPageMetadata(url: string, domain: string): Promise<PageMet
     const h1 = h1Match?.[1]?.replace(/<[^>]+>/g, '').trim() || '';
     const desc = descMatch?.[1]?.trim() || '';
     const contentDepth = extractContentDepth(html, domain);
+    const brandColor = extractBrandColor(html);
     
     const context = `CONTENU PAGE: Titre="${title||'?'}", Desc="${(desc||'?').substring(0,200)}", H1="${h1||'?'}"`;
-    return { title, h1, desc, context, contentDepth, rawHtml: html };
+    return { title, h1, desc, context, contentDepth, rawHtml: html, brandColor };
   } catch (e) {
     console.warn('Page fetch failed:', e instanceof Error ? e.message : e);
-    return { title: '', h1: '', desc: '', context: '', contentDepth: emptyDepth, rawHtml: '' };
+    return { title: '', h1: '', desc: '', context: '', contentDepth: emptyDepth, rawHtml: '', brandColor: null };
   }
 }
 
