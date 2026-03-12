@@ -654,6 +654,7 @@ async function analyzeSite(
   supabaseUrl: string,
   supabaseAnonKey: string,
   openrouterKey: string,
+  opponentDomain?: string,
 ): Promise<{ metadata: PageMetadata; analysis: any; llm_raw: any; keywords: any[]; backlinks: BacklinkProfile | null; pagespeed: PageSpeedScores | null }> {
   // Step 1: Metadata + LLM visibility + Backlinks + PageSpeed in parallel
   const [metadata, llmResult, backlinks, pagespeed] = await Promise.all([
