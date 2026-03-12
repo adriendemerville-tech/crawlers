@@ -1367,7 +1367,8 @@ async function generateNarrativeIntroduction(
   scores: any,
   htmlAnalysis: HtmlAnalysis,
   insights: ExpertInsights,
-  meta: AuditMeta
+  meta: AuditMeta,
+  lang: string = 'fr'
 ): Promise<{ presentation: string; strengths: string; improvement: string } | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   
