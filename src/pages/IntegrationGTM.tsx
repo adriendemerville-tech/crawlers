@@ -158,6 +158,7 @@ export default function IntegrationGTM() {
         <meta property="og:locale:alternate" content="fr_FR" />
         <meta property="og:locale:alternate" content="en_US" />
         <meta property="og:locale:alternate" content="es_ES" />
+        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 
       <Header />

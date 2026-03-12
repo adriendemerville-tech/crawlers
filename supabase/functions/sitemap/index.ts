@@ -95,6 +95,7 @@ Deno.serve(async (req) => {
     pages.push({ loc: `${SITE_URL}/guide-audit-seo`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/comparatif-crawlers-semrush`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/modifier-code-wordpress`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/integration-gtm`, lastmod: today });
 
     // ========================================
     // BLOG INDEX

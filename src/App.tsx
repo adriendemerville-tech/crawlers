@@ -120,6 +120,7 @@ const App = () => (
                           <Route path="/guide-audit-seo" element={<GuideAuditSeo />} />
                           <Route path="/site-crawl" element={<SiteCrawl />} />
                           <Route path="/audit-compare" element={<AuditCompare />} />
+                          <Route path="/integration-gtm" element={<IntegrationGTM />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
