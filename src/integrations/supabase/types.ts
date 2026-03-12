@@ -2053,6 +2053,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      atomic_credit_update: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: Json
+      }
       check_rate_limit: {
         Args: {
           p_action: string
