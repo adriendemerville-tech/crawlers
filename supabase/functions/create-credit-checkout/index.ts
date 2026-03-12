@@ -14,7 +14,7 @@ const CREDIT_PACKAGES = {
   essential: { credits: 10, price_cents: 500, name: "Essentiel", stripe_product_id: "prod_Tt71HPd497Zx9V" },
   pro:       { credits: 50, price_cents: 1900, name: "Pro",       stripe_product_id: "prod_U4yjVH7b8EhmQF" },
   premium:   { credits: 150, price_cents: 4500, name: "Premium",  stripe_product_id: "prod_U4ykI3KfQMFKNe" },
-  ultimate:  { credits: 500, price_cents: 9900, name: "Ultime",   stripe_product_id: "prod_ULTIMATE_TODO" }, // TODO: Create Stripe product and replace ID
+  ultimate:  { credits: 500, price_cents: 9900, name: "Ultime",   stripe_product_id: "prod_U8OU3uivREIjpQ" },
 } as const;
 
 type PackageType = keyof typeof CREDIT_PACKAGES;
