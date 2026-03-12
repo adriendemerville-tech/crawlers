@@ -84,6 +84,14 @@ Patches prêts à l'emploi :
 - Métadonnées corrigées (title, meta description)
 - Scripts de performance
 - Correctifs d'accessibilité
+- **Déploiement automatique via GTM** : branchement en 30 secondes avec un snippet de 3 lignes
+
+## 4b. INTÉGRATION GTM / WIDGET (GRATUIT)
+Connexion simplifiée entre Crawlers.fr et n'importe quel site :
+- Snippet universel compatible Google Tag Manager ou injection directe avant </head>
+- Implémentation automatique des correctifs générés par l'Architecte Génératif
+- Suivi de connectivité en temps réel (ping widget)
+- Compatible tous CMS : WordPress, Shopify, Webflow, Wix, sites custom
 
 ## 5. AUDIT COMPARÉ (Premium - 5 crédits)
 Analyse concurrentielle face-à-face de deux URLs :
