@@ -184,8 +184,7 @@ async function fetchSupplementaryArticles(
 
 // Translate text using Lovable AI Gateway
 async function translateText(text: string, targetLang: string): Promise<string> {
-  // Skip translation if already in target language or if French (source language)
-  if (targetLang === 'fr') return text;
+  // Don't skip any language — RSS feeds may contain articles in any language
   
   const langNames: Record<string, string> = {
     en: 'English',
