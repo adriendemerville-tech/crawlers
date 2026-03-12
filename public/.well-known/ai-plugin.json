@@ -55,7 +55,11 @@
     "competitive analysis",
     "site comparison",
     "multi-page crawl",
-    "full site audit"
+    "full site audit",
+    "GTM integration",
+    "Google Tag Manager",
+    "auto deploy SEO fixes",
+    "widget connection"
   ],
   "not_for": [
     "web scraping",
