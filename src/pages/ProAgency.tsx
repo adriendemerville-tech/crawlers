@@ -81,7 +81,7 @@ const translations = {
     compRows: [
       ['Audits techniques', '1 crédit / audit', 'Illimité ∞'],
       ['Audits stratégiques IA', '2 crédits / audit', 'Illimité ∞'],
-      ['Crawl multi-pages', '5-30 crédits / crawl', 'Illimité ∞'],
+      ['Crawl multi-pages', '5-30 crédits / crawl', '5 000 pages/mois incluses *'],
       ['Codes correctifs', '1 crédit / code', 'Illimité ∞'],
       ['Marque blanche', '—', '✓ Inclus'],
       ['Multi-comptes', '—', '3 comptes'],
