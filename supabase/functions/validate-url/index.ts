@@ -1,24 +1,14 @@
 import { corsHeaders } from '../_shared/cors.ts';
-
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+import { stealthFetch } from '../_shared/stealthFetch.ts';
 
 async function checkUrl(url: string): Promise<{ ok: boolean; status: number; finalUrl: string; contentLength: number }> {
   try {
-    const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'User-Agent': UA,
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-      },
-      redirect: 'follow',
-      signal: controller.signal,
+    const { response } = await stealthFetch(url, {
+      timeout: 8000,
+      maxRetries: 1,
     });
-    clearTimeout(tid);
-    const text = await res.text();
-    return { ok: res.ok, status: res.status, finalUrl: res.url || url, contentLength: text.length };
+    const text = await response.text();
+    return { ok: response.ok, status: response.status, finalUrl: response.url || url, contentLength: text.length };
   } catch {
     return { ok: false, status: 0, finalUrl: url, contentLength: 0 };
   }

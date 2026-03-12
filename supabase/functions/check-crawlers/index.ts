@@ -2,6 +2,7 @@ import { assertSafeUrl } from '../_shared/ssrf.ts';
 import { fetchAndRenderPage } from '../_shared/renderPage.ts';
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { stealthFetch } from '../_shared/stealthFetch.ts';
 
 const AI_BOTS = [
   { name: 'GPTBot', userAgent: 'GPTBot', company: 'OpenAI' },
@@ -149,8 +150,9 @@ Deno.serve(async (req) => {
     // Fetch robots.txt
     let robotsTxt: string | null = null;
     try {
-      const robotsResponse = await fetch(robotsTxtUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AIBotChecker/1.0)' }
+      const { response: robotsResponse } = await stealthFetch(robotsTxtUrl, {
+        timeout: 8000,
+        maxRetries: 1,
       });
       if (robotsResponse.ok) {
         robotsTxt = await robotsResponse.text();

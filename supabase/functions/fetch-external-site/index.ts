@@ -1,7 +1,6 @@
 import { assertSafeUrl } from '../_shared/ssrf.ts';
 import { corsHeaders } from '../_shared/cors.ts';
-
-const MODERN_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+import { stealthFetch } from '../_shared/stealthFetch.ts';
 
 const TIMEOUT_MS = 15_000;
 
@@ -51,25 +50,22 @@ Deno.serve(async (req) => {
 
     let response: Response;
     try {
-      response = await fetch(targetUrl, {
-        headers: {
-          'User-Agent': MODERN_USER_AGENT,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-        },
-        redirect: 'follow',
-        signal: controller.signal,
+      const result = await stealthFetch(targetUrl, {
+        timeout: TIMEOUT_MS,
+        maxRetries: 2,
       });
+      response = result.response;
+      if (result.retries > 0) {
+        console.log(`[fetch-external-site] Succeeded after ${result.retries} retries`);
+      }
     } catch (fetchErr: any) {
-      clearTimeout(timeoutId);
-      const isTimeout = fetchErr.name === 'AbortError';
+      const isTimeout = fetchErr.message?.includes('Timeout');
       console.error(`[fetch-external-site] ${isTimeout ? 'Timeout' : 'Fetch error'}:`, fetchErr.message);
       return new Response(
         JSON.stringify({ error: isTimeout ? 'Le site n\'a pas répondu dans les 15 secondes.' : `Impossible de joindre le site : ${fetchErr.message}` }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.error(`[fetch-external-site] HTTP ${response.status} from ${targetUrl}`);
