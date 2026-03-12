@@ -226,8 +226,10 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
       }
       resetTurnstile();
     } else {
-      toast.success(t.signupSuccess);
-      onSuccess?.();
+      // Send verification code and show modal
+      setVerificationEmail(data.email);
+      supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
+      setShowVerification(true);
     }
   };
 
