@@ -599,7 +599,20 @@ function LlmVisibilityCard({ site, t }: { site: SiteResult; t: typeof i18n['fr']
 
 function KeywordsCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
   const { analysis } = site;
-  if (!analysis.keyword_positioning?.main_keywords?.length) return <div />;
+  if (!analysis.keyword_positioning?.main_keywords?.length) {
+    return (
+      <Card className="border-border/50 bg-card/80 h-full">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+            <Target className="h-4 w-4 text-amber-500" /> {t.keywords}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground italic">Données indisponibles</p>
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <Card className="border-border/50 bg-card/80 h-full">
       <CardHeader className="pb-2">
