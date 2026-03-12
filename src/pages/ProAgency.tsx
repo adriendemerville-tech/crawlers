@@ -154,7 +154,7 @@ const translations = {
     features: [
       { icon: 'Infinity', title: 'Unlimited reports', description: 'Run as many technical SEO, strategic, GEO and LLM audits as you want. No caps, no restrictions.' },
       { icon: 'Code2', title: 'Unlimited corrective code', description: 'Generate customized fix scripts for each client without consuming credits.' },
-      { icon: 'Globe', title: 'Unlimited multi-page crawl', description: 'Analyze entire sites (10 to 200 pages): structure, SEO score/200 per page, broken links, global AI summary.' },
+      { icon: 'Globe', title: 'Multi-page crawl included', description: '5,000 crawled pages/month included (Fair Use). Beyond that, purchase additional credits Pay-As-You-Go. Structure, SEO score/200, broken links, AI summary.' },
       { icon: 'Palette', title: 'White label', description: 'Customize your reports with your logo, colors and contact info. Clients only see your brand.' },
       { icon: 'Users', title: '3 accounts included', description: 'Invite your team members and manage them from a centralized console.' },
       { icon: 'Headphones', title: 'Priority support', description: 'Access dedicated support with reduced response times and personalized assistance.' },
