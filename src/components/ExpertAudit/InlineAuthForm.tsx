@@ -10,6 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
+import { useTurnstile } from '@/hooks/useTurnstile';
+import { supabase } from '@/integrations/supabase/client';
 
 const translations = {
   fr: {
