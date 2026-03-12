@@ -44,12 +44,19 @@ interface AgentDecision {
 
 // ─── Reliability engine ───────────────────────────────────────────────
 async function getReliabilityProfile(supabase: any, functionName: string): Promise<ReliabilityProfile> {
-  const { data: snapshots } = await supabase
-    .from('audit_impact_snapshots')
-    .select('impact_score, reliability_grade, action_plan_progress, corrective_code_deployed, gsc_baseline, measurement_phase, created_at')
-    .eq('audit_type', mapFunctionToAuditType(functionName))
-    .order('created_at', { ascending: false })
-    .limit(100)
+  // Fetch snapshots + widget connection stats in parallel
+  const [{ data: snapshots }, { data: trackedSites }] = await Promise.all([
+    supabase
+      .from('audit_impact_snapshots')
+      .select('impact_score, reliability_grade, action_plan_progress, corrective_code_deployed, gsc_baseline, measurement_phase, created_at')
+      .eq('audit_type', mapFunctionToAuditType(functionName))
+      .order('created_at', { ascending: false })
+      .limit(100),
+    supabase
+      .from('tracked_sites')
+      .select('last_widget_ping')
+      .not('last_widget_ping', 'is', null),
+  ])
 
   const all = snapshots || []
   const withGsc = all.filter((s: any) => s.gsc_baseline != null)
@@ -61,6 +68,17 @@ async function getReliabilityProfile(supabase: any, functionName: string): Promi
     const g = s.reliability_grade || 'N/A'
     grades[g] = (grades[g] || 0) + 1
   })
+
+  // Widget connection rate: % of tracked sites with a recent ping (<7 days)
+  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+  const allTracked = trackedSites || []
+  const activeWidgets = allTracked.filter((s: any) => {
+    if (!s.last_widget_ping) return false
+    return (Date.now() - new Date(s.last_widget_ping).getTime()) < SEVEN_DAYS
+  })
+  const widgetConnectionRate = allTracked.length > 0
+    ? Math.round(activeWidgets.length / allTracked.length * 100)
+    : 0
 
   // Trend: compare last 10 vs previous 10
   let trend: ReliabilityProfile['trend'] = 'insufficient_data'
@@ -89,6 +107,7 @@ async function getReliabilityProfile(supabase: any, functionName: string): Promi
     code_deployment_rate: all.length > 0
       ? Math.round(all.filter((r: any) => r.corrective_code_deployed).length / all.length * 100)
       : 0,
+    widget_connection_rate: widgetConnectionRate,
     trend,
   }
 }
