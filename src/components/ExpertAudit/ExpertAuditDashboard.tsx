@@ -1350,13 +1350,7 @@ export function ExpertAuditDashboard() {
                 {result.rawData?.crawlersData && (
                   <AIBotsCard data={result.rawData.crawlersData} />
                 )}
-                {/* Image Quality */}
-                {result.rawData?.htmlAnalysis?.imagesTotal !== undefined && (
-                  <ImageQualityCard 
-                    imagesTotal={result.rawData.htmlAnalysis.imagesTotal || 0} 
-                    imagesMissingAlt={result.rawData.htmlAnalysis.imagesMissingAlt || 0} 
-                  />
-                )}
+                
               </div>
 
               {/* NEW: Technical Audit Cards (Dark Social, Freshness, Conversion Friction) */}
