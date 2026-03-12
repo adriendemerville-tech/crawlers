@@ -198,20 +198,24 @@ export default function Auth() {
 
   const handleLogin = async (data: { email: string; password: string }) => {
     setIsLoading(true);
+    const verified = await verifyTurnstile();
+    if (!verified) { setIsLoading(false); return; }
     const { error } = await signInWithEmail(data.email, data.password);
     setIsLoading(false);
 
     if (error) {
       toast.error(t.loginError);
+      resetTurnstile();
     } else {
       toast.success(t.loginSuccess);
-      // Navigation handled by useEffect when user state updates
     }
   };
 
   const handleSignup = async (data: { email: string; password: string; firstName: string; lastName: string }) => {
     setIsLoading(true);
     setShowExistsBanner(false);
+    const verified = await verifyTurnstile();
+    if (!verified) { setIsLoading(false); return; }
     const { error } = await signUpWithEmail(data.email, data.password, data.firstName, data.lastName);
     setIsLoading(false);
 
@@ -221,6 +225,7 @@ export default function Auth() {
       } else {
         toast.error(t.signupError);
       }
+      resetTurnstile();
     } else {
       trackAnalyticsEvent('signup_complete');
       toast.success(t.signupSuccess);
