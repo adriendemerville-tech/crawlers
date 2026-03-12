@@ -1435,18 +1435,25 @@ export function SmartConfigurator({
                         <Copy className="w-3.5 h-3.5" />
                       )}
                     </Button>
-                    {/* Inject rejection inline notification */}
+                    {/* Inject rejection — Popover with install snippet */}
                     {injectRejected && (
-                      <motion.div
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0 }}
-                        className="flex items-center gap-1.5 text-xs font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2.5 py-1.5 whitespace-nowrap"
-                      >
-                        <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                        <span>Branchez votre site</span>
-                        <Cable className="w-3 h-3 flex-shrink-0 opacity-60" />
-                      </motion.div>
+                      <Popover open={injectRejected} onOpenChange={(open) => { if (!open) setInjectRejected(false); }}>
+                        <PopoverTrigger asChild>
+                          <motion.div
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center gap-1.5 text-xs font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2.5 py-1.5 whitespace-nowrap cursor-pointer"
+                          >
+                            <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                            <span>Branchez votre site</span>
+                            <Cable className="w-3 h-3 flex-shrink-0 opacity-60" />
+                          </motion.div>
+                        </PopoverTrigger>
+                        <PopoverContent side="top" align="end" className="w-[420px] p-0 border-0">
+                          <PlugSnippetCard apiKey={wpSiteData?.apiKey} siteDomain={siteDomain} />
+                        </PopoverContent>
+                      </Popover>
                     )}
                     {/* Inject to site button */}
                     <motion.div
