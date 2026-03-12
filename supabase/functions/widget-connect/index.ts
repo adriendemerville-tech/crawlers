@@ -125,7 +125,15 @@ Deno.serve(async (req) => {
     profile?.plan_type === 'pro';
 
   // ──────────────────────────────────────────────────────────
-  // 6. Réponse de succès avec configuration du widget
+  // 6. Enregistrer le ping pour tracking de connectivité
+  // ──────────────────────────────────────────────────────────
+  await supabase
+    .from('tracked_sites')
+    .update({ last_widget_ping: new Date().toISOString() })
+    .eq('id', site.id);
+
+  // ──────────────────────────────────────────────────────────
+  // 7. Réponse de succès avec configuration du widget
   // ──────────────────────────────────────────────────────────
   return jsonResponse({
     success: true,

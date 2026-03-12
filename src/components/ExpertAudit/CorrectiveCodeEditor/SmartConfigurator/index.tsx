@@ -1100,60 +1100,77 @@ export function SmartConfigurator({
 
   const [shakeInject, setShakeInject] = useState(false);
   const [injectRejected, setInjectRejected] = useState(false);
+  const [connectionMethod, setConnectionMethod] = useState<'wordpress' | 'widget' | null>(null);
 
-  // Verify actual plugin connectivity by pinging the WP site's REST endpoint
-  const verifySiteConnected = useCallback(async (): Promise<boolean> => {
+  // Verify site connectivity via WordPress plugin OR GTM widget
+  const verifySiteConnected = useCallback(async (): Promise<'wordpress' | 'widget' | false> => {
     if (!user) return false;
     try {
-      // 1. Get the site's api_key
+      // 1. Get the site's api_key and last_widget_ping
       const { data: site } = await supabase
         .from('tracked_sites')
-        .select('id, domain, api_key')
+        .select('id, domain, api_key, last_widget_ping')
         .eq('user_id', user.id)
         .eq('domain', siteDomain)
         .maybeSingle();
 
       if (!site || !site.api_key) return false;
 
-      // 2. Actually ping the WP plugin endpoint to confirm it's live
-      const pingUrl = `https://${site.domain}/wp-json/crawlers/v1/ping`;
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 2300);
-      
-      try {
-        const res = await fetch(pingUrl, { 
-          method: 'GET',
-          signal: controller.signal,
-          headers: { 'X-Crawlers-Key': site.api_key }
-        });
-        clearTimeout(timeout);
-        if (!res.ok) return false;
-        const data = await res.json();
-        return data?.connected === true || data?.status === 'ok';
-      } catch {
-        clearTimeout(timeout);
-        return false;
+      // 2. Try WordPress plugin ping first (fastest confirmation)
+      const wpConnected = await (async () => {
+        try {
+          const pingUrl = `https://${site.domain}/wp-json/crawlers/v1/ping`;
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 2300);
+          const res = await fetch(pingUrl, { 
+            method: 'GET',
+            signal: controller.signal,
+            headers: { 'X-Crawlers-Key': site.api_key }
+          });
+          clearTimeout(timeout);
+          if (!res.ok) return false;
+          const data = await res.json();
+          return data?.connected === true || data?.status === 'ok';
+        } catch {
+          return false;
+        }
+      })();
+
+      if (wpConnected) return 'wordpress';
+
+      // 3. Check GTM widget connectivity (last_widget_ping < 24h)
+      if (site.last_widget_ping) {
+        const pingAge = Date.now() - new Date(site.last_widget_ping).getTime();
+        const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+        if (pingAge < TWENTY_FOUR_HOURS) return 'widget';
       }
+
+      return false;
     } catch {
       return false;
     }
   }, [user, siteDomain]);
 
-  // Apply modifications to WordPress via update-config + persist to tracked_sites
+  // Apply modifications via update-config + persist to tracked_sites
   const handleApplyToWordPress = useCallback(async () => {
     if (!generatedCode || !user) return;
 
-    const isConnected = await verifySiteConnected();
-    if (!isConnected) {
+    setIsApplying(true);
+    setApplySuccess(false);
+    setConnectionMethod(null);
+
+    const connected = await verifySiteConnected();
+    if (!connected) {
+      setIsApplying(false);
       setInjectRejected(true);
       setShakeInject(true);
       setTimeout(() => setShakeInject(false), 1500);
-      setTimeout(() => setInjectRejected(false), 4000);
+      setTimeout(() => setInjectRejected(false), 6000);
       return;
     }
 
-    setIsApplying(true);
-    setApplySuccess(false);
+    setConnectionMethod(connected);
+
     try {
       const domain = siteDomain;
       
@@ -1186,7 +1203,7 @@ export function SmartConfigurator({
 
       if (data?.success) {
         setApplySuccess(true);
-        setTimeout(() => setApplySuccess(false), 4000);
+        setTimeout(() => { setApplySuccess(false); setConnectionMethod(null); }, 4000);
       } else {
         throw new Error(data?.error || 'Erreur');
       }
@@ -1197,7 +1214,7 @@ export function SmartConfigurator({
       setIsApplying(false);
     }
   }, [generatedCode, user, siteDomain, verifySiteConnected, resolveActiveSiteId, saveConfigToSite]);
-  
+
 
   const enabledCount = fixConfigs.filter(f => f.enabled).length;
   const technicalCount = fixConfigs.filter(f => f.enabled && !['strategic', 'generative'].includes(f.category)).length;
@@ -1421,23 +1438,18 @@ export function SmartConfigurator({
                     </Button>
                     {/* Inject rejection inline notification */}
                     {injectRejected && (
-                      <motion.a
-                        href="/modifier-code-wordpress"
+                      <motion.div
                         initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0 }}
-                        className="flex items-center gap-1.5 text-xs font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2.5 py-1.5 cursor-pointer hover:bg-destructive/20 transition-colors whitespace-nowrap"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          window.open('/modifier-code-wordpress', '_blank');
-                        }}
+                        className="flex items-center gap-1.5 text-xs font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-2.5 py-1.5 whitespace-nowrap"
                       >
                         <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                        <span>Plugin non connecté</span>
-                        <Plug className="w-3 h-3 flex-shrink-0 opacity-60" />
-                      </motion.a>
+                        <span>Aucune connexion détectée (GTM / WordPress)</span>
+                        <Cable className="w-3 h-3 flex-shrink-0 opacity-60" />
+                      </motion.div>
                     )}
-                    {/* Inject to WordPress button */}
+                    {/* Inject to site button */}
                     <motion.div
                       animate={shakeInject ? { x: [0, -6, 6, -5, 5, -3, 3, -1, 1, 0] } : {}}
                       transition={shakeInject ? { duration: 1.5, ease: 'easeInOut' } : {}}
@@ -1451,7 +1463,7 @@ export function SmartConfigurator({
                       {isApplying ? (
                         <>
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          Injection...
+                          Vérification...
                         </>
                       ) : applySuccess ? (
                         <>
@@ -1466,14 +1478,14 @@ export function SmartConfigurator({
                       )}
                     </Button>
                     </motion.div>
-                    {applySuccess && (
+                    {applySuccess && connectionMethod && (
                       <motion.span
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0 }}
                         className="text-xs font-medium text-emerald-500 whitespace-nowrap"
                       >
-                        ✅ Injecté avec succès !
+                        ✅ Injecté via {connectionMethod === 'wordpress' ? 'WordPress' : 'GTM Widget'}
                       </motion.span>
                     )}
                   </>
