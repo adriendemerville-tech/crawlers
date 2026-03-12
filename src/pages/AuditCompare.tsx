@@ -1400,7 +1400,7 @@ const AuditCompare = () => {
                   {!isUnlimited && (
                     <button
                       type="button"
-                      onClick={() => setShowTopUp(true)}
+                      onClick={() => user ? setShowTopUp(true) : setShowAuthDialog(true)}
                       className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-500 hover:text-amber-400 transition-colors cursor-pointer border border-amber-500/40 rounded-lg px-3 py-2"
                     >
                       <CreditCoin size="sm" />
