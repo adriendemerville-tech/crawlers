@@ -167,6 +167,7 @@ export default function Profile() {
               </h1>
             </div>
 
+            <FreeTrialBanner />
             <Tabs defaultValue={initialTab} className="space-y-6">
               <TabsList className="w-full flex">
                 {isProUser && (
