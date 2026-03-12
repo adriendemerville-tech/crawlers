@@ -144,13 +144,48 @@ const ConditionsUtilisation = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
+                {t3(language, '5 bis. Injection de code via Widget / GTM', '5a. Code Injection via Widget / GTM', '5 bis. Inyección de código via Widget / GTM')}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                {t3(language,
+                  'La fonctionnalité « Code correctif » permet à l\'utilisateur de générer un script JavaScript encapsulé, injectable sur son site via un widget dédié ou Google Tag Manager (GTM). L\'opération est volontaire, initiée par l\'utilisateur, et entièrement réversible.',
+                  'The "Corrective code" feature allows the user to generate an encapsulated JavaScript script, injectable on their site via a dedicated widget or Google Tag Manager (GTM). The operation is voluntary, initiated by the user, and fully reversible.',
+                  'La funcionalidad « Código correctivo » permite al usuario generar un script JavaScript encapsulado, inyectable en su sitio a través de un widget dedicado o Google Tag Manager (GTM). La operación es voluntaria, iniciada por el usuario y completamente reversible.'
+                )}
+              </p>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
+                <li>{t3(language, 'Le code est exécuté en sandboxing sémantique (isolation du DOM)', 'The code runs in semantic sandboxing (DOM isolation)', 'El código se ejecuta en sandboxing semántico (aislamiento del DOM)')}</li>
+                <li>{t3(language, 'Aucune donnée personnelle n\'est collectée par le script', 'No personal data is collected by the script', 'El script no recopila datos personales')}</li>
+                <li>{t3(language, 'L\'utilisateur peut désactiver ou supprimer le script à tout moment', 'The user can disable or remove the script at any time', 'El usuario puede desactivar o eliminar el script en cualquier momento')}</li>
+              </ul>
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                <p className="text-muted-foreground">
+                  <strong className="text-amber-600 dark:text-amber-400">{t3(language, 'Responsabilité :', 'Liability:', 'Responsabilidad:')}</strong>{' '}
+                  {t3(language,
+                    'Crawlers AI ne saurait être tenu responsable des effets de l\'injection de code sur un site tiers. L\'utilisateur est seul responsable de la validation, du déploiement et de la surveillance du script sur son propre site.',
+                    'Crawlers AI cannot be held liable for the effects of code injection on a third-party site. The user is solely responsible for the validation, deployment, and monitoring of the script on their own site.',
+                    'Crawlers AI no podrá ser considerado responsable de los efectos de la inyección de código en un sitio de terceros. El usuario es el único responsable de la validación, despliegue y supervisión del script en su propio sitio.'
+                  )}
+                </p>
+              </div>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 {t3(language, '6. Durée de validité des crédits', '6. Credit Validity Period', '6. Período de validez de los créditos')}
               </h2>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language,
                   'Les crédits achetés sont valables sans limitation de durée. Ils restent utilisables tant que votre compte est actif. En cas de suppression de compte à votre demande, les crédits non utilisés sont perdus.',
                   'Purchased credits are valid without time limit. They remain usable as long as your account is active. If your account is deleted at your request, unused credits are forfeited.',
                   'Los créditos comprados son válidos sin límite de tiempo. Permanecen utilizables mientras su cuenta esté activa. En caso de eliminación de la cuenta a su solicitud, los créditos no utilizados se pierden.'
+                )}
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                {t3(language,
+                  'Les types de crédits suivants sont reconnus : achat (purchase), utilisation (usage), bonus, crédit administratif (admin_credit), débit administratif (admin_debit), parrainage (referral) et bienvenue (welcome). Les crédits de bienvenue sont attribués automatiquement à la création du compte.',
+                  'The following credit types are recognized: purchase, usage, bonus, admin credit (admin_credit), admin debit (admin_debit), referral, and welcome. Welcome credits are automatically granted upon account creation.',
+                  'Se reconocen los siguientes tipos de créditos: compra (purchase), uso (usage), bonus, crédito administrativo (admin_credit), débito administrativo (admin_debit), referido (referral) y bienvenida (welcome). Los créditos de bienvenida se otorgan automáticamente al crear la cuenta.'
                 )}
               </p>
             </section>
