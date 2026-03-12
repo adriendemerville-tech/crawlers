@@ -61,6 +61,18 @@ const ResetPassword = () => {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const navigate = useNavigate();
+
+  // noindex this page
+  useEffect(() => {
+    let meta = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'robots');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', 'noindex, nofollow');
+    return () => { meta?.remove(); };
+  }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
