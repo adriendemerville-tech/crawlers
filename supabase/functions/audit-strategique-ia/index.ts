@@ -2058,19 +2058,19 @@ Deno.serve(async (req) => {
       const context = detectBusinessContext(domain, pageContentContext);
 
       // ── WAVE 2: DataForSEO Market + check-llm + Local Competitor + Founder (all parallel) ──
-      console.log('\n📊 WAVE 2: Market data + LLM check + Competitor + Founder (parallel)...');
+      console.log(`\n📊 WAVE 2: Market data + LLM check${isContentMode ? '' : ' + Competitor + Founder'} (parallel)...`);
 
       const needsLlmCheck = !toolsData?.llm || toolsData.llm.note;
       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
 
       const [mktDataResult, llmCheckResult, localCompResult, founderResult] = await Promise.allSettled([
-        // Market data (DataForSEO keywords)
+        // Market data (DataForSEO keywords) — always needed for keyword analysis
         withDeadline(
           fetchMarketData(domain, context, pageContentContext, url),
           180_000, 'market_data'
         ),
-        // LLM visibility check (sub-function call)
+        // LLM visibility check (sub-function call) — always needed
         needsLlmCheck && supabaseUrl && supabaseAnonKey
           ? withDeadline(
               (async () => {
@@ -2087,18 +2087,20 @@ Deno.serve(async (req) => {
               45_000, 'check_llm'
             )
           : Promise.resolve(null),
-        // Local competitor
-        context.locationCode
+        // Local competitor — skip in content mode (SERP competitors handled by LLM)
+        !isContentMode && context.locationCode
           ? withDeadline(
               findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext),
               20_000, 'local_competitor'
             )
           : Promise.resolve(null),
-        // Founder discovery
-        withDeadline(
-          searchFounderProfile(domain, context.location),
-          15_000, 'founder'
-        ),
+        // Founder discovery — skip in content mode
+        !isContentMode
+          ? withDeadline(
+              searchFounderProfile(domain, context.location),
+              15_000, 'founder'
+            )
+          : Promise.resolve(null),
       ]);
 
       marketData = mktDataResult.status === 'fulfilled' ? mktDataResult.value : null;
