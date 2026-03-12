@@ -1396,7 +1396,7 @@ export function SmartConfigurator({
               </ToggleGroup>
 
               {/* Connect site button - centered */}
-              <Popover>
+              <Popover modal={true}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5 text-xs h-7 border-dashed border-violet-400/50 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30">
                     <Cable className="w-3 h-3" />
