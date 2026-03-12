@@ -1114,6 +1114,30 @@ const AuditCompare = () => {
       return;
     }
 
+    // Credit check (skip for unlimited users)
+    if (!isUnlimited) {
+      if (balance < 4) {
+        setShowTopUp(true);
+        return;
+      }
+      // Deduct 4 credits
+      const { data: creditResult, error: creditError } = await supabase.rpc('use_credit', {
+        p_user_id: user.id,
+        p_amount: 4,
+        p_description: 'Audit comparé',
+      });
+      if (creditError || !(creditResult as any)?.success) {
+        const errMsg = (creditResult as any)?.error || creditError?.message || t.insufficientCredits;
+        if (errMsg.includes('Insufficient')) {
+          setShowTopUp(true);
+        } else {
+          toast({ title: 'Error', description: errMsg, variant: 'destructive' });
+        }
+        return;
+      }
+      refreshBalance();
+    }
+
     setIsLoading(true);
     setResult(null);
     retryCountRef.current = 0;
