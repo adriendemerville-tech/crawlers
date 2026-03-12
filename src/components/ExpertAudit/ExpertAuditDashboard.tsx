@@ -30,6 +30,7 @@ import { PatienceCards } from './PatienceCards';
 import { HallucinationDiagnosisCard } from './HallucinationDiagnosisCard';
 import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { AIBotsCard } from './AIBotsCard';
+import { ImageQualityCard } from './ImageQualityCard';
 import { MethodologyPopover } from './MethodologyPopover';
 import { DarkSocialCard } from './DarkSocialCard';
 import { FreshnessSignalsCard } from './FreshnessSignalsCard';
@@ -1348,6 +1349,13 @@ export function ExpertAuditDashboard() {
                 {/* AI Bots */}
                 {result.rawData?.crawlersData && (
                   <AIBotsCard data={result.rawData.crawlersData} />
+                )}
+                {/* Image Quality */}
+                {result.rawData?.htmlAnalysis?.imagesTotal !== undefined && (
+                  <ImageQualityCard 
+                    imagesTotal={result.rawData.htmlAnalysis.imagesTotal || 0} 
+                    imagesMissingAlt={result.rawData.htmlAnalysis.imagesMissingAlt || 0} 
+                  />
                 )}
               </div>
 
