@@ -5,7 +5,7 @@ import { AlertTriangle, TrendingUp, Eye, ShieldCheck, Zap, Award } from 'lucide-
 const translations = {
   fr: {
     badge: 'Alerte 2026',
-    title: 'Pourquoi c\'est vital en 2026 ?',
+    title: 'Pourquoi optimiser son SEO et sa visibilité IA est vital en 2026',
     subtitle: 'Les règles du jeu ont changé. Voici ce que vous risquez.',
     points: [
       {
