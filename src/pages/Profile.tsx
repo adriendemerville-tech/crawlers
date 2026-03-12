@@ -20,6 +20,7 @@ import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
+import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 
 const translations = {
   fr: {
