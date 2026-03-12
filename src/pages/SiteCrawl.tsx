@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
-import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp } from 'lucide-react';
+import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAdmin } from '@/hooks/useAdmin';
 import { toast } from 'sonner';
 import microwaveDing from '@/assets/sounds/microwave-ding.mp3';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const crawlI18n = {
   fr: {
@@ -31,9 +32,9 @@ const crawlI18n = {
     h1_2: 'page par page',
     subtitle: 'Crawl complet avec score SEO/200 par page, détection d\'erreurs techniques et synthèse IA globale.',
     whyTitle: 'Pourquoi auditer plusieurs pages de votre site ?',
-    whyText: 'Un audit SEO mono-page ne révèle qu\'une infime partie de vos problèmes techniques. En analysant l\'ensemble de vos URLs, vous identifiez les balises manquantes, les erreurs de maillage interne, les pages orphelines et les contenus dupliqués qui freinent votre indexation. Le crawl multi-pages détecte chaque point de friction pour que Google et les moteurs IA comprennent parfaitement la structure de votre site.',
+    whyText: 'Un audit SEO mono-page ne révèle qu\'une infime partie de vos problèmes techniques. En analysant l\'ensemble de vos URLs, vous identifiez les balises manquantes, les erreurs de maillage interne, les pages orphelines et les contenus dupliqués qui freinent votre indexation.',
     scoreTitle: 'Un score SEO/200 par page, une synthèse IA globale',
-    scoreText: 'Chaque page crawlée reçoit un score sur 200 points couvrant les critères techniques, sémantiques et structurels. L\'intelligence artificielle consolide ensuite ces résultats en une synthèse exploitable : recommandations prioritaires, estimation du gain de trafic et identification des pages à corriger en premier. Vous obtenez une feuille de route concrète, pas seulement un diagnostic.',
+    scoreText: 'Chaque page crawlée reçoit un score sur 200 points couvrant les critères techniques, sémantiques et structurels. L\'intelligence artificielle consolide ensuite ces résultats en une synthèse exploitable.',
     placeholder: 'https://votre-site.fr',
     launchBtn: 'Lancer le crawl',
     crawling: 'Crawl en cours…',
@@ -69,6 +70,28 @@ const crawlI18n = {
     imgsNoAlt: 'Imgs sans alt:',
     previousCrawls: 'Crawls précédents',
     errorCrawl: 'Erreur lors du crawl',
+    advancedOptions: 'Options avancées',
+    crawlDepth: 'Profondeur max',
+    depthUnlimited: 'Illimitée',
+    depthLevel: 'Niveau',
+    urlFilter: 'Filtre URL (regex)',
+    urlFilterPlaceholder: '/blog/.*|/produits/.*',
+    customSelectors: 'Extraction custom (CSS)',
+    selectorName: 'Nom',
+    selectorValue: 'Sélecteur CSS',
+    addSelector: 'Ajouter',
+    sitemapExport: 'Exporter Sitemap XML',
+    compareCrawls: 'Comparer les crawls',
+    selectCrawlA: 'Crawl A',
+    selectCrawlB: 'Crawl B',
+    compare: 'Comparer',
+    comparisonResults: 'Résultat de la comparaison',
+    newPages: 'Pages ajoutées',
+    removedPages: 'Pages supprimées',
+    improvedPages: 'Pages améliorées',
+    degradedPages: 'Pages dégradées',
+    duplicateContent: 'Contenu quasi-dupliqué',
+    schemaErrors: 'Erreurs Schema.org',
   },
   en: {
     pageTitle: 'Multi-Page SEO Crawl — Analyze your full site | Crawlers.fr',
@@ -78,9 +101,9 @@ const crawlI18n = {
     h1_2: 'page by page',
     subtitle: 'Full crawl with SEO score/200 per page, technical error detection and global AI synthesis.',
     whyTitle: 'Why audit multiple pages of your site?',
-    whyText: 'A single-page SEO audit only reveals a tiny part of your technical issues. By analyzing all your URLs, you identify missing tags, internal linking errors, orphan pages and duplicate content that hinder your indexing. Multi-page crawling detects every friction point so Google and AI engines perfectly understand your site structure.',
+    whyText: 'A single-page SEO audit only reveals a tiny part of your technical issues. By analyzing all your URLs, you identify missing tags, internal linking errors, orphan pages and duplicate content that hinder your indexing.',
     scoreTitle: 'A SEO/200 score per page, a global AI synthesis',
-    scoreText: 'Each crawled page receives a score out of 200 points covering technical, semantic and structural criteria. Artificial intelligence then consolidates these results into an actionable synthesis: priority recommendations, traffic gain estimation and identification of pages to fix first. You get a concrete roadmap, not just a diagnosis.',
+    scoreText: 'Each crawled page receives a score out of 200 points covering technical, semantic and structural criteria. AI then consolidates these results into an actionable synthesis.',
     placeholder: 'https://your-site.com',
     launchBtn: 'Launch crawl',
     crawling: 'Crawling…',
@@ -116,6 +139,28 @@ const crawlI18n = {
     imgsNoAlt: 'Imgs no alt:',
     previousCrawls: 'Previous crawls',
     errorCrawl: 'Crawl error',
+    advancedOptions: 'Advanced options',
+    crawlDepth: 'Max depth',
+    depthUnlimited: 'Unlimited',
+    depthLevel: 'Level',
+    urlFilter: 'URL filter (regex)',
+    urlFilterPlaceholder: '/blog/.*|/products/.*',
+    customSelectors: 'Custom extraction (CSS)',
+    selectorName: 'Name',
+    selectorValue: 'CSS Selector',
+    addSelector: 'Add',
+    sitemapExport: 'Export Sitemap XML',
+    compareCrawls: 'Compare crawls',
+    selectCrawlA: 'Crawl A',
+    selectCrawlB: 'Crawl B',
+    compare: 'Compare',
+    comparisonResults: 'Comparison results',
+    newPages: 'New pages',
+    removedPages: 'Removed pages',
+    improvedPages: 'Improved pages',
+    degradedPages: 'Degraded pages',
+    duplicateContent: 'Near-duplicate content',
+    schemaErrors: 'Schema.org errors',
   },
   es: {
     pageTitle: 'Crawl Multi-Páginas SEO — Analice su sitio completo | Crawlers.fr',
@@ -125,9 +170,9 @@ const crawlI18n = {
     h1_2: 'página por página',
     subtitle: 'Crawl completo con puntuación SEO/200 por página, detección de errores técnicos y síntesis IA global.',
     whyTitle: '¿Por qué auditar varias páginas de su sitio?',
-    whyText: 'Una auditoría SEO de una sola página solo revela una ínfima parte de sus problemas técnicos. Al analizar todas sus URLs, identifica las etiquetas faltantes, los errores de enlazado interno, las páginas huérfanas y el contenido duplicado que frena su indexación. El crawl multi-páginas detecta cada punto de fricción para que Google y los motores IA comprendan perfectamente la estructura de su sitio.',
+    whyText: 'Una auditoría SEO de una sola página solo revela una ínfima parte de sus problemas técnicos. Al analizar todas sus URLs, identifica las etiquetas faltantes, los errores de enlazado interno, las páginas huérfanas y el contenido duplicado.',
     scoreTitle: 'Una puntuación SEO/200 por página, una síntesis IA global',
-    scoreText: 'Cada página rastreada recibe una puntuación sobre 200 puntos que cubre criterios técnicos, semánticos y estructurales. La inteligencia artificial consolida estos resultados en una síntesis accionable: recomendaciones prioritarias, estimación de ganancia de tráfico e identificación de las páginas a corregir primero. Obtiene una hoja de ruta concreta, no solo un diagnóstico.',
+    scoreText: 'Cada página rastreada recibe una puntuación sobre 200 puntos que cubre criterios técnicos, semánticos y estructurales. La IA consolida estos resultados en una síntesis accionable.',
     placeholder: 'https://su-sitio.es',
     launchBtn: 'Lanzar crawl',
     crawling: 'Crawl en curso…',
@@ -163,6 +208,28 @@ const crawlI18n = {
     imgsNoAlt: 'Imgs sin alt:',
     previousCrawls: 'Crawls anteriores',
     errorCrawl: 'Error de crawl',
+    advancedOptions: 'Opciones avanzadas',
+    crawlDepth: 'Profundidad máx',
+    depthUnlimited: 'Ilimitada',
+    depthLevel: 'Nivel',
+    urlFilter: 'Filtro URL (regex)',
+    urlFilterPlaceholder: '/blog/.*|/productos/.*',
+    customSelectors: 'Extracción personalizada (CSS)',
+    selectorName: 'Nombre',
+    selectorValue: 'Selector CSS',
+    addSelector: 'Añadir',
+    sitemapExport: 'Exportar Sitemap XML',
+    compareCrawls: 'Comparar crawls',
+    selectCrawlA: 'Crawl A',
+    selectCrawlB: 'Crawl B',
+    compare: 'Comparar',
+    comparisonResults: 'Resultado de la comparación',
+    newPages: 'Páginas añadidas',
+    removedPages: 'Páginas eliminadas',
+    improvedPages: 'Páginas mejoradas',
+    degradedPages: 'Páginas degradadas',
+    duplicateContent: 'Contenido quasi-duplicado',
+    schemaErrors: 'Errores Schema.org',
   },
 };
 
@@ -200,6 +267,11 @@ interface CrawlPage {
   has_canonical: boolean;
   has_og: boolean;
   issues: string[];
+  content_hash?: string | null;
+  schema_org_types?: string[];
+  schema_org_errors?: string[];
+  custom_extraction?: Record<string, string>;
+  crawl_depth?: number;
 }
 
 interface CrawlResult {
@@ -216,6 +288,32 @@ interface CrawlResult {
   completed_at: string | null;
 }
 
+interface CustomSelector {
+  name: string;
+  selector: string;
+  type: 'css';
+}
+
+interface ComparisonResult {
+  newPages: string[];
+  removedPages: string[];
+  improved: { path: string; before: number; after: number }[];
+  degraded: { path: string; before: number; after: number }[];
+  scoreChange: number;
+}
+
+// ── Sitemap XML Generator ──────────────────────────────────
+function generateSitemapXml(pages: CrawlPage[], domain: string): string {
+  const urls = pages
+    .filter(p => p.http_status === 200 && !(p.issues || []).includes('noindex'))
+    .map(p => {
+      const loc = p.url.startsWith('http') ? p.url : `https://${domain}${p.path}`;
+      return `  <url>\n    <loc>${loc}</loc>\n    <priority>${(p.seo_score || 0) >= 160 ? '1.0' : (p.seo_score || 0) >= 120 ? '0.8' : '0.5'}</priority>\n  </url>`;
+    });
+
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`;
+}
+
 export default function SiteCrawl() {
   const { user, loading } = useAuth();
   const { balance: credits, isAgencyPro } = useCredits();
@@ -225,23 +323,8 @@ export default function SiteCrawl() {
   useCanonicalHreflang('/site-crawl');
   const t = crawlI18n[language];
 
-  // Gate: restrict to paying subscribers (Pro Agency or Admin)
   const isUnlimitedUser = isAgencyPro || isAdmin;
-  useEffect(() => {
-    if (!loading && !adminLoading) {
-      if (!user || !isUnlimitedUser) {
-        navigate('/tarifs', { replace: true });
-      }
-    }
-  }, [user, loading, adminLoading, isUnlimitedUser, navigate]);
 
-  if (loading || adminLoading || !user || !isUnlimitedUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
   const [url, setUrl] = useState('');
   const [maxPages, setMaxPages] = useState(50);
   const [isLoading, setIsLoading] = useState(false);
@@ -257,8 +340,41 @@ export default function SiteCrawl() {
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
 
+  // Advanced options
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [maxDepth, setMaxDepth] = useState(0); // 0 = unlimited
+  const [urlFilter, setUrlFilter] = useState('');
+  const [customSelectors, setCustomSelectors] = useState<CustomSelector[]>([]);
+  const [newSelectorName, setNewSelectorName] = useState('');
+  const [newSelectorValue, setNewSelectorValue] = useState('');
+
+  // Comparison
+  const [showComparison, setShowComparison] = useState(false);
+  const [compareCrawlA, setCompareCrawlA] = useState('');
+  const [compareCrawlB, setCompareCrawlB] = useState('');
+  const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
+  const [isComparing, setIsComparing] = useState(false);
+
   const isUnlimited = isAgencyPro || isAdmin;
   const creditCost = isUnlimited ? 0 : getCreditCost(maxPages);
+
+  // Gate: restrict to paying subscribers
+  useEffect(() => {
+    if (!loading && !adminLoading) {
+      if (!user || !isUnlimitedUser) {
+        navigate('/tarifs', { replace: true });
+      }
+    }
+  }, [user, loading, adminLoading, isUnlimitedUser, navigate]);
+
+  if (loading || adminLoading || !user || !isUnlimitedUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
 
   // Load past crawls
   useEffect(() => {
@@ -267,13 +383,13 @@ export default function SiteCrawl() {
       .from('site_crawls')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(10)
+      .limit(20)
       .then(({ data }) => {
         if (data) setPastCrawls(data as any);
       });
   }, [user, crawlResult]);
 
-  // Poll progress while crawling (every 5s)
+  // Poll progress while crawling
   useEffect(() => {
     if (!crawlResult || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
     const interval = setInterval(async () => {
@@ -286,34 +402,17 @@ export default function SiteCrawl() {
         const r = data as any;
         setCrawlResult(r);
         if (r.total_pages > 0) setProgress(Math.round((r.crawled_pages / r.total_pages) * 100));
-        
-        if (r.status === 'queued') setPhase('En file d\'attente…');
-        else if (r.status === 'mapping') setPhase('Mapping du site…');
-        else if (r.status === 'crawling') setPhase(`Analyse en cours : ${r.crawled_pages}/${r.total_pages} pages…`);
-        else if (r.status === 'analyzing') setPhase('Synthèse IA en cours…');
-        
+        if (r.status === 'queued') setPhase(t.queued);
+        else if (r.status === 'mapping') setPhase(t.mapping);
+        else if (r.status === 'crawling') setPhase(`${t.crawlingProgress} ${r.crawled_pages}/${r.total_pages} ${t.pages}…`);
+        else if (r.status === 'analyzing') setPhase(t.analyzing);
         if (r.status === 'completed') {
           clearInterval(interval);
           setIsLoading(false);
           setPhase('');
           loadPages(r.id);
-          
-          // 🔔 Notification sonore (micro-ondes)
-          try {
-            const audio = new Audio(microwaveDing);
-            audio.volume = 0.6;
-            audio.play().catch(() => {});
-          } catch {}
-          
-          toast.success(`✅ Audit terminé : ${r.crawled_pages} pages analysées !`, {
-            duration: 10000,
-            action: {
-              label: 'Voir le rapport',
-              onClick: () => {},
-            },
-          });
-          
-          // Fire-and-forget: trigger CTO Agent for crawl analysis
+          try { const audio = new Audio(microwaveDing); audio.volume = 0.6; audio.play().catch(() => {}); } catch {}
+          toast.success(`✅ ${t.auditDone} ${r.crawled_pages} ${t.pagesAnalyzed}`, { duration: 10000 });
           supabase.functions.invoke('agent-cto', {
             body: { auditResult: { ai_summary: r.ai_summary, ai_recommendations: r.ai_recommendations, avg_score: r.avg_score, crawled_pages: r.crawled_pages }, auditType: 'crawl', url: r.url, domain: r.domain }
           }).catch(() => {});
@@ -322,7 +421,7 @@ export default function SiteCrawl() {
           clearInterval(interval);
           setIsLoading(false);
           setPhase('');
-          toast.error(r.error_message || 'Erreur lors du crawl');
+          toast.error(r.error_message || t.errorCrawl);
         }
       }
     }, 5000);
@@ -344,37 +443,50 @@ export default function SiteCrawl() {
     await loadPages(crawl.id);
   }
 
+  function addSelector() {
+    if (!newSelectorName.trim() || !newSelectorValue.trim()) return;
+    setCustomSelectors(prev => [...prev, { name: newSelectorName.trim(), selector: newSelectorValue.trim(), type: 'css' }]);
+    setNewSelectorName('');
+    setNewSelectorValue('');
+  }
+
+  function removeSelector(index: number) {
+    setCustomSelectors(prev => prev.filter((_, i) => i !== index));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
+    if (!user) { navigate('/auth'); return; }
     if (!isUnlimited && credits < creditCost) {
-      toast.error(`Crédits insuffisants. Requis : ${creditCost}, disponibles : ${credits}`);
+      toast.error(`${t.insufficientCredits} ${creditCost}, ${t.available} ${credits}`);
       return;
     }
 
     setIsLoading(true);
-    setPhase('Mapping du site…');
+    setPhase(t.mapping);
     setProgress(0);
     setPages([]);
     setCrawlResult(null);
 
     try {
       const { data, error } = await supabase.functions.invoke('crawl-site', {
-        body: { url, maxPages, userId: user.id },
+        body: { 
+          url, 
+          maxPages, 
+          userId: user.id,
+          maxDepth: maxDepth || 0,
+          urlFilter: urlFilter.trim() || '',
+          customSelectors,
+        },
       });
 
       if (error) throw error;
-
       if (!data.success) {
-        toast.error(data.error || 'Erreur lors du crawl');
+        toast.error(data.error || t.errorCrawl);
         setIsLoading(false);
         return;
       }
 
-      // Load the queued crawl from DB — polling will track progress
       const { data: crawl } = await supabase
         .from('site_crawls')
         .select('*')
@@ -383,41 +495,76 @@ export default function SiteCrawl() {
 
       if (crawl) {
         setCrawlResult(crawl as any);
-        setPhase(`${data.totalPages} pages découvertes — audit en file d'attente…`);
+        setPhase(`${data.totalPages} ${t.auditQueued}`);
       }
-
-      toast.success(`${data.totalPages} pages découvertes — audit lancé en arrière-plan`);
+      toast.success(`${data.totalPages} ${t.pagesDiscovered}`);
     } catch (err: any) {
-      toast.error(err.message || 'Erreur inattendue');
+      toast.error(err.message || t.errorCrawl);
       setIsLoading(false);
       setPhase('');
     }
   }
 
-  async function handlePredict() {
-    if (!crawlResult || !user) return;
-    setIsPredicting(true);
+  // ── Sitemap export ────────────────────────────────────────
+  function handleSitemapExport() {
+    if (pages.length === 0) return;
+    const domain = crawlResult?.domain || '';
+    const xml = generateSitemapXml(pages, domain);
+    const blob = new Blob([xml], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sitemap-${domain}.xml`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Sitemap XML téléchargé');
+  }
+
+  // ── Crawl comparison ──────────────────────────────────────
+  async function handleCompare() {
+    if (!compareCrawlA || !compareCrawlB || compareCrawlA === compareCrawlB) return;
+    setIsComparing(true);
+    setComparisonResult(null);
+
     try {
-      const { data, error } = await supabase.functions.invoke('generate-prediction', {
-        body: { crawl_id: crawlResult.id, client_id: user.id },
-      });
-      if (error) throw error;
-      if (data?.success) {
-        setPrediction({
-          baseline_traffic: data.baseline_traffic,
-          scenarios: data.scenarios,
-          ai_risk_score: data.ai_risk_score,
-          business_impact: data.business_impact,
-          reasoning: data.reasoning,
-        });
-        toast.success('Prédiction de trafic générée');
-      } else {
-        toast.error(data?.error || 'Erreur prédiction');
+      const [{ data: pagesA }, { data: pagesB }] = await Promise.all([
+        supabase.from('crawl_pages').select('path, seo_score, url').eq('crawl_id', compareCrawlA),
+        supabase.from('crawl_pages').select('path, seo_score, url').eq('crawl_id', compareCrawlB),
+      ]);
+
+      if (!pagesA || !pagesB) { toast.error('Impossible de charger les données'); return; }
+
+      const mapA = new Map(pagesA.map((p: any) => [p.path, p.seo_score || 0]));
+      const mapB = new Map(pagesB.map((p: any) => [p.path, p.seo_score || 0]));
+
+      const newPages = pagesB.filter((p: any) => !mapA.has(p.path)).map((p: any) => p.path);
+      const removedPages = pagesA.filter((p: any) => !mapB.has(p.path)).map((p: any) => p.path);
+
+      const improved: { path: string; before: number; after: number }[] = [];
+      const degraded: { path: string; before: number; after: number }[] = [];
+
+      for (const [path, scoreB] of mapB.entries()) {
+        const scoreA = mapA.get(path);
+        if (scoreA !== undefined) {
+          if (scoreB > scoreA + 5) improved.push({ path, before: scoreA, after: scoreB });
+          else if (scoreB < scoreA - 5) degraded.push({ path, before: scoreA, after: scoreB });
+        }
       }
+
+      const avgA = pagesA.length > 0 ? pagesA.reduce((s: number, p: any) => s + (p.seo_score || 0), 0) / pagesA.length : 0;
+      const avgB = pagesB.length > 0 ? pagesB.reduce((s: number, p: any) => s + (p.seo_score || 0), 0) / pagesB.length : 0;
+
+      setComparisonResult({
+        newPages,
+        removedPages,
+        improved: improved.sort((a, b) => (b.after - b.before) - (a.after - a.before)),
+        degraded: degraded.sort((a, b) => (a.after - a.before) - (b.after - b.before)),
+        scoreChange: Math.round(avgB - avgA),
+      });
     } catch (err: any) {
-      toast.error(err.message || 'Erreur prédiction');
+      toast.error(err.message || 'Erreur comparaison');
     } finally {
-      setIsPredicting(false);
+      setIsComparing(false);
     }
   }
 
@@ -433,6 +580,12 @@ export default function SiteCrawl() {
     });
     return acc;
   }, {});
+
+  // Duplicate content stats
+  const nearDuplicates = pages.filter(p => (p.issues || []).includes('near_duplicate_content'));
+  const schemaErrorPages = pages.filter(p => (p.issues || []).includes('schema_org_errors'));
+
+  const completedCrawls = pastCrawls.filter(c => c.status === 'completed');
 
   return (
     <>
@@ -454,28 +607,18 @@ export default function SiteCrawl() {
             <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
               {t.h1_1} <span className="text-primary">{t.h1_2}</span>
             </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              {t.subtitle}
-            </p>
+            <p className="text-muted-foreground max-w-2xl mx-auto">{t.subtitle}</p>
           </div>
 
-          {/* SEO / GEO content */}
+          {/* SEO content */}
           <div className="mb-10 max-w-3xl mx-auto space-y-6">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">
-                {t.whyTitle}
-              </h2>
-              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                {t.whyText}
-              </p>
+              <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">{t.whyTitle}</h2>
+              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.whyText}</p>
             </div>
             <div>
-              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">
-                {t.scoreTitle}
-              </h3>
-              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">
-                {t.scoreText}
-              </p>
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">{t.scoreTitle}</h3>
+              <p className="text-muted-foreground leading-relaxed text-sm sm:text-base">{t.scoreText}</p>
             </div>
           </div>
 
@@ -489,8 +632,8 @@ export default function SiteCrawl() {
                     <Input
                       value={url}
                       onChange={e => setUrl(e.target.value)}
-                     placeholder={t.placeholder}
-                     className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500"
+                      placeholder={t.placeholder}
+                      className="pl-10 border-violet-500/40 focus-visible:ring-violet-500/50 focus-visible:border-violet-500"
                       required
                       disabled={isLoading}
                     />
@@ -504,7 +647,7 @@ export default function SiteCrawl() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div className="flex-1 space-y-2">
                     <label className="text-sm text-muted-foreground flex items-center justify-between">
-                     <span>{t.pagesToAnalyze}</span>
+                      <span>{t.pagesToAnalyze}</span>
                       <span className="font-semibold text-foreground">{maxPages}</span>
                     </label>
                     <Slider
@@ -531,6 +674,88 @@ export default function SiteCrawl() {
                     )}
                   </button>
                 </div>
+
+                {/* Advanced Options */}
+                <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+                  <CollapsibleTrigger asChild>
+                    <Button type="button" variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground w-full justify-start">
+                      <Settings2 className="w-4 h-4" />
+                      {t.advancedOptions}
+                      <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-4 pt-3 border-t border-border mt-2">
+                    {/* Crawl Depth */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Layers className="w-4 h-4" />
+                        {t.crawlDepth}: <span className="font-semibold text-foreground">{maxDepth === 0 ? t.depthUnlimited : `${t.depthLevel} ${maxDepth}`}</span>
+                      </label>
+                      <Slider
+                        value={[maxDepth]}
+                        onValueChange={v => setMaxDepth(v[0])}
+                        min={0}
+                        max={10}
+                        step={1}
+                        disabled={isLoading}
+                      />
+                      <p className="text-xs text-muted-foreground">0 = {t.depthUnlimited}</p>
+                    </div>
+
+                    {/* URL Filter */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Filter className="w-4 h-4" />
+                        {t.urlFilter}
+                      </label>
+                      <Input
+                        value={urlFilter}
+                        onChange={e => setUrlFilter(e.target.value)}
+                        placeholder={t.urlFilterPlaceholder}
+                        className="font-mono text-sm"
+                        disabled={isLoading}
+                      />
+                    </div>
+
+                    {/* Custom Selectors */}
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground flex items-center gap-2">
+                        <Code2 className="w-4 h-4" />
+                        {t.customSelectors}
+                      </label>
+                      {customSelectors.map((sel, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs bg-muted/50 rounded-lg px-3 py-2">
+                          <span className="font-medium text-foreground">{sel.name}</span>
+                          <span className="text-muted-foreground">→</span>
+                          <code className="text-violet-400 font-mono flex-1 truncate">{sel.selector}</code>
+                          <button type="button" onClick={() => removeSelector(i)} className="text-destructive hover:text-destructive/80">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                      <div className="flex gap-2">
+                        <Input
+                          value={newSelectorName}
+                          onChange={e => setNewSelectorName(e.target.value)}
+                          placeholder={t.selectorName}
+                          className="w-32 text-sm"
+                          disabled={isLoading}
+                        />
+                        <Input
+                          value={newSelectorValue}
+                          onChange={e => setNewSelectorValue(e.target.value)}
+                          placeholder={t.selectorValue}
+                          className="flex-1 font-mono text-sm"
+                          disabled={isLoading}
+                          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSelector())}
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={addSelector} disabled={isLoading || !newSelectorName || !newSelectorValue}>
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </form>
 
               {isLoading && (
@@ -583,6 +808,42 @@ export default function SiteCrawl() {
                 </Card>
               </div>
 
+              {/* Near-duplicate & Schema.org alerts */}
+              {(nearDuplicates.length > 0 || schemaErrorPages.length > 0) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {nearDuplicates.length > 0 && (
+                    <Card className="border-amber-500/30 bg-amber-500/5">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <Hash className="w-5 h-5 text-amber-500 shrink-0" />
+                        <div>
+                          <div className="text-sm font-medium text-foreground">{t.duplicateContent}</div>
+                          <div className="text-xs text-muted-foreground">{nearDuplicates.length} {t.pages}</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {schemaErrorPages.length > 0 && (
+                    <Card className="border-red-500/30 bg-red-500/5">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <ShieldAlert className="w-5 h-5 text-red-500 shrink-0" />
+                        <div>
+                          <div className="text-sm font-medium text-foreground">{t.schemaErrors}</div>
+                          <div className="text-xs text-muted-foreground">{schemaErrorPages.length} {t.pages}</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {/* Action bar: Sitemap Export */}
+              <div className="flex flex-wrap gap-3">
+                <Button variant="outline" size="sm" className="gap-2" onClick={handleSitemapExport}>
+                  <Download className="w-4 h-4" />
+                  {t.sitemapExport}
+                </Button>
+              </div>
+
               {/* Synthèse IA */}
               {crawlResult.ai_summary && (
                 <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
@@ -594,7 +855,6 @@ export default function SiteCrawl() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-foreground leading-relaxed">{crawlResult.ai_summary}</p>
-
                     {crawlResult.ai_recommendations?.length > 0 && (
                       <div className="mt-4 space-y-3">
                         <h4 className="text-sm font-semibold text-foreground">{t.priorityRecs}</h4>
@@ -607,9 +867,7 @@ export default function SiteCrawl() {
                               <div className="text-sm font-medium text-foreground">{rec.title}</div>
                               <div className="text-xs text-muted-foreground mt-0.5">{rec.description}</div>
                               {rec.affected_pages && (
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  📄 {rec.affected_pages} {t.pagesAffected}
-                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">📄 {rec.affected_pages} {t.pagesAffected}</div>
                               )}
                             </div>
                           </div>
@@ -620,14 +878,12 @@ export default function SiteCrawl() {
                 </Card>
               )}
 
-
-
               {/* Top erreurs */}
               {Object.keys(issueStats).length > 0 && (
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <AlertTriangle className="w-5 h-5 text-warning" />
+                      <AlertTriangle className="w-5 h-5 text-amber-500" />
                       {t.topErrors}
                     </CardTitle>
                   </CardHeader>
@@ -635,7 +891,7 @@ export default function SiteCrawl() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {Object.entries(issueStats)
                         .sort((a, b) => b[1] - a[1])
-                        .slice(0, 10)
+                        .slice(0, 12)
                         .map(([issue, count]) => (
                           <div key={issue} className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50">
                             <span className="text-sm text-foreground font-mono">{issue.replace(/_/g, ' ')}</span>
@@ -647,7 +903,7 @@ export default function SiteCrawl() {
                 </Card>
               )}
 
-              {/* Liste des pages */}
+              {/* Pages list */}
               <Card>
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between flex-wrap gap-2">
@@ -683,6 +939,9 @@ export default function SiteCrawl() {
                             <div className="text-xs text-muted-foreground truncate">{page.title || t.noTitle}</div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
+                            {page.crawl_depth !== undefined && page.crawl_depth > 0 && (
+                              <Badge variant="outline" className="text-[10px] gap-1"><Layers className="w-3 h-3" />{page.crawl_depth}</Badge>
+                            )}
                             {(page.issues || []).length > 0 && (
                               <Badge variant="destructive" className="text-xs">{(page.issues || []).length}</Badge>
                             )}
@@ -725,6 +984,33 @@ export default function SiteCrawl() {
                               {!page.has_canonical && <Badge variant="destructive" className="text-[10px]">Canonical ✗</Badge>}
                               {!page.has_og && <Badge variant="destructive" className="text-[10px]">OG ✗</Badge>}
                             </div>
+                            {/* Schema.org types & errors */}
+                            {page.schema_org_types && page.schema_org_types.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {page.schema_org_types.map((type, i) => (
+                                  <Badge key={i} variant="outline" className="text-[10px] text-violet-400 border-violet-400/30">{type}</Badge>
+                                ))}
+                              </div>
+                            )}
+                            {page.schema_org_errors && page.schema_org_errors.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {page.schema_org_errors.map((err, i) => (
+                                  <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 font-mono">{err}</span>
+                                ))}
+                              </div>
+                            )}
+                            {/* Custom extraction */}
+                            {page.custom_extraction && Object.keys(page.custom_extraction).length > 0 && (
+                              <div className="space-y-1">
+                                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Extraction</div>
+                                {Object.entries(page.custom_extraction).map(([name, value]) => (
+                                  <div key={name} className="flex gap-2 text-xs">
+                                    <span className="font-medium text-foreground shrink-0">{name}:</span>
+                                    <span className="text-muted-foreground truncate">{value || '—'}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                             {(page.issues || []).length > 0 && (
                               <div className="flex flex-wrap gap-1">
                                 {(page.issues as string[]).map((issue, i) => (
@@ -744,7 +1030,118 @@ export default function SiteCrawl() {
             </div>
           )}
 
-          {/* Crawls précédents */}
+          {/* Crawl Comparison */}
+          {completedCrawls.length >= 2 && (
+            <Card className="mb-6 mt-6">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2 cursor-pointer" onClick={() => setShowComparison(!showComparison)}>
+                  <GitCompare className="w-5 h-5 text-violet-400" />
+                  {t.compareCrawls}
+                  <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${showComparison ? 'rotate-180' : ''}`} />
+                </CardTitle>
+              </CardHeader>
+              {showComparison && (
+                <CardContent className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex-1">
+                      <label className="text-xs text-muted-foreground mb-1 block">{t.selectCrawlA}</label>
+                      <Select value={compareCrawlA} onValueChange={setCompareCrawlA}>
+                        <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                        <SelectContent>
+                          {completedCrawls.map(c => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.domain} — {new Date(c.created_at).toLocaleDateString()} ({c.avg_score}/200)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs text-muted-foreground mb-1 block">{t.selectCrawlB}</label>
+                      <Select value={compareCrawlB} onValueChange={setCompareCrawlB}>
+                        <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                        <SelectContent>
+                          {completedCrawls.map(c => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.domain} — {new Date(c.created_at).toLocaleDateString()} ({c.avg_score}/200)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      onClick={handleCompare}
+                      disabled={!compareCrawlA || !compareCrawlB || compareCrawlA === compareCrawlB || isComparing}
+                      className="gap-2 bg-violet-600 hover:bg-violet-700 text-white self-end"
+                    >
+                      {isComparing ? <Loader2 className="w-4 h-4 animate-spin" /> : <GitCompare className="w-4 h-4" />}
+                      {t.compare}
+                    </Button>
+                  </div>
+
+                  {comparisonResult && (
+                    <div className="space-y-4 animate-in fade-in duration-300">
+                      <div className="text-center p-4 rounded-lg bg-muted/50">
+                        <div className={`text-3xl font-bold ${comparisonResult.scoreChange > 0 ? 'text-emerald-500' : comparisonResult.scoreChange < 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                          {comparisonResult.scoreChange > 0 ? '+' : ''}{comparisonResult.scoreChange} pts
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">Score moyen Δ</div>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="p-3 rounded-lg bg-emerald-500/10 text-center">
+                          <div className="text-lg font-bold text-emerald-500">{comparisonResult.newPages.length}</div>
+                          <div className="text-xs text-muted-foreground">{t.newPages}</div>
+                        </div>
+                        <div className="p-3 rounded-lg bg-red-500/10 text-center">
+                          <div className="text-lg font-bold text-destructive">{comparisonResult.removedPages.length}</div>
+                          <div className="text-xs text-muted-foreground">{t.removedPages}</div>
+                        </div>
+                        <div className="p-3 rounded-lg bg-emerald-500/10 text-center">
+                          <div className="text-lg font-bold text-emerald-500">{comparisonResult.improved.length}</div>
+                          <div className="text-xs text-muted-foreground">{t.improvedPages}</div>
+                        </div>
+                        <div className="p-3 rounded-lg bg-amber-500/10 text-center">
+                          <div className="text-lg font-bold text-amber-500">{comparisonResult.degraded.length}</div>
+                          <div className="text-xs text-muted-foreground">{t.degradedPages}</div>
+                        </div>
+                      </div>
+
+                      {/* Improved pages detail */}
+                      {comparisonResult.improved.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-emerald-500 uppercase tracking-wide">↑ {t.improvedPages}</div>
+                          {comparisonResult.improved.slice(0, 10).map((p, i) => (
+                            <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded bg-muted/30 text-xs">
+                              <span className="text-foreground font-mono truncate flex-1">{p.path}</span>
+                              <span className="text-muted-foreground">{p.before}</span>
+                              <ArrowRight className="w-3 h-3 mx-1 text-emerald-500" />
+                              <span className="text-emerald-500 font-bold">{p.after}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {comparisonResult.degraded.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-amber-500 uppercase tracking-wide">↓ {t.degradedPages}</div>
+                          {comparisonResult.degraded.slice(0, 10).map((p, i) => (
+                            <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded bg-muted/30 text-xs">
+                              <span className="text-foreground font-mono truncate flex-1">{p.path}</span>
+                              <span className="text-muted-foreground">{p.before}</span>
+                              <ArrowRight className="w-3 h-3 mx-1 text-destructive" />
+                              <span className="text-destructive font-bold">{p.after}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              )}
+            </Card>
+          )}
+
+          {/* Past crawls */}
           {!crawlResult && pastCrawls.length > 0 && (
             <Card>
               <CardHeader>

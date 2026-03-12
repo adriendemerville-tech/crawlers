@@ -5,13 +5,8 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 
 /**
- * crawl-site v2 — Lightweight launcher
- * 1. Normalizes URL
- * 2. Deducts credits
- * 3. Creates site_crawls row
- * 4. Maps URLs via Firecrawl
- * 5. Creates crawl_jobs row with urls_to_process
- * 6. Returns immediately (worker picks it up)
+ * crawl-site v3 — Lightweight launcher with advanced options
+ * Supports: maxDepth, urlFilter (regex), customSelectors (CSS extraction)
  */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -31,7 +26,15 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
-    const { url, maxPages = 50, userId } = await req.json();
+    const { 
+      url, 
+      maxPages = 50, 
+      userId, 
+      maxDepth = 0, 
+      urlFilter = '', 
+      customSelectors = [] 
+    } = await req.json();
+    
     if (!url || !userId) {
       return new Response(JSON.stringify({ success: false, error: 'URL et userId requis' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -55,11 +58,9 @@ Deno.serve(async (req) => {
     const isProAgency = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
     const isUnlimited = isProAgency || isAdmin === true;
 
-    // Credit cost
     const creditCost = isUnlimited ? 0 : (pageLimit <= 50 ? 5 : pageLimit <= 100 ? 10 : pageLimit <= 200 ? 15 : 30);
 
     if (!isUnlimited) {
-      // Deduct credits
       const { data: creditResult } = await supabase.rpc('use_credit', {
         p_user_id: userId,
         p_amount: creditCost,
@@ -78,6 +79,17 @@ Deno.serve(async (req) => {
       console.log(`[${domain}] Crawl illimité (${isProAgency ? 'Pro Agency' : 'Admin'})`);
     }
 
+    // Validate urlFilter regex
+    if (urlFilter) {
+      try {
+        new RegExp(urlFilter);
+      } catch {
+        return new Response(JSON.stringify({ success: false, error: 'Regex de filtre URL invalide' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     // Create site_crawls row
     const { data: crawl, error: crawlError } = await supabase
       .from('site_crawls')
@@ -88,6 +100,8 @@ Deno.serve(async (req) => {
         status: 'mapping',
         total_pages: pageLimit,
         credits_used: creditCost,
+        max_depth: maxDepth,
+        url_filter: urlFilter || null,
       })
       .select('id')
       .single();
@@ -100,7 +114,7 @@ Deno.serve(async (req) => {
     }
 
     const crawlId = crawl.id;
-    console.log(`[${crawlId}] Mapping démarré: ${domain} (max ${pageLimit} pages)`);
+    console.log(`[${crawlId}] Mapping démarré: ${domain} (max ${pageLimit} pages, depth: ${maxDepth || '∞'}, filter: ${urlFilter || 'none'})`);
 
     // Map URLs via Firecrawl
     const mapResponse = await fetch(`${FIRECRAWL_API}/map`, {
@@ -118,15 +132,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    const urls: string[] = mapData.links.slice(0, pageLimit);
+    let urls: string[] = mapData.links.slice(0, pageLimit);
+
+    // Pre-filter URLs by regex if provided
+    if (urlFilter) {
+      try {
+        const regex = new RegExp(urlFilter);
+        urls = urls.filter(u => regex.test(u));
+      } catch {}
+    }
     
-    // Update site_crawls with actual URL count and set status to queued
+    // Update site_crawls with actual URL count
     await supabase.from('site_crawls').update({
       total_pages: urls.length,
       status: 'queued',
     }).eq('id', crawlId);
 
-    // Create the crawl job in the queue
+    // Create the crawl job with advanced options
     const { data: job, error: jobError } = await supabase
       .from('crawl_jobs')
       .insert({
@@ -137,6 +159,9 @@ Deno.serve(async (req) => {
         urls_to_process: urls,
         total_count: urls.length,
         status: 'pending',
+        max_depth: maxDepth,
+        url_filter: urlFilter || null,
+        custom_selectors: customSelectors,
       })
       .select('id')
       .single();
@@ -160,7 +185,7 @@ Deno.serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ trigger: 'immediate' }),
-      }).catch(() => {}); // fire-and-forget
+      }).catch(() => {});
     } catch {}
 
     return new Response(JSON.stringify({
