@@ -599,7 +599,16 @@ function LlmVisibilityCard({ site, t }: { site: SiteResult; t: typeof i18n['fr']
 
 function KeywordsCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
   const { analysis } = site;
-  if (!analysis.keyword_positioning?.main_keywords?.length) {
+  // Use analysis.keyword_positioning first, fallback to site.keywords array
+  const mainKeywords = analysis.keyword_positioning?.main_keywords?.length
+    ? analysis.keyword_positioning.main_keywords
+    : (site.keywords || []).map((kw: any) => ({
+        keyword: kw.keyword || kw.term || kw,
+        volume: kw.volume || kw.search_volume || 0,
+        current_rank: kw.current_rank || kw.rank || kw.position || 'N/C',
+      }));
+
+  if (!mainKeywords.length) {
     return (
       <Card className="border-border/50 bg-card/80 h-full">
         <CardHeader className="pb-2">
@@ -622,7 +631,7 @@ function KeywordsCard({ site, t }: { site: SiteResult; t: typeof i18n['fr'] }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {analysis.keyword_positioning.main_keywords.slice(0, 6).map((kw, i) => (
+          {mainKeywords.slice(0, 6).map((kw: any, i: number) => (
             <div key={i} className="flex items-center justify-between text-sm gap-2">
               <span className="text-foreground truncate flex-1">{kw.keyword}</span>
               <span className="text-foreground/50 whitespace-nowrap">{kw.volume} vol</span>
