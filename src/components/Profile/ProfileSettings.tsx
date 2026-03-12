@@ -203,6 +203,61 @@ export function ProfileSettings() {
         </CardContent>
       </Card>
 
+      {/* Spotify Playlist */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Music className="h-5 w-5" />
+            {t.playlistTitle}
+          </CardTitle>
+          <CardDescription>{t.playlistDescription}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {playlistUri ? (
+            <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="flex items-center gap-2">
+                <Music className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">{t.playlistCurrent}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { clearPlaylist(); toast.success(t.playlistDefault); }}
+                className="gap-1 text-xs text-muted-foreground"
+              >
+                <X className="h-3 w-3" />
+                {t.playlistReset}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">{t.playlistDefault}</p>
+          )}
+          <div className="flex gap-2">
+            <Input
+              placeholder={t.playlistPlaceholder}
+              value={playlistInput}
+              onChange={(e) => setPlaylistInput(e.target.value)}
+              className="text-sm"
+            />
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (savePlaylist(playlistInput)) {
+                  toast.success(t.playlistSaved);
+                  setPlaylistInput('');
+                } else {
+                  toast.error(t.playlistInvalid);
+                }
+              }}
+              disabled={!playlistInput.trim()}
+              className="shrink-0"
+            >
+              {t.playlistSave}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* WordPress Integration */}
       <WordPressIntegrationCard />
 
