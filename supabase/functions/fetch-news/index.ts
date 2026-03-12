@@ -632,8 +632,8 @@ Deno.serve(async (req) => {
       console.log(`After supplementary fetch: ${results.length} total articles`);
     }
     
-    // Translate titles and summaries if not French
-    if (lang !== 'fr' && results.length > 0) {
+    // Translate titles and summaries to target language (RSS feeds may contain mixed languages)
+    if (results.length > 0) {
       console.log(`Translating ${results.length} articles to ${lang}...`);
       
       // Extract all titles and summaries for batch translation
