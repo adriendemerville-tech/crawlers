@@ -118,6 +118,26 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const t = translations[language];
   const inviteToken = searchParams.get('invite');
+  const { containerRef, token, reset: resetTurnstile } = useTurnstile();
+
+  const verifyTurnstile = async (): Promise<boolean> => {
+    if (!token) {
+      toast.error(language === 'fr' ? 'Veuillez compléter la vérification' : 'Please complete the verification');
+      return false;
+    }
+    if (token === 'TURNSTILE_UNAVAILABLE') return true;
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-turnstile', { body: { token } });
+      if (error || !data?.success) {
+        toast.error(language === 'fr' ? 'Vérification échouée, réessayez' : 'Verification failed, please retry');
+        resetTurnstile();
+        return false;
+      }
+      return true;
+    } catch {
+      return true;
+    }
+  };
 
   // Accept invitation after login
   useEffect(() => {
