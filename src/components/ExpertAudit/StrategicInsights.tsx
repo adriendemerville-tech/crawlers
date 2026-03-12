@@ -59,6 +59,7 @@ export function StrategicInsights({
   progressiveReveal = false
 }: StrategicInsightsProps) {
   const [showHallucinationModal, setShowHallucinationModal] = useState(false);
+  const isContentMode = analysis.isContentMode || false;
   
   const getAuthorityColor = (authority: string) => {
     switch (authority) {
