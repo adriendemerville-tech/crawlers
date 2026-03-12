@@ -305,7 +305,7 @@ const translations: Record<Language, Translations> = {
     },
     faq: {
       badge: 'Questions Fréquentes',
-      title: 'Tout savoir sur les crawlers IA et le GEO',
+      title: 'Questions fréquentes sur l\'audit SEO, le GEO et la visibilité IA',
       items: [
         {
           question: "Crawlers.AI est-il gratuit ou payant ?",
@@ -495,7 +495,7 @@ const translations: Record<Language, Translations> = {
     },
     faq: {
       badge: 'Frequently Asked Questions',
-      title: 'Everything about AI crawlers and GEO',
+      title: 'Frequently asked questions about SEO audit, GEO and AI visibility',
       items: [
         {
           question: 'Is Crawlers.AI free or paid?',
@@ -685,7 +685,7 @@ const translations: Record<Language, Translations> = {
     },
     faq: {
       badge: 'Preguntas Frecuentes',
-      title: 'Todo sobre los crawlers de IA y GEO',
+      title: 'Preguntas frecuentes sobre auditoría SEO, GEO y visibilidad IA',
       items: [
         {
           question: '¿Crawlers.AI es gratis o de pago?',

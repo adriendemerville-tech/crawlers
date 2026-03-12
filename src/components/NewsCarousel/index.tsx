@@ -206,7 +206,7 @@ export function NewsCarousel() {
           <div className="flex items-center gap-3">
             <Sparkles className="h-6 w-6 text-primary" />
             <h2 className="text-2xl font-bold text-foreground">
-              {t.news?.title || 'Veille SEO / LLM / GEO'}
+              {language === 'fr' ? 'Veille SEO, LLM et GEO : actualités et tendances du référencement IA' : language === 'es' ? 'Vigilancia SEO, LLM y GEO: noticias y tendencias del posicionamiento IA' : 'SEO, LLM & GEO watch: AI search news and trends'}
             </h2>
           </div>
           

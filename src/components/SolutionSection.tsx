@@ -6,7 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 
 const translations = {
   fr: {
-    title: 'Vos corrections techniques, générées en 3 clics.',
+    title: 'Code correctif SEO & GEO : vos corrections techniques générées en 3 clics',
     subtitlePart1: 'Identifier un problème sans solution, c\'est frustrant.',
     subtitleHighlight: 'Audit Expert',
     subtitlePart2: ', recevez le',
@@ -21,7 +21,7 @@ const translations = {
     cta: 'Voir un exemple de correctif',
   },
   en: {
-    title: 'Your technical fixes, generated in 3 clicks.',
+    title: 'SEO & GEO corrective code: your technical fixes generated in 3 clicks',
     subtitlePart1: 'Identifying a problem without a solution is frustrating.',
     subtitleHighlight: 'Expert Audit',
     subtitlePart2: ', receive the',
@@ -36,7 +36,7 @@ const translations = {
     cta: 'See an example of a fix',
   },
   es: {
-    title: 'Sus correcciones técnicas, generadas en 3 clics.',
+    title: 'Código correctivo SEO & GEO: sus correcciones técnicas generadas en 3 clics',
     subtitlePart1: 'Identificar un problema sin solución es frustrante.',
     subtitleHighlight: 'Auditoría Experta',
     subtitlePart2: ', reciba el',

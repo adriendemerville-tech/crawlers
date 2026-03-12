@@ -1,5 +1,5 @@
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, Smartphone, Monitor, Brain } from 'lucide-react';
 
@@ -194,10 +194,10 @@ export function GEOComparisonTable() {
       <div className="container mx-auto px-4">
         <Card className="overflow-hidden border max-w-5xl mx-auto">
           <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 py-4">
-            <CardTitle className="flex items-center gap-3 text-lg md:text-xl">
+            <h2 className="flex items-center gap-3 text-lg md:text-xl font-semibold text-foreground">
               <Brain className="h-5 w-5 text-primary" />
-              {t.title}
-            </CardTitle>
+              {language === 'fr' ? 'Facteurs GEO essentiels pour être cité par ChatGPT, Gemini et Perplexity' : language === 'es' ? 'Factores GEO esenciales para ser citado por ChatGPT, Gemini y Perplexity' : 'Essential GEO factors to be cited by ChatGPT, Gemini & Perplexity'}
+            </h2>
             <p className="text-sm text-muted-foreground">{t.subtitle}</p>
           </CardHeader>
           <CardContent className="p-0">
