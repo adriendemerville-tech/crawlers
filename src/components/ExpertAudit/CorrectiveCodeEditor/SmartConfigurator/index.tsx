@@ -1403,7 +1403,7 @@ export function SmartConfigurator({
                     Brancher mon site
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="center" className="w-[480px] p-0" sideOffset={8}>
+                <PopoverContent align="center" className="w-[480px] p-0 z-[9999]" sideOffset={8} collisionPadding={16}>
                   <div className="p-4 border-b bg-violet-50/50 dark:bg-violet-950/20">
                     <h4 className="text-sm font-semibold flex items-center gap-2">
                       <Cable className="w-4 h-4 text-violet-500" />
