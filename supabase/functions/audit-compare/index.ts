@@ -759,6 +759,7 @@ async function runCrossComparison(
   site1: { domain: string; analysis: any; backlinks: BacklinkProfile | null; contentDepth: ContentDepth; keywords: any[] },
   site2: { domain: string; analysis: any; backlinks: BacklinkProfile | null; contentDepth: ContentDepth; keywords: any[] },
   openrouterKey: string,
+  langLabel: string = 'français',
 ): Promise<any> {
   const prompt = buildCrossComparePrompt(site1, site2);
   try {
