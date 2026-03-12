@@ -705,7 +705,10 @@ function createEmptyAnalysis(url: string): HtmlAnalysis {
       contentDensity: { ratio: 0, verdict: 'unknown', htmlSize: 0, textSize: 0 },
       linkProfile: { internal: 0, external: 0, total: 0, toxicAnchors: [], toxicAnchorsCount: 0 },
       jsonLdValidation: { valid: false, types: [], parseErrors: [], count: 0 }
-    }
+    },
+    imagesTotal: 0,
+    imagesMissingAlt: 0,
+    htmlSizeBytes: 0,
   };
 }
 
