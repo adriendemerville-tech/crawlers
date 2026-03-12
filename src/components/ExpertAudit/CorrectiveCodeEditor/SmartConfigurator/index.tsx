@@ -100,7 +100,7 @@ function PlugSnippetCard({ apiKey, siteDomain }: { apiKey?: string; siteDomain: 
         defer></script>`}
         </pre>
         <p className="text-[10px] text-zinc-500 leading-snug">
-          Collez ce code avant <code className="text-zinc-400 bg-zinc-800 px-1 rounded">&lt;/head&gt;</code> ou dans une balise HTML personnalisée GTM.
+          Collez ce code avant <code className="text-zinc-400 bg-zinc-800 px-1 rounded">&lt;/head&gt;</code> ou dans une balise HTML personnalisée Google Tag Manager.
           {!apiKey && <span className="block mt-1 text-amber-500">⚠ Ajoutez d'abord ce site dans Mon Espace → Mes Sites pour obtenir votre clé API.</span>}
         </p>
       </div>
