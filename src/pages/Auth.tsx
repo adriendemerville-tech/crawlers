@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { VerificationCodeModal } from '@/components/VerificationCodeModal';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -115,6 +116,8 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showExistsBanner, setShowExistsBanner] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
   const { user, signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -231,7 +234,26 @@ export default function Auth() {
       resetTurnstile();
     } else {
       trackAnalyticsEvent('signup_complete');
-      toast.success(t.signupSuccess);
+      // Send verification code and show modal
+      setVerificationEmail(data.email);
+      supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
+      setShowVerification(true);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const email = loginForm.getValues('email');
+    if (!email) {
+      toast.error(language === 'fr' ? 'Saisissez votre email d\'abord' : language === 'es' ? 'Ingrese su email primero' : 'Enter your email first');
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    if (error) {
+      toast.error(language === 'fr' ? 'Erreur, réessayez' : 'Error, try again');
+    } else {
+      toast.success(language === 'fr' ? 'Email de réinitialisation envoyé !' : language === 'es' ? '¡Email de restablecimiento enviado!' : 'Password reset email sent!');
     }
   };
 
@@ -363,6 +385,15 @@ export default function Auth() {
                   <Button type="submit" className="w-full h-11" disabled={isLoading}>
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
                   </Button>
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {language === 'fr' ? 'Mot de passe oublié ?' : language === 'es' ? '¿Contraseña olvidada?' : 'Forgot password?'}
+                    </button>
+                  </div>
                 </form>
               </Form>
             ) : (
@@ -492,6 +523,16 @@ export default function Auth() {
           </CardContent>
         </Card>
       </motion.div>
+
+      <VerificationCodeModal
+        open={showVerification}
+        email={verificationEmail}
+        onVerified={() => {
+          setShowVerification(false);
+          toast.success(t.signupSuccess);
+        }}
+        onClose={() => setShowVerification(false)}
+      />
     </div>
   );
 }

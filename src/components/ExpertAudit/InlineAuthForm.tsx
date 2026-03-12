@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { VerificationCodeModal } from '@/components/VerificationCodeModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -104,6 +105,8 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
   const [isLoading, setIsLoading] = useState(false);
   const [existingUser, setExistingUser] = useState(false);
   const [cgvuAccepted, setCgvuAccepted] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
   const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth();
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
@@ -223,8 +226,10 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
       }
       resetTurnstile();
     } else {
-      toast.success(t.signupSuccess);
-      onSuccess?.();
+      // Send verification code and show modal
+      setVerificationEmail(data.email);
+      supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
+      setShowVerification(true);
     }
   };
 
@@ -238,12 +243,29 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
     }
   };
 
+  const handleForgotPassword = async () => {
+    const email = loginForm.getValues('email');
+    if (!email) {
+      toast.error(language === 'fr' ? 'Saisissez votre email d\'abord' : 'Enter your email first');
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    if (error) {
+      toast.error(language === 'fr' ? 'Erreur, réessayez' : 'Error, try again');
+    } else {
+      toast.success(language === 'fr' ? 'Email de réinitialisation envoyé !' : 'Password reset email sent!');
+    }
+  };
+
   const handleSignupEmailChange = (value: string, onChange: (v: string) => void) => {
     onChange(value);
     debouncedEmailCheck(value);
   };
 
   return (
+    <>
     <div className="space-y-4">
       {/* Google OAuth Button */}
       <Button
@@ -327,6 +349,15 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
                 <Button type="submit" className="w-full h-9 text-sm" disabled={isLoading}>
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t.loginButton}
                 </Button>
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {language === 'fr' ? 'Mot de passe oublié ?' : language === 'es' ? '¿Contraseña olvidada?' : 'Forgot password?'}
+                  </button>
+                </div>
               </form>
             </Form>
           </motion.div>
@@ -495,5 +526,17 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
         </button>
       </div>
     </div>
+
+      <VerificationCodeModal
+        open={showVerification}
+        email={verificationEmail}
+        onVerified={() => {
+          setShowVerification(false);
+          toast.success(t.signupSuccess);
+          onSuccess?.();
+        }}
+        onClose={() => setShowVerification(false)}
+      />
+    </>
   );
 }

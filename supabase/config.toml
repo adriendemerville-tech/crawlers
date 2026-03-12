@@ -95,3 +95,9 @@ verify_jwt = false
 
 [functions.process-email-queue]
 verify_jwt = false
+
+[functions.send-verification-code]
+verify_jwt = false
+
+[functions.verify-email-code]
+verify_jwt = false
