@@ -26,7 +26,7 @@ const translations = {
     heroTitle: 'Passez au niveau supérieur',
     heroTitleAccent: 'avec Pro Agency',
     heroSubtitle: 'L\'abonnement tout-en-un pour les professionnels du SEO et du GEO qui veulent scaler leur activité sans limites.',
-    price: '49€',
+    price: '59€',
     period: '/mois',
     badgeText: 'Tout illimité',
     ctaSubscribe: 'S\'abonner maintenant',
