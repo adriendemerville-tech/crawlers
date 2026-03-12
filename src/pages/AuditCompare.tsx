@@ -1053,7 +1053,7 @@ const AuditCompare = () => {
   const validation1 = useUrlValidation(language);
   const validation2 = useUrlValidation(language);
 
-  const { embedContainerRef, stopPlayback } = useSpotifyTrackRotation(isLoading);
+  const { embedContainerRef, stopPlayback, isCustomPlaylist } = useSpotifyTrackRotation(isLoading);
   const dingAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Preload ding
