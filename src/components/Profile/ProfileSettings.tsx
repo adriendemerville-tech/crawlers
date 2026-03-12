@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Save, Loader2, Globe } from 'lucide-react';
+import { User, Save, Loader2, Globe, Music, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { WordPressIntegrationCard } from '@/components/Profile/WordPressIntegrationCard';
+import { useCustomPlaylist, parseSpotifyUri } from '@/hooks/useCustomPlaylist';
 
 const translations = {
   fr: {
@@ -31,6 +32,15 @@ const translations = {
     spanish: 'Español',
     managePersonalInfo: 'Gérez vos informations personnelles',
     manageLoginSettings: 'Gérez vos paramètres de connexion',
+    playlistTitle: 'Playlist d\'audit',
+    playlistDescription: 'Branchez votre propre playlist Spotify pour les audits',
+    playlistPlaceholder: 'https://open.spotify.com/playlist/...',
+    playlistSave: 'Enregistrer',
+    playlistSaved: 'Playlist enregistrée !',
+    playlistInvalid: 'Lien Spotify invalide (playlist ou album)',
+    playlistReset: 'Utiliser la playlist Crawlers par défaut',
+    playlistCurrent: 'Playlist personnalisée active',
+    playlistDefault: 'Playlist Crawlers (par défaut)',
   },
   en: {
     identity: 'My Info',
@@ -52,6 +62,15 @@ const translations = {
     spanish: 'Español',
     managePersonalInfo: 'Manage your personal information',
     manageLoginSettings: 'Manage your login settings',
+    playlistTitle: 'Audit Playlist',
+    playlistDescription: 'Connect your own Spotify playlist for audits',
+    playlistPlaceholder: 'https://open.spotify.com/playlist/...',
+    playlistSave: 'Save',
+    playlistSaved: 'Playlist saved!',
+    playlistInvalid: 'Invalid Spotify link (playlist or album)',
+    playlistReset: 'Use default Crawlers playlist',
+    playlistCurrent: 'Custom playlist active',
+    playlistDefault: 'Crawlers Playlist (default)',
   },
   es: {
     identity: 'Mis datos',
@@ -73,6 +92,15 @@ const translations = {
     spanish: 'Español',
     managePersonalInfo: 'Administra tu información personal',
     manageLoginSettings: 'Administra tu configuración de inicio de sesión',
+    playlistTitle: 'Playlist de auditoría',
+    playlistDescription: 'Conecta tu propia playlist de Spotify para las auditorías',
+    playlistPlaceholder: 'https://open.spotify.com/playlist/...',
+    playlistSave: 'Guardar',
+    playlistSaved: '¡Playlist guardada!',
+    playlistInvalid: 'Enlace de Spotify inválido (playlist o álbum)',
+    playlistReset: 'Usar playlist Crawlers por defecto',
+    playlistCurrent: 'Playlist personalizada activa',
+    playlistDefault: 'Playlist Crawlers (por defecto)',
   },
 };
 
@@ -84,6 +112,8 @@ export function ProfileSettings() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const { playlistUri, savePlaylist, clearPlaylist } = useCustomPlaylist();
+  const [playlistInput, setPlaylistInput] = useState('');
 
   useEffect(() => {
     if (profile) {
@@ -169,6 +199,61 @@ export function ProfileSettings() {
             ) : (
               <Button variant="outline" size="sm">{t.changePassword}</Button>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Spotify Playlist */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Music className="h-5 w-5" />
+            {t.playlistTitle}
+          </CardTitle>
+          <CardDescription>{t.playlistDescription}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {playlistUri ? (
+            <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="flex items-center gap-2">
+                <Music className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">{t.playlistCurrent}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { clearPlaylist(); toast.success(t.playlistDefault); }}
+                className="gap-1 text-xs text-muted-foreground"
+              >
+                <X className="h-3 w-3" />
+                {t.playlistReset}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">{t.playlistDefault}</p>
+          )}
+          <div className="flex gap-2">
+            <Input
+              placeholder={t.playlistPlaceholder}
+              value={playlistInput}
+              onChange={(e) => setPlaylistInput(e.target.value)}
+              className="text-sm"
+            />
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (savePlaylist(playlistInput)) {
+                  toast.success(t.playlistSaved);
+                  setPlaylistInput('');
+                } else {
+                  toast.error(t.playlistInvalid);
+                }
+              }}
+              disabled={!playlistInput.trim()}
+              className="shrink-0"
+            >
+              {t.playlistSave}
+            </Button>
           </div>
         </CardContent>
       </Card>

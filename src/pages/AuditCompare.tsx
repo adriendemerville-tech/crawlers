@@ -1053,7 +1053,7 @@ const AuditCompare = () => {
   const validation1 = useUrlValidation(language);
   const validation2 = useUrlValidation(language);
 
-  const { embedContainerRef, stopPlayback } = useSpotifyTrackRotation(isLoading);
+  const { embedContainerRef, stopPlayback, isCustomPlaylist } = useSpotifyTrackRotation(isLoading);
   const dingAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Preload ding
@@ -1462,7 +1462,7 @@ const AuditCompare = () => {
                 <div className="flex flex-col items-center">
                   <div className="flex items-center gap-2 justify-center mb-2">
                     <Music className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs font-medium text-foreground">{t.playlist}</span>
+                    <span className="text-xs font-medium text-foreground">{isCustomPlaylist ? (language === 'fr' ? 'Ma Playlist' : language === 'es' ? 'Mi Playlist' : 'My Playlist') : t.playlist}</span>
                   </div>
                   <div className="w-full max-w-[672px] overflow-hidden rounded-[12px] bg-[#282828] isolate"
                     style={{ clipPath: 'inset(0 round 12px)' }}>
