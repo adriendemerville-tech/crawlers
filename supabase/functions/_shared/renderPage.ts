@@ -158,23 +158,14 @@ export async function fetchAndRenderPage(
     forceRender?: boolean;
   }
 ): Promise<RenderResult> {
-  const ua = options?.userAgent || BROWSER_UA;
   const timeout = options?.timeout || 10000;
 
-  // Step 1: Fetch raw HTML
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  const response = await fetch(url, {
-    signal: controller.signal,
-    headers: {
-      'User-Agent': ua,
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    },
-    redirect: 'follow',
+  // Step 1: Fetch raw HTML with stealth headers
+  const { response } = await stealthFetch(url, {
+    timeout,
+    maxRetries: 2,
+    headers: options?.userAgent ? { 'User-Agent': options.userAgent } : {},
   });
-
-  clearTimeout(timeoutId);
 
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);
