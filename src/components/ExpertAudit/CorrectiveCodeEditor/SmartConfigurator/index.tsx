@@ -1396,14 +1396,14 @@ export function SmartConfigurator({
               </ToggleGroup>
 
               {/* Connect site button - centered */}
-              <Popover>
+              <Popover modal={true}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5 text-xs h-7 border-dashed border-violet-400/50 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30">
                     <Cable className="w-3 h-3" />
                     Brancher mon site
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="center" className="w-[480px] p-0" sideOffset={8}>
+                <PopoverContent align="center" className="w-[480px] p-0 z-[9999]" sideOffset={8} collisionPadding={16}>
                   <div className="p-4 border-b bg-violet-50/50 dark:bg-violet-950/20">
                     <h4 className="text-sm font-semibold flex items-center gap-2">
                       <Cable className="w-4 h-4 text-violet-500" />
