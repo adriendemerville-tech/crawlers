@@ -184,8 +184,7 @@ async function fetchSupplementaryArticles(
 
 // Translate text using Lovable AI Gateway
 async function translateText(text: string, targetLang: string): Promise<string> {
-  // Skip translation if already in target language or if French (source language)
-  if (targetLang === 'fr') return text;
+  // Don't skip any language — RSS feeds may contain articles in any language
   
   const langNames: Record<string, string> = {
     en: 'English',
@@ -213,7 +212,7 @@ async function translateText(text: string, targetLang: string): Promise<string> 
         messages: [
           {
             role: 'system',
-            content: `You are a professional translator. Translate the following text to ${targetLangName}. Only return the translated text, nothing else. Keep any technical terms (SEO, LLM, GEO, ChatGPT, etc.) unchanged.`
+            content: `You are a professional translator. Translate the following text to ${targetLangName}. If the text is already in ${targetLangName}, return it unchanged. Only return the translated text, nothing else. Keep any technical terms (SEO, LLM, GEO, ChatGPT, etc.) unchanged.`
           },
           {
             role: 'user',
@@ -245,7 +244,6 @@ async function translateText(text: string, targetLang: string): Promise<string> 
 
 // Batch translate multiple texts
 async function batchTranslate(texts: string[], targetLang: string): Promise<string[]> {
-  if (targetLang === 'fr') return texts;
   
   // Translate in parallel with concurrency limit
   const BATCH_SIZE = 5;
@@ -634,8 +632,8 @@ Deno.serve(async (req) => {
       console.log(`After supplementary fetch: ${results.length} total articles`);
     }
     
-    // Translate titles and summaries if not French
-    if (lang !== 'fr' && results.length > 0) {
+    // Translate titles and summaries to target language (RSS feeds may contain mixed languages)
+    if (results.length > 0) {
       console.log(`Translating ${results.length} articles to ${lang}...`);
       
       // Extract all titles and summaries for batch translation
