@@ -343,7 +343,7 @@ export function Header() {
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
               >
-                <DropdownMenu open={isProfileOpen} onOpenChange={(open) => {
+                <DropdownMenu open={isProfileOpen} modal={false} onOpenChange={(open) => {
                   if (open) {
                     if (closeTimeoutRef.current) {
                       clearTimeout(closeTimeoutRef.current);
