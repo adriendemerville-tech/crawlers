@@ -131,35 +131,44 @@ export function useSpotifyTrackRotation(active = true) {
   const playTimeoutRef = useRef<number | null>(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
 
+  // Check for user-defined playlist in localStorage
+  const customPlaylistUri = useMemo(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEY) || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
   // Track whether the user has actively chosen to play music.
-  // Starts false → no autoplay on first load or rotation.
-  // Becomes true when user clicks play, false when user clicks pause.
   const userWantsPlaybackRef = useRef(false);
   const isFirstTrackRef = useRef(true);
 
   const trackQueue = useMemo(() => shuffleTrackIds(PLAYLIST_TRACK_IDS), []);
   const currentTrackId = trackQueue[currentTrackIndex];
 
+  // Only rotate tracks when NOT using a custom playlist
   useEffect(() => {
+    if (customPlaylistUri) return; // Spotify handles rotation internally for playlists
+
     const rotateInterval = window.setInterval(() => {
       setCurrentTrackIndex((previousIndex) => (previousIndex + 1) % trackQueue.length);
     }, TRACK_ROTATION_MS);
 
     return () => window.clearInterval(rotateInterval);
-  }, [trackQueue.length]);
+  }, [trackQueue.length, customPlaylistUri]);
 
   useEffect(() => {
     let isCancelled = false;
     const container = embedContainerRef.current;
 
-    if (!container || !currentTrackId) {
-      return;
-    }
+    if (!container) return;
 
-    const spotifyUri = `spotify:track:${currentTrackId}`;
+    // Determine the Spotify URI: custom playlist or individual track
+    const spotifyUri = customPlaylistUri || (currentTrackId ? `spotify:track:${currentTrackId}` : null);
+    if (!spotifyUri) return;
 
     const queuePlaybackIfUserWants = () => {
-      // Only auto-play if the user previously clicked play
       if (!userWantsPlaybackRef.current) return;
 
       if (playTimeoutRef.current) {
@@ -179,9 +188,11 @@ export function useSpotifyTrackRotation(active = true) {
       }
 
       if (controllerRef.current) {
-        controllerRef.current.loadUri(spotifyUri);
-        // On track rotation, only resume if user was already playing
-        queuePlaybackIfUserWants();
+        // For custom playlists, don't reload on track rotation
+        if (!customPlaylistUri) {
+          controllerRef.current.loadUri(spotifyUri);
+          queuePlaybackIfUserWants();
+        }
         return;
       }
 
@@ -202,25 +213,18 @@ export function useSpotifyTrackRotation(active = true) {
 
           controllerRef.current = controller;
 
-          // Listen for playback state changes to track user intent
           controller.addListener('playback_update', (data: unknown) => {
             const update = data as { data?: { isPaused?: boolean } };
             if (update?.data) {
               const isPaused = update.data.isPaused;
               if (isPaused === false) {
-                // User clicked play (or autoplay succeeded)
                 userWantsPlaybackRef.current = true;
                 isFirstTrackRef.current = false;
               } else if (isPaused === true && !isFirstTrackRef.current) {
-                // User clicked pause (only track after first interaction)
                 userWantsPlaybackRef.current = false;
               }
             }
           });
-
-          // Don't auto-play on first load — let the user click play
-          // queuePlaybackIfUserWants() would be a no-op here since
-          // userWantsPlaybackRef is false initially
         },
       );
     };
@@ -232,7 +236,7 @@ export function useSpotifyTrackRotation(active = true) {
     return () => {
       isCancelled = true;
     };
-  }, [currentTrackId, active]);
+  }, [currentTrackId, active, customPlaylistUri]);
 
   useEffect(() => {
     return () => {
@@ -260,5 +264,6 @@ export function useSpotifyTrackRotation(active = true) {
   return {
     embedContainerRef,
     stopPlayback,
+    isCustomPlaylist: !!customPlaylistUri,
   };
 }
