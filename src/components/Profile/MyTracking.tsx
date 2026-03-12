@@ -1092,9 +1092,9 @@ export function MyTracking() {
         </DialogContent>
       </Dialog>
 
-      {/* WordPress Connection Modal */}
+      {/* Site Connection Modal (WordPress + GTM) */}
       <Dialog open={showWpModal} onOpenChange={setShowWpModal}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {(() => {
             const wpSite = sites.find(s => s.id === wpConnectSiteId);
             if (!wpSite) return null;
