@@ -62,6 +62,14 @@ function FooterComponent() {
     },
     { 
       icon: Radar, 
+      label: t3(language, '<code correctif>', '<corrective code>', '<código correctivo>'),
+      href: '/audit-expert',
+      description: t3(language, 'Code correctif SEO/GEO automatique', 'Automatic SEO/GEO corrective code', 'Código correctivo SEO/GEO automático'),
+      gold: false,
+      isRoute: true
+    },
+    { 
+      icon: Radar, 
       label: t3(language, 'Audit Expert', 'Expert Audit', 'Auditoría Experta'),
       href: '/audit-expert',
       description: t3(language, 'Audit SEO/GEO approfondi par IA', 'In-depth AI-powered SEO/GEO audit', 'Auditoría SEO/GEO en profundidad con IA'),
@@ -76,14 +84,6 @@ function FooterComponent() {
       gold: true,
       isRoute: true,
       violet: true
-    },
-    { 
-      icon: Radar, 
-      label: t3(language, '<code correctif>', '<corrective code>', '<código correctivo>'),
-      href: '/audit-expert',
-      description: t3(language, 'Code correctif SEO/GEO automatique', 'Automatic SEO/GEO corrective code', 'Código correctivo SEO/GEO automático'),
-      gold: false,
-      isRoute: true
     },
   ];
 
