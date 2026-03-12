@@ -609,7 +609,7 @@ export default function SiteCrawl() {
               <div className="absolute top-0 right-0">
                 <Badge className="rounded-none rounded-bl-lg bg-violet-600 text-white border-0 px-3 py-1 text-xs font-bold gap-1.5">
                   <Lock className="h-3 w-3" />
-                  {language === 'fr' ? 'Réservé aux abonnés' : language === 'es' ? 'Solo suscriptores' : 'Subscribers only'}
+                  Pro
                 </Badge>
               </div>
               <CardHeader className="pb-3 pt-10">
