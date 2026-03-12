@@ -768,7 +768,7 @@ async function runCrossComparison(
       headers: { 'Authorization': `Bearer ${openrouterKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'system', content: CROSS_COMPARE_SYSTEM }, { role: 'user', content: prompt }],
+        messages: [{ role: 'system', content: CROSS_COMPARE_SYSTEM + `\n\nLANGUE DE RÉDACTION: ${langLabel}. Rédige TOUTES les analyses en ${langLabel}.` }, { role: 'user', content: prompt }],
         temperature: 0.2,
       }),
       signal: AbortSignal.timeout(55000),
