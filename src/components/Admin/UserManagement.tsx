@@ -168,6 +168,26 @@ export function UserManagement() {
     }
   };
 
+  const handleStripProAgency = async () => {
+    if (!selectedUser) return;
+    setActionLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke('admin-update-plan', {
+        body: { target_user_id: selectedUser.user_id },
+      });
+      if (res.error) throw res.error;
+      toast.success(`Abonnement Pro Agency retiré pour ${selectedUser.first_name} ${selectedUser.last_name}`);
+      setStripDialogOpen(false);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error stripping Pro Agency:', error);
+      toast.error('Erreur lors du retrait de l\'abonnement');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
     
