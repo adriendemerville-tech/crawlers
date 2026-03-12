@@ -1,0 +1,1 @@
+ALTER TABLE public.tracked_sites ADD COLUMN IF NOT EXISTS last_widget_ping timestamp with time zone DEFAULT NULL;

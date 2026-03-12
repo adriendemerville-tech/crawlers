@@ -1904,6 +1904,7 @@ export type Database = {
           domain: string
           id: string
           last_audit_at: string | null
+          last_widget_ping: string | null
           site_name: string
           user_id: string
         }
@@ -1914,6 +1915,7 @@ export type Database = {
           domain: string
           id?: string
           last_audit_at?: string | null
+          last_widget_ping?: string | null
           site_name?: string
           user_id: string
         }
@@ -1924,6 +1926,7 @@ export type Database = {
           domain?: string
           id?: string
           last_audit_at?: string | null
+          last_widget_ping?: string | null
           site_name?: string
           user_id?: string
         }
