@@ -419,6 +419,9 @@ export interface HallucinationCorrections {
 export interface StrategicAnalysis {
   introduction?: StrategicIntroduction;
   
+  // Content mode flag (true when URL is /blog or /article)
+  isContentMode?: boolean;
+  
   // NEW PREMIUM FORMAT
   brand_authority?: BrandAuthority;
   social_signals?: SocialSignals;
