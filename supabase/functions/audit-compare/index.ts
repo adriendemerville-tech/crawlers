@@ -929,7 +929,9 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   
   try {
-    const { url1, url2, skipCache } = await req.json();
+    const { url1, url2, skipCache, lang } = await req.json();
+    const outputLang = lang || 'fr';
+    const langLabel = outputLang === 'fr' ? 'français' : outputLang === 'es' ? 'espagnol' : 'anglais';
     
     if (!url1 || !url2) return json({ success: false, error: 'Two URLs are required' }, 400);
     
