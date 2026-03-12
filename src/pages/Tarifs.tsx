@@ -94,7 +94,7 @@ const translations = {
     perCredit: '/ crédit',
     agencyTitle: 'Pro Agency',
     agencySubtitle: 'Pour les professionnels et agences SEO',
-    agencyPrice: '49€',
+    agencyPrice: '59€',
     agencyPeriod: '/ mois',
     agencyFeatures: [
       'Audit expert illimité',
@@ -184,7 +184,7 @@ const translations = {
     perCredit: '/ credit',
     agencyTitle: 'Pro Agency',
     agencySubtitle: 'For SEO professionals and agencies',
-    agencyPrice: '€49',
+    agencyPrice: '€59',
     agencyPeriod: '/ month',
     agencyFeatures: [
       'Unlimited expert audit',
@@ -274,7 +274,7 @@ const translations = {
     perCredit: '/ crédito',
     agencyTitle: 'Pro Agency',
     agencySubtitle: 'Para profesionales y agencias SEO',
-    agencyPrice: '49€',
+    agencyPrice: '59€',
     agencyPeriod: '/ mes',
     agencyFeatures: [
       'Auditoría experta ilimitada',

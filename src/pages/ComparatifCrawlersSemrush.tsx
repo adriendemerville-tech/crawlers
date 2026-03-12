@@ -459,7 +459,7 @@ const ComparatifCrawlersSemrush = () => {
                         <td className="px-2 md:px-4 py-2 md:py-3 font-medium text-foreground">Dashboard Agence multi-clients</td>
                         <td className="px-2 md:px-4 py-2 md:py-3 text-center text-muted-foreground text-[10px] md:text-sm">Add-on payant</td>
                         <td className="px-2 md:px-4 py-2 md:py-3 text-center">
-                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Inclus (49€/mois)</Badge>
+                          <Badge variant="default" className="bg-primary text-[10px] md:text-xs">Inclus (59€/mois)</Badge>
                         </td>
                       </tr>
                       <tr className="border-b border-border/50 bg-muted/20">
@@ -631,7 +631,7 @@ const ComparatifCrawlersSemrush = () => {
                     <li>• <strong>Pack Essentiel</strong> : 10 crédits pour 5€</li>
                     <li>• <strong>Pack Pro</strong> : 50 crédits pour 19€</li>
                     <li>• <strong>Pack Premium</strong> : 150 crédits pour 45€</li>
-                    <li>• <strong>Pro Agency</strong> : 49€/mois — illimité, marque blanche, dashboard agence</li>
+                    <li>• <strong>Pro Agency</strong> : 59€/mois — illimité, marque blanche, dashboard agence</li>
                   </ul>
                   <p className="text-xs text-muted-foreground mt-3">
                     * Pas d'abonnement obligatoire pour les packs. Les crédits n'expirent pas.
@@ -716,7 +716,7 @@ const ComparatifCrawlersSemrush = () => {
                   <li>
                     <strong>Marque Blanche (White Label)</strong> : L'offre{' '}
                     <Link to="/pro-agency" className="text-primary hover:underline font-medium">Pro Agency</Link>
-                    {' '}à 49€/mois permet de personnaliser entièrement les rapports avec votre propre logo, 
+                    {' '}à 59€/mois permet de personnaliser entièrement les rapports avec votre propre logo, 
                     vos couleurs et votre nom de marque. Idéal pour les consultants et agences qui veulent 
                     présenter des livrables professionnels sous leur propre identité à leurs clients finaux.
                   </li>
