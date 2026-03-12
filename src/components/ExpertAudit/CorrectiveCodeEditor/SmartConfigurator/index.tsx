@@ -409,10 +409,10 @@ export function SmartConfigurator({
         label: 'Intégrer Google Tag Manager',
         description: hasGTM ? 'GTM déjà détecté sur votre site' : 'GTM non détecté — injecte le snippet GTM',
         enabled: !hasGTM,
-        priority: hasGTM ? 'installed' as any : 'optional',
+        priority: hasGTM ? 'installed' : 'optional',
         data: { gtmId: 'GTM-XXXXXXX' },
         locked: hasGTM,
-      } as any);
+      });
 
       if (!hasGA4) {
         fixes.push({
