@@ -19,6 +19,7 @@ import { AdminDashboard } from '@/components/Admin';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
+import { FreeTrialBanner } from '@/components/Profile/FreeTrialBanner';
 
 const translations = {
   fr: {
