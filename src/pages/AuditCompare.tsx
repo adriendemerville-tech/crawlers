@@ -1299,7 +1299,7 @@ const AuditCompare = () => {
                         placeholder="https://site-a.com"
                         value={url1}
                         onChange={e => setUrl1(e.target.value)}
-                        className={`h-12 text-sm pr-10 ${confirmedUrl1 ? 'border-emerald-500/50 bg-emerald-500/5' : ''}`}
+                        className={`h-12 text-sm pr-10 caret-primary ${confirmedUrl1 ? 'border-emerald-500/50 bg-emerald-500/5' : ''}`}
                         disabled={validation1.isValidating}
                       />
                       {confirmedUrl1 && (
