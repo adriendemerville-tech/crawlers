@@ -167,7 +167,7 @@ const MentionsLegales = () => {
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {t3(language, 'Dernière mise à jour : 31 janvier 2026', 'Last updated: January 31, 2026', 'Última actualización: 31 de enero de 2026')}
+              {t3(language, 'Dernière mise à jour : 12 mars 2026', 'Last updated: March 12, 2026', 'Última actualización: 12 de marzo de 2026')}
             </p>
           </article>
         </div>
