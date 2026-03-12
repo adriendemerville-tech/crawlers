@@ -874,7 +874,7 @@ export function ExpertAuditDashboard() {
           console.log('Strategic audit: auto-retrying...');
           const retryData = await invokeWithTimeout('audit-strategique-ia', {
             url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
-            cachedContext: useCachedContext ? strategicCachedContext : null,
+            cachedContext: useCachedContext ? strategicCachedContext : null, lang: language,
           });
           const strategicData = mapStrategicData(retryData.data, normalizedUrl, hallucinationCorrections);
 
