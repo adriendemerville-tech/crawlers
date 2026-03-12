@@ -112,6 +112,8 @@ export function ProfileSettings() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const { playlistUri, savePlaylist, clearPlaylist } = useCustomPlaylist();
+  const [playlistInput, setPlaylistInput] = useState('');
 
   useEffect(() => {
     if (profile) {
