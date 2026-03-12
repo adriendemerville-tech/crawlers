@@ -298,6 +298,53 @@ export function UserManagement() {
                           >
                             <ShieldCheck className="h-4 w-4" />
                           </Button>
+                          {user.plan_type === 'agency_pro' && (
+                            <Dialog open={stripDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
+                              setStripDialogOpen(open);
+                              if (open) setSelectedUser(user);
+                            }}>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950"
+                                  title="Retirer Pro Agency"
+                                >
+                                  <Crown className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle className="flex items-center gap-2 text-amber-600">
+                                    <Crown className="h-5 w-5" />
+                                    Retirer l'abonnement Pro Agency
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Voulez-vous retirer l'abonnement Pro Agency de {user.first_name} {user.last_name} ({user.email}) ?
+                                    Son plan passera en « free ».
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <DialogFooter>
+                                  <Button variant="outline" onClick={() => setStripDialogOpen(false)}>
+                                    Annuler
+                                  </Button>
+                                  <Button
+                                    variant="default"
+                                    className="bg-amber-600 hover:bg-amber-700"
+                                    onClick={handleStripProAgency}
+                                    disabled={actionLoading}
+                                  >
+                                    {actionLoading ? (
+                                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    ) : (
+                                      <Crown className="h-4 w-4 mr-2" />
+                                    )}
+                                    Retirer Pro Agency
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
+                          )}
                           <Dialog open={creditDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                             setCreditDialogOpen(open);
                             if (open) setSelectedUser(user);
