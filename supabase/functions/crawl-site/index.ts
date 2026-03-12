@@ -46,25 +46,49 @@ Deno.serve(async (req) => {
     const domain = new URL(normalizedUrl).hostname;
     const pageLimit = Math.min(maxPages, 500);
 
-    // Check if user is Pro Agency or Admin (unlimited crawl)
+    // Check if user is Pro Agency or Admin
     const { data: profile } = await supabase
       .from('profiles')
-      .select('plan_type, subscription_status')
+      .select('plan_type, subscription_status, crawl_pages_this_month, crawl_month_reset')
       .eq('user_id', userId)
       .single();
 
     const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
 
     const isProAgency = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
-    const isUnlimited = isProAgency || isAdmin === true;
+    const isUnlimited = isAdmin === true;
 
-    const creditCost = isUnlimited ? 0 : (pageLimit <= 50 ? 5 : pageLimit <= 100 ? 10 : pageLimit <= 200 ? 15 : 30);
+    // ── Fair Use Policy ──────────────────────────────────────
+    // Pro Agency: 5 000 pages/month included, then pay-as-you-go
+    // Free users: always pay credits
+    const FAIR_USE_LIMIT = 5000;
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
-    if (!isUnlimited) {
+    // Reset monthly counter if new month
+    let usedThisMonth = profile?.crawl_pages_this_month || 0;
+    if (profile?.crawl_month_reset !== currentMonth) {
+      usedThisMonth = 0;
+      await supabase
+        .from('profiles')
+        .update({ crawl_pages_this_month: 0, crawl_month_reset: currentMonth } as any)
+        .eq('user_id', userId);
+    }
+
+    const pagesRemaining = isProAgency ? Math.max(0, FAIR_USE_LIMIT - usedThisMonth) : 0;
+    const freePages = isProAgency ? Math.min(pageLimit, pagesRemaining) : 0;
+    const paidPages = pageLimit - freePages;
+
+    // Credit cost: only for pages beyond fair use (or all pages for free users)
+    const creditCost = isUnlimited ? 0 : (
+      paidPages <= 0 ? 0 :
+      paidPages <= 50 ? 5 : paidPages <= 100 ? 10 : paidPages <= 200 ? 15 : 30
+    );
+
+    if (!isUnlimited && creditCost > 0) {
       const { data: creditResult } = await supabase.rpc('use_credit', {
         p_user_id: userId,
         p_amount: creditCost,
-        p_description: `Crawl multi-pages: ${domain} (${pageLimit} pages max)`,
+        p_description: `Crawl multi-pages: ${domain} (${paidPages} pages payantes sur ${pageLimit})`,
       });
 
       if (!creditResult?.success) {
@@ -73,10 +97,23 @@ Deno.serve(async (req) => {
           error: 'Crédits insuffisants',
           required: creditCost,
           balance: creditResult?.balance || 0,
+          fair_use_remaining: pagesRemaining,
         }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
-    } else {
-      console.log(`[${domain}] Crawl illimité (${isProAgency ? 'Pro Agency' : 'Admin'})`);
+    }
+
+    // Update monthly page counter
+    if (!isUnlimited) {
+      await supabase
+        .from('profiles')
+        .update({ crawl_pages_this_month: usedThisMonth + pageLimit } as any)
+        .eq('user_id', userId);
+    }
+
+    if (isUnlimited) {
+      console.log(`[${domain}] Crawl illimité (Admin)`);
+    } else if (isProAgency && freePages > 0) {
+      console.log(`[${domain}] Fair Use: ${freePages}/${pageLimit} pages incluses (${usedThisMonth + pageLimit}/${FAIR_USE_LIMIT} ce mois)`);
     }
 
     // Validate urlFilter regex

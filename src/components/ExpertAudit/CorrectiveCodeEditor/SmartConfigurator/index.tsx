@@ -1093,12 +1093,28 @@ export function SmartConfigurator({
   }, [user, siteDomain, siteName]);
 
   // Save current_config to the tracked site (per-site config persistence)
+  // Also saves the previous config for rollback support
   const saveConfigToSite = useCallback(async (siteId: string | null, config: Record<string, unknown>) => {
     if (!user || !siteId) return;
     try {
+      // Fetch current config to save as previous (for rollback)
+      const { data: currentSite } = await supabase
+        .from('tracked_sites')
+        .select('current_config')
+        .eq('id', siteId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const previousConfig = currentSite?.current_config && Object.keys(currentSite.current_config as object).length > 0
+        ? currentSite.current_config
+        : {};
+
       await supabase
         .from('tracked_sites')
-        .update({ current_config: config } as any)
+        .update({ 
+          current_config: config,
+          previous_config: previousConfig,
+        } as any)
         .eq('id', siteId)
         .eq('user_id', user.id);
     } catch (err) {
