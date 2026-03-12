@@ -208,8 +208,8 @@ export function StrategicInsights({
             </Card>
           )}
 
-          {/* 2. Intelligence Marché & Psychologie */}
-          {analysis.market_intelligence && (
+          {/* 2. Intelligence Marché & Psychologie — hidden in content mode */}
+          {!isContentMode && analysis.market_intelligence && (
             <MarketIntelligenceCard intelligence={analysis.market_intelligence} />
           )}
 
