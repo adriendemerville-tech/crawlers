@@ -677,7 +677,7 @@ async function analyzeSite(
   ]);
 
   // Step 2: Seeds (needs metadata)
-  const seeds = await generateSeedsWithAI(url, metadata.context, domain);
+  const seeds = await generateSeedsWithAI(url, metadata.context, domain, opponentDomain);
 
   // Step 3: Keywords (needs seeds)
   const locCode = detectLocationCode(domain);
