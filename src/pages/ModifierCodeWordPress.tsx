@@ -204,7 +204,7 @@ const ModifierCodeWordPress = () => {
               </h1>
               <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
                 Optimiser votre site pour les <strong className="text-white">moteurs de réponse IA</strong> (ChatGPT, Perplexity, Gemini) ne nécessite plus de savoir coder.
-                Le plugin Crawlers.fr injecte automatiquement les balises <strong className="text-white">JSON-LD</strong>, les métadonnées SEO et le code GEO — sans toucher à votre thème.
+                Le plugin WordPress ou le widget GTM Crawlers.fr injecte automatiquement les balises <strong className="text-white">JSON-LD</strong>, les métadonnées SEO et le code GEO — sans toucher à votre thème.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <Button
