@@ -212,7 +212,7 @@ const translations = {
     features: [
       { icon: 'Infinity', title: 'Informes ilimitados', description: 'Lanza todas las auditorías SEO, GEO y LLM que necesites. Sin tope, sin restricción.' },
       { icon: 'Code2', title: 'Código correctivo ilimitado', description: 'Genera scripts de corrección personalizados para cada cliente sin gastar créditos.' },
-      { icon: 'Globe', title: 'Crawl multi-páginas ilimitado', description: 'Analiza sitios enteros (10 a 200 páginas): estructura, puntuación SEO/200 por página, enlaces rotos, resumen IA global.' },
+      { icon: 'Globe', title: 'Crawl multi-páginas incluido', description: '5 000 páginas rastreadas/mes incluidas (Fair Use). Más allá, compra de créditos adicionales Pay-As-You-Go. Estructura, puntuación SEO/200, enlaces rotos, resumen IA.' },
       { icon: 'Palette', title: 'Marca blanca', description: 'Personaliza tus informes con tu logo, colores y datos de contacto.' },
       { icon: 'Users', title: '3 cuentas incluidas', description: 'Invita a tus colaboradores y gestiona tu equipo desde una consola centralizada.' },
       { icon: 'Headphones', title: 'Soporte prioritario', description: 'Accede a soporte dedicado con tiempos de respuesta reducidos.' },
