@@ -323,14 +323,20 @@ export function ImplementationGuide({ language }: ImplementationGuideProps) {
             <CardContent className="grid gap-3 sm:grid-cols-2">
               {Object.entries(t.methods).map(([key, method]) => {
                 const Icon = method.icon;
+                const isRecommended = 'recommended' in method && method.recommended;
                 return (
                   <div 
                     key={key}
-                    className="p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors"
+                    className={`p-3 rounded-lg border transition-colors ${isRecommended ? 'border-primary/40 bg-primary/5 hover:bg-primary/10' : 'bg-muted/30 hover:bg-muted/50'}`}
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <Icon className="w-4 h-4 text-primary" />
                       <span className="font-medium text-sm">{method.title}</span>
+                      {isRecommended && (
+                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-primary/40 text-primary">
+                          {'recommended' in t ? (t as any).recommended : '★'}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mb-2">{method.description}</p>
                     <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
@@ -341,7 +347,7 @@ export function ImplementationGuide({ language }: ImplementationGuideProps) {
                     {'link' in method && method.link && (
                       <a
                         href={method.link}
-                        target="_blank"
+                        target={method.link.startsWith('/') ? '_self' : '_blank'}
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
                       >

@@ -514,7 +514,7 @@ const ModifierCodeWordPress = () => {
               </Button>
             </div>
             <p className="text-xs text-slate-500 pt-4">
-              Plugin compatible WordPress 5.0+ · Aucune dépendance · Licence GPL · <Link to="/blog" className="underline hover:text-slate-300">Documentation technique</Link>
+              Plugin compatible WordPress 5.0+ · Widget GTM compatible tous CMS · Aucune dépendance · Licence GPL · <Link to="/blog" className="underline hover:text-slate-300">Documentation technique</Link>
             </p>
           </div>
         </section>
