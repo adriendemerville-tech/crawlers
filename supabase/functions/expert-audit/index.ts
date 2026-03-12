@@ -594,6 +594,7 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       hasGA4,
       imagesTotal: allImages.length,
       imagesMissingAlt,
+      // Log for debugging
       // Content freshness
       mostRecentDate,
       contentAgeDays,
