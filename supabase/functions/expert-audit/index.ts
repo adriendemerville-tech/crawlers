@@ -334,11 +334,18 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     const hasGA4 = /googletagmanager\.com\/gtag\/js\?id=G-/i.test(html) || /gtag\s*\(\s*['"]config['"]\s*,\s*['"]G-/i.test(html);
     
     // Detect images missing alt text
-    const allImages = html.match(/<img[^>]*>/gi) || [];
+    // Strip script/style/noscript/template to avoid counting non-visible <img> tags
+    const htmlForImages = html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<noscript[^>]*>[\s\S]*?<\/noscript>/gi, '')
+      .replace(/<template[^>]*>[\s\S]*?<\/template>/gi, '');
+    const allImages = htmlForImages.match(/<img\s[^>]*>/gi) || [];
     const imagesMissingAlt = allImages.filter(img => {
-      const hasAlt = /alt\s*=\s*["'][^"']+["']/i.test(img);
+      // Match alt with non-empty content (quoted or unquoted)
+      const hasAlt = /\balt\s*=\s*["'][^"']+["']/i.test(img) || /\balt\s*=\s*[^\s"'>]+/i.test(img);
       return !hasAlt;
-    }).length;
+    console.log(`[analyzeHtml] 🖼️ Images: ${allImages.length} total, ${imagesMissingAlt} missing alt`);
 
     // ═══ CONTENT FRESHNESS DETECTION ═══
     // Check for date signals in meta tags and HTML
