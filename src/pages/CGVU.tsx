@@ -171,6 +171,7 @@ const CGVU = () => {
                 <li>Le code injecté est <strong>encapsulé et sandboxé</strong> : il s'exécute dans un périmètre isolé et n'interagit qu'avec les éléments HTML ciblés par les correctifs (données structurées, balises meta, attributs Open Graph, etc.), sans pouvoir modifier d'autres composants du site ;</li>
                 <li>Le code injecté <strong>ne collecte aucune donnée personnelle</strong> des visiteurs du site et ne dépose aucun cookie ;</li>
                 <li>L'utilisateur peut <strong>débrancher son site à tout moment</strong>, en un clic, depuis son espace personnel (Console → Mes Sites). La déconnexion est immédiate et supprime tout code injecté ;</li>
+                <li>L'utilisateur dispose d'une <strong>fonction de Rollback (annulation)</strong> accessible depuis la page « Mes Sites », permettant de <strong>restaurer instantanément la configuration précédente</strong> et de retirer le dernier script injecté. Cette opération est immédiate et sans frais ;</li>
                 <li>Crawlers.fr <strong>ne saurait être tenu responsable</strong> des éventuels conflits entre le code injecté et d'autres scripts tiers présents sur le site de l'utilisateur.</li>
               </ul>
               <p>

@@ -106,6 +106,12 @@ export function SecurityZone({
                 <strong>Conseil :</strong> Utilisez Google Tag Manager pour une intégration sans toucher au code source.
               </p>
             </div>
+
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 mt-2">
+              <p className="text-amber-700 dark:text-amber-300">
+                <strong>🔄 Rollback :</strong> Vous pouvez annuler la dernière injection à tout moment depuis <strong>Mon Profil → Mes Sites</strong> en cliquant sur le bouton rouge « Rollback ». La configuration précédente sera restaurée instantanément.
+              </p>
+            </div>
           </div>
         </CollapsibleContent>
       </Collapsible>
