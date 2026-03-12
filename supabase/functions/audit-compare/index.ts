@@ -953,8 +953,8 @@ Deno.serve(async (req) => {
     
     // ═══ Phase 1 & 2: Both site pipelines in PARALLEL ═══
     const [site1, site2] = await Promise.all([
-      analyzeSite(url1, domain1, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY),
-      analyzeSite(url2, domain2, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY),
+      analyzeSite(url1, domain1, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY, domain2),
+      analyzeSite(url2, domain2, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY, domain1),
     ]);
     
     // ═══ Phase 2.5: CROSS-SERP CHECK — enrich both keyword sets with opponent rankings ═══
