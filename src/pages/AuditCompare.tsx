@@ -1531,14 +1531,47 @@ const AuditCompare = () => {
               {/* Row-based comparison */}
               <SiteComparisonGrid site1={result.site1} site2={result.site2} t={t} />
 
-              {/* Cross-Comparison Section */}
-              {result.crossComparison && (
+              {/* Cross-Comparison Section — always render radar even without full cross data */}
+              {result.crossComparison ? (
                 <CrossComparisonSection 
                   cross={result.crossComparison} 
                   site1={result.site1} 
                   site2={result.site2} 
                   t={t} 
                 />
+              ) : (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-8 space-y-4">
+                  <Separator className="my-6" />
+                  <Card className="border-border/50 bg-card/80">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5 text-primary" /> {t.radarTitle}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-center gap-6 mb-3">
+                        <div className="flex items-center gap-2"><div className="w-4 h-2 rounded-full" style={{ backgroundColor: result.site1.brandColor || '#8b5cf6' }} /><span className="text-xs font-medium text-white">{result.site1.domain}</span></div>
+                        <div className="flex items-center gap-2"><div className="w-4 h-2 rounded-full" style={{ backgroundColor: result.site2.brandColor || '#f59e0b' }} /><span className="text-xs font-medium text-white">{result.site2.domain}</span></div>
+                      </div>
+                      <ResponsiveContainer width="100%" height={392}>
+                        <RadarChart data={[
+                          { dimension: t.aeoScore, site1: result.site1.analysis.aeo_score || 0, site2: result.site2.analysis.aeo_score || 0 },
+                          { dimension: t.eeat, site1: (result.site1.analysis.eeat_score?.overall || 0) * 10, site2: (result.site2.analysis.eeat_score?.overall || 0) * 10 },
+                          { dimension: t.pagespeed, site1: result.site1.pagespeed?.performanceMobile || 0, site2: result.site2.pagespeed?.performanceMobile || 0 },
+                          { dimension: t.backlinks, site1: Math.min(100, (result.site1.backlinks?.domainRank || 0)), site2: Math.min(100, (result.site2.backlinks?.domainRank || 0)) },
+                          { dimension: t.contentDepth, site1: Math.min(100, Math.round((result.site1.contentDepth?.wordCount || 0) / 30)), site2: Math.min(100, Math.round((result.site2.contentDepth?.wordCount || 0) / 30)) },
+                          { dimension: t.expertise, site1: (result.site1.analysis.expertise_sentiment?.rating || 0) * 20, site2: (result.site2.analysis.expertise_sentiment?.rating || 0) * 20 },
+                        ]} cx="50%" cy="50%" outerRadius="75%">
+                          <PolarGrid stroke="hsl(var(--border))" />
+                          <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 12, fill: 'white', fontWeight: 500 }} />
+                          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                          <Radar name={result.site1.domain} dataKey="site1" stroke={result.site1.brandColor || '#8b5cf6'} fill={result.site1.brandColor || '#8b5cf6'} fillOpacity={0.2} strokeWidth={2.5} />
+                          <Radar name={result.site2.domain} dataKey="site2" stroke={result.site2.brandColor || '#f59e0b'} fill={result.site2.brandColor || '#f59e0b'} fillOpacity={0.2} strokeWidth={2.5} />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               )}
 
               {/* Restart */}

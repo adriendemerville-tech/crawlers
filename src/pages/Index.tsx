@@ -97,6 +97,17 @@ const Index = () => {
     metaDesc.setAttribute('content', descriptions[language] || descriptions.fr);
   }, [language]);
 
+  // Auto-redirect subscribed users to console
+  const { user: authUser } = useAuth();
+  const { isAgencyPro: isSubscribed } = useCredits();
+  const { isAdmin: isAdminUser } = useAdmin();
+  const navTo = useNavigate();
+  useEffect(() => {
+    if (authUser && (isSubscribed || isAdminUser)) {
+      navTo('/console?tab=tracking', { replace: true });
+    }
+  }, [authUser, isSubscribed, isAdminUser, navTo]);
+
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
   useStructuredData();
 

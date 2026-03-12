@@ -236,11 +236,11 @@ function ArticleLayoutComponent({
                 Prêt à optimiser votre visibilité IA ?
               </p>
               <p className="text-sm text-foreground/70 mb-5 max-w-md mx-auto">
-                Découvrez gratuitement si votre site est bien référencé par ChatGPT, Gemini et Perplexity.
+                Découvrez si votre site est bien référencé par ChatGPT, Gemini et Perplexity.
               </p>
               <Button asChild size="lg" variant="hero">
                 <Link to="/audit-expert">
-                  Lancer mon audit GEO gratuit
+                  Lancer mon audit expert
                 </Link>
               </Button>
             </div>
