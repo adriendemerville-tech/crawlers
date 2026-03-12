@@ -54,6 +54,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const IntegrationGTM = lazy(() => import("./pages/IntegrationGTM"));
 const SiteCrawl = lazy(() => import("./pages/SiteCrawl"));
 const AuditCompare = lazy(() => import("./pages/AuditCompare"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 // Loading fallback
 const PageLoader = () => (
