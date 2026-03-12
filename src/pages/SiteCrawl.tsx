@@ -68,6 +68,7 @@ const crawlI18n = {
     noTitle: '(sans titre)',
     words: 'Mots:',
     imgsNoAlt: 'Imgs sans alt:',
+    weight: 'Poids:',
     previousCrawls: 'Crawls précédents',
     errorCrawl: 'Erreur lors du crawl',
     advancedOptions: 'Options avancées',
