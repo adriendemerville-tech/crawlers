@@ -159,6 +159,7 @@ export function SmartConfigurator({
   const [isApplying, setIsApplying] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
   const [showWpConfigModal, setShowWpConfigModal] = useState(false);
+  const [showConnectSiteModal, setShowConnectSiteModal] = useState(false);
   const [wpSiteData, setWpSiteData] = useState<{ id: string; domain: string; apiKey: string; hasConfig: boolean } | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   
@@ -1396,60 +1397,15 @@ export function SmartConfigurator({
               </ToggleGroup>
 
               {/* Connect site button - centered */}
-              <Popover modal={true}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs h-7 border-dashed border-violet-400/50 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30">
-                    <Cable className="w-3 h-3" />
-                    Brancher mon site
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="center" className="w-[480px] p-0 z-[9999]" sideOffset={8} collisionPadding={16}>
-                  <div className="p-4 border-b bg-violet-50/50 dark:bg-violet-950/20">
-                    <h4 className="text-sm font-semibold flex items-center gap-2">
-                      <Cable className="w-4 h-4 text-violet-500" />
-                      Brancher Crawlers.fr sur votre site
-                    </h4>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Installez ce snippet via Google Tag Manager ou directement dans votre code pour activer le suivi en temps réel.
-                    </p>
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <div>
-                      <p className="text-xs font-medium mb-1.5">1. Récupérez votre clé API dans <span className="text-violet-600 dark:text-violet-400">Mon Profil → Mes Sites</span></p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium mb-1.5">2. Ajoutez ce code dans une balise HTML personnalisée GTM :</p>
-                      <div className="relative group">
-                        <pre className="bg-muted rounded-md p-3 text-[11px] leading-relaxed overflow-x-auto font-mono border">
-{`<script>
-  window.CRAWLERS_API_KEY = "VOTRE-CLÉ-API";
-</script>
-<script src="https://crawlers.fr/widget.js" defer></script>`}
-                        </pre>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="absolute top-1.5 right-1.5 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => {
-                            navigator.clipboard.writeText(`<script>\n  window.CRAWLERS_API_KEY = "VOTRE-CLÉ-API";\n</script>\n<script src="https://crawlers.fr/widget.js" defer></script>`);
-                            sonnerToast.success('Code copié !');
-                          }}
-                        >
-                          <Copy className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium mb-1">3. Déclenchez sur <span className="font-mono text-[11px] bg-muted px-1 py-0.5 rounded">All Pages</span></p>
-                    </div>
-                    <Separator />
-                    <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-500" />
-                      <span>Sans GTM ? Collez le snippet juste avant la balise <code className="font-mono bg-muted px-1 py-0.5 rounded">&lt;/head&gt;</code> de votre site.</span>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowConnectSiteModal(true)}
+                className="gap-1.5 text-xs h-7 border-dashed border-violet-400/50 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30"
+              >
+                <Cable className="w-3 h-3" />
+                Brancher mon site
+              </Button>
 
               {/* Right side actions */}
               <div className="flex items-center gap-3">
@@ -1645,6 +1601,56 @@ export function SmartConfigurator({
         </div>
       </DialogContent>
     </Dialog>
+
+      {/* Connect Site Modal */}
+      <Dialog open={showConnectSiteModal} onOpenChange={setShowConnectSiteModal} modal={true}>
+        <DialogContent className="max-w-lg p-0 overflow-hidden" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <div className="p-4 border-b bg-violet-50/50 dark:bg-violet-950/20">
+            <h4 className="text-sm font-semibold flex items-center gap-2">
+              <Cable className="w-4 h-4 text-violet-500" />
+              Brancher Crawlers.fr sur votre site
+            </h4>
+            <p className="text-xs text-muted-foreground mt-1">
+              Installez ce snippet via Google Tag Manager ou directement dans votre code pour activer le suivi en temps réel.
+            </p>
+          </div>
+          <div className="p-4 space-y-3">
+            <div>
+              <p className="text-xs font-medium mb-1.5">1. Récupérez votre clé API dans <span className="text-violet-600 dark:text-violet-400">Mon Profil → Mes Sites</span></p>
+            </div>
+            <div>
+              <p className="text-xs font-medium mb-1.5">2. Ajoutez ce code dans une balise HTML personnalisée GTM :</p>
+              <div className="relative group">
+                <pre className="bg-muted rounded-md p-3 text-[11px] leading-relaxed overflow-x-auto font-mono border">
+{`<script>
+  window.CRAWLERS_API_KEY = "VOTRE-CLÉ-API";
+</script>
+<script src="https://crawlers.fr/widget.js" defer></script>`}
+                </pre>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-1.5 right-1.5 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`<script>\n  window.CRAWLERS_API_KEY = "VOTRE-CLÉ-API";\n</script>\n<script src="https://crawlers.fr/widget.js" defer></script>`);
+                    sonnerToast.success('Code copié !');
+                  }}
+                >
+                  <Copy className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-medium mb-1">3. Déclenchez sur <span className="font-mono text-[11px] bg-muted px-1 py-0.5 rounded">All Pages</span></p>
+            </div>
+            <Separator />
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-500" />
+              <span>Sans GTM ? Collez le snippet juste avant la balise <code className="font-mono bg-muted px-1 py-0.5 rounded">&lt;/head&gt;</code> de votre site.</span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* WordPress Configuration Modal */}
       <Dialog open={showWpConfigModal} onOpenChange={setShowWpConfigModal} modal={true}>
