@@ -1033,6 +1033,7 @@ const AuditCompare = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<CompareResult | null>(null);
   const [showTopUp, setShowTopUp] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const retryCountRef = useRef(0);
   const MAX_RETRIES = 2;
 
