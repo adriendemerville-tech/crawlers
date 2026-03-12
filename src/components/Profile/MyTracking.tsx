@@ -640,11 +640,12 @@ export function MyTracking() {
                         </Button>
                       )}
 
-                      {/* WordPress Button → opens modal */}
+                      {/* Connect site button → opens modal */}
                       <Button 
                         variant="outline" 
-                        size="sm" 
-                        className="gap-1.5 relative"
+                        size="icon"
+                        className="h-8 w-8 relative"
+                        title={language === 'fr' ? 'Brancher mon site' : language === 'es' ? 'Conectar mi sitio' : 'Connect my site'}
                         onClick={() => {
                           setWpConnectSiteId(currentSite.id);
                           setShowWpModal(true);
@@ -653,7 +654,6 @@ export function MyTracking() {
                         }}
                       >
                         <Plug className="h-3.5 w-3.5" />
-                        WordPress
                         {!isSiteSynced(currentSite.current_config as Record<string, unknown>) && (
                           <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-orange-500 border-2 border-background" />
                         )}
@@ -1092,9 +1092,9 @@ export function MyTracking() {
         </DialogContent>
       </Dialog>
 
-      {/* WordPress Connection Modal */}
+      {/* Site Connection Modal (WordPress + GTM) */}
       <Dialog open={showWpModal} onOpenChange={setShowWpModal}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {(() => {
             const wpSite = sites.find(s => s.id === wpConnectSiteId);
             if (!wpSite) return null;

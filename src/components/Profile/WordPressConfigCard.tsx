@@ -1,112 +1,19 @@
 import { useState } from 'react';
-import { Download, Link2, Loader2, Copy, Check, Eye, EyeOff, Plug, Wifi, WifiOff, ChevronDown, ExternalLink } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Download, Link2, Loader2, Copy, Check, Eye, EyeOff, Plug, Wifi, WifiOff, ExternalLink, Cable, Code, AlertCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
+import { t3 } from '@/utils/i18n';
 
-const translations = {
-  fr: {
-    title: 'Intégration WordPress (Recommandé)',
-    description: 'Connectez votre site WordPress à Crawlers.AI pour synchroniser automatiquement les optimisations SEO/GEO.',
-    downloadPlugin: 'Télécharger le Plugin .zip',
-    downloadDesc: 'Installez le plugin dans WordPress > Extensions > Ajouter > Téléverser.',
-    wpUrlLabel: 'URL de votre site WordPress',
-    wpUrlPlaceholder: 'https://mon-site.fr',
-    magicLink: 'Connexion Magique',
-    magicLinkDesc: 'Ouvre la page de configuration du plugin avec authentification automatique.',
-    magicLinkDisabled: 'Entrez l\'URL de votre site WordPress pour activer la connexion magique.',
-    magicLinkSuccess: 'Nouvel onglet ouvert ! Suivez les instructions dans votre plugin WordPress.',
-    magicLinkError: 'Erreur lors de la génération du lien magique.',
-    generating: 'Génération...',
-    apiKeyLabel: 'Clé API du site',
-    show: 'Afficher',
-    hide: 'Masquer',
-    copied: 'Clé API copiée !',
-    connected: 'Connecté',
-    notConfigured: 'Non configuré',
-    testConnection: 'Tester la connexion',
-    testing: 'Test en cours...',
-    testSuccess: 'Connexion réussie ! Le plugin WordPress répond correctement.',
-    testError: 'Le site ne répond pas à l\'API. Vérifiez que le plugin est installé et activé.',
-    manualInstall: 'Installation manuelle',
-    manualDesc: 'Copiez ce code PHP dans un fichier crawlers-geo.php et placez-le dans wp-content/plugins/',
-    copyCode: 'Copier le code',
-    codeCopied: 'Code PHP copié !',
-    apiKeyInstructions: 'Collez cette clé dans les paramètres du plugin.',
-  },
-  en: {
-    title: 'WordPress Integration (Recommended)',
-    description: 'Connect your WordPress site to Crawlers.AI to automatically sync SEO/GEO optimizations.',
-    downloadPlugin: 'Download Plugin .zip',
-    downloadDesc: 'Install the plugin in WordPress > Plugins > Add New > Upload.',
-    wpUrlLabel: 'Your WordPress site URL',
-    wpUrlPlaceholder: 'https://my-site.com',
-    magicLink: 'Magic Connection',
-    magicLinkDesc: 'Opens the plugin configuration page with automatic authentication.',
-    magicLinkDisabled: 'Enter your WordPress site URL to enable magic connection.',
-    magicLinkSuccess: 'New tab opened! Follow the instructions in your WordPress plugin.',
-    magicLinkError: 'Error generating the magic link.',
-    generating: 'Generating...',
-    apiKeyLabel: 'Site API Key',
-    show: 'Show',
-    hide: 'Hide',
-    copied: 'API Key copied!',
-    connected: 'Connected',
-    notConfigured: 'Not configured',
-    testConnection: 'Test Connection',
-    testing: 'Testing...',
-    testSuccess: 'Connection successful! The WordPress plugin responds correctly.',
-    testError: 'The site does not respond to the API. Check that the plugin is installed and activated.',
-    manualInstall: 'Manual Installation',
-    manualDesc: 'Copy this PHP code into a file named crawlers-geo.php and place it in wp-content/plugins/',
-    copyCode: 'Copy code',
-    codeCopied: 'PHP code copied!',
-    apiKeyInstructions: 'Paste this key in the plugin settings.',
-  },
-  es: {
-    title: 'Integración WordPress (Recomendado)',
-    description: 'Conecte su sitio WordPress a Crawlers.AI para sincronizar automáticamente las optimizaciones SEO/GEO.',
-    downloadPlugin: 'Descargar Plugin .zip',
-    downloadDesc: 'Instale el plugin en WordPress > Plugins > Añadir nuevo > Subir.',
-    wpUrlLabel: 'URL de su sitio WordPress',
-    wpUrlPlaceholder: 'https://mi-sitio.es',
-    magicLink: 'Conexión Mágica',
-    magicLinkDesc: 'Abre la página de configuración del plugin con autenticación automática.',
-    magicLinkDisabled: 'Ingrese la URL de su sitio WordPress para activar la conexión mágica.',
-    magicLinkSuccess: '¡Nueva pestaña abierta! Siga las instrucciones en su plugin WordPress.',
-    magicLinkError: 'Error al generar el enlace mágico.',
-    generating: 'Generando...',
-    apiKeyLabel: 'Clave API del sitio',
-    show: 'Mostrar',
-    hide: 'Ocultar',
-    copied: '¡Clave API copiada!',
-    connected: 'Conectado',
-    notConfigured: 'No configurado',
-    testConnection: 'Probar conexión',
-    testing: 'Probando...',
-    testSuccess: '¡Conexión exitosa! El plugin WordPress responde correctamente.',
-    testError: 'El sitio no responde a la API. Verifique que el plugin esté instalado y activado.',
-    manualInstall: 'Instalación manual',
-    manualDesc: 'Copie este código PHP en un archivo crawlers-geo.php y colóquelo en wp-content/plugins/',
-    copyCode: 'Copiar código',
-    codeCopied: '¡Código PHP copiado!',
-    apiKeyInstructions: 'Pegue esta clave en la configuración del plugin.',
-  },
-};
-
-interface WordPressConfigCardProps {
-  siteId: string;
-  siteDomain: string;
-  siteApiKey: string;
-  hasConfig: boolean;
-}
-
+// ── Plugin PHP generator (unchanged) ──
 function generatePluginPhp(apiKey: string, domain: string): string {
   return `<?php
 /**
@@ -121,7 +28,6 @@ if (!defined('ABSPATH')) exit;
 define('CRAWLERS_API_KEY', '${apiKey}');
 define('CRAWLERS_API_URL', 'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/wpsync');
 
-// Récupération de la configuration
 function crawlers_fetch_config() {
     $response = wp_remote_get(
         CRAWLERS_API_URL . '?api_key=' . CRAWLERS_API_KEY,
@@ -137,7 +43,6 @@ function crawlers_fetch_config() {
     return false;
 }
 
-// Injection du JSON-LD
 add_action('wp_head', function() {
     $config = get_option('crawlers_config', array());
     if (!empty($config['json_ld'])) {
@@ -152,7 +57,6 @@ add_action('wp_head', function() {
     }
 });
 
-// Injection du script correctif
 add_action('wp_footer', function() {
     $config = get_option('crawlers_config', array());
     if (!empty($config['corrective_script'])) {
@@ -160,7 +64,6 @@ add_action('wp_footer', function() {
     }
 });
 
-// Synchronisation automatique toutes les 6h
 if (!wp_next_scheduled('crawlers_sync_event')) {
     wp_schedule_event(time(), 'crawlers_6h', 'crawlers_sync_event');
 }
@@ -170,13 +73,11 @@ add_filter('cron_schedules', function($schedules) {
 });
 add_action('crawlers_sync_event', 'crawlers_fetch_config');
 
-// Page de configuration admin
 add_action('admin_menu', function() {
     add_options_page('Crawlers.AI', 'Crawlers.AI', 'manage_options', 'crawlers-config', 'crawlers_admin_page');
 });
 function crawlers_admin_page() {
     if (isset($_GET['token'])) {
-        // Magic link auto-configuration
         echo '<div class="notice notice-info"><p>Configuration automatique en cours...</p></div>';
     }
     $last_sync = get_option('crawlers_last_sync', 'Jamais');
@@ -188,7 +89,6 @@ function crawlers_admin_page() {
     if (isset($_GET['sync'])) { crawlers_fetch_config(); echo '<meta http-equiv="refresh" content="0">'; }
 }
 
-// REST API endpoint pour le test de connexion
 add_action('rest_api_init', function() {
     register_rest_route('crawlers/v1', '/ping', array(
         'methods' => 'GET',
@@ -205,10 +105,17 @@ add_action('rest_api_init', function() {
 });`;
 }
 
+// ── Component ──
+interface WordPressConfigCardProps {
+  siteId: string;
+  siteDomain: string;
+  siteApiKey: string;
+  hasConfig: boolean;
+}
+
 export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig }: WordPressConfigCardProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
-  const t = translations[language] || translations.fr;
 
   const [wpUrl, setWpUrl] = useState(`https://${siteDomain}`);
   const [generatingLink, setGeneratingLink] = useState(false);
@@ -216,6 +123,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
+  const [gtmSnippetCopied, setGtmSnippetCopied] = useState(false);
 
   const isValidWpUrl = (() => {
     try {
@@ -233,13 +141,11 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
     if (!siteApiKey) return;
     await navigator.clipboard.writeText(siteApiKey);
     setApiKeyCopied(true);
-    toast.success(t.copied);
+    toast.success(t3(language, 'Clé API copiée !', 'API Key copied!', '¡Clave API copiada!'));
     setTimeout(() => setApiKeyCopied(false), 2000);
   };
 
   const handleDownloadPlugin = () => {
-    // Generate PHP content and trigger download as .php file
-    // (Real zip generation would require a backend; for now, download the PHP directly)
     const phpCode = generatePluginPhp(siteApiKey, siteDomain);
     const blob = new Blob([phpCode], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
@@ -250,7 +156,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success(language === 'fr' ? 'Plugin téléchargé ! Uploadez-le dans WordPress.' : language === 'es' ? '¡Plugin descargado! Súbalo en WordPress.' : 'Plugin downloaded! Upload it in WordPress.');
+    toast.success(t3(language, 'Plugin téléchargé !', 'Plugin downloaded!', '¡Plugin descargado!'));
   };
 
   const handleMagicLink = async () => {
@@ -259,7 +165,7 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        toast.error(t.magicLinkError);
+        toast.error(t3(language, 'Erreur d\'authentification', 'Auth error', 'Error de autenticación'));
         return;
       }
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -279,12 +185,12 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
         const cleanUrl = wpUrl.replace(/\/+$/, '');
         const magicUrl = `${cleanUrl}/wp-admin/admin.php?page=crawlers-config&token=${json.token}`;
         window.open(magicUrl, '_blank');
-        toast.success(t.magicLinkSuccess);
+        toast.success(t3(language, 'Nouvel onglet ouvert !', 'New tab opened!', '¡Nueva pestaña abierta!'));
       } else {
-        toast.error(json.error || t.magicLinkError);
+        toast.error(json.error || t3(language, 'Erreur', 'Error', 'Error'));
       }
     } catch {
-      toast.error(t.magicLinkError);
+      toast.error(t3(language, 'Erreur lors de la génération du lien', 'Error generating link', 'Error al generar el enlace'));
     } finally {
       setGeneratingLink(false);
     }
@@ -295,145 +201,281 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
     setTestingConnection(true);
     try {
       const cleanUrl = wpUrl.replace(/\/+$/, '');
-      const res = await fetch(`${cleanUrl}/wp-json/crawlers/v1/ping`, {
-        method: 'GET',
-        mode: 'cors',
-      });
+      const res = await fetch(`${cleanUrl}/wp-json/crawlers/v1/ping`, { method: 'GET', mode: 'cors' });
       if (res.ok) {
         const json = await res.json();
         if (json.status === 'ok') {
-          toast.success(t.testSuccess);
+          toast.success(t3(language, 'Connexion réussie !', 'Connection successful!', '¡Conexión exitosa!'));
         } else {
-          toast.error(t.testError);
+          toast.error(t3(language, 'Le plugin ne répond pas.', 'Plugin not responding.', 'El plugin no responde.'));
         }
       } else {
-        toast.error(t.testError);
+        toast.error(t3(language, 'Le plugin ne répond pas.', 'Plugin not responding.', 'El plugin no responde.'));
       }
     } catch {
-      toast.error(t.testError);
+      toast.error(t3(language, 'Le plugin ne répond pas.', 'Plugin not responding.', 'El plugin no responde.'));
     } finally {
       setTestingConnection(false);
     }
   };
 
+  const gtmSnippet = `<script>\n  window.CRAWLERS_API_KEY = "${siteApiKey}";\n</script>\n<script src="https://crawlers.fr/widget.js" defer></script>`;
+
+  const handleCopyGtmSnippet = async () => {
+    await navigator.clipboard.writeText(gtmSnippet);
+    setGtmSnippetCopied(true);
+    toast.success(t3(language, 'Code GTM copié !', 'GTM code copied!', '¡Código GTM copiado!'));
+    setTimeout(() => setGtmSnippetCopied(false), 2000);
+  };
+
   const phpCode = generatePluginPhp(siteApiKey, siteDomain);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Plug className="h-5 w-5 text-primary" />
-              {t.title}
-            </CardTitle>
-            <CardDescription>{t.description}</CardDescription>
-          </div>
+    <>
+      {/* Header */}
+      <DialogHeader className="pb-2">
+        <DialogTitle className="flex items-center gap-2.5 text-lg">
+          <Cable className="h-5 w-5 text-primary" />
+          {t3(language, 'Brancher mon site', 'Connect my site', 'Conectar mi sitio')}
+        </DialogTitle>
+        <DialogDescription className="flex items-center gap-2">
+          <span className="font-mono text-xs">{siteDomain}</span>
           <Badge
             variant={isConnected ? 'default' : 'outline'}
-            className={isConnected ? 'bg-green-600 hover:bg-green-600 text-white' : ''}
+            className={isConnected ? 'bg-emerald-600 hover:bg-emerald-600 text-white text-[10px] px-1.5 py-0' : 'text-[10px] px-1.5 py-0'}
           >
             {isConnected ? (
-              <><Wifi className="h-3 w-3 mr-1" />{t.connected}</>
+              <><Wifi className="h-2.5 w-2.5 mr-0.5" />{t3(language, 'Connecté', 'Connected', 'Conectado')}</>
             ) : (
-              <><WifiOff className="h-3 w-3 mr-1" />{t.notConfigured}</>
+              <><WifiOff className="h-2.5 w-2.5 mr-0.5" />{t3(language, 'Non branché', 'Not connected', 'No conectado')}</>
             )}
           </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        {/* 1. Download Plugin */}
-        <Button onClick={handleDownloadPlugin} className="w-full gap-2" variant="default">
-          <Download className="h-4 w-4" />
-          {t.downloadPlugin}
-        </Button>
-        <p className="text-xs text-muted-foreground -mt-3">{t.downloadDesc}</p>
+        </DialogDescription>
+      </DialogHeader>
 
-        {/* 2. WordPress URL + Magic Link */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{t.wpUrlLabel}</label>
-          <Input
-            value={wpUrl}
-            onChange={e => setWpUrl(e.target.value)}
-            placeholder={t.wpUrlPlaceholder}
-            className="font-mono text-sm"
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button
-            onClick={handleMagicLink}
-            disabled={!isValidWpUrl || generatingLink || !user}
-            className="flex-1 gap-2"
-            variant="secondary"
-          >
-            {generatingLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
-            {generatingLink ? t.generating : t.magicLink}
-          </Button>
-          <Button
-            onClick={handleTestConnection}
-            disabled={!isValidWpUrl || testingConnection}
-            variant="outline"
-            className="gap-2"
-          >
-            {testingConnection ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
-            {testingConnection ? t.testing : t.testConnection}
-          </Button>
-        </div>
-        {!isValidWpUrl && wpUrl.length > 0 && (
-          <p className="text-xs text-muted-foreground">{t.magicLinkDisabled}</p>
-        )}
-        <p className="text-xs text-muted-foreground">{t.magicLinkDesc}</p>
+      <Separator />
 
-        {/* 3. API Key display */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{t.apiKeyLabel}</label>
-          <div className="flex items-center gap-2">
-            <Input
-              readOnly
-              value={apiKeyVisible ? siteApiKey : maskedKey}
-              className="font-mono text-sm bg-muted"
-            />
-            <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={() => setApiKeyVisible(!apiKeyVisible)}
-              aria-label={apiKeyVisible ? t.hide : t.show}
-            >
-              {apiKeyVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
-            <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={handleCopyApiKey} aria-label="Copy">
-              {apiKeyCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-            </Button>
+      {/* Two-column layout */}
+      <div className="grid grid-cols-2 gap-6 pt-2">
+        {/* ═══ LEFT: WordPress Plugin ═══ */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <Plug className="h-4 w-4 text-blue-500" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold">WordPress</h3>
+              <p className="text-[11px] text-muted-foreground">
+                {t3(language, 'Plugin auto-synchronisé', 'Auto-synced plugin', 'Plugin auto-sincronizado')}
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">{t.apiKeyInstructions}</p>
+
+          {/* Step 1: Download */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground">
+              {t3(language, '1. Téléchargez le plugin', '1. Download the plugin', '1. Descargue el plugin')}
+            </p>
+            <Button onClick={handleDownloadPlugin} className="w-full gap-2" size="sm">
+              <Download className="h-3.5 w-3.5" />
+              {t3(language, 'Télécharger le Plugin .php', 'Download Plugin .php', 'Descargar Plugin .php')}
+            </Button>
+            <p className="text-[10px] text-muted-foreground">
+              {t3(language,
+                'Uploadez dans WordPress → Extensions → Ajouter → Téléverser.',
+                'Upload in WordPress → Plugins → Add New → Upload.',
+                'Suba en WordPress → Plugins → Añadir → Subir.'
+              )}
+            </p>
+          </div>
+
+          {/* Step 2: URL + Magic Link */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground">
+              {t3(language, '2. Connectez-vous automatiquement', '2. Auto-connect', '2. Conéctese automáticamente')}
+            </p>
+            <Input
+              value={wpUrl}
+              onChange={e => setWpUrl(e.target.value)}
+              placeholder="https://mon-site.fr"
+              className="font-mono text-xs h-8"
+            />
+            <div className="flex gap-1.5">
+              <Button
+                onClick={handleMagicLink}
+                disabled={!isValidWpUrl || generatingLink || !user}
+                className="flex-1 gap-1.5"
+                variant="secondary"
+                size="sm"
+              >
+                {generatingLink ? <Loader2 className="h-3 w-3 animate-spin" /> : <Link2 className="h-3 w-3" />}
+                {t3(language, 'Lien Magique', 'Magic Link', 'Enlace Mágico')}
+              </Button>
+              <Button
+                onClick={handleTestConnection}
+                disabled={!isValidWpUrl || testingConnection}
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+              >
+                {testingConnection ? <Loader2 className="h-3 w-3 animate-spin" /> : <ExternalLink className="h-3 w-3" />}
+                {t3(language, 'Tester', 'Test', 'Probar')}
+              </Button>
+            </div>
+          </div>
+
+          {/* Manual install accordion */}
+          <Accordion type="single" collapsible>
+            <AccordionItem value="manual" className="border-dashed">
+              <AccordionTrigger className="text-xs py-2 text-muted-foreground hover:text-foreground">
+                {t3(language, 'Installation manuelle (PHP)', 'Manual install (PHP)', 'Instalación manual (PHP)')}
+              </AccordionTrigger>
+              <AccordionContent>
+                <p className="text-[10px] text-muted-foreground mb-2">
+                  {t3(language,
+                    'Copiez ce code PHP dans un fichier et placez-le dans wp-content/plugins/',
+                    'Copy this PHP code into a file and place it in wp-content/plugins/',
+                    'Copie este código PHP en un archivo y colóquelo en wp-content/plugins/'
+                  )}
+                </p>
+                <div className="relative">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-1 right-1 gap-1 z-10 h-6 text-[10px] px-2"
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(phpCode);
+                      setCodeCopied(true);
+                      toast.success(t3(language, 'Code PHP copié !', 'PHP code copied!', '¡Código PHP copiado!'));
+                      setTimeout(() => setCodeCopied(false), 2000);
+                    }}
+                  >
+                    {codeCopied ? <Check className="h-2.5 w-2.5" /> : <Copy className="h-2.5 w-2.5" />}
+                    {t3(language, 'Copier', 'Copy', 'Copiar')}
+                  </Button>
+                  <pre className="bg-muted rounded-md p-2.5 text-[10px] leading-relaxed overflow-x-auto max-h-40 font-mono border">
+                    {phpCode.slice(0, 600)}...
+                  </pre>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
-        {/* 4. Manual install accordion */}
-        <Accordion type="single" collapsible>
-          <AccordionItem value="manual">
-            <AccordionTrigger className="text-sm">{t.manualInstall}</AccordionTrigger>
-            <AccordionContent>
-              <p className="text-xs text-muted-foreground mb-3">{t.manualDesc}</p>
-              <div className="relative">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute top-2 right-2 gap-1 z-10"
-                  onClick={async () => {
-                    await navigator.clipboard.writeText(phpCode);
-                    setCodeCopied(true);
-                    toast.success(t.codeCopied);
-                    setTimeout(() => setCodeCopied(false), 2000);
-                  }}
-                >
-                  {codeCopied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                  {t.copyCode}
-                </Button>
-                <pre className="bg-muted rounded-md p-4 text-xs font-mono overflow-x-auto max-h-80 whitespace-pre-wrap break-all">
-                  {phpCode}
-                </pre>
+        {/* ═══ RIGHT: GTM / Script universel ═══ */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <Code className="h-4 w-4 text-amber-500" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold">
+                {t3(language, 'Google Tag Manager / Script', 'Google Tag Manager / Script', 'Google Tag Manager / Script')}
+              </h3>
+              <p className="text-[11px] text-muted-foreground">
+                {t3(language, 'Tous sites (React, Shopify, HTML…)', 'All sites (React, Shopify, HTML…)', 'Todos los sitios (React, Shopify, HTML…)')}
+              </p>
+            </div>
+          </div>
+
+          {/* Step 1: Copy snippet */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground">
+              {t3(language, '1. Copiez ce code', '1. Copy this code', '1. Copie este código')}
+            </p>
+            <div className="relative group">
+              <pre className="bg-muted rounded-md p-3 text-[11px] leading-relaxed overflow-x-auto font-mono border">
+{`<script>
+  window.CRAWLERS_API_KEY = "${siteApiKey}";
+</script>
+<script src="https://crawlers.fr/widget.js"
+        defer></script>`}
+              </pre>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-1.5 right-1.5 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={handleCopyGtmSnippet}
+              >
+                {gtmSnippetCopied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Step 2: Where to paste */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground">
+              {t3(language, '2. Collez-le dans…', '2. Paste it in…', '2. Péguelo en…')}
+            </p>
+            <div className="space-y-2">
+              <div className="rounded-md border border-dashed p-2.5 space-y-1">
+                <p className="text-xs font-medium">Google Tag Manager</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {t3(language,
+                    'Nouvelle balise → HTML personnalisée → Collez le code → Déclencheur : All Pages',
+                    'New tag → Custom HTML → Paste code → Trigger: All Pages',
+                    'Nueva etiqueta → HTML personalizado → Pegue el código → Activador: All Pages'
+                  )}
+                </p>
               </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </CardContent>
-    </Card>
+              <div className="rounded-md border border-dashed p-2.5 space-y-1">
+                <p className="text-xs font-medium">
+                  {t3(language, 'Injection directe', 'Direct injection', 'Inyección directa')}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  {t3(language,
+                    'Collez le snippet juste avant la balise ',
+                    'Paste the snippet just before the ',
+                    'Pegue el snippet justo antes de la etiqueta '
+                  )}
+                  <code className="font-mono bg-muted px-1 py-0.5 rounded text-[10px]">&lt;/head&gt;</code>
+                  {t3(language, ' de votre site.', ' tag of your site.', ' de su sitio.')}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Info box */}
+          <div className="flex items-start gap-2 text-[10px] text-muted-foreground bg-muted/50 rounded-md p-2.5 border">
+            <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-amber-500" />
+            <span>
+              {t3(language,
+                'Le widget est léger (~2 Ko), fail-safe et ne ralentit pas votre site. Il se connecte automatiquement à votre espace Crawlers.AI.',
+                'The widget is lightweight (~2 KB), fail-safe, and won\'t slow your site. It auto-connects to your Crawlers.AI workspace.',
+                'El widget es ligero (~2 KB), fail-safe y no ralentiza su sitio. Se conecta automáticamente a su espacio Crawlers.AI.'
+              )}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Shared: API Key section at the bottom */}
+      <Separator className="mt-2" />
+      <div className="space-y-2 pt-2">
+        <label className="text-xs font-medium text-muted-foreground">
+          {t3(language, 'Clé API de ce site', 'Site API Key', 'Clave API del sitio')}
+        </label>
+        <div className="flex items-center gap-2">
+          <Input
+            readOnly
+            value={apiKeyVisible ? siteApiKey : maskedKey}
+            className="font-mono text-xs bg-muted h-8"
+          />
+          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setApiKeyVisible(!apiKeyVisible)}>
+            {apiKeyVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          </Button>
+          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={handleCopyApiKey}>
+            {apiKeyCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+          </Button>
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          {t3(language,
+            'Cette clé est pré-remplie dans les snippets ci-dessus. Ne la partagez pas.',
+            'This key is pre-filled in the snippets above. Do not share it.',
+            'Esta clave está pre-rellenada en los snippets anteriores. No la comparta.'
+          )}
+        </p>
+      </div>
+    </>
   );
 }
