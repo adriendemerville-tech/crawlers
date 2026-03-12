@@ -626,7 +626,7 @@ export function ExpertAuditDashboard() {
     const attemptAudit = async (attempt: number): Promise<void> => {
       try {
         const { data, error } = await supabase.functions.invoke('audit-expert-seo', {
-          body: { url: normalizedUrl }
+          body: { url: normalizedUrl, lang: language }
         });
 
         if (error) throw new Error(error.message);
@@ -778,6 +778,7 @@ export function ExpertAuditDashboard() {
         hallucinationCorrections: hallucinationCorrections || null,
         competitorCorrections: competitorCorrections || null,
         cachedContext: useCachedContext ? strategicCachedContext : null,
+        lang: language,
       });
 
       if (!data.success) throw new Error(data.error || 'Strategic audit failed');
@@ -873,7 +874,7 @@ export function ExpertAuditDashboard() {
           console.log('Strategic audit: auto-retrying...');
           const retryData = await invokeWithTimeout('audit-strategique-ia', {
             url: normalizedUrl, toolsData: null, hallucinationCorrections: hallucinationCorrections || null, competitorCorrections: competitorCorrections || null,
-            cachedContext: useCachedContext ? strategicCachedContext : null,
+            cachedContext: useCachedContext ? strategicCachedContext : null, lang: language,
           });
           const strategicData = mapStrategicData(retryData.data, normalizedUrl, hallucinationCorrections);
 

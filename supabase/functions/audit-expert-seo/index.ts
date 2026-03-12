@@ -1367,7 +1367,8 @@ async function generateNarrativeIntroduction(
   scores: any,
   htmlAnalysis: HtmlAnalysis,
   insights: ExpertInsights,
-  meta: AuditMeta
+  meta: AuditMeta,
+  lang: string = 'fr'
 ): Promise<{ presentation: string; strengths: string; improvement: string } | null> {
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
   
@@ -1387,7 +1388,7 @@ async function generateNarrativeIntroduction(
         messages: [
           { 
             role: 'system', 
-            content: `Tu es un consultant SEO senior. Tu dois générer une introduction structurée en 3 paragraphes pour un audit technique SEO Expert. RÈGLE ABSOLUE: Tu DOIS désigner le site analysé EXCLUSIVEMENT par son NOM DE DOMAINE fourni dans le prompt. Ne jamais inventer, déduire ou halluciner un nom de marque ou une description générique. Réponds UNIQUEMENT en JSON valide.`
+            content: `Tu es un consultant SEO senior. Tu dois générer une introduction structurée en 3 paragraphes pour un audit technique SEO Expert. RÈGLE ABSOLUE: Tu DOIS désigner le site analysé EXCLUSIVEMENT par son NOM DE DOMAINE fourni dans le prompt. Ne jamais inventer, déduire ou halluciner un nom de marque ou une description générique. Réponds UNIQUEMENT en JSON valide. LANGUE DE RÉDACTION: ${lang === 'fr' ? 'français' : lang === 'es' ? 'espagnol' : 'anglais'}. Rédige TOUT le contenu dans cette langue.`
           },
           { 
             role: 'user', 
@@ -1410,6 +1411,8 @@ INSIGHTS EXPERTS:
 
 Titre: "${htmlAnalysis.titleContent}"
 Meta: "${htmlAnalysis.metaDescContent?.substring(0, 100) || 'absente'}"
+
+LANGUE: Rédige en ${lang === 'fr' ? 'français' : lang === 'es' ? 'espagnol' : 'anglais'}.
 
 Réponds avec ce JSON:
 {
@@ -1452,7 +1455,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { url } = await req.json();
+    const { url, lang } = await req.json();
+    const outputLang = lang || 'fr';
     
     if (!url) {
       return new Response(
@@ -1671,7 +1675,7 @@ Deno.serve(async (req) => {
     
     // Generate AI narrative
     const introduction = await generateNarrativeIntroduction(
-      domain, normalizedUrl, totalScore, scores, htmlAnalysis, enrichedInsights, meta
+      domain, normalizedUrl, totalScore, scores, htmlAnalysis, enrichedInsights, meta, outputLang
     );
     
     console.log('='.repeat(60));

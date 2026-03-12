@@ -698,6 +698,7 @@ async function analyzeSite(
   supabaseAnonKey: string,
   openrouterKey: string,
   opponentDomain?: string,
+  langLabel: string = 'français',
 ): Promise<{ metadata: PageMetadata; analysis: any; llm_raw: any; keywords: any[]; backlinks: BacklinkProfile | null; pagespeed: PageSpeedScores | null }> {
   // Step 1: Metadata + LLM visibility + Backlinks + PageSpeed in parallel
   const [metadata, llmResult, backlinks, pagespeed] = await Promise.all([
@@ -735,7 +736,7 @@ async function analyzeSite(
       headers: { 'Authorization': `Bearer ${openrouterKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'system', content: SITE_ANALYSIS_PROMPT }, { role: 'user', content: prompt }],
+        messages: [{ role: 'system', content: SITE_ANALYSIS_PROMPT + `\n\nLANGUE DE RÉDACTION: ${langLabel}. Rédige TOUTES les analyses en ${langLabel}.` }, { role: 'user', content: prompt }],
         temperature: 0.3,
       }),
       signal: AbortSignal.timeout(55000),
@@ -758,6 +759,7 @@ async function runCrossComparison(
   site1: { domain: string; analysis: any; backlinks: BacklinkProfile | null; contentDepth: ContentDepth; keywords: any[] },
   site2: { domain: string; analysis: any; backlinks: BacklinkProfile | null; contentDepth: ContentDepth; keywords: any[] },
   openrouterKey: string,
+  langLabel: string = 'français',
 ): Promise<any> {
   const prompt = buildCrossComparePrompt(site1, site2);
   try {
@@ -766,7 +768,7 @@ async function runCrossComparison(
       headers: { 'Authorization': `Bearer ${openrouterKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [{ role: 'system', content: CROSS_COMPARE_SYSTEM }, { role: 'user', content: prompt }],
+        messages: [{ role: 'system', content: CROSS_COMPARE_SYSTEM + `\n\nLANGUE DE RÉDACTION: ${langLabel}. Rédige TOUTES les analyses en ${langLabel}.` }, { role: 'user', content: prompt }],
         temperature: 0.2,
       }),
       signal: AbortSignal.timeout(55000),
@@ -929,7 +931,9 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   
   try {
-    const { url1, url2, skipCache } = await req.json();
+    const { url1, url2, skipCache, lang } = await req.json();
+    const outputLang = lang || 'fr';
+    const langLabel = outputLang === 'fr' ? 'français' : outputLang === 'es' ? 'espagnol' : 'anglais';
     
     if (!url1 || !url2) return json({ success: false, error: 'Two URLs are required' }, 400);
     
@@ -996,8 +1000,8 @@ Deno.serve(async (req) => {
     
     // ═══ Phase 1 & 2: Both site pipelines in PARALLEL ═══
     const [site1, site2] = await Promise.all([
-      analyzeSite(url1, domain1, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY, domain2),
-      analyzeSite(url2, domain2, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY, domain1),
+      analyzeSite(url1, domain1, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY, domain2, langLabel),
+      analyzeSite(url2, domain2, supabaseUrl, supabaseAnonKey, OPENROUTER_API_KEY, domain1, langLabel),
     ]);
     
     // ═══ Phase 2.5: CROSS-SERP CHECK — enrich both keyword sets with opponent rankings ═══
@@ -1010,7 +1014,7 @@ Deno.serve(async (req) => {
     const crossComparison = await runCrossComparison(
       { domain: domain1, analysis: site1.analysis, backlinks: site1.backlinks, contentDepth: site1.metadata.contentDepth, keywords: enrichedKeywords.site1Keywords },
       { domain: domain2, analysis: site2.analysis, backlinks: site2.backlinks, contentDepth: site2.metadata.contentDepth, keywords: enrichedKeywords.site2Keywords },
-      OPENROUTER_API_KEY,
+      OPENROUTER_API_KEY, langLabel,
     );
     
     console.log(`✅ Audit comparé v2 terminé: site1=${site1.analysis ? 'OK' : 'FAIL'}, site2=${site2.analysis ? 'OK' : 'FAIL'}, cross=${crossComparison ? 'OK' : 'FAIL'}`);
