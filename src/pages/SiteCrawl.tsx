@@ -217,13 +217,31 @@ interface CrawlResult {
 }
 
 export default function SiteCrawl() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { balance: credits, isAgencyPro } = useCredits();
   const { language } = useLanguage();
   const navigate = useNavigate();
-  const { isAdmin } = useAdmin();
+  const { isAdmin, loading: adminLoading } = useAdmin();
   useCanonicalHreflang('/site-crawl');
   const t = crawlI18n[language];
+
+  // Gate: restrict to paying subscribers (Pro Agency or Admin)
+  const isUnlimitedUser = isAgencyPro || isAdmin;
+  useEffect(() => {
+    if (!loading && !adminLoading) {
+      if (!user || !isUnlimitedUser) {
+        navigate('/tarifs', { replace: true });
+      }
+    }
+  }, [user, loading, adminLoading, isUnlimitedUser, navigate]);
+
+  if (loading || adminLoading || !user || !isUnlimitedUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   const [url, setUrl] = useState('');
   const [maxPages, setMaxPages] = useState(50);
   const [isLoading, setIsLoading] = useState(false);
