@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Crown, Linkedin, Handshake, Infinity, FileText, Code, Stamp, Users, Copy, Gift, Share2, Globe, Zap } from 'lucide-react';
+import { Check, Loader2, Crown, Linkedin, Handshake, Infinity, FileText, Code, Users, Copy, Gift, Share2, Globe, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
