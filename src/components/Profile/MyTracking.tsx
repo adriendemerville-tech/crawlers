@@ -1666,17 +1666,6 @@ export function MyTracking() {
   );
 }
 
-function KPICard({ label, value, icon: Icon, valueClassName }: { label: string; value: string; icon: React.ElementType; valueClassName?: string }) {
-  return (
-    <div className="rounded-lg border bg-card p-3 space-y-1">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Icon className="h-3 w-3" />
-        {label}
-      </div>
-      <p className={`text-lg font-semibold ${valueClassName || ''}`}>{value}</p>
-    </div>
-  );
-}
 
 function KPICard({ label, value, icon: Icon, valueClassName, onRefresh }: { label: string; value: string; icon: ElementType; valueClassName?: string; onRefresh?: () => Promise<void> }) {
   const [refreshing, setRefreshing] = useState(false);
