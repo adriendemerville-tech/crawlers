@@ -99,6 +99,16 @@ async function searchBrandDomain(query: string): Promise<string | null> {
       }
     }
 
+    // If HTTP validation failed but LLM confidently returned a domain,
+    // trust it — many large sites (fnac.com, amazon.fr, etc.) block server-side requests entirely
+    // Only trust domains that look legitimate (has a recognized TLD)
+    const trustedTlds = ['.com', '.fr', '.org', '.net', '.eu', '.co', '.io', '.de', '.es', '.it', '.uk', '.be', '.ch', '.ca', '.us'];
+    const hasTrustedTld = trustedTlds.some(tld => domain.endsWith(tld));
+    if (hasTrustedTld && cleanQuery.length >= 2) {
+      console.log(`[validate-url] Trusting LLM domain (HTTP blocked): "${cleanQuery}" → https://www.${domain}`);
+      return `https://www.${domain}`;
+    }
+
     return null;
   } catch (err) {
     console.error('[validate-url] Brand search error:', err);
