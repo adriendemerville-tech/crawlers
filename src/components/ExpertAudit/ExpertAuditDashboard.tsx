@@ -705,10 +705,21 @@ export function ExpertAuditDashboard() {
     setAuditMode('technical');
     setIsLoading(true);
     setResult(null);
+    setFatalAuditError(false);
     
     // Track audit launch
     trackAnalyticsEvent('expert_audit_launched', { targetUrl: normalizedUrl });
     storeAnalyzedUrl(normalizedUrl);
+
+    // Track consecutive failures per URL
+    const urlKey = normalizedUrl;
+    const currentCount = auditFailCountRef.current[urlKey] || 0;
+    
+    if (currentCount >= 4) {
+      setFatalAuditError(true);
+      setIsLoading(false);
+      return;
+    }
 
     const attemptAudit = async (attempt: number): Promise<void> => {
       try {
@@ -728,6 +739,8 @@ export function ExpertAuditDashboard() {
         if (auditResult.meta?.scannedAt && !auditResult.scannedAt) {
           auditResult.scannedAt = auditResult.meta.scannedAt;
         }
+        // Reset fail counter on success
+        auditFailCountRef.current[urlKey] = 0;
         setResult(auditResult);
         setTechnicalResult(auditResult);
         setCompletedSteps(prev => [...prev.filter(s => s !== 1), 1]);
@@ -752,18 +765,18 @@ export function ExpertAuditDashboard() {
         console.error(`Audit error (attempt ${attempt}):`, error);
         trackAnalyticsEvent('error', { eventData: { type: 'technical_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
         
-        // Silent retry on first failure
-        if (attempt < 2) {
-          console.log('[TechnicalAudit] Relance silencieuse...');
+        // Increment fail counter
+        auditFailCountRef.current[urlKey] = (auditFailCountRef.current[urlKey] || 0) + 1;
+        
+        // Silent retry up to 4 attempts total
+        if (attempt < 4) {
+          console.log(`[TechnicalAudit] Relance silencieuse (${attempt}/4)...`);
           await new Promise(r => setTimeout(r, 2000));
           return attemptAudit(attempt + 1);
         }
         
-        // After retry, show subtle non-destructive toast
-        toast({
-          title: 'Erreur de chargement',
-          description: 'L\'analyse n\'a pas pu aboutir. Veuillez réessayer.',
-        });
+        // After 4 failures, show fatal banner
+        setFatalAuditError(true);
       }
     };
 
