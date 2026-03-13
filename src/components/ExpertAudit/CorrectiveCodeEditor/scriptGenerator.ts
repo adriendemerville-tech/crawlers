@@ -129,7 +129,7 @@ export function generateCorrectiveScript(
   
   const script = `/**
  * ═══════════════════════════════════════════════════════════════
- * 🏗️ Crawlers.fr — ARCHITECTE GÉNÉRATIF v3.1 (CLS-ZERO + SDK Isolation)
+ * 🏗️ Crawlers.fr — ARCHITECTE GÉNÉRATIF v3.2 (CLS-ZERO + Merge-Override)
  * ═══════════════════════════════════════════════════════════════
  * 
  * Généré le ${new Date().toLocaleDateString(dateLocale)}
@@ -142,12 +142,13 @@ export function generateCorrectiveScript(
  *   → Stratégiques (JSON-LD sémantique): ${strategicFixes.length}
  *   → Anti-Hallucination IA: ${hallucinationFixes.length}
  *
- * Protocole CLS-ZERO + SDK Isolation:
+ * Protocole CLS-ZERO + Merge-Override:
  *   Règle 1  — Données sémantiques → JSON-LD <head> uniquement
  *   Règle 2A — Attribution → bas de page (footer)
  *   Règle 2B — Contenu visible → skeleton (min-height) avant injection
  *   Règle 3  — lazy/fetchpriority via MutationObserver
- *   Règle 4  — Locks (data-crawlers-lock) anti double-exécution
+ *   Règle 4  — Merge-Override: le dernier script écrase les fixes redondants
+ *              (clearLock supprime l'ancien DOM/JSON-LD avant réinjection)
  *   Règle 5  — IIFE + try/catch silencieux
  *   Règle 6  — requestIdleCallback (non-bloquant)
  *   Règle 7  — Kill Switch distant (sdk-status)
