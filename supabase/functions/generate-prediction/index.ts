@@ -538,6 +538,8 @@ ${cc.topIssues.length > 0 ? `- Top issues:\n${cc.topIssues.map((r: any) => `  �
   → High TDI creates an "Indexing Ceiling": Google throttles crawl budget.
 - Semantic Depth: "${intel.depth}" → Trust Rebound ETA: ${intel.reboundDays} days
 - Domain Authority: ${intel.ext.domain_authority || 'N/A'}
+- Domain Rank (backlink-based): ${intel.ext.domain_rank || 'N/A'}
+- Referring Domains: ${intel.ext.referring_domains || 'N/A'}
 
 ## AUDIT DATA
 - Technical SEO score: ${intel.ext.technical_score || 'N/A'}/100
