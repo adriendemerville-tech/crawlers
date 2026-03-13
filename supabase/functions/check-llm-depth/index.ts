@@ -561,7 +561,24 @@ Deno.serve(async (req) => {
     }
 
     const brand = extractBrand(domain)
-    const ctx: SiteContext = site_context || {}
+
+    // ── Auto-enrich site identity card if empty ──
+    let ctx: SiteContext = site_context || {}
+    if (!ctx.market_sector && !ctx.products_services && tracked_site_id) {
+      // Fetch site from DB and enrich via LLM if needed
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      const sbEnrich = createClient(supabaseUrl, serviceKey)
+      const { data: siteData } = await sbEnrich
+        .from('tracked_sites')
+        .select('*')
+        .eq('id', tracked_site_id)
+        .single()
+      if (siteData) {
+        const enriched = await ensureSiteContext(siteData)
+        ctx = enriched
+      }
+    }
 
     // Build service description from context — never mention the brand!
     const svcDesc = service_description ||
