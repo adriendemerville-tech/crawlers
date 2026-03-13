@@ -45,34 +45,40 @@ function CompetitorCard({
               {role}
             </Badge>
           </div>
-          <h4 className="font-semibold text-foreground flex items-center gap-2">
+          <h4 className="font-semibold text-foreground">
             {actor.name}
-            {actor.url && (() => {
-              let href = actor.url.trim();
-              // Strip any leading slashes to avoid relative path issues
-              href = href.replace(/^\/+/, '');
-              // Ensure absolute URL
-              if (!href.startsWith('http://') && !href.startsWith('https://')) {
-                href = `https://${href}`;
-              }
-              try {
-                new URL(href); // validate
-                return (
-                  <a 
-                    href={href}
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                );
-              } catch {
-                return null;
-              }
-            })()}
           </h4>
+          {(() => {
+            // Build URL: use actor.url if provided, otherwise try to construct from name
+            let href = (actor.url || '').trim();
+            if (!href) {
+              // Try to extract a domain-like string from the name
+              const domainMatch = actor.name.match(/([a-zA-Z0-9-]+\.[a-z]{2,})/);
+              if (domainMatch) href = domainMatch[0];
+            }
+            if (!href) return null;
+            href = href.replace(/^\/+/, '');
+            if (!href.startsWith('http://') && !href.startsWith('https://')) {
+              href = `https://${href}`;
+            }
+            try {
+              const urlObj = new URL(href);
+              return (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors mt-0.5 underline underline-offset-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {urlObj.hostname.replace('www.', '')}
+                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                </a>
+              );
+            } catch {
+              return null;
+            }
+          })()}
           <p className="text-xs text-primary font-medium mt-1 flex items-center gap-1">
             <Shield className="h-3 w-3" />
             {actor.authority_factor}
