@@ -673,6 +673,12 @@ export function MyTracking() {
     });
     await fetchStats();
 
+    // Re-check if site is now exhausted
+    const nowExhausted = await checkRefreshExhausted(site.id);
+    if (nowExhausted) {
+      setRefreshExhaustedSites(prev => new Set(prev).add(site.id));
+    }
+
     // Update last_audit_at
     await supabase
       .from('tracked_sites')
