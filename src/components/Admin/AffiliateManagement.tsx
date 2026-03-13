@@ -34,6 +34,7 @@ export function AffiliateManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingCode, setEditingCode] = useState<AffiliateCode | null>(null);
 
   const fetchCodes = async () => {
     setLoading(true);
