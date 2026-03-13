@@ -940,7 +940,7 @@ export function ExpertAuditDashboard() {
             setPreSummarizedResult(null);
             summarizeStrategicResult(strategicData, language).then(s => setPreSummarizedResult(s)).catch(() => {});
             trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
-            fetchStoredCorrections(domain);
+            fetchStoredCorrections(recoveryDomain);
             toast({ title: t.strategicComplete, description: t.strategicDesc2 });
             recovered = true;
           }
