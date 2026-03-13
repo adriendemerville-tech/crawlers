@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area, Bar, BarChart, ComposedChart, ReferenceLine } from 'recharts';
 import { SmartConfigurator } from '@/components/ExpertAudit/CorrectiveCodeEditor/SmartConfigurator';
 import { SerpKpiBanner } from '@/components/Profile/SerpKpiBanner';
+import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashboard';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 
 const translations = {
