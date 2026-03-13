@@ -478,6 +478,16 @@ export function UserManagement() {
       </CardContent>
 
       <UserKpiModal user={kpiUser} open={kpiModalOpen} onOpenChange={setKpiModalOpen} />
+      
+      {affiliateUser && (
+        <CreateAffiliateModal
+          open={affiliateModalOpen}
+          onOpenChange={setAffiliateModalOpen}
+          userName={`${affiliateUser.first_name} ${affiliateUser.last_name}`}
+          userEmail={affiliateUser.email}
+          userId={affiliateUser.user_id}
+        />
+      )}
     </Card>
   );
 }
