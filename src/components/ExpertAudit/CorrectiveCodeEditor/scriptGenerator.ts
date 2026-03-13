@@ -453,10 +453,10 @@ function generateFixCode(
 
     case 'fix_h1':
       return {
-        fn: `  // Correction de la balise H1 — Remplacement dynamique White Hat
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Correction de la balise H1 — Remplacement dynamique White Hat
+  // Règle 4: Merge-override
   function fixH1() {
-    if (hasLock('fix_h1')) return;
+    clearLock('fix_h1');
     try {
       var h1s = document.querySelectorAll('h1');
       if (h1s.length === 0) {
