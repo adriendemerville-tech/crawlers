@@ -258,7 +258,7 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<string>
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-pro',
+      model: 'google/gemini-2.5-flash',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
@@ -283,7 +283,7 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<string>
   }
 
   const data = await response.json();
-  trackTokenUsage('diagnose-hallucination', 'google/gemini-2.5-pro', data.usage);
+  trackTokenUsage('diagnose-hallucination', 'google/gemini-2.5-flash', data.usage);
   return data.choices?.[0]?.message?.content || '';
 }
 

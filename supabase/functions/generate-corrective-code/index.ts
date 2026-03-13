@@ -279,7 +279,7 @@ async function adaptSolutionWithAI(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: `Tu es un expert JavaScript spécialisé en correctifs SEO/web. Tu ADAPTES un snippet existant éprouvé aux spécificités d'un site cible. Ne change que les sélecteurs CSS, IDs, noms de domaine et données spécifiques. Conserve la logique intacte. Réponds UNIQUEMENT avec le code JavaScript adapté, sans markdown.` },
           { role: 'user', content: `Adapte ce correctif "${fixLabel}" pour le site "${siteName}" (${siteUrl}):\n\n${existingSnippet}\n\nRemplace les références génériques par les spécificités du site cible. Garde la structure et la logique identiques.` }
@@ -290,7 +290,7 @@ async function adaptSolutionWithAI(
 
     if (!response.ok) return null;
     const data = await response.json();
-    trackTokenUsage('generate-corrective-code', 'google/gemini-3-flash-preview', data.usage);
+    trackTokenUsage('generate-corrective-code', 'google/gemini-2.5-flash', data.usage);
     let content = data.choices?.[0]?.message?.content || null;
     if (content) {
       // Nettoyer les blocs markdown
@@ -470,7 +470,7 @@ RAPPEL: JSON valide uniquement, pas de markdown.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -493,7 +493,7 @@ RAPPEL: JSON valide uniquement, pas de markdown.`;
     }
 
     const aiResponse = await response.json();
-    trackTokenUsage('generate-corrective-code', 'google/gemini-3-flash-preview', aiResponse.usage);
+    trackTokenUsage('generate-corrective-code', 'google/gemini-2.5-flash', aiResponse.usage);
     const content = aiResponse.choices?.[0]?.message?.content;
 
     if (!content) {
@@ -1821,7 +1821,7 @@ IMPORTANT:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -1836,7 +1836,7 @@ IMPORTANT:
     }
 
     const aiResponse = await response.json();
-    trackTokenUsage('generate-corrective-code', 'google/gemini-3-flash-preview', aiResponse.usage);
+    trackTokenUsage('generate-corrective-code', 'google/gemini-2.5-flash', aiResponse.usage);
     const content = aiResponse.choices?.[0]?.message?.content;
     if (!content) {
       console.error('❌ Empty AI response for fix generation');
