@@ -169,6 +169,25 @@ export function StrategicInsights({
         onHallucinationDataReady={onHallucinationData}
       />
 
+      {/* Strategic cache indicator + refresh button */}
+      {strategicCacheInfo && strategicCacheInfo.auditCount > 0 && onForceRefresh && (
+        <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/40 border border-border/50">
+          <p className="text-xs text-muted-foreground">
+            Données stratégiques en cache ({strategicCacheInfo.auditCount}/{strategicCacheInfo.maxBeforeRefresh} audits avant actualisation auto)
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onForceRefresh}
+            className="gap-1.5 text-xs h-7 text-muted-foreground hover:text-foreground"
+            disabled={isReanalyzing}
+          >
+            <RefreshCw className={`h-3 w-3 ${isReanalyzing ? 'animate-spin' : ''}`} />
+            Rafraîchir
+          </Button>
+        </div>
+      )}
+
       {/* ═══════════════════════════════════════════════════════════
           PREMIUM FORMAT — Ordre stratégique 2026
          ═══════════════════════════════════════════════════════════ */}
