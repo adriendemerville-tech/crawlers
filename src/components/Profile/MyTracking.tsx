@@ -1602,12 +1602,7 @@ export function MyTracking() {
               </div>
             )}
 
-            <div className="flex justify-end gap-2">
-              <DialogClose asChild>
-                <Button variant="outline">
-                  {language === 'fr' ? 'Annuler' : 'Cancel'}
-                </Button>
-              </DialogClose>
+            <div className="flex justify-center">
               <Button
                 onClick={handleAddSite}
                 disabled={adding || !newUrl.trim() || validating || (!validationResult.checked)}
