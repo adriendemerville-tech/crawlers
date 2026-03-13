@@ -3,7 +3,8 @@ import { trackTokenUsage } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
 // ══════════════════════════════════════════════════════════════
-// INTERFACES - ARCHITECTE GÉNÉRATIF v3.0 — CLS-ZERO Protocol
+// INTERFACES - ARCHITECTE GÉNÉRATIF v4.0 — CLS-ZERO Protocol
+// + Confidence Score, Impact Estimation, Telemetry, Versioning
 // ══════════════════════════════════════════════════════════════
 
 interface FixConfig {
@@ -13,8 +14,32 @@ interface FixConfig {
   description: string;
   enabled: boolean;
   priority: 'critical' | 'important' | 'optional';
-  data?: Record<string, any>; // Pour passer titre, mots-clés, paragraphes, etc.
-  isPremium?: boolean; // Nécessite paiement
+  data?: Record<string, any>;
+  isPremium?: boolean;
+}
+
+// Score de confiance par fix
+interface FixConfidence {
+  fixId: string;
+  label: string;
+  confidence: number; // 0-100
+  source: 'template' | 'library_exact' | 'library_adapted' | 'ai_generated';
+  estimatedImpact: {
+    seoPoints: [number, number]; // [min, max] estimated impact
+    category: string;
+    description: string;
+  };
+}
+
+// Diff between versions
+interface VersionDiff {
+  previousVersion: string | null;
+  previousDate: string | null;
+  linesAdded: number;
+  linesRemoved: number;
+  fixesAdded: string[];
+  fixesRemoved: string[];
+  hasChanges: boolean;
 }
 
 interface RegistryRecommendation {
