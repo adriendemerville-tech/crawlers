@@ -891,8 +891,8 @@ export function ExpertAuditDashboard() {
       // Site tracking is now manual via TrackSiteButton
 
       // Fetch stored corrections for this domain (community knowledge)
-      const domain = new URL(normalizedUrl).hostname;
-      fetchStoredCorrections(domain);
+      const auditDomain = new URL(normalizedUrl).hostname;
+      fetchStoredCorrections(auditDomain);
 
       toast({
         title: hallucinationCorrections ? 'Analyse corrigée terminée !' : t.strategicComplete,
