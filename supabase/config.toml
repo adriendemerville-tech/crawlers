@@ -81,3 +81,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.check-llm-depth]
     verify_jwt = false
+  [functions.auto-measure-predictions]
+    verify_jwt = false
