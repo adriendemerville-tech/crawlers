@@ -70,17 +70,17 @@ const translations = {
 function depthColor(depth: number | null): string {
   if (depth === null) return 'text-muted-foreground';
   if (depth <= 1) return 'text-green-600 dark:text-green-400';
-  if (depth <= 2) return 'text-emerald-600 dark:text-emerald-400';
-  if (depth <= 3) return 'text-yellow-600 dark:text-yellow-400';
-  if (depth <= 5) return 'text-orange-600 dark:text-orange-400';
+  if (depth <= 3) return 'text-emerald-600 dark:text-emerald-400';
+  if (depth <= 5) return 'text-yellow-600 dark:text-yellow-400';
+  if (depth <= 8) return 'text-orange-600 dark:text-orange-400';
   return 'text-red-600 dark:text-red-400';
 }
 
 function depthLabel(depth: number, lang: string): string {
   if (depth <= 1) return lang === 'fr' ? 'Excellent' : lang === 'es' ? 'Excelente' : 'Excellent';
-  if (depth <= 2) return lang === 'fr' ? 'Bon' : lang === 'es' ? 'Bueno' : 'Good';
-  if (depth <= 3) return lang === 'fr' ? 'Moyen' : lang === 'es' ? 'Medio' : 'Average';
-  if (depth <= 5) return lang === 'fr' ? 'Faible' : lang === 'es' ? 'Débil' : 'Weak';
+  if (depth <= 3) return lang === 'fr' ? 'Bon' : lang === 'es' ? 'Bueno' : 'Good';
+  if (depth <= 5) return lang === 'fr' ? 'Moyen' : lang === 'es' ? 'Medio' : 'Average';
+  if (depth <= 8) return lang === 'fr' ? 'Faible' : lang === 'es' ? 'Débil' : 'Weak';
   return lang === 'fr' ? 'Invisible' : lang === 'es' ? 'Invisible' : 'Invisible';
 }
 

@@ -11,12 +11,12 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
  * Max iterations = 5 (if not cited after 5, score = 5+).
  */
 
-const MAX_ITERATIONS = 5
+const MAX_ITERATIONS = 10
 
 interface DepthResult {
   llm: string
   model: string
-  iterations: number // 1-5 or 6 if never found
+  iterations: number // 1-10 or 11 if never found
   found: boolean
   conversation_summary: string
 }
@@ -68,12 +68,22 @@ async function runDepthConversation(
         `Et côté rapport qualité-prix, lequel te semble le plus intéressant ? Des alternatives moins connues ?`,
         `J'aimerais une solution vraiment spécialisée. Quels sont les acteurs de niche dans ce domaine ?`,
         `Merci. Peux-tu me faire un récapitulatif complet de toutes les solutions que tu connais, y compris les plus petites ?`,
+        `Y a-t-il des solutions émergentes ou des startups récentes dans ce domaine ?`,
+        `Si je cherche quelque chose de très technique et pointu, quelles options existent ?`,
+        `Peux-tu creuser encore plus ? Des outils ou services que même les experts ne connaissent pas forcément ?`,
+        `Et en termes d'innovation, quels acteurs se démarquent vraiment ?`,
+        `Dernière question : donne-moi absolument toutes les marques que tu connais dans ce secteur, même les plus confidentielles.`,
       ]
     : [
         `Can you give me more details about these options? Are there other players you recommend?`,
         `In terms of value for money, which one seems most interesting? Any lesser-known alternatives?`,
         `I'd like a really specialized solution. What are the niche players in this space?`,
         `Thanks. Can you give me a complete summary of all the solutions you know, including the smaller ones?`,
+        `Are there any emerging solutions or recent startups in this space?`,
+        `If I'm looking for something very technical and specialized, what options exist?`,
+        `Can you dig even deeper? Tools or services that even experts might not know about?`,
+        `In terms of innovation, which players really stand out?`,
+        `Last question: give me absolutely every brand you know in this sector, even the most obscure ones.`,
       ]
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
