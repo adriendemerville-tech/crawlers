@@ -1477,7 +1477,18 @@ export function MyTracking() {
                     isRefreshing={refreshingSerp}
                   />
 
-                  {/* LLM Visibility Dashboard */}
+                  {/* IAS — Indice d'Alignement Stratégique */}
+                  {currentSite && user && gscConnected && (
+                    <IASCard
+                      trackedSiteId={currentSite.id}
+                      userId={user.id}
+                      domain={currentSite.domain}
+                      isPremium={isAgencyPro || isAdmin}
+                      onUpgrade={() => navigate('/tarifs')}
+                    />
+                  )}
+
+                   {/* LLM Visibility Dashboard */}
                    {currentSite && user && (
                     <LLMVisibilityDashboard
                       trackedSiteId={currentSite.id}
