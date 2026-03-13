@@ -100,7 +100,7 @@ const translations = {
   },
   es: {
     title: 'Consultas objetivo',
-    subtitle: 'Consultas estratégicas para maximizar tus recomendaciones LLM',
+    subtitle: 'Consultas estratégicas para maximizar tus citas LLM. Apúntalas para dominar la IA.',
     copied: '¡Copiado!',
     high: 'Prioritario',
     medium: 'Importante',
