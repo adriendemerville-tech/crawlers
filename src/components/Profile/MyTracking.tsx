@@ -26,6 +26,7 @@ import { SerpKpiBanner } from '@/components/Profile/SerpKpiBanner';
 import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashboard';
 import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
+import { IASCard } from '@/components/Profile/IASCard';
 
 const translations = {
   fr: {
