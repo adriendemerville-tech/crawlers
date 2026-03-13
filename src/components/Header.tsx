@@ -106,6 +106,7 @@ export function Header() {
   // Check if we're on specific pages
   const isAuditExpertPage = location.pathname === '/audit-expert';
   const isProfilePage = location.pathname === '/console' || location.pathname === '/profil';
+  const isHomePage = location.pathname === '/';
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -264,14 +265,14 @@ export function Header() {
                 <span className="text-sm">{lexiqueLabels[language]}</span>
               </Button>
             </a>
-          ) : (
+          ) : isHomePage ? (
             <Link to="/lexique">
               <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                 <Book className="h-4 w-4" />
                 <span className="text-sm">{lexiqueLabels[language]}</span>
               </Button>
             </Link>
-          )}
+          ) : null}
           {isProfilePage ? null : (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) ? (
             isAuditExpertPage ? (
               <a href="/console" target="_blank" rel="noopener noreferrer">
@@ -290,22 +291,22 @@ export function Header() {
             )
           ) : null}
           {isAuditExpertPage ? (
-            <>
-              <a href="/site-crawl" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  <Globe className="h-4 w-4" />
-                  <span className="text-sm">Crawl</span>
-                </Button>
-              </a>
-            </>
+            <a href="/site-crawl" target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                <Globe className="h-4 w-4" />
+                <span className="text-sm">Crawl</span>
+              </Button>
+            </a>
           ) : (
             <>
-              <Link to="/observatoire">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  <Radar className="h-4 w-4" />
-                  <span className="text-sm">{language === 'fr' ? 'Observatoire' : language === 'es' ? 'Observatorio' : 'Observatory'}</span>
-                </Button>
-              </Link>
+              {isHomePage && (
+                <Link to="/observatoire">
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                    <Radar className="h-4 w-4" />
+                    <span className="text-sm">{language === 'fr' ? 'Observatoire' : language === 'es' ? 'Observatorio' : 'Observatory'}</span>
+                  </Button>
+                </Link>
+              )}
               <Link to="/site-crawl">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                   <Globe className="h-4 w-4" />
