@@ -533,10 +533,11 @@ Deno.serve(async (req) => {
       data: {
         brand,
         domain,
-        avg_depth: avgDepth,
-        results: successResults,
+        avg_depth: allEmpty ? null : avgDepth,
+        results: allEmpty ? [] : successResults,
         prompt_strategy: prompts.length + ' phases',
         measured_at: new Date().toISOString(),
+        ...(allEmpty ? { error_code: 'credits_exhausted' } : {}),
       },
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
