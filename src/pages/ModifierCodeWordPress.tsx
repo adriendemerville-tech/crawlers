@@ -487,6 +487,50 @@ const ModifierCodeWordPress = () => {
           </div>
         </section>
 
+        {/* ═══════════════════ HERO GTM ═══════════════════ */}
+        <section className="py-16 md:py-24 bg-gradient-to-br from-amber-500/5 via-background to-primary/5 border-y border-border">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              <div className="flex-1 space-y-5">
+                <Badge variant="outline" className="gap-1.5 border-amber-400/50 text-amber-600 dark:text-amber-400">
+                  <Puzzle className="h-3.5 w-3.5" />
+                  Google Tag Manager
+                </Badge>
+                <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+                  {language === 'es'
+                    ? 'Integración GTM: inyecte su código sin tocar su CMS'
+                    : language === 'en'
+                    ? 'GTM Integration: inject your code without touching your CMS'
+                    : 'Intégration GTM : injectez votre code sans toucher à votre CMS'}
+                </h2>
+                <p className="text-muted-foreground text-base leading-relaxed">
+                  {language === 'es'
+                    ? 'Un snippet ligero (~2 Ko), asíncrono y sandboxeado. Compatible con todos los CMS: Shopify, Webflow, Wix, Squarespace… Sin dependencias, sin conflictos, desconexión instantánea.'
+                    : language === 'en'
+                    ? 'A lightweight snippet (~2 KB), asynchronous and sandboxed. Compatible with any CMS: Shopify, Webflow, Wix, Squarespace… No dependencies, no conflicts, instant disconnect.'
+                    : 'Un snippet léger (~2 Ko), asynchrone et sandboxé. Compatible tous CMS : Shopify, Webflow, Wix, Squarespace… Sans dépendance, sans conflit, débranchement instantané.'}
+                </p>
+                <div className="flex flex-wrap gap-3 pt-1">
+                  <Button size="lg" className="gap-2" asChild>
+                    <Link to="/integration-gtm">
+                      <Code className="h-4 w-4" />
+                      {language === 'es' ? 'Descubrir la integración GTM' : language === 'en' ? 'Discover GTM Integration' : 'Découvrir l\'intégration GTM'}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+              <div className="shrink-0 w-48 h-48 md:w-56 md:h-56 rounded-2xl bg-gradient-to-br from-amber-400/20 to-primary/20 border border-amber-400/30 flex items-center justify-center">
+                <div className="text-center space-y-3">
+                  <Code className="h-12 w-12 mx-auto text-amber-500" />
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">GTM · Script · API</p>
+                  <p className="text-2xl font-bold text-foreground">~2 Ko</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ═══════════════════ CTA FINAL ═══════════════════ */}
         <section className="py-20 bg-gradient-to-b from-background to-slate-950">
           <div className="container mx-auto px-4 max-w-3xl text-center space-y-6">
