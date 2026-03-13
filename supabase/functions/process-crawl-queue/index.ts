@@ -697,7 +697,8 @@ Deno.serve(async (req) => {
 
       const availableSlots = MAX_GLOBAL_CONCURRENT - globalPagesProcessed;
       const batchStart = (alreadyProcessed === 0 && firstPageResult) ? 1 : 0;
-      const batchSize = Math.min(remaining.length - batchStart, availableSlots - (firstPageResult ? 1 : 0), 20);
+      // Reduced batch size from 20 to 8 to avoid CPU timeout kills
+      const batchSize = Math.min(remaining.length - batchStart, availableSlots - (firstPageResult ? 1 : 0), 8);
       const batch = remaining.slice(batchStart, batchStart + batchSize);
 
       console.log(`[Worker] Job ${job.id}: processing ${firstPageResult ? '1+' : ''}${batch.length} pages (${alreadyProcessed}/${job.total_count})${useBrowserless ? ' [SPA mode]' : ''}`);
@@ -713,9 +714,10 @@ Deno.serve(async (req) => {
         validResults.unshift(firstPageResult);
       }
 
+      // Use upsert with ON CONFLICT to prevent duplicates on CPU timeout retries
       if (validResults.length > 0) {
         const rows = validResults.map(p => ({ crawl_id: job.crawl_id, ...p }));
-        await supabase.from('crawl_pages').insert(rows);
+        await supabase.from('crawl_pages').upsert(rows, { onConflict: 'crawl_id,url', ignoreDuplicates: true });
       }
 
       const pagesInThisCycle = (firstPageResult ? 1 : 0) + batch.length;
