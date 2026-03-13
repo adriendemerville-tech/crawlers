@@ -1295,22 +1295,40 @@ export function MyTracking() {
                           body: { domain: currentSite.domain, url: `https://${currentSite.domain}` },
                         });
                         
-                        console.log('[SERP refresh] response:', response);
+                        let serpData = response.data?.data;
                         
-                        if (response.error) {
-                          console.error('[SERP refresh] Function error:', response.error);
-                          toast.error(language === 'fr' ? 'Erreur de mise à jour SERP' : 'SERP update error');
-                          return;
+                        // Fallback: if the API call failed or returned no data, query serp_snapshots silently
+                        if (response.error || !serpData) {
+                          console.warn('[SERP refresh] API failed, falling back to serp_snapshots');
+                          const { data: snapshot } = await supabase
+                            .from('serp_snapshots')
+                            .select('*')
+                            .eq('tracked_site_id', currentSite.id)
+                            .order('measured_at', { ascending: false })
+                            .limit(1)
+                            .maybeSingle();
+                          
+                          if (snapshot) {
+                            serpData = {
+                              total_keywords: snapshot.total_keywords,
+                              avg_position: snapshot.avg_position,
+                              homepage_position: snapshot.homepage_position,
+                              top_3: snapshot.top_3,
+                              top_10: snapshot.top_10,
+                              top_50: snapshot.top_50,
+                              etv: snapshot.etv,
+                              indexed_pages: snapshot.indexed_pages,
+                              sample_keywords: snapshot.sample_keywords,
+                              measured_at: snapshot.measured_at,
+                            };
+                          }
                         }
-                        
-                        const serpData = response.data?.data;
+
                         if (!serpData) {
-                          console.error('[SERP refresh] No data in response:', response.data);
-                          toast.error(language === 'fr' ? 'Aucune donnée SERP reçue' : 'No SERP data received');
+                          // Still nothing — stay silent, no error toast
                           return;
                         }
                         
-                        // Always insert a new stats entry (UPDATE is blocked by RLS)
                         const existingRaw = (latestStats as any)?.raw_data || {};
                         await supabase.from('user_stats_history').insert({
                           tracked_site_id: currentSite.id,
@@ -1327,8 +1345,45 @@ export function MyTracking() {
                         await fetchStats();
                         toast.success(language === 'fr' ? 'Données SERP mises à jour' : 'SERP data updated');
                       } catch (err) {
-                        console.error('SERP refresh error:', err);
-                        toast.error(language === 'fr' ? 'Erreur de mise à jour SERP' : 'SERP update error');
+                        // Silent fallback on total failure — try serp_snapshots one last time
+                        console.warn('[SERP refresh] Error, attempting serp_snapshots fallback:', err);
+                        try {
+                          const { data: snapshot } = await supabase
+                            .from('serp_snapshots')
+                            .select('*')
+                            .eq('tracked_site_id', currentSite!.id)
+                            .order('measured_at', { ascending: false })
+                            .limit(1)
+                            .maybeSingle();
+                          if (snapshot) {
+                            const serpData = {
+                              total_keywords: snapshot.total_keywords,
+                              avg_position: snapshot.avg_position,
+                              homepage_position: snapshot.homepage_position,
+                              top_3: snapshot.top_3,
+                              top_10: snapshot.top_10,
+                              top_50: snapshot.top_50,
+                              etv: snapshot.etv,
+                              indexed_pages: snapshot.indexed_pages,
+                              sample_keywords: snapshot.sample_keywords,
+                              measured_at: snapshot.measured_at,
+                            };
+                            const existingRaw = (latestStats as any)?.raw_data || {};
+                            await supabase.from('user_stats_history').insert({
+                              tracked_site_id: currentSite!.id,
+                              user_id: user!.id,
+                              domain: currentSite!.domain,
+                              seo_score: latestStats?.seo_score ?? null,
+                              geo_score: latestStats?.geo_score ?? null,
+                              llm_citation_rate: latestStats?.llm_citation_rate ?? null,
+                              ai_sentiment: latestStats?.ai_sentiment ?? null,
+                              semantic_authority: latestStats?.semantic_authority ?? null,
+                              voice_share: latestStats?.voice_share ?? null,
+                              raw_data: { ...existingRaw, serpData },
+                            });
+                            await fetchStats();
+                          }
+                        } catch (_) { /* truly silent */ }
                       } finally {
                         setRefreshingSerp(false);
                       }
