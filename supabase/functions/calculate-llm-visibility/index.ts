@@ -107,10 +107,11 @@ async function queryWithIterations(
       // Prepare follow-up for next iteration
       messages.push({ role: 'assistant', content })
 
+      // Follow-up prompts must also stay brand-agnostic to avoid bias
       if (iteration === 1) {
         messages.push({ role: 'user', content: "Y a-t-il d'autres alternatives ou options que tu n'as pas mentionnées ?" })
       } else if (iteration === 2) {
-        messages.push({ role: 'user', content: `Connais-tu spécifiquement ${site.site_name || site.domain} ? Peux-tu me donner ton avis ?` })
+        messages.push({ role: 'user', content: "Peux-tu élargir ta liste ? Y a-t-il des acteurs plus petits ou spécialisés que tu aurais oubliés ?" })
       }
     } catch (err) {
       console.error(`[llm-visibility] ${model} iteration ${iteration} error:`, err)
