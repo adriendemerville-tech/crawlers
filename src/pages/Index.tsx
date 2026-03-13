@@ -114,16 +114,7 @@ const Index = () => {
     }
   }, [authUser, isSubscribed, isAdminUser, navTo]);
 
-  if (isRedirecting) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background animate-fade-in">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-muted-foreground text-sm">Chargement de votre console…</p>
-        </div>
-      </div>
-    );
-  }
+
 
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
   useStructuredData();
