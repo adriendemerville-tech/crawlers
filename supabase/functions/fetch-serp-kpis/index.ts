@@ -202,6 +202,7 @@ Deno.serve(async (req) => {
           top_10: serpData.top_10,
           top_50: serpData.top_50,
           etv: serpData.etv,
+          indexed_pages: serpData.indexed_pages,
           sample_keywords: serpData.sample_keywords,
           measured_at: serpData.measured_at,
         })
