@@ -275,10 +275,16 @@ export function UserManagement() {
                   filteredUsers.map((user) => (
                     <TableRow key={user.id} className="group cursor-pointer hover:bg-muted/50" onClick={() => { setKpiUser(user); setKpiModalOpen(true); }}>
                       <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           {user.first_name} {user.last_name}
                           {adminUserIds.has(user.user_id) && (
                             <Badge variant="outline" className="text-xs border-primary text-primary">Admin</Badge>
+                          )}
+                          {user.affiliate_code_used && (
+                            <Badge variant="outline" className="text-xs border-violet-500 text-violet-600 dark:text-violet-400 gap-1">
+                              <Link2 className="h-2.5 w-2.5" />
+                              {user.affiliate_code_used}
+                            </Badge>
                           )}
                         </div>
                       </TableCell>
