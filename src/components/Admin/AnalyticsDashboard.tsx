@@ -70,6 +70,8 @@ interface TokenUsageStats {
   openrouterCalls: number;
   browserlessCalls: number;
   firecrawlCalls: number;
+  flyPlaywrightCalls: number;
+  flyEstimatedCost: number;
   byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
 }
 
@@ -168,6 +170,8 @@ export function AnalyticsDashboard() {
     openrouterCalls: 0,
     browserlessCalls: 0,
     firecrawlCalls: 0,
+    flyPlaywrightCalls: 0,
+    flyEstimatedCost: 0,
     byApiService: {},
   });
 
@@ -319,6 +323,7 @@ export function AnalyticsDashboard() {
       let openrouterCalls = 0;
       let browserlessCalls = 0;
       let firecrawlCalls = 0;
+      let flyPlaywrightCalls = 0;
       
       paidApiEvents.forEach(e => {
         const data = e.event_data as Record<string, unknown> | null;
@@ -333,8 +338,13 @@ export function AnalyticsDashboard() {
           if (service === 'openrouter') openrouterCalls++;
           if (service === 'browserless') browserlessCalls++;
           if (service === 'firecrawl') firecrawlCalls++;
+          if (service === 'fly-playwright') flyPlaywrightCalls++;
         }
       });
+
+      // Fly.io cost: shared-cpu-2x 1GB = $0.00000246/sec, ~40s per render
+      const FLY_COST_PER_RENDER_EUR = 0.00000246 * 40 * 0.92; // USD→EUR
+      const flyEstimatedCost = flyPlaywrightCalls * FLY_COST_PER_RENDER_EUR;
 
       setTokenUsage({
         totalTokens,
@@ -349,6 +359,8 @@ export function AnalyticsDashboard() {
         openrouterCalls,
         browserlessCalls,
         firecrawlCalls,
+        flyPlaywrightCalls,
+        flyEstimatedCost,
         byApiService,
       });
 
@@ -379,6 +391,7 @@ export function AnalyticsDashboard() {
             dataforseo: 0.01,
             browserless: 0.008,
             firecrawl: 0.005,
+            'fly-playwright': 0.0001,
             openrouter: 0, // already counted in tokens
           };
           paidApiEvents.forEach(e => {
@@ -756,6 +769,17 @@ export function AnalyticsDashboard() {
               </p>
               <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
                 {tokenUsage.firecrawlCalls.toLocaleString('fr-FR')}
+              </p>
+            </div>
+            <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
+                <Cpu className="h-3 w-3" /> Fly.io Playwright
+              </p>
+              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                {tokenUsage.flyPlaywrightCalls.toLocaleString('fr-FR')}
+              </p>
+              <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
+                ~{tokenUsage.flyEstimatedCost.toFixed(6)}€ ({(tokenUsage.flyEstimatedCost * 100).toFixed(4)}c)
               </p>
             </div>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
