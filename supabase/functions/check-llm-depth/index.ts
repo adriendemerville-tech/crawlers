@@ -392,6 +392,7 @@ async function runDepthConversation(
       )
 
       if (detection.found) {
+        onProgress?.({ type: 'found', model: modelDef.name, iteration: i + 1, found: true, mentioned_as: detection.mentionedAs || brand })
         return {
           llm: modelDef.name,
           model: modelDef.model,
