@@ -103,6 +103,48 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_codes: {
+        Row: {
+          assigned_to_user_id: string | null
+          code: string
+          created_at: string
+          created_by: string
+          current_activations: number
+          discount_percent: number
+          duration_months: number
+          id: string
+          is_active: boolean
+          max_activations: number
+          updated_at: string
+        }
+        Insert: {
+          assigned_to_user_id?: string | null
+          code: string
+          created_at?: string
+          created_by: string
+          current_activations?: number
+          discount_percent?: number
+          duration_months?: number
+          id?: string
+          is_active?: boolean
+          max_activations?: number
+          updated_at?: string
+        }
+        Update: {
+          assigned_to_user_id?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string
+          current_activations?: number
+          discount_percent?: number
+          duration_months?: number
+          id?: string
+          is_active?: boolean
+          max_activations?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agency_client_sites: {
         Row: {
           client_id: string
@@ -1410,6 +1452,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          affiliate_code_used: string | null
           agency_brand_name: string | null
           agency_contact_email: string | null
           agency_contact_first_name: string | null
@@ -1444,6 +1487,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          affiliate_code_used?: string | null
           agency_brand_name?: string | null
           agency_contact_email?: string | null
           agency_contact_first_name?: string | null
@@ -1478,6 +1522,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          affiliate_code_used?: string | null
           agency_brand_name?: string | null
           agency_contact_email?: string | null
           agency_contact_first_name?: string | null
