@@ -11,7 +11,7 @@ import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
  * Max iterations = 5 (if not cited after 5, score = 5+).
  */
 
-const MAX_ITERATIONS = 5
+const MAX_ITERATIONS = 10
 
 interface DepthResult {
   llm: string
