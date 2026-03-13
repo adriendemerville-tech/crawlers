@@ -1489,6 +1489,7 @@ export type Database = {
           predicted_increase_pct: number
           predicted_traffic: number
           prediction_details: Json | null
+          tracked_site_id: string | null
         }
         Insert: {
           audit_id: string
@@ -1501,6 +1502,7 @@ export type Database = {
           predicted_increase_pct?: number
           predicted_traffic?: number
           prediction_details?: Json | null
+          tracked_site_id?: string | null
         }
         Update: {
           audit_id?: string
@@ -1513,6 +1515,7 @@ export type Database = {
           predicted_increase_pct?: number
           predicted_traffic?: number
           prediction_details?: Json | null
+          tracked_site_id?: string | null
         }
         Relationships: [
           {
@@ -1520,6 +1523,13 @@ export type Database = {
             columns: ["audit_id"]
             isOneToOne: false
             referencedRelation: "pdf_audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "predictions_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
             referencedColumns: ["id"]
           },
         ]
