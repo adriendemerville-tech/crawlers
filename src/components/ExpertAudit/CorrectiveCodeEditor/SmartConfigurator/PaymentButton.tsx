@@ -279,9 +279,15 @@ ${shareUrl}
           </div>
 
           <div className="text-xs text-muted-foreground text-center">
-            <span>
-              Solde : {balance} crédit{balance > 1 ? 's' : ''}
-            </span>
+            {isUnlimited ? (
+              <span className="flex items-center justify-center gap-1 text-amber-500 font-medium">
+                <InfinityIcon className="w-4 h-4" /> Illimité
+              </span>
+            ) : (
+              <span>
+                Solde : {balance} crédit{balance > 1 ? 's' : ''}
+              </span>
+            )}
           </div>
         </div>
 
