@@ -343,6 +343,48 @@ export type Database = {
         }
         Relationships: []
       }
+      async_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          function_name: string
+          id: string
+          input_payload: Json
+          progress: number | null
+          result_data: Json | null
+          started_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          function_name: string
+          id?: string
+          input_payload?: Json
+          progress?: number | null
+          result_data?: Json | null
+          started_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          input_payload?: Json
+          progress?: number | null
+          result_data?: Json | null
+          started_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_cache: {
         Row: {
           cache_key: string

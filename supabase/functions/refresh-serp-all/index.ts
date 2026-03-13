@@ -397,6 +397,19 @@ Deno.serve(async (req) => {
 
     console.log(`[refresh-serp-all] Batch done: ${refreshed}/${sites.length} refreshed, ${errors} errors. SERP:${stats.serp} GSC:${stats.gsc} BL:${stats.backlinks} GSC_expired:${stats.gsc_expired}${nextCursor ? ` | next_cursor: ${nextCursor}` : ' | COMPLETE'}`)
 
+    // ═══ SELF-RE-INVOCATION: continue processing remaining sites ═══
+    if (nextCursor) {
+      console.log(`[refresh-serp-all] 🔄 Self-invoking for next batch (cursor: ${nextCursor})`)
+      fetch(`${supabaseUrl}/functions/v1/refresh-serp-all`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cursor: nextCursor }),
+      }).catch(err => console.error('[refresh-serp-all] Self-invoke failed:', err))
+    }
+
     return new Response(JSON.stringify({ refreshed, errors, total: sites.length, stats, next_cursor: nextCursor }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
