@@ -119,6 +119,11 @@ function FooterComponent() {
       description: t3(language, 'Abonnement illimité pour agences SEO', 'Unlimited subscription for SEO agencies', 'Suscripción ilimitada para agencias SEO'),
       gold: true
     },
+    { 
+      label: t3(language, 'Observatoire', 'Observatory', 'Observatorio'),
+      href: '/observatoire',
+      description: t3(language, 'Tendances SEO/GEO par secteur', 'SEO/GEO trends by sector', 'Tendencias SEO/GEO por sector')
+    },
   ];
 
   const technicalLinks = [

@@ -307,14 +307,6 @@ export function Header() {
             </>
           ) : (
             <>
-              {isHomePage && (
-                <Link to="/observatoire">
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                    <Radar className="h-4 w-4" />
-                    <span className="text-sm">{language === 'fr' ? 'Observatoire' : language === 'es' ? 'Observatorio' : 'Observatory'}</span>
-                  </Button>
-                </Link>
-              )}
               <Link to="/site-crawl">
                 <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                   <Globe className="h-4 w-4" />
