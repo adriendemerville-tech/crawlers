@@ -1784,6 +1784,65 @@ export type Database = {
         }
         Relationships: []
       }
+      serp_snapshots: {
+        Row: {
+          avg_position: number | null
+          created_at: string
+          domain: string
+          etv: number
+          homepage_position: number | null
+          id: string
+          measured_at: string
+          sample_keywords: Json
+          top_10: number
+          top_3: number
+          top_50: number
+          total_keywords: number
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          avg_position?: number | null
+          created_at?: string
+          domain: string
+          etv?: number
+          homepage_position?: number | null
+          id?: string
+          measured_at?: string
+          sample_keywords?: Json
+          top_10?: number
+          top_3?: number
+          top_50?: number
+          total_keywords?: number
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          avg_position?: number | null
+          created_at?: string
+          domain?: string
+          etv?: number
+          homepage_position?: number | null
+          id?: string
+          measured_at?: string
+          sample_keywords?: Json
+          top_10?: number
+          top_3?: number
+          top_50?: number
+          total_keywords?: number
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "serp_snapshots_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shared_link_clicks: {
         Row: {
           created_at: string
