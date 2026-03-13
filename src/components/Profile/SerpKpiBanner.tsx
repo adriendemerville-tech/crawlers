@@ -19,6 +19,7 @@ interface SerpData {
 
 interface SerpKpiBannerProps {
   data: SerpData | null | undefined;
+  previousIndexedPages?: number | null;
   onRefresh?: () => void;
   isRefreshing?: boolean;
 }
