@@ -240,8 +240,25 @@ export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefresh
               <FileText className="h-3 w-3" />
               {t.indexedPages}
             </div>
-            <p className="text-lg font-semibold">
+            <p className="text-lg font-semibold flex items-center gap-1">
               {data.indexed_pages != null ? data.indexed_pages.toLocaleString() : '—'}
+              {indexedPagesTrend && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center">
+                      {indexedPagesTrend.direction === 'up' ? (
+                        <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
+                      )}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {indexedPagesTrend.direction === 'up' ? '+' : ''}{indexedPagesTrend.pct.toFixed(1)}%
+                    {previousIndexedPages != null && ` (${language === 'fr' ? 'avant' : 'prev'}: ${previousIndexedPages.toLocaleString()})`}
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </p>
           </div>
         </div>
