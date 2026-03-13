@@ -901,7 +901,7 @@ export function AnalyticsDashboard() {
                           </span>
                         </div>
                         <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
-                          {data.estimatedCost.toFixed(4)}€
+                          {data.estimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
                         </span>
                       </div>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
