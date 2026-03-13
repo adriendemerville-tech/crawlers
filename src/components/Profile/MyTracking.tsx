@@ -394,16 +394,18 @@ export function MyTracking() {
     try {
       const url = `https://${site.domain}`;
       
-      // Run check-geo, check-llm and check-pagespeed in parallel
-      const [geoRes, llmRes, psiRes] = await Promise.allSettled([
+      // Run check-geo, check-llm, check-pagespeed and check-crawlers in parallel
+      const [geoRes, llmRes, psiRes, crawlersRes] = await Promise.allSettled([
         supabase.functions.invoke('check-geo', { body: { url, lang: language } }),
         supabase.functions.invoke('check-llm', { body: { url, lang: language } }),
         supabase.functions.invoke('check-pagespeed', { body: { url, lang: language } }),
+        supabase.functions.invoke('check-crawlers', { body: { url } }),
       ]);
 
       const geoData = geoRes.status === 'fulfilled' ? geoRes.value.data : null;
       const llmData = llmRes.status === 'fulfilled' ? llmRes.value.data : null;
       const psiData = psiRes.status === 'fulfilled' ? psiRes.value.data : null;
+      const crawlersData = crawlersRes.status === 'fulfilled' ? crawlersRes.value.data : null;
 
       const geoScore = geoData?.data?.totalScore ?? geoData?.data?.overallScore ?? 0;
       const llmCitationRate = llmData?.data?.citationRate;
@@ -411,8 +413,14 @@ export function MyTracking() {
         ? (llmCitationRate.cited / (llmCitationRate.total || 1)) * 100 
         : 0;
       const sentiment = llmData?.data?.overallSentiment || 'neutral';
-      const seoScore = llmData?.data?.overallScore ?? null;
+      const llmOverallScore = llmData?.data?.overallScore ?? null;
       
+      // Compute SEO crawlability score from check-crawlers (% of AI bots allowed)
+      const botResults = crawlersData?.data?.results || crawlersData?.results || [];
+      const seoScore = botResults.length > 0
+        ? Math.round((botResults.filter((b: any) => b.status === 'allowed').length / botResults.length) * 100)
+        : null;
+
       // Extract PageSpeed performance score (0-100)
       const performanceScore = psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
 
@@ -421,7 +429,7 @@ export function MyTracking() {
         user_id: user.id,
         tracked_site_id: site.id,
         domain: site.domain,
-        seo_score: seoScore ? Math.round(seoScore) : null,
+        seo_score: seoScore,
         geo_score: Math.round(geoScore),
         llm_citation_rate: citationRate,
         ai_sentiment: sentiment,
@@ -430,7 +438,9 @@ export function MyTracking() {
           geoData: geoData?.data, 
           llmData: llmData?.data, 
           psiData: psiData?.data,
+          crawlersData: crawlersData?.data || crawlersData,
           performanceScore,
+          llmOverallScore,
         },
       });
 
