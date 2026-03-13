@@ -174,6 +174,7 @@ export function BrandingTab() {
   const [contactEmail, setContactEmail] = useState(profile?.agency_contact_email || '');
   const [reportHeaderText, setReportHeaderText] = useState(profile?.agency_report_header_text || '');
   const [reportFooterText, setReportFooterText] = useState(profile?.agency_report_footer_text || '');
+  const [reportFont, setReportFont] = useState((profile as any)?.agency_report_font || '');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
