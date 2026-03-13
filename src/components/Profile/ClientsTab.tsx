@@ -296,7 +296,7 @@ export function ClientsTab() {
             </CardTitle>
             <CardDescription className="mt-1">{t.description}</CardDescription>
           </div>
-          <Button onClick={() => setDialogOpen(true)} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white">
+          <Button onClick={() => { setEditingClientId(null); setForm({ first_name: '', last_name: '', company: '', role: '', email: '' }); setDialogOpen(true); }} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white">
             <UserPlus className="h-4 w-4" />
             {t.newClient}
           </Button>
