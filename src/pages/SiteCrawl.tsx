@@ -633,6 +633,8 @@ export default function SiteCrawl() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) { navigate('/auth'); return; }
+    // #15: persist URL for next session
+    try { localStorage.setItem('crawl_last_url', url); } catch {}
     
     // Fair-use limit check for subscribed users
     if (isUnlimited && (crawlPagesThisMonth >= FAIR_USE_LIMIT || crawlPagesThisMonth + maxPages > FAIR_USE_LIMIT)) {
