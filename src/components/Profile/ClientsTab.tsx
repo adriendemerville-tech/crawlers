@@ -125,6 +125,7 @@ export function ClientsTab() {
   const [shakingClient, setShakingClient] = useState<string | null>(null);
 
   // Form state
+  const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [form, setForm] = useState({ first_name: '', last_name: '', company: '', role: '', email: '' });
 
   const fetchClients = async () => {
