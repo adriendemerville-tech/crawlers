@@ -626,10 +626,10 @@ function generateFixCode(
     case 'fix_gtm':
       const gtmId = fix.data?.gtmId || 'GTM-XXXXXXX';
       return {
-        fn: `  // Intégration Google Tag Manager
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Intégration Google Tag Manager
+  // Règle 4: Merge-override
   function injectGTM() {
-    if (hasLock('fix_gtm')) return;
+    clearLock('fix_gtm');
     try {
       if (window.google_tag_manager) return;
       (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
