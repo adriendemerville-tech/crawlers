@@ -258,21 +258,14 @@ export function Header() {
               </Button>
             </Link>
           )}
-          {isAuditExpertPage ? (
-            <a href="/lexique" target="_blank" rel="noopener noreferrer">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                <Book className="h-4 w-4" />
-                <span className="text-sm">{lexiqueLabels[language]}</span>
-              </Button>
-            </a>
-          ) : isHomePage ? (
+          {!isAuditExpertPage && isHomePage && (
             <Link to="/lexique">
               <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                 <Book className="h-4 w-4" />
                 <span className="text-sm">{lexiqueLabels[language]}</span>
               </Button>
             </Link>
-          ) : null}
+          )}
           {isProfilePage ? null : (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) ? (
             isAuditExpertPage ? (
               <a href="/console" target="_blank" rel="noopener noreferrer">
@@ -291,12 +284,20 @@ export function Header() {
             )
           ) : null}
           {isAuditExpertPage ? (
-            <a href="/site-crawl" target="_blank" rel="noopener noreferrer">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                <Globe className="h-4 w-4" />
-                <span className="text-sm">Crawl</span>
-              </Button>
-            </a>
+            <>
+              <a href="/site-crawl" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <Globe className="h-4 w-4" />
+                  <span className="text-sm">Crawl</span>
+                </Button>
+              </a>
+              <a href="/integration-gtm" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <Puzzle className="h-4 w-4" />
+                  <span className="text-sm">GTM</span>
+                </Button>
+              </a>
+            </>
           ) : (
             <>
               {isHomePage && (
