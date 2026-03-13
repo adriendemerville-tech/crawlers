@@ -55,6 +55,8 @@ export function useAuditState() {
     setCurrentStep(1);
     setCompletedSteps([]);
     setStrategicProgressiveReveal(false);
+    setFatalAuditError(false);
+    auditFailCountRef.current = {};
     sessionStorage.removeItem('audit_url');
     sessionStorage.removeItem('audit_technical_result');
     sessionStorage.removeItem('audit_strategic_result');
