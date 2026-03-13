@@ -16,7 +16,7 @@ const MAX_ITERATIONS = 10
 interface DepthResult {
   llm: string
   model: string
-  iterations: number // 1-5 or 6 if never found
+  iterations: number // 1-10 or 11 if never found
   found: boolean
   conversation_summary: string
 }
