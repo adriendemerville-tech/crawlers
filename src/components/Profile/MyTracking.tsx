@@ -1666,29 +1666,9 @@ export function MyTracking() {
   );
 }
 
-function KPICard({ label, value, icon: Icon, valueClassName }: { label: string; value: string; icon: React.ElementType; valueClassName?: string }) {
-  return (
-    <div className="rounded-lg border bg-card p-3 space-y-1">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Icon className="h-3 w-3" />
-        {label}
-      </div>
-      <p className={`text-lg font-semibold ${valueClassName || ''}`}>{value}</p>
-    </div>
-  );
-}
 
-const KPI_ORDER_STORAGE_KEY = 'tracking_kpi_order';
-
-function SortableKPICard({ id, label, value, icon: Icon, valueClassName, onRefresh }: { id: string; label: string; value: string; icon: ElementType; valueClassName?: string; onRefresh?: () => Promise<void> }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+function KPICard({ label, value, icon: Icon, valueClassName, onRefresh }: { label: string; value: string; icon: ElementType; valueClassName?: string; onRefresh?: () => Promise<void> }) {
   const [refreshing, setRefreshing] = useState(false);
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : undefined,
-    opacity: isDragging ? 0.8 : 1,
-  };
 
   const handleRefresh = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1698,14 +1678,12 @@ function SortableKPICard({ id, label, value, icon: Icon, valueClassName, onRefre
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative group rounded-lg border bg-card p-3 space-y-1">
-      {/* Drag handle — top left */}
+    <div className="relative group rounded-lg border bg-card p-3 space-y-1">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className="h-3 w-3" />
         {label}
       </div>
       <p className={`text-lg font-semibold ${valueClassName || ''}`}>{value}</p>
-      {/* Refresh button — bottom right */}
       {onRefresh && (
         <button
           onClick={handleRefresh}
@@ -1726,59 +1704,25 @@ function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: 
   disabled: boolean;
   onRefresh?: Record<string, () => Promise<void>>;
 }) {
-  const [order, setOrder] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem(KPI_ORDER_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as string[];
-        if (parsed.length === defaultOrder.length && parsed.every(k => defaultOrder.includes(k))) {
-          return parsed;
-        }
-      }
-    } catch { /* ignore */ }
-    return defaultOrder;
-  });
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    setOrder(prev => {
-      const oldIndex = prev.indexOf(active.id as string);
-      const newIndex = prev.indexOf(over.id as string);
-      const newOrder = arrayMove(prev, oldIndex, newIndex);
-      localStorage.setItem(KPI_ORDER_STORAGE_KEY, JSON.stringify(newOrder));
-      return newOrder;
-    });
-  };
-
   return (
     <Card className="border">
       <CardContent className="p-4">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={order} strategy={rectSortingStrategy}>
-            <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
-              {order.map(id => {
-                const def = kpiDefinitions[id];
-                if (!def) return null;
-                return (
-                  <SortableKPICard
-                    key={id}
-                    id={id}
-                    label={def.label}
-                    value={def.value}
-                    icon={def.icon}
-                    valueClassName={def.valueClassName}
-                    onRefresh={onRefresh?.[id]}
-                  />
-                );
-              })}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+          {defaultOrder.map(id => {
+            const def = kpiDefinitions[id];
+            if (!def) return null;
+            return (
+              <KPICard
+                key={id}
+                label={def.label}
+                value={def.value}
+                icon={def.icon}
+                valueClassName={def.valueClassName}
+                onRefresh={onRefresh?.[id]}
+              />
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );
