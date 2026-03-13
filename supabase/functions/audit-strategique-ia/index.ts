@@ -2660,6 +2660,7 @@ Deno.serve(async (req) => {
         ...parsedAnalysis,
         raw_market_data: marketData,
         ranking_overview: rankingOverview,
+        google_my_business: gmbData,
         toolsData: null,
         llm_visibility_raw: effectiveToolsData.llm,
         _cachedContext: cachedContextOut,
