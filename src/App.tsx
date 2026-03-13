@@ -56,6 +56,7 @@ const IntegrationGTM = lazy(() => import("./pages/IntegrationGTM"));
 const SiteCrawl = lazy(() => import("./pages/SiteCrawl"));
 const AuditCompare = lazy(() => import("./pages/AuditCompare"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const IndiceAlignementStrategique = lazy(() => import("./pages/IndiceAlignementStrategique"));
 
 // Loading fallback
 const PageLoader = () => (
