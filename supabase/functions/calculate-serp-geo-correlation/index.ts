@@ -2,16 +2,20 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 /**
- * calculate-serp-geo-correlation
- * 
- * Calculates Pearson correlation between SERP metrics (serp_snapshots)
- * and GEO/LLM visibility (llm_visibility_scores) for each tracked site.
- * 
- * Aligned by week_start_date / measured_at week.
- * Stores results in serp_geo_correlations table.
- * 
- * Trigger: cron (weekly) or manual via admin
+ * calculate-serp-geo-correlation  v2
+ *
+ * Measures how traditional SERP performance correlates with LLM visibility.
+ *
+ * v2 improvements over v1:
+ *  - Lag analysis (0-3 week shifts, keeps best |r|)
+ *  - Statistical significance via t-test (p < 0.05 required)
+ *  - Spearman rank correlation alongside Pearson (captures non-linear)
+ *  - Per-LLM breakdown stored for granular insight
+ *  - Minimum 8 aligned weeks (was 4)
+ *  - Cleaner type contracts
  */
+
+// ─── Types ──────────────────────────────────────────────────────────
 
 interface WeeklySerp {
   week: string;
@@ -25,95 +29,276 @@ interface WeeklyLlm {
   avg_score: number;
 }
 
-function pearson(x: number[], y: number[]): number | null {
-  const n = x.length;
-  if (n < 4) return null; // Need minimum 4 data points for meaningful correlation
-
-  const sumX = x.reduce((a, b) => a + b, 0);
-  const sumY = y.reduce((a, b) => a + b, 0);
-  const sumXY = x.reduce((a, xi, i) => a + xi * y[i], 0);
-  const sumX2 = x.reduce((a, xi) => a + xi * xi, 0);
-  const sumY2 = y.reduce((a, yi) => a + yi * yi, 0);
-
-  const numerator = n * sumXY - sumX * sumY;
-  const denominator = Math.sqrt(
-    (n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY)
-  );
-
-  if (denominator === 0) return null;
-  return Math.round((numerator / denominator) * 1000) / 1000;
+interface CorrelationResult {
+  pearson: number | null;
+  spearman: number | null;
+  p_value: number | null;
+  best_lag: number;
+  significant: boolean;
 }
 
-function classifyConvergence(
-  pPosition: number | null,
-  pEtv: number | null,
-  pTop10: number | null,
-  weeks: number
-): { index: number; label: string } {
-  if (weeks < 4) {
-    return { index: 0, label: 'insufficient_data' };
+interface MetricCorrelations {
+  position: CorrelationResult;
+  etv: CorrelationResult;
+  top_10: CorrelationResult;
+}
+
+interface LlmBreakdown {
+  llm_name: string;
+  weeks: number;
+  pearson_vs_position: number | null;
+  spearman_vs_position: number | null;
+  best_lag: number;
+}
+
+// ─── Statistics ─────────────────────────────────────────────────────
+
+/** Pearson product-moment correlation coefficient */
+function pearson(x: number[], y: number[]): number | null {
+  const n = x.length;
+  if (n < 3) return null;
+
+  const mx = x.reduce((a, b) => a + b, 0) / n;
+  const my = y.reduce((a, b) => a + b, 0) / n;
+
+  let num = 0, dx2 = 0, dy2 = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - mx;
+    const dy = y[i] - my;
+    num += dx * dy;
+    dx2 += dx * dx;
+    dy2 += dy * dy;
   }
 
-  // Position correlation is inverted (lower position = better ranking)
-  // So a negative correlation means: when position improves (goes down), LLM visibility goes up = convergent
-  const effectivePosition = pPosition !== null ? -pPosition : null;
+  const den = Math.sqrt(dx2 * dy2);
+  if (den === 0) return null;
+  return num / den;
+}
 
-  const values = [effectivePosition, pEtv, pTop10].filter((v): v is number => v !== null);
-  if (values.length === 0) {
-    return { index: 0, label: 'insufficient_data' };
+/** Spearman rank correlation — robust to non-linear monotonic relationships */
+function spearman(x: number[], y: number[]): number | null {
+  const n = x.length;
+  if (n < 3) return null;
+  return pearson(toRanks(x), toRanks(y));
+}
+
+/** Convert values to ranks (average rank for ties) */
+function toRanks(values: number[]): number[] {
+  const indexed = values.map((v, i) => ({ v, i }));
+  indexed.sort((a, b) => a.v - b.v);
+
+  const ranks = new Array(values.length);
+  let i = 0;
+  while (i < indexed.length) {
+    let j = i;
+    while (j < indexed.length && indexed[j].v === indexed[i].v) j++;
+    const avgRank = (i + j + 1) / 2; // 1-based average
+    for (let k = i; k < j; k++) ranks[indexed[k].i] = avgRank;
+    i = j;
+  }
+  return ranks;
+}
+
+/**
+ * Two-tailed p-value for Pearson r using the t-distribution approximation.
+ * t = r * sqrt((n-2) / (1-r²)), df = n-2
+ * Uses the regularized incomplete beta function for accuracy.
+ */
+function pValue(r: number | null, n: number): number | null {
+  if (r === null || n < 4) return null;
+  const r2 = r * r;
+  if (r2 >= 1) return 0;
+  const t = Math.abs(r) * Math.sqrt((n - 2) / (1 - r2));
+  const df = n - 2;
+  // Use the beta regularized incomplete function approximation
+  return betaIncomplete(df / 2, 0.5, df / (df + t * t));
+}
+
+/** Regularized incomplete beta function via continued fraction (Lentz) */
+function betaIncomplete(a: number, b: number, x: number): number {
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+
+  const lnBeta = lgamma(a) + lgamma(b) - lgamma(a + b);
+  const front = Math.exp(Math.log(x) * a + Math.log(1 - x) * b - lnBeta) / a;
+
+  // Lentz's continued fraction
+  let f = 1, c = 1, d = 1 - (a + b) * x / (a + 1);
+  if (Math.abs(d) < 1e-30) d = 1e-30;
+  d = 1 / d;
+  f = d;
+
+  for (let m = 1; m <= 200; m++) {
+    // Even step
+    let num = m * (b - m) * x / ((a + 2 * m - 1) * (a + 2 * m));
+    d = 1 + num * d; if (Math.abs(d) < 1e-30) d = 1e-30; d = 1 / d;
+    c = 1 + num / c; if (Math.abs(c) < 1e-30) c = 1e-30;
+    f *= d * c;
+
+    // Odd step
+    num = -(a + m) * (a + b + m) * x / ((a + 2 * m) * (a + 2 * m + 1));
+    d = 1 + num * d; if (Math.abs(d) < 1e-30) d = 1e-30; d = 1 / d;
+    c = 1 + num / c; if (Math.abs(c) < 1e-30) c = 1e-30;
+    f *= d * c;
+
+    if (Math.abs(d * c - 1) < 1e-8) break;
   }
 
-  // Weighted composite: position 40%, ETV 35%, top10 25%
-  const weights = [0.4, 0.35, 0.25];
-  const allValues = [effectivePosition, pEtv, pTop10];
-  let weightedSum = 0;
-  let totalWeight = 0;
+  return front * f;
+}
 
-  for (let i = 0; i < allValues.length; i++) {
-    if (allValues[i] !== null) {
-      weightedSum += allValues[i]! * weights[i];
-      totalWeight += weights[i];
+/** Log-gamma via Stirling's approximation (Lanczos) */
+function lgamma(z: number): number {
+  const g = 7;
+  const coef = [
+    0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+    771.32342877765313, -176.61502916214059, 12.507343278686905,
+    -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7,
+  ];
+  if (z < 0.5) {
+    return Math.log(Math.PI / Math.sin(Math.PI * z)) - lgamma(1 - z);
+  }
+  z -= 1;
+  let x = coef[0];
+  for (let i = 1; i < g + 2; i++) x += coef[i] / (z + i);
+  const t = z + g + 0.5;
+  return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+}
+
+// ─── Lag analysis ───────────────────────────────────────────────────
+
+const MAX_LAG = 3;
+const MIN_WEEKS = 8;
+const P_THRESHOLD = 0.05;
+
+/**
+ * For a given SERP metric series and LLM series (aligned by week order),
+ * test lags 0..MAX_LAG. Returns the correlation with the best |r|.
+ * Lag = number of weeks SERP leads LLM (positive lag = SEO effect delayed).
+ */
+function bestLagCorrelation(serp: number[], llm: number[]): CorrelationResult {
+  let bestR: number | null = null;
+  let bestSpearman: number | null = null;
+  let bestP: number | null = null;
+  let bestLag = 0;
+
+  for (let lag = 0; lag <= MAX_LAG; lag++) {
+    const n = serp.length - lag;
+    if (n < MIN_WEEKS) continue;
+
+    const sx = serp.slice(0, n);
+    const sy = llm.slice(lag, lag + n);
+
+    const r = pearson(sx, sy);
+    const s = spearman(sx, sy);
+    const p = pValue(r, n);
+
+    if (r !== null && (bestR === null || Math.abs(r) > Math.abs(bestR))) {
+      bestR = r;
+      bestSpearman = s;
+      bestP = p;
+      bestLag = lag;
     }
   }
 
-  const avgCorrelation = totalWeight > 0 ? weightedSum / totalWeight : 0;
+  const significant = bestP !== null && bestP < P_THRESHOLD;
 
-  // Convert correlation (-1 to 1) to index (0 to 100)
-  // 1.0 → 100 (perfectly convergent)
-  // 0.0 → 50 (decorrelated)
-  // -1.0 → 0 (perfectly divergent)
-  const index = Math.round((avgCorrelation + 1) * 50);
+  return {
+    pearson: bestR !== null ? round3(bestR) : null,
+    spearman: bestSpearman !== null ? round3(bestSpearman) : null,
+    p_value: bestP !== null ? round4(bestP) : null,
+    best_lag: bestLag,
+    significant,
+  };
+}
 
-  let label: string;
-  if (avgCorrelation > 0.4) label = 'convergent';
-  else if (avgCorrelation < -0.4) label = 'divergent';
+// ─── Convergence classification ─────────────────────────────────────
+
+interface Convergence {
+  index: number;
+  label: 'convergent' | 'divergent' | 'decorrelated' | 'insufficient_data' | 'not_significant';
+}
+
+function classifyConvergence(metrics: MetricCorrelations, weeks: number): Convergence {
+  if (weeks < MIN_WEEKS) {
+    return { index: 0, label: 'insufficient_data' };
+  }
+
+  // Only use statistically significant correlations
+  const significantValues: { value: number; weight: number }[] = [];
+
+  // Position: invert sign (lower position = better = positive effect)
+  if (metrics.position.significant && metrics.position.pearson !== null) {
+    significantValues.push({ value: -metrics.position.pearson, weight: 0.4 });
+  }
+  if (metrics.etv.significant && metrics.etv.pearson !== null) {
+    significantValues.push({ value: metrics.etv.pearson, weight: 0.35 });
+  }
+  if (metrics.top_10.significant && metrics.top_10.pearson !== null) {
+    significantValues.push({ value: metrics.top_10.pearson, weight: 0.25 });
+  }
+
+  if (significantValues.length === 0) {
+    return { index: 50, label: 'not_significant' };
+  }
+
+  const totalWeight = significantValues.reduce((s, v) => s + v.weight, 0);
+  const weighted = significantValues.reduce((s, v) => s + v.value * v.weight, 0) / totalWeight;
+
+  // Map [-1, 1] → [0, 100]
+  const index = Math.round((weighted + 1) * 50);
+
+  let label: Convergence['label'];
+  if (weighted > 0.4) label = 'convergent';
+  else if (weighted < -0.4) label = 'divergent';
   else label = 'decorrelated';
 
   return { index, label };
 }
+
+// ─── Utilities ──────────────────────────────────────────────────────
+
+function round3(n: number): number { return Math.round(n * 1000) / 1000; }
+function round4(n: number): number { return Math.round(n * 10000) / 10000; }
+
+/** ISO week string from Date: "2026-W12" */
+function isoWeek(date: Date): string {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const jan1 = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((d.getTime() - jan1.getTime()) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+}
+
+/** ISO week from "YYYY-MM-DD" */
+function isoWeekFromStr(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return isoWeek(new Date(y, m - 1, d));
+}
+
+// ─── Main ───────────────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+  );
 
   try {
     const body = await req.json().catch(() => ({}));
     const targetSiteId: string | undefined = body.tracked_site_id;
 
-    // Get all tracked sites (or a specific one)
+    // Fetch tracked sites
     let query = supabase.from('tracked_sites').select('id, user_id, domain');
-    if (targetSiteId) {
-      query = query.eq('id', targetSiteId);
-    }
+    if (targetSiteId) query = query.eq('id', targetSiteId);
     const { data: sites, error: sitesError } = await query;
 
     if (sitesError || !sites?.length) {
-      console.log('No tracked sites found:', sitesError?.message);
       return new Response(JSON.stringify({ success: true, processed: 0 }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -121,107 +306,153 @@ Deno.serve(async (req) => {
 
     let processed = 0;
     let skipped = 0;
-    const results: Array<{ domain: string; label: string; index: number; weeks: number }> = [];
+    const results: Array<{ domain: string; label: string; index: number; weeks: number; significant_metrics: number }> = [];
 
     for (const site of sites) {
       try {
-        // Fetch last 16 weeks of SERP data
-        const { data: serpRows } = await supabase
-          .from('serp_snapshots')
-          .select('measured_at, avg_position, etv, top_10')
-          .eq('tracked_site_id', site.id)
-          .order('measured_at', { ascending: true })
-          .limit(16);
+        // Fetch last 20 weeks (need extra for lag window)
+        const [serpRes, llmRes] = await Promise.all([
+          supabase
+            .from('serp_snapshots')
+            .select('measured_at, avg_position, etv, top_10')
+            .eq('tracked_site_id', site.id)
+            .order('measured_at', { ascending: true })
+            .limit(20),
+          supabase
+            .from('llm_visibility_scores')
+            .select('week_start_date, llm_name, score_percentage')
+            .eq('tracked_site_id', site.id)
+            .order('week_start_date', { ascending: true })
+            .limit(200),
+        ]);
 
-        // Fetch last 16 weeks of LLM visibility data
-        const { data: llmRows } = await supabase
-          .from('llm_visibility_scores')
-          .select('week_start_date, llm_name, score_percentage')
-          .eq('tracked_site_id', site.id)
-          .order('week_start_date', { ascending: true })
-          .limit(100); // Multiple LLMs per week
+        const serpRows = serpRes.data;
+        const llmRows = llmRes.data;
 
-        if (!serpRows?.length || !llmRows?.length) {
-          skipped++;
-          continue;
-        }
+        if (!serpRows?.length || !llmRows?.length) { skipped++; continue; }
 
-        // Normalize SERP data by week (YYYY-Www)
+        // ── Normalize SERP by ISO week ──
         const serpByWeek = new Map<string, WeeklySerp>();
         for (const row of serpRows) {
-          const date = new Date(row.measured_at);
-          const weekKey = getISOWeek(date);
-          serpByWeek.set(weekKey, {
-            week: weekKey,
+          const wk = isoWeek(new Date(row.measured_at));
+          serpByWeek.set(wk, {
+            week: wk,
             avg_position: Number(row.avg_position) || 0,
             etv: Number(row.etv) || 0,
             top_10: Number(row.top_10) || 0,
           });
         }
 
-        // Normalize LLM data by week — average all LLMs per week
-        const llmByWeek = new Map<string, { total: number; count: number }>();
+        // ── Normalize LLM by ISO week — keep per-LLM detail ──
+        const llmByWeekByModel = new Map<string, Map<string, number[]>>();
+        const llmByWeekAll = new Map<string, { total: number; count: number }>();
+
         for (const row of llmRows) {
-          const weekKey = row.week_start_date; // Already in YYYY-MM-DD format
-          const normalizedWeek = getISOWeekFromDateStr(weekKey);
-          const existing = llmByWeek.get(normalizedWeek) || { total: 0, count: 0 };
-          existing.total += Number(row.score_percentage) || 0;
-          existing.count++;
-          llmByWeek.set(normalizedWeek, existing);
+          const wk = isoWeekFromStr(row.week_start_date);
+          const score = Number(row.score_percentage) || 0;
+
+          // Per-LLM
+          if (!llmByWeekByModel.has(row.llm_name)) llmByWeekByModel.set(row.llm_name, new Map());
+          const modelMap = llmByWeekByModel.get(row.llm_name)!;
+          if (!modelMap.has(wk)) modelMap.set(wk, []);
+          modelMap.get(wk)!.push(score);
+
+          // Aggregated
+          const agg = llmByWeekAll.get(wk) || { total: 0, count: 0 };
+          agg.total += score;
+          agg.count++;
+          llmByWeekAll.set(wk, agg);
         }
 
-        // Align by common weeks
-        const commonWeeks = [...serpByWeek.keys()].filter(w => llmByWeek.has(w)).sort();
+        // ── Align by common weeks (sorted) ──
+        const commonWeeks = [...serpByWeek.keys()].filter(w => llmByWeekAll.has(w)).sort();
 
-        if (commonWeeks.length < 3) {
-          skipped++;
-          continue;
+        if (commonWeeks.length < MIN_WEEKS) { skipped++; continue; }
+
+        // Build aligned arrays
+        const positions: number[] = [];
+        const etvs: number[] = [];
+        const top10s: number[] = [];
+        const llmAvgs: number[] = [];
+        const serpPoints: WeeklySerp[] = [];
+        const llmPoints: WeeklyLlm[] = [];
+
+        for (const wk of commonWeeks) {
+          const s = serpByWeek.get(wk)!;
+          const l = llmByWeekAll.get(wk)!;
+          const avg = round3(l.total / l.count);
+
+          positions.push(s.avg_position);
+          etvs.push(s.etv);
+          top10s.push(s.top_10);
+          llmAvgs.push(avg);
+
+          serpPoints.push(s);
+          llmPoints.push({ week: wk, avg_score: avg });
         }
 
-        const serpDataPoints: WeeklySerp[] = [];
-        const llmDataPoints: WeeklyLlm[] = [];
-        const positionValues: number[] = [];
-        const etvValues: number[] = [];
-        const top10Values: number[] = [];
-        const llmValues: number[] = [];
+        // ── Compute correlations with lag analysis ──
+        const metrics: MetricCorrelations = {
+          position: bestLagCorrelation(positions, llmAvgs),
+          etv: bestLagCorrelation(etvs, llmAvgs),
+          top_10: bestLagCorrelation(top10s, llmAvgs),
+        };
 
-        for (const week of commonWeeks) {
-          const serp = serpByWeek.get(week)!;
-          const llm = llmByWeek.get(week)!;
-          const avgLlm = llm.total / llm.count;
+        const { index, label } = classifyConvergence(metrics, commonWeeks.length);
 
-          serpDataPoints.push(serp);
-          llmDataPoints.push({ week, avg_score: Math.round(avgLlm * 10) / 10 });
+        // ── Per-LLM breakdown ──
+        const llmBreakdown: LlmBreakdown[] = [];
+        for (const [llmName, weekMap] of llmByWeekByModel.entries()) {
+          const llmWeeks = commonWeeks.filter(w => weekMap.has(w));
+          if (llmWeeks.length < MIN_WEEKS) continue;
 
-          positionValues.push(serp.avg_position);
-          etvValues.push(serp.etv);
-          top10Values.push(serp.top_10);
-          llmValues.push(avgLlm);
+          const posArr = llmWeeks.map(w => serpByWeek.get(w)!.avg_position);
+          const llmArr = llmWeeks.map(w => {
+            const scores = weekMap.get(w)!;
+            return scores.reduce((a, b) => a + b, 0) / scores.length;
+          });
+
+          const result = bestLagCorrelation(posArr, llmArr);
+          llmBreakdown.push({
+            llm_name: llmName,
+            weeks: llmWeeks.length,
+            pearson_vs_position: result.pearson,
+            spearman_vs_position: result.spearman,
+            best_lag: result.best_lag,
+          });
         }
 
-        // Calculate Pearson correlations
-        const pPosition = pearson(positionValues, llmValues);
-        const pEtv = pearson(etvValues, llmValues);
-        const pTop10 = pearson(top10Values, llmValues);
+        // Count how many metrics are statistically significant
+        const sigCount = [metrics.position, metrics.etv, metrics.top_10]
+          .filter(m => m.significant).length;
 
-        const { index, label } = classifyConvergence(pPosition, pEtv, pTop10, commonWeeks.length);
-
-        // Upsert result — one row per site, overwrite on recalculation
+        // ── Upsert ──
         const { error: upsertError } = await supabase
           .from('serp_geo_correlations')
           .upsert({
             tracked_site_id: site.id,
             user_id: site.user_id,
             domain: site.domain,
-            pearson_position_vs_llm: pPosition,
-            pearson_etv_vs_llm: pEtv,
-            pearson_top10_vs_llm: pTop10,
+            pearson_position_vs_llm: metrics.position.pearson,
+            pearson_etv_vs_llm: metrics.etv.pearson,
+            pearson_top10_vs_llm: metrics.top_10.pearson,
             convergence_index: index,
             trend_label: label,
             weeks_analyzed: commonWeeks.length,
-            serp_data_points: serpDataPoints,
-            llm_data_points: llmDataPoints,
+            serp_data_points: serpPoints,
+            llm_data_points: llmPoints,
             calculated_at: new Date().toISOString(),
+            // v2 fields
+            spearman_position_vs_llm: metrics.position.spearman,
+            spearman_etv_vs_llm: metrics.etv.spearman,
+            spearman_top10_vs_llm: metrics.top_10.spearman,
+            p_value_position: metrics.position.p_value,
+            p_value_etv: metrics.etv.p_value,
+            p_value_top10: metrics.top_10.p_value,
+            best_lag_position: metrics.position.best_lag,
+            best_lag_etv: metrics.etv.best_lag,
+            best_lag_top10: metrics.top_10.best_lag,
+            llm_breakdown: llmBreakdown,
           }, {
             onConflict: 'tracked_site_id',
             ignoreDuplicates: false,
@@ -231,24 +462,21 @@ Deno.serve(async (req) => {
           console.error(`[${site.domain}] Upsert error:`, upsertError.message);
         } else {
           processed++;
-          results.push({ domain: site.domain, label, index, weeks: commonWeeks.length });
-          console.log(`[${site.domain}] ✅ ${label} (index: ${index}, ${commonWeeks.length} semaines, r_pos=${pPosition}, r_etv=${pEtv}, r_top10=${pTop10})`);
+          results.push({ domain: site.domain, label, index, weeks: commonWeeks.length, significant_metrics: sigCount });
+          console.log(
+            `[${site.domain}] ✅ ${label} (idx:${index}, ${commonWeeks.length}w, sig:${sigCount}/3, ` +
+            `lag_pos:${metrics.position.best_lag}w, r_pos=${metrics.position.pearson}, ρ_pos=${metrics.position.spearman}, p=${metrics.position.p_value})`
+          );
         }
-      } catch (siteError) {
-        console.error(`[${site.domain}] Error:`, siteError);
+      } catch (e) {
+        console.error(`[${site.domain}] Error:`, e);
         skipped++;
       }
     }
 
-    console.log(`Corrélation SERP↔GEO terminée: ${processed} traités, ${skipped} ignorés sur ${sites.length} sites`);
+    console.log(`SERP↔GEO v2: ${processed} traités, ${skipped} ignorés / ${sites.length}`);
 
-    return new Response(JSON.stringify({
-      success: true,
-      processed,
-      skipped,
-      total: sites.length,
-      results,
-    }), {
+    return new Response(JSON.stringify({ success: true, processed, skipped, total: sites.length, results }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
@@ -262,19 +490,3 @@ Deno.serve(async (req) => {
     });
   }
 });
-
-/** Get ISO week string from Date: "2026-W12" */
-function getISOWeek(date: Date): string {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
-}
-
-/** Get ISO week string from "YYYY-MM-DD" string */
-function getISOWeekFromDateStr(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  return getISOWeek(new Date(y, m - 1, d));
-}
