@@ -61,6 +61,10 @@ export function AdminDashboard() {
             <MessageCircle className="h-4 w-4" />
             <span className="hidden sm:inline">SAV</span>
           </TabsTrigger>
+          <TabsTrigger value="ci-tests" className="flex-1 gap-2">
+            <FlaskConical className="h-4 w-4" />
+            <span className="hidden sm:inline">CI Tests</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" forceMount className="data-[state=inactive]:hidden">
