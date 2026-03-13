@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { User, Save, Loader2, Globe, Music, X } from 'lucide-react';
+import { User, Save, Loader2, Globe, Music, X, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -284,6 +285,42 @@ export function ProfileSettings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Theme Settings */}
+      <ThemeSettingsCard />
     </div>
+  );
+}
+
+function ThemeSettingsCard() {
+  const { theme, setTheme } = useTheme();
+  const { language } = useLanguage();
+  const labels = {
+    fr: { title: 'Apparence', desc: 'Choisissez le thème d\'affichage', light: 'Clair', dark: 'Sombre' },
+    en: { title: 'Appearance', desc: 'Choose your display theme', light: 'Light', dark: 'Dark' },
+    es: { title: 'Apariencia', desc: 'Elige el tema de visualización', light: 'Claro', dark: 'Oscuro' },
+  };
+  const l = labels[language] || labels.fr;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+          {l.title}
+        </CardTitle>
+        <CardDescription>{l.desc}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex gap-2">
+          <Button variant={theme !== 'dark' ? 'default' : 'outline'} onClick={() => setTheme('light')} className="gap-2">
+            <Sun className="h-4 w-4" /> {l.light}
+          </Button>
+          <Button variant={theme === 'dark' ? 'default' : 'outline'} onClick={() => setTheme('dark')} className="gap-2">
+            <Moon className="h-4 w-4" /> {l.dark}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
