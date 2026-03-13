@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot, BookOpen, Globe } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot, BookOpen, Globe, FlaskConical } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -10,6 +10,7 @@ import { CtoAgentDashboard } from './CtoAgentDashboard';
 import { BackendDocumentation } from './BackendDocumentation';
 import { CrawlManagement } from './CrawlManagement';
 import { DemoModeToggle } from './DemoModeToggle';
+import { CiTestsDashboard } from './CiTestsDashboard';
 
 export function AdminDashboard() {
   return (
@@ -60,6 +61,10 @@ export function AdminDashboard() {
             <MessageCircle className="h-4 w-4" />
             <span className="hidden sm:inline">SAV</span>
           </TabsTrigger>
+          <TabsTrigger value="ci-tests" className="flex-1 gap-2">
+            <FlaskConical className="h-4 w-4" />
+            <span className="hidden sm:inline">CI Tests</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" forceMount className="data-[state=inactive]:hidden">
@@ -92,6 +97,10 @@ export function AdminDashboard() {
 
         <TabsContent value="support" forceMount className="data-[state=inactive]:hidden">
           <SupportManagement />
+        </TabsContent>
+
+        <TabsContent value="ci-tests" forceMount className="data-[state=inactive]:hidden">
+          <CiTestsDashboard />
         </TabsContent>
       </Tabs>
     </div>
