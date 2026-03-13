@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
             top_10: serpData.top_10 ?? 0,
             top_50: serpData.top_50 ?? 0,
             etv: serpData.etv ?? 0,
+            indexed_pages: serpData.indexed_pages ?? null,
             sample_keywords: serpData.sample_keywords ?? [],
             measured_at: serpData.measured_at || new Date().toISOString(),
           })
