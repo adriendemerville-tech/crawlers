@@ -33,7 +33,7 @@ import { SummaryResilienceCard } from './SummaryResilienceCard';
 import { LexicalFootprintCard } from './LexicalFootprintCard';
 import { ExpertiseSentimentCard } from './ExpertiseSentimentCard';
 import { RedTeamCard } from './RedTeamCard';
-
+import { GoogleMyBusinessCard } from './GoogleMyBusinessCard';
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
   hideExecutiveSummary?: boolean;
