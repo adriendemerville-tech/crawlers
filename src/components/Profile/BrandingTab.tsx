@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText, Check } from 'lucide-react';
+import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText, Check, Type } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
