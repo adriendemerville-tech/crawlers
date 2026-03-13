@@ -1139,6 +1139,9 @@ export function MyTracking() {
                       )}
                     </CardContent>
                   </Card>
+
+                  {/* SERP Ranking Banner (DataForSEO) */}
+                  <SerpKpiBanner data={latestSerpData} />
                 </div>
               )}
             </div>
