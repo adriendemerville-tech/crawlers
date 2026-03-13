@@ -861,12 +861,25 @@ Deno.serve(async (req) => {
     const realisticClicks = prediction.scenarios.realistic.clicks;
     const realisticPct = prediction.scenarios.realistic.increase_pct;
 
+    // Resolve tracked_site_id for direct FK linkage
+    let trackedSiteId: string | null = null;
+    if (intel.domain) {
+      const { data: ts } = await supabase
+        .from('tracked_sites')
+        .select('id')
+        .ilike('domain', `%${intel.domain}%`)
+        .limit(1)
+        .maybeSingle();
+      trackedSiteId = ts?.id || null;
+    }
+
     const { data: saved, error: saveErr } = await supabase
       .from('predictions')
       .insert({
         audit_id: audit_id || crawl_id, // Use crawl_id as audit_id fallback for FK
         client_id,
         domain: intel.domain || null,
+        tracked_site_id: trackedSiteId,
         predicted_increase_pct: realisticPct,
         predicted_traffic: realisticClicks,
         baseline_traffic: seg.totalClicks,
