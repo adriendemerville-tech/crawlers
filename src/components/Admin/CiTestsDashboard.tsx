@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FlaskConical, Loader2, CheckCircle2, XCircle, Clock, RefreshCw, History } from 'lucide-react';
+import { FlaskConical, Loader2, CheckCircle2, XCircle, Clock, RefreshCw, History, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TestResult {
   id: string;
