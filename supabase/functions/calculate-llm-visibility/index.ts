@@ -3,72 +3,287 @@ import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 
 /**
- * calculate-llm-visibility
- * 
- * For a tracked site, generates prompts from site identity,
- * queries 4 LLMs with up to 3 iterations each,
- * scores based on iteration depth (100/50/25/0),
- * and stores results in llm_test_executions + llm_visibility_scores.
+ * calculate-llm-visibility v2
+ *
+ * Sophisticated LLM visibility scoring engine.
+ *
+ * Scoring dimensions (per prompt × LLM):
+ *   1. Iteration depth    — how quickly the brand surfaces (1st=100, 2nd=50, 3rd=25, absent=0)
+ *   2. Position rank      — where in a list the brand appears (top=1.0x … bottom=0.4x)
+ *   3. Sentiment signal   — recommended/positive=+20%, neutral=0, negative/warning=-30%
+ *   4. Mention richness   — described in detail vs just name-dropped (bonus up to +15%)
+ *
+ * Final per-LLM score = weighted average across prompts, capped 0–100.
  */
 
-// ─── Configurable scoring weights ───
-const ITERATION_SCORES: Record<number, number> = {
-  1: 100,
-  2: 50,
-  3: 25,
+// ─── Scoring config ───
+const ITERATION_WEIGHT: Record<number, number> = { 1: 100, 2: 50, 3: 25 }
+const ITERATION_DEFAULT = 0
+
+const POSITION_MULTIPLIERS: Record<number, number> = {
+  1: 1.0, 2: 0.9, 3: 0.8, 4: 0.7, 5: 0.6,
 }
-const DEFAULT_SCORE = 0
+const POSITION_DEFAULT = 0.4 // rank 6+ or unranked mention
+
+const SENTIMENT_BONUS: Record<string, number> = {
+  recommended: 20,
+  positive: 15,
+  neutral: 0,
+  mentioned: -5,
+  negative: -30,
+}
+
+const MAX_RICHNESS_BONUS = 15 // for detailed descriptions
 
 // ─── LLM targets (via OpenRouter) ───
 const LLM_TARGETS = [
-  { id: 'chatgpt', name: 'ChatGPT', model: 'openai/gpt-4o' },
-  { id: 'claude', name: 'Claude', model: 'anthropic/claude-3.5-sonnet' },
-  { id: 'gemini', name: 'Gemini', model: 'google/gemini-2.5-flash-preview' },
-  { id: 'perplexity', name: 'Perplexity', model: 'perplexity/sonar' },
+  { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-4o' },
+  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-3.5-sonnet' },
+  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash-preview' },
+  { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar' },
 ]
 
 const NUM_PROMPTS = 5
 
-// ─── Prompt generation from site identity ───
-// CRITICAL: Prompts must NEVER contain brand name, site name, domain, or company name.
-// Prompts simulate REAL END-USER queries — the potential customer, NOT the site owner.
-// They must sound like what someone would actually type into ChatGPT/Perplexity.
-function generatePrompts(site: any): string[] {
-  const sector = site.market_sector || ''
-  const target = site.target_audience || ''
-  const products = site.products_services || ''
-  const area = site.commercial_area || ''
+// ═══════════════════════════════════════════════
+// BRAND DETECTION — multi-pattern matching
+// ═══════════════════════════════════════════════
 
-  // ─── Intent-based prompt templates ───
-  // Mix of informational, commercial, and problem-solving intents
-  // written from the perspective of a potential customer/user.
+interface BrandPatterns {
+  exact: string[]       // lowercased exact strings
+  regex: RegExp[]       // compiled patterns
+}
+
+function buildBrandPatterns(site: any): BrandPatterns {
+  const exact: string[] = []
+  const regex: RegExp[] = []
+
+  const siteName = (site.site_name || '').trim()
+  const domain = (site.domain || '').trim()
+
+  // Exact matches
+  if (siteName && siteName.length > 2) {
+    exact.push(siteName.toLowerCase())
+    // Common variations: with/without spaces, hyphens
+    const collapsed = siteName.toLowerCase().replace(/[\s\-_.]+/g, '')
+    if (collapsed !== siteName.toLowerCase()) exact.push(collapsed)
+  }
+
+  // Domain without TLD (e.g. "crawlers" from "crawlers.fr")
+  if (domain) {
+    const domainLower = domain.toLowerCase()
+    exact.push(domainLower)
+    const withoutTld = domainLower.split('.')[0]
+    if (withoutTld.length > 2) exact.push(withoutTld)
+
+    // Regex: domain with flexible separators (crawlers.fr, crawlers .fr, crawlers[.]fr)
+    const escaped = domainLower.replace(/\./g, '[\\s.\\-]?')
+    try { regex.push(new RegExp(escaped, 'i')) } catch { /* skip */ }
+  }
+
+  return { exact: [...new Set(exact)], regex }
+}
+
+function findBrandInText(text: string, patterns: BrandPatterns): boolean {
+  const lower = text.toLowerCase()
+  for (const e of patterns.exact) {
+    // Word-boundary-aware check to avoid false positives
+    const idx = lower.indexOf(e)
+    if (idx !== -1) {
+      const before = idx > 0 ? lower[idx - 1] : ' '
+      const after = idx + e.length < lower.length ? lower[idx + e.length] : ' '
+      const isBoundary = (c: string) => /[\s,.:;!?()[\]{}/"'<>—–\-]/.test(c)
+      if (isBoundary(before) && isBoundary(after)) return true
+      // Also accept if at start/end of string
+      if (idx === 0 || idx + e.length === lower.length) return true
+    }
+  }
+  for (const r of patterns.regex) {
+    if (r.test(text)) return true
+  }
+  return false
+}
+
+// ═══════════════════════════════════════════════
+// POSITION EXTRACTION — find rank in numbered lists
+// ═══════════════════════════════════════════════
+
+function extractPositionRank(text: string, patterns: BrandPatterns): number {
+  // Try to find numbered list items: "1. Brand", "1) Brand", "**1. Brand**"
+  const lines = text.split('\n')
+  for (const line of lines) {
+    // Match patterns like "1.", "1)", "**1.", "#1", "- 1."
+    const rankMatch = line.match(/(?:^|\*{0,2})[\s#\-]*(\d{1,2})[.):\s]/)
+    if (rankMatch && findBrandInText(line, patterns)) {
+      return parseInt(rankMatch[1], 10)
+    }
+  }
+
+  // Fallback: check if brand appears in first/second/third paragraph
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim())
+  for (let i = 0; i < paragraphs.length; i++) {
+    if (findBrandInText(paragraphs[i], patterns)) {
+      return i + 1 // 1-indexed pseudo-rank
+    }
+  }
+
+  return 0 // found but no clear rank
+}
+
+// ═══════════════════════════════════════════════
+// SENTIMENT ANALYSIS — keyword-based heuristic
+// ═══════════════════════════════════════════════
+
+type SentimentLabel = 'recommended' | 'positive' | 'neutral' | 'mentioned' | 'negative'
+
+function analyzeSentiment(text: string, patterns: BrandPatterns): SentimentLabel {
+  const lower = text.toLowerCase()
+
+  // Find the sentence(s) containing the brand mention
+  const sentences = text.split(/[.!?\n]+/)
+  const brandSentences = sentences.filter(s => findBrandInText(s, patterns))
+  if (brandSentences.length === 0) return 'mentioned'
+
+  const context = brandSentences.join(' ').toLowerCase()
+
+  // Negative signals — warnings, caveats
+  const negativePatterns = [
+    /\bévite[rz]?\b/, /\bpas recommand/, /\bà éviter\b/, /\bméfie/,
+    /\battention à\b/, /\binconvénient/, /\bproblème/, /\brisque/,
+    /\bfaible qualité/, /\bdécevant/, /\bne recommande pas/,
+    /\bavoid\b/, /\bnot recommend/, /\bpoor quality/, /\bdisappointing/,
+  ]
+  if (negativePatterns.some(p => p.test(context))) return 'negative'
+
+  // Strong recommendation signals
+  const recommendPatterns = [
+    /\bje (?:te |vous )?recommande\b/, /\bexcellent(?:e)?\b/,
+    /\bmeilleur(?:e)?(?:s)?\b/, /\btop\b/, /\bincontournable\b/,
+    /\bparfait(?:e)?\b/, /\bréférence\b/, /\bje conseille\b/,
+    /\bi recommend\b/, /\bbest\b/, /\btop pick\b/, /\bhighly recommend/,
+    /\bstandout\b/, /\bleading\b/,
+  ]
+  if (recommendPatterns.some(p => p.test(context))) return 'recommended'
+
+  // Positive signals
+  const positivePatterns = [
+    /\bbon(?:ne)?\b/, /\bfiable\b/, /\befficace\b/, /\bintéressant/,
+    /\bpopulaire\b/, /\bsolide\b/, /\breconnu/, /\bapprécié/,
+    /\bgood\b/, /\breliable\b/, /\beffective\b/, /\bsolid\b/,
+    /\bwell.known\b/, /\btrusted\b/,
+  ]
+  if (positivePatterns.some(p => p.test(context))) return 'positive'
+
+  return 'neutral'
+}
+
+// ═══════════════════════════════════════════════
+// MENTION RICHNESS — how much detail about the brand
+// ═══════════════════════════════════════════════
+
+function measureRichness(text: string, patterns: BrandPatterns): number {
+  // Count words in sentences mentioning the brand
+  const sentences = text.split(/[.!?\n]+/)
+  const brandSentences = sentences.filter(s => findBrandInText(s, patterns))
+  const totalWords = brandSentences.join(' ').split(/\s+/).length
+
+  // More context = richer mention
+  // 0-10 words: just a name drop → 0 bonus
+  // 10-30 words: moderate description → 5-10 bonus
+  // 30+ words: detailed description → 10-15 bonus
+  if (totalWords < 10) return 0
+  if (totalWords < 20) return 5
+  if (totalWords < 30) return 10
+  return MAX_RICHNESS_BONUS
+}
+
+// ═══════════════════════════════════════════════
+// COMPOSITE SCORE for a single prompt × LLM
+// ═══════════════════════════════════════════════
+
+interface PromptScore {
+  iterationFound: number
+  rawIterationScore: number
+  positionRank: number
+  positionMultiplier: number
+  sentiment: SentimentLabel
+  sentimentBonus: number
+  richnessBonus: number
+  compositeScore: number // final 0-100 for this prompt
+}
+
+function scorePromptResult(
+  iterationFound: number,
+  responseText: string,
+  patterns: BrandPatterns,
+): PromptScore {
+  const rawIterationScore = ITERATION_WEIGHT[iterationFound] ?? ITERATION_DEFAULT
+
+  if (iterationFound === 0 || !responseText) {
+    return {
+      iterationFound: 0,
+      rawIterationScore: 0,
+      positionRank: 0,
+      positionMultiplier: 0,
+      sentiment: 'mentioned',
+      sentimentBonus: 0,
+      richnessBonus: 0,
+      compositeScore: 0,
+    }
+  }
+
+  const positionRank = extractPositionRank(responseText, patterns)
+  const positionMultiplier = positionRank > 0
+    ? (POSITION_MULTIPLIERS[positionRank] ?? POSITION_DEFAULT)
+    : 0.5 // mentioned but not in a list
+
+  const sentiment = analyzeSentiment(responseText, patterns)
+  const sentimentBonus = SENTIMENT_BONUS[sentiment] ?? 0
+
+  const richnessBonus = measureRichness(responseText, patterns)
+
+  // Composite: base × position + bonuses, clamped to [0, 100]
+  const base = rawIterationScore * positionMultiplier
+  const composite = Math.max(0, Math.min(100, Math.round(base + sentimentBonus + richnessBonus)))
+
+  return {
+    iterationFound,
+    rawIterationScore,
+    positionRank,
+    positionMultiplier,
+    sentiment,
+    sentimentBonus,
+    richnessBonus,
+    compositeScore: composite,
+  }
+}
+
+// ═══════════════════════════════════════════════
+// PROMPT GENERATION — natural customer perspective
+// ═══════════════════════════════════════════════
+
+function generatePrompts(site: any): string[] {
+  const sector = (site.market_sector || '').trim()
+  const target = (site.target_audience || '').trim()
+  const products = (site.products_services || '').trim()
+  const area = (site.commercial_area || '').trim()
+
   const informational: string[] = []
   const commercial: string[] = []
   const problemSolving: string[] = []
 
   if (products) {
-    // Customer looking for a solution
     commercial.push(
       area
         ? `Je cherche ${products} ${area}, qu'est-ce que tu me conseilles ?`
         : `Je cherche ${products}, qu'est-ce que tu me conseilles ?`
     )
-    // Customer comparing options
-    commercial.push(
-      `C'est quoi les meilleures options pour ${products} en ce moment ?`
-    )
-    // Customer with a problem
-    problemSolving.push(
-      `J'ai besoin de ${products} mais je ne sais pas par où commencer, tu peux m'aider ?`
-    )
+    commercial.push(`C'est quoi les meilleures options pour ${products} en ce moment ?`)
+    problemSolving.push(`J'ai besoin de ${products} mais je ne sais pas par où commencer, tu peux m'aider ?`)
   }
 
   if (sector) {
-    // Curious user exploring a domain
-    informational.push(
-      `Comment ça marche ${sector} ? C'est quoi les outils ou services qui existent ?`
-    )
-    // User asking for advice
+    informational.push(`Comment ça marche ${sector} ? C'est quoi les outils ou services qui existent ?`)
     informational.push(
       target
         ? `Je suis ${target} et je veux me lancer dans ${sector}, tu recommandes quoi ?`
@@ -77,64 +292,43 @@ function generatePrompts(site: any): string[] {
   }
 
   if (target && products) {
-    // Very natural "friend asking a friend" style
-    problemSolving.push(
-      `En tant que ${target}, j'hésite entre plusieurs solutions pour ${products}. Tu as des recommandations ?`
-    )
+    problemSolving.push(`En tant que ${target}, j'hésite entre plusieurs solutions pour ${products}. Tu as des recommandations ?`)
   }
 
   if (area && products) {
-    // Local intent
-    commercial.push(
-      `Où trouver ${products} à ${area} ? Des adresses ou des sites à me recommander ?`
-    )
+    commercial.push(`Où trouver ${products} à ${area} ? Des adresses ou des sites à me recommander ?`)
   }
 
-  // Fallback generic prompts if identity data is sparse
   if (informational.length === 0 && commercial.length === 0 && problemSolving.length === 0) {
-    const fallbackSector = sector || 'services en ligne'
+    const fb = sector || 'services en ligne'
     return [
-      `Je cherche un bon prestataire pour ${fallbackSector}, tu connais ?`,
-      `C'est quoi les solutions les plus populaires dans le domaine ${fallbackSector} ?`,
-      `J'ai un projet dans ${fallbackSector}, tu me recommandes quoi comme outil ou service ?`,
-      `Quelles sont les alternatives les plus fiables pour ${fallbackSector} en ce moment ?`,
-      `Un ami m'a dit de regarder du côté de ${fallbackSector}, tu as des suggestions concrètes ?`,
+      `Je cherche un bon prestataire pour ${fb}, tu connais ?`,
+      `C'est quoi les solutions les plus populaires dans le domaine ${fb} ?`,
+      `J'ai un projet dans ${fb}, tu me recommandes quoi comme outil ou service ?`,
+      `Quelles sont les alternatives les plus fiables pour ${fb} en ce moment ?`,
+      `Un ami m'a dit de regarder du côté de ${fb}, tu as des suggestions concrètes ?`,
     ]
   }
 
-  // Interleave intents for diversity: commercial, informational, problem-solving
-  const allPrompts = [
-    ...commercial,
-    ...informational,
-    ...problemSolving,
-  ]
-
-  // Deduplicate and pick up to NUM_PROMPTS
-  const unique = [...new Set(allPrompts)]
+  const unique = [...new Set([...commercial, ...informational, ...problemSolving])]
   return unique.slice(0, NUM_PROMPTS)
 }
 
-// ─── Check if brand is mentioned in response ───
-function brandFoundInResponse(response: string, site: any): boolean {
-  const brand = (site.site_name || '').toLowerCase()
-  const domain = (site.domain || '').toLowerCase().replace(/\./g, '[\\.\\s]?')
-  const text = response.toLowerCase()
-  
-  if (brand && brand.length > 2 && text.includes(brand)) return true
-  if (domain && new RegExp(domain).test(text)) return true
-  return false
-}
+// ═══════════════════════════════════════════════
+// LLM QUERY ENGINE — 3-iteration discovery
+// ═══════════════════════════════════════════════
 
-// ─── Query a single LLM with up to 3 iterations ───
 async function queryWithIterations(
   apiKey: string,
   model: string,
   prompt: string,
-  site: any,
-): Promise<{ iteration_found: number; response_text: string }> {
+  patterns: BrandPatterns,
+  domain: string,
+): Promise<{ iteration_found: number; response_text: string; all_responses: string[] }> {
   const messages: Array<{ role: string; content: string }> = [
     { role: 'user', content: prompt },
   ]
+  const allResponses: string[] = []
 
   for (let iteration = 1; iteration <= 3; iteration++) {
     try {
@@ -150,47 +344,59 @@ async function queryWithIterations(
           model,
           messages,
           temperature: 0.4,
-          max_tokens: 600,
+          max_tokens: 800,
         }),
       })
 
       if (!resp.ok) {
-        console.error(`[llm-visibility] ${model} iteration ${iteration} HTTP ${resp.status}`)
+        console.error(`[llm-vis] ${model} it${iteration} HTTP ${resp.status}`)
         break
       }
 
       const data = await resp.json()
       const content = data.choices?.[0]?.message?.content || ''
+      allResponses.push(content)
 
-      trackTokenUsage('calculate-llm-visibility', model, data.usage, site.domain)
+      trackTokenUsage('calculate-llm-visibility', model, data.usage, domain)
 
-      if (brandFoundInResponse(content, site)) {
-        return { iteration_found: iteration, response_text: content }
+      if (findBrandInText(content, patterns)) {
+        // Return the full concatenated text for richer analysis
+        return {
+          iteration_found: iteration,
+          response_text: allResponses.join('\n\n---\n\n'),
+          all_responses: allResponses,
+        }
       }
 
-      // Prepare follow-up for next iteration
       messages.push({ role: 'assistant', content })
 
-      // Follow-up prompts stay conversational, like a real user digging deeper
       if (iteration === 1) {
         messages.push({ role: 'user', content: "Ok merci, mais t'as pas d'autres noms ? Des alternatives moins connues peut-être ?" })
       } else if (iteration === 2) {
         messages.push({ role: 'user', content: "Et des petits acteurs ou des solutions de niche que t'aurais oubliées ?" })
       }
     } catch (err) {
-      console.error(`[llm-visibility] ${model} iteration ${iteration} error:`, err)
+      console.error(`[llm-vis] ${model} it${iteration} error:`, err)
       break
     }
   }
 
-  return { iteration_found: 0, response_text: '' }
+  return { iteration_found: 0, response_text: '', all_responses: allResponses }
 }
 
-// ─── Calculate score from iteration results ───
-function calculateScore(iterations: number[]): number {
-  if (iterations.length === 0) return 0
-  const total = iterations.reduce((sum, it) => sum + (ITERATION_SCORES[it] ?? DEFAULT_SCORE), 0)
-  return Math.round(total / iterations.length)
+// ═══════════════════════════════════════════════
+// AGGREGATE SCORE — weighted average with quality signal
+// ═══════════════════════════════════════════════
+
+function aggregateLLMScore(promptScores: PromptScore[]): number {
+  if (promptScores.length === 0) return 0
+
+  // Weight prompts where the brand was found more heavily
+  // (a prompt where brand is absent is a clear signal of low visibility)
+  const totalWeight = promptScores.length // every prompt counts
+  const totalScore = promptScores.reduce((sum, ps) => sum + ps.compositeScore, 0)
+
+  return Math.round(Math.max(0, Math.min(100, totalScore / totalWeight)))
 }
 
 // ─── Get Monday of current week ───
@@ -203,6 +409,10 @@ function getWeekStart(): string {
 }
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
+
+// ═══════════════════════════════════════════════
+// MAIN HANDLER
+// ═══════════════════════════════════════════════
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -246,43 +456,50 @@ Deno.serve(async (req) => {
       })
     }
 
+    const patterns = buildBrandPatterns(site)
     const prompts = generatePrompts(site)
     const weekStart = getWeekStart()
-    const results: Record<string, number[]> = {}
 
-    // For each LLM target
+    console.log(`[llm-vis] 🔍 ${site.domain} — patterns: ${patterns.exact.join(', ')} — ${prompts.length} prompts`)
+
+    const llmResults: Array<{
+      llm_name: string
+      score: number
+      promptDetails: PromptScore[]
+    }> = []
+
     for (const llm of LLM_TARGETS) {
-      results[llm.name] = []
+      const promptScores: PromptScore[] = []
 
       for (const prompt of prompts) {
-        // Small delay between calls to avoid rate limiting
-        await delay(300)
+        await delay(400) // rate-limit safety
 
         const { iteration_found, response_text } = await queryWithIterations(
           openrouterKey,
           llm.model,
           prompt,
-          site,
+          patterns,
+          site.domain,
         )
 
         trackPaidApiCall('calculate-llm-visibility', 'openrouter', llm.model, site.domain)
 
-        // Store raw execution
+        const ps = scorePromptResult(iteration_found, response_text, patterns)
+        promptScores.push(ps)
+
+        // Store raw execution with enriched metadata
         await supabase.from('llm_test_executions').insert({
           tracked_site_id,
           user_id,
           llm_name: llm.name,
           prompt_tested: prompt,
-          response_text: response_text.slice(0, 2000), // Truncate for storage
+          response_text: response_text.slice(0, 2000),
           brand_found: iteration_found > 0,
           iteration_found,
         })
-
-        results[llm.name].push(iteration_found)
       }
 
-      // Calculate and store aggregated score
-      const score = calculateScore(results[llm.name])
+      const score = aggregateLLMScore(promptScores)
 
       await supabase.from('llm_visibility_scores').upsert({
         tracked_site_id,
@@ -292,27 +509,35 @@ Deno.serve(async (req) => {
         week_start_date: weekStart,
       }, { onConflict: 'tracked_site_id,llm_name,week_start_date' })
 
-      console.log(`[llm-visibility] ${site.domain} × ${llm.name}: ${score}%`)
+      llmResults.push({ llm_name: llm.name, score, promptDetails: promptScores })
+
+      const breakdown = promptScores.map((ps, i) =>
+        `P${i + 1}:it${ps.iterationFound}×pos${ps.positionRank}×${ps.sentiment}=${ps.compositeScore}`
+      ).join(' | ')
+      console.log(`[llm-vis] ${site.domain} × ${llm.name}: ${score}% [${breakdown}]`)
     }
 
     // Build response summary
-    const scores = Object.entries(results).map(([llm, iterations]) => ({
-      llm_name: llm,
-      score_percentage: calculateScore(iterations),
-      details: iterations.map((it, i) => ({
+    const scores = llmResults.map(r => ({
+      llm_name: r.llm_name,
+      score_percentage: r.score,
+      details: r.promptDetails.map((ps, i) => ({
         prompt: prompts[i],
-        iteration_found: it,
-        points: ITERATION_SCORES[it] ?? DEFAULT_SCORE,
+        iteration_found: ps.iterationFound,
+        position_rank: ps.positionRank,
+        sentiment: ps.sentiment,
+        richness_bonus: ps.richnessBonus,
+        composite_score: ps.compositeScore,
       })),
     }))
 
-    console.log(`[llm-visibility] ✅ ${site.domain} complete: ${scores.map(s => `${s.llm_name}=${s.score_percentage}%`).join(', ')}`)
+    console.log(`[llm-vis] ✅ ${site.domain} complete: ${scores.map(s => `${s.llm_name}=${s.score_percentage}%`).join(', ')}`)
 
     return new Response(JSON.stringify({ data: { scores, week_start_date: weekStart } }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    console.error('[llm-visibility] Error:', error)
+    console.error('[llm-vis] Error:', error)
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
