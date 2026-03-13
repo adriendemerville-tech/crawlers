@@ -743,6 +743,7 @@ export type Database = {
           has_noindex: boolean | null
           has_og: boolean | null
           has_schema_org: boolean | null
+          html_size_bytes: number | null
           http_status: number | null
           id: string
           images_total: number | null
@@ -780,6 +781,7 @@ export type Database = {
           has_noindex?: boolean | null
           has_og?: boolean | null
           has_schema_org?: boolean | null
+          html_size_bytes?: number | null
           http_status?: number | null
           id?: string
           images_total?: number | null
@@ -817,6 +819,7 @@ export type Database = {
           has_noindex?: boolean | null
           has_og?: boolean | null
           has_schema_org?: boolean | null
+          html_size_bytes?: number | null
           http_status?: number | null
           id?: string
           images_total?: number | null
