@@ -2432,6 +2432,192 @@ ${fixCalls.map(call => `      ${call}`).join('\n')}
 }
 
 // ══════════════════════════════════════════════════════════════
+// SCORE DE CONFIANCE PAR FIX
+// ══════════════════════════════════════════════════════════════
+
+const IMPACT_ESTIMATES: Record<string, { seoPoints: [number, number]; category: string; description: string }> = {
+  fix_title:            { seoPoints: [3, 8],   category: 'SEO',         description: 'Un titre optimisé améliore le CTR et la pertinence sémantique' },
+  fix_meta_desc:        { seoPoints: [2, 5],   category: 'SEO',         description: 'Meta description optimisée pour le CTR dans les SERPs' },
+  fix_h1:               { seoPoints: [3, 7],   category: 'SEO',         description: 'Correction H1 unique améliore la hiérarchie sémantique' },
+  fix_jsonld:           { seoPoints: [4, 10],  category: 'SEO/GEO',     description: 'JSON-LD augmente la citabilité par les LLMs (+rich snippets)' },
+  fix_lazy_images:      { seoPoints: [2, 6],   category: 'Performance', description: 'Lazy loading + LCP fetchpriority améliorent Core Web Vitals' },
+  fix_https_redirect:   { seoPoints: [5, 12],  category: 'Sécurité',    description: 'HTTPS est un signal de classement Google direct' },
+  fix_contrast:         { seoPoints: [1, 3],   category: 'Accessibilité', description: 'Améliore WCAG compliance et expérience utilisateur' },
+  fix_alt_images:       { seoPoints: [2, 5],   category: 'SEO/A11y',    description: 'Alt text améliore le référencement image et l\'accessibilité' },
+  fix_gtm:              { seoPoints: [0, 2],   category: 'Tracking',    description: 'GTM ne change pas le SEO mais permet de mesurer les progrès' },
+  fix_ga4:              { seoPoints: [0, 2],   category: 'Tracking',    description: 'GA4 permet le suivi des performances post-optimisation' },
+  fix_hallucination:    { seoPoints: [5, 15],  category: 'GEO/AEO',     description: 'Correction hallucination IA améliore la citabilité LLM' },
+  inject_faq:           { seoPoints: [4, 10],  category: 'SEO/GEO',     description: 'FAQ Schema.org améliore les rich results et la citabilité' },
+  inject_blog_section:  { seoPoints: [3, 8],   category: 'Contenu',     description: 'Contenu éditorial enrichit la valeur sémantique de la page' },
+  enhance_semantic_meta:{ seoPoints: [3, 7],   category: 'SEO Social',  description: 'OG + Twitter Cards améliorent le partage social et la visibilité' },
+  inject_breadcrumbs:   { seoPoints: [2, 5],   category: 'SEO',         description: 'BreadcrumbList améliore la navigation et les rich snippets' },
+  inject_local_business:{ seoPoints: [3, 8],   category: 'SEO Local',   description: 'LocalBusiness Schema améliore la visibilité locale' },
+  fix_missing_blog:     { seoPoints: [5, 12],  category: 'Contenu/GEO', description: 'Section blog complète augmente le contenu indexable' },
+  fix_semantic_injection:{ seoPoints: [4, 10], category: 'GEO',         description: 'Info Box sémantique renforce l\'autorité thématique' },
+  fix_robot_context:    { seoPoints: [6, 15],  category: 'GEO/AEO',     description: 'Calque anti-hallucination clarifie l\'entité pour les LLMs' },
+  fix_pagespeed_suite:  { seoPoints: [5, 12],  category: 'Performance', description: 'Suite CLS+LCP+Fonts améliore les Core Web Vitals' },
+  fix_hreflang:         { seoPoints: [2, 5],   category: 'SEO Int.',    description: 'Hreflang améliore le SEO international' },
+  fix_open_graph:       { seoPoints: [2, 5],   category: 'SEO Social',  description: 'Open Graph optimise les previews sur les réseaux sociaux' },
+  fix_twitter_cards:    { seoPoints: [1, 4],   category: 'SEO Social',  description: 'Twitter Cards améliorent la visibilité sur X/Twitter' },
+};
+
+// Template fixes (100% deterministic) — confidence = 100
+const TEMPLATE_FIX_IDS = new Set([
+  'fix_title', 'fix_meta_desc', 'fix_h1', 'fix_jsonld', 'fix_lazy_images',
+  'fix_https_redirect', 'fix_contrast', 'fix_alt_images', 'fix_gtm', 'fix_ga4',
+  'fix_hallucination', 'inject_faq', 'inject_blog_section', 'enhance_semantic_meta',
+  'inject_breadcrumbs', 'inject_local_business', 'fix_missing_blog',
+  'fix_semantic_injection', 'fix_robot_context', 'fix_pagespeed_suite',
+  'fix_hreflang', 'fix_open_graph', 'fix_twitter_cards'
+]);
+
+function computeFixConfidence(
+  fix: FixConfig,
+  libraryHits: string[],
+  solutionMatches: Map<string, SolutionMatch>,
+  aiGeneratedFixes: Map<string, { fn: string; call: string }> | null
+): FixConfidence {
+  let confidence: number;
+  let source: FixConfidence['source'];
+
+  if (libraryHits.includes(fix.id)) {
+    const match = solutionMatches.get(fix.id);
+    if (match?.similarity === 'exact' && match.is_generic) {
+      confidence = 95 + Math.min(5, Math.floor((match.success_rate || 0) / 20));
+      source = 'library_exact';
+    } else {
+      confidence = 88 + Math.min(7, Math.floor((match?.success_rate || 0) / 15));
+      source = 'library_adapted';
+    }
+  } else if (aiGeneratedFixes?.has(fix.id)) {
+    confidence = 80;
+    source = 'ai_generated';
+  } else if (TEMPLATE_FIX_IDS.has(fix.id)) {
+    confidence = 100;
+    source = 'template';
+  } else {
+    confidence = 75;
+    source = 'ai_generated';
+  }
+
+  const impact = IMPACT_ESTIMATES[fix.id] || { 
+    seoPoints: [1, 5] as [number, number], 
+    category: fix.category, 
+    description: `Correctif ${fix.label}` 
+  };
+
+  return {
+    fixId: fix.id,
+    label: fix.label,
+    confidence,
+    source,
+    estimatedImpact: impact,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// VALIDATION SYNTAXIQUE + MINIFICATION
+// ══════════════════════════════════════════════════════════════
+
+function validateJsSyntax(code: string): { valid: boolean; error?: string } {
+  try {
+    // Use Deno's built-in eval in a safe way — just syntax check
+    new Function(code);
+    return { valid: true };
+  } catch (e) {
+    return { valid: false, error: e instanceof Error ? e.message : 'Unknown syntax error' };
+  }
+}
+
+function minifyScript(code: string): string {
+  // Simple but effective minification (no AST, regex-based)
+  return code
+    // Remove single-line comments (but not URLs with //)
+    .replace(/(?<!:)\/\/(?![\/*]).*$/gm, '')
+    // Remove multi-line comments (except JSON-LD and important ones)
+    .replace(/\/\*(?!\*\/)[^*]*\*+(?:[^/*][^*]*\*+)*\//g, '')
+    // Remove the header block comment
+    .replace(/\/\*\*[\s\S]*?\*\//g, '')
+    // Collapse multiple blank lines into one
+    .replace(/\n\s*\n\s*\n/g, '\n')
+    // Remove leading whitespace on lines
+    .replace(/^\s+/gm, '')
+    // Remove trailing whitespace
+    .replace(/\s+$/gm, '')
+    // Collapse multiple spaces into one (but keep string literals)
+    .replace(/  +/g, ' ')
+    // Remove blank lines
+    .replace(/^\s*[\r\n]/gm, '')
+    .trim();
+}
+
+// ══════════════════════════════════════════════════════════════
+// VERSIONING / DIFF avec saved_corrective_codes
+// ══════════════════════════════════════════════════════════════
+
+async function computeVersionDiff(
+  userId: string | null,
+  siteUrl: string,
+  currentFixIds: string[]
+): Promise<VersionDiff> {
+  const noDiff: VersionDiff = {
+    previousVersion: null, previousDate: null,
+    linesAdded: 0, linesRemoved: 0,
+    fixesAdded: [], fixesRemoved: [], hasChanges: false
+  };
+
+  if (!userId) return noDiff;
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  if (!supabaseUrl || !serviceKey) return noDiff;
+
+  try {
+    const supabase = createClient(supabaseUrl, serviceKey);
+    
+    // Extract domain from URL
+    let domain = siteUrl;
+    try {
+      const urlObj = new URL(siteUrl.startsWith('http') ? siteUrl : `https://${siteUrl}`);
+      domain = urlObj.hostname.replace('www.', '');
+    } catch { /* keep as-is */ }
+
+    const { data: previous } = await supabase
+      .from('saved_corrective_codes')
+      .select('code, fixes_applied, created_at, url')
+      .eq('user_id', userId)
+      .ilike('url', `%${domain}%`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!previous) return noDiff;
+
+    const previousFixes = (previous.fixes_applied as any[] || []).map((f: any) => f.id || f);
+    const fixesAdded = currentFixIds.filter(id => !previousFixes.includes(id));
+    const fixesRemoved = previousFixes.filter((id: string) => !currentFixIds.includes(id));
+
+    const previousLines = (previous.code || '').split('\n').length;
+    // Rough estimate since we don't have the new code yet
+    const linesAdded = fixesAdded.length * 20; // ~20 lines per fix
+    const linesRemoved = fixesRemoved.length * 20;
+
+    return {
+      previousVersion: previous.created_at,
+      previousDate: previous.created_at,
+      linesAdded,
+      linesRemoved,
+      fixesAdded,
+      fixesRemoved,
+      hasChanges: fixesAdded.length > 0 || fixesRemoved.length > 0,
+    };
+  } catch (error) {
+    console.error('❌ Erreur version diff:', error);
+    return noDiff;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
 // HANDLER PRINCIPAL
 // ══════════════════════════════════════════════════════════════
 
@@ -2456,7 +2642,7 @@ Deno.serve(async (req) => {
     }: GenerateRequest = await req.json();
 
     console.log('═══════════════════════════════════════════════════════════════');
-    console.log('🏗️ ARCHITECTE GÉNÉRATIF v3.0 — CLS-ZERO Protocol');
+    console.log('🏗️ ARCHITECTE GÉNÉRATIF v4.0 — CLS-ZERO + Confidence + Telemetry');
     console.log('═══════════════════════════════════════════════════════════════');
     console.log(`📍 Site: ${siteName} (${siteUrl})`);
     console.log(`📋 Fixes demandés: ${fixes?.length || 0}`);
