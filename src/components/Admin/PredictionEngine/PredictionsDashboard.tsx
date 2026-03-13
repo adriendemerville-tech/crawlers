@@ -3,13 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Brain, TrendingUp, Target, RefreshCw, FileText, AlertCircle } from 'lucide-react';
+import { Upload, Brain, TrendingUp, Target, RefreshCw, FileText, AlertCircle, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ScoreGauge200 } from '@/components/ExpertAudit/ScoreGauge200';
 import { PdfUploader } from './PdfUploader';
 import { PredictionsList } from './PredictionsList';
 import { ActualResultsForm } from './ActualResultsForm';
+import { BacktestingDashboard } from './BacktestingDashboard';
 
 interface SystemMetrics {
   current_reliability_score: number;
@@ -103,6 +104,10 @@ export function PredictionsDashboard() {
             <Target className="h-4 w-4" />
             Résultats réels
           </TabsTrigger>
+          <TabsTrigger value="backtest" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Backtesting
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="upload">
@@ -115,6 +120,10 @@ export function PredictionsDashboard() {
 
         <TabsContent value="results">
           <ActualResultsForm onSaved={fetchMetrics} />
+        </TabsContent>
+
+        <TabsContent value="backtest">
+          <BacktestingDashboard />
         </TabsContent>
       </Tabs>
     </div>

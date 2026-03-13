@@ -38,6 +38,8 @@ import { FreshnessSignalsCard } from './FreshnessSignalsCard';
 import { ConversionFrictionCard } from './ConversionFrictionCard';
 import { AEOScoreCard } from './AEOScoreCard';
 import { StrategicErrorBoundary } from './StrategicErrorBoundary';
+import { TechnicalResultsSection } from './TechnicalResultsSection';
+import { StrategicResultsSection } from './StrategicResultsSection';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -1357,412 +1359,35 @@ export function ExpertAuditDashboard() {
         >
           {/* === STEP 1: TECHNICAL AUDIT SECTION === */}
           {auditMode === 'technical' && (
-            <>
-              {/* Introduction */}
-              {result.introduction && (
-                <IntroductionCard introduction={result.introduction} variant="technical" />
-              )}
-
-              {/* SPA Detection Alert */}
-              {result.isSPA && (
-                <SPADetectionAlert />
-              )}
-
-              {/* Hero Score */}
-              <Card className="bg-gradient-to-br from-card via-card to-muted/30 border-2">
-                <CardContent className="p-8">
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div className="text-center md:text-left">
-                      <h2 className="text-2xl font-bold text-foreground mb-2">{result.domain}</h2>
-                      <a 
-                        href={result.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1"
-                      >
-                        {result.url} <ExternalLink className="h-3 w-3" />
-                      </a>
-                      <div className="mt-4 space-y-1">
-                      <p className="text-base font-semibold text-foreground">Score Global SEO</p>
-                      {/* Recompute total from sub-scores for consistency */}
-                      {(() => {
-                        const computedTotal = result.scores.performance.score + result.scores.technical.score + result.scores.semantic.score + result.scores.aiReady.score + result.scores.security.score;
-                        const displayScore = computedTotal;
-                        return (
-                          <>
-                            <p className="text-lg">
-                              {displayScore < 100 && <span className="text-destructive font-medium">{t.toImprove}</span>}
-                              {displayScore >= 100 && displayScore < 150 && <span className="text-warning font-medium">{t.correct}</span>}
-                              {displayScore >= 150 && <span className="text-success font-medium">{t.excellent}</span>}
-                            </p>
-                          </>
-                        );
-                      })()}
-                      </div>
-                    </div>
-                    <ScoreGauge200 score={result.scores.performance.score + result.scores.technical.score + result.scores.semantic.score + result.scores.aiReady.score + result.scores.security.score} />
-                  </div>
-                  <MethodologyPopover variant="global_score" />
-                </CardContent>
-              </Card>
-
-              {/* Category Cards Grid */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {/* Performance */}
-                <CategoryCard
-                  icon={<Zap className="h-5 w-5" />}
-                  title="Performance"
-                  score={result.scores.performance.score}
-                  maxScore={result.scores.performance.maxScore}
-                  variant="performance"
-                >
-                  <MetricRow 
-                    label="Score PSI" 
-                    value={`${result.scores.performance.psiPerformance}%`} 
-                    status={result.scores.performance.psiPerformance >= 90 ? 'good' : result.scores.performance.psiPerformance >= 50 ? 'warning' : 'bad'}
-                  />
-                  <MetricRow label="LCP" value={formatMs(result.scores.performance.lcp)} status={result.scores.performance.lcp <= 2500 ? 'good' : 'warning'} />
-                  <MetricRow label="CLS" value={result.scores.performance.cls.toFixed(2)} status={result.scores.performance.cls <= 0.1 ? 'good' : 'warning'} />
-                  <MetricRow label="TBT" value={formatMs(result.scores.performance.tbt)} status={result.scores.performance.tbt <= 200 ? 'good' : 'warning'} />
-                </CategoryCard>
-
-                {/* Technical */}
-                <CategoryCard
-                  icon={<Settings2 className="h-5 w-5" />}
-                  title="Socle Technique"
-                  score={result.scores.technical.score}
-                  maxScore={result.scores.technical.maxScore}
-                  variant="technical"
-                >
-                  <MetricRow 
-                    label="Score SEO PSI" 
-                    value={`${result.scores.technical.psiSeo}%`} 
-                    status={result.scores.technical.psiSeo >= 90 ? 'good' : result.scores.technical.psiSeo >= 70 ? 'warning' : 'bad'}
-                  />
-                  <MetricRow label="Status HTTP" value={result.scores.technical.httpStatus} status="good" />
-                  <MetricRow label="HTTPS" value={result.scores.technical.isHttps} />
-                  {result.scores.technical.brokenLinksCount !== undefined && (
-                    <MetricRow 
-                      label="Liens cassés" 
-                      value={`${result.scores.technical.brokenLinksCount}/${result.scores.technical.brokenLinksChecked || 0}`} 
-                      status={result.scores.technical.brokenLinksCount === 0 ? 'good' : result.scores.technical.brokenLinksCount <= 2 ? 'warning' : 'bad'}
-                    />
-                  )}
-                </CategoryCard>
-
-                {/* Semantic */}
-                <CategoryCard
-                  icon={<FileText className="h-5 w-5" />}
-                  title="Sémantique & Contenu"
-                  score={result.scores.semantic.score}
-                  maxScore={result.scores.semantic.maxScore}
-                  variant="semantic"
-                >
-                  <MetricRow 
-                    label="Balise Title" 
-                    value={result.scores.semantic.hasTitle ? `${result.scores.semantic.titleLength} car.` : 'Absente'} 
-                    status={result.scores.semantic.hasTitle && result.scores.semantic.titleLength <= 70 ? 'good' : 'bad'}
-                  />
-                  <MetricRow label="Meta Description" value={result.scores.semantic.hasMetaDesc} />
-                  <MetricRow 
-                    label="H1 unique" 
-                    value={result.scores.semantic.hasUniqueH1 ? 'Oui' : `${result.scores.semantic.h1Count} trouvés`} 
-                    status={result.scores.semantic.hasUniqueH1 ? 'good' : 'bad'}
-                  />
-                  <MetricRow 
-                    label="Contenu" 
-                    value={`~${result.scores.semantic.wordCount} mots`} 
-                    status={result.scores.semantic.wordCount >= 500 ? 'good' : 'warning'}
-                  />
-                </CategoryCard>
-
-                {/* AI Ready */}
-                <CategoryCard
-                  icon={<Brain className="h-5 w-5" />}
-                  title="Préparation IA & GEO"
-                  score={result.scores.aiReady.score}
-                  maxScore={result.scores.aiReady.maxScore}
-                  variant="ai"
-                >
-                  <MetricRow label="Schema.org (JSON-LD)" value={result.scores.aiReady.hasSchemaOrg} />
-                  {result.scores.aiReady.schemaTypes.length > 0 && (
-                    <div className="flex flex-wrap gap-1 py-1">
-                      {result.scores.aiReady.schemaTypes.slice(0, 3).map((type) => (
-                        <Badge key={type} variant="secondary" className="text-xs">{type}</Badge>
-                      ))}
-                    </div>
-                  )}
-                  <MetricRow label="Robots.txt" value={result.scores.aiReady.hasRobotsTxt} />
-                  <MetricRow 
-                    label="Permissif aux bots" 
-                    value={result.scores.aiReady.robotsPermissive} 
-                    status={result.scores.aiReady.robotsPermissive ? 'good' : 'warning'}
-                  />
-                </CategoryCard>
-
-                {/* Security */}
-                <CategoryCard
-                  icon={<Shield className="h-5 w-5" />}
-                  title="Santé & Sécurité"
-                  score={result.scores.security.score}
-                  maxScore={result.scores.security.maxScore}
-                  variant="security"
-                >
-                  <MetricRow label="HTTPS activé" value={result.scores.security.isHttps} />
-                  <MetricRow 
-                    label="Safe Browsing" 
-                    value={result.scores.security.safeBrowsingOk ? 'OK' : 'Menaces détectées'} 
-                    status={result.scores.security.safeBrowsingOk ? 'good' : 'bad'}
-                  />
-                  {result.scores.security.threats.length > 0 && (
-                    <div className="text-xs text-destructive">
-                      Menaces : {result.scores.security.threats.join(', ')}
-                    </div>
-                  )}
-                </CategoryCard>
-
-                {/* AI Bots */}
-                {result.rawData?.crawlersData && (
-                  <AIBotsCard data={result.rawData.crawlersData} />
-                )}
-                
-              </div>
-
-              {/* NEW: Technical Audit Cards (Dark Social, Freshness, Conversion Friction) */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {result.rawData?.htmlAnalysis?.darkSocial && (
-                  <DarkSocialCard data={result.rawData.htmlAnalysis.darkSocial} />
-                )}
-                {result.rawData?.htmlAnalysis?.freshnessSignals && (
-                  <FreshnessSignalsCard data={result.rawData.htmlAnalysis.freshnessSignals} />
-                )}
-                {result.rawData?.htmlAnalysis?.conversionFriction && (
-                  <ConversionFrictionCard data={result.rawData.htmlAnalysis.conversionFriction} />
-                )}
-              </div>
-
-              {/* Premium Report Button - Before Expert Insights */}
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex justify-center py-6"
-              >
-                <Button
-                  onClick={handleReportButtonClick}
-                  size="lg"
-                  className="gap-3 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
-                >
-                  <FileDown className="h-5 w-5" />
-                  {t.viewReport}
-                </Button>
-              </motion.div>
-
-              {/* Expert Insights Card */}
-              {result.insights && (
-                <ExpertInsightsCard insights={result.insights} />
-              )}
-
-              {/* Broken Links Card */}
-              {result.insights?.brokenLinks && (
-                <BrokenLinksCard brokenLinks={result.insights.brokenLinks} />
-              )}
-
-              {/* Technical Narrative Section - 3 pedagogical blocs */}
-              <TechnicalNarrativeSection result={result} />
-
-              {/* Image Quality & Page Weight Cards */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <ImageQualityCard 
-                  imagesTotal={result.rawData?.htmlAnalysis?.imagesTotal ?? 0} 
-                  imagesMissingAlt={result.rawData?.htmlAnalysis?.imagesMissingAlt ?? 0} 
-                />
-                {(result.rawData?.htmlAnalysis?.htmlSizeBytes > 0 || result.insights?.contentDensity?.htmlSize > 0) && (
-                  <PageWeightCard 
-                    htmlSizeBytes={result.rawData?.htmlAnalysis?.htmlSizeBytes || result.insights?.contentDensity?.htmlSize || 0} 
-                  />
-                )}
-              </div>
-
-              {/* Action Plan (refactored from RecommendationList) */}
-              <ActionPlan recommendations={result.recommendations} url={result.url} />
-            </>
+            <TechnicalResultsSection result={result} t={t} onReportClick={handleReportButtonClick} />
           )}
 
-          {/* === STEP 2: STRATEGIC AUDIT SECTION (with Registration Gate) === */}
+          {/* === STEP 2: STRATEGIC AUDIT SECTION === */}
           {auditMode === 'strategic' && (
-            <StrategicErrorBoundary onReset={handleNewAudit}>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="relative"
-            >
-              {/* Header : Titre */}
-              <div className="flex items-center gap-3 mb-6">
-                <div className="h-8 w-1 rounded-full bg-gradient-to-b from-primary to-primary/40" />
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">{t.strategicSectionTitle}</h2>
-                  <p className="text-sm text-muted-foreground">{t.strategicSectionDesc}</p>
-                </div>
-              </div>
-
-              {/* Introduction - Toujours visible avec bouton Corriger */}
-              {result.strategicAnalysis?.introduction && (
-                <>
-                  <IntroductionCard 
-                    introduction={result.strategicAnalysis.introduction} 
-                    variant="strategic"
-                    domain={result.domain || url}
-                    siteName={result.domain || url}
-                    onHallucinationData={handleHallucinationCorrectionComplete}
-                    typewriter={strategicProgressiveReveal}
-                  />
-                  {/* Report button under introduction */}
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="flex justify-center py-4"
-                  >
-                    <Button
-                      onClick={handleReportButtonClick}
-                      size="lg"
-                      className="gap-3 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
-                    >
-                      <FileDown className="h-5 w-5" />
-                      {t.viewReport}
-                    </Button>
-                  </motion.div>
-                </>
-              )}
-
-              {/* Hallucination Diagnosis Results - Displayed under introduction after diagnosis */}
-              {hallucinationDiagnosis && hallucinationDiagnosis.discrepancies && (
-                <HallucinationDiagnosisCard diagnosis={hallucinationDiagnosis} />
-              )}
-
-              {/* LLM Confusion Detection - Show if stored corrections exist for this domain */}
-              {storedCorrections.length > 0 && !hallucinationDiagnosis && (
-                <LLMConfusionDetectionCard 
-                  corrections={storedCorrections}
-                  domain={result.domain || url}
-                  onApplyCorrections={(correctedValues) => {
-                    toast({
-                      title: 'Re-analyse en cours...',
-                      description: 'Le rapport va être régénéré avec les corrections communautaires.',
-                    });
-                    handleStrategicAudit(correctedValues, null);
-                  }}
-                />
-              )}
-
-              {/* Zone de Contenu Protégée */}
-              <div className="relative min-h-[400px] mt-6">
-                {/* Le contenu existant (Flouté si pas loggé) */}
-                <motion.div 
-                  initial={false}
-                  animate={{ 
-                    filter: isLoggedIn ? 'blur(0px)' : 'blur(8px)',
-                    opacity: isLoggedIn ? 1 : 0.5,
-                    scale: isLoggedIn ? 1 : 0.98,
-                  }}
-                  transition={{ 
-                    duration: 0.6, 
-                    ease: [0.22, 1, 0.36, 1],
-                    filter: { duration: 0.5 },
-                    opacity: { duration: 0.4 },
-                    scale: { duration: 0.5 }
-                  }}
-                  className={cn(
-                    "space-y-6",
-                    !isLoggedIn && "pointer-events-none select-none"
-                  )}
-                >
-                  {/* Strategic Insights */}
-                  {result.strategicAnalysis && (() => {
-                    console.log('[Strategic] Rendering StrategicInsights, keys:', Object.keys(result.strategicAnalysis || {}));
-                    return (
-                      <StrategicInsights 
-                        analysis={result.strategicAnalysis!} 
-                        hideExecutiveSummary={true}
-                        domain={result.domain || url}
-                        siteName={result.domain || url}
-                        onHallucinationData={handleHallucinationCorrectionComplete}
-                        onCompetitorCorrection={handleCompetitorCorrectionComplete}
-                        isReanalyzing={isStrategicLoading}
-                        auditResult={result}
-                        progressiveReveal={strategicProgressiveReveal}
-                        strategicCacheInfo={strategicCacheInfo}
-                        onForceRefresh={() => {
-                          setForceStrategicRefresh(true);
-                          const d = result.domain || (() => { try { return new URL(url).hostname; } catch { return ''; } })();
-                          if (d) clearStrategicCache(d);
-                          setStrategicCacheInfo(null);
-                          const normalizedUrl = normalizeUrl(url);
-                          setTimeout(() => runStrategicAudit(normalizedUrl), 100);
-                        }}
-                      />
-                    );
-                  })()}
-
-                  {/* Strategic Roadmap as Action Plan */}
-                  {result.strategicAnalysis && (() => {
-                    const roadmap = result.strategicAnalysis!.executive_roadmap || [];
-                    const legacyRoadmap = result.strategicAnalysis!.strategic_roadmap || [];
-                    
-                    const priorityMap: Record<string, 'critical' | 'important' | 'optional'> = {
-                      'Prioritaire': 'critical',
-                      'Important': 'important',
-                      'Opportunité': 'optional',
-                    };
-                    const categoryMap: Record<string, 'performance' | 'technique' | 'contenu' | 'ia' | 'securite'> = {
-                      'Identité': 'contenu',
-                      'Contenu': 'contenu',
-                      'Autorité': 'ia',
-                      'Social': 'contenu',
-                      'Technique': 'technique',
-                    };
-
-                    const recommendations: import('@/types/expertAudit').Recommendation[] = roadmap.length > 0
-                      ? roadmap.map((item, i) => ({
-                          id: `roadmap-${i}`,
-                          priority: priorityMap[item.priority] || 'optional',
-                          category: categoryMap[item.category] || 'contenu',
-                          icon: '🎯',
-                          title: item.title || item.prescriptive_action?.slice(0, 80) || '',
-                          description: item.prescriptive_action || '',
-                        }))
-                      : legacyRoadmap.map((item, i) => ({
-                          id: `roadmap-legacy-${i}`,
-                          priority: priorityMap[item.priority] || 'optional',
-                          category: categoryMap[item.category] || 'contenu',
-                          icon: '🎯',
-                          title: item.action_concrete || '',
-                          description: item.strategic_goal || '',
-                        }));
-
-                    if (recommendations.length === 0) return null;
-
-                    return (
-                      <ActionPlan 
-                        recommendations={recommendations} 
-                        url={result.url} 
-                        auditType="strategic" 
-                      />
-                    );
-                  })()}
-                </motion.div>
-
-                {/* La Carte d'Inscription (Apparaît par-dessus si pas loggé) */}
-                <AnimatePresence>
-                  {!isLoggedIn && (
-                    <RegistrationGate />
-                  )}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-            </StrategicErrorBoundary>
+            <StrategicResultsSection
+              result={result}
+              url={url}
+              t={t}
+              isLoggedIn={isLoggedIn}
+              isStrategicLoading={isStrategicLoading}
+              hallucinationDiagnosis={hallucinationDiagnosis}
+              storedCorrections={storedCorrections}
+              strategicProgressiveReveal={strategicProgressiveReveal}
+              strategicCacheInfo={strategicCacheInfo}
+              onReportClick={handleReportButtonClick}
+              onHallucinationCorrectionComplete={handleHallucinationCorrectionComplete}
+              onCompetitorCorrectionComplete={handleCompetitorCorrectionComplete}
+              onNewAudit={handleNewAudit}
+              onStrategicAudit={handleStrategicAudit}
+              onForceRefresh={() => {
+                setForceStrategicRefresh(true);
+                const d = result.domain || (() => { try { return new URL(url).hostname; } catch { return ''; } })();
+                if (d) clearStrategicCache(d);
+                setStrategicCacheInfo(null);
+                const normalizedUrl = normalizeUrl(url);
+                setTimeout(() => runStrategicAudit(normalizedUrl), 100);
+              }}
+            />
           )}
 
           {/* Timestamp + Premium Report Button */}
