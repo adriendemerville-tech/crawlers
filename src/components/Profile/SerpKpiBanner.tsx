@@ -1,6 +1,7 @@
-import { Hash, TrendingUp, Home, Award, Target, BarChart3 } from 'lucide-react';
+import { Hash, TrendingUp, Home, Award, Target, BarChart3, RefreshCw, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -17,6 +18,8 @@ interface SerpData {
 
 interface SerpKpiBannerProps {
   data: SerpData | null | undefined;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 const translations = {
@@ -123,7 +126,7 @@ function DistributionBar({ top3, top10, top50, total }: { top3: number; top10: n
   );
 }
 
-export function SerpKpiBanner({ data }: SerpKpiBannerProps) {
+export function SerpKpiBanner({ data, onRefresh, isRefreshing }: SerpKpiBannerProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
 
@@ -149,6 +152,21 @@ export function SerpKpiBanner({ data }: SerpKpiBannerProps) {
             <span className="ml-auto text-[10px] text-muted-foreground font-normal">
               {new Date(data.measured_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}
             </span>
+          )}
+          {onRefresh && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 ml-1"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3" />
+              )}
+            </Button>
           )}
         </CardTitle>
       </CardHeader>
