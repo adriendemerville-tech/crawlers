@@ -1406,8 +1406,8 @@ export function MyTracking() {
                     />
                   )}
 
-                  {/* LLM Depth Card – paid users only */}
-                  {currentSite && isAgencyPro && (
+                  {/* LLM Depth Card – Pro Agency, collaborators & admins */}
+                  {currentSite && (isAgencyPro || isCollaborator || isAdmin) && (
                     <LLMDepthCard domain={currentSite.domain} />
                   )}
                 </div>
