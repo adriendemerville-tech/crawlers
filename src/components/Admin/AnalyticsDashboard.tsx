@@ -1194,7 +1194,7 @@ export function AnalyticsDashboard() {
               <div className="p-3 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">Score de fiabilité</p>
                 <p className={`text-2xl font-bold ${reliabilityScore.score >= 70 ? 'text-emerald-500' : reliabilityScore.score >= 40 ? 'text-amber-500' : 'text-destructive'}`}>
-                  {reliabilityScore.score.toFixed(1)}%
+                  {reliabilityScore.score.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-1">
                   {reliabilityScore.score >= 70 ? '✅ Visible clients' : '🔒 Shadow mode'}
