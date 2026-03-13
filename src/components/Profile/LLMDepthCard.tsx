@@ -270,21 +270,94 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
       });
   }, [trackedSiteId, userId, canViewConversations, data]);
 
-  // Check if user has previous LLM depth data for this site
+  // Load previous LLM depth data from database on mount
   useEffect(() => {
-    if (!trackedSiteId || !userId) {
-      setHasPreviousData(false);
+    if (!trackedSiteId || !userId || data) {
+      if (!trackedSiteId || !userId) setHasPreviousData(false);
       return;
     }
-    supabase
-      .from('llm_test_executions')
-      .select('id', { count: 'exact', head: true })
-      .eq('tracked_site_id', trackedSiteId)
-      .eq('user_id', userId)
-      .then(({ count }) => {
-        setHasPreviousData((count ?? 0) > 0);
-      });
-  }, [trackedSiteId, userId]);
+
+    (async () => {
+      try {
+        // Get the most recent executions for this site, grouped by llm_name
+        const { data: executions, error } = await supabase
+          .from('llm_test_executions')
+          .select('llm_name, brand_found, iteration_found, prompt_tested, response_text, created_at')
+          .eq('tracked_site_id', trackedSiteId)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(100);
+
+        if (error || !executions?.length) {
+          setHasPreviousData(false);
+          return;
+        }
+
+        setHasPreviousData(true);
+
+        // Get the latest batch timestamp (within 5 min window of most recent)
+        const latestTime = new Date(executions[0].created_at).getTime();
+        const batchWindow = 5 * 60 * 1000; // 5 minutes
+        const batchExecutions = executions.filter(
+          e => latestTime - new Date(e.created_at).getTime() < batchWindow
+        );
+
+        // Group by LLM
+        const byLlm: Record<string, typeof batchExecutions> = {};
+        for (const exec of batchExecutions) {
+          if (!byLlm[exec.llm_name]) byLlm[exec.llm_name] = [];
+          byLlm[exec.llm_name].push(exec);
+        }
+
+        const results: DepthResult[] = [];
+        const depths: number[] = [];
+
+        for (const [llmName, execs] of Object.entries(byLlm)) {
+          // Find the best (earliest found) execution
+          const foundExec = execs.find(e => e.brand_found);
+          const iterations = foundExec ? (foundExec.iteration_found ?? 7) : 7;
+          const found = !!foundExec;
+
+          if (found) depths.push(iterations);
+
+          // Extract mentioned_as from response
+          let mentionedAs: string | null = null;
+          if (foundExec?.response_text) {
+            const snippet = foundExec.response_text.slice(0, 200);
+            mentionedAs = snippet.length > 60 ? snippet.slice(0, 60) + '…' : snippet;
+          }
+
+          results.push({
+            llm: llmName,
+            model: '',
+            iterations,
+            found,
+            mentioned_as: mentionedAs,
+            conversation_summary: '',
+            angles_tested: execs.map(e => e.prompt_tested.slice(0, 40)),
+          });
+        }
+
+        if (results.length > 0) {
+          const avgDepth = depths.length > 0
+            ? Math.round((depths.reduce((a, b) => a + b, 0) / depths.length) * 10) / 10
+            : null;
+
+          setData({
+            brand: domain,
+            domain,
+            avg_depth: avgDepth,
+            results,
+            prompt_strategy: 'multi-angle',
+            measured_at: executions[0].created_at,
+          });
+        }
+      } catch (err) {
+        console.error('[LLMDepthCard] Failed to load previous data:', err);
+        setHasPreviousData(false);
+      }
+    })();
+  }, [trackedSiteId, userId, domain]);
 
   const handleRefresh = useCallback(async () => {
     if (loading) return;
