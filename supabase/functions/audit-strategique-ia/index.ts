@@ -2311,6 +2311,10 @@ Deno.serve(async (req) => {
         ? founderResult.value
         : { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
 
+      if (gmbResult.status === 'fulfilled' && gmbResult.value) {
+        gmbData = gmbResult.value;
+      }
+
       console.log(`⏱️ Data collection done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
 
