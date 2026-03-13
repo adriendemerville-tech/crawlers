@@ -164,7 +164,7 @@ export function generateCorrectiveScript(
   // Aucune variable ne fuit dans window sauf le namespace dédié.
   // ═══════════════════════════════════════════════════════════
    var __CRAWLERS_CONFIG__ = {
-    version: '3.1',
+    version: '3.2',
     site: '${siteUrl}',
     fixes: ${enabledFixes.length},
     generatedAt: new Date().toISOString()
