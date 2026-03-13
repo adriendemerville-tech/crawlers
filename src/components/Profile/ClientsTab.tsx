@@ -406,6 +406,10 @@ export function ClientsTab() {
                     </PopoverContent>
                   </Popover>
 
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-violet-500 hover:bg-violet-500/10" onClick={() => openEdit(client)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(client.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
