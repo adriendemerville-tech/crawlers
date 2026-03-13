@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Target, TrendingUp, Brain, MessageSquare, 
   CheckCircle2, XCircle, AlertCircle, Lightbulb,
-  Globe, Building2, Users, BrainCircuit
+  Globe, Building2, Users, BrainCircuit, RefreshCw
 } from 'lucide-react';
 import { StrategicAnalysis, AuditPageType } from '@/types/expertAudit';
 import { GeoScoreVisualization } from './GeoScoreVisualization';
