@@ -26,6 +26,7 @@ import { SerpKpiBanner } from '@/components/Profile/SerpKpiBanner';
 import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashboard';
 import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
+import { IASCard } from '@/components/Profile/IASCard';
 
 const translations = {
   fr: {
@@ -1476,7 +1477,18 @@ export function MyTracking() {
                     isRefreshing={refreshingSerp}
                   />
 
-                  {/* LLM Visibility Dashboard */}
+                  {/* IAS — Indice d'Alignement Stratégique */}
+                  {currentSite && user && gscConnected && (
+                    <IASCard
+                      trackedSiteId={currentSite.id}
+                      userId={user.id}
+                      domain={currentSite.domain}
+                      isPremium={isAgencyPro || isAdmin}
+                      onUpgrade={() => navigate('/tarifs')}
+                    />
+                  )}
+
+                   {/* LLM Visibility Dashboard */}
                    {currentSite && user && (
                     <LLMVisibilityDashboard
                       trackedSiteId={currentSite.id}

@@ -1287,10 +1287,12 @@ export type Database = {
         Row: {
           actual_ratio: number
           brand_clicks: number
+          brand_penetration_rate: number | null
           business_type: string
           created_at: string
           domain: string
           generic_clicks: number
+          ias_score: number | null
           id: string
           risk_score: number
           target_ratio: number
@@ -1302,10 +1304,12 @@ export type Database = {
         Insert: {
           actual_ratio: number
           brand_clicks?: number
+          brand_penetration_rate?: number | null
           business_type: string
           created_at?: string
           domain: string
           generic_clicks?: number
+          ias_score?: number | null
           id?: string
           risk_score: number
           target_ratio: number
@@ -1317,10 +1321,12 @@ export type Database = {
         Update: {
           actual_ratio?: number
           brand_clicks?: number
+          brand_penetration_rate?: number | null
           business_type?: string
           created_at?: string
           domain?: string
           generic_clicks?: number
+          ias_score?: number | null
           id?: string
           risk_score?: number
           target_ratio?: number
@@ -1334,6 +1340,47 @@ export type Database = {
             foreignKeyName: "ias_history_tracked_site_id_fkey"
             columns: ["tracked_site_id"]
             isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ias_settings: {
+        Row: {
+          brand_name: string
+          category_id: number
+          created_at: string
+          id: string
+          is_manual: boolean
+          site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_name?: string
+          category_id?: number
+          created_at?: string
+          id?: string
+          is_manual?: boolean
+          site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_name?: string
+          category_id?: number
+          created_at?: string
+          id?: string
+          is_manual?: boolean
+          site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ias_settings_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: true
             referencedRelation: "tracked_sites"
             referencedColumns: ["id"]
           },
