@@ -58,7 +58,9 @@ export function StrategicInsights({
   onCompetitorCorrection,
   isReanalyzing = false,
   auditResult,
-  progressiveReveal = false
+  progressiveReveal = false,
+  onForceRefresh,
+  strategicCacheInfo,
 }: StrategicInsightsProps) {
   const [showHallucinationModal, setShowHallucinationModal] = useState(false);
   const pageType: AuditPageType = analysis.pageType || (analysis.isContentMode ? 'editorial' : 'homepage');
