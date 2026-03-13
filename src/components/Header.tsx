@@ -328,12 +328,11 @@ export function Header() {
           )}
 
 
-          {/* Console button - not on home */}
-          {!loading && user && !isHomePage && (
-            <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground" asChild>
-              <Link to="/console">
+          {/* Console button - icon only */}
+          {!loading && user && (
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground" asChild>
+              <Link to="/console" aria-label={t.console}>
                 <LayoutDashboard className="h-4 w-4" />
-                <span className="text-sm">Console</span>
               </Link>
             </Button>
           )}
