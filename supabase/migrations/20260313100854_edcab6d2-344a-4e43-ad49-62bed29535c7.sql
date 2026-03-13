@@ -1,0 +1,1 @@
+ALTER TABLE public.serp_snapshots ADD COLUMN indexed_pages integer;
