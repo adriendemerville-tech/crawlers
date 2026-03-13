@@ -1,4 +1,4 @@
-// Types for fix configuration - ARCHITECTE GÉNÉRATIF v3.0 — CLS-ZERO Protocol
+// Types for fix configuration - ARCHITECTE GÉNÉRATIF v3.2 — CLS-ZERO + Merge-Override Protocol
 export interface FixConfig {
   id: string;
   category: 'seo' | 'performance' | 'accessibility' | 'tracking' | 'hallucination' | 'strategic';
