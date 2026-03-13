@@ -63,6 +63,44 @@ function triggerCtoAgent(auditResult: any, auditType: string, url: string, domai
   }).catch(() => { /* silent */ });
 }
 
+// Fire-and-forget: sync SERP KPIs to tracked site after expert audit
+function syncSerpToTrackedSite(domain: string, userId: string) {
+  (async () => {
+    try {
+      const { data: site } = await supabase
+        .from('tracked_sites')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('domain', domain)
+        .maybeSingle();
+      if (!site) return;
+
+      const { data: serpRes } = await supabase.functions.invoke('fetch-serp-kpis', {
+        body: { domain, url: `https://${domain}` },
+      });
+      const serpData = serpRes?.data;
+      if (!serpData) return;
+
+      const { data: latest } = await supabase
+        .from('user_stats_history')
+        .select('id, raw_data')
+        .eq('user_id', userId)
+        .eq('tracked_site_id', site.id)
+        .order('recorded_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!latest) return;
+
+      const existingRaw = (latest.raw_data as Record<string, unknown>) || {};
+      await supabase
+        .from('user_stats_history')
+        .update({ raw_data: { ...existingRaw, serpData } })
+        .eq('id', latest.id);
+      console.log(`[SERP-Sync] ✅ ${domain} SERP data synced to tracking`);
+    } catch { /* silent */ }
+  })();
+}
+
 function formatMs(ms: number): string {
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
   return `${Math.round(ms)}ms`;
@@ -689,6 +727,11 @@ export function ExpertAuditDashboard() {
         
         // Fire-and-forget: CTO Agent analysis
         triggerCtoAgent(auditResult, 'technical', normalizedUrl, auditResult.domain || '');
+        // Fire-and-forget: sync SERP KPIs to tracked site
+        if (user) {
+          const auditDomain = auditResult.domain || new URL(normalizedUrl).hostname.replace('www.', '');
+          syncSerpToTrackedSite(auditDomain, user.id);
+        }
 
         const reliabilityInfo = auditResult.meta?.reliabilityScore 
           ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
@@ -876,6 +919,8 @@ export function ExpertAuditDashboard() {
       }
       // Fire-and-forget: CTO Agent analysis
       triggerCtoAgent(strategicData, 'strategic', normalizedUrl, new URL(normalizedUrl).hostname);
+      // Fire-and-forget: sync SERP KPIs to tracked site
+      if (user) syncSerpToTrackedSite(domain, user.id);
       // Clear any previous hallucination diagnosis since we re-analyzed
       setHallucinationDiagnosis(null);
       

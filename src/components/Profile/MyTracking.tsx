@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, ElementType } from 'react';
 import { ActiveCrawlBanner } from '@/components/Profile/ActiveCrawlBanner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2 } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, GripVertical } from 'lucide-react';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
@@ -781,20 +784,29 @@ export function MyTracking() {
                     </div>
                   </div>
 
-                  {/* KPI Cards */}
-                   <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${!latestStats ? 'opacity-40 pointer-events-none' : ''}`}>
-                    {/* Technique */}
-                    <KPICard label={t.performance} value={latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—'} icon={Gauge} />
-                    <KPICard label={t.seoScore} value={latestStats?.seo_score != null ? `${latestStats.seo_score}%` : '—'} icon={Search} />
-                    {/* Optimisation IA */}
-                    <KPICard label={t.geoScore} value={latestStats?.geo_score ? `${latestStats.geo_score}%` : '—'} icon={Globe} />
-                    <KPICard label={t.aiVisibility} value={latestAiVisibility != null ? `${Math.round(latestAiVisibility)}/100` : '—'} icon={Eye} />
-                    {/* Réputation & Influence */}
-                    <KPICard label={t.citationRate} value={latestStats?.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—'} icon={Brain} />
-                    <KPICard label={t.sentiment} value={latestStats ? sentimentLabel(latestStats.ai_sentiment) : '—'} icon={BarChart3} valueClassName={latestStats ? sentimentColor(latestStats.ai_sentiment) : ''} />
-                    <KPICard label={t.semanticAuth} value={latestStats?.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—'} icon={TrendingUp} />
-                    <KPICard label={t.voiceShare} value={latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—'} icon={BarChart3} />
-                  </div>
+                  {/* KPI Cards — Sortable */}
+                  {(() => {
+                    const defaultKpiOrder = ['performance', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
+                    
+                    const kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string }> = {
+                      performance: { label: t.performance, value: latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—', icon: Gauge },
+                      seoScore: { label: t.seoScore, value: latestStats?.seo_score != null ? `${latestStats.seo_score}%` : '—', icon: Search },
+                      geoScore: { label: t.geoScore, value: latestStats?.geo_score ? `${latestStats.geo_score}%` : '—', icon: Globe },
+                      aiVisibility: { label: t.aiVisibility, value: latestAiVisibility != null ? `${Math.round(latestAiVisibility)}/100` : '—', icon: Eye },
+                      citationRate: { label: t.citationRate, value: latestStats?.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—', icon: Brain },
+                      sentiment: { label: t.sentiment, value: latestStats ? sentimentLabel(latestStats.ai_sentiment) : '—', icon: BarChart3, valueClassName: latestStats ? sentimentColor(latestStats.ai_sentiment) : '' },
+                      semanticAuth: { label: t.semanticAuth, value: latestStats?.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—', icon: TrendingUp },
+                      voiceShare: { label: t.voiceShare, value: latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—', icon: BarChart3 },
+                    };
+
+                    return (
+                      <SortableKPIGrid
+                        kpiDefinitions={kpiDefinitions}
+                        defaultOrder={defaultKpiOrder}
+                        disabled={!latestStats}
+                      />
+                    );
+                  })()}
 
                   {/* Evolution Chart */}
                   {chartData.length > 1 && (
@@ -1197,5 +1209,94 @@ function KPICard({ label, value, icon: Icon, valueClassName }: { label: string; 
       </div>
       <p className={`text-lg font-semibold ${valueClassName || ''}`}>{value}</p>
     </div>
+  );
+}
+
+const KPI_ORDER_STORAGE_KEY = 'tracking_kpi_order';
+
+function SortableKPICard({ id, label, value, icon: Icon, valueClassName }: { id: string; label: string; value: string; icon: ElementType; valueClassName?: string }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group rounded-lg border bg-card p-3 space-y-1">
+      <button
+        {...attributes}
+        {...listeners}
+        className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted"
+        aria-label="Réorganiser"
+      >
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+      </button>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Icon className="h-3 w-3" />
+        {label}
+      </div>
+      <p className={`text-lg font-semibold ${valueClassName || ''}`}>{value}</p>
+    </div>
+  );
+}
+
+function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled }: {
+  kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string }>;
+  defaultOrder: string[];
+  disabled: boolean;
+}) {
+  const [order, setOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(KPI_ORDER_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as string[];
+        // Validate all keys exist
+        if (parsed.length === defaultOrder.length && parsed.every(k => defaultOrder.includes(k))) {
+          return parsed;
+        }
+      }
+    } catch { /* ignore */ }
+    return defaultOrder;
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setOrder(prev => {
+      const oldIndex = prev.indexOf(active.id as string);
+      const newIndex = prev.indexOf(over.id as string);
+      const newOrder = arrayMove(prev, oldIndex, newIndex);
+      localStorage.setItem(KPI_ORDER_STORAGE_KEY, JSON.stringify(newOrder));
+      return newOrder;
+    });
+  };
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={order} strategy={rectSortingStrategy}>
+        <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+          {order.map(id => {
+            const def = kpiDefinitions[id];
+            if (!def) return null;
+            return (
+              <SortableKPICard
+                key={id}
+                id={id}
+                label={def.label}
+                value={def.value}
+                icon={def.icon}
+                valueClassName={def.valueClassName}
+              />
+            );
+          })}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }
