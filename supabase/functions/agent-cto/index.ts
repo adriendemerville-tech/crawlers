@@ -242,6 +242,15 @@ Deno.serve(async (req) => {
       'strategic': 'audit-strategique-ia',
       'compare': 'audit-compare',
       'crawl': 'crawl-site',
+      'llm-visibility': 'check-llm',
+      'llm-depth': 'check-llm-depth',
+      'geo': 'check-geo',
+      'pagespeed': 'check-pagespeed',
+      'crawlers': 'check-crawlers',
+      'hallucination': 'diagnose-hallucination',
+      'local-seo': 'audit-local-seo',
+      'corrective-code': 'generate-corrective-code',
+      'llm-volumes': 'calculate-llm-volumes',
     }
     const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType
 
