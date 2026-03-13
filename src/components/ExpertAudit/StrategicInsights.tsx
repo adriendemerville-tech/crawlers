@@ -45,6 +45,8 @@ interface StrategicInsightsProps {
   isReanalyzing?: boolean;
   auditResult?: import('@/types/expertAudit').ExpertAuditResult;
   progressiveReveal?: boolean;
+  onForceRefresh?: () => void;
+  strategicCacheInfo?: { auditCount: number; maxBeforeRefresh: number } | null;
 }
 
 export function StrategicInsights({ 
