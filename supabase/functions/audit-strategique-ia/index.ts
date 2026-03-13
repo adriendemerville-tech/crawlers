@@ -2758,10 +2758,30 @@ Deno.serve(async (req) => {
     // URL tracking (fire-and-forget)
     trackAnalyzedUrl(url).catch(() => {});
 
+    // ═══ ASYNC JOB: Save result if running as background job ═══
+    if (jobSb && jobId) {
+      await jobSb.from('async_jobs').update({
+        status: 'completed',
+        result_data: result.data,
+        progress: 100,
+        completed_at: new Date().toISOString(),
+      }).eq('id', jobId);
+    }
+
     return json(result);
 
   } catch (error) {
     console.error('❌ Fatal error:', error);
+
+    // ═══ ASYNC JOB: Mark as failed ═══
+    if (jobSb && jobId) {
+      await jobSb.from('async_jobs').update({
+        status: 'failed',
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+        completed_at: new Date().toISOString(),
+      }).eq('id', jobId).catch(() => {});
+    }
+
     // Even fatal errors return success:true with an empty structure so client never crashes
     return json({
       success: true,
