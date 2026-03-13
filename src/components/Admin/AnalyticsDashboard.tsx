@@ -580,16 +580,16 @@ export function AnalyticsDashboard() {
 
     return (
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground">
+        <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+          <CardTitle className="text-xs font-medium text-muted-foreground">
             {title}
           </CardTitle>
-          <Icon className={`h-4 w-4 ${variantStyles[variant]}`} />
+          <Icon className={`h-3.5 w-3.5 ${variantStyles[variant]}`} />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{value.toLocaleString('fr-FR')}</div>
+        <CardContent className="p-3 pt-0">
+          <div className="text-lg font-bold">{value.toLocaleString('fr-FR')}</div>
           {description && (
-            <p className="text-xs text-muted-foreground mt-1">{description}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{description}</p>
           )}
         </CardContent>
       </Card>
@@ -607,10 +607,10 @@ export function AnalyticsDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(8)].map((_, i) => (
             <Card key={i}>
-              <CardContent className="p-6">
-                <div className="animate-pulse space-y-2">
-                  <div className="h-4 w-20 bg-muted rounded" />
-                  <div className="h-8 w-16 bg-muted rounded" />
+              <CardContent className="p-3">
+                <div className="animate-pulse space-y-1.5">
+                  <div className="h-3 w-16 bg-muted rounded" />
+                  <div className="h-5 w-12 bg-muted rounded" />
                 </div>
               </CardContent>
             </Card>
@@ -717,33 +717,33 @@ export function AnalyticsDashboard() {
       {/* Business Metrics */}
       <div className="grid grid-cols-3 gap-4">
         <Card className="border-emerald-500/30">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Abonnés payants</CardTitle>
-            <Users className="h-4 w-4 text-emerald-500" />
+          <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Abonnés payants</CardTitle>
+            <Users className="h-3.5 w-3.5 text-emerald-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{businessMetrics.payingSubscribers}</div>
-            <p className="text-xs text-muted-foreground mt-1">Pro Agency actifs</p>
+          <CardContent className="p-3 pt-0">
+            <div className="text-lg font-bold">{businessMetrics.payingSubscribers}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Pro Agency actifs</p>
           </CardContent>
         </Card>
         <Card className="border-violet-500/30">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Crédits achetés</CardTitle>
-            <Coins className="h-4 w-4 text-violet-500" />
+          <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Crédits achetés</CardTitle>
+            <Coins className="h-3.5 w-3.5 text-violet-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{businessMetrics.creditsPurchased.toLocaleString('fr-FR')}</div>
-            <p className="text-xs text-muted-foreground mt-1">Total historique</p>
+          <CardContent className="p-3 pt-0">
+            <div className="text-lg font-bold">{businessMetrics.creditsPurchased.toLocaleString('fr-FR')}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Total historique</p>
           </CardContent>
         </Card>
         <Card className="border-amber-500/30">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">MRR</CardTitle>
-            <CreditCard className="h-4 w-4 text-amber-500" />
+          <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+            <CardTitle className="text-xs font-medium text-muted-foreground">MRR</CardTitle>
+            <CreditCard className="h-3.5 w-3.5 text-amber-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{businessMetrics.mrr.toLocaleString('fr-FR')} €</div>
-            <p className="text-xs text-muted-foreground mt-1">{businessMetrics.payingSubscribers} × 59 €/mois</p>
+          <CardContent className="p-3 pt-0">
+            <div className="text-lg font-bold">{businessMetrics.mrr.toLocaleString('fr-FR')} €</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{businessMetrics.payingSubscribers} × 59 €/mois</p>
           </CardContent>
         </Card>
       </div>
