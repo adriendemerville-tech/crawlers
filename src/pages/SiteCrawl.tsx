@@ -430,7 +430,9 @@ export default function SiteCrawl() {
 
   const isUnlimitedUser = isAgencyPro || isAdmin;
 
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState(() => {
+    try { return localStorage.getItem('crawl_last_url') || ''; } catch { return ''; }
+  });
   const [maxPages, setMaxPages] = useState(50);
   const [isLoading, setIsLoading] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
