@@ -102,6 +102,7 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - **Audit Principal** : https://crawlers.fr/audit-expert (Audit Technique & Stratégique SEO/GEO)
 - **Audit Comparé** : https://crawlers.fr/audit-compare (Analyse concurrentielle face-à-face)
 - **Crawl Multi-Pages** : https://crawlers.fr/site-crawl (Analyse récursive de site entier)
+- **Indice d'Alignement Stratégique** : https://crawlers.fr/indice-alignement-strategique (Diagnostic Brand/Non-Brand automatisé via GSC)
 - **Intégration GTM** : https://crawlers.fr/integration-gtm (Guide de déploiement automatique des correctifs via Google Tag Manager)
 - **Comprendre le GEO** : https://crawlers.fr/lexique (Définitions officielles)
 - **Documentation Technique** : https://crawlers.fr/llms.txt
