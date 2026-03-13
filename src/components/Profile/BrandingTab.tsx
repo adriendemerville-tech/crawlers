@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText, Check } from 'lucide-react';
+import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText, Check, Type } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,10 +43,12 @@ const translations = {
     reportFooterPlaceholder: 'Ex : Pour toute question, n\'hésitez pas à nous contacter...',
     customTextsTitle: 'Textes personnalisés du rapport',
     customTextsDescription: 'Ajoutez des messages personnalisés en début et fin de rapport',
-    error: 'Erreur lors de la sauvegarde',
-    uploadError: 'Erreur lors de l\'upload du logo',
-    fileTooLarge: 'Le fichier dépasse 2 Mo',
-  },
+     error: 'Erreur lors de la sauvegarde',
+     uploadError: 'Erreur lors de l\'upload du logo',
+     fileTooLarge: 'Le fichier dépasse 2 Mo',
+     fontLabel: 'Police d\'écriture',
+     fontHint: 'Appliquée aux titres de vos rapports clients',
+   },
   en: {
     title: 'White Label',
     description: 'Customize your reports with your brand identity',
@@ -79,10 +81,12 @@ const translations = {
     reportFooterPlaceholder: 'e.g. For any questions, feel free to contact us...',
     customTextsTitle: 'Custom Report Texts',
     customTextsDescription: 'Add custom messages at the beginning and end of reports',
-    error: 'Error saving branding',
-    uploadError: 'Error uploading logo',
-    fileTooLarge: 'File exceeds 2 MB',
-  },
+     error: 'Error saving branding',
+     uploadError: 'Error uploading logo',
+     fileTooLarge: 'File exceeds 2 MB',
+     fontLabel: 'Font Family',
+     fontHint: 'Applied to titles in your client reports',
+   },
   es: {
     title: 'Marca Blanca',
     description: 'Personaliza tus informes con tu identidad visual',
@@ -115,11 +119,30 @@ const translations = {
     reportFooterPlaceholder: 'Ej: Para cualquier pregunta, no dude en contactarnos...',
     customTextsTitle: 'Textos personalizados del informe',
     customTextsDescription: 'Agrega mensajes personalizados al inicio y final de los informes',
-    error: 'Error al guardar el branding',
-    uploadError: 'Error al subir el logo',
-    fileTooLarge: 'El archivo supera los 2 MB',
-  },
-};
+     error: 'Error al guardar el branding',
+     uploadError: 'Error al subir el logo',
+     fileTooLarge: 'El archivo supera los 2 MB',
+     fontLabel: 'Tipografía',
+     fontHint: 'Aplicada a los títulos de tus informes de clientes',
+   },
+ };
+
+const FONT_OPTIONS = [
+  { value: '', label: 'Par défaut (Inter)' },
+  { value: 'Quicksand', label: 'Quicksand' },
+  { value: 'Roboto', label: 'Roboto' },
+  { value: 'Open Sans', label: 'Open Sans' },
+  { value: 'Lato', label: 'Lato' },
+  { value: 'Montserrat', label: 'Montserrat' },
+  { value: 'Poppins', label: 'Poppins' },
+  { value: 'Playfair Display', label: 'Playfair Display' },
+  { value: 'Merriweather', label: 'Merriweather' },
+  { value: 'Raleway', label: 'Raleway' },
+  { value: 'Nunito', label: 'Nunito' },
+  { value: 'Source Sans 3', label: 'Source Sans 3' },
+  { value: 'DM Sans', label: 'DM Sans' },
+  { value: 'Space Grotesk', label: 'Space Grotesk' },
+];
 
 type CardId = 'identity' | 'contact' | 'texts';
 
@@ -151,6 +174,7 @@ export function BrandingTab() {
   const [contactEmail, setContactEmail] = useState(profile?.agency_contact_email || '');
   const [reportHeaderText, setReportHeaderText] = useState(profile?.agency_report_header_text || '');
   const [reportFooterText, setReportFooterText] = useState(profile?.agency_report_footer_text || '');
+  const [reportFont, setReportFont] = useState((profile as any)?.agency_report_font || '');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -165,7 +189,8 @@ export function BrandingTab() {
   // Detect which cards are dirty
   const isIdentityDirty = logoUrl !== (profile?.agency_logo_url || '')
     || primaryColor !== (profile?.agency_primary_color || '#7c3aed')
-    || brandName !== (profile?.agency_brand_name || '');
+    || brandName !== (profile?.agency_brand_name || '')
+    || reportFont !== ((profile as any)?.agency_report_font || '');
 
   const isContactDirty = contactFirstName !== (profile?.agency_contact_first_name || '')
     || contactLastName !== (profile?.agency_contact_last_name || '')
@@ -195,6 +220,7 @@ export function BrandingTab() {
         agency_logo_url: logoUrl || null,
         agency_primary_color: primaryColor || null,
         agency_brand_name: brandName.trim() || null,
+        agency_report_font: reportFont || null,
         agency_contact_first_name: contactFirstName.trim() || null,
         agency_contact_last_name: contactLastName.trim() || null,
         agency_contact_phone: contactPhone.trim() || null,
@@ -228,7 +254,7 @@ export function BrandingTab() {
       }, 2000);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, logoUrl, primaryColor, brandName, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
+  }, [user, logoUrl, primaryColor, brandName, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
 
   // Debounced auto-save: triggers 1.5s after last change
   useEffect(() => {
@@ -254,8 +280,20 @@ export function BrandingTab() {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logoUrl, primaryColor, brandName, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
+  }, [logoUrl, primaryColor, brandName, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
 
+
+  // Load Google Font for preview
+  useEffect(() => {
+    if (!reportFont) return;
+    const id = `gfont-${reportFont.replace(/\s/g, '-')}`;
+    if (document.getElementById(id)) return;
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(reportFont)}:wght@400;700&display=swap`;
+    document.head.appendChild(link);
+  }, [reportFont]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -308,6 +346,7 @@ export function BrandingTab() {
         agency_logo_url: logoUrl || null,
         agency_primary_color: primaryColor || null,
         agency_brand_name: brandName.trim() || null,
+        agency_report_font: reportFont || null,
         agency_contact_first_name: contactFirstName.trim() || null,
         agency_contact_last_name: contactLastName.trim() || null,
         agency_contact_phone: contactPhone.trim() || null,
@@ -444,13 +483,53 @@ export function BrandingTab() {
             </div>
           </div>
 
+          {/* Font Selector */}
+          <div className="space-y-3">
+            <Label className="flex items-center gap-2">
+              <Type className="h-4 w-4" />
+              {t.fontLabel}
+            </Label>
+            <p className="text-xs text-muted-foreground">{t.fontHint}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-w-lg">
+              {FONT_OPTIONS.map((font) => (
+                <button
+                  key={font.value}
+                  type="button"
+                  onClick={() => setReportFont(font.value)}
+                  className={`px-3 py-2.5 rounded-lg border text-sm transition-all text-left ${
+                    reportFont === font.value
+                      ? 'border-primary bg-primary/10 text-foreground font-medium ring-1 ring-primary/30'
+                      : 'border-border bg-background hover:border-primary/40 text-muted-foreground hover:text-foreground'
+                  }`}
+                  style={{ fontFamily: font.value || 'Inter Variable, sans-serif' }}
+                >
+                  {font.label}
+                </button>
+              ))}
+            </div>
+            {reportFont && (
+              <div className="rounded-lg border border-border bg-muted/20 p-4 mt-2">
+                <p className="text-sm text-muted-foreground mb-1">Aperçu :</p>
+                <p className="text-lg font-bold" style={{ fontFamily: `${reportFont}, sans-serif` }}>
+                  Audit Technique SEO — {brandName || 'Mon Agence'}
+                </p>
+                <p className="text-sm mt-1" style={{ fontFamily: `${reportFont}, sans-serif` }}>
+                  Rapport généré automatiquement par votre plateforme d'audit.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Preview */}
           <div className="space-y-2">
             <Label>{t.preview}</Label>
             <div className="rounded-xl overflow-hidden border border-border">
               <div
                 className="p-4 text-center"
-                style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}aa)` }}
+                style={{ 
+                  background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}aa)`,
+                  fontFamily: reportFont ? `${reportFont}, sans-serif` : undefined,
+                }}
               >
                 {logoUrl ? (
                   <img src={logoUrl} alt="Logo" className="h-8 mx-auto mb-2 object-contain" />
