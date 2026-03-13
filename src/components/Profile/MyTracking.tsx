@@ -1481,6 +1481,7 @@ export function MyTracking() {
                   {/* LLM Depth Card – Pro Agency, collaborators & admins */}
                   {currentSite && (isAgencyPro || isCollaborator || isAdmin) && (
                     <LLMDepthCard
+                      key={currentSite.id}
                       domain={currentSite.domain}
                       trackedSiteId={currentSite.id}
                       userId={user?.id}
