@@ -741,10 +741,10 @@ function generateFixCode(
 
     case 'enhance_semantic_meta':
       return {
-        fn: `  // Enrichissement Sémantique — head uniquement (pas de CLS)
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Enrichissement Sémantique — head uniquement (pas de CLS)
+  // Règle 4: Merge-override
   function enhanceSemanticMeta() {
-    if (hasLock('enhance_semantic_meta')) return;
+    clearLock('enhance_semantic_meta');
     try {
       // Version complète générée côté serveur
       console.log('[Crawlers.fr] 🏗️ Sémantique (version complète côté serveur)');
