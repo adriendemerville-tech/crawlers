@@ -360,6 +360,9 @@ async function runDepthConversation(
     messages.push({ role: 'user', content: prompts[i] })
     anglesTested.push(anglesLabels[i] || `Phase ${i + 1}`)
 
+    // Emit progress event
+    onProgress?.({ type: 'iteration', model: modelDef.name, iteration: i + 1, found: false })
+
     try {
       const { response, usedGateway, didFallback } = await resilientFetch(
         activeGateway, modelDef.fallbackGateway, keys, modelDef.model, messages,
