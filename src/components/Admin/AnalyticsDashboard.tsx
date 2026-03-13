@@ -767,7 +767,7 @@ export function AnalyticsDashboard() {
                 <p className="text-xs text-muted-foreground">{tokenUsage.callCount} appels IA</p>
                 {tokenUsage.totalEstimatedCost > 0 && (
                   <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                    ~{tokenUsage.totalEstimatedCost.toFixed(4)}€
+                    ~{tokenUsage.totalEstimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
                   </span>
                 )}
               </div>
@@ -830,20 +830,20 @@ export function AnalyticsDashboard() {
                 {tokenUsage.flyPlaywrightCalls.toLocaleString('fr-FR')}
               </p>
               <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
-                ~{tokenUsage.flyEstimatedCost.toFixed(6)}€ ({(tokenUsage.flyEstimatedCost * 100).toFixed(4)}c)
+                ~{tokenUsage.flyEstimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 6, maximumFractionDigits: 6 })}€ ({(tokenUsage.flyEstimatedCost * 100).toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}c)
               </p>
             </div>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">Coût estimé total</p>
               <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
-                {tokenUsage.totalEstimatedCost.toFixed(4)}€
+                {tokenUsage.totalEstimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
               </p>
             </div>
             {avgCostPerSubscriber && (
               <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
                 <p className="text-xs text-rose-700 dark:text-rose-400 font-medium">Coût moyen / abonné</p>
                 <p className="text-lg font-bold text-rose-600 dark:text-rose-400">
-                  {avgCostPerSubscriber.avg.toFixed(4)}€
+                  {avgCostPerSubscriber.avg.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
                 </p>
                 <p className="text-[10px] text-rose-600/70 dark:text-rose-400/70 mt-0.5">
                   {avgCostPerSubscriber.count} abonné{avgCostPerSubscriber.count > 1 ? 's' : ''} actif{avgCostPerSubscriber.count > 1 ? 's' : ''}
@@ -901,14 +901,14 @@ export function AnalyticsDashboard() {
                           </span>
                         </div>
                         <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
-                          {data.estimatedCost.toFixed(4)}€
+                          {data.estimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
                         </span>
                       </div>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span>{data.calls} appels</span>
                         <span>↑ {data.promptTokens.toLocaleString('fr-FR')} in</span>
                         <span>↓ {data.completionTokens.toLocaleString('fr-FR')} out</span>
-                        <span className="ml-auto font-medium">{costPercent.toFixed(1)}% du coût</span>
+                        <span className="ml-auto font-medium">{costPercent.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}% du coût</span>
                       </div>
                       {/* Cost bar */}
                       <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
@@ -1194,7 +1194,7 @@ export function AnalyticsDashboard() {
               <div className="p-3 rounded-lg bg-muted/50 text-center">
                 <p className="text-xs text-muted-foreground">Score de fiabilité</p>
                 <p className={`text-2xl font-bold ${reliabilityScore.score >= 70 ? 'text-emerald-500' : reliabilityScore.score >= 40 ? 'text-amber-500' : 'text-destructive'}`}>
-                  {reliabilityScore.score.toFixed(1)}%
+                  {reliabilityScore.score.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
                 </p>
                 <p className="text-[10px] text-muted-foreground mt-1">
                   {reliabilityScore.score >= 70 ? '✅ Visible clients' : '🔒 Shadow mode'}
