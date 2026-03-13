@@ -1090,26 +1090,39 @@ export function MyTracking() {
                       if (!currentSite || !user || refreshingSerp) return;
                       setRefreshingSerp(true);
                       try {
-                        const { data: serpRes } = await supabase.functions.invoke('fetch-serp-kpis', {
+                        const response = await supabase.functions.invoke('fetch-serp-kpis', {
                           body: { domain: currentSite.domain, url: `https://${currentSite.domain}` },
                         });
-                        const serpData = serpRes?.data;
-                        if (serpData) {
-                          if (latestStats) {
-                            const existingRaw = (latestStats as any)?.raw_data || {};
-                            await supabase.from('user_stats_history').update({
-                              raw_data: { ...existingRaw, serpData },
-                            }).eq('id', (latestStats as any).id);
-                          } else {
-                            await supabase.from('user_stats_history').insert({
-                              tracked_site_id: currentSite.id,
-                              user_id: user.id,
-                              domain: currentSite.domain,
-                              raw_data: { serpData },
-                            });
-                          }
-                          await fetchStats();
+                        
+                        console.log('[SERP refresh] response:', response);
+                        
+                        if (response.error) {
+                          console.error('[SERP refresh] Function error:', response.error);
+                          toast.error(language === 'fr' ? 'Erreur de mise à jour SERP' : 'SERP update error');
+                          return;
                         }
+                        
+                        const serpData = response.data?.data;
+                        if (!serpData) {
+                          console.error('[SERP refresh] No data in response:', response.data);
+                          toast.error(language === 'fr' ? 'Aucune donnée SERP reçue' : 'No SERP data received');
+                          return;
+                        }
+                        
+                        if (latestStats) {
+                          const existingRaw = (latestStats as any)?.raw_data || {};
+                          await supabase.from('user_stats_history').update({
+                            raw_data: { ...existingRaw, serpData },
+                          }).eq('id', (latestStats as any).id);
+                        } else {
+                          await supabase.from('user_stats_history').insert({
+                            tracked_site_id: currentSite.id,
+                            user_id: user.id,
+                            domain: currentSite.domain,
+                            raw_data: { serpData },
+                          });
+                        }
+                        await fetchStats();
                         toast.success(language === 'fr' ? 'Données SERP mises à jour' : 'SERP data updated');
                       } catch (err) {
                         console.error('SERP refresh error:', err);
