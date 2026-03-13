@@ -579,17 +579,17 @@ export function AnalyticsDashboard() {
     };
 
     return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
-          <CardTitle className="text-xs font-medium text-muted-foreground">
+      <Card className="py-0">
+        <CardHeader className="flex flex-row items-center justify-between px-2.5 py-1.5 pb-0.5">
+          <CardTitle className="text-[10px] font-medium text-muted-foreground truncate">
             {title}
           </CardTitle>
-          <Icon className={`h-3.5 w-3.5 ${variantStyles[variant]}`} />
+          <Icon className={`h-3 w-3 shrink-0 ${variantStyles[variant]}`} />
         </CardHeader>
-        <CardContent className="p-3 pt-0">
-          <div className="text-lg font-bold">{value.toLocaleString('fr-FR')}</div>
+        <CardContent className="px-2.5 py-1.5 pt-0">
+          <div className="text-sm font-bold">{value.toLocaleString('fr-FR')}</div>
           {description && (
-            <p className="text-[10px] text-muted-foreground mt-0.5">{description}</p>
+            <p className="text-[9px] text-muted-foreground leading-tight">{description}</p>
           )}
         </CardContent>
       </Card>
