@@ -2157,6 +2157,60 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) return json({ success: false, error: 'AI service not configured' }, 500);
 
+    // ═══ ASYNC MODE: Create job, self-invoke, return 202 ═══
+    if (asyncMode) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const sb = createClient(supabaseUrl, serviceKey);
+      const authHeader = req.headers.get('Authorization') || '';
+      
+      // Extract user_id from auth
+      const userSb = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } }
+      });
+      const { data: { user } } = await userSb.auth.getUser();
+      const userId = user?.id;
+      if (!userId) return json({ error: 'Authentication required for async mode' }, 401);
+
+      const { data: job, error: jobError } = await sb
+        .from('async_jobs')
+        .insert({
+          user_id: userId,
+          function_name: 'audit-strategique-ia',
+          status: 'pending',
+          input_payload: { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, lang },
+        })
+        .select('id')
+        .single();
+
+      if (jobError || !job) return json({ error: 'Failed to create job' }, 500);
+
+      // Fire-and-forget: self-invoke synchronously with job_id
+      const syncBody = { ...body, async: false, _job_id: job.id };
+      fetch(`${supabaseUrl}/functions/v1/audit-strategique-ia`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(syncBody),
+      }).catch(err => console.error('[audit-strategique-ia] Async self-invoke failed:', err));
+
+      return json({ job_id: job.id, status: 'pending' }, 202);
+    }
+
+    // ═══ JOB TRACKING: if _job_id provided, update progress in DB ═══
+    const jobId: string | undefined = body._job_id;
+    const supabaseUrlForJob = Deno.env.get('SUPABASE_URL');
+    const serviceKeyForJob = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const jobSb = jobId && supabaseUrlForJob && serviceKeyForJob
+      ? createClient(supabaseUrlForJob, serviceKeyForJob)
+      : null;
+
+    if (jobSb && jobId) {
+      await jobSb.from('async_jobs').update({ status: 'processing', started_at: new Date().toISOString(), progress: 5 }).eq('id', jobId);
+    }
+
     const effectiveToolsData: ToolsData = toolsData || {
       crawlers: { note: 'Non disponible' },
       geo: { note: 'Non disponible' },
