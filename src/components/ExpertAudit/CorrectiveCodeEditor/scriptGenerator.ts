@@ -496,9 +496,9 @@ function generateFixCode(
 
     case 'fix_jsonld':
       return {
-        fn: `  // Règle 1: Injection JSON-LD Organization dans <head> (données sémantiques)
+         fn: `  // Règle 1: Injection JSON-LD Organization dans <head> (données sémantiques)
   function injectOrganizationJsonLd() {
-    if (hasLock('fix_jsonld')) return;
+    clearLock('fix_jsonld');
     try {
       injectJsonLd('organization', {
         "@context": "https://schema.org",
