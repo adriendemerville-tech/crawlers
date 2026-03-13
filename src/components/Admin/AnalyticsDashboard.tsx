@@ -780,6 +780,7 @@ export function AnalyticsDashboard() {
               <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
                 ~{tokenUsage.flyEstimatedCost.toFixed(6)}€ ({(tokenUsage.flyEstimatedCost * 100).toFixed(4)}c)
               </p>
+            </div>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">Coût estimé total</p>
               <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
