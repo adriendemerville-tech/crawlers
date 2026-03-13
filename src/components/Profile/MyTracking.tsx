@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, GripVertical } from 'lucide-react';
+import { Plus, Radar, Trash2, TrendingUp, Globe, Brain, BarChart3, Loader2, ExternalLink, Gauge, Wrench, Plug, Unplug, Download, Link2, MoreVertical, AlertCircle, Search, CheckCircle2, MousePointerClick, Eye, Undo2, GripVertical, RefreshCw } from 'lucide-react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -953,7 +953,7 @@ export function MyTracking() {
                     </div>
                   </div>
 
-                  {/* KPI Cards — Sortable */}
+                  {/* KPI Cards — Sortable, wrapped in a bordered Card */}
                   {(() => {
                     const defaultKpiOrder = ['performance', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
                     
@@ -968,11 +968,43 @@ export function MyTracking() {
                       voiceShare: { label: t.voiceShare, value: latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—', icon: BarChart3 },
                     };
 
+                    // Per-KPI refresh handler map
+                    const kpiRefreshMap: Record<string, () => Promise<void>> = {
+                      performance: async () => {
+                        if (!currentSite) return;
+                        const res = await supabase.functions.invoke('check-pagespeed', { body: { url: `https://${currentSite.domain}`, lang: language } });
+                        const score = res.data?.data?.scores?.performance ?? res.data?.data?.performance ?? null;
+                        if (score !== null) toast.success(`${t.performance}: ${Math.round(score)}/100`);
+                        if (currentSite) await runStreamingAudit(currentSite);
+                      },
+                      seoScore: async () => {
+                        if (!currentSite) return;
+                        const res = await supabase.functions.invoke('check-crawlers', { body: { url: `https://${currentSite.domain}` } });
+                        const bots = res.data?.data?.results || res.data?.results || [];
+                        const score = bots.length > 0 ? Math.round((bots.filter((b: any) => b.status === 'allowed').length / bots.length) * 100) : null;
+                        if (score !== null) toast.success(`${t.seoScore}: ${score}%`);
+                        if (currentSite) await runStreamingAudit(currentSite);
+                      },
+                      geoScore: async () => {
+                        if (!currentSite) return;
+                        const res = await supabase.functions.invoke('check-geo', { body: { url: `https://${currentSite.domain}`, lang: language } });
+                        const score = res.data?.data?.totalScore ?? res.data?.data?.overallScore ?? 0;
+                        toast.success(`${t.geoScore}: ${Math.round(score)}%`);
+                        if (currentSite) await runStreamingAudit(currentSite);
+                      },
+                      aiVisibility: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                      citationRate: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                      sentiment: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                      semanticAuth: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                      voiceShare: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                    };
+
                     return (
                       <SortableKPIGrid
                         kpiDefinitions={kpiDefinitions}
                         defaultOrder={defaultKpiOrder}
-                        disabled={!latestStats}
+                        disabled={!latestStats && !refreshingSites.has(currentSite?.id || '')}
+                        onRefresh={kpiRefreshMap}
                       />
                     );
                   })()}
@@ -1478,8 +1510,9 @@ function KPICard({ label, value, icon: Icon, valueClassName }: { label: string; 
 
 const KPI_ORDER_STORAGE_KEY = 'tracking_kpi_order';
 
-function SortableKPICard({ id, label, value, icon: Icon, valueClassName }: { id: string; label: string; value: string; icon: ElementType; valueClassName?: string }) {
+function SortableKPICard({ id, label, value, icon: Icon, valueClassName, onRefresh }: { id: string; label: string; value: string; icon: ElementType; valueClassName?: string; onRefresh?: () => Promise<void> }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const [refreshing, setRefreshing] = useState(false);
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -1487,13 +1520,21 @@ function SortableKPICard({ id, label, value, icon: Icon, valueClassName }: { id:
     opacity: isDragging ? 0.8 : 1,
   };
 
+  const handleRefresh = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onRefresh || refreshing) return;
+    setRefreshing(true);
+    try { await onRefresh(); } finally { setRefreshing(false); }
+  };
+
   return (
     <div ref={setNodeRef} style={style} className="relative group rounded-lg border bg-card p-3 space-y-1">
+      {/* Drag handle — top right */}
       <button
         {...attributes}
         {...listeners}
         className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted"
-        aria-label="Réorganiser"
+        aria-label="Déplacer"
       >
         <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
       </button>
@@ -1502,21 +1543,32 @@ function SortableKPICard({ id, label, value, icon: Icon, valueClassName }: { id:
         {label}
       </div>
       <p className={`text-lg font-semibold ${valueClassName || ''}`}>{value}</p>
+      {/* Refresh button — bottom right */}
+      {onRefresh && (
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="absolute bottom-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted disabled:opacity-50"
+          aria-label="Actualiser"
+        >
+          <RefreshCw className={cn("h-3 w-3 text-muted-foreground", refreshing && "animate-spin")} />
+        </button>
+      )}
     </div>
   );
 }
 
-function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled }: {
+function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled, onRefresh }: {
   kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string }>;
   defaultOrder: string[];
   disabled: boolean;
+  onRefresh?: Record<string, () => Promise<void>>;
 }) {
   const [order, setOrder] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(KPI_ORDER_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as string[];
-        // Validate all keys exist
         if (parsed.length === defaultOrder.length && parsed.every(k => defaultOrder.includes(k))) {
           return parsed;
         }
@@ -1542,25 +1594,30 @@ function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled }: {
   };
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={order} strategy={rectSortingStrategy}>
-        <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
-          {order.map(id => {
-            const def = kpiDefinitions[id];
-            if (!def) return null;
-            return (
-              <SortableKPICard
-                key={id}
-                id={id}
-                label={def.label}
-                value={def.value}
-                icon={def.icon}
-                valueClassName={def.valueClassName}
-              />
-            );
-          })}
-        </div>
-      </SortableContext>
-    </DndContext>
+    <Card className="border">
+      <CardContent className="p-4">
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={order} strategy={rectSortingStrategy}>
+            <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+              {order.map(id => {
+                const def = kpiDefinitions[id];
+                if (!def) return null;
+                return (
+                  <SortableKPICard
+                    key={id}
+                    id={id}
+                    label={def.label}
+                    value={def.value}
+                    icon={def.icon}
+                    valueClassName={def.valueClassName}
+                    onRefresh={onRefresh?.[id]}
+                  />
+                );
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </CardContent>
+    </Card>
   );
 }
