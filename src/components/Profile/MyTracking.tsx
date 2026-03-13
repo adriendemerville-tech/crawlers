@@ -1104,8 +1104,8 @@ export function MyTracking() {
                             await supabase.from('user_stats_history').insert({
                               tracked_site_id: currentSite.id,
                               user_id: user.id,
+                              domain: currentSite.domain,
                               raw_data: { serpData },
-                              recorded_at: new Date().toISOString(),
                             });
                           }
                           await fetchStats();
