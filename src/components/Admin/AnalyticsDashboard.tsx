@@ -156,6 +156,7 @@ export function AnalyticsDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [reliabilityScore, setReliabilityScore] = useState<{ score: number; audits: number; predictions: number } | null>(null);
+  const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
   const [businessMetrics, setBusinessMetrics] = useState<{ payingSubscribers: number; creditsPurchased: number; mrr: number }>({ payingSubscribers: 0, creditsPurchased: 0, mrr: 0 });
   const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
     totalTokens: 0,
