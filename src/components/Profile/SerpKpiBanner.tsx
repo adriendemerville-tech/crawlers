@@ -1,4 +1,4 @@
-import { Hash, TrendingUp, Home, Award, Target, BarChart3, RefreshCw, Loader2, FileText, GripVertical } from 'lucide-react';
+import { Hash, TrendingUp, TrendingDown, Home, Award, Target, BarChart3, RefreshCw, Loader2, FileText, GripVertical } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ interface SerpData {
 
 interface SerpKpiBannerProps {
   data: SerpData | null | undefined;
+  previousIndexedPages?: number | null;
   onRefresh?: () => void;
   isRefreshing?: boolean;
 }
@@ -118,9 +119,18 @@ function DistributionBar({ top3, top10, top50, total }: { top3: number; top10: n
   );
 }
 
-export function SerpKpiBanner({ data, onRefresh, isRefreshing }: SerpKpiBannerProps) {
+export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefreshing }: SerpKpiBannerProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
+
+  // Compute indexed pages trend (min ±5%)
+  const indexedPagesTrend = (() => {
+    if (data?.indexed_pages == null || previousIndexedPages == null || previousIndexedPages === 0) return null;
+    const pctChange = ((data.indexed_pages - previousIndexedPages) / previousIndexedPages) * 100;
+    if (pctChange >= 5) return { direction: 'up' as const, pct: pctChange };
+    if (pctChange <= -5) return { direction: 'down' as const, pct: pctChange };
+    return null;
+  })();
 
   if (!data || data.total_keywords === 0) {
     return (
@@ -230,8 +240,25 @@ export function SerpKpiBanner({ data, onRefresh, isRefreshing }: SerpKpiBannerPr
               <FileText className="h-3 w-3" />
               {t.indexedPages}
             </div>
-            <p className="text-lg font-semibold">
+            <p className="text-lg font-semibold flex items-center gap-1">
               {data.indexed_pages != null ? data.indexed_pages.toLocaleString() : '—'}
+              {indexedPagesTrend && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center">
+                      {indexedPagesTrend.direction === 'up' ? (
+                        <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
+                      )}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {indexedPagesTrend.direction === 'up' ? '+' : ''}{indexedPagesTrend.pct.toFixed(1)}%
+                    {previousIndexedPages != null && ` (${language === 'fr' ? 'avant' : 'prev'}: ${previousIndexedPages.toLocaleString()})`}
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </p>
           </div>
         </div>

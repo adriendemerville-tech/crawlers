@@ -821,6 +821,8 @@ export function MyTracking() {
   const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
   const latestAiVisibility = latestStats ? getAiVisibility(latestStats) : null;
   const latestSerpData = latestStats ? getSerpData(latestStats) : null;
+  const previousSerpData = currentStats.length >= 2 ? getSerpData(currentStats[currentStats.length - 2]) : null;
+  const previousIndexedPages = previousSerpData?.indexed_pages ?? null;
 
   const chartData = currentStats.map((entry) => {
     const d = new Date(entry.recorded_at);
@@ -1361,7 +1363,8 @@ export function MyTracking() {
 
                   {/* SERP Ranking Banner (DataForSEO) */}
                   <SerpKpiBanner 
-                    data={latestSerpData} 
+                    data={latestSerpData}
+                    previousIndexedPages={previousIndexedPages}
                     onRefresh={async () => {
                       if (!currentSite || !user || refreshingSerp) return;
                       setRefreshingSerp(true);
