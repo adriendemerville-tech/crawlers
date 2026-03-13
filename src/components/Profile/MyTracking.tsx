@@ -126,6 +126,12 @@ interface TrackedSite {
   api_key?: string;
   current_config?: Record<string, unknown>;
   previous_config?: Record<string, unknown>;
+  market_sector?: string | null;
+  products_services?: string | null;
+  target_audience?: string | null;
+  address?: string | null;
+  commercial_area?: string | null;
+  company_size?: string | null;
 }
 
 interface StatsEntry {
@@ -1474,7 +1480,19 @@ export function MyTracking() {
 
                   {/* LLM Depth Card – Pro Agency, collaborators & admins */}
                   {currentSite && (isAgencyPro || isCollaborator || isAdmin) && (
-                    <LLMDepthCard domain={currentSite.domain} />
+                    <LLMDepthCard
+                      domain={currentSite.domain}
+                      trackedSiteId={currentSite.id}
+                      userId={user?.id}
+                      siteContext={{
+                        market_sector: currentSite.market_sector || undefined,
+                        products_services: currentSite.products_services || undefined,
+                        target_audience: currentSite.target_audience || undefined,
+                        address: currentSite.address || undefined,
+                        commercial_area: currentSite.commercial_area || undefined,
+                        company_size: currentSite.company_size || undefined,
+                      }}
+                    />
                   )}
                 </div>
               )}
