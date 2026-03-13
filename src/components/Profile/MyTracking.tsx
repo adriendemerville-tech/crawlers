@@ -754,7 +754,7 @@ export function MyTracking() {
 
                   {/* KPI Cards */}
                   <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${!latestStats ? 'opacity-40 pointer-events-none' : ''}`}>
-                    <KPICard label={t.seoScore} value={latestStats?.seo_score ? `${latestStats.seo_score}/200` : '—'} icon={TrendingUp} />
+                    <KPICard label={t.seoScore} value={latestStats?.seo_score ? `${latestStats.seo_score}/100` : '—'} icon={TrendingUp} />
                     <KPICard label={t.geoScore} value={latestStats?.geo_score ? `${latestStats.geo_score}%` : '—'} icon={Globe} />
                     <KPICard label={t.performance} value={latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—'} icon={Gauge} />
                     <KPICard label={t.citationRate} value={latestStats?.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—'} icon={Brain} />
