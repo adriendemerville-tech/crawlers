@@ -198,6 +198,9 @@ Deno.serve(async (req) => {
 
     console.log(`[fetch-serp-kpis] ✅ ${domain}: ${totalKeywords} keywords, avg pos ${avgPosition}, top3=${top3}, top10=${top10}, top50=${top50}`)
 
+    // #1: Cache result for 24h to avoid duplicate API calls
+    await setCache(ck, 'fetch-serp-kpis', serpData, 1440)
+
     // If tracked_site_id provided, persist to serp_snapshots
     if (tracked_site_id && caller_user_id) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!
