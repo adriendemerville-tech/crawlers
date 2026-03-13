@@ -2018,39 +2018,57 @@ export type Database = {
       }
       tracked_sites: {
         Row: {
+          address: string | null
           api_key: string
+          commercial_area: string | null
+          company_size: string | null
           created_at: string
           current_config: Json
           domain: string
           id: string
           last_audit_at: string | null
           last_widget_ping: string | null
+          market_sector: string | null
           previous_config: Json
+          products_services: string | null
           site_name: string
+          target_audience: string | null
           user_id: string
         }
         Insert: {
+          address?: string | null
           api_key?: string
+          commercial_area?: string | null
+          company_size?: string | null
           created_at?: string
           current_config?: Json
           domain: string
           id?: string
           last_audit_at?: string | null
           last_widget_ping?: string | null
+          market_sector?: string | null
           previous_config?: Json
+          products_services?: string | null
           site_name?: string
+          target_audience?: string | null
           user_id: string
         }
         Update: {
+          address?: string | null
           api_key?: string
+          commercial_area?: string | null
+          company_size?: string | null
           created_at?: string
           current_config?: Json
           domain?: string
           id?: string
           last_audit_at?: string | null
           last_widget_ping?: string | null
+          market_sector?: string | null
           previous_config?: Json
+          products_services?: string | null
           site_name?: string
+          target_audience?: string | null
           user_id?: string
         }
         Relationships: []
