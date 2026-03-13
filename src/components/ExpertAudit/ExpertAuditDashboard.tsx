@@ -806,8 +806,45 @@ export function ExpertAuditDashboard() {
     setIsStrategicLoading(true);
     setResult(null);
 
+    // ═══ DOMAIN-LEVEL STRATEGIC CACHE ═══
+    // Reuse cached strategic data for stable modules (intro, DNA, market, competition, EEAT, social)
+    // Refreshes every 10 audits or on manual force-refresh
+    const domain = (() => { try { return new URL(normalizedUrl).hostname; } catch { return ''; } })();
+    const isCorrection = !!(hallucinationCorrections || competitorCorrections);
+    
+    if (!isCorrection && !forceStrategicRefresh && domain) {
+      const cached = getStrategicCache(domain);
+      if (cached && cached.auditCount < STRATEGIC_CACHE_MAX) {
+        console.log(`[Strategic] ⚡ Using domain cache (audit ${cached.auditCount}/${STRATEGIC_CACHE_MAX})`);
+        incrementStrategicCount(domain);
+        const count = cached.auditCount + 1;
+        setStrategicCacheInfo({ auditCount: count, maxBeforeRefresh: STRATEGIC_CACHE_MAX });
+        
+        setResult(cached.data);
+        setStrategicResult(cached.data);
+        setStrategicProgressiveReveal(false);
+        setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+        trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl, eventData: { cached: true } });
+        
+        // Pre-summarize cached result
+        setPreSummarizedResult(null);
+        summarizeStrategicResult(cached.data, language).then(s => setPreSummarizedResult(s)).catch(() => {});
+        
+        toast({
+          title: t.strategicComplete,
+          description: 'Données stratégiques en cache (module stable).',
+        });
+        setIsStrategicLoading(false);
+        // Reset force refresh flag
+        setForceStrategicRefresh(false);
+        return;
+      }
+    }
+    // Reset force refresh flag after use
+    setForceStrategicRefresh(false);
+
     // Use cached context for competitor/hallucination corrections (skips DataForSEO, metadata, etc.)
-    const useCachedContext = (hallucinationCorrections || competitorCorrections) && strategicCachedContext;
+    const useCachedContext = isCorrection && strategicCachedContext;
     
     try {
       
