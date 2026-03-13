@@ -537,6 +537,23 @@ export default function SiteCrawl() {
     return () => clearInterval(interval);
   }, [crawlResult]);
 
+  // Fetch indexed pages count when crawl is completed
+  useEffect(() => {
+    if (!crawlResult || crawlResult.status !== 'completed') {
+      setIndexedPagesCount(null);
+      return;
+    }
+    const domain = crawlResult.domain;
+    if (!domain) return;
+    supabase.functions.invoke('fetch-serp-kpis', {
+      body: { domain },
+    }).then(({ data }) => {
+      if (data?.data?.indexed_pages != null) {
+        setIndexedPagesCount(data.data.indexed_pages);
+      }
+    }).catch(() => {});
+  }, [crawlResult?.id, crawlResult?.status]);
+
   if (loading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
