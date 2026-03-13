@@ -579,7 +579,19 @@ export function MyTracking() {
     return true;
   }, [language, checkRefreshExhausted]);
 
-  // Streaming audit: fire each API independently, insert ONCE at the end
+  // Check refresh exhaustion for all sites on load and when sites change
+  useEffect(() => {
+    if (!sites.length) return;
+    (async () => {
+      const exhausted = new Set<string>();
+      await Promise.all(sites.map(async (site) => {
+        const isExhausted = await checkRefreshExhausted(site.id);
+        if (isExhausted) exhausted.add(site.id);
+      }));
+      setRefreshExhaustedSites(exhausted);
+    })();
+  }, [sites, checkRefreshExhausted]);
+
   const runStreamingAudit = async (site: TrackedSite) => {
     if (!user) return;
 
