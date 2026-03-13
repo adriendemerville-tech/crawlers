@@ -20,7 +20,10 @@ import {
   Brain,
   Flame,
   Swords,
-  ScanSearch
+  ScanSearch,
+  Coins,
+  CreditCard,
+  Users
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -157,6 +160,7 @@ export function AnalyticsDashboard() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [reliabilityScore, setReliabilityScore] = useState<{ score: number; audits: number; predictions: number } | null>(null);
   const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
+  const [businessMetrics, setBusinessMetrics] = useState<{ payingSubscribers: number; creditsPurchased: number; mrr: number }>({ payingSubscribers: 0, creditsPurchased: 0, mrr: 0 });
   const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
     totalTokens: 0,
     promptTokens: 0,
@@ -364,7 +368,7 @@ export function AnalyticsDashboard() {
         byApiService,
       });
 
-      // Calculate average cost per paying subscriber
+      // Calculate business metrics: paying subscribers, credits purchased, MRR
       try {
         const { data: payingProfiles } = await supabase
           .from('profiles')
@@ -372,9 +376,22 @@ export function AnalyticsDashboard() {
           .eq('plan_type', 'agency_pro')
           .eq('subscription_status', 'active');
         
+        const payingCount = payingProfiles?.length || 0;
+
+        // Credits purchased (sum of positive 'purchase' transactions)
+        const { data: purchaseTx } = await supabase
+          .from('credit_transactions')
+          .select('amount')
+          .eq('transaction_type', 'purchase');
+        const creditsPurchased = (purchaseTx || []).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+
+        // MRR = paying subscribers × 59€
+        const mrr = payingCount * 59;
+
+        setBusinessMetrics({ payingSubscribers: payingCount, creditsPurchased, mrr });
+
         if (payingProfiles && payingProfiles.length > 0) {
           const payingUserIds = new Set(payingProfiles.map(p => p.user_id));
-          // Sum cost per paying user from token events
           const costPerUser: Record<string, number> = {};
           tokenEvents.forEach(e => {
             const data = e.event_data as Record<string, unknown> | null;
@@ -386,13 +403,12 @@ export function AnalyticsDashboard() {
               costPerUser[e.user_id] = (costPerUser[e.user_id] || 0) + cost;
             }
           });
-          // Also add paid API call costs (estimated at ~0.01€ per call for DataForSEO, ~0.005€ for others)
           const API_COST_ESTIMATES: Record<string, number> = {
             dataforseo: 0.01,
             browserless: 0.008,
             firecrawl: 0.005,
             'fly-playwright': 0.0001,
-            openrouter: 0, // already counted in tokens
+            openrouter: 0,
           };
           paidApiEvents.forEach(e => {
             const data = e.event_data as Record<string, unknown> | null;
@@ -411,7 +427,7 @@ export function AnalyticsDashboard() {
           setAvgCostPerSubscriber({ avg: 0, count: 0 });
         }
       } catch (err) {
-        console.error('Error calculating avg cost per subscriber:', err);
+        console.error('Error calculating business metrics:', err);
       }
 
       // Calculate daily data (last 30 days)
@@ -695,6 +711,40 @@ export function AnalyticsDashboard() {
           icon={ScanSearch}
           description="Sites entiers analysés"
         />
+      </div>
+
+      {/* Business Metrics */}
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="border-emerald-500/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Abonnés payants</CardTitle>
+            <Users className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{businessMetrics.payingSubscribers}</div>
+            <p className="text-xs text-muted-foreground mt-1">Pro Agency actifs</p>
+          </CardContent>
+        </Card>
+        <Card className="border-violet-500/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Crédits achetés</CardTitle>
+            <Coins className="h-4 w-4 text-violet-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{businessMetrics.creditsPurchased.toLocaleString('fr-FR')}</div>
+            <p className="text-xs text-muted-foreground mt-1">Total historique</p>
+          </CardContent>
+        </Card>
+        <Card className="border-amber-500/30">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">MRR</CardTitle>
+            <CreditCard className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{businessMetrics.mrr.toLocaleString('fr-FR')} €</div>
+            <p className="text-xs text-muted-foreground mt-1">{businessMetrics.payingSubscribers} × 59 €/mois</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Token Usage Card */}
