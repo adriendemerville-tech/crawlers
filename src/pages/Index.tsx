@@ -106,6 +106,15 @@ const Index = () => {
   const [isRedirecting, setIsRedirecting] = useState(false);
   useEffect(() => {
     if (authUser && (isSubscribed || isAdminUser)) {
+      // Don't redirect if user navigated here from another page on the site
+      const isInternalNavigation = document.referrer && (() => {
+        try {
+          const ref = new URL(document.referrer);
+          return ref.origin === window.location.origin;
+        } catch { return false; }
+      })();
+      if (isInternalNavigation) return;
+
       setIsRedirecting(true);
       const timer = setTimeout(() => {
         navTo('/console?tab=tracking', { replace: true });
