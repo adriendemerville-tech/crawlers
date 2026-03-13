@@ -1521,18 +1521,15 @@ export function SmartConfigurator({
                     key={`${calculatedPrice}-${enabledCount}`}
                     initial={{ scale: 1.1, opacity: 0.7 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="text-sm font-semibold text-amber-600 dark:text-amber-400 tabular-nums flex items-center gap-1"
+                    className="text-sm font-semibold tabular-nums flex items-center gap-1"
                   >
                     {isAgencyPro ? (
-                      <>
-                        <span className="text-lg">∞</span>
-                        <CreditCoin size="sm" />
-                      </>
+                      <span className="text-xl" style={{ color: 'hsl(45, 90%, 50%)' }}>∞</span>
                     ) : (
-                      <>
+                      <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
                         {calculatedPrice === 0 ? 0 : Math.max(1, Math.round(calculatedPrice / 0.5))}
                         <CreditCoin size="sm" />
-                      </>
+                      </span>
                     )}
                   </motion.span>
                 )}
