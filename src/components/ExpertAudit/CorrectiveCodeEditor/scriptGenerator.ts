@@ -367,7 +367,7 @@ ${fixFunctions.join('\n\n')}
         // Règle 5: Global try-catch — SILENT failure
         try {
 
-          safeLog('[Crawlers.fr] 🏗️ Architecte Génératif v3.1 — CLS-ZERO + SDK Isolation');
+          safeLog('[Crawlers.fr] 🏗️ Architecte Génératif v3.2 — CLS-ZERO + Merge-Override');
 
 ${fixCalls.map(call => `          ${call}`).join('\n')}
 
