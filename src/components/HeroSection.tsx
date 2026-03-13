@@ -358,18 +358,6 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               </span>
             </Button>
           </Link>
-          <Link to="/audit-compare">
-            <Button
-              variant="outline"
-              size="lg"
-              className="gap-2 px-6 py-3 text-base border border-violet-500 text-violet-500 bg-transparent hover:bg-violet-500/10 hover:text-violet-400 font-medium shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
-            >
-              <GitCompareArrows className="h-4 w-4" />
-              <span>
-                {language === 'fr' ? 'Audit Comparé' : language === 'es' ? 'Auditoría Comparada' : 'Compared Audit'}
-              </span>
-            </Button>
-          </Link>
         </div>
       </div>
     </section>
