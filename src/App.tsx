@@ -8,6 +8,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 // Lazy load providers not needed for first paint
 const AuthProvider = lazy(() => import("@/contexts/AuthContext").then(m => ({ default: m.AuthProvider })));
 const CreditsProvider = lazy(() => import("@/contexts/CreditsContext").then(m => ({ default: m.CreditsProvider })));
+const DemoModeProvider = lazy(() => import("@/contexts/DemoModeContext").then(m => ({ default: m.DemoModeProvider })));
 const TooltipProvider = lazy(() => import("@/components/ui/tooltip").then(m => ({ default: m.TooltipProvider })));
 const HelmetProvider = lazy(() => import("react-helmet-async").then(m => ({ default: m.HelmetProvider })));
 
@@ -76,6 +77,7 @@ const App = () => (
           <LanguageProvider>
             <Suspense fallback={null}>
               <AuthProvider>
+                <DemoModeProvider>
                 <CreditsProvider>
                   <TooltipProvider>
                     <Suspense fallback={null}>
@@ -132,6 +134,7 @@ const App = () => (
                     </BrowserRouter>
                   </TooltipProvider>
                 </CreditsProvider>
+                </DemoModeProvider>
               </AuthProvider>
             </Suspense>
           </LanguageProvider>

@@ -9,10 +9,12 @@ import { BrowserlessAlert } from './BrowserlessAlert';
 import { CtoAgentDashboard } from './CtoAgentDashboard';
 import { BackendDocumentation } from './BackendDocumentation';
 import { CrawlManagement } from './CrawlManagement';
+import { DemoModeToggle } from './DemoModeToggle';
 
 export function AdminDashboard() {
   return (
     <div className="space-y-6">
+      <DemoModeToggle />
       <BrowserlessAlert />
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-primary/10">
