@@ -2193,6 +2193,7 @@ Deno.serve(async (req) => {
     let rankingOverview: RankingOverview | null;
     let founderInfo: FounderInfo;
     let localCompetitorData: { name: string; url: string; rank: number } | null = null;
+    let gmbData: GMBData | null = null;
 
     if (useCache) {
       // ═══ FAST PATH: Reuse cached context (corrections/re-runs) ═══
