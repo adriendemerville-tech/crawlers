@@ -240,15 +240,44 @@ export function AffiliateManagement() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={code.discount_percent === 100 ? 'default' : 'secondary'}>
-                        {code.discount_percent}%
-                      </Badge>
+                      {editingCode?.id === code.id ? (
+                        <Input
+                          type="number"
+                          className="h-7 w-20 text-xs"
+                          value={editingCode.discount_percent}
+                          onChange={e => setEditingCode({ ...editingCode, discount_percent: Number(e.target.value) })}
+                        />
+                      ) : (
+                        <Badge variant={code.discount_percent === 100 ? 'default' : 'secondary'}>
+                          {code.discount_percent}%
+                        </Badge>
+                      )}
                     </TableCell>
-                    <TableCell>{code.duration_months} mois</TableCell>
                     <TableCell>
-                      <span className={code.current_activations >= code.max_activations ? 'text-amber-600 font-semibold' : ''}>
-                        {code.current_activations}/{code.max_activations}
-                      </span>
+                      {editingCode?.id === code.id ? (
+                        <Input
+                          type="number"
+                          className="h-7 w-16 text-xs"
+                          value={editingCode.duration_months}
+                          onChange={e => setEditingCode({ ...editingCode, duration_months: Number(e.target.value) })}
+                        />
+                      ) : (
+                        <>{code.duration_months} mois</>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingCode?.id === code.id ? (
+                        <Input
+                          type="number"
+                          className="h-7 w-16 text-xs"
+                          value={editingCode.max_activations}
+                          onChange={e => setEditingCode({ ...editingCode, max_activations: Number(e.target.value) })}
+                        />
+                      ) : (
+                        <span className={code.current_activations >= code.max_activations ? 'text-amber-600 font-semibold' : ''}>
+                          {code.current_activations}/{code.max_activations}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Switch
@@ -259,15 +288,36 @@ export function AffiliateManagement() {
                     <TableCell className="text-xs text-muted-foreground">
                       {format(new Date(code.created_at), 'dd MMM yyyy', { locale: fr })}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => deleteCode(code.id, code.code)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                    <TableCell className="text-right flex items-center justify-end gap-1">
+                      {editingCode?.id === code.id ? (
+                        <>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={saveEdit}>
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingCode(null)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setEditingCode({ ...code })}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => deleteCode(code.id, code.code)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
