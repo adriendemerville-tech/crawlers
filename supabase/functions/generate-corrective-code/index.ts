@@ -2373,16 +2373,54 @@ function generateCorrectiveScript(
 ${fixFunctions.join('\n\n')}
 
   // ═══════════════════════════════════════════════════════════
+  // TÉLÉMÉTRIE ANONYME — Beacon vers sdk-status (Règle 10)
+  // ═══════════════════════════════════════════════════════════
+
+  (function() {
+    try {
+      var endpoint = '${Deno.env.get('SUPABASE_URL') || ''}/functions/v1/sdk-status';
+      var payload = JSON.stringify({
+        domain: CONFIG.siteUrl.replace(/^https?:\\/\\//, '').replace(/^www\\./, '').split('/')[0],
+        event: 'script_loaded',
+        fixes: ${enabledFixes.length},
+        version: '4.0',
+        ts: Date.now()
+      });
+      if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+        navigator.sendBeacon(endpoint, payload);
+      } else {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', endpoint, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(payload);
+      }
+    } catch(e) { /* silent */ }
+  })();
+
+  // ═══════════════════════════════════════════════════════════
   // EXÉCUTION — Règle 5: try/catch global
   // ═══════════════════════════════════════════════════════════
 
   ready(function() {
-    console.log('[Crawlers.fr] 🏗️ Architecte Génératif v3.0 — CLS-ZERO Protocol');
+    console.log('[Crawlers.fr] 🏗️ Architecte Génératif v4.0 — CLS-ZERO Protocol');
     
     try {
 ${fixCalls.map(call => `      ${call}`).join('\n')}
       
       console.log('[Crawlers.fr] ✅ ${enabledFixes.length} correctif(s) appliqué(s) — CLS-ZERO');
+
+      // Télémétrie: confirmer l'exécution réussie
+      try {
+        var ep = '${Deno.env.get('SUPABASE_URL') || ''}/functions/v1/sdk-status';
+        var p2 = JSON.stringify({
+          domain: CONFIG.siteUrl.replace(/^https?:\\/\\//, '').replace(/^www\\./, '').split('/')[0],
+          event: 'fixes_applied',
+          fixes: ${enabledFixes.length},
+          version: '4.0',
+          ts: Date.now()
+        });
+        if (typeof navigator !== 'undefined' && navigator.sendBeacon) navigator.sendBeacon(ep, p2);
+      } catch(e2) {}
     } catch (error) {
       console.error('[Crawlers.fr] ❌ Erreur:', error);
     }
