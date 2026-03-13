@@ -222,6 +222,7 @@ const translations = {
       { icon: 'Code2', title: 'Código correctivo ilimitado', description: 'Genera scripts de corrección personalizados para cada cliente sin gastar créditos.' },
       { icon: 'Globe', title: 'Crawl multi-páginas incluido', description: '5 000 páginas rastreadas/mes incluidas (Fair Use). Más allá, compra de créditos adicionales Pay-As-You-Go. Estructura, puntuación SEO/200, enlaces rotos, resumen IA.' },
       { icon: 'BarChart3', title: '30 URL seguidos incluidos', description: 'Sigue hasta 30 dominios con KPIs SEO, GEO y LLM actualizados diariamente desde tu consola.' },
+      { icon: 'TrendingUp', title: 'Índice de Alineamiento Estratégico (IAS)', description: 'Diagnostique automáticamente el equilibrio Brand / Genérico de su tráfico GSC por modelo de negocio. Score, historización y benchmarks sectoriales.' },
       { icon: 'Palette', title: 'Marca blanca', description: 'Personaliza tus informes con tu logo, colores y datos de contacto.' },
       { icon: 'Users', title: '3 cuentas incluidas', description: 'Invita a tus colaboradores y gestiona tu equipo desde una consola centralizada.' },
       { icon: 'Headphones', title: 'Soporte prioritario', description: 'Accede a soporte dedicado con tiempos de respuesta reducidos.' },
