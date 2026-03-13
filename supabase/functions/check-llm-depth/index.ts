@@ -258,7 +258,7 @@ interface DepthResult {
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 async function runDepthConversation(
-  apiKey: string,
+  keys: ApiKeys,
   modelDef: ModelDef,
   brand: string,
   domain: string,
@@ -291,38 +291,25 @@ async function runDepthConversation(
     anglesTested.push(anglesLabels[i] || `Phase ${i + 1}`)
 
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://crawlers.lovable.app',
-          'X-Title': 'Crawlers.fr - LLM Depth Analyzer',
-        },
-        body: JSON.stringify({
-          model: modelDef.model,
-          messages,
-          temperature: 0.7,
-          max_tokens: 1000,
-        }),
-      })
+      const [url, init] = buildFetchArgs(modelDef.gateway, keys, modelDef.model, messages, { temperature: 0.7, max_tokens: 1000 })
+      const response = await fetch(url, init)
 
       if (!response.ok) {
-        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status}`)
-        // Don't break — try next iteration
+        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status} (${modelDef.gateway})`)
         continue
       }
 
       const data = await response.json()
       const content = data.choices?.[0]?.message?.content || ''
 
-      trackPaidApiCall('check-llm-depth', 'openrouter', modelDef.model, domain)
+      const provider = modelDef.gateway === 'lovable' ? 'lovable-ai' : 'openrouter'
+      trackPaidApiCall('check-llm-depth', provider, modelDef.model, domain)
 
       messages.push({ role: 'assistant', content })
 
-      // Semantic brand detection
+      // Semantic brand detection (uses same gateway as the model)
       const detection = await detectBrandSemantically(
-        apiKey, modelDef.model, content, brand, domain, lang,
+        keys, modelDef.gateway, modelDef.model, content, brand, domain, lang,
       )
 
       if (detection.found) {
