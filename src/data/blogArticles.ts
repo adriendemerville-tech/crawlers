@@ -1,6 +1,7 @@
 import crawlerHeroImage from '@/assets/blog/crawler-hero.webp';
 import paradoxeGoogleGeoHero from '@/assets/blog/paradoxe-google-geo-hero.webp';
 import sovLlmHero from '@/assets/blog/share-of-voice-llm-hero.webp';
+import iasGscHero from '@/assets/blog/indice-alignement-strategique-gsc-hero.webp';
 
 export interface BlogArticle {
   slug: string;
