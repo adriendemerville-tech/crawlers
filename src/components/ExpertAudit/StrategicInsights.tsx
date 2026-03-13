@@ -33,7 +33,7 @@ import { SummaryResilienceCard } from './SummaryResilienceCard';
 import { LexicalFootprintCard } from './LexicalFootprintCard';
 import { ExpertiseSentimentCard } from './ExpertiseSentimentCard';
 import { RedTeamCard } from './RedTeamCard';
-
+import { GoogleMyBusinessCard } from './GoogleMyBusinessCard';
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
   hideExecutiveSummary?: boolean;
@@ -300,6 +300,13 @@ export function StrategicInsights({
           {!hideSocialSignals && analysis.social_signals && (
             <RevealWrapper delay={14000} isDataCard enabled={progressiveReveal}>
               <SocialSignalsCard signals={analysis.social_signals} />
+            </RevealWrapper>
+          )}
+
+          {/* 13b. Google My Business (when detected) */}
+          {analysis.google_my_business && (
+            <RevealWrapper delay={15000} isDataCard enabled={progressiveReveal}>
+              <GoogleMyBusinessCard data={analysis.google_my_business} />
             </RevealWrapper>
           )}
 

@@ -415,6 +415,17 @@ export interface HallucinationCorrections {
   mainProducts?: string;
 }
 
+// Google My Business data
+export interface GoogleMyBusinessData {
+  title?: string;
+  rating?: number;
+  reviews_count?: number;
+  category?: string;
+  address?: string;
+  is_claimed?: boolean;
+  quick_wins?: string[];
+}
+
 // UPDATED: Premium Strategic Analysis
 export type AuditPageType = 'homepage' | 'editorial' | 'product' | 'deep';
 
@@ -463,6 +474,9 @@ export interface StrategicAnalysis {
   lexical_footprint?: import('./newAuditMetrics').LexicalFootprint;
   expertise_sentiment?: import('./newAuditMetrics').ExpertiseSentiment;
   red_team?: import('./newAuditMetrics').RedTeamAnalysis;
+
+  // Google My Business
+  google_my_business?: GoogleMyBusinessData | null;
 }
 
  // Raw LLM visibility data from check-llm edge function

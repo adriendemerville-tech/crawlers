@@ -1191,6 +1191,103 @@ async function fetchRankedKeywords(domain: string, locationCode: number): Promis
   }
 }
 
+// ==================== GOOGLE MY BUSINESS DETECTION ====================
+
+interface GMBData {
+  title?: string;
+  rating?: number;
+  reviews_count?: number;
+  category?: string;
+  address?: string;
+  is_claimed?: boolean;
+  quick_wins?: string[];
+}
+
+async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number): Promise<GMBData | null> {
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
+
+  const cleanDomain = domain.replace(/^www\./, '');
+  console.log(`📍 Searching GMB for "${brandName}" / ${cleanDomain}...`);
+
+  try {
+    // Search Google Maps for the brand/domain
+    const response = await fetch('https://api.dataforseo.com/v3/serp/google/maps/live/regular', {
+      method: 'POST',
+      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify([{
+        keyword: brandName,
+        location_code: locationCode,
+        language_code: 'fr',
+        depth: 5,
+      }]),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      console.log(`⚠️ GMB search failed: ${response.status}`);
+      await response.text();
+      return null;
+    }
+    trackPaidApiCall('audit-strategique-ia', 'dataforseo', 'serp/google/maps');
+
+    const data = await response.json();
+    const items = data.tasks?.[0]?.result?.[0]?.items;
+    if (!items || !Array.isArray(items)) {
+      console.log('📍 No GMB results found');
+      return null;
+    }
+
+    // Find the listing that matches the domain
+    const match = items.find((item: any) => {
+      if (!item) return false;
+      const itemDomain = (item.domain || '').replace(/^www\./, '').toLowerCase();
+      const itemUrl = (item.url || '').toLowerCase();
+      return itemDomain === cleanDomain.toLowerCase() || 
+             itemUrl.includes(cleanDomain.toLowerCase()) ||
+             (item.website && item.website.toLowerCase().includes(cleanDomain.toLowerCase()));
+    });
+
+    if (!match) {
+      console.log('📍 No matching GMB listing for domain');
+      return null;
+    }
+
+    const rating = match.rating?.value ?? match.rating ?? null;
+    const reviewsCount = match.rating?.votes_count ?? match.reviews_count ?? null;
+
+    // Generate quick wins based on data
+    const quickWins: string[] = [];
+    if (rating != null && rating < 4.5 && reviewsCount != null) {
+      quickWins.push(`Améliorez votre note (${rating}/5) en sollicitant des avis clients satisfaits. Objectif : atteindre 4.5+ pour maximiser la confiance locale.`);
+    }
+    if (reviewsCount != null && reviewsCount < 50) {
+      quickWins.push(`Avec seulement ${reviewsCount} avis, mettez en place une stratégie de collecte d'avis post-achat (email, QR code, SMS) pour renforcer votre visibilité Maps.`);
+    }
+    if (quickWins.length === 0 && rating != null && rating >= 4.5) {
+      quickWins.push(`Exploitez votre excellente note (${rating}/5) en intégrant des rich snippets "AggregateRating" dans vos données structurées Schema.org.`);
+    }
+    if (quickWins.length < 2) {
+      quickWins.push(`Publiez des Google Posts hebdomadaires (offres, actualités, événements) pour maintenir votre fiche active et améliorer votre positionnement local.`);
+    }
+
+    const result: GMBData = {
+      title: match.title || brandName,
+      rating: typeof rating === 'number' ? rating : undefined,
+      reviews_count: typeof reviewsCount === 'number' ? reviewsCount : undefined,
+      category: match.category || match.snippet || undefined,
+      address: match.address || undefined,
+      is_claimed: match.is_claimed ?? undefined,
+      quick_wins: quickWins.slice(0, 2),
+    };
+
+    console.log(`📍 ✅ GMB found: "${result.title}" — ${result.rating}/5 (${result.reviews_count} avis)`);
+    return result;
+  } catch (error) {
+    console.error('📍 GMB detection error:', error);
+    return null;
+  }
+}
+
 // ==================== FOUNDER DISCOVERY VIA SERP ====================
 
 interface FounderInfo {
@@ -2096,6 +2193,7 @@ Deno.serve(async (req) => {
     let rankingOverview: RankingOverview | null;
     let founderInfo: FounderInfo;
     let localCompetitorData: { name: string; url: string; rank: number } | null = null;
+    let gmbData: GMBData | null = null;
 
     if (useCache) {
       // ═══ FAST PATH: Reuse cached context (corrections/re-runs) ═══
@@ -2113,6 +2211,7 @@ Deno.serve(async (req) => {
       rankingOverview = cachedContext.rankingOverview || null;
       founderInfo = cachedContext.founderInfo || { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
       localCompetitorData = null;
+      gmbData = cachedContext.gmbData || null;
       if (cachedContext.llmData) effectiveToolsData.llm = cachedContext.llmData;
     } else {
       // ═══ FULL PATH: Collect all data with maximum parallelism ═══
@@ -2151,7 +2250,7 @@ Deno.serve(async (req) => {
       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
 
-      const [mktDataResult, llmCheckResult, localCompResult, founderResult] = await Promise.allSettled([
+      const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult] = await Promise.allSettled([
         // Market data (DataForSEO keywords) — always needed for keyword analysis
         withDeadline(
           fetchMarketData(domain, context, pageContentContext, url),
@@ -2188,6 +2287,13 @@ Deno.serve(async (req) => {
               15_000, 'founder'
             )
           : Promise.resolve(null),
+        // Google My Business detection — skip in content mode
+        !isContentMode && context.locationCode
+          ? withDeadline(
+              detectGoogleMyBusiness(domain, context.brandName, context.locationCode),
+              12_000, 'gmb'
+            )
+          : Promise.resolve(null),
       ]);
 
       marketData = mktDataResult.status === 'fulfilled' ? mktDataResult.value : null;
@@ -2205,6 +2311,10 @@ Deno.serve(async (req) => {
         ? founderResult.value
         : { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
 
+      if (gmbResult.status === 'fulfilled' && gmbResult.value) {
+        gmbData = gmbResult.value;
+      }
+
       console.log(`⏱️ Data collection done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
 
@@ -2219,6 +2329,7 @@ Deno.serve(async (req) => {
       pageContentContext, brandSignals, eeatSignals,
       marketData, rankingOverview, founderInfo,
       llmData: effectiveToolsData.llm,
+      gmbData,
     };
 
     // ═══ CHECK DEADLINE before expensive LLM call ═══
@@ -2549,6 +2660,7 @@ Deno.serve(async (req) => {
         ...parsedAnalysis,
         raw_market_data: marketData,
         ranking_overview: rankingOverview,
+        google_my_business: gmbData,
         toolsData: null,
         llm_visibility_raw: effectiveToolsData.llm,
         _cachedContext: cachedContextOut,
