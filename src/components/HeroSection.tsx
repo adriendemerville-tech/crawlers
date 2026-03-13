@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, memo, lazy, Suspense, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Zap, Bot, Sparkles, Brain, Gauge, FileSearch } from 'lucide-react';
+import { Search, Zap, Bot, Brain, Gauge, FileSearch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
