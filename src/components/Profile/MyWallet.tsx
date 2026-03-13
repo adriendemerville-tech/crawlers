@@ -486,7 +486,7 @@ export function MyWallet() {
                     {/* Transaction history */}
                     <div className="pt-4 border-t">
                       <h3 className="text-sm font-semibold mb-3">{t.allHistory}</h3>
-                      {renderTransactionList(transactions)}
+                      <TransactionList items={transactions || []} emptyMessage={t.noTransactions} />
                     </div>
                   </CardContent>
                 </Card>
