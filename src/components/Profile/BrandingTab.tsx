@@ -491,7 +491,7 @@ export function BrandingTab() {
               {t.fontLabel}
             </Label>
             <p className="text-xs text-muted-foreground">{t.fontHint}</p>
-            <Select value={reportFont} onValueChange={setReportFont}>
+            <Select value={reportFont || '__default__'} onValueChange={(v) => setReportFont(v === '__default__' ? '' : v)}>
               <SelectTrigger className="max-w-xs" style={{ fontFamily: reportFont || 'Inter Variable, sans-serif' }}>
                 <SelectValue placeholder="Par défaut (Inter)" />
               </SelectTrigger>
