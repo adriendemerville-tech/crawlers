@@ -283,6 +283,18 @@ export function BrandingTab() {
   }, [logoUrl, primaryColor, brandName, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
 
 
+  // Load Google Font for preview
+  useEffect(() => {
+    if (!reportFont) return;
+    const id = `gfont-${reportFont.replace(/\s/g, '-')}`;
+    if (document.getElementById(id)) return;
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(reportFont)}:wght@400;700&display=swap`;
+    document.head.appendChild(link);
+  }, [reportFont]);
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
