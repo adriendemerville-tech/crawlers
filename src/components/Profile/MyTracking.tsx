@@ -893,14 +893,7 @@ export function MyTracking() {
       {/* Active crawl progress banner */}
       <ActiveCrawlBanner />
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Radar className="h-5 w-5 text-primary" />
-              {t.title}
-            </CardTitle>
-            
-          </div>
+        <CardHeader className="flex flex-row items-center justify-end pb-2">
           <Button variant="outline" size="icon" onClick={() => setShowAddModal(true)} aria-label={t.addSite} className="h-9 w-9 shrink-0">
             <Plus className="h-4 w-4" />
           </Button>

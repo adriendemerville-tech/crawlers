@@ -225,18 +225,7 @@ export function MyActionPlans() {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5" />
-              {t.title}
-            </CardTitle>
-            <CardDescription>{t.description}</CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

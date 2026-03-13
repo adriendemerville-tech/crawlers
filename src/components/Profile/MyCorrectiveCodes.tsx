@@ -200,14 +200,7 @@ export function MyCorrectiveCodes() {
   if (loading) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Code2 className="h-5 w-5" />
-            {t.title}
-          </CardTitle>
-          <CardDescription>{t.description}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 pt-6">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-20 w-full" />
           ))}
@@ -218,14 +211,7 @@ export function MyCorrectiveCodes() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Code2 className="h-5 w-5 text-primary" />
-          {t.title}
-        </CardTitle>
-        <CardDescription>{t.description}</CardDescription>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         {codes.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Code2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
