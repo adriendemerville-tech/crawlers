@@ -963,23 +963,32 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2.5">
-            {cross.differentiators.map((d, i) => (
-              <div key={i} className={`p-3 rounded-lg border ${impactColors[d.impact] || impactColors.mineur}`}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-semibold text-foreground">{d.dimension}</span>
-                  <Badge variant="outline" className="text-[10px] px-2">{d.impact}</Badge>
-                </div>
-                <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center text-sm">
-                  <div className={`text-center p-1.5 rounded ${d.advantage === site1Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-foreground/60'}`}>
-                    {d.site1_value}
+            {cross.differentiators.map((d, i) => {
+              const s1Wins = d.advantage === site1Domain;
+              const s2Wins = d.advantage === site2Domain;
+              const gradientStyle = s1Wins
+                ? { background: 'linear-gradient(to right, hsl(221 83% 53% / 0.12), transparent 60%)' }
+                : s2Wins
+                  ? { background: 'linear-gradient(to left, hsl(38 92% 50% / 0.12), transparent 60%)' }
+                  : {};
+              return (
+                <div key={i} className={`p-3 rounded-lg border ${impactColors[d.impact] || impactColors.mineur}`} style={gradientStyle}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-semibold text-foreground">{d.dimension}</span>
+                    <Badge variant="outline" className="text-[10px] px-2">{d.impact}</Badge>
                   </div>
-                  <span className="text-foreground/40 text-xs">vs</span>
-                  <div className={`text-center p-1.5 rounded ${d.advantage === site2Domain ? 'bg-primary/10 font-semibold text-foreground' : 'text-foreground/60'}`}>
-                    {d.site2_value}
+                  <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center text-sm">
+                    <div className={`text-center p-1.5 rounded ${s1Wins ? 'bg-primary/15 font-semibold text-primary' : 'text-foreground/50'}`}>
+                      {d.site1_value}
+                    </div>
+                    <span className="text-foreground/40 text-xs">vs</span>
+                    <div className={`text-center p-1.5 rounded ${s2Wins ? 'bg-warning/15 font-semibold text-warning' : 'text-foreground/50'}`}>
+                      {d.site2_value}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       )}
