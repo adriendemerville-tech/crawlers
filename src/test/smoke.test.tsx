@@ -37,6 +37,12 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
+// Mock LanguageContext
+vi.mock("@/contexts/LanguageContext", () => ({
+  useLanguage: () => ({ language: "fr", setLanguage: vi.fn(), t: {} }),
+  LanguageProvider: ({ children }: any) => <>{children}</>,
+}));
+
 // ─── Smoke tests: critical components render without crashing ───
 
 describe("Smoke Tests — Critical Components", () => {
