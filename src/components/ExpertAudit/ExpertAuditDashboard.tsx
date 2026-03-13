@@ -1045,6 +1045,14 @@ export function ExpertAuditDashboard() {
           toast({ title: t.strategicComplete, description: t.strategicDesc2 });
         } catch (retryError) {
           console.error('Strategic audit retry also failed:', retryError);
+          // Increment fail counter for this URL
+          const urlKey = normalizedUrl;
+          auditFailCountRef.current[urlKey] = (auditFailCountRef.current[urlKey] || 0) + 1;
+          
+          if ((auditFailCountRef.current[urlKey] || 0) >= 4) {
+            setFatalAuditError(true);
+          }
+          
           // Restore technical results so user doesn't see a blank screen
           if (technicalResult) {
             setResult(technicalResult);
