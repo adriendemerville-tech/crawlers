@@ -458,7 +458,7 @@ export function ClientsTab() {
               <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>{t.cancel}</Button>
+              <Button variant="outline" onClick={resetForm}>{t.cancel}</Button>
               <Button
                 onClick={handleCreate}
                 disabled={saving || !form.first_name.trim() || !form.last_name.trim()}
