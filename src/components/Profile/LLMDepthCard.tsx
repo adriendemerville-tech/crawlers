@@ -268,7 +268,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
         }
         setConversations(grouped);
       });
-  }, [trackedSiteId, userId, isAgencyPro, data]);
+  }, [trackedSiteId, userId, canViewConversations, data]);
 
   // Check if user has previous LLM depth data for this site
   useEffect(() => {
