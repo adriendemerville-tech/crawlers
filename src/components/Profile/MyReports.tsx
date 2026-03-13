@@ -427,11 +427,7 @@ export function MyReports() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>{t.title}</CardTitle>
-            <CardDescription>{t.description}</CardDescription>
-          </div>
+        <div className="flex items-center justify-end">
           <Button onClick={() => setShowNewFolderDialog(true)} size="sm" className="gap-2">
             <FolderPlus className="h-4 w-4" />
             {t.createFolder}
