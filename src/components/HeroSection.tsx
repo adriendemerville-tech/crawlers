@@ -131,15 +131,6 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
           buttonText: t.hero.button.crawlers,
           loadingText: t.hero.button.loading.crawlers
         };
-      case 'geo':
-        return {
-          badge: t.hero.badge.geo,
-          headline: <>{t.hero.headline.geo}{' '}<span className="text-gradient">{t.hero.headline.geoHighlight}</span></>,
-          useAnimatedHeadline: false,
-          subheadline: t.hero.subheadline.geo,
-          buttonText: t.hero.button.geo,
-          loadingText: t.hero.button.loading.geo
-        };
       case 'llm':
         return {
           badge: t.hero.badge.llm,
