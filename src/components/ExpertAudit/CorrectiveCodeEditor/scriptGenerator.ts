@@ -199,7 +199,22 @@ export function generateCorrectiveScript(
     else document.addEventListener('DOMContentLoaded', fn);
   }
 
-  // Règle 4: Système de Locks — empêche la double exécution
+  // Règle 4: Système de Locks — merge-override
+  // Si un lock existe déjà, on SUPPRIME l'ancien élément pour que le nouveau script le remplace.
+  function clearLock(id) {
+    var existing = document.querySelectorAll('[data-crawlers-lock="' + id + '"]');
+    for (var i = 0; i < existing.length; i++) {
+      // Pour les éléments <head> (meta, title), on ne supprime pas le noeud, juste l'attribut
+      if (existing[i].parentNode === document.head) {
+        existing[i].removeAttribute('data-crawlers-lock');
+      } else {
+        // Pour les éléments injectés dans le body (FAQ, blog section, skeleton…), on les retire
+        existing[i].parentNode && existing[i].parentNode.removeChild(existing[i]);
+      }
+      safeLog('[Crawlers.fr] ♻️ Lock précédent supprimé:', id);
+    }
+  }
+  // Rétro-compat : hasLock renvoie toujours false après clearLock
   function hasLock(id) {
     return !!document.querySelector('[data-crawlers-lock="' + id + '"]');
   }
@@ -207,9 +222,13 @@ export function generateCorrectiveScript(
     if (el && el.setAttribute) el.setAttribute('data-crawlers-lock', id);
   }
 
-  // Règle 1: Injection JSON-LD dans <head> (données sémantiques IA/GEO)
+  // Règle 1: Injection JSON-LD dans <head> — merge-override (remplace l'ancien si existant)
   function injectJsonLd(id, data) {
-    if (document.querySelector('script[data-crawlers-jsonld="' + id + '"]')) return;
+    var old = document.querySelector('script[data-crawlers-jsonld="' + id + '"]');
+    if (old) {
+      old.parentNode && old.parentNode.removeChild(old);
+      safeLog('[Crawlers.fr] ♻️ JSON-LD remplacé:', id);
+    }
     var script = document.createElement('script');
     script.type = 'application/ld+json';
     script.setAttribute('data-crawlers-jsonld', id);
