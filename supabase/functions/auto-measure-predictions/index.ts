@@ -164,16 +164,69 @@ Deno.serve(async (req) => {
     const errors: string[] = []
 
     for (const [domain, preds] of domainMap) {
-      // Find a user with GSC connected for this domain
+      // ─── 1. Find tracked sites for this domain ───
       const { data: trackedSites } = await supabase
         .from('tracked_sites')
-        .select('user_id')
+        .select('id, user_id, current_config, last_widget_ping')
         .ilike('domain', `%${domain}%`)
         .limit(5)
 
+      // ─── 2. Collect deployment context ───
+      let deploymentStatus = 'unknown'
+      let widgetActive = false
+      let wpSynced = false
+
+      if (trackedSites && trackedSites.length > 0) {
+        const site = trackedSites[0]
+        const cfg = site.current_config as Record<string, any> | null
+
+        // WordPress sync check
+        if (cfg?.last_sync && cfg?.fixes?.length > 0) {
+          wpSynced = true
+          deploymentStatus = 'wp_deployed'
+        }
+
+        // GTM widget check (active if pinged < 24h from prediction end date)
+        if (site.last_widget_ping) {
+          const pingAge = Date.now() - new Date(site.last_widget_ping).getTime()
+          if (pingAge < 7 * 24 * 60 * 60 * 1000) { // 7 days tolerance for cron
+            widgetActive = true
+            if (deploymentStatus === 'unknown') deploymentStatus = 'gtm_active'
+          }
+        }
+
+        if (deploymentStatus === 'unknown') deploymentStatus = 'not_deployed'
+      }
+
+      // ─── 3. Check validated corrective codes ───
+      let correctiveCodesValidated = 0
+      const { data: validatedCodes } = await supabase
+        .from('saved_corrective_codes')
+        .select('id')
+        .ilike('url', `%${domain}%`)
+        .not('validated_at', 'is', null)
+
+      correctiveCodesValidated = validatedCodes?.length || 0
+
+      // ─── 4. Fetch audit_impact_snapshots (latest for this domain) ───
+      let impactScore: number | null = null
+      let impactReliabilityGrade: string | null = null
+      const { data: latestSnapshot } = await supabase
+        .from('audit_impact_snapshots')
+        .select('impact_score, reliability_grade, corrective_code_deployed, gsc_t90')
+        .eq('domain', domain)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestSnapshot) {
+        impactScore = latestSnapshot.impact_score
+        impactReliabilityGrade = latestSnapshot.reliability_grade
+      }
+
+      // ─── 5. Fetch GSC real traffic ───
       let realClicks: number | null = null
 
-      // Try each user's GSC until we get data
       for (const site of (trackedSites || [])) {
         const token = await getGscAccessToken(supabase, site.user_id)
         if (!token) continue
@@ -187,7 +240,20 @@ Deno.serve(async (req) => {
         continue
       }
 
-      // Insert actual_results for each prediction on this domain
+      // ─── 6. Build enriched context ───
+      const contextData = {
+        deployment_status: deploymentStatus,
+        widget_active: widgetActive,
+        wp_synced: wpSynced,
+        corrective_codes_validated: correctiveCodesValidated,
+        impact_score: impactScore,
+        impact_reliability_grade: impactReliabilityGrade,
+        snapshot_corrective_deployed: latestSnapshot?.corrective_code_deployed || false,
+        snapshot_gsc_t90: latestSnapshot?.gsc_t90 || null,
+        measured_at: new Date().toISOString(),
+      }
+
+      // ─── 7. Insert actual_results with context ───
       for (const pred of preds) {
         const accuracyGap = pred.predicted_traffic > 0
           ? Math.abs(realClicks - pred.predicted_traffic) / pred.predicted_traffic
@@ -199,6 +265,7 @@ Deno.serve(async (req) => {
             prediction_id: pred.id,
             real_traffic_after_90_days: realClicks,
             accuracy_gap: accuracyGap !== null ? Math.round(accuracyGap * 10000) / 10000 : null,
+            context_data: contextData,
           })
 
         if (insertErr) {
