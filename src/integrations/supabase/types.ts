@@ -594,6 +594,62 @@ export type Database = {
         }
         Relationships: []
       }
+      backlink_snapshots: {
+        Row: {
+          anchor_distribution: Json | null
+          backlinks_total: number | null
+          created_at: string
+          domain: string
+          domain_rank: number | null
+          id: string
+          measured_at: string
+          referring_domains: number | null
+          referring_domains_lost: number | null
+          referring_domains_new: number | null
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          anchor_distribution?: Json | null
+          backlinks_total?: number | null
+          created_at?: string
+          domain: string
+          domain_rank?: number | null
+          id?: string
+          measured_at?: string
+          referring_domains?: number | null
+          referring_domains_lost?: number | null
+          referring_domains_new?: number | null
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          anchor_distribution?: Json | null
+          backlinks_total?: number | null
+          created_at?: string
+          domain?: string
+          domain_rank?: number | null
+          id?: string
+          measured_at?: string
+          referring_domains?: number | null
+          referring_domains_lost?: number | null
+          referring_domains_new?: number | null
+          tracked_site_id?: string
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_snapshots_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_info: {
         Row: {
           billing_address: string | null
@@ -1086,6 +1142,59 @@ export type Database = {
           used_at?: string | null
         }
         Relationships: []
+      }
+      gsc_history_log: {
+        Row: {
+          avg_position: number | null
+          clicks: number
+          created_at: string
+          ctr: number
+          domain: string
+          id: string
+          impressions: number
+          measured_at: string
+          top_queries: Json | null
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          avg_position?: number | null
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          domain: string
+          id?: string
+          impressions?: number
+          measured_at?: string
+          top_queries?: Json | null
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          avg_position?: number | null
+          clicks?: number
+          created_at?: string
+          ctr?: number
+          domain?: string
+          id?: string
+          impressions?: number
+          measured_at?: string
+          top_queries?: Json | null
+          tracked_site_id?: string
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gsc_history_log_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hallucination_corrections: {
         Row: {
