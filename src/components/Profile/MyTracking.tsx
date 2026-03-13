@@ -36,7 +36,8 @@ const translations = {
     removeConfirm: 'Site retiré du suivi',
     lastAudit: 'Dernier audit',
     never: 'Jamais',
-    seoScore: 'Visibilité IA',
+    aiVisibility: 'Visibilité IA',
+    seoScore: 'Score SEO',
     geoScore: 'Score GEO',
     citationRate: 'Taux de citation LLM',
     sentiment: 'Sentiment IA',
@@ -63,7 +64,8 @@ const translations = {
     removeConfirm: 'Site removed from tracking',
     lastAudit: 'Last audit',
     never: 'Never',
-    seoScore: 'AI Visibility',
+    aiVisibility: 'AI Visibility',
+    seoScore: 'SEO Score',
     geoScore: 'GEO Score',
     citationRate: 'LLM Citation Rate',
     sentiment: 'AI Sentiment',
@@ -90,7 +92,8 @@ const translations = {
     removeConfirm: 'Sitio eliminado del seguimiento',
     lastAudit: 'Última auditoría',
     never: 'Nunca',
-    seoScore: 'Visibilidad IA',
+    aiVisibility: 'Visibilidad IA',
+    seoScore: 'Score SEO',
     geoScore: 'Score GEO',
     citationRate: 'Tasa de citación LLM',
     sentiment: 'Sentimiento IA',
@@ -391,16 +394,18 @@ export function MyTracking() {
     try {
       const url = `https://${site.domain}`;
       
-      // Run check-geo, check-llm and check-pagespeed in parallel
-      const [geoRes, llmRes, psiRes] = await Promise.allSettled([
+      // Run check-geo, check-llm, check-pagespeed and check-crawlers in parallel
+      const [geoRes, llmRes, psiRes, crawlersRes] = await Promise.allSettled([
         supabase.functions.invoke('check-geo', { body: { url, lang: language } }),
         supabase.functions.invoke('check-llm', { body: { url, lang: language } }),
         supabase.functions.invoke('check-pagespeed', { body: { url, lang: language } }),
+        supabase.functions.invoke('check-crawlers', { body: { url } }),
       ]);
 
       const geoData = geoRes.status === 'fulfilled' ? geoRes.value.data : null;
       const llmData = llmRes.status === 'fulfilled' ? llmRes.value.data : null;
       const psiData = psiRes.status === 'fulfilled' ? psiRes.value.data : null;
+      const crawlersData = crawlersRes.status === 'fulfilled' ? crawlersRes.value.data : null;
 
       const geoScore = geoData?.data?.totalScore ?? geoData?.data?.overallScore ?? 0;
       const llmCitationRate = llmData?.data?.citationRate;
@@ -408,8 +413,14 @@ export function MyTracking() {
         ? (llmCitationRate.cited / (llmCitationRate.total || 1)) * 100 
         : 0;
       const sentiment = llmData?.data?.overallSentiment || 'neutral';
-      const seoScore = llmData?.data?.overallScore ?? null;
+      const llmOverallScore = llmData?.data?.overallScore ?? null;
       
+      // Compute SEO crawlability score from check-crawlers (% of AI bots allowed)
+      const botResults = crawlersData?.data?.results || crawlersData?.results || [];
+      const seoScore = botResults.length > 0
+        ? Math.round((botResults.filter((b: any) => b.status === 'allowed').length / botResults.length) * 100)
+        : null;
+
       // Extract PageSpeed performance score (0-100)
       const performanceScore = psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
 
@@ -418,7 +429,7 @@ export function MyTracking() {
         user_id: user.id,
         tracked_site_id: site.id,
         domain: site.domain,
-        seo_score: seoScore ? Math.round(seoScore) : null,
+        seo_score: seoScore,
         geo_score: Math.round(geoScore),
         llm_citation_rate: citationRate,
         ai_sentiment: sentiment,
@@ -427,7 +438,9 @@ export function MyTracking() {
           geoData: geoData?.data, 
           llmData: llmData?.data, 
           psiData: psiData?.data,
+          crawlersData: crawlersData?.data || crawlersData,
           performanceScore,
+          llmOverallScore,
         },
       });
 
@@ -546,7 +559,12 @@ export function MyTracking() {
     const raw = entry as any;
     return raw?.raw_data?.performanceScore ?? null;
   };
+  const getAiVisibility = (entry: StatsEntry): number | null => {
+    const raw = entry as any;
+    return raw?.raw_data?.llmOverallScore ?? null;
+  };
   const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
+  const latestAiVisibility = latestStats ? getAiVisibility(latestStats) : null;
 
   const chartData = currentStats.map((entry) => {
     const d = new Date(entry.recorded_at);
@@ -753,10 +771,11 @@ export function MyTracking() {
                   </div>
 
                   {/* KPI Cards */}
-                  <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${!latestStats ? 'opacity-40 pointer-events-none' : ''}`}>
-                    <KPICard label={t.seoScore} value={latestStats?.seo_score ? `${latestStats.seo_score}/100` : '—'} icon={Eye} />
+                   <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${!latestStats ? 'opacity-40 pointer-events-none' : ''}`}>
+                    <KPICard label={t.seoScore} value={latestStats?.seo_score != null ? `${latestStats.seo_score}%` : '—'} icon={Search} />
                     <KPICard label={t.geoScore} value={latestStats?.geo_score ? `${latestStats.geo_score}%` : '—'} icon={Globe} />
                     <KPICard label={t.performance} value={latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—'} icon={Gauge} />
+                    <KPICard label={t.aiVisibility} value={latestAiVisibility != null ? `${Math.round(latestAiVisibility)}/100` : '—'} icon={Eye} />
                     <KPICard label={t.citationRate} value={latestStats?.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—'} icon={Brain} />
                     <KPICard label={t.sentiment} value={latestStats ? sentimentLabel(latestStats.ai_sentiment) : '—'} icon={BarChart3} valueClassName={latestStats ? sentimentColor(latestStats.ai_sentiment) : ''} />
                     <KPICard label={t.semanticAuth} value={latestStats?.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—'} icon={TrendingUp} />
