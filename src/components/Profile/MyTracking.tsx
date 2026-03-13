@@ -26,6 +26,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { SmartConfigurator } from '@/components/ExpertAudit/CorrectiveCodeEditor/SmartConfigurator';
 import { SerpKpiBanner } from '@/components/Profile/SerpKpiBanner';
 import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashboard';
+import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 
 const translations = {
@@ -1395,12 +1396,17 @@ export function MyTracking() {
                   />
 
                   {/* LLM Visibility Dashboard */}
-                  {currentSite && user && (
+                   {currentSite && user && (
                     <LLMVisibilityDashboard
                       trackedSiteId={currentSite.id}
                       userId={user.id}
                       domain={currentSite.domain}
                     />
+                  )}
+
+                  {/* LLM Depth Card – paid users only */}
+                  {currentSite && isAgencyPro && (
+                    <LLMDepthCard domain={currentSite.domain} />
                   )}
                 </div>
               )}
