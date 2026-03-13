@@ -704,11 +704,11 @@ function generateFixCode(
 
     case 'inject_faq':
       return {
-        fn: `  // Règle 1: FAQ → JSON-LD FAQPage dans <head> (données sémantiques IA/GEO)
+         fn: `  // Règle 1: FAQ → JSON-LD FAQPage dans <head> (données sémantiques IA/GEO)
   // Pas de HTML visible = pas de CLS
-  // Règle 4: Lock anti double-exécution
+  // Règle 4: Merge-override
   function injectFAQSection() {
-    if (hasLock('inject_faq')) return;
+    clearLock('inject_faq');
     try {
       // Version complète générée côté serveur avec contenu IA
       // Frontend fallback: JSON-LD sémantique uniquement (Règle 1)
