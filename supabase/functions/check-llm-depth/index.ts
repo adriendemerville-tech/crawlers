@@ -599,68 +599,37 @@ Deno.serve(async (req) => {
 
     console.log(`[check-llm-depth] Starting for "${brand}" (${domain}) — ${MODELS.length} models × ${prompts.length} phases`)
 
-    // ── Streaming mode ──────────────────────────────────────────────────
-    const streamMode = true // always stream now
+    // ── Check shared domain cache first (24h TTL) ──
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const sb = createClient(supabaseUrl, serviceKey)
 
-    if (streamMode) {
+    const { data: cachedDepth } = await sb
+      .from('domain_data_cache')
+      .select('result_data')
+      .eq('domain', domain)
+      .eq('data_type', 'llm_depth')
+      .is('week_start_date', null)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle()
+
+    if (cachedDepth?.result_data) {
+      console.log(`[check-llm-depth] ♻️ ${domain} — cache hit`)
+      const cached = cachedDepth.result_data as any
+
+      // Still persist to user's tables so their dashboard works
+      if (cached.results?.length > 0 && tracked_site_id && user_id) {
+        await persistResults(sb, tracked_site_id, user_id, cached.results)
+      }
+
+      // Return as SSE stream (single done event) for compatibility
       const encoder = new TextEncoder()
       const stream = new ReadableStream({
-        async start(controller) {
-          const send = (data: Record<string, unknown>) => {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
-          }
-
-          // Progress callback shared by all models
-          const onProgress: StreamCallback = (evt) => {
-            try { send(evt) } catch { /* stream closed */ }
-          }
-
-          // Run all models in parallel with streaming callbacks
-          const resultPromises = MODELS.map(m =>
-            runDepthConversation(keys, m, brand, domain, prompts, lang, onProgress)
-          )
-          const results = await Promise.allSettled(resultPromises)
-
-          const successResults: DepthResult[] = results
-            .filter((r): r is PromiseFulfilledResult<DepthResult> => r.status === 'fulfilled')
-            .map(r => r.value)
-
-          const allEmpty = successResults.every(r => !r.found && !r.conversation_summary)
-
-          const scores = successResults.map(r => r.iterations)
-          const avgDepth = scores.length > 0
-            ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1))
-            : null
-
-          // Persist
-          const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-          const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-          const sb = createClient(supabaseUrl, serviceKey)
-          if (!allEmpty) {
-            await persistResults(sb, tracked_site_id || null, user_id || null, successResults)
-          }
-
-          // Send final result
-          send({
-            type: 'done',
-            data: {
-              brand,
-              domain,
-              avg_depth: allEmpty ? null : avgDepth,
-              results: allEmpty ? [] : successResults,
-              prompt_strategy: prompts.length + ' phases',
-              measured_at: new Date().toISOString(),
-              ...(allEmpty ? { error_code: 'credits_exhausted' } : {}),
-            },
-          })
-
-          console.log(`[check-llm-depth] ${allEmpty ? '❌ ALL MODELS FAILED' : '✅'} ${domain}: brand="${brand}" avgDepth=${avgDepth}`,
-            successResults.map(r => `${r.llm}=${r.iterations}${r.found ? '✓' : '✗'}`).join(', '))
-
+        start(controller) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', data: cached })}\n\n`))
           controller.close()
         },
       })
-
       return new Response(stream, {
         headers: {
           ...corsHeaders,
@@ -670,6 +639,81 @@ Deno.serve(async (req) => {
         },
       })
     }
+
+    // ── Streaming mode ──────────────────────────────────────────────────
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (data: Record<string, unknown>) => {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+        }
+
+        // Progress callback shared by all models
+        const onProgress: StreamCallback = (evt) => {
+          try { send(evt) } catch { /* stream closed */ }
+        }
+
+        // Run all models in parallel with streaming callbacks
+        const resultPromises = MODELS.map(m =>
+          runDepthConversation(keys, m, brand, domain, prompts, lang, onProgress)
+        )
+        const results = await Promise.allSettled(resultPromises)
+
+        const successResults: DepthResult[] = results
+          .filter((r): r is PromiseFulfilledResult<DepthResult> => r.status === 'fulfilled')
+          .map(r => r.value)
+
+        const allEmpty = successResults.every(r => !r.found && !r.conversation_summary)
+
+        const scores = successResults.map(r => r.iterations)
+        const avgDepth = scores.length > 0
+          ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1))
+          : null
+
+        // Persist to user tables
+        if (!allEmpty) {
+          await persistResults(sb, tracked_site_id || null, user_id || null, successResults)
+        }
+
+        const finalData = {
+          brand,
+          domain,
+          avg_depth: allEmpty ? null : avgDepth,
+          results: allEmpty ? [] : successResults,
+          prompt_strategy: prompts.length + ' phases',
+          measured_at: new Date().toISOString(),
+          ...(allEmpty ? { error_code: 'credits_exhausted' } : {}),
+        }
+
+        // Write to shared domain cache (24h TTL)
+        if (!allEmpty) {
+          await sb.from('domain_data_cache').upsert({
+            domain,
+            data_type: 'llm_depth',
+            week_start_date: null,
+            result_data: finalData,
+            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          }, { onConflict: 'domain,data_type,week_start_date' })
+        }
+
+        // Send final result
+        send({ type: 'done', data: finalData })
+
+        console.log(`[check-llm-depth] ${allEmpty ? '❌ ALL MODELS FAILED' : '✅'} ${domain}: brand="${brand}" avgDepth=${avgDepth}`,
+          successResults.map(r => `${r.llm}=${r.iterations}${r.found ? '✓' : '✗'}`).join(', '))
+
+        controller.close()
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    })
   } catch (error) {
     console.error('[check-llm-depth] Fatal:', error)
     return new Response(JSON.stringify({
