@@ -226,10 +226,10 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
         {/* H2 Tagline - SEO/GEO optimized */}
         <h2 className="mb-4 text-lg font-medium font-display text-primary sm:mb-6 sm:text-2xl">
           {language === 'es'
-            ? <>Auditar su sitio. Afinar la estrategia. Implementar el <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">código</code>.</>
+            ? <>Audite su sitio. Afine la estrategia. Implemente el <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">código</code>.</>
             : language === 'en'
               ? <>Audit your site. Refine the strategy. Implement the <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">code</code>.</>
-              : <>Auditer votre site. Affiner la stratégie. Implémenter le <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">code</code>.</>}
+              : <>Auditez votre site. Affinez la stratégie. Implémentez le <code className="font-mono text-foreground bg-muted px-1.5 py-0.5 rounded text-[0.85em]">code</code>.</>}
         </h2>
 
         {/* H3 Subheadline - SEO optimized */}
