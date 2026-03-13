@@ -68,6 +68,12 @@ function needsJSRendering(html: string, visibleText: string): boolean {
   // Count actual words (not just chars) — more reliable for content detection
   const wordCount = visibleText.split(/\s+/).filter(w => w.length > 2).length;
 
+  // Count real content signals: H1 tags, <img> tags, <a> links
+  const h1Count = (html.match(/<h1[^>]*>[\s\S]*?<\/h1>/gi) || []).length;
+  const imgCount = (html.match(/<img\b[^>]*>/gi) || []).length;
+  const linkCount = (html.match(/<a\b[^>]*href/gi) || []).length;
+  const contentSignals = h1Count + imgCount + linkCount;
+
   return (
     // Very little text despite large HTML
     (visibleText.length < 200 && html.length > 1000) ||
@@ -78,7 +84,11 @@ function needsJSRendering(html: string, visibleText: string): boolean {
     // Less than 2% text ratio (JS-heavy pages)
     (html.length > 5000 && htmlToTextRatio < 0.02) ||
     // Framework detected (Nuxt, Next, etc.) but key SEO tags missing from raw HTML
-    (!!spaInfo.framework && isMissingSEOTags(html))
+    (!!spaInfo.framework && isMissingSEOTags(html)) ||
+    // Large HTML but suspiciously few content signals (WAF/bot-protected page)
+    (html.length > 10000 && wordCount < 200 && contentSignals < 10) ||
+    // Framework detected but almost no images or links (degraded/shell response)
+    (!!spaInfo.framework && imgCount < 3 && linkCount < 5 && wordCount < 300)
   );
 }
 

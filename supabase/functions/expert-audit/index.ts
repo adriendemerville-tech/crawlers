@@ -276,12 +276,12 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
       || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["']description["'][^>]*>/i);
     const metaDescContent = metaDescMatch ? metaDescMatch[1].trim() : '';
     
-    // Extract H1 tags
-    const h1Matches = html.match(/<h1[^>]*>([^<]*)<\/h1>/gi) || [];
+    // Extract H1 tags (supports nested HTML inside <h1>)
+    const h1Matches = html.match(/<h1[^>]*>[\s\S]*?<\/h1>/gi) || [];
     const h1Contents = h1Matches.map(h1 => {
       const content = h1.replace(/<[^>]*>/g, '').trim();
       return content;
-    });
+    }).filter(c => c.length > 0);
     
     // Count words (simple approximation)
     const textContent = html
