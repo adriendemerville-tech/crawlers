@@ -653,13 +653,13 @@ const Index = () => {
         />
       </Suspense>
 
-      {/* Onboarding tutorial - first visit only */}
-      <Suspense fallback={null}>
+      {/* Onboarding tutorial - disabled, kept in reserve */}
+      {/* <Suspense fallback={null}>
         <OnboardingTutorial
           active={showTutorial}
           onComplete={() => setShowTutorial(false)}
         />
-      </Suspense>
+      </Suspense> */}
     </div>
   );
 };
