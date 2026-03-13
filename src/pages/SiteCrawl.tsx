@@ -499,7 +499,27 @@ export default function SiteCrawl() {
       });
   }, [user, crawlResult]);
 
-  // Poll progress while crawling
+  // Auto-load crawl from ?view= query param
+  useEffect(() => {
+    const viewId = searchParams.get('view');
+    if (!viewId) return;
+    (async () => {
+      const { data } = await supabase
+        .from('site_crawls')
+        .select('*')
+        .eq('id', viewId)
+        .single();
+      if (data) {
+        const crawl = data as any;
+        setUrl(crawl.url || crawl.domain || '');
+        setCrawlResult(crawl);
+        setViewingCrawlId(crawl.id);
+        await loadPages(crawl.id);
+      }
+    })();
+  }, [searchParams]);
+
+
   useEffect(() => {
     if (!crawlResult || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
     const interval = setInterval(async () => {
