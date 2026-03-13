@@ -677,10 +677,10 @@ function generateFixCode(
       const hallucinationData = fix.data || {};
       const trueValue = hallucinationData.trueValue || siteName;
       return {
-        fn: `  // Règle 1: Correction Hallucination IA — JSON-LD dans <head> uniquement
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Règle 1: Correction Hallucination IA — JSON-LD dans <head> uniquement
+  // Règle 4: Merge-override
   function fixHallucination() {
-    if (hasLock('fix_hallucination')) return;
+    clearLock('fix_hallucination');
     try {
       // Données sémantiques via JSON-LD exclusivement (Règle 1)
       injectJsonLd('hallucination-fix', {
