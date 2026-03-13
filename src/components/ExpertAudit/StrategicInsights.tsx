@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { 
   Target, TrendingUp, Brain, MessageSquare, 
   CheckCircle2, XCircle, AlertCircle, Lightbulb,
-  Globe, Building2, Users, BrainCircuit
+  Globe, Building2, Users, BrainCircuit, RefreshCw
 } from 'lucide-react';
 import { StrategicAnalysis, AuditPageType } from '@/types/expertAudit';
 import { GeoScoreVisualization } from './GeoScoreVisualization';
@@ -45,6 +45,8 @@ interface StrategicInsightsProps {
   isReanalyzing?: boolean;
   auditResult?: import('@/types/expertAudit').ExpertAuditResult;
   progressiveReveal?: boolean;
+  onForceRefresh?: () => void;
+  strategicCacheInfo?: { auditCount: number; maxBeforeRefresh: number } | null;
 }
 
 export function StrategicInsights({ 
@@ -56,7 +58,9 @@ export function StrategicInsights({
   onCompetitorCorrection,
   isReanalyzing = false,
   auditResult,
-  progressiveReveal = false
+  progressiveReveal = false,
+  onForceRefresh,
+  strategicCacheInfo,
 }: StrategicInsightsProps) {
   const [showHallucinationModal, setShowHallucinationModal] = useState(false);
   const pageType: AuditPageType = analysis.pageType || (analysis.isContentMode ? 'editorial' : 'homepage');
@@ -164,6 +168,25 @@ export function StrategicInsights({
         siteName={siteName || domain}
         onHallucinationDataReady={onHallucinationData}
       />
+
+      {/* Strategic cache indicator + refresh button */}
+      {strategicCacheInfo && strategicCacheInfo.auditCount > 0 && onForceRefresh && (
+        <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/40 border border-border/50">
+          <p className="text-xs text-muted-foreground">
+            Données stratégiques en cache ({strategicCacheInfo.auditCount}/{strategicCacheInfo.maxBeforeRefresh} audits avant actualisation auto)
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onForceRefresh}
+            className="gap-1.5 text-xs h-7 text-muted-foreground hover:text-foreground"
+            disabled={isReanalyzing}
+          >
+            <RefreshCw className={`h-3 w-3 ${isReanalyzing ? 'animate-spin' : ''}`} />
+            Rafraîchir
+          </Button>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════
           PREMIUM FORMAT — Ordre stratégique 2026

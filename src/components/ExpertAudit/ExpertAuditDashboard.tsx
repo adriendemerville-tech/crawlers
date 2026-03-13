@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -213,6 +213,45 @@ export function ExpertAuditDashboard() {
   const urlValidation = useUrlValidation(language);
 
   const isLoggedIn = !!user;
+  const [strategicCacheInfo, setStrategicCacheInfo] = useState<{ auditCount: number; maxBeforeRefresh: number } | null>(null);
+  const [forceStrategicRefresh, setForceStrategicRefresh] = useState(false);
+
+  const STRATEGIC_CACHE_MAX = 10;
+
+  // Helpers for domain-level strategic cache
+  const getStrategicCacheKey = (domain: string) => `strategic_cache_${domain}`;
+  const getStrategicCountKey = (domain: string) => `strategic_count_${domain}`;
+
+  const getStrategicCache = (domain: string) => {
+    try {
+      const cached = localStorage.getItem(getStrategicCacheKey(domain));
+      const count = parseInt(localStorage.getItem(getStrategicCountKey(domain)) || '0', 10);
+      if (!cached) return null;
+      const parsed = JSON.parse(cached);
+      // Validate cache has data
+      if (!parsed?.strategicAnalysis) return null;
+      return { data: parsed, auditCount: count };
+    } catch { return null; }
+  };
+
+  const setStrategicCache = (domain: string, result: ExpertAuditResult) => {
+    try {
+      localStorage.setItem(getStrategicCacheKey(domain), JSON.stringify(result));
+      localStorage.setItem(getStrategicCountKey(domain), '1');
+    } catch { /* storage full */ }
+  };
+
+  const incrementStrategicCount = (domain: string) => {
+    try {
+      const count = parseInt(localStorage.getItem(getStrategicCountKey(domain)) || '0', 10);
+      localStorage.setItem(getStrategicCountKey(domain), String(count + 1));
+    } catch { /* ignore */ }
+  };
+
+  const clearStrategicCache = (domain: string) => {
+    localStorage.removeItem(getStrategicCacheKey(domain));
+    localStorage.removeItem(getStrategicCountKey(domain));
+  };
 
   // Restore audit state from session storage on mount / after auth
   // Also check for URL from query params (from landing page) or localStorage (from home page)
@@ -767,8 +806,45 @@ export function ExpertAuditDashboard() {
     setIsStrategicLoading(true);
     setResult(null);
 
+    // ═══ DOMAIN-LEVEL STRATEGIC CACHE ═══
+    // Reuse cached strategic data for stable modules (intro, DNA, market, competition, EEAT, social)
+    // Refreshes every 10 audits or on manual force-refresh
+    const domain = (() => { try { return new URL(normalizedUrl).hostname; } catch { return ''; } })();
+    const isCorrection = !!(hallucinationCorrections || competitorCorrections);
+    
+    if (!isCorrection && !forceStrategicRefresh && domain) {
+      const cached = getStrategicCache(domain);
+      if (cached && cached.auditCount < STRATEGIC_CACHE_MAX) {
+        console.log(`[Strategic] ⚡ Using domain cache (audit ${cached.auditCount}/${STRATEGIC_CACHE_MAX})`);
+        incrementStrategicCount(domain);
+        const count = cached.auditCount + 1;
+        setStrategicCacheInfo({ auditCount: count, maxBeforeRefresh: STRATEGIC_CACHE_MAX });
+        
+        setResult(cached.data);
+        setStrategicResult(cached.data);
+        setStrategicProgressiveReveal(false);
+        setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+        trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl, eventData: { cached: true } });
+        
+        // Pre-summarize cached result
+        setPreSummarizedResult(null);
+        summarizeStrategicResult(cached.data, language).then(s => setPreSummarizedResult(s)).catch(() => {});
+        
+        toast({
+          title: t.strategicComplete,
+          description: 'Données stratégiques en cache (module stable).',
+        });
+        setIsStrategicLoading(false);
+        // Reset force refresh flag
+        setForceStrategicRefresh(false);
+        return;
+      }
+    }
+    // Reset force refresh flag after use
+    setForceStrategicRefresh(false);
+
     // Use cached context for competitor/hallucination corrections (skips DataForSEO, metadata, etc.)
-    const useCachedContext = (hallucinationCorrections || competitorCorrections) && strategicCachedContext;
+    const useCachedContext = isCorrection && strategicCachedContext;
     
     try {
       
@@ -793,6 +869,11 @@ export function ExpertAuditDashboard() {
         setStrategicCachedContext(data.data._cachedContext);
       }
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+      // Save to domain-level strategic cache for future audits
+      if (domain) {
+        setStrategicCache(domain, strategicData);
+        setStrategicCacheInfo({ auditCount: 1, maxBeforeRefresh: STRATEGIC_CACHE_MAX });
+      }
       // Fire-and-forget: CTO Agent analysis
       triggerCtoAgent(strategicData, 'strategic', normalizedUrl, new URL(normalizedUrl).hostname);
       // Clear any previous hallucination diagnosis since we re-analyzed
@@ -810,8 +891,8 @@ export function ExpertAuditDashboard() {
       // Site tracking is now manual via TrackSiteButton
 
       // Fetch stored corrections for this domain (community knowledge)
-      const domain = new URL(normalizedUrl).hostname;
-      fetchStoredCorrections(domain);
+      const auditDomain = new URL(normalizedUrl).hostname;
+      fetchStoredCorrections(auditDomain);
 
       toast({
         title: hallucinationCorrections ? 'Analyse corrigée terminée !' : t.strategicComplete,
@@ -824,8 +905,8 @@ export function ExpertAuditDashboard() {
       trackAnalyticsEvent('error', { eventData: { type: 'strategic_audit', message: error instanceof Error ? error.message : 'Unknown error' } });
       
       // Step 1: Try to recover result from server-side cache (audit may have completed but connection was cut)
-      const domain = new URL(normalizedUrl).hostname;
-      const cacheKey = `strategic_${domain}_${normalizedUrl}`;
+      const recoveryDomain = new URL(normalizedUrl).hostname;
+      const cacheKey = `strategic_${recoveryDomain}_${normalizedUrl}`;
       let recovered = false;
       
       try {
@@ -859,7 +940,7 @@ export function ExpertAuditDashboard() {
             setPreSummarizedResult(null);
             summarizeStrategicResult(strategicData, language).then(s => setPreSummarizedResult(s)).catch(() => {});
             trackAnalyticsEvent('expert_audit_step_2', { targetUrl: normalizedUrl });
-            fetchStoredCorrections(domain);
+            fetchStoredCorrections(recoveryDomain);
             toast({ title: t.strategicComplete, description: t.strategicDesc2 });
             recovered = true;
           }
@@ -1520,6 +1601,15 @@ export function ExpertAuditDashboard() {
                         isReanalyzing={isStrategicLoading}
                         auditResult={result}
                         progressiveReveal={strategicProgressiveReveal}
+                        strategicCacheInfo={strategicCacheInfo}
+                        onForceRefresh={() => {
+                          setForceStrategicRefresh(true);
+                          const d = result.domain || (() => { try { return new URL(url).hostname; } catch { return ''; } })();
+                          if (d) clearStrategicCache(d);
+                          setStrategicCacheInfo(null);
+                          const normalizedUrl = normalizeUrl(url);
+                          setTimeout(() => runStrategicAudit(normalizedUrl), 100);
+                        }}
                       />
                     );
                   })()}
