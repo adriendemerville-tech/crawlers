@@ -2044,34 +2044,43 @@ Allow: /`}</pre>
         />
 
         <h2>La Google Search Console a changé — et personne n'en parle</h2>
+
         <p>
           Depuis les mises à jour majeures de <strong>2025 et début 2026</strong>, Google a considérablement enrichi les données exposées dans la Search Console. La granularité des requêtes, la distinction plus fine entre trafic de marque et trafic générique, les données d'impression par type de résultat : la GSC est devenue un outil infiniment plus riche que ce que la plupart des webmasters en font.
         </p>
+
         <p>
-          Pourtant, cette évolution est passée largement sous le radar. Les professionnels du SEO continuent de consulter les mêmes onglets — performances, couverture, sitemaps — sans exploiter le potentiel stratégique de ces nouvelles métriques.
+          Pourtant, cette évolution est passée largement sous le radar. Les professionnels du SEO continuent de consulter les mêmes onglets — performances, couverture, sitemaps — sans exploiter le potentiel stratégique de ces nouvelles métriques. Le <a href="https://developers.google.com/search/blog" target="_blank" rel="noopener noreferrer">blog officiel Google Search Central</a> a pourtant documenté ces changements.
         </p>
 
         <h2>Le ratio Brand / Non-Brand : une donnée critique ignorée par les outils SEO</h2>
+
         <p>
-          La répartition entre les requêtes de <strong>marque</strong> (votre nom, vos produits) et les requêtes <strong>génériques</strong> (liées à votre secteur) est l'un des indicateurs les plus révélateurs de la santé d'une stratégie d'acquisition. Un déséquilibre dans un sens ou dans l'autre peut signaler un risque majeur :
+          La répartition entre les requêtes de <strong>marque</strong> (votre nom, vos produits) et les requêtes <strong>génériques</strong> (liées à votre secteur) est l'un des indicateurs les plus révélateurs de la santé d'une stratégie d'acquisition. Un déséquilibre dans un sens ou dans l'autre peut signaler un risque majeur.
         </p>
+
         <p>
           Un <strong>e-commerce avec 80% de trafic de marque</strong> est en danger : il ne capte pas de nouvelle audience. À l'inverse, un <strong>site média avec seulement 10% de trafic de marque</strong> manque d'identité. Ce même ratio, à 80% de marque, serait optimal pour une maison de luxe.
         </p>
+
         <p>
-          Le problème ? Aucun outil du marché ne contextualise cette donnée. Semrush, Ahrefs, SE Ranking affichent les chiffres bruts, sans interprétation en fonction du modèle économique.
+          Le problème ? Aucun outil du marché ne contextualise cette donnée. Semrush, Ahrefs, SE Ranking affichent les chiffres bruts, sans interprétation en fonction du modèle économique. Comme le souligne <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer">Search Engine Land</a>, le fossé entre les données disponibles et leur exploitation stratégique ne cesse de se creuser.
         </p>
 
         <h3>L'approche Crawlers.fr : l'Indice d'Alignement Stratégique</h3>
+
         <p>
           Chez <strong>Crawlers.fr</strong>, nous avons développé l'<strong>Indice d'Alignement Stratégique (IAS)</strong> pour combler ce vide. Le principe est simple mais puissant :
         </p>
+
         <p>
           Une <strong>intelligence artificielle</strong> analyse le contenu de votre site et détermine automatiquement votre typologie d'activité. Chaque typologie possède un ratio cible calibré sur les benchmarks sectoriels. L'IAS calcule ensuite l'écart entre votre ratio réel (mesuré sur vos clics GSC) et ce ratio optimal.
         </p>
+
         <p>
           Le résultat est un <strong>score de 0 à 100</strong>, mis à jour chaque semaine, avec un code couleur immédiatement compréhensible : vert (aligné), orange (vigilance), rouge (désalignement critique).
         </p>
+
         <p>
           Au-delà du score, l'IAS intègre un <strong>taux de pénétration de marque</strong> qui croise vos clics de marque avec le volume de recherche mensuel réel de votre marque. Ce KPI indique quelle part de l'audience potentielle vous captez — une donnée que votre direction marketing va adorer.
         </p>
@@ -2082,20 +2091,24 @@ Allow: /`}</pre>
           description="Découvrez en détail comment fonctionne l'IAS et comment l'activer sur votre site."
         />
 
-        <h2>Fiabilité : des données réelles, pas des simulations</h2>
+        <h3>Fiabilité : des données réelles, pas des simulations</h3>
+
         <p>
           Contrairement aux outils qui vendent des « scores de visibilité LLM » basés sur des simulations synthétiques, l'IAS repose <strong>exclusivement sur vos données réelles</strong>. Les clics proviennent de votre Google Search Console. Les volumes de recherche de marque sont vérifiés. Chaque point de donnée est traçable.
         </p>
+
         <p>
           Cette exigence de fiabilité est au cœur de l'ADN de Crawlers.fr. Nous ne vendons pas de la donnée estimée — nous vendons du diagnostic vérifié et de la correction immédiate.
         </p>
 
-        <h2>Un indicateur conçu pour le COMEX</h2>
+        <h3>Un indicateur conçu pour le COMEX</h3>
+
         <p>
           L'IAS a été pensé pour être présenté en comité de direction. Un score unique, une jauge visuelle, une tendance hebdomadaire. Le format est suffisamment simple pour être compris par un directeur marketing, et suffisamment rigoureux pour être défendu devant un directeur technique.
         </p>
+
         <p>
-          L'historisation automatique permet de <strong>détecter les dérives avant qu'elles n'impactent les conversions</strong>. Une baisse progressive du trafic hors-marque sur 8 semaines ? L'IAS la rend visible avant qu'elle ne devienne critique.
+          L'historisation automatique permet de <strong>détecter les dérives avant qu'elles n'impactent les conversions</strong>. Une baisse progressive du trafic hors-marque sur 8 semaines ? L'IAS la rend visible avant qu'elle ne devienne critique. Une approche comparable à celle recommandée par <a href="https://www.thinkwithgoogle.com/" target="_blank" rel="noopener noreferrer">Think with Google</a> pour le pilotage data-driven du marketing.
         </p>
 
         <RichLink
@@ -2104,19 +2117,22 @@ Allow: /`}</pre>
           description="L'IAS est intégré à notre audit expert complet. Lancez un diagnostic et découvrez votre score."
         />
 
-        <h2>Questions fréquentes</h2>
+        <h3>Questions fréquentes</h3>
 
         <h3>L'IAS est-il fiable ?</h3>
+
         <p>
           Oui. L'IAS repose exclusivement sur vos données réelles Google Search Console, croisées avec les volumes de recherche de marque vérifiés. Il n'y a aucune estimation ni simulation synthétique.
         </p>
 
         <h3>L'IAS est-il inclus dans Pro Agency ?</h3>
+
         <p>
           Oui. L'IAS est accessible à tous les abonnés <RichLink href="/pro-agency" title="Pro Agency" description="59€/mois, sans engagement" /> sans surcoût. Il nécessite d'avoir connecté votre Google Search Console.
         </p>
 
         <h3>Peut-on modifier la typologie détectée ?</h3>
+
         <p>
           Oui. L'IA détermine automatiquement votre type d'activité, mais les abonnés Pro peuvent ajuster manuellement la classification pour affiner le ratio cible.
         </p>
@@ -2137,25 +2153,31 @@ Allow: /`}</pre>
         />
 
         <h2>Google Search Console Has Changed — And Nobody Is Talking About It</h2>
+
         <p>
           Since the major updates of <strong>2025 and early 2026</strong>, Google has significantly enriched the data exposed in Search Console. Query granularity, finer distinction between brand and generic traffic, impression data by result type: GSC has become infinitely richer than what most webmasters make of it.
         </p>
+
         <p>
-          Yet this evolution has largely flown under the radar. SEO professionals continue to check the same tabs — performance, coverage, sitemaps — without leveraging the strategic potential of these new metrics.
+          Yet this evolution has largely flown under the radar. SEO professionals continue to check the same tabs — performance, coverage, sitemaps — without leveraging the strategic potential of these new metrics. The <a href="https://developers.google.com/search/blog" target="_blank" rel="noopener noreferrer">Google Search Central blog</a> documented these changes extensively.
         </p>
 
         <h2>The Brand / Non-Brand Ratio: Critical Data Ignored by SEO Tools</h2>
+
         <p>
           The split between <strong>brand queries</strong> (your name, products) and <strong>generic queries</strong> (sector-related) is one of the most revealing indicators of acquisition strategy health. An imbalance either way can signal major risk.
         </p>
+
         <p>
-          An <strong>e-commerce with 80% brand traffic</strong> is in danger: it's not capturing new audience. Conversely, a <strong>media site with only 10% brand traffic</strong> lacks identity. The same 80% brand ratio would be optimal for a luxury brand.
+          An <strong>e-commerce with 80% brand traffic</strong> is in danger: it's not capturing new audience. Conversely, a <strong>media site with only 10% brand traffic</strong> lacks identity. The same 80% brand ratio would be optimal for a luxury brand. As <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer">Search Engine Land</a> notes, the gap between available data and strategic use keeps widening.
         </p>
 
         <h3>The Crawlers.fr Approach: The Strategic Alignment Index</h3>
+
         <p>
           At <strong>Crawlers.fr</strong>, we built the <strong>Strategic Alignment Index (SAI)</strong> to fill this gap. An AI automatically classifies your business type, each type has a calibrated target ratio, and the SAI calculates the gap between your real ratio and the optimal one.
         </p>
+
         <p>
           The result is a <strong>0-100 score</strong>, updated weekly, with an immediately understandable color code: green (aligned), orange (vigilance), red (critical misalignment).
         </p>
@@ -2166,14 +2188,16 @@ Allow: /`}</pre>
           description="Learn how the SAI works and how to activate it on your site."
         />
 
-        <h2>Reliability: Real Data, Not Simulations</h2>
+        <h3>Reliability: Real Data, Not Simulations</h3>
+
         <p>
           Unlike tools selling "LLM visibility scores" based on synthetic simulations, the SAI relies <strong>exclusively on your real data</strong>. Clicks come from your Google Search Console. Brand search volumes are verified. Every data point is traceable.
         </p>
 
-        <h2>An Indicator Designed for the Boardroom</h2>
+        <h3>An Indicator Designed for the Boardroom</h3>
+
         <p>
-          The SAI was designed for board presentations. A single score, a visual gauge, a weekly trend. Simple enough for a marketing director, rigorous enough for a CTO.
+          The SAI was designed for board presentations. A single score, a visual gauge, a weekly trend. Simple enough for a marketing director, rigorous enough for a CTO. An approach aligned with <a href="https://www.thinkwithgoogle.com/" target="_blank" rel="noopener noreferrer">Think with Google</a>'s data-driven marketing recommendations.
         </p>
 
         <RichLink
@@ -2198,18 +2222,25 @@ Allow: /`}</pre>
         />
 
         <h2>Google Search Console ha cambiado — y nadie habla de ello</h2>
+
         <p>
-          Desde las actualizaciones de <strong>2025 y principios de 2026</strong>, Google ha enriquecido considerablemente los datos expuestos en Search Console. La granularidad de consultas, la distinción más fina entre tráfico de marca y genérico: la GSC se ha convertido en una herramienta mucho más rica.
+          Desde las actualizaciones de <strong>2025 y principios de 2026</strong>, Google ha enriquecido considerablemente los datos expuestos en Search Console. La granularidad de consultas, la distinción más fina entre tráfico de marca y genérico: la GSC se ha convertido en una herramienta mucho más rica. El <a href="https://developers.google.com/search/blog" target="_blank" rel="noopener noreferrer">blog de Google Search Central</a> documentó estos cambios.
         </p>
 
         <h2>El ratio Marca / Genérico: un dato crítico ignorado por las herramientas SEO</h2>
+
         <p>
-          Un <strong>e-commerce con 80% de tráfico de marca</strong> está en peligro. Por el contrario, una <strong>marca de lujo con 80% de tráfico de marca</strong> está en situación óptima. Los datos son idénticos, pero la interpretación es opuesta.
+          Un <strong>e-commerce con 80% de tráfico de marca</strong> está en peligro. Por el contrario, una <strong>marca de lujo con 80% de tráfico de marca</strong> está en situación óptima. Los datos son idénticos, pero la interpretación es opuesta. Como señala <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer">Search Engine Land</a>, la brecha entre datos disponibles y uso estratégico sigue creciendo.
         </p>
 
         <h3>El enfoque Crawlers.fr: el Índice de Alineamiento Estratégico</h3>
+
         <p>
           En <strong>Crawlers.fr</strong>, hemos creado el <strong>Índice de Alineamiento Estratégico (IAS)</strong>. Una IA clasifica automáticamente su tipo de actividad, cada tipo tiene un ratio objetivo calibrado y el IAS calcula la brecha entre su ratio real y el óptimo.
+        </p>
+
+        <p>
+          Un enfoque alineado con las recomendaciones de marketing data-driven de <a href="https://www.thinkwithgoogle.com/" target="_blank" rel="noopener noreferrer">Think with Google</a>.
         </p>
 
         <RichLink
