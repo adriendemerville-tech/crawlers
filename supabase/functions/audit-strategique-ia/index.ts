@@ -2251,10 +2251,10 @@ Deno.serve(async (req) => {
       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
 
       const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult] = await Promise.allSettled([
-        // Market data (DataForSEO keywords) — always needed for keyword analysis
+        // Market data (DataForSEO keywords) — reduced deadline to preserve LLM budget
         withDeadline(
           fetchMarketData(domain, context, pageContentContext, url),
-          180_000, 'market_data'
+          120_000, 'market_data'
         ),
         // LLM visibility check (sub-function call) — always needed
         needsLlmCheck && supabaseUrl && supabaseAnonKey
@@ -2332,9 +2332,11 @@ Deno.serve(async (req) => {
       gmbData,
     };
 
-    // ═══ CHECK DEADLINE before expensive LLM call ═══
-    if (isOverDeadline()) {
-      console.warn('⏰ Deadline reached before LLM call — returning fallback with market data');
+    // ═══ CHECK DEADLINE before expensive LLM call — need at least 90s ═══
+    const elapsedBeforeLLM = Date.now() - startTime;
+    const remainingBeforeLLM = GLOBAL_DEADLINE - elapsedBeforeLLM;
+    if (remainingBeforeLLM < 90_000) {
+      console.warn(`⏰ Only ${(remainingBeforeLLM / 1000).toFixed(0)}s remaining — not enough for LLM call, returning fallback`);
       const fallback = buildFallbackResult(url, domain, marketData, rankingOverview, effectiveToolsData.llm, cachedContextOut);
       saveToCache(domain, url, fallback).catch(() => {});
       return json(fallback);
