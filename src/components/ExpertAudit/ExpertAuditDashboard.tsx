@@ -89,13 +89,23 @@ function syncSerpToTrackedSite(domain: string, userId: string) {
         .order('recorded_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (!latest) return;
 
-      const existingRaw = (latest.raw_data as Record<string, unknown>) || {};
-      await supabase
-        .from('user_stats_history')
-        .update({ raw_data: { ...existingRaw, serpData } })
-        .eq('id', latest.id);
+      if (latest) {
+        // Update existing entry
+        const existingRaw = (latest.raw_data as Record<string, unknown>) || {};
+        await supabase
+          .from('user_stats_history')
+          .update({ raw_data: { ...existingRaw, serpData } })
+          .eq('id', latest.id);
+      } else {
+        // Create a new stats entry with SERP data
+        await supabase.from('user_stats_history').insert({
+          user_id: userId,
+          tracked_site_id: site.id,
+          domain,
+          raw_data: { serpData },
+        });
+      }
       console.log(`[SERP-Sync] ✅ ${domain} SERP data synced to tracking`);
     } catch { /* silent */ }
   })();
