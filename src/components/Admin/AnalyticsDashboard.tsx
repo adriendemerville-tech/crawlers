@@ -767,7 +767,7 @@ export function AnalyticsDashboard() {
                 <p className="text-xs text-muted-foreground">{tokenUsage.callCount} appels IA</p>
                 {tokenUsage.totalEstimatedCost > 0 && (
                   <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                    ~{tokenUsage.totalEstimatedCost.toFixed(4)}€
+                    ~{tokenUsage.totalEstimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
                   </span>
                 )}
               </div>
