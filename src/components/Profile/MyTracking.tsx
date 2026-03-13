@@ -1310,19 +1310,20 @@ export function MyTracking() {
                           return;
                         }
                         
-                        if (latestStats) {
-                          const existingRaw = (latestStats as any)?.raw_data || {};
-                          await supabase.from('user_stats_history').update({
-                            raw_data: { ...existingRaw, serpData },
-                          }).eq('id', (latestStats as any).id);
-                        } else {
-                          await supabase.from('user_stats_history').insert({
-                            tracked_site_id: currentSite.id,
-                            user_id: user.id,
-                            domain: currentSite.domain,
-                            raw_data: { serpData },
-                          });
-                        }
+                        // Always insert a new stats entry (UPDATE is blocked by RLS)
+                        const existingRaw = (latestStats as any)?.raw_data || {};
+                        await supabase.from('user_stats_history').insert({
+                          tracked_site_id: currentSite.id,
+                          user_id: user.id,
+                          domain: currentSite.domain,
+                          seo_score: latestStats?.seo_score ?? null,
+                          geo_score: latestStats?.geo_score ?? null,
+                          llm_citation_rate: latestStats?.llm_citation_rate ?? null,
+                          ai_sentiment: latestStats?.ai_sentiment ?? null,
+                          semantic_authority: latestStats?.semantic_authority ?? null,
+                          voice_share: latestStats?.voice_share ?? null,
+                          raw_data: { ...existingRaw, serpData },
+                        });
                         await fetchStats();
                         toast.success(language === 'fr' ? 'Données SERP mises à jour' : 'SERP data updated');
                       } catch (err) {
