@@ -95,8 +95,27 @@ export function AffiliateManagement() {
     toast.success('Code copié !');
     setTimeout(() => setCopiedId(null), 2000);
   };
+  const saveEdit = async () => {
+    if (!editingCode) return;
+    try {
+      const { error } = await supabase
+        .from('affiliate_codes')
+        .update({
+          discount_percent: editingCode.discount_percent,
+          duration_months: editingCode.duration_months,
+          max_activations: editingCode.max_activations,
+        } as any)
+        .eq('id', editingCode.id);
+      if (error) throw error;
+      setCodes(prev => prev.map(c => c.id === editingCode.id ? { ...c, discount_percent: editingCode.discount_percent, duration_months: editingCode.duration_months, max_activations: editingCode.max_activations } : c));
+      setEditingCode(null);
+      toast.success('Code mis à jour');
+    } catch {
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
 
-  const filtered = codes.filter(c =>
+
     c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (c.assigned_to_user_id && c.assigned_to_user_id.includes(searchQuery))
   );
