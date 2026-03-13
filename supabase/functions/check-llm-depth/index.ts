@@ -183,7 +183,8 @@ function extractBrand(domain: string): string {
  * positives from substring matching (e.g. "lcp" inside "excepté").
  */
 async function detectBrandSemantically(
-  apiKey: string,
+  keys: ApiKeys,
+  gateway: Gateway,
   model: string,
   assistantResponse: string,
   brand: string,
@@ -208,21 +209,8 @@ async function detectBrandSemantically(
     : `Here is a text. Extract ONLY the names of brands, companies, tools or products mentioned. Respond in JSON: {"brands": ["name1", "name2"]}. Generate nothing else.\n\nText:\n${assistantResponse.slice(0, 2000)}`
 
   try {
-    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://crawlers.lovable.app',
-        'X-Title': 'Crawlers.fr - LLM Depth',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'user', content: extractPrompt }],
-        temperature: 0,
-        max_tokens: 400,
-      }),
-    })
+    const [url, init] = buildFetchArgs(gateway, keys, model, [{ role: 'user', content: extractPrompt }], { temperature: 0, max_tokens: 400 })
+    const resp = await fetch(url, init)
 
     if (!resp.ok) return { found: hasCandidate && brand.length > 3 }
 
