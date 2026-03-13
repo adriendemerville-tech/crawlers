@@ -390,12 +390,18 @@ Deno.serve(async (req) => {
       })
     }
 
-    const apiKey = Deno.env.get('OPENROUTER_API_KEY')
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'OpenRouter API key not configured' }), {
+    const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
+    const lovableKey = Deno.env.get('LOVABLE_API_KEY')
+    if (!openrouterKey && !lovableKey) {
+      return new Response(JSON.stringify({ error: 'No API keys configured (OpenRouter or Lovable AI)' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    const keys: ApiKeys = {
+      openrouter: openrouterKey || '',
+      lovable: lovableKey || '',
     }
 
     const brand = extractBrand(domain)
@@ -422,7 +428,7 @@ Deno.serve(async (req) => {
 
     // Run all models in parallel
     const resultPromises = MODELS.map(m =>
-      runDepthConversation(apiKey, m, brand, domain, prompts, lang)
+      runDepthConversation(keys, m, brand, domain, prompts, lang)
     )
     const results = await Promise.allSettled(resultPromises)
 
