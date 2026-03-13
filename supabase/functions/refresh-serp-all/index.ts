@@ -60,7 +60,29 @@ Deno.serve(async (req) => {
           continue
         }
 
-        // Get latest stats entry for this site
+        // 1. Write to dedicated serp_snapshots table (primary storage)
+        const { error: snapshotError } = await supabase
+          .from('serp_snapshots')
+          .insert({
+            tracked_site_id: site.id,
+            user_id: site.user_id,
+            domain: site.domain,
+            total_keywords: serpData.total_keywords ?? 0,
+            avg_position: serpData.avg_position,
+            homepage_position: serpData.homepage_position,
+            top_3: serpData.top_3 ?? 0,
+            top_10: serpData.top_10 ?? 0,
+            top_50: serpData.top_50 ?? 0,
+            etv: serpData.etv ?? 0,
+            sample_keywords: serpData.sample_keywords ?? [],
+            measured_at: serpData.measured_at || new Date().toISOString(),
+          })
+
+        if (snapshotError) {
+          console.error(`[refresh-serp-all] Snapshot insert error for ${site.domain}:`, snapshotError)
+        }
+
+        // 2. Also update raw_data in user_stats_history (backward compatibility)
         const { data: latestEntry } = await supabase
           .from('user_stats_history')
           .select('id, raw_data')

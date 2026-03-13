@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { domain, url } = await req.json()
+    const { domain, url, tracked_site_id, user_id: caller_user_id } = await req.json()
 
     if (!domain) {
       return new Response(JSON.stringify({ error: 'Missing domain' }), {
@@ -150,6 +150,34 @@ Deno.serve(async (req) => {
     }
 
     console.log(`[fetch-serp-kpis] ✅ ${domain}: ${totalKeywords} keywords, avg pos ${avgPosition}, top3=${top3}, top10=${top10}, top50=${top50}`)
+
+    // If tracked_site_id provided, persist to serp_snapshots
+    if (tracked_site_id && caller_user_id) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      const supabase = createClient(supabaseUrl, serviceKey)
+
+      const { error: insertErr } = await supabase
+        .from('serp_snapshots')
+        .insert({
+          tracked_site_id,
+          user_id: caller_user_id,
+          domain,
+          total_keywords: serpData.total_keywords,
+          avg_position: serpData.avg_position,
+          homepage_position: serpData.homepage_position,
+          top_3: serpData.top_3,
+          top_10: serpData.top_10,
+          top_50: serpData.top_50,
+          etv: serpData.etv,
+          sample_keywords: serpData.sample_keywords,
+          measured_at: serpData.measured_at,
+        })
+
+      if (insertErr) {
+        console.error('[fetch-serp-kpis] serp_snapshots insert error:', insertErr)
+      }
+    }
 
     return new Response(JSON.stringify({ data: serpData }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
