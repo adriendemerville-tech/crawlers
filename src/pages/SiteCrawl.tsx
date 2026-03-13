@@ -443,6 +443,7 @@ export default function SiteCrawl() {
   const [viewingCrawlId, setViewingCrawlId] = useState<string | null>(null);
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
+  const [indexedPagesCount, setIndexedPagesCount] = useState<number | null>(null);
 
   // Advanced options
   const [showAdvanced, setShowAdvanced] = useState(false);
