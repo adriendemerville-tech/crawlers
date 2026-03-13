@@ -93,7 +93,28 @@ export function CtoAgentDashboard() {
     }
   }
 
-  // Compute chart data: rolling average confidence over time (grouped by day)
+  async function runCacheHealthCheck() {
+    setCheckingCache(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('agent-cto', {
+        body: { action: 'cache_health_check' },
+      });
+      if (error) throw error;
+      if (data?.report) {
+        setCacheHealth(data.report);
+        toast({
+          title: `Cache ${data.report.status === 'healthy' ? '✅' : data.report.status === 'warning' ? '⚠️' : '🔴'}`,
+          description: `${data.report.total_entries} entrées, ${data.report.anomalies.length} anomalies`,
+        });
+      }
+    } catch (e) {
+      console.error('Cache health check error:', e);
+      toast({ title: 'Erreur', description: 'Impossible de vérifier le cache.', variant: 'destructive' });
+    } finally {
+      setCheckingCache(false);
+    }
+  }
+
   const chartData = useMemo(() => {
     if (logs.length === 0) return [];
 
