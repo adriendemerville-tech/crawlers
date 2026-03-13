@@ -350,30 +350,39 @@ async function runDepthConversation(
 
   const anglesTested: string[] = []
 
+  // Track which gateway is active (may change on fallback)
+  let activeGateway: Gateway = modelDef.gateway
+
   for (let i = 0; i < Math.min(prompts.length, MAX_ITERATIONS); i++) {
     messages.push({ role: 'user', content: prompts[i] })
     anglesTested.push(anglesLabels[i] || `Phase ${i + 1}`)
 
     try {
-      const [url, init] = buildFetchArgs(modelDef.gateway, keys, modelDef.model, messages, { temperature: 0.7, max_tokens: 1000 })
-      const response = await fetch(url, init)
+      const { response, usedGateway, didFallback } = await resilientFetch(
+        activeGateway, modelDef.fallbackGateway, keys, modelDef.model, messages,
+        { temperature: 0.7, max_tokens: 1000 },
+        `${domain} phase ${i + 1}`,
+      )
+
+      // If we fell back, stick with fallback for remaining phases
+      if (didFallback) activeGateway = usedGateway
 
       if (!response.ok) {
-        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status} (${modelDef.gateway})`)
+        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status} (${usedGateway})`)
         continue
       }
 
       const data = await response.json()
       const content = data.choices?.[0]?.message?.content || ''
 
-      const provider = modelDef.gateway === 'lovable' ? 'lovable-ai' : 'openrouter'
+      const provider = usedGateway === 'lovable' ? 'lovable-ai' : 'openrouter'
       trackPaidApiCall('check-llm-depth', provider, modelDef.model, domain)
 
       messages.push({ role: 'assistant', content })
 
-      // Semantic brand detection (uses same gateway as the model)
+      // Semantic brand detection (uses active gateway)
       const detection = await detectBrandSemantically(
-        keys, modelDef.gateway, modelDef.model, content, brand, domain, lang,
+        keys, activeGateway, modelDef.model, content, brand, domain, lang,
       )
 
       if (detection.found) {
