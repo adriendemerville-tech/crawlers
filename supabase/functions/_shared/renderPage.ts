@@ -130,9 +130,7 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
       body: JSON.stringify({
         url,
         gotoOptions: { waitUntil: 'networkidle2', timeout: 30000 },
-        // Wait for meaningful content to appear (h1 or main content area)
         waitForSelector: { selector: 'h1, main, [role="main"], #content, .content, article', timeout: 10000 },
-        // Additional wait for lazy-loaded images
         waitForTimeout: 3000,
       }),
       signal: AbortSignal.timeout(45000),
@@ -140,18 +138,61 @@ async function renderWithBrowserless(url: string, renderingKey: string): Promise
 
     if (response.ok) {
       const renderedHtml = await response.text();
-      // Track Browserless API call
       await trackPaidApiCall('renderPage', 'browserless', '/content', url).catch(() => {});
       return renderedHtml;
     } else {
       console.log(`[renderPage] ⚠️ Browserless error: ${response.status}`);
       await logBrowserlessError(response.status, `HTTP ${response.status}`, url);
+      // Fallback to Fly.io on quota exhaustion (429) or server errors
+      if (response.status === 429 || response.status >= 500) {
+        return await renderWithFlyPlaywright(url);
+      }
       return null;
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.log('[renderPage] ⚠️ Browserless failed:', msg);
     await logBrowserlessError(0, msg, url);
+    // Fallback to Fly.io on any Browserless failure
+    return await renderWithFlyPlaywright(url);
+  }
+}
+
+/**
+ * Fallback renderer using self-hosted Playwright on Fly.io.
+ */
+async function renderWithFlyPlaywright(url: string): Promise<string | null> {
+  const flyUrl = Deno.env.get('FLY_RENDERER_URL');
+  const flySecret = Deno.env.get('FLY_RENDERER_SECRET');
+  if (!flyUrl) {
+    console.log('[renderPage] ⚠️ FLY_RENDERER_URL not configured');
+    return null;
+  }
+
+  try {
+    console.log(`[renderPage] 🔄 Falling back to Fly.io Playwright for ${url}`);
+    const response = await fetch(`${flyUrl}/render`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(flySecret ? { 'x-secret': flySecret } : {}),
+      },
+      body: JSON.stringify({ url, timeout: 30000, waitFor: 3000 }),
+      signal: AbortSignal.timeout(45000),
+    });
+
+    if (response.ok) {
+      const html = await response.text();
+      console.log(`[renderPage] ✅ Fly.io Playwright success (${html.length} chars)`);
+      await trackPaidApiCall('renderPage', 'fly-playwright', '/render', url).catch(() => {});
+      return html;
+    } else {
+      console.log(`[renderPage] ⚠️ Fly.io error: ${response.status}`);
+      return null;
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.log('[renderPage] ⚠️ Fly.io Playwright failed:', msg);
     return null;
   }
 }
