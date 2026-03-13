@@ -20,7 +20,10 @@ import {
   Brain,
   Flame,
   Swords,
-  ScanSearch
+  ScanSearch,
+  Coins,
+  CreditCard,
+  Users
 } from 'lucide-react';
 import { 
   LineChart, 
