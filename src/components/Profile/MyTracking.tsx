@@ -559,7 +559,12 @@ export function MyTracking() {
     const raw = entry as any;
     return raw?.raw_data?.performanceScore ?? null;
   };
+  const getAiVisibility = (entry: StatsEntry): number | null => {
+    const raw = entry as any;
+    return raw?.raw_data?.llmOverallScore ?? null;
+  };
   const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
+  const latestAiVisibility = latestStats ? getAiVisibility(latestStats) : null;
 
   const chartData = currentStats.map((entry) => {
     const d = new Date(entry.recorded_at);
