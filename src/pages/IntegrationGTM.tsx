@@ -555,7 +555,7 @@ export default function IntegrationGTM() {
               <Button asChild size="lg" className="gap-2">
                 <Link to="/audit-expert">
                   <Zap className="h-4 w-4" />
-                  {t3(language, 'Lancer un audit gratuit', 'Run a free audit', 'Ejecutar auditoría gratuita')}
+                  {t3(language, 'Lancer mon Audit Expert', 'Run my Expert Audit', 'Ejecutar mi Auditoría Experta')}
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="gap-2">
