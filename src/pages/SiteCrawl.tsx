@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 import { Bug, Search, BarChart3, AlertTriangle, CheckCircle2, XCircle, ArrowRight, Loader2, Globe, FileText, Image, Link2, Code2, ChevronDown, ChevronUp, Sparkles, TrendingUp, Settings2, Download, GitCompare, Filter, Layers, Plus, Trash2, Hash, ShieldAlert, Crown, Star, Lock, Bot, FileCode2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -423,6 +423,7 @@ export default function SiteCrawl() {
   const { balance: credits, isAgencyPro } = useCredits();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAdmin, loading: adminLoading } = useAdmin();
   useCanonicalHreflang('/site-crawl');
   const t = crawlI18n[language];
@@ -498,7 +499,27 @@ export default function SiteCrawl() {
       });
   }, [user, crawlResult]);
 
-  // Poll progress while crawling
+  // Auto-load crawl from ?view= query param
+  useEffect(() => {
+    const viewId = searchParams.get('view');
+    if (!viewId) return;
+    (async () => {
+      const { data } = await supabase
+        .from('site_crawls')
+        .select('*')
+        .eq('id', viewId)
+        .single();
+      if (data) {
+        const crawl = data as any;
+        setUrl(crawl.url || crawl.domain || '');
+        setCrawlResult(crawl);
+        setViewingCrawlId(crawl.id);
+        await loadPages(crawl.id);
+      }
+    })();
+  }, [searchParams]);
+
+
   useEffect(() => {
     if (!crawlResult || crawlResult.status === 'completed' || crawlResult.status === 'error') return;
     const interval = setInterval(async () => {
