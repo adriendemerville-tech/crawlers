@@ -132,10 +132,28 @@ export function SerpKpiBanner({ data, onRefresh, isRefreshing }: SerpKpiBannerPr
 
   if (!data || data.total_keywords === 0) {
     return (
-      <Card className="border-dashed opacity-60">
+      <Card className="border-dashed opacity-80">
         <CardContent className="py-6 text-center text-muted-foreground text-sm">
           <BarChart3 className="h-8 w-8 mx-auto mb-3 opacity-30" />
           <p>{t.noData}</p>
+          {onRefresh && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3 gap-2"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5" />
+              )}
+              {isRefreshing 
+                ? (language === 'fr' ? 'Analyse en cours…' : 'Analyzing…') 
+                : (language === 'fr' ? 'Analyser maintenant' : 'Analyze now')}
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
