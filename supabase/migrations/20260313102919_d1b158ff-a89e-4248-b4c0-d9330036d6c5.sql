@@ -1,0 +1,1 @@
+ALTER TABLE public.crawl_pages ADD COLUMN IF NOT EXISTS html_size_bytes integer DEFAULT 0;
