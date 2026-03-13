@@ -836,7 +836,7 @@ export function AnalyticsDashboard() {
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">Coût estimé total</p>
               <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
-                {tokenUsage.totalEstimatedCost.toFixed(4)}€
+                {tokenUsage.totalEstimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
               </p>
             </div>
             {avgCostPerSubscriber && (
