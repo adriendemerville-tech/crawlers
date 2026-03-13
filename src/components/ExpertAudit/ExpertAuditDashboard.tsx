@@ -213,6 +213,45 @@ export function ExpertAuditDashboard() {
   const urlValidation = useUrlValidation(language);
 
   const isLoggedIn = !!user;
+  const [strategicCacheInfo, setStrategicCacheInfo] = useState<{ auditCount: number; maxBeforeRefresh: number } | null>(null);
+  const [forceStrategicRefresh, setForceStrategicRefresh] = useState(false);
+
+  const STRATEGIC_CACHE_MAX = 10;
+
+  // Helpers for domain-level strategic cache
+  const getStrategicCacheKey = (domain: string) => `strategic_cache_${domain}`;
+  const getStrategicCountKey = (domain: string) => `strategic_count_${domain}`;
+
+  const getStrategicCache = (domain: string) => {
+    try {
+      const cached = localStorage.getItem(getStrategicCacheKey(domain));
+      const count = parseInt(localStorage.getItem(getStrategicCountKey(domain)) || '0', 10);
+      if (!cached) return null;
+      const parsed = JSON.parse(cached);
+      // Validate cache has data
+      if (!parsed?.strategicAnalysis) return null;
+      return { data: parsed, auditCount: count };
+    } catch { return null; }
+  };
+
+  const setStrategicCache = (domain: string, result: ExpertAuditResult) => {
+    try {
+      localStorage.setItem(getStrategicCacheKey(domain), JSON.stringify(result));
+      localStorage.setItem(getStrategicCountKey(domain), '1');
+    } catch { /* storage full */ }
+  };
+
+  const incrementStrategicCount = (domain: string) => {
+    try {
+      const count = parseInt(localStorage.getItem(getStrategicCountKey(domain)) || '0', 10);
+      localStorage.setItem(getStrategicCountKey(domain), String(count + 1));
+    } catch { /* ignore */ }
+  };
+
+  const clearStrategicCache = (domain: string) => {
+    localStorage.removeItem(getStrategicCacheKey(domain));
+    localStorage.removeItem(getStrategicCountKey(domain));
+  };
 
   // Restore audit state from session storage on mount / after auth
   // Also check for URL from query params (from landing page) or localStorage (from home page)
