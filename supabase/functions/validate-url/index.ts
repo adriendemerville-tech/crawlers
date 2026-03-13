@@ -15,10 +15,12 @@ async function checkUrl(url: string): Promise<{ ok: boolean; status: number; fin
 }
 
 function isRealSite(result: { ok: boolean; status: number; contentLength: number; finalUrl: string }): boolean {
-  // Accept 200-399 with enough content, or 403 (WAF/Cloudflare) if the response has some content
-  // Many major sites (liberation.fr, etc.) return 403 to bot-like user agents but are real sites
-  if (result.status === 403 && result.contentLength > 100) return true;
-  return result.ok && result.contentLength > 500;
+  // Accept 200-399 with enough content, or 403/503 (WAF/Cloudflare) if the response has some content
+  // Many major sites (fnac.com, liberation.fr, etc.) return 403/503 to bot-like user agents but are real sites
+  if ((result.status === 403 || result.status === 503) && result.contentLength > 50) return true;
+  // Accept any response with substantial content (some WAFs return odd status codes)
+  if (result.contentLength > 500) return true;
+  return result.ok && result.contentLength > 200;
 }
 
 // Use Gemini to resolve brand name to official domain, then validate
@@ -95,6 +97,16 @@ async function searchBrandDomain(query: string): Promise<string | null> {
         console.log(`[validate-url] Brand resolved: "${cleanQuery}" → ${result.finalUrl || url}`);
         return result.finalUrl || url;
       }
+    }
+
+    // If HTTP validation failed but LLM confidently returned a domain,
+    // trust it — many large sites (fnac.com, amazon.fr, etc.) block server-side requests entirely
+    // Only trust domains that look legitimate (has a recognized TLD)
+    const trustedTlds = ['.com', '.fr', '.org', '.net', '.eu', '.co', '.io', '.de', '.es', '.it', '.uk', '.be', '.ch', '.ca', '.us'];
+    const hasTrustedTld = trustedTlds.some(tld => domain.endsWith(tld));
+    if (hasTrustedTld && cleanQuery.length >= 2) {
+      console.log(`[validate-url] Trusting LLM domain (HTTP blocked): "${cleanQuery}" → https://www.${domain}`);
+      return `https://www.${domain}`;
     }
 
     return null;
