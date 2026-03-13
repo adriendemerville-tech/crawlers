@@ -328,6 +328,16 @@ export function Header() {
           )}
 
 
+          {/* Console button - not on home */}
+          {!loading && user && !isHomePage && (
+            <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground" asChild>
+              <Link to="/console">
+                <LayoutDashboard className="h-4 w-4" />
+                <span className="text-sm">Console</span>
+              </Link>
+            </Button>
+          )}
+
           {/* User menu or login button */}
           {!loading && (
             user ? (
