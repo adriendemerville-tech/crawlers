@@ -252,19 +252,6 @@ export function MyTracking() {
   useEffect(() => { fetchSites(); }, [fetchSites]);
   useEffect(() => { fetchStats(); }, [fetchStats]);
 
-  // Check refresh exhaustion for all sites on load and when sites change
-  useEffect(() => {
-    if (!sites.length) return;
-    (async () => {
-      const exhausted = new Set<string>();
-      await Promise.all(sites.map(async (site) => {
-        const isExhausted = await checkRefreshExhausted(site.id);
-        if (isExhausted) exhausted.add(site.id);
-      }));
-      setRefreshExhaustedSites(exhausted);
-    })();
-  }, [sites, checkRefreshExhausted]);
-
   // Check if user is a collaborator (not owner)
   useEffect(() => {
     if (!user) return;
