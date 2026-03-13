@@ -312,20 +312,20 @@ Deno.serve(async (req) => {
 
     for (const site of sites) {
       try {
-        // Fetch last 20 weeks (need extra for lag window)
+        // Fetch up to 52 weeks of SERP + up to 1000 LLM scores (~5 models × 52w × ~4)
         const [serpRes, llmRes] = await Promise.all([
           supabase
             .from('serp_snapshots')
             .select('measured_at, avg_position, etv, top_10')
             .eq('tracked_site_id', site.id)
             .order('measured_at', { ascending: true })
-            .limit(20),
+            .limit(52),
           supabase
             .from('llm_visibility_scores')
             .select('week_start_date, llm_name, score_percentage')
             .eq('tracked_site_id', site.id)
             .order('week_start_date', { ascending: true })
-            .limit(200),
+            .limit(1000),
         ]);
 
         const serpRows = serpRes.data;
