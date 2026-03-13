@@ -495,6 +495,30 @@ async function persistResults(
 
   const { error } = await supabase.from('llm_test_executions').insert(rows)
   if (error) console.error('[check-llm-depth] Persist error:', error)
+
+  // Store conversation turns for paid subscribers (7-day TTL handled by expires_at default)
+  const convRows = results.flatMap(r =>
+    r.conversation_turns.map(turn => ({
+      tracked_site_id: trackedSiteId,
+      user_id: userId,
+      llm_name: r.llm,
+      iteration: turn.iteration,
+      prompt_text: turn.prompt,
+      response_summary: turn.response_summary,
+    }))
+  )
+
+  if (convRows.length > 0) {
+    // Clean up old conversations for this site+user first
+    await supabase
+      .from('llm_depth_conversations')
+      .delete()
+      .eq('tracked_site_id', trackedSiteId)
+      .eq('user_id', userId)
+
+    const { error: convError } = await supabase.from('llm_depth_conversations').insert(convRows)
+    if (convError) console.error('[check-llm-depth] Conversation persist error:', convError)
+  }
 }
 
 // ─── Main handler ────────────────────────────────────────────────────────────
