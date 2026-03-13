@@ -415,6 +415,36 @@ Deno.serve(async (req) => {
     const prompts = generatePrompts(enrichedSite)
     const weekStart = getWeekStart()
 
+    // ── Check shared domain cache first ──
+    const { data: cachedData } = await supabase
+      .from('domain_data_cache')
+      .select('result_data, created_at')
+      .eq('domain', site.domain)
+      .eq('data_type', 'llm_visibility')
+      .eq('week_start_date', weekStart)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle()
+
+    if (cachedData?.result_data) {
+      console.log(`[llm-vis] ♻️ ${site.domain} — cache hit for week ${weekStart}`)
+      const cached = cachedData.result_data as { scores: any[]; week_start_date: string }
+
+      // Copy scores to user's own tables for their dashboard
+      for (const s of (cached.scores || [])) {
+        await supabase.from('llm_visibility_scores').upsert({
+          tracked_site_id,
+          user_id,
+          llm_name: s.llm_name,
+          score_percentage: s.score_percentage,
+          week_start_date: weekStart,
+        }, { onConflict: 'tracked_site_id,llm_name,week_start_date' })
+      }
+
+      return new Response(JSON.stringify({ data: cached }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     console.log(`[llm-vis] 🔍 ${site.domain} — patterns: ${patterns.exact.join(', ')} — ${prompts.length} prompts × ${LLM_TARGETS.length} LLMs (parallel)`)
 
     // ── Run ALL LLMs in parallel ──
@@ -482,7 +512,17 @@ Deno.serve(async (req) => {
 
     console.log(`[llm-vis] ✅ ${site.domain} complete: ${scores.map(s => `${s.llm_name}=${s.score_percentage}%`).join(', ')}`)
 
-    return new Response(JSON.stringify({ data: { scores, week_start_date: weekStart } }), {
+    // ── Write to shared domain cache ──
+    const cachePayload = { scores, week_start_date: weekStart }
+    await supabase.from('domain_data_cache').upsert({
+      domain: site.domain,
+      data_type: 'llm_visibility',
+      week_start_date: weekStart,
+      result_data: cachePayload,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    }, { onConflict: 'domain,data_type,week_start_date' })
+
+    return new Response(JSON.stringify({ data: cachePayload }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {

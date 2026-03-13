@@ -967,6 +967,36 @@ export type Database = {
         }
         Relationships: []
       }
+      domain_data_cache: {
+        Row: {
+          created_at: string
+          data_type: string
+          domain: string
+          expires_at: string
+          id: string
+          result_data: Json
+          week_start_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_type: string
+          domain: string
+          expires_at?: string
+          id?: string
+          result_data?: Json
+          week_start_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_type?: string
+          domain?: string
+          expires_at?: string
+          id?: string
+          result_data?: Json
+          week_start_date?: string | null
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
