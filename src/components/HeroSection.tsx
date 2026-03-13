@@ -225,7 +225,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
 
         {/* H2 Tagline - SEO/GEO optimized */}
         <h2 className="mb-4 text-lg font-medium font-display text-primary sm:mb-6 sm:text-2xl">
-          {language === 'es' ? 'Auditoría SEO & GEO experta — descubra lo que la IA dice de usted.' : language === 'en' ? 'Expert SEO & GEO audit — find out what AI says about you.' : 'Audit SEO & GEO expert — découvrez ce que l\'IA dit de vous.'}
+          {language === 'es' ? 'Auditar su sitio. Afinar la estrategia. Inyectar el código.' : language === 'en' ? 'Audit your site. Refine the strategy. Inject the code.' : 'Auditer votre site. Affiner la stratégie. Injecter le code.'}
         </h2>
 
         {/* H3 Subheadline - SEO optimized */}
