@@ -438,7 +438,7 @@ export function MyWallet() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={handleOpenPortal}
+                        onClick={() => setShowRetentionModal(true)}
                         disabled={portalLoading}
                         className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
                       >
