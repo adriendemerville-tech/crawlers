@@ -274,7 +274,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               <div className="relative">
                 <Input
                   type="text"
-                  placeholder=""
+                  placeholder="url : crawlers.fr"
                   value={url}
                   onChange={(e) => handleUrlChange(e.target.value)}
                   onBlur={handleUrlBlur}
