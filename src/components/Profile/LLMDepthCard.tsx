@@ -611,7 +611,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
           {data.results.map((result) => {
             const isDark = document.documentElement.classList.contains('dark');
             const color = isDark ? iterationHslColorDark(result.iterations) : iterationHslColor(result.iterations);
-            const hasConv = isAgencyPro && conversations[result.llm]?.length > 0;
+            const hasConv = canViewConversations && conversations[result.llm]?.length > 0;
             const isOpen = activeConversation === result.llm;
 
             return (
