@@ -493,7 +493,7 @@ RAPPEL: JSON valide uniquement, pas de markdown.`;
     }
 
     const aiResponse = await response.json();
-    trackTokenUsage('generate-corrective-code', 'google/gemini-3-flash-preview', aiResponse.usage);
+    trackTokenUsage('generate-corrective-code', 'google/gemini-2.5-flash', aiResponse.usage);
     const content = aiResponse.choices?.[0]?.message?.content;
 
     if (!content) {
