@@ -915,6 +915,8 @@ export function ExpertAuditDashboard() {
       }
       // Fire-and-forget: CTO Agent analysis
       triggerCtoAgent(strategicData, 'strategic', normalizedUrl, new URL(normalizedUrl).hostname);
+      // Fire-and-forget: sync SERP KPIs to tracked site
+      if (user) syncSerpToTrackedSite(domain, user.id);
       // Clear any previous hallucination diagnosis since we re-analyzed
       setHallucinationDiagnosis(null);
       
