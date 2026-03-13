@@ -304,8 +304,8 @@ export function MyWallet() {
                     transition={{ delay: 0.1 + i * 0.06, duration: 0.25, ease: 'easeOut' }}
                   >
                     <TabsTrigger value={item.value} className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
+                      <item.icon className={`h-4 w-4 ${'color' in item && item.color ? item.color : ''}`} />
+                      <span className={'color' in item && item.color ? item.color : ''}>{item.label}</span>
                     </TabsTrigger>
                   </motion.div>
                 ))}
