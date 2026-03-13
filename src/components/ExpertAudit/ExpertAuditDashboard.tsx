@@ -1200,6 +1200,20 @@ export function ExpertAuditDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-10 max-w-5xl">
+      {/* Fatal error banner — after 4 consecutive failures */}
+      {fatalAuditError && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 rounded-lg bg-black px-5 py-4 text-white text-center text-sm font-medium shadow-lg"
+        >
+          {language === 'fr'
+            ? 'Impossible de compléter l\'audit. Contactez le support.'
+            : language === 'es'
+              ? 'No se pudo completar la auditoría. Contacte al soporte.'
+              : 'Unable to complete the audit. Contact support.'}
+        </motion.div>
+      )}
       {/* New Audit Button - show when there are results */}
       {(technicalResult || strategicResult) && (
         <motion.div
