@@ -145,7 +145,10 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
 
   if (scores.length === 0) {
     return (
-      <Card className="border-dashed opacity-80">
+      <Card className="border-dashed opacity-80 relative">
+        <button className="absolute top-2 right-2 z-10 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted transition-colors" aria-label="Déplacer">
+          <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
         <CardContent className="py-8 text-center space-y-4">
           <Brain className="h-10 w-10 mx-auto opacity-30" />
           <p className="text-sm text-muted-foreground">{t.noData}</p>
