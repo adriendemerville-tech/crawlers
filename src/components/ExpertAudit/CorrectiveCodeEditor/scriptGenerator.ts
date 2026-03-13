@@ -162,14 +162,17 @@ export function generateCorrectiveScript(
   // RÈGLE 8 — NO-GLOBAL POLICY
   // Aucune variable ne fuit dans window sauf le namespace dédié.
   // ═══════════════════════════════════════════════════════════
-  var __CRAWLERS_CONFIG__ = {
+   var __CRAWLERS_CONFIG__ = {
     version: '3.1',
     site: '${siteUrl}',
     fixes: ${enabledFixes.length},
-    started: false
+    generatedAt: new Date().toISOString()
   };
-  // Exposer uniquement sous préfixe unique
-  try { Object.defineProperty(window, '__CRAWLERS_CONFIG__', { value: __CRAWLERS_CONFIG__, writable: false, configurable: false }); } catch(e) {}
+  // Exposer sous préfixe unique — configurable: true pour permettre l'écrasement par un script ultérieur
+  try {
+    if (window.__CRAWLERS_CONFIG__) { safeLog('[Crawlers.fr] ♻️ Script précédent détecté — merge-override actif'); }
+    Object.defineProperty(window, '__CRAWLERS_CONFIG__', { value: __CRAWLERS_CONFIG__, writable: false, configurable: true });
+  } catch(e) {}
 
   // ═══════════════════════════════════════════════════════════
   // RÈGLE 6 — EXECUTION DEFERRAL (Non-bloquant)
