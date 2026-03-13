@@ -303,6 +303,13 @@ export function StrategicInsights({
             </RevealWrapper>
           )}
 
+          {/* 13b. Google My Business (when detected) */}
+          {analysis.google_my_business && (
+            <RevealWrapper delay={15000} isDataCard enabled={progressiveReveal}>
+              <GoogleMyBusinessCard data={analysis.google_my_business} />
+            </RevealWrapper>
+          )}
+
           {/* 14. Sémantique IA & Reformulations */}
           {analysis.geo_readiness && (
             <RevealWrapper delay={16000} isDataCard enabled={progressiveReveal}>
