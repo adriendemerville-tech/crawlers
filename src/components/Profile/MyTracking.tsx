@@ -165,6 +165,12 @@ export function MyTracking() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newUrl, setNewUrl] = useState('');
   const [adding, setAdding] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState<{
+    valid: boolean;
+    suggestion?: string;
+    checked: boolean;
+  }>({ valid: false, checked: false });
   const [selectedSite, setSelectedSite] = useState<string | null>(null);
   const [refreshingSites, setRefreshingSites] = useState<Set<string>>(new Set());
   const [refreshingSerp, setRefreshingSerp] = useState(false);
@@ -472,8 +478,65 @@ export function MyTracking() {
     }
   };
 
+  const handleValidateUrl = async () => {
+    if (!newUrl.trim()) return;
+    setValidating(true);
+    setValidationResult({ valid: false, checked: false });
+
+    const formatted = newUrl.startsWith('http') ? newUrl : `https://${newUrl}`;
+    // Extract brand-like term for LLM search
+    let brandSearch = '';
+    try {
+      const u = new URL(formatted);
+      brandSearch = u.hostname.replace('www.', '').split('.')[0];
+    } catch {
+      brandSearch = newUrl.replace(/^https?:\/\//, '').split('.')[0];
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-url', {
+        body: { urls: [formatted], searchBrand: brandSearch },
+      });
+
+      if (error) throw error;
+
+      const mainResult = data?.results?.[0];
+      const brandResult = data?.brandResult;
+
+      if (mainResult?.valid) {
+        // URL is valid — use finalUrl if available
+        const finalUrl = mainResult.finalUrl || formatted;
+        setNewUrl(finalUrl);
+        setValidationResult({ valid: true, checked: true });
+      } else if (brandResult) {
+        // URL invalid but LLM found a suggestion
+        setValidationResult({ valid: false, checked: true, suggestion: brandResult });
+      } else {
+        setValidationResult({ valid: false, checked: true });
+      }
+    } catch (err) {
+      console.error('[MyTracking] validate-url error:', err);
+      setValidationResult({ valid: false, checked: true });
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const handleAcceptSuggestion = () => {
+    if (validationResult.suggestion) {
+      setNewUrl(validationResult.suggestion);
+      setValidationResult({ valid: true, checked: true });
+    }
+  };
+
   const handleAddSite = async () => {
     if (!user) return;
+
+    // If not validated yet, validate first
+    if (!validationResult.checked) {
+      await handleValidateUrl();
+      return;
+    }
     
     let parsedUrl: URL;
     try {
@@ -509,6 +572,7 @@ export function MyTracking() {
 
       setShowAddModal(false);
       setNewUrl('');
+      setValidationResult({ valid: false, checked: false });
       await fetchSites();
 
       // No background audit — user will audit manually
@@ -1160,19 +1224,92 @@ export function MyTracking() {
             <DialogDescription>{t.addSiteDesc}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <Input
-              placeholder={t.urlPlaceholder}
-              value={newUrl}
-              onChange={e => setNewUrl(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleAddSite()}
-            />
+            <div className="flex gap-2">
+              <Input
+                placeholder={t.urlPlaceholder}
+                value={newUrl}
+                onChange={e => {
+                  setNewUrl(e.target.value);
+                  setValidationResult({ valid: false, checked: false });
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    if (!validationResult.checked) handleValidateUrl();
+                    else if (validationResult.valid) handleAddSite();
+                  }
+                }}
+                className={cn(
+                  validationResult.checked && validationResult.valid && 'border-green-500 focus-visible:ring-green-500',
+                  validationResult.checked && !validationResult.valid && !validationResult.suggestion && 'border-destructive focus-visible:ring-destructive'
+                )}
+              />
+              {!validationResult.checked && (
+                <Button
+                  variant="secondary"
+                  onClick={handleValidateUrl}
+                  disabled={validating || !newUrl.trim()}
+                  className="gap-2 shrink-0"
+                >
+                  {validating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  {language === 'fr' ? 'Vérifier' : 'Verify'}
+                </Button>
+              )}
+            </div>
+
+            {/* Validation feedback */}
+            {validationResult.checked && validationResult.valid && (
+              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                <CheckCircle2 className="h-4 w-4" />
+                {language === 'fr' ? 'URL validée ✓' : 'URL validated ✓'}
+              </div>
+            )}
+
+            {validationResult.checked && !validationResult.valid && validationResult.suggestion && (
+              <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-3 space-y-2">
+                <div className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-400">
+                  <AlertCircle className="h-4 w-4" />
+                  {language === 'fr' ? 'URL inaccessible. Suggestion trouvée :' : 'URL unreachable. Suggestion found:'}
+                </div>
+                <div className="flex items-center gap-2">
+                  <code className="text-sm font-mono bg-muted px-2 py-1 rounded flex-1 truncate">
+                    {validationResult.suggestion}
+                  </code>
+                  <Button size="sm" onClick={handleAcceptSuggestion} className="gap-1.5 shrink-0">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    {language === 'fr' ? 'Utiliser' : 'Use'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {validationResult.checked && !validationResult.valid && !validationResult.suggestion && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  {language === 'fr' ? 'URL inaccessible. Vérifiez l\'adresse.' : 'URL unreachable. Check the address.'}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setValidationResult({ valid: true, checked: true })}
+                  className="text-xs text-muted-foreground"
+                >
+                  {language === 'fr' ? 'Ignorer et ajouter quand même' : 'Ignore and add anyway'}
+                </Button>
+              </div>
+            )}
+
             <div className="flex justify-end gap-2">
               <DialogClose asChild>
                 <Button variant="outline">
                   {language === 'fr' ? 'Annuler' : 'Cancel'}
                 </Button>
               </DialogClose>
-              <Button onClick={handleAddSite} disabled={adding || !newUrl.trim()} className="gap-2">
+              <Button
+                onClick={handleAddSite}
+                disabled={adding || !newUrl.trim() || validating || (!validationResult.checked)}
+                className="gap-2"
+              >
                 {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                 {adding ? t.adding : t.add}
               </Button>
