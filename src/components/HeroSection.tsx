@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, memo, lazy, Suspense, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Zap, Bot, Sparkles, Brain, Gauge, FileSearch } from 'lucide-react';
+import { Search, Zap, Bot, Brain, Gauge, FileSearch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -131,15 +131,6 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
           buttonText: t.hero.button.crawlers,
           loadingText: t.hero.button.loading.crawlers
         };
-      case 'geo':
-        return {
-          badge: t.hero.badge.geo,
-          headline: <>{t.hero.headline.geo}{' '}<span className="text-gradient">{t.hero.headline.geoHighlight}</span></>,
-          useAnimatedHeadline: false,
-          subheadline: t.hero.subheadline.geo,
-          buttonText: t.hero.button.geo,
-          loadingText: t.hero.button.loading.geo
-        };
       case 'llm':
         return {
           badge: t.hero.badge.llm,
@@ -247,7 +238,6 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               <div className="mb-2 flex overflow-x-auto scrollbar-hide rounded-lg border border-border bg-card p-1 -mx-1 sm:mx-0">
                 {([
                   { key: 'crawlers' as ToolTab, icon: Bot, label: t.tabs.crawlers },
-                  { key: 'geo' as ToolTab, icon: Sparkles, label: t.tabs.geo },
                   { key: 'llm' as ToolTab, icon: Brain, label: t.tabs.llm },
                   { key: 'pagespeed' as ToolTab, icon: Gauge, label: t.tabs.pagespeed },
                 ]).map(({ key, icon: Icon, label }, index) => (
