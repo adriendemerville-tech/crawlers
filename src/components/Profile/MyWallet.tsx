@@ -20,6 +20,7 @@ import { BrandingTab } from '@/components/Profile/BrandingTab';
 import { ClientsTab } from '@/components/Profile/ClientsTab';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { AccountManager } from '@/components/Profile/AccountManager';
+import { RetentionModal } from '@/components/Profile/RetentionModal';
 
 const translations = {
   fr: {
@@ -111,6 +112,7 @@ export function MyWallet() {
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [showFreeOfferModal, setShowFreeOfferModal] = useState(false);
+  const [showRetentionModal, setShowRetentionModal] = useState(false);
   const t = translations[language];
 
   const handleOpenPortal = async () => {
@@ -436,7 +438,7 @@ export function MyWallet() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={handleOpenPortal}
+                        onClick={() => setShowRetentionModal(true)}
                         disabled={portalLoading}
                         className="gap-2 border-violet-500/30 hover:bg-violet-500/10"
                       >
@@ -523,6 +525,11 @@ export function MyWallet() {
         onOpenChange={setShowTopUpModal}
         currentBalance={balance}
       />
+      <RetentionModal
+        open={showRetentionModal}
+        onOpenChange={setShowRetentionModal}
+        onProceedToPortal={handleOpenPortal}
+      />
       </>
     );
   }
@@ -579,7 +586,7 @@ export function MyWallet() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
               <FileText className="h-3.5 w-3.5 text-violet-500 shrink-0" />
               <span className="text-xs font-medium leading-tight">
@@ -590,6 +597,12 @@ export function MyWallet() {
               <Globe className="h-3.5 w-3.5 text-violet-500 shrink-0" />
               <span className="text-xs font-medium leading-tight">
                 {language === 'fr' ? 'Audit multi-pages' : language === 'es' ? 'Auditoría multi-página' : 'Multi-page audit'}
+              </span>
+            </div>
+            <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">
+              <TrendingUp className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+              <span className="text-xs font-medium leading-tight">
+                {language === 'fr' ? '30 URL suivis' : language === 'es' ? '30 URL seguidos' : '30 tracked URLs'}
               </span>
             </div>
             <div className="flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg bg-muted/50 border text-center">

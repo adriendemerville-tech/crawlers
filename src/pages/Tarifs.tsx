@@ -101,6 +101,7 @@ const translations = {
       'Audit expert illimité',
       'Code correctif illimité',
       'Crawl : 5 000 pages/mois incluses',
+      '30 URL suivis inclus',
       'Marque Blanche (White Label)',
       '3 comptes inclus',
       'Support prioritaire',
@@ -192,6 +193,7 @@ const translations = {
       'Unlimited expert audit',
       'Unlimited corrective code',
       'Crawl: 5,000 pages/month included',
+      '30 tracked URLs included',
       'White Label option',
       '3 accounts included',
       'Priority support',
@@ -283,6 +285,7 @@ const translations = {
       'Auditoría experta ilimitada',
       'Código correctivo ilimitado',
       'Crawl: 5 000 páginas/mes incluidas',
+      '30 URL seguidos incluidos',
       'Opción Marca Blanca',
       '3 cuentas incluidas',
       'Soporte prioritario',
@@ -295,7 +298,7 @@ const translations = {
   },
 };
 
-const agencyIcons = [Infinity, Infinity, Shield, Shield, Users, Headphones];
+const agencyIcons = [Infinity, Infinity, Shield, ScanSearch, Shield, Users, Headphones];
 
 export default function Tarifs() {
   const { language } = useLanguage();
