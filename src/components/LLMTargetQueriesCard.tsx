@@ -80,7 +80,7 @@ const translations = {
   },
   en: {
     title: 'Target Queries',
-    subtitle: 'Strategic queries to maximize your LLM recommendations',
+    subtitle: 'Strategic queries to maximize your LLM citations. Target them to dominate AI.',
     copied: 'Copied!',
     high: 'Priority',
     medium: 'Important',
