@@ -1060,12 +1060,14 @@ export function MyTracking() {
                       voiceShare: async () => { if (currentSite) await runStreamingAudit(currentSite); },
                     };
 
+                    const isSiteExhausted = currentSite ? refreshExhaustedSites.has(currentSite.id) : false;
+
                     return (
                       <SortableKPIGrid
                         kpiDefinitions={kpiDefinitions}
                         defaultOrder={defaultKpiOrder}
                         disabled={!latestStats && !refreshingSites.has(currentSite?.id || '')}
-                        onRefresh={kpiRefreshMap}
+                        onRefresh={isSiteExhausted ? undefined : kpiRefreshMap}
                       />
                     );
                   })()}
