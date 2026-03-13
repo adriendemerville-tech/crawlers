@@ -60,7 +60,7 @@ interface LLMTargetQueriesCardProps {
 const translations = {
   fr: {
     title: 'Requêtes LLM à cibler',
-    subtitle: 'Requêtes stratégiques pour maximiser vos recommandations par les LLMs',
+    subtitle: 'Requêtes stratégiques pour maximiser vos citations LLM. Ciblez-les pour dominer l\'IA.',
     copied: 'Copié !',
     high: 'Prioritaire',
     medium: 'Important',
@@ -80,7 +80,7 @@ const translations = {
   },
   en: {
     title: 'Target Queries',
-    subtitle: 'Strategic queries to maximize your LLM recommendations',
+    subtitle: 'Strategic queries to maximize your LLM citations. Target them to dominate AI.',
     copied: 'Copied!',
     high: 'Priority',
     medium: 'Important',
@@ -100,7 +100,7 @@ const translations = {
   },
   es: {
     title: 'Consultas objetivo',
-    subtitle: 'Consultas estratégicas para maximizar tus recomendaciones LLM',
+    subtitle: 'Consultas estratégicas para maximizar tus citas LLM. Apúntalas para dominar la IA.',
     copied: '¡Copiado!',
     high: 'Prioritario',
     medium: 'Importante',
@@ -326,7 +326,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
           {t.title}
         </CardTitle>
         {!compact && (
-          <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+          <p className="text-base text-muted-foreground leading-relaxed px-1 py-2">{t.subtitle}</p>
         )}
         {(data.coreBusiness || data.marketLeader) && (
           <div className="flex flex-wrap gap-2 mt-2">
