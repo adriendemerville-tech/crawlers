@@ -518,6 +518,11 @@ export function MyWallet() {
           </div>
         </DialogContent>
       </Dialog>
+      <CreditTopUpModal
+        open={showTopUpModal}
+        onOpenChange={setShowTopUpModal}
+        currentBalance={balance}
+      />
       </>
     );
   }
