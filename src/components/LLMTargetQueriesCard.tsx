@@ -60,7 +60,7 @@ interface LLMTargetQueriesCardProps {
 const translations = {
   fr: {
     title: 'Requêtes LLM à cibler',
-    subtitle: 'Requêtes stratégiques pour maximiser vos recommandations par les LLMs',
+    subtitle: 'Requêtes stratégiques pour maximiser vos citations LLM. Ciblez-les pour dominer l\'IA.',
     copied: 'Copié !',
     high: 'Prioritaire',
     medium: 'Important',
