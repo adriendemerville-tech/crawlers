@@ -1,6 +1,8 @@
 project_id = "tutlimtasnjabdfhpewu"
 
 [functions]
+  [functions.apply-affiliate]
+    verify_jwt = false
   [functions.apply-referral]
     verify_jwt = false
   [functions.audit-compare]
