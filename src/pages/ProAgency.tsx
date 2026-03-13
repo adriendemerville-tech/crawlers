@@ -271,6 +271,7 @@ const iconMap: Record<string, React.ReactNode> = {
   Users: <Users className="h-6 w-6" />,
   Headphones: <Headphones className="h-6 w-6" />,
   BarChart3: <BarChart3 className="h-6 w-6" />,
+  TrendingUp: <TrendingUp className="h-6 w-6" />,
 };
 
 export default function ProAgency() {

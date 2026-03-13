@@ -337,6 +337,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Globe className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '5 000 pages crawl/mois' : language === 'es' ? '5 000 páginas crawl/mes' : '5,000 crawl pages/mo'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Zap className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '30 URL suivis inclus' : language === 'es' ? '30 URL seguidos' : '30 tracked URLs'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Users className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '3 comptes inclus' : language === 'es' ? '3 cuentas' : '3 accounts'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Zap className="h-3.5 w-3.5 text-amber-500" />{language === 'fr' ? '🆕 Indice IAS' : language === 'es' ? '🆕 Índice IAS' : '🆕 SAI Index'}</span>
               </div>
             </div>
             <div className="flex flex-col items-center gap-2 shrink-0">
