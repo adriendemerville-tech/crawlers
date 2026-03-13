@@ -478,8 +478,65 @@ export function MyTracking() {
     }
   };
 
+  const handleValidateUrl = async () => {
+    if (!newUrl.trim()) return;
+    setValidating(true);
+    setValidationResult({ valid: false, checked: false });
+
+    const formatted = newUrl.startsWith('http') ? newUrl : `https://${newUrl}`;
+    // Extract brand-like term for LLM search
+    let brandSearch = '';
+    try {
+      const u = new URL(formatted);
+      brandSearch = u.hostname.replace('www.', '').split('.')[0];
+    } catch {
+      brandSearch = newUrl.replace(/^https?:\/\//, '').split('.')[0];
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-url', {
+        body: { urls: [formatted], searchBrand: brandSearch },
+      });
+
+      if (error) throw error;
+
+      const mainResult = data?.results?.[0];
+      const brandResult = data?.brandResult;
+
+      if (mainResult?.valid) {
+        // URL is valid — use finalUrl if available
+        const finalUrl = mainResult.finalUrl || formatted;
+        setNewUrl(finalUrl);
+        setValidationResult({ valid: true, checked: true });
+      } else if (brandResult) {
+        // URL invalid but LLM found a suggestion
+        setValidationResult({ valid: false, checked: true, suggestion: brandResult });
+      } else {
+        setValidationResult({ valid: false, checked: true });
+      }
+    } catch (err) {
+      console.error('[MyTracking] validate-url error:', err);
+      setValidationResult({ valid: false, checked: true });
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const handleAcceptSuggestion = () => {
+    if (validationResult.suggestion) {
+      setNewUrl(validationResult.suggestion);
+      setValidationResult({ valid: true, checked: true });
+    }
+  };
+
   const handleAddSite = async () => {
     if (!user) return;
+
+    // If not validated yet, validate first
+    if (!validationResult.checked) {
+      await handleValidateUrl();
+      return;
+    }
     
     let parsedUrl: URL;
     try {
@@ -515,6 +572,7 @@ export function MyTracking() {
 
       setShowAddModal(false);
       setNewUrl('');
+      setValidationResult({ valid: false, checked: false });
       await fetchSites();
 
       // No background audit — user will audit manually
