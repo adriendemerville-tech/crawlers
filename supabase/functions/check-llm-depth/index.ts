@@ -321,6 +321,8 @@ interface DepthResult {
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
+type StreamCallback = (event: { type: string; model: string; iteration?: number; found?: boolean; mentioned_as?: string | null }) => void
+
 async function runDepthConversation(
   keys: ApiKeys,
   modelDef: ModelDef,
@@ -328,6 +330,7 @@ async function runDepthConversation(
   domain: string,
   prompts: string[],
   lang: string,
+  onProgress?: StreamCallback,
 ): Promise<DepthResult> {
   const isFr = lang === 'fr'
   const isEs = lang === 'es'
