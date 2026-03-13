@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot, BookOpen, Globe } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot, BookOpen, Globe, FlaskConical } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -10,6 +10,7 @@ import { CtoAgentDashboard } from './CtoAgentDashboard';
 import { BackendDocumentation } from './BackendDocumentation';
 import { CrawlManagement } from './CrawlManagement';
 import { DemoModeToggle } from './DemoModeToggle';
+import { CiTestsDashboard } from './CiTestsDashboard';
 
 export function AdminDashboard() {
   return (
