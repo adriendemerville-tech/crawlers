@@ -60,7 +60,11 @@
     "GTM integration",
     "Google Tag Manager",
     "auto deploy SEO fixes",
-    "widget connection"
+    "widget connection",
+    "brand non-brand ratio",
+    "strategic alignment index",
+    "Google Search Console diagnostic",
+    "IAS score"
   ],
   "not_for": [
     "web scraping",
