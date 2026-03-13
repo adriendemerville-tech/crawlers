@@ -519,9 +519,9 @@ function generateFixCode(
 
     case 'fix_lazy_images':
       return {
-        fn: `  // Règle 3: Lazy Loading images hors-écran + fetchpriority="high" sur image LCP
+         fn: `  // Règle 3: Lazy Loading images hors-écran + fetchpriority="high" sur image LCP
   function optimizeImages() {
-    if (hasLock('fix_lazy_images')) return;
+    clearLock('fix_lazy_images');
     try {
       var images = document.querySelectorAll('img');
       var viewportHeight = window.innerHeight;
