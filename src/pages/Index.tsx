@@ -548,8 +548,18 @@ const Index = () => {
   };
 
 
-  // Check if any scan has results
   const hasResults = !!(crawlResult || geoResult || llmResult || mobilePageSpeedResult || desktopPageSpeedResult);
+
+  if (isRedirecting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background animate-fade-in">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground text-sm">Chargement de votre console…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
