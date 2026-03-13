@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 
 /**
  * check-llm-depth v2 — Expert-grade conversational discoverability analysis
