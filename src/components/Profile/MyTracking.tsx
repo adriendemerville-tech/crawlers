@@ -395,18 +395,20 @@ export function MyTracking() {
     try {
       const url = `https://${site.domain}`;
       
-      // Run check-geo, check-llm, check-pagespeed and check-crawlers in parallel
-      const [geoRes, llmRes, psiRes, crawlersRes] = await Promise.allSettled([
+      // Run check-geo, check-llm, check-pagespeed, check-crawlers and fetch-serp-kpis in parallel
+      const [geoRes, llmRes, psiRes, crawlersRes, serpRes] = await Promise.allSettled([
         supabase.functions.invoke('check-geo', { body: { url, lang: language } }),
         supabase.functions.invoke('check-llm', { body: { url, lang: language } }),
         supabase.functions.invoke('check-pagespeed', { body: { url, lang: language } }),
         supabase.functions.invoke('check-crawlers', { body: { url } }),
+        supabase.functions.invoke('fetch-serp-kpis', { body: { domain: site.domain, url } }),
       ]);
 
       const geoData = geoRes.status === 'fulfilled' ? geoRes.value.data : null;
       const llmData = llmRes.status === 'fulfilled' ? llmRes.value.data : null;
       const psiData = psiRes.status === 'fulfilled' ? psiRes.value.data : null;
       const crawlersData = crawlersRes.status === 'fulfilled' ? crawlersRes.value.data : null;
+      const serpData = serpRes.status === 'fulfilled' ? serpRes.value.data?.data : null;
 
       const geoScore = geoData?.data?.totalScore ?? geoData?.data?.overallScore ?? 0;
       const llmCitationRate = llmData?.data?.citationRate;
@@ -442,6 +444,7 @@ export function MyTracking() {
           crawlersData: crawlersData?.data || crawlersData,
           performanceScore,
           llmOverallScore,
+          serpData,
         },
       });
 
