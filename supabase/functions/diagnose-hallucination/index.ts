@@ -283,7 +283,7 @@ async function callAI(systemPrompt: string, userPrompt: string): Promise<string>
   }
 
   const data = await response.json();
-  trackTokenUsage('diagnose-hallucination', 'google/gemini-2.5-pro', data.usage);
+  trackTokenUsage('diagnose-hallucination', 'google/gemini-2.5-flash', data.usage);
   return data.choices?.[0]?.message?.content || '';
 }
 
