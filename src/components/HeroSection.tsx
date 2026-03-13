@@ -247,7 +247,6 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               <div className="mb-2 flex overflow-x-auto scrollbar-hide rounded-lg border border-border bg-card p-1 -mx-1 sm:mx-0">
                 {([
                   { key: 'crawlers' as ToolTab, icon: Bot, label: t.tabs.crawlers },
-                  { key: 'geo' as ToolTab, icon: Sparkles, label: t.tabs.geo },
                   { key: 'llm' as ToolTab, icon: Brain, label: t.tabs.llm },
                   { key: 'pagespeed' as ToolTab, icon: Gauge, label: t.tabs.pagespeed },
                 ]).map(({ key, icon: Icon, label }, index) => (
