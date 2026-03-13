@@ -37,6 +37,11 @@ export const getReportStyles = () => `
     @page {
       margin: 20mm 10mm;
     }
+    .card, .bot-card, .factor-card, .summary-header, .header, .footer,
+    .stat-badge, .score-gauge, .section-title, .grid-2 > *, .grid-3 > *, .grid-4 > * {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
   }
   
   .container { max-width: 1152px; margin: 0 auto; }
