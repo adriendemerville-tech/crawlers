@@ -119,9 +119,18 @@ function DistributionBar({ top3, top10, top50, total }: { top3: number; top10: n
   );
 }
 
-export function SerpKpiBanner({ data, onRefresh, isRefreshing }: SerpKpiBannerProps) {
+export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefreshing }: SerpKpiBannerProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
+
+  // Compute indexed pages trend (min ±5%)
+  const indexedPagesTrend = (() => {
+    if (data?.indexed_pages == null || previousIndexedPages == null || previousIndexedPages === 0) return null;
+    const pctChange = ((data.indexed_pages - previousIndexedPages) / previousIndexedPages) * 100;
+    if (pctChange >= 5) return { direction: 'up' as const, pct: pctChange };
+    if (pctChange <= -5) return { direction: 'down' as const, pct: pctChange };
+    return null;
+  })();
 
   if (!data || data.total_keywords === 0) {
     return (
