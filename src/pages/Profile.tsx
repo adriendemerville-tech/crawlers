@@ -178,16 +178,6 @@ export default function Profile() {
                     <span className="hidden sm:inline text-yellow-500 font-semibold">Pro Agency</span>
                   </TabsTrigger>
                 )}
-                {isProUser && (
-                  <button
-                    type="button"
-                    onClick={() => setShowCreditModal(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-amber-500 hover:bg-amber-500/10 transition-colors"
-                  >
-                    <Bot className="h-4 w-4 text-amber-500" />
-                    <span className="hidden sm:inline">Crédits</span>
-                  </button>
-                )}
                 <TabsTrigger value="tracking" className="flex-1 gap-2">
                   <Radar className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.tracking}</span>

@@ -455,6 +455,42 @@ export function MyWallet() {
                   <ProfileSettings />
                 </div>
               </TabsContent>
+
+              {/* Credits Tab */}
+              <TabsContent value="credits" className="mt-0">
+                <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2">
+                      <Bot className="h-5 w-5 text-amber-500" />
+                      {language === 'fr' ? 'Crédits' : language === 'es' ? 'Créditos' : 'Credits'}
+                    </CardTitle>
+                    <CardDescription>
+                      {language === 'fr' ? 'Rechargez vos crédits pour les audits et crawls' : language === 'es' ? 'Recargue sus créditos para auditorías y crawls' : 'Top up credits for audits and crawls'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <CreditCoin size="lg" />
+                        <div>
+                          <p className="text-3xl font-bold">{balance}</p>
+                          <p className="text-sm text-muted-foreground">{t.credits}</p>
+                        </div>
+                      </div>
+                      <Button onClick={() => setShowTopUp(true)} className="gap-2 bg-amber-500 hover:bg-amber-600 text-white">
+                        <ShoppingCart className="h-4 w-4" />
+                        {t.topUp}
+                      </Button>
+                    </div>
+
+                    {/* Transaction history */}
+                    <div className="pt-4 border-t">
+                      <h3 className="text-sm font-semibold mb-3">{t.allHistory}</h3>
+                      {renderTransactionList(transactions)}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </div>
           </div>
         </Tabs>
