@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FlaskConical, Loader2, CheckCircle2, XCircle, Clock, RefreshCw, History } from 'lucide-react';
+import { FlaskConical, Loader2, CheckCircle2, XCircle, Clock, RefreshCw, History, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TestResult {
   id: string;
@@ -39,6 +40,82 @@ const PILLAR_COLORS: Record<string, string> = {
   'Audit': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
   'Tracking': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
 };
+
+function HistoryRow({
+  allPassed, date, passed, total, failed, durationMs, failedTests, hasFails,
+}: {
+  allPassed: boolean;
+  date: Date;
+  passed: number;
+  total: number;
+  failed: number;
+  durationMs: number;
+  failedTests: TestResult[];
+  hasFails: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="rounded-md overflow-hidden">
+      <button
+        type="button"
+        onClick={() => hasFails && setOpen(o => !o)}
+        className={`flex items-center gap-3 px-3 py-2 w-full text-left text-sm transition-colors ${
+          allPassed
+            ? 'bg-green-50/50 dark:bg-green-900/5'
+            : 'bg-red-50/50 dark:bg-red-900/5'
+        } ${hasFails ? 'cursor-pointer hover:bg-red-100/50 dark:hover:bg-red-900/10' : ''}`}
+      >
+        {allPassed ? (
+          <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+        ) : (
+          <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+        )}
+        <span className="text-muted-foreground text-xs">
+          {date.toLocaleDateString('fr-FR')} {date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+        </span>
+        <span className="font-medium">
+          {passed}/{total}
+        </span>
+        {failed > 0 && (
+          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+            {failed} échec{failed > 1 ? 's' : ''}
+          </Badge>
+        )}
+        <span className="text-muted-foreground text-xs ml-auto flex items-center gap-1">
+          {durationMs}ms
+          {hasFails && (
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+          )}
+        </span>
+      </button>
+
+      <AnimatePresence>
+        {open && failedTests.length > 0 && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 py-2 space-y-1 bg-red-50/30 dark:bg-red-900/5 border-t border-red-200/30 dark:border-red-800/20">
+              {failedTests.map((ft) => (
+                <div key={ft.id} className="flex items-start gap-2 text-xs">
+                  <XCircle className="h-3 w-3 text-red-500 mt-0.5 shrink-0" />
+                  <span className="font-medium text-red-700 dark:text-red-400">{ft.name}</span>
+                  {ft.error && (
+                    <span className="text-muted-foreground">— {ft.error}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export function CiTestsDashboard() {
   const [running, setRunning] = useState(false);
@@ -205,35 +282,21 @@ export function CiTestsDashboard() {
               {history.map((entry, i) => {
                 const d = entry.event_data;
                 const date = new Date(entry.created_at);
+                const failedTests = d.results?.filter(r => !r.passed) || [];
+                const hasFails = failedTests.length > 0;
+
                 return (
-                  <div
+                  <HistoryRow
                     key={i}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm ${
-                      d.all_passed
-                        ? 'bg-green-50/50 dark:bg-green-900/5'
-                        : 'bg-red-50/50 dark:bg-red-900/5'
-                    }`}
-                  >
-                    {d.all_passed ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-                    )}
-                    <span className="text-muted-foreground text-xs">
-                      {date.toLocaleDateString('fr-FR')} {date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    <span className="font-medium">
-                      {d.passed}/{d.total}
-                    </span>
-                    {d.failed > 0 && (
-                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
-                        {d.failed} échec{d.failed > 1 ? 's' : ''}
-                      </Badge>
-                    )}
-                    <span className="text-muted-foreground text-xs ml-auto">
-                      {d.duration_ms}ms
-                    </span>
-                  </div>
+                    allPassed={d.all_passed}
+                    date={date}
+                    passed={d.passed}
+                    total={d.total}
+                    failed={d.failed}
+                    durationMs={d.duration_ms}
+                    failedTests={failedTests}
+                    hasFails={hasFails}
+                  />
                 );
               })}
             </div>
