@@ -1170,6 +1170,15 @@ export function MyTracking() {
                     }}
                     isRefreshing={refreshingSerp}
                   />
+
+                  {/* LLM Visibility Dashboard */}
+                  {currentSite && user && (
+                    <LLMVisibilityDashboard
+                      trackedSiteId={currentSite.id}
+                      userId={user.id}
+                      domain={currentSite.domain}
+                    />
+                  )}
                 </div>
               )}
             </div>
