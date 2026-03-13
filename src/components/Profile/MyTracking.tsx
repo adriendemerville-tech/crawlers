@@ -1094,11 +1094,20 @@ export function MyTracking() {
                           body: { domain: currentSite.domain, url: `https://${currentSite.domain}` },
                         });
                         const serpData = serpRes?.data;
-                        if (serpData && latestStats) {
-                          const existingRaw = (latestStats as any)?.raw_data || {};
-                          await supabase.from('user_stats_history').update({
-                            raw_data: { ...existingRaw, serpData },
-                          }).eq('id', (latestStats as any).id);
+                        if (serpData) {
+                          if (latestStats) {
+                            const existingRaw = (latestStats as any)?.raw_data || {};
+                            await supabase.from('user_stats_history').update({
+                              raw_data: { ...existingRaw, serpData },
+                            }).eq('id', (latestStats as any).id);
+                          } else {
+                            await supabase.from('user_stats_history').insert({
+                              tracked_site_id: currentSite.id,
+                              user_id: user.id,
+                              domain: currentSite.domain,
+                              raw_data: { serpData },
+                            });
+                          }
                           await fetchStats();
                         }
                         toast.success(language === 'fr' ? 'Données SERP mises à jour' : 'SERP data updated');
