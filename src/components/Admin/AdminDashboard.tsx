@@ -50,6 +50,10 @@ export function AdminDashboard() {
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Documentation</span>
           </TabsTrigger>
+          <TabsTrigger value="crawls" className="flex-1 gap-2">
+            <Globe className="h-4 w-4" />
+            <span className="hidden sm:inline">Crawls</span>
+          </TabsTrigger>
           <TabsTrigger value="support" className="flex-1 gap-2">
             <MessageCircle className="h-4 w-4" />
             <span className="hidden sm:inline">SAV</span>
