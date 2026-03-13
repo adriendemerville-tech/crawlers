@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle, AlertTriangle, FileSearch } from 'lucide-react';
+import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle, FileSearch } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface DepthResult {
   llm: string;
@@ -44,6 +45,13 @@ interface LLMDepthCardProps {
   initialData?: LLMDepthData | null;
 }
 
+// Streaming progress state per model
+interface ModelProgress {
+  iteration: number;
+  found: boolean;
+  mentioned_as?: string | null;
+}
+
 const translations = {
   fr: {
     title: 'Profondeur LLM',
@@ -62,6 +70,7 @@ const translations = {
     completedDesc: 'Les crédits API sont temporairement épuisés. Vos données précédentes restent affichées.',
     expertRequired: 'Audit expert requis',
     expertRequiredDesc: 'Lancez un audit stratégique pour obtenir votre profondeur LLM avec des données de simulation intelligentes.',
+    scanning: 'Scan en cours…',
   },
   en: {
     title: 'LLM Depth',
@@ -80,6 +89,7 @@ const translations = {
     completedDesc: 'API credits are temporarily exhausted. Your previous data remains displayed.',
     expertRequired: 'Expert audit required',
     expertRequiredDesc: 'Run a strategic audit to get your LLM depth with smart simulated data.',
+    scanning: 'Scanning…',
   },
   es: {
     title: 'Profundidad LLM',
@@ -98,8 +108,32 @@ const translations = {
     completedDesc: 'Los créditos API están temporalmente agotados. Sus datos anteriores siguen mostrados.',
     expertRequired: 'Auditoría experta requerida',
     expertRequiredDesc: 'Ejecute una auditoría estratégica para obtener su profundidad LLM con datos simulados inteligentes.',
+    scanning: 'Escaneando…',
   },
 };
+
+const MAX_ITERATIONS = 7;
+const MODELS_LIST = ['ChatGPT', 'Gemini', 'Claude', 'Perplexity'];
+
+/**
+ * Returns an HSL color string interpolated from green (iteration 1) to red (iteration 7+).
+ * Uses hue rotation: 120 (green) → 60 (yellow) → 0 (red)
+ */
+function iterationHslColor(iteration: number): string {
+  const t = Math.min((iteration - 1) / (MAX_ITERATIONS - 1), 1); // 0..1
+  const hue = 120 - t * 120; // 120 (green) → 0 (red)
+  const saturation = 75 + t * 10; // slightly more saturated towards red
+  const lightness = 42 + t * 5;
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+function iterationHslColorDark(iteration: number): string {
+  const t = Math.min((iteration - 1) / (MAX_ITERATIONS - 1), 1);
+  const hue = 120 - t * 120;
+  const saturation = 70 + t * 10;
+  const lightness = 55 + t * 5;
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
 
 function depthColor(depth: number | null): string {
   if (depth === null) return 'text-muted-foreground';
@@ -121,6 +155,72 @@ function depthLabel(depth: number, lang: string): string {
 const MAX_DISPLAY = 7;
 const SIMULATED_LOADING_MS = 30_000;
 
+/** Streaming iteration counter for a single model */
+function StreamingCounter({ iteration, found, modelName }: { iteration: number; found: boolean; modelName: string }) {
+  const isDark = document.documentElement.classList.contains('dark');
+  const color = found
+    ? (isDark ? iterationHslColorDark(iteration) : iterationHslColor(iteration))
+    : undefined;
+
+  return (
+    <div className="flex items-baseline gap-1.5">
+      <AnimatePresence mode="popLayout">
+        <motion.span
+          key={iteration}
+          initial={{ scale: 1.6, opacity: 0, y: -4 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.8, opacity: 0, y: 4 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          className="text-lg font-bold tabular-nums"
+          style={color ? { color } : undefined}
+        >
+          {iteration}
+        </motion.span>
+      </AnimatePresence>
+      <span className="text-[10px] text-muted-foreground">/ {MAX_ITERATIONS}</span>
+    </div>
+  );
+}
+
+/** Progress ring for streaming state */
+function MiniProgressRing({ iteration, found }: { iteration: number; found: boolean }) {
+  const size = 28;
+  const strokeWidth = 3;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const progress = found ? 1 : iteration / MAX_ITERATIONS;
+  const offset = circumference - progress * circumference;
+  const isDark = document.documentElement.classList.contains('dark');
+  const color = isDark ? iterationHslColorDark(iteration) : iterationHslColor(iteration);
+
+  return (
+    <svg width={size} height={size} className="-rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="hsl(var(--muted))"
+        strokeWidth={strokeWidth}
+        className="opacity-20"
+      />
+      <motion.circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        initial={{ strokeDashoffset: circumference }}
+        animate={{ strokeDashoffset: offset }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+      />
+    </svg>
+  );
+}
+
 export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initialData }: LLMDepthCardProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
@@ -128,7 +228,9 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
   const [loading, setLoading] = useState(false);
   const [banner, setBanner] = useState<'completed' | 'expert_required' | null>(null);
   const [hasPreviousData, setHasPreviousData] = useState<boolean | null>(null);
+  const [streamProgress, setStreamProgress] = useState<Record<string, ModelProgress>>({});
   const simulatedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // Check if user has previous LLM depth data for this site
   useEffect(() => {
@@ -146,64 +248,208 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
       });
   }, [trackedSiteId, userId]);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     if (loading) return;
     setLoading(true);
     setBanner(null);
+    setStreamProgress({});
+
+    abortRef.current = new AbortController();
 
     try {
-      const response = await supabase.functions.invoke('check-llm-depth', {
-        body: {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      // Get auth token for the request
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/check-llm-depth`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken || supabaseKey}`,
+          'apikey': supabaseKey,
+        },
+        body: JSON.stringify({
           domain,
           lang: language,
           tracked_site_id: trackedSiteId,
           user_id: userId,
           site_context: siteContext,
-        },
+        }),
+        signal: abortRef.current.signal,
       });
 
-      const responseData = response.data?.data as LLMDepthData | undefined;
-
-      // Credits exhausted scenario
-      if (responseData?.error_code === 'credits_exhausted') {
-        if (hasPreviousData || data) {
-          // User has previous data: simulate 30s loading then show "terminé" banner
-          await new Promise<void>((resolve) => {
-            simulatedTimerRef.current = setTimeout(resolve, SIMULATED_LOADING_MS);
-          });
-          setBanner('completed');
-        } else {
-          // User never used depth: show "audit expert requis" immediately
-          setBanner('expert_required');
-        }
+      if (!response.ok || !response.body) {
+        console.error('[LLMDepthCard] Stream response error:', response.status);
         setLoading(false);
         return;
       }
 
-      if (responseData && responseData.results && responseData.results.length > 0) {
-        setData(responseData);
-        setHasPreviousData(true);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const evt = JSON.parse(line.slice(6));
+
+            if (evt.type === 'iteration') {
+              setStreamProgress(prev => ({
+                ...prev,
+                [evt.model]: { iteration: evt.iteration, found: false },
+              }));
+            } else if (evt.type === 'found') {
+              setStreamProgress(prev => ({
+                ...prev,
+                [evt.model]: { iteration: evt.iteration, found: true, mentioned_as: evt.mentioned_as },
+              }));
+            } else if (evt.type === 'done') {
+              const responseData = evt.data as LLMDepthData;
+
+              if (responseData?.error_code === 'credits_exhausted') {
+                if (hasPreviousData || data) {
+                  await new Promise<void>((resolve) => {
+                    simulatedTimerRef.current = setTimeout(resolve, SIMULATED_LOADING_MS);
+                  });
+                  setBanner('completed');
+                } else {
+                  setBanner('expert_required');
+                }
+              } else if (responseData?.results?.length > 0) {
+                setData(responseData);
+                setHasPreviousData(true);
+              }
+            }
+          } catch {
+            // ignore parse errors
+          }
+        }
       }
     } catch (err) {
-      console.error('[LLMDepthCard] refresh error:', err);
+      if ((err as Error).name !== 'AbortError') {
+        console.error('[LLMDepthCard] stream error:', err);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [loading, domain, language, trackedSiteId, userId, siteContext, hasPreviousData, data]);
 
-  // Cleanup timer on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (simulatedTimerRef.current) clearTimeout(simulatedTimerRef.current);
+      abortRef.current?.abort();
     };
   }, []);
+
+  // ── Streaming loading state ──────────────────────────────────────────────
+  if (loading) {
+    const hasAnyProgress = Object.keys(streamProgress).length > 0;
+    return (
+      <Card className="relative border-2 border-violet-500/40 dark:border-violet-400/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {t.analyzing}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            {MODELS_LIST.map((modelName) => {
+              const progress = streamProgress[modelName];
+              const iteration = progress?.iteration ?? 0;
+              const found = progress?.found ?? false;
+              const isActive = iteration > 0 && !found;
+
+              return (
+                <motion.div
+                  key={modelName}
+                  className="rounded-lg border bg-card p-2.5 space-y-1.5"
+                  initial={{ opacity: 0.5 }}
+                  animate={{ opacity: iteration > 0 ? 1 : 0.5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium">{modelName}</span>
+                    {found ? (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                      </motion.div>
+                    ) : iteration > 0 ? (
+                      <MiniProgressRing iteration={iteration} found={found} />
+                    ) : (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground/40" />
+                    )}
+                  </div>
+
+                  {iteration > 0 ? (
+                    <StreamingCounter iteration={iteration} found={found} modelName={modelName} />
+                  ) : (
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-lg font-bold text-muted-foreground/30">—</span>
+                      <span className="text-[10px] text-muted-foreground/40">/ {MAX_ITERATIONS}</span>
+                    </div>
+                  )}
+
+                  {found && progress?.mentioned_as && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-[10px] text-muted-foreground truncate"
+                    >
+                      → {progress.mentioned_as}
+                    </motion.p>
+                  )}
+
+                  {isActive && (
+                    <motion.div
+                      className="h-0.5 rounded-full overflow-hidden bg-muted/30"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{
+                          background: `linear-gradient(90deg, ${iterationHslColor(1)}, ${iterationHslColor(iteration)})`,
+                        }}
+                        initial={{ width: '0%' }}
+                        animate={{ width: `${(iteration / MAX_ITERATIONS) * 100}%` }}
+                        transition={{ duration: 0.4, ease: 'easeOut' }}
+                      />
+                    </motion.div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+          {!hasAnyProgress && (
+            <p className="text-[10px] text-center text-muted-foreground/60">{t.scanning}</p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Banner: "Analyse terminée" (user has prior data, credits exhausted)
   if (banner === 'completed') {
     return (
       <Card className="relative border-2 border-violet-500/40 dark:border-violet-400/30">
         <CardContent className="py-6 space-y-4">
-          {/* Show existing data if available */}
           {data && (
             <div className="space-y-3 mb-4">
               <div className="rounded-lg border bg-card p-3 space-y-1">
@@ -224,12 +470,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
               <p className="text-xs text-muted-foreground mt-0.5">{t.completedDesc}</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2"
-            onClick={() => setBanner(null)}
-          >
+          <Button variant="ghost" size="sm" className="gap-2" onClick={() => setBanner(null)}>
             <RefreshCw className="h-3 w-3" />
             OK
           </Button>
@@ -238,7 +479,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
     );
   }
 
-  // Banner: "Audit expert requis" (user never used depth, credits exhausted)
+  // Banner: "Audit expert requis"
   if (banner === 'expert_required') {
     return (
       <Card className="relative border-2 border-violet-500/40 dark:border-violet-400/30">
@@ -248,12 +489,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
             <p className="font-semibold text-sm text-amber-700 dark:text-amber-400">{t.expertRequired}</p>
             <p className="text-xs text-muted-foreground max-w-xs mx-auto">{t.expertRequiredDesc}</p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2"
-            onClick={() => setBanner(null)}
-          >
+          <Button variant="ghost" size="sm" className="gap-2" onClick={() => setBanner(null)}>
             OK
           </Button>
         </CardContent>
@@ -274,12 +510,8 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
             onClick={handleRefresh}
             disabled={loading}
           >
-            {loading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3.5 w-3.5" />
-            )}
-            {loading ? t.analyzing : t.analyze}
+            <RefreshCw className="h-3.5 w-3.5" />
+            {t.analyze}
           </Button>
         </CardContent>
       </Card>
@@ -315,11 +547,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
             onClick={handleRefresh}
             disabled={loading}
           >
-            {loading ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <RefreshCw className="h-3 w-3" />
-            )}
+            <RefreshCw className="h-3 w-3" />
           </Button>
         </CardTitle>
       </CardHeader>
@@ -342,36 +570,44 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
 
         {/* Per-model results */}
         <div className="grid grid-cols-2 gap-2">
-          {data.results.map((result) => (
-            <div key={result.llm} className="rounded-lg border bg-card p-2.5 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium">{result.llm}</span>
-                {result.found ? (
-                  <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-                ) : (
-                  <XCircle className="h-3.5 w-3.5 text-red-400" />
+          {data.results.map((result) => {
+            const isDark = document.documentElement.classList.contains('dark');
+            const color = isDark ? iterationHslColorDark(result.iterations) : iterationHslColor(result.iterations);
+
+            return (
+              <div key={result.llm} className="rounded-lg border bg-card p-2.5 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium">{result.llm}</span>
+                  {result.found ? (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                  ) : (
+                    <XCircle className="h-3.5 w-3.5 text-red-400" />
+                  )}
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span
+                    className="text-lg font-semibold"
+                    style={{ color }}
+                  >
+                    {result.found ? result.iterations : `${MAX_DISPLAY}+`}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {result.found ? t.found : t.notFound}
+                  </span>
+                </div>
+                {result.found && result.mentioned_as && (
+                  <p className="text-[10px] text-muted-foreground truncate" title={result.mentioned_as}>
+                    → {result.mentioned_as}
+                  </p>
+                )}
+                {result.angles_tested?.length > 0 && (
+                  <p className="text-[9px] text-muted-foreground/60 truncate" title={result.angles_tested.join(' → ')}>
+                    {result.angles_tested.join(' → ')}
+                  </p>
                 )}
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className={`text-lg font-semibold ${depthColor(result.iterations)}`}>
-                  {result.found ? result.iterations : `${MAX_DISPLAY}+`}
-                </span>
-                <span className="text-[10px] text-muted-foreground">
-                  {result.found ? t.found : t.notFound}
-                </span>
-              </div>
-              {result.found && result.mentioned_as && (
-                <p className="text-[10px] text-muted-foreground truncate" title={result.mentioned_as}>
-                  → {result.mentioned_as}
-                </p>
-              )}
-              {result.angles_tested?.length > 0 && (
-                <p className="text-[9px] text-muted-foreground/60 truncate" title={result.angles_tested.join(' → ')}>
-                  {result.angles_tested.join(' → ')}
-                </p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>
