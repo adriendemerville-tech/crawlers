@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Loader2, AlertCircle, Linkedin } from 'lucide-react';
+import { CreditCard, Loader2, AlertCircle, Linkedin, Infinity as InfinityIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import type { FixConfig } from './types';
@@ -33,12 +34,15 @@ export function PaymentButton({
   const [showTopUpModal, setShowTopUpModal] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { balance, useCredit, refreshBalance } = useCredits();
+  const { balance, useCredit, refreshBalance, isAgencyPro } = useCredits();
+  const { isAdmin } = useAdmin();
+
+  const isUnlimited = isAgencyPro || isAdmin;
 
   // Determine credit cost from calculatedPrice (1 credit = 0.50€)
   const enabledFixesCount = fixConfigs.filter(f => f.enabled).length;
   const creditCost = enabledFixesCount === 0 ? 0 : Math.max(1, Math.round(calculatedPrice / 0.5));
-  const hasEnoughCredits = balance >= creditCost;
+  const hasEnoughCredits = isUnlimited || balance >= creditCost;
 
   const handleCreditUnlock = async () => {
     if (!user) {
@@ -219,10 +223,19 @@ export function PaymentButton({
                   </motion.div>
                   Déblocage...
                 </>
-              ) : hasEnoughCredits ? (
+               ) : hasEnoughCredits ? (
                 <>
-                  <CreditCoin size="sm" />
-                  Débloquer avec {creditCost} crédit{creditCost > 1 ? 's' : ''}
+                  {isUnlimited ? (
+                    <>
+                      <InfinityIcon className="w-4 h-4 text-amber-500" />
+                      Débloquer
+                    </>
+                  ) : (
+                    <>
+                      <CreditCoin size="sm" />
+                      Débloquer avec {creditCost} crédit{creditCost > 1 ? 's' : ''}
+                    </>
+                  )}
                 </>
               ) : (
                 <>
@@ -266,9 +279,15 @@ ${shareUrl}
           </div>
 
           <div className="text-xs text-muted-foreground text-center">
-            <span>
-              Solde : {balance} crédit{balance > 1 ? 's' : ''}
-            </span>
+            {isUnlimited ? (
+              <span className="flex items-center justify-center gap-1 text-amber-500 font-medium">
+                <InfinityIcon className="w-4 h-4" /> Illimité
+              </span>
+            ) : (
+              <span>
+                Solde : {balance} crédit{balance > 1 ? 's' : ''}
+              </span>
+            )}
           </div>
         </div>
 
