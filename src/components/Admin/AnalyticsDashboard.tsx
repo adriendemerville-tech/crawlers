@@ -391,6 +391,7 @@ export function AnalyticsDashboard() {
             dataforseo: 0.01,
             browserless: 0.008,
             firecrawl: 0.005,
+            'fly-playwright': 0.0001,
             openrouter: 0, // already counted in tokens
           };
           paidApiEvents.forEach(e => {
