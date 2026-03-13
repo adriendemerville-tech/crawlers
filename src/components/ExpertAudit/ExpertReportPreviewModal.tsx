@@ -212,7 +212,7 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
       const domain = (() => { try { return new URL(effectiveResult.url.startsWith('http') ? effectiveResult.url : `https://${effectiveResult.url}`).hostname; } catch { return 'report'; } })();
       const auditLabel = auditMode === 'technical' ? 'technique' : 'strategique';
       doc.save(`rapport-audit-${auditLabel}-${domain}.pdf`);
-      toast.success(t.pdfSuccess);
+      
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error(t.pdfError);

@@ -136,7 +136,7 @@ export default function SharedReportRedirect() {
       }
 
       doc.save(`rapport-partage-${shareId?.slice(0, 8) || 'report'}.pdf`);
-      toast.success(language === 'fr' ? 'PDF téléchargé' : 'PDF downloaded');
+      
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error(language === 'fr' ? 'Erreur de génération PDF' : 'PDF generation error');

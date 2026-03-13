@@ -222,7 +222,7 @@ export function ReportPreviewModal({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
-      toast.success(t.pdfSuccess);
+      
     } catch (error) {
       console.error('Download error:', error);
       toast.error(t.pdfError);
