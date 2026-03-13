@@ -104,6 +104,10 @@ export function PredictionsDashboard() {
             <Target className="h-4 w-4" />
             Résultats réels
           </TabsTrigger>
+          <TabsTrigger value="backtest" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Backtesting
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="upload">
@@ -116,6 +120,10 @@ export function PredictionsDashboard() {
 
         <TabsContent value="results">
           <ActualResultsForm onSaved={fetchMetrics} />
+        </TabsContent>
+
+        <TabsContent value="backtest">
+          <BacktestingDashboard />
         </TabsContent>
       </Tabs>
     </div>
