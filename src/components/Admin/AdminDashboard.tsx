@@ -66,6 +66,10 @@ export function AdminDashboard() {
             <FlaskConical className="h-4 w-4" />
             <span className="hidden sm:inline">CI Tests</span>
           </TabsTrigger>
+          <TabsTrigger value="affiliates" className="flex-1 gap-2">
+            <Link2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Affiliation</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" forceMount className="data-[state=inactive]:hidden">
