@@ -295,6 +295,7 @@ export function MyWallet() {
                   { value: 'invoices', icon: Receipt, label: language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices' },
                   { value: 'payment', icon: CreditCard, label: language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment' },
                   { value: 'profile', icon: User, label: language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts' },
+                  { value: 'credits', icon: Bot, label: language === 'fr' ? 'Crédits' : language === 'es' ? 'Créditos' : 'Credits', color: 'text-amber-500' },
                 ].map((item, i) => (
                   <motion.div
                     key={item.value}
