@@ -143,7 +143,7 @@ export function Header() {
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm" role="banner">
-      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4" aria-label="Navigation principale">
+      <nav className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4" aria-label="Navigation principale">
         {/* Left side: Back button OR Logo + Language selector */}
         <div className="flex items-center gap-4">
           {isAuditExpertPage ? (
@@ -184,59 +184,60 @@ export function Header() {
           ) : (
             // Logo + Language selector on other pages
             <>
-              <a href="/" className="flex items-center gap-2" aria-label="Crawlers.fr - Accueil">
-                <svg className="h-9 w-9" viewBox="0 0 48 48" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="headerBgGradient" x1="100%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#d4a853"/>
-                      <stop offset="30%" stopColor="#8b5cf6"/>
-                      <stop offset="70%" stopColor="#7c3aed"/>
-                      <stop offset="100%" stopColor="#3b5998"/>
-                    </linearGradient>
-                  </defs>
-                  <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#headerBgGradient)"/>
-                  <g transform="translate(8.4, 8.4) scale(1.3)" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
-                    <path d="M12 8V4H8"/>
-                    <rect x="4" y="8" width="16" height="12" rx="2"/>
-                    <path d="M2 14h2"/>
-                    <path d="M20 14h2"/>
-                    <path d="M9 13v2"/>
-                    <path d="M15 13v2"/>
-                  </g>
-                </svg>
-                {/* Hide site name on mobile */}
-                <span className="hidden sm:inline text-lg font-display text-[#7c3aed]" style={{ fontWeight: 900 }}>Crawlers</span>
-              </a>
-
-              {/* Language selector below Crawlers - hidden on mobile and profile page */}
-              {!isProfilePage && (
-                <div className="hidden sm:flex items-center gap-0.5 ml-1" role="group" aria-label="Sélection de la langue">
-                  <button
-                    onClick={() => setLanguage('fr')}
-                    className={`h-6 w-6 rounded-md flex items-center justify-center transition-opacity ${language === 'fr' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
-                    aria-pressed={language === 'fr'}
-                    aria-label="Français"
-                  >
-                    <span className="text-sm">🇫🇷</span>
-                  </button>
-                  <button
-                    onClick={() => setLanguage('en')}
-                    className={`h-6 w-6 rounded-md flex items-center justify-center transition-opacity ${language === 'en' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
-                    aria-pressed={language === 'en'}
-                    aria-label="English"
-                  >
-                    <span className="text-sm">🇬🇧</span>
-                  </button>
-                  <button
-                    onClick={() => setLanguage('es')}
-                    className={`h-6 w-6 rounded-md flex items-center justify-center transition-opacity ${language === 'es' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
-                    aria-pressed={language === 'es'}
-                    aria-label="Español"
-                  >
-                    <span className="text-sm">🇪🇸</span>
-                  </button>
+              <a href="/" className="flex flex-col items-start gap-0.5" aria-label="Crawlers.fr - Accueil">
+                <div className="flex items-center gap-2">
+                  <svg className="h-9 w-9" viewBox="0 0 48 48" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="headerBgGradient" x1="100%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#d4a853"/>
+                        <stop offset="30%" stopColor="#8b5cf6"/>
+                        <stop offset="70%" stopColor="#7c3aed"/>
+                        <stop offset="100%" stopColor="#3b5998"/>
+                      </linearGradient>
+                    </defs>
+                    <rect x="0" y="0" width="48" height="48" rx="10" ry="10" fill="url(#headerBgGradient)"/>
+                    <g transform="translate(8.4, 8.4) scale(1.3)" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
+                      <path d="M12 8V4H8"/>
+                      <rect x="4" y="8" width="16" height="12" rx="2"/>
+                      <path d="M2 14h2"/>
+                      <path d="M20 14h2"/>
+                      <path d="M9 13v2"/>
+                      <path d="M15 13v2"/>
+                    </g>
+                  </svg>
+                  <span className="hidden sm:inline text-lg font-display text-[#7c3aed]" style={{ fontWeight: 900 }}>Crawlers</span>
                 </div>
-              )}
+
+                {/* Language selector below Crawlers */}
+                {!isProfilePage && (
+                  <div className="hidden sm:flex items-center gap-0.5 ml-11" role="group" aria-label="Sélection de la langue">
+                    <button
+                      onClick={(e) => { e.preventDefault(); setLanguage('fr'); }}
+                      className={`h-5 w-5 rounded-md flex items-center justify-center transition-opacity ${language === 'fr' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                      aria-pressed={language === 'fr'}
+                      aria-label="Français"
+                    >
+                      <span className="text-xs">🇫🇷</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.preventDefault(); setLanguage('en'); }}
+                      className={`h-5 w-5 rounded-md flex items-center justify-center transition-opacity ${language === 'en' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                      aria-pressed={language === 'en'}
+                      aria-label="English"
+                    >
+                      <span className="text-xs">🇬🇧</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.preventDefault(); setLanguage('es'); }}
+                      className={`h-5 w-5 rounded-md flex items-center justify-center transition-opacity ${language === 'es' ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+                      aria-pressed={language === 'es'}
+                      aria-label="Español"
+                    >
+                      <span className="text-xs">🇪🇸</span>
+                    </button>
+                  </div>
+                )}
+              </a>
             </>
           )}
         </div>
