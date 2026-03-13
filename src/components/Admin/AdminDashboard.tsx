@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot, BookOpen } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot, BookOpen, Globe } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -8,6 +8,7 @@ import { PredictionsDashboard } from './PredictionEngine';
 import { BrowserlessAlert } from './BrowserlessAlert';
 import { CtoAgentDashboard } from './CtoAgentDashboard';
 import { BackendDocumentation } from './BackendDocumentation';
+import { CrawlManagement } from './CrawlManagement';
 
 export function AdminDashboard() {
   return (
@@ -49,6 +50,10 @@ export function AdminDashboard() {
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">Documentation</span>
           </TabsTrigger>
+          <TabsTrigger value="crawls" className="flex-1 gap-2">
+            <Globe className="h-4 w-4" />
+            <span className="hidden sm:inline">Crawls</span>
+          </TabsTrigger>
           <TabsTrigger value="support" className="flex-1 gap-2">
             <MessageCircle className="h-4 w-4" />
             <span className="hidden sm:inline">SAV</span>
@@ -77,6 +82,10 @@ export function AdminDashboard() {
 
         <TabsContent value="docs" forceMount className="data-[state=inactive]:hidden">
           <BackendDocumentation />
+        </TabsContent>
+
+        <TabsContent value="crawls" forceMount className="data-[state=inactive]:hidden">
+          <CrawlManagement />
         </TabsContent>
 
         <TabsContent value="support" forceMount className="data-[state=inactive]:hidden">
