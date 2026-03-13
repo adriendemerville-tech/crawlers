@@ -155,6 +155,7 @@ interface GscData {
 export function MyTracking() {
   const { user, profile } = useAuth();
   const { language } = useLanguage();
+  const { isAgencyPro } = useCredits();
   const t = translations[language] || translations.fr;
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
