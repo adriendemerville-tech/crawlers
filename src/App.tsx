@@ -77,6 +77,7 @@ const App = () => (
           <LanguageProvider>
             <Suspense fallback={null}>
               <AuthProvider>
+                <DemoModeProvider>
                 <CreditsProvider>
                   <TooltipProvider>
                     <Suspense fallback={null}>
