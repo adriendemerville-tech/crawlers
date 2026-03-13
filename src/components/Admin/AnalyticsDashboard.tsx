@@ -359,6 +359,8 @@ export function AnalyticsDashboard() {
         openrouterCalls,
         browserlessCalls,
         firecrawlCalls,
+        flyPlaywrightCalls,
+        flyEstimatedCost,
         byApiService,
       });
 
