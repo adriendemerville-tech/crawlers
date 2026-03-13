@@ -169,7 +169,9 @@ function lgamma(z: number): number {
 
 const MAX_LAG = 3;
 const MIN_WEEKS = 8;
-const P_THRESHOLD = 0.05;
+// Bonferroni correction: 3 metrics × (MAX_LAG+1) lags = 12 tests
+const NUM_TESTS = 3 * (MAX_LAG + 1);
+const P_THRESHOLD = 0.05 / NUM_TESTS; // ≈ 0.00417
 
 /**
  * For a given SERP metric series and LLM series (aligned by week order),
