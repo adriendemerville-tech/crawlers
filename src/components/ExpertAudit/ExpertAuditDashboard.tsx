@@ -1601,6 +1601,15 @@ export function ExpertAuditDashboard() {
                         isReanalyzing={isStrategicLoading}
                         auditResult={result}
                         progressiveReveal={strategicProgressiveReveal}
+                        strategicCacheInfo={strategicCacheInfo}
+                        onForceRefresh={() => {
+                          setForceStrategicRefresh(true);
+                          const d = result.domain || (() => { try { return new URL(url).hostname; } catch { return ''; } })();
+                          if (d) clearStrategicCache(d);
+                          setStrategicCacheInfo(null);
+                          const normalizedUrl = normalizeUrl(url);
+                          setTimeout(() => runStrategicAudit(normalizedUrl), 100);
+                        }}
                       />
                     );
                   })()}
