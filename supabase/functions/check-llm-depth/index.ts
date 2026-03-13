@@ -24,10 +24,10 @@ const MAX_ITERATIONS = 7
 
 // ─── Models ──────────────────────────────────────────────────────────────────
 type Gateway = 'openrouter' | 'lovable'
-interface ModelDef { id: string; name: string; model: string; gateway: Gateway }
+interface ModelDef { id: string; name: string; model: string; gateway: Gateway; fallbackGateway?: Gateway }
 const MODELS: ModelDef[] = [
   { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-4o',              gateway: 'openrouter' },
-  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash',    gateway: 'lovable' },
+  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash',    gateway: 'openrouter', fallbackGateway: 'lovable' },
   { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-sonnet-4',  gateway: 'openrouter' },
   { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar',           gateway: 'openrouter' },
 ]
