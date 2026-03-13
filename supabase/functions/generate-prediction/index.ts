@@ -465,6 +465,23 @@ async function gatherIntelligence(
     }
   }
 
+  // ─── Source 6: Latest backlink snapshot (from weekly cron) ───
+  if (domain) {
+    const { data: blSnap } = await supabase
+      .from('backlink_snapshots')
+      .select('domain_rank, referring_domains, backlinks_total')
+      .ilike('domain', `%${domain}%`)
+      .order('measured_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (blSnap) {
+      ext.domain_rank = ext.domain_rank || blSnap.domain_rank;
+      ext.referring_domains = ext.referring_domains || blSnap.referring_domains;
+      ext.backlinks_total = ext.backlinks_total || blSnap.backlinks_total;
+    }
+  }
+
   // ─── Compute derived metrics ───
   const root = domainRoot(domain);
   const tdiScore = crawlContext 
