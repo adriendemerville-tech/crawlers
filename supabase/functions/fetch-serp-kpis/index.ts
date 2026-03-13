@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { cacheKey, getCached, setCache } from '../_shared/auditCache.ts'
 
 /**
  * fetch-serp-kpis
@@ -24,6 +25,16 @@ Deno.serve(async (req) => {
       })
     }
 
+    // #1: Check audit_cache first (24h TTL for SERP data)
+    const ck = cacheKey('fetch-serp-kpis', { domain })
+    const cached = await getCached(ck)
+    if (cached) {
+      console.log(`[fetch-serp-kpis] Cache hit for ${domain}`)
+      return new Response(JSON.stringify({ data: cached }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const login = Deno.env.get('DATAFORSEO_LOGIN')
     const password = Deno.env.get('DATAFORSEO_PASSWORD')
 
@@ -36,7 +47,9 @@ Deno.serve(async (req) => {
 
     const authHeader = 'Basic ' + btoa(`${login}:${password}`)
 
-    // Fetch ranked keywords (limit 1000 for comprehensive distribution)
+    // Fetch ranked keywords with timeout (#2)
+    const controller = new AbortController()
+    const fetchTimeout = setTimeout(() => controller.abort(), 30000)
     const resp = await fetch('https://api.dataforseo.com/v3/dataforseo_labs/google/ranked_keywords/live', {
       method: 'POST',
       headers: {
@@ -50,7 +63,9 @@ Deno.serve(async (req) => {
         limit: 1000,
         order_by: ['ranked_serp_element.serp_item.rank_absolute,asc'],
       }]),
+      signal: controller.signal,
     })
+    clearTimeout(fetchTimeout)
 
     if (!resp.ok) {
       const errorText = await resp.text()
@@ -182,6 +197,9 @@ Deno.serve(async (req) => {
     }
 
     console.log(`[fetch-serp-kpis] ✅ ${domain}: ${totalKeywords} keywords, avg pos ${avgPosition}, top3=${top3}, top10=${top10}, top50=${top50}`)
+
+    // #1: Cache result for 24h to avoid duplicate API calls
+    await setCache(ck, 'fetch-serp-kpis', serpData, 1440)
 
     // If tracked_site_id provided, persist to serp_snapshots
     if (tracked_site_id && caller_user_id) {

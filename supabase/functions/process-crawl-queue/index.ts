@@ -857,6 +857,8 @@ Réponds en JSON STRICT:
 Donne 5-8 recommandations max, classées par impact.`;
 
     try {
+      const aiController = new AbortController();
+      const aiTimeout = setTimeout(() => aiController.abort(), 60000); // #2: 60s timeout
       const aiRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -869,13 +871,15 @@ Donne 5-8 recommandations max, classées par impact.`;
           response_format: { type: 'json_object' },
           temperature: 0.3,
         }),
+        signal: aiController.signal,
       });
+      clearTimeout(aiTimeout);
 
       const aiData = await aiRes.json();
       const aiContent = aiData.choices?.[0]?.message?.content || '';
       const parsed = JSON.parse(aiContent);
       aiSummary = parsed.summary || '';
-      aiRecommendations = parsed.recommendations || [];
+      aiRecommendations = (parsed.recommendations || []).slice(0, 10); // #5: cap to 10 max
     } catch (e) {
       console.warn(`[Worker] AI summary failed:`, e);
       aiSummary = `Crawl terminé: ${pages.length} pages analysées, score moyen ${avgScore}/200.`;

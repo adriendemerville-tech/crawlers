@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
@@ -430,7 +430,9 @@ export default function SiteCrawl() {
 
   const isUnlimitedUser = isAgencyPro || isAdmin;
 
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState(() => {
+    try { return localStorage.getItem('crawl_last_url') || ''; } catch { return ''; }
+  });
   const [maxPages, setMaxPages] = useState(50);
   const [isLoading, setIsLoading] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
@@ -631,6 +633,8 @@ export default function SiteCrawl() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) { navigate('/auth'); return; }
+    // #15: persist URL for next session
+    try { localStorage.setItem('crawl_last_url', url); } catch {}
     
     // Fair-use limit check for subscribed users
     if (isUnlimited && (crawlPagesThisMonth >= FAIR_USE_LIMIT || crawlPagesThisMonth + maxPages > FAIR_USE_LIMIT)) {
@@ -753,24 +757,24 @@ export default function SiteCrawl() {
     }
   }
 
-  const sortedPages = [...pages].sort((a, b) => {
+  // #8: useMemo for expensive computations
+  const sortedPages = useMemo(() => [...pages].sort((a, b) => {
     if (sortBy === 'score_asc') return (a.seo_score || 0) - (b.seo_score || 0);
     if (sortBy === 'score_desc') return (b.seo_score || 0) - (a.seo_score || 0);
     return a.path.localeCompare(b.path);
-  });
+  }), [pages, sortBy]);
 
-  const issueStats = pages.reduce<Record<string, number>>((acc, p) => {
+  const issueStats = useMemo(() => pages.reduce<Record<string, number>>((acc, p) => {
     (p.issues || []).forEach((issue: string) => {
       acc[issue] = (acc[issue] || 0) + 1;
     });
     return acc;
-  }, {});
+  }, {}), [pages]);
 
-  // Duplicate content stats
-  const nearDuplicates = pages.filter(p => (p.issues || []).includes('near_duplicate_content'));
-  const schemaErrorPages = pages.filter(p => (p.issues || []).includes('schema_org_errors'));
+  const nearDuplicates = useMemo(() => pages.filter(p => (p.issues || []).includes('near_duplicate_content')), [pages]);
+  const schemaErrorPages = useMemo(() => pages.filter(p => (p.issues || []).includes('schema_org_errors')), [pages]);
 
-  const completedCrawls = pastCrawls.filter(c => c.status === 'completed');
+  const completedCrawls = useMemo(() => pastCrawls.filter(c => c.status === 'completed'), [pastCrawls]);
 
   return (
     <>
@@ -1066,7 +1070,7 @@ export default function SiteCrawl() {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
               {/* Métriques globales */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 <Card className="border">
                   <CardContent className="p-4 text-center">
                     <div className="text-2xl font-bold text-foreground">{crawlResult.crawled_pages}</div>
