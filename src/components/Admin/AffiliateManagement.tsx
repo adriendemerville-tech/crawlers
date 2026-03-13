@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Link2, Copy, Check, Plus, RefreshCw, Search, Trash2, ToggleLeft } from 'lucide-react';
+import { Link2, Copy, Check, Plus, RefreshCw, Search, Trash2, ToggleLeft, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
