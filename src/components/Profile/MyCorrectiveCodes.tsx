@@ -77,6 +77,7 @@ const translations = {
 export function MyCorrectiveCodes() {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const t = translations[language];
   const [codes, setCodes] = useState<CorrectiveCode[]>([]);
   const [loading, setLoading] = useState(true);
