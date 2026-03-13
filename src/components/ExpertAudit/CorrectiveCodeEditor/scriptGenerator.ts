@@ -603,10 +603,10 @@ function generateFixCode(
 
     case 'fix_alt_images':
       return {
-        fn: `  // Ajout des attributs alt
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Ajout des attributs alt
+  // Règle 4: Merge-override
   function fixImageAlts() {
-    if (hasLock('fix_alt_images')) return;
+    clearLock('fix_alt_images');
     try {
       var images = document.querySelectorAll('img:not([alt]), img[alt=""]');
       images.forEach(function(img, index) {
