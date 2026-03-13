@@ -607,10 +607,10 @@ export function AnalyticsDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(8)].map((_, i) => (
             <Card key={i}>
-              <CardContent className="p-6">
-                <div className="animate-pulse space-y-2">
-                  <div className="h-4 w-20 bg-muted rounded" />
-                  <div className="h-8 w-16 bg-muted rounded" />
+              <CardContent className="p-3">
+                <div className="animate-pulse space-y-1.5">
+                  <div className="h-3 w-16 bg-muted rounded" />
+                  <div className="h-5 w-12 bg-muted rounded" />
                 </div>
               </CardContent>
             </Card>
