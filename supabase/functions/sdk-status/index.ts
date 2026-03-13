@@ -17,11 +17,24 @@ Deno.serve(async (req) => {
 
   try {
     let domain = '';
+    let event = '';
+    let fixesCount = 0;
     try {
       const body = await req.json();
       domain = (body.domain || '').toLowerCase().replace(/^www\./, '');
+      event = body.event || '';
+      fixesCount = body.fixes || 0;
     } catch {
       // If no body, still respond with enabled
+    }
+
+    // If this is a telemetry event, log it and respond quickly
+    if (event) {
+      console.log(`📡 Telemetry [${event}]: ${domain} (${fixesCount} fixes)`);
+      // Fire-and-forget: don't block the response for analytics logging
+      return new Response(JSON.stringify({ isEnabled: true, telemetryReceived: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+      });
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
