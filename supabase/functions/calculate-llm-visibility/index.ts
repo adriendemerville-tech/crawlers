@@ -270,8 +270,13 @@ function generatePrompts(site: any): string[] {
 }
 
 // ═══════════════════════════════════════════════
-// LLM QUERY ENGINE — 2-iteration discovery (reduced from 3)
+// LLM QUERY ENGINE — 3-iteration discovery
 // ═══════════════════════════════════════════════
+
+const FOLLOW_UP_PROMPTS = [
+  "Ok merci, mais t'as pas d'autres noms ? Des alternatives moins connues peut-être ?",
+  "Et dans les solutions plus spécialisées ou de niche, tu connais d'autres acteurs ?",
+]
 
 async function queryWithIterations(
   apiKey: string,
@@ -284,7 +289,7 @@ async function queryWithIterations(
     { role: 'user', content: prompt },
   ]
 
-  for (let iteration = 1; iteration <= 2; iteration++) {
+  for (let iteration = 1; iteration <= 3; iteration++) {
     try {
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 12000) // 12s timeout per call
@@ -324,8 +329,8 @@ async function queryWithIterations(
 
       messages.push({ role: 'assistant', content })
 
-      if (iteration === 1) {
-        messages.push({ role: 'user', content: "Ok merci, mais t'as pas d'autres noms ? Des alternatives moins connues peut-être ?" })
+      if (iteration <= 2) {
+        messages.push({ role: 'user', content: FOLLOW_UP_PROMPTS[iteration - 1] })
       }
     } catch (err) {
       console.error(`[llm-vis] ${model} it${iteration} error:`, err)

@@ -238,6 +238,13 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
           <div className="flex-1 h-2 rounded-full bg-gradient-to-r from-blue-100 via-blue-300 to-blue-600" />
           <span>{t.legend}</span>
         </div>
+        <p className="text-[10px] text-muted-foreground/70 mt-2 italic">
+          {language === 'fr'
+            ? 'Score basé sur 3 itérations conversationnelles par modèle (1ère = 100 pts, 2ème = 50 pts, 3ème = 25 pts, absent = 0).'
+            : language === 'es'
+              ? 'Puntuación basada en 3 iteraciones conversacionales por modelo (1ª = 100 pts, 2ª = 50 pts, 3ª = 25 pts, ausente = 0).'
+              : 'Score based on 3 conversational iterations per model (1st = 100 pts, 2nd = 50 pts, 3rd = 25 pts, absent = 0).'}
+        </p>
       </CardContent>
     </Card>
   );
