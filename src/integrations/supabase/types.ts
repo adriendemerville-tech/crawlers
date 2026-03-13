@@ -1283,6 +1283,62 @@ export type Database = {
         }
         Relationships: []
       }
+      ias_history: {
+        Row: {
+          actual_ratio: number
+          brand_clicks: number
+          business_type: string
+          created_at: string
+          domain: string
+          generic_clicks: number
+          id: string
+          risk_score: number
+          target_ratio: number
+          total_clicks: number
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          actual_ratio: number
+          brand_clicks?: number
+          business_type: string
+          created_at?: string
+          domain: string
+          generic_clicks?: number
+          id?: string
+          risk_score: number
+          target_ratio: number
+          total_clicks?: number
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          actual_ratio?: number
+          brand_clicks?: number
+          business_type?: string
+          created_at?: string
+          domain?: string
+          generic_clicks?: number
+          id?: string
+          risk_score?: number
+          target_ratio?: number
+          total_clicks?: number
+          tracked_site_id?: string
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ias_history_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       llm_depth_conversations: {
         Row: {
           created_at: string
@@ -2539,6 +2595,7 @@ export type Database = {
         Row: {
           address: string | null
           api_key: string
+          business_type: string | null
           commercial_area: string | null
           company_size: string | null
           created_at: string
@@ -2557,6 +2614,7 @@ export type Database = {
         Insert: {
           address?: string | null
           api_key?: string
+          business_type?: string | null
           commercial_area?: string | null
           company_size?: string | null
           created_at?: string
@@ -2575,6 +2633,7 @@ export type Database = {
         Update: {
           address?: string | null
           api_key?: string
+          business_type?: string | null
           commercial_area?: string | null
           company_size?: string | null
           created_at?: string
