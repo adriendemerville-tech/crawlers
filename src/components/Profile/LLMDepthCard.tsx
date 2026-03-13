@@ -161,9 +161,6 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
 
   return (
     <Card className="relative border-2 border-violet-500/40 dark:border-violet-400/30">
-      <button className="absolute top-2 right-2 z-10 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted transition-colors" aria-label="Déplacer">
-        <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-      </button>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Layers className="h-4 w-4" />
