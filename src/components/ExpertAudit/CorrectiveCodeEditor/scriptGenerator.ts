@@ -90,7 +90,8 @@ export const AVAILABLE_FIXES = {
 // Règle 3 — OPTIMISATIONS TECHNIQUES : loading="lazy" hors-écran,
 //           fetchpriority="high" sur image LCP, via MutationObserver.
 //
-// Règle 4 — LOCKS : data-crawlers-lock="<fixId>" pour éviter la double exécution.
+// Règle 4 — MERGE-OVERRIDE : clearLock(id) supprime l'ancien fix avant réinjection.
+//           Le dernier script déployé écrase les parties redondantes, conserve les uniques.
 //
 // Règle 5 — STRUCTURE : IIFE + try/catch + commentaires CLS.
 // ══════════════════════════════════════════════════════════════
