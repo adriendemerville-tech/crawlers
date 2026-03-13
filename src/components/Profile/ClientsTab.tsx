@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Activity, Plus, UserPlus, Loader2, Trash2, Globe, X } from 'lucide-react';
+import { Activity, Plus, UserPlus, Loader2, Trash2, Globe, X, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AgencyClient {
