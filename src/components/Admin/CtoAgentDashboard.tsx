@@ -2,12 +2,24 @@ import { useState, useEffect, useMemo } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock, HeartPulse } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+interface CacheHealthReport {
+  total_entries: number;
+  expired_entries: number;
+  entries_by_type: Record<string, number>;
+  anomalies: string[];
+  score_stats: { avg: number; min: number; max: number; stddev: number } | null;
+  empty_results_count: number;
+  oldest_entry_age_hours: number;
+  status: 'healthy' | 'warning' | 'critical';
+}
 
 interface AgentLog {
   id: string;
@@ -27,6 +39,8 @@ export function CtoAgentDashboard() {
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
   const [logs, setLogs] = useState<AgentLog[]>([]);
+  const [cacheHealth, setCacheHealth] = useState<CacheHealthReport | null>(null);
+  const [checkingCache, setCheckingCache] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,7 +93,28 @@ export function CtoAgentDashboard() {
     }
   }
 
-  // Compute chart data: rolling average confidence over time (grouped by day)
+  async function runCacheHealthCheck() {
+    setCheckingCache(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('agent-cto', {
+        body: { action: 'cache_health_check' },
+      });
+      if (error) throw error;
+      if (data?.report) {
+        setCacheHealth(data.report);
+        toast({
+          title: `Cache ${data.report.status === 'healthy' ? '✅' : data.report.status === 'warning' ? '⚠️' : '🔴'}`,
+          description: `${data.report.total_entries} entrées, ${data.report.anomalies.length} anomalies`,
+        });
+      }
+    } catch (e) {
+      console.error('Cache health check error:', e);
+      toast({ title: 'Erreur', description: 'Impossible de vérifier le cache.', variant: 'destructive' });
+    } finally {
+      setCheckingCache(false);
+    }
+  }
+
   const chartData = useMemo(() => {
     if (logs.length === 0) return [];
 
@@ -206,6 +241,59 @@ export function CtoAgentDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cache Health Check */}
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <HeartPulse className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base">Santé du cache partagé</CardTitle>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={runCacheHealthCheck}
+              disabled={checkingCache}
+            >
+              {checkingCache ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <HeartPulse className="h-3.5 w-3.5 mr-1.5" />}
+              Vérifier
+            </Button>
+          </div>
+        </CardHeader>
+        {cacheHealth && (
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Badge variant={cacheHealth.status === 'healthy' ? 'default' : cacheHealth.status === 'warning' ? 'secondary' : 'destructive'}>
+                {cacheHealth.status === 'healthy' ? '✅ Sain' : cacheHealth.status === 'warning' ? '⚠️ Attention' : '🔴 Critique'}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {cacheHealth.total_entries} entrées · {cacheHealth.expired_entries} expirées · {cacheHealth.empty_results_count} vides
+              </span>
+            </div>
+            <div className="flex gap-4 text-xs">
+              {Object.entries(cacheHealth.entries_by_type).map(([type, count]) => (
+                <span key={type} className="text-muted-foreground">
+                  <span className="font-medium text-foreground">{count}</span> {type}
+                </span>
+              ))}
+            </div>
+            {cacheHealth.score_stats && (
+              <div className="text-xs text-muted-foreground">
+                Scores visibilité : moy {cacheHealth.score_stats.avg}% · min {cacheHealth.score_stats.min}% · max {cacheHealth.score_stats.max}% · σ {cacheHealth.score_stats.stddev}
+              </div>
+            )}
+            {cacheHealth.anomalies.length > 0 && (
+              <div className="space-y-1 p-2 rounded-md bg-destructive/5 border border-destructive/20">
+                <p className="text-xs font-medium text-destructive">Anomalies détectées :</p>
+                {cacheHealth.anomalies.map((a, i) => (
+                  <p key={i} className="text-xs text-muted-foreground">{a}</p>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
 
       {/* Chart */}
       <Card>
