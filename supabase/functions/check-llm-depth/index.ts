@@ -23,13 +23,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const MAX_ITERATIONS = 7
 
 // ─── Models ──────────────────────────────────────────────────────────────────
-interface ModelDef { id: string; name: string; model: string }
+type Gateway = 'openrouter' | 'lovable'
+interface ModelDef { id: string; name: string; model: string; gateway: Gateway }
 const MODELS: ModelDef[] = [
-  { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-4o' },
-  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash' },
-  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-sonnet-4' },
-  { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar' },
+  { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-4o',              gateway: 'openrouter' },
+  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash',    gateway: 'lovable' },
+  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-sonnet-4',  gateway: 'openrouter' },
+  { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar',           gateway: 'openrouter' },
 ]
+
+const LOVABLE_AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 // ─── Site context (from tracked_sites) ───────────────────────────────────────
 interface SiteContext {
@@ -131,6 +135,39 @@ function buildPromptSequence(
   return [p1, p2, p3, p4, p5, p6, p7]
 }
 
+// ─── Dual-gateway fetch helper ───────────────────────────────────────────────
+
+interface ApiKeys { openrouter: string; lovable: string }
+
+function buildFetchArgs(
+  gateway: Gateway,
+  keys: ApiKeys,
+  model: string,
+  messages: { role: string; content: string }[],
+  opts: { temperature?: number; max_tokens?: number } = {},
+): [string, RequestInit] {
+  if (gateway === 'lovable') {
+    return [LOVABLE_AI_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${keys.lovable}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ model, messages, ...opts }),
+    }]
+  }
+  return [OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${keys.openrouter}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://crawlers.lovable.app',
+      'X-Title': 'Crawlers.fr - LLM Depth',
+    },
+    body: JSON.stringify({ model, messages, ...opts }),
+  }]
+}
+
 // ─── Semantic brand extraction ───────────────────────────────────────────────
 
 function extractBrand(domain: string): string {
@@ -146,7 +183,8 @@ function extractBrand(domain: string): string {
  * positives from substring matching (e.g. "lcp" inside "excepté").
  */
 async function detectBrandSemantically(
-  apiKey: string,
+  keys: ApiKeys,
+  gateway: Gateway,
   model: string,
   assistantResponse: string,
   brand: string,
@@ -171,21 +209,8 @@ async function detectBrandSemantically(
     : `Here is a text. Extract ONLY the names of brands, companies, tools or products mentioned. Respond in JSON: {"brands": ["name1", "name2"]}. Generate nothing else.\n\nText:\n${assistantResponse.slice(0, 2000)}`
 
   try {
-    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://crawlers.lovable.app',
-        'X-Title': 'Crawlers.fr - LLM Depth',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'user', content: extractPrompt }],
-        temperature: 0,
-        max_tokens: 400,
-      }),
-    })
+    const [url, init] = buildFetchArgs(gateway, keys, model, [{ role: 'user', content: extractPrompt }], { temperature: 0, max_tokens: 400 })
+    const resp = await fetch(url, init)
 
     if (!resp.ok) return { found: hasCandidate && brand.length > 3 }
 
@@ -233,7 +258,7 @@ interface DepthResult {
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 async function runDepthConversation(
-  apiKey: string,
+  keys: ApiKeys,
   modelDef: ModelDef,
   brand: string,
   domain: string,
@@ -266,38 +291,25 @@ async function runDepthConversation(
     anglesTested.push(anglesLabels[i] || `Phase ${i + 1}`)
 
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://crawlers.lovable.app',
-          'X-Title': 'Crawlers.fr - LLM Depth Analyzer',
-        },
-        body: JSON.stringify({
-          model: modelDef.model,
-          messages,
-          temperature: 0.7,
-          max_tokens: 1000,
-        }),
-      })
+      const [url, init] = buildFetchArgs(modelDef.gateway, keys, modelDef.model, messages, { temperature: 0.7, max_tokens: 1000 })
+      const response = await fetch(url, init)
 
       if (!response.ok) {
-        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status}`)
-        // Don't break — try next iteration
+        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status} (${modelDef.gateway})`)
         continue
       }
 
       const data = await response.json()
       const content = data.choices?.[0]?.message?.content || ''
 
-      trackPaidApiCall('check-llm-depth', 'openrouter', modelDef.model, domain)
+      const provider = modelDef.gateway === 'lovable' ? 'lovable-ai' : 'openrouter'
+      trackPaidApiCall('check-llm-depth', provider, modelDef.model, domain)
 
       messages.push({ role: 'assistant', content })
 
-      // Semantic brand detection
+      // Semantic brand detection (uses same gateway as the model)
       const detection = await detectBrandSemantically(
-        apiKey, modelDef.model, content, brand, domain, lang,
+        keys, modelDef.gateway, modelDef.model, content, brand, domain, lang,
       )
 
       if (detection.found) {
@@ -378,12 +390,18 @@ Deno.serve(async (req) => {
       })
     }
 
-    const apiKey = Deno.env.get('OPENROUTER_API_KEY')
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'OpenRouter API key not configured' }), {
+    const openrouterKey = Deno.env.get('OPENROUTER_API_KEY')
+    const lovableKey = Deno.env.get('LOVABLE_API_KEY')
+    if (!openrouterKey && !lovableKey) {
+      return new Response(JSON.stringify({ error: 'No API keys configured (OpenRouter or Lovable AI)' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    const keys: ApiKeys = {
+      openrouter: openrouterKey || '',
+      lovable: lovableKey || '',
     }
 
     const brand = extractBrand(domain)
@@ -410,7 +428,7 @@ Deno.serve(async (req) => {
 
     // Run all models in parallel
     const resultPromises = MODELS.map(m =>
-      runDepthConversation(apiKey, m, brand, domain, prompts, lang)
+      runDepthConversation(keys, m, brand, domain, prompts, lang)
     )
     const results = await Promise.allSettled(resultPromises)
 
