@@ -1036,6 +1036,17 @@ export default function SiteCrawl() {
                     </Card>
                   );
                 })()}
+                {/* Indexed pages (DataForSEO) */}
+                {indexedPagesCount != null && (
+                  <Card className="border">
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-primary">{indexedPagesCount.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {language === 'fr' ? 'Pages indexées (Google)' : language === 'es' ? 'Páginas indexadas (Google)' : 'Indexed pages (Google)'}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Near-duplicate & Schema.org alerts */}
