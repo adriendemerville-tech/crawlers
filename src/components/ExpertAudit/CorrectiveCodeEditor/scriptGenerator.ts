@@ -588,10 +588,10 @@ function generateFixCode(
 
     case 'fix_contrast':
       return {
-        fn: `  // Amélioration du contraste
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Amélioration du contraste
+  // Règle 4: Merge-override
   function improveContrast() {
-    if (hasLock('fix_contrast')) return;
+    clearLock('fix_contrast');
     try {
       // Version simplifiée — version complète côté serveur
       setLock(document.body, 'fix_contrast');
