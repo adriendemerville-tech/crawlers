@@ -66,6 +66,10 @@ export function AdminDashboard() {
             <Link2 className="h-4 w-4" />
             <span className="hidden sm:inline">Affiliation</span>
           </TabsTrigger>
+          <TabsTrigger value="docs" className="flex-1 gap-2">
+            <BookOpen className="h-4 w-4" />
+            <span className="hidden sm:inline">Docs</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" forceMount className="data-[state=inactive]:hidden">
