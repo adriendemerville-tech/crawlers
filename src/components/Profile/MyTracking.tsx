@@ -442,7 +442,7 @@ export function MyTracking() {
       const llmOverallScore = llmData?.data?.overallScore ?? null;
       
       // Compute SEO crawlability score from check-crawlers (% of AI bots allowed)
-      const botResults = crawlersData?.data?.results || crawlersData?.results || [];
+      const botResults = crawlersData?.data?.bots || crawlersData?.data?.results || crawlersData?.results || [];
       const seoScore = botResults.length > 0
         ? Math.round((botResults.filter((b: any) => b.status === 'allowed').length / botResults.length) * 100)
         : null;
