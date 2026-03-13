@@ -17,6 +17,12 @@
   // ── 1. Récupération de l'URL courante ──────────────────────
   var urlActuelle = window.location.href;
 
+  // ── 1b. Ne pas exécuter sur les domaines de preview/dev ──────
+  var host = window.location.hostname;
+  if (host.includes('lovableproject.com') || host.includes('lovable.app') || host === 'localhost') {
+    return;
+  }
+
   // ── 2. Récupération de la clé API client ───────────────────
   var cleClient = window.CRAWLERS_API_KEY;
 
