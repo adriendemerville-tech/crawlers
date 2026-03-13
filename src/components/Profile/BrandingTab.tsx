@@ -514,7 +514,10 @@ export function BrandingTab() {
             <div className="rounded-xl overflow-hidden border border-border">
               <div
                 className="p-4 text-center"
-                style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}aa)` }}
+                style={{ 
+                  background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}aa)`,
+                  fontFamily: reportFont ? `${reportFont}, sans-serif` : undefined,
+                }}
               >
                 {logoUrl ? (
                   <img src={logoUrl} alt="Logo" className="h-8 mx-auto mb-2 object-contain" />
