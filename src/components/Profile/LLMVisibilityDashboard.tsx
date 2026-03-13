@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { RefreshCw, Loader2, Brain, Info } from 'lucide-react';
+import { RefreshCw, Loader2, Brain, Info, GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -145,7 +145,10 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
 
   if (scores.length === 0) {
     return (
-      <Card className="border-dashed opacity-80">
+      <Card className="border-dashed opacity-80 relative">
+        <button className="absolute top-2 right-2 z-10 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted transition-colors" aria-label="Déplacer">
+          <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
         <CardContent className="py-8 text-center space-y-4">
           <Brain className="h-10 w-10 mx-auto opacity-30" />
           <p className="text-sm text-muted-foreground">{t.noData}</p>
@@ -159,7 +162,10 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
   }
 
   return (
-    <Card>
+    <Card className="relative">
+      <button className="absolute top-2 right-2 z-10 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted transition-colors" aria-label="Déplacer">
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+      </button>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Brain className="h-4 w-4" />
