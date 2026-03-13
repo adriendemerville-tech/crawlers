@@ -875,7 +875,7 @@ Donne 5-8 recommandations max, classées par impact.`;
       const aiContent = aiData.choices?.[0]?.message?.content || '';
       const parsed = JSON.parse(aiContent);
       aiSummary = parsed.summary || '';
-      aiRecommendations = parsed.recommendations || [];
+      aiRecommendations = (parsed.recommendations || []).slice(0, 10); // #5: cap to 10 max
     } catch (e) {
       console.warn(`[Worker] AI summary failed:`, e);
       aiSummary = `Crawl terminé: ${pages.length} pages analysées, score moyen ${avgScore}/200.`;
