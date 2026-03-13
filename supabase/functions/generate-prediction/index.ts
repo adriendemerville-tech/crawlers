@@ -821,6 +821,59 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Fetch cross-source training vector (SERP × GSC × Backlinks) ──
+    let trainingVector: Record<string, any> | null = null;
+    if (intel.domain) {
+      const weekQuery = (table: string) => supabase
+        .from(table)
+        .select('*')
+        .ilike('domain', `%${intel.domain}%`)
+        .order('measured_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const [serpSnap, gscSnap, blSnap] = await Promise.all([
+        supabase.from('serp_snapshots').select('*').ilike('domain', `%${intel.domain}%`).order('measured_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('gsc_history_log').select('*').ilike('domain', `%${intel.domain}%`).order('measured_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('backlink_snapshots').select('*').ilike('domain', `%${intel.domain}%`).order('measured_at', { ascending: false }).limit(1).maybeSingle(),
+      ]);
+
+      const serp = serpSnap.data;
+      const gsc = gscSnap.data;
+      const bl = blSnap.data;
+
+      if (serp || gsc || bl) {
+        trainingVector = {
+          captured_at: new Date().toISOString(),
+          serp: serp ? {
+            total_keywords: serp.total_keywords,
+            avg_position: serp.avg_position,
+            top_3: serp.top_3,
+            top_10: serp.top_10,
+            top_50: serp.top_50,
+            etv: serp.etv,
+            indexed_pages: serp.indexed_pages,
+            measured_at: serp.measured_at,
+          } : null,
+          gsc: gsc ? {
+            clicks: gsc.clicks,
+            impressions: gsc.impressions,
+            ctr: gsc.ctr,
+            avg_position: gsc.avg_position,
+            week_start_date: gsc.week_start_date,
+          } : null,
+          backlinks: bl ? {
+            domain_rank: bl.domain_rank,
+            referring_domains: bl.referring_domains,
+            backlinks_total: bl.backlinks_total,
+            referring_domains_new: bl.referring_domains_new,
+            referring_domains_lost: bl.referring_domains_lost,
+            week_start_date: bl.week_start_date,
+          } : null,
+        };
+      }
+    }
+
     // ── Inject auditable metadata ──
     const aiRealisticRaw = JSON.parse(cleaned).scenarios?.realistic?.clicks ?? null;
     prediction._meta = {
@@ -855,6 +908,7 @@ Deno.serve(async (req) => {
         total_pages: intel.crawlContext.totalPages,
         avg_score: intel.crawlContext.avgScore,
       } : null,
+      training_vector: trainingVector,
     };
 
     // ── Persist ──
