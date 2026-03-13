@@ -321,6 +321,8 @@ interface DepthResult {
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
+type StreamCallback = (event: { type: string; model: string; iteration?: number; found?: boolean; mentioned_as?: string | null }) => void
+
 async function runDepthConversation(
   keys: ApiKeys,
   modelDef: ModelDef,
@@ -328,6 +330,7 @@ async function runDepthConversation(
   domain: string,
   prompts: string[],
   lang: string,
+  onProgress?: StreamCallback,
 ): Promise<DepthResult> {
   const isFr = lang === 'fr'
   const isEs = lang === 'es'
@@ -356,6 +359,9 @@ async function runDepthConversation(
   for (let i = 0; i < Math.min(prompts.length, MAX_ITERATIONS); i++) {
     messages.push({ role: 'user', content: prompts[i] })
     anglesTested.push(anglesLabels[i] || `Phase ${i + 1}`)
+
+    // Emit progress event
+    onProgress?.({ type: 'iteration', model: modelDef.name, iteration: i + 1, found: false })
 
     try {
       const { response, usedGateway, didFallback } = await resilientFetch(
@@ -386,6 +392,7 @@ async function runDepthConversation(
       )
 
       if (detection.found) {
+        onProgress?.({ type: 'found', model: modelDef.name, iteration: i + 1, found: true, mentioned_as: detection.mentionedAs || brand })
         return {
           llm: modelDef.name,
           model: modelDef.model,
@@ -499,49 +506,77 @@ Deno.serve(async (req) => {
 
     console.log(`[check-llm-depth] Starting for "${brand}" (${domain}) — ${MODELS.length} models × ${prompts.length} phases`)
 
-    // Run all models in parallel
-    const resultPromises = MODELS.map(m =>
-      runDepthConversation(keys, m, brand, domain, prompts, lang)
-    )
-    const results = await Promise.allSettled(resultPromises)
+    // ── Streaming mode ──────────────────────────────────────────────────
+    const streamMode = true // always stream now
 
-    const successResults: DepthResult[] = results
-      .filter((r): r is PromiseFulfilledResult<DepthResult> => r.status === 'fulfilled')
-      .map(r => r.value)
+    if (streamMode) {
+      const encoder = new TextEncoder()
+      const stream = new ReadableStream({
+        async start(controller) {
+          const send = (data: Record<string, unknown>) => {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+          }
 
-    // Detect if ALL models failed (no conversation content = API credits exhausted)
-    const allEmpty = successResults.every(r => !r.found && !r.conversation_summary)
-    
-    // Calculate weighted average depth
-    const scores = successResults.map(r => r.iterations)
-    const avgDepth = scores.length > 0
-      ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1))
-      : null
+          // Progress callback shared by all models
+          const onProgress: StreamCallback = (evt) => {
+            try { send(evt) } catch { /* stream closed */ }
+          }
 
-    // Persist to database (only if we have real data)
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, serviceKey)
-    if (!allEmpty) {
-      await persistResults(supabase, tracked_site_id || null, user_id || null, successResults)
+          // Run all models in parallel with streaming callbacks
+          const resultPromises = MODELS.map(m =>
+            runDepthConversation(keys, m, brand, domain, prompts, lang, onProgress)
+          )
+          const results = await Promise.allSettled(resultPromises)
+
+          const successResults: DepthResult[] = results
+            .filter((r): r is PromiseFulfilledResult<DepthResult> => r.status === 'fulfilled')
+            .map(r => r.value)
+
+          const allEmpty = successResults.every(r => !r.found && !r.conversation_summary)
+
+          const scores = successResults.map(r => r.iterations)
+          const avgDepth = scores.length > 0
+            ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1))
+            : null
+
+          // Persist
+          const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+          const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+          const sb = createClient(supabaseUrl, serviceKey)
+          if (!allEmpty) {
+            await persistResults(sb, tracked_site_id || null, user_id || null, successResults)
+          }
+
+          // Send final result
+          send({
+            type: 'done',
+            data: {
+              brand,
+              domain,
+              avg_depth: allEmpty ? null : avgDepth,
+              results: allEmpty ? [] : successResults,
+              prompt_strategy: prompts.length + ' phases',
+              measured_at: new Date().toISOString(),
+              ...(allEmpty ? { error_code: 'credits_exhausted' } : {}),
+            },
+          })
+
+          console.log(`[check-llm-depth] ${allEmpty ? '❌ ALL MODELS FAILED' : '✅'} ${domain}: brand="${brand}" avgDepth=${avgDepth}`,
+            successResults.map(r => `${r.llm}=${r.iterations}${r.found ? '✓' : '✗'}`).join(', '))
+
+          controller.close()
+        },
+      })
+
+      return new Response(stream, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      })
     }
-
-    console.log(`[check-llm-depth] ${allEmpty ? '❌ ALL MODELS FAILED' : '✅'} ${domain}: brand="${brand}" avgDepth=${avgDepth}`,
-      successResults.map(r => `${r.llm}=${r.iterations}${r.found ? '✓' : '✗'}`).join(', '))
-
-    return new Response(JSON.stringify({
-      data: {
-        brand,
-        domain,
-        avg_depth: allEmpty ? null : avgDepth,
-        results: allEmpty ? [] : successResults,
-        prompt_strategy: prompts.length + ' phases',
-        measured_at: new Date().toISOString(),
-        ...(allEmpty ? { error_code: 'credits_exhausted' } : {}),
-      },
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
   } catch (error) {
     console.error('[check-llm-depth] Fatal:', error)
     return new Response(JSON.stringify({
