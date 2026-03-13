@@ -107,6 +107,10 @@ export function AdminDashboard() {
         <TabsContent value="ci-tests" forceMount className="data-[state=inactive]:hidden">
           <CiTestsDashboard />
         </TabsContent>
+
+        <TabsContent value="affiliates" forceMount className="data-[state=inactive]:hidden">
+          <AffiliateManagement />
+        </TabsContent>
       </Tabs>
     </div>
   );
