@@ -65,41 +65,40 @@ function triggerCtoAgent(auditResult: any, auditType: string, url: string, domai
 
 // Fire-and-forget: sync SERP KPIs to tracked site after expert audit
 function syncSerpToTrackedSite(domain: string, userId: string) {
-  supabase
-    .from('tracked_sites')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('domain', domain)
-    .maybeSingle()
-    .then(({ data: site }) => {
+  (async () => {
+    try {
+      const { data: site } = await supabase
+        .from('tracked_sites')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('domain', domain)
+        .maybeSingle();
       if (!site) return;
-      supabase.functions.invoke('fetch-serp-kpis', {
+
+      const { data: serpRes } = await supabase.functions.invoke('fetch-serp-kpis', {
         body: { domain, url: `https://${domain}` },
-      }).then(({ data: serpRes }) => {
-        const serpData = serpRes?.data;
-        if (!serpData) return;
-        // Update latest stats entry with SERP data
-        supabase
-          .from('user_stats_history')
-          .select('id, raw_data')
-          .eq('user_id', userId)
-          .eq('tracked_site_id', site.id)
-          .order('recorded_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-          .then(({ data: latest }) => {
-            if (!latest) return;
-            const existingRaw = (latest.raw_data as Record<string, unknown>) || {};
-            supabase
-              .from('user_stats_history')
-              .update({ raw_data: { ...existingRaw, serpData } })
-              .eq('id', latest.id)
-              .then(() => console.log(`[SERP-Sync] ✅ ${domain} SERP data synced to tracking`))
-              .catch(() => { /* silent */ });
-          });
-      }).catch(() => { /* silent */ });
-    })
-    .catch(() => { /* silent */ });
+      });
+      const serpData = serpRes?.data;
+      if (!serpData) return;
+
+      const { data: latest } = await supabase
+        .from('user_stats_history')
+        .select('id, raw_data')
+        .eq('user_id', userId)
+        .eq('tracked_site_id', site.id)
+        .order('recorded_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!latest) return;
+
+      const existingRaw = (latest.raw_data as Record<string, unknown>) || {};
+      await supabase
+        .from('user_stats_history')
+        .update({ raw_data: { ...existingRaw, serpData } })
+        .eq('id', latest.id);
+      console.log(`[SERP-Sync] ✅ ${domain} SERP data synced to tracking`);
+    } catch { /* silent */ }
+  })();
 }
 
 function formatMs(ms: number): string {
