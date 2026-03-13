@@ -901,9 +901,8 @@ export function MyTracking() {
             </CardTitle>
             
           </div>
-          <Button onClick={() => setShowAddModal(true)} className="gap-2">
+          <Button variant="outline" size="icon" onClick={() => setShowAddModal(true)} aria-label={t.addSite} className="h-9 w-9 shrink-0">
             <Plus className="h-4 w-4" />
-            {t.addSite}
           </Button>
         </CardHeader>
         <CardContent>
