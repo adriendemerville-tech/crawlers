@@ -259,8 +259,6 @@ export function ProfileSettings() {
         </CardContent>
       </Card>
 
-      {/* WordPress Integration */}
-      <WordPressIntegrationCard />
 
       {/* Language Settings — at the bottom */}
       <Card>
