@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Activity, Plus, UserPlus, Loader2, Trash2, Globe, X } from 'lucide-react';
+import { Activity, Plus, UserPlus, Loader2, Trash2, Globe, X, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AgencyClient {
@@ -52,8 +52,10 @@ const translations = {
     searchSite: 'Rechercher un site...',
     noSites: 'Aucun site trouvé.',
     deleteConfirm: 'Supprimer ce client ?',
-    clientAdded: 'Client ajouté',
-    clientDeleted: 'Client supprimé',
+     clientAdded: 'Client ajouté',
+     clientUpdated: 'Client modifié',
+     clientDeleted: 'Client supprimé',
+     editClient: 'Modifier le client',
     siteLinked: 'Site associé au client',
     siteUnlinked: 'Site dissocié',
     creating: 'Création...',
@@ -74,8 +76,10 @@ const translations = {
     searchSite: 'Search a site...',
     noSites: 'No sites found.',
     deleteConfirm: 'Delete this client?',
-    clientAdded: 'Client added',
-    clientDeleted: 'Client deleted',
+     clientAdded: 'Client added',
+     clientUpdated: 'Client updated',
+     clientDeleted: 'Client deleted',
+     editClient: 'Edit client',
     siteLinked: 'Site linked to client',
     siteUnlinked: 'Site unlinked',
     creating: 'Creating...',
@@ -96,8 +100,10 @@ const translations = {
     searchSite: 'Buscar un sitio...',
     noSites: 'No se encontraron sitios.',
     deleteConfirm: '¿Eliminar este cliente?',
-    clientAdded: 'Cliente agregado',
-    clientDeleted: 'Cliente eliminado',
+     clientAdded: 'Cliente agregado',
+     clientUpdated: 'Cliente modificado',
+     clientDeleted: 'Cliente eliminado',
+     editClient: 'Editar cliente',
     siteLinked: 'Sitio asociado al cliente',
     siteUnlinked: 'Sitio desvinculado',
     creating: 'Creando...',
@@ -119,6 +125,7 @@ export function ClientsTab() {
   const [shakingClient, setShakingClient] = useState<string | null>(null);
 
   // Form state
+  const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [form, setForm] = useState({ first_name: '', last_name: '', company: '', role: '', email: '' });
 
   const fetchClients = async () => {
@@ -189,23 +196,54 @@ export function ClientsTab() {
   const handleCreate = async () => {
     if (!user || !form.first_name.trim() || !form.last_name.trim()) return;
     setSaving(true);
-    const { error } = await supabase.from('agency_clients').insert({
-      owner_user_id: user.id,
+
+    const payload = {
       first_name: form.first_name.trim(),
       last_name: form.last_name.trim(),
       company: form.company.trim() || null,
       role: form.role.trim() || null,
       email: form.email.trim() || null,
-    });
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
+    };
+
+    if (editingClientId) {
+      const { error } = await supabase.from('agency_clients').update(payload).eq('id', editingClientId);
+      setSaving(false);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success(t.clientUpdated);
+        resetForm();
+        fetchClients();
+      }
     } else {
-      toast.success(t.clientAdded);
-      setForm({ first_name: '', last_name: '', company: '', role: '', email: '' });
-      setDialogOpen(false);
-      fetchClients();
+      const { error } = await supabase.from('agency_clients').insert({ ...payload, owner_user_id: user.id });
+      setSaving(false);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success(t.clientAdded);
+        resetForm();
+        fetchClients();
+      }
     }
+  };
+
+  const resetForm = () => {
+    setForm({ first_name: '', last_name: '', company: '', role: '', email: '' });
+    setEditingClientId(null);
+    setDialogOpen(false);
+  };
+
+  const openEdit = (client: AgencyClient) => {
+    setEditingClientId(client.id);
+    setForm({
+      first_name: client.first_name,
+      last_name: client.last_name,
+      company: client.company || '',
+      role: client.role || '',
+      email: client.email || '',
+    });
+    setDialogOpen(true);
   };
 
   const handleDelete = async (clientId: string) => {
@@ -258,7 +296,7 @@ export function ClientsTab() {
             </CardTitle>
             <CardDescription className="mt-1">{t.description}</CardDescription>
           </div>
-          <Button onClick={() => setDialogOpen(true)} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white">
+          <Button onClick={() => { setEditingClientId(null); setForm({ first_name: '', last_name: '', company: '', role: '', email: '' }); setDialogOpen(true); }} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white">
             <UserPlus className="h-4 w-4" />
             {t.newClient}
           </Button>
@@ -368,6 +406,10 @@ export function ClientsTab() {
                     </PopoverContent>
                   </Popover>
 
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-violet-500 hover:bg-violet-500/10" onClick={() => openEdit(client)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(client.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -379,12 +421,12 @@ export function ClientsTab() {
       </CardContent>
 
       {/* New Client Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-violet-500" />
-              {t.newClient}
+              {editingClientId ? <Pencil className="h-5 w-5 text-violet-500" /> : <UserPlus className="h-5 w-5 text-violet-500" />}
+              {editingClientId ? t.editClient : t.newClient}
             </DialogTitle>
             <DialogDescription>
               {language === 'fr' ? 'Renseignez les informations du client.' : language === 'es' ? 'Complete la información del cliente.' : 'Fill in client details.'}
@@ -416,7 +458,7 @@ export function ClientsTab() {
               <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>{t.cancel}</Button>
+              <Button variant="outline" onClick={resetForm}>{t.cancel}</Button>
               <Button
                 onClick={handleCreate}
                 disabled={saving || !form.first_name.trim() || !form.last_name.trim()}
