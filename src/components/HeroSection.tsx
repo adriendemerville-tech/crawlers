@@ -278,7 +278,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
                   value={url}
                   onChange={(e) => handleUrlChange(e.target.value)}
                   onBlur={handleUrlBlur}
-                  className="h-14 pl-4 pr-12 text-base"
+                  className="h-14 pl-4 pr-12 text-base placeholder:text-xs placeholder:font-light placeholder:text-muted-foreground/50"
                   required
                   aria-label="URL du site web"
                 />
