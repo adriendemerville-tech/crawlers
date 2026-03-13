@@ -50,6 +50,7 @@ export type Database = {
       actual_results: {
         Row: {
           accuracy_gap: number | null
+          context_data: Json | null
           id: string
           prediction_id: string
           real_traffic_after_90_days: number
@@ -57,6 +58,7 @@ export type Database = {
         }
         Insert: {
           accuracy_gap?: number | null
+          context_data?: Json | null
           id?: string
           prediction_id: string
           real_traffic_after_90_days: number
@@ -64,6 +66,7 @@ export type Database = {
         }
         Update: {
           accuracy_gap?: number | null
+          context_data?: Json | null
           id?: string
           prediction_id?: string
           real_traffic_after_90_days?: number
