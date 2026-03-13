@@ -74,13 +74,16 @@ function HistoryRow({
         <span className="text-muted-foreground text-xs">
           {date.toLocaleDateString('fr-FR')} {date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
         </span>
-        <span className="font-medium">
-          {passed}/{total}
-        </span>
-        {failed > 0 && (
-          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
-            {failed} échec{failed > 1 ? 's' : ''}
-          </Badge>
+        {allPassed ? (
+          <span className="font-medium text-green-700 dark:text-green-400">
+            {total}/{total} réussis
+          </span>
+        ) : (
+          <span className="font-medium text-foreground">
+            <span className="text-green-700 dark:text-green-400">{passed} réussi{passed > 1 ? 's' : ''}</span>
+            <span className="text-muted-foreground mx-1">·</span>
+            <span className="text-red-600 dark:text-red-400">{failed} échoué{failed > 1 ? 's' : ''}</span>
+          </span>
         )}
         <span className="text-muted-foreground text-xs ml-auto flex items-center gap-1">
           {durationMs}ms
