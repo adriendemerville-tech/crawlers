@@ -784,20 +784,29 @@ export function MyTracking() {
                     </div>
                   </div>
 
-                  {/* KPI Cards */}
-                   <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${!latestStats ? 'opacity-40 pointer-events-none' : ''}`}>
-                    {/* Technique */}
-                    <KPICard label={t.performance} value={latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—'} icon={Gauge} />
-                    <KPICard label={t.seoScore} value={latestStats?.seo_score != null ? `${latestStats.seo_score}%` : '—'} icon={Search} />
-                    {/* Optimisation IA */}
-                    <KPICard label={t.geoScore} value={latestStats?.geo_score ? `${latestStats.geo_score}%` : '—'} icon={Globe} />
-                    <KPICard label={t.aiVisibility} value={latestAiVisibility != null ? `${Math.round(latestAiVisibility)}/100` : '—'} icon={Eye} />
-                    {/* Réputation & Influence */}
-                    <KPICard label={t.citationRate} value={latestStats?.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—'} icon={Brain} />
-                    <KPICard label={t.sentiment} value={latestStats ? sentimentLabel(latestStats.ai_sentiment) : '—'} icon={BarChart3} valueClassName={latestStats ? sentimentColor(latestStats.ai_sentiment) : ''} />
-                    <KPICard label={t.semanticAuth} value={latestStats?.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—'} icon={TrendingUp} />
-                    <KPICard label={t.voiceShare} value={latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—'} icon={BarChart3} />
-                  </div>
+                  {/* KPI Cards — Sortable */}
+                  {(() => {
+                    const defaultKpiOrder = ['performance', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
+                    
+                    const kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string }> = {
+                      performance: { label: t.performance, value: latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—', icon: Gauge },
+                      seoScore: { label: t.seoScore, value: latestStats?.seo_score != null ? `${latestStats.seo_score}%` : '—', icon: Search },
+                      geoScore: { label: t.geoScore, value: latestStats?.geo_score ? `${latestStats.geo_score}%` : '—', icon: Globe },
+                      aiVisibility: { label: t.aiVisibility, value: latestAiVisibility != null ? `${Math.round(latestAiVisibility)}/100` : '—', icon: Eye },
+                      citationRate: { label: t.citationRate, value: latestStats?.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—', icon: Brain },
+                      sentiment: { label: t.sentiment, value: latestStats ? sentimentLabel(latestStats.ai_sentiment) : '—', icon: BarChart3, valueClassName: latestStats ? sentimentColor(latestStats.ai_sentiment) : '' },
+                      semanticAuth: { label: t.semanticAuth, value: latestStats?.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—', icon: TrendingUp },
+                      voiceShare: { label: t.voiceShare, value: latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—', icon: BarChart3 },
+                    };
+
+                    return (
+                      <SortableKPIGrid
+                        kpiDefinitions={kpiDefinitions}
+                        defaultOrder={defaultKpiOrder}
+                        disabled={!latestStats}
+                      />
+                    );
+                  })()}
 
                   {/* Evolution Chart */}
                   {chartData.length > 1 && (
