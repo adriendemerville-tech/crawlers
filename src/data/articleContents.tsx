@@ -2034,7 +2034,6 @@ Allow: /`}</pre>
     fr: (
       <>
         <SummaryBox
-          title="En résumé"
           points={[
             "La Google Search Console a évolué en 2025-2026 avec des données Brand / Non-Brand enrichies.",
             "L'Indice d'Alignement Stratégique (IAS) contextualise ce ratio par modèle économique.",
