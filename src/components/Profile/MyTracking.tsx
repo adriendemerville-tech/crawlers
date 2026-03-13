@@ -1596,11 +1596,12 @@ function SortableKPICard({ id, label, value, icon: Icon, valueClassName, onRefre
 
   return (
     <div ref={setNodeRef} style={style} className="relative group rounded-lg border bg-card p-3 space-y-1">
-      {/* Drag handle — top right */}
+      {/* Drag handle — top left */}
       <button
         {...attributes}
         {...listeners}
-        className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted"
+        className="absolute top-1.5 left-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted"
+        style={{ touchAction: 'none' }}
         aria-label="Déplacer"
       >
         <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
