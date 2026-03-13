@@ -1,6 +1,7 @@
-import { Hash, TrendingUp, Home, Award, Target, BarChart3 } from 'lucide-react';
+import { Hash, TrendingUp, Home, Award, Target, BarChart3, RefreshCw, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -17,6 +18,8 @@ interface SerpData {
 
 interface SerpKpiBannerProps {
   data: SerpData | null | undefined;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 const translations = {
