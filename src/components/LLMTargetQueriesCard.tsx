@@ -326,7 +326,7 @@ export function LLMTargetQueriesCard({ domain, coreValueSummary, citations, comp
           {t.title}
         </CardTitle>
         {!compact && (
-          <p className="text-sm text-muted-foreground">{t.subtitle}</p>
+          <p className="text-base text-muted-foreground leading-relaxed px-1 py-2">{t.subtitle}</p>
         )}
         {(data.coreBusiness || data.marketLeader) && (
           <div className="flex flex-wrap gap-2 mt-2">
