@@ -432,10 +432,10 @@ function generateFixCode(
     case 'fix_meta_desc':
       const customDesc = fix.data?.description || `Découvrez ${siteName} - Votre partenaire de confiance.`;
       return {
-        fn: `  // Meta Description (head — pas d'impact CLS)
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Meta Description (head — pas d'impact CLS)
+  // Règle 4: Merge-override
   function fixMetaDescription() {
-    if (hasLock('fix_meta_desc')) return;
+    clearLock('fix_meta_desc');
     try {
       var metaDesc = document.querySelector('meta[name="description"]');
       if (!metaDesc) {
