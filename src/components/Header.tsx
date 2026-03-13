@@ -106,6 +106,7 @@ export function Header() {
   // Check if we're on specific pages
   const isAuditExpertPage = location.pathname === '/audit-expert';
   const isProfilePage = location.pathname === '/console' || location.pathname === '/profil';
+  const isHomePage = location.pathname === '/';
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
