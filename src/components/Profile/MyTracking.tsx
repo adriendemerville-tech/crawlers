@@ -126,6 +126,12 @@ interface TrackedSite {
   api_key?: string;
   current_config?: Record<string, unknown>;
   previous_config?: Record<string, unknown>;
+  market_sector?: string | null;
+  products_services?: string | null;
+  target_audience?: string | null;
+  address?: string | null;
+  commercial_area?: string | null;
+  company_size?: string | null;
 }
 
 interface StatsEntry {
