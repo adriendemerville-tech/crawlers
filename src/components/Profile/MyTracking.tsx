@@ -953,7 +953,7 @@ export function MyTracking() {
                     </div>
                   </div>
 
-                  {/* KPI Cards — Sortable */}
+                  {/* KPI Cards — Sortable, wrapped in a bordered Card */}
                   {(() => {
                     const defaultKpiOrder = ['performance', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
                     
@@ -968,11 +968,43 @@ export function MyTracking() {
                       voiceShare: { label: t.voiceShare, value: latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—', icon: BarChart3 },
                     };
 
+                    // Per-KPI refresh handler map
+                    const kpiRefreshMap: Record<string, () => Promise<void>> = {
+                      performance: async () => {
+                        if (!currentSite) return;
+                        const res = await supabase.functions.invoke('check-pagespeed', { body: { url: `https://${currentSite.domain}`, lang: language } });
+                        const score = res.data?.data?.scores?.performance ?? res.data?.data?.performance ?? null;
+                        if (score !== null) toast.success(`${t.performance}: ${Math.round(score)}/100`);
+                        if (currentSite) await runStreamingAudit(currentSite);
+                      },
+                      seoScore: async () => {
+                        if (!currentSite) return;
+                        const res = await supabase.functions.invoke('check-crawlers', { body: { url: `https://${currentSite.domain}` } });
+                        const bots = res.data?.data?.results || res.data?.results || [];
+                        const score = bots.length > 0 ? Math.round((bots.filter((b: any) => b.status === 'allowed').length / bots.length) * 100) : null;
+                        if (score !== null) toast.success(`${t.seoScore}: ${score}%`);
+                        if (currentSite) await runStreamingAudit(currentSite);
+                      },
+                      geoScore: async () => {
+                        if (!currentSite) return;
+                        const res = await supabase.functions.invoke('check-geo', { body: { url: `https://${currentSite.domain}`, lang: language } });
+                        const score = res.data?.data?.totalScore ?? res.data?.data?.overallScore ?? 0;
+                        toast.success(`${t.geoScore}: ${Math.round(score)}%`);
+                        if (currentSite) await runStreamingAudit(currentSite);
+                      },
+                      aiVisibility: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                      citationRate: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                      sentiment: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                      semanticAuth: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                      voiceShare: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                    };
+
                     return (
                       <SortableKPIGrid
                         kpiDefinitions={kpiDefinitions}
                         defaultOrder={defaultKpiOrder}
-                        disabled={!latestStats}
+                        disabled={!latestStats && !refreshingSites.has(currentSite?.id || '')}
+                        onRefresh={kpiRefreshMap}
                       />
                     );
                   })()}
