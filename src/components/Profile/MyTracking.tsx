@@ -624,7 +624,7 @@ export function MyTracking() {
       // 1. Crawlers → SEO score
       supabase.functions.invoke('check-crawlers', { body: { url } }).then((res) => {
         const crawlersData = res.data;
-        const botResults = crawlersData?.data?.results || crawlersData?.results || [];
+        const botResults = crawlersData?.data?.bots || crawlersData?.data?.results || crawlersData?.results || [];
         currentSeoScore = botResults.length > 0
           ? Math.round((botResults.filter((b: any) => b.status === 'allowed').length / botResults.length) * 100)
           : null;
