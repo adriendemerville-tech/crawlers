@@ -223,10 +223,19 @@ export function PaymentButton({
                   </motion.div>
                   Déblocage...
                 </>
-              ) : hasEnoughCredits ? (
+               ) : hasEnoughCredits ? (
                 <>
-                  <CreditCoin size="sm" />
-                  Débloquer avec {creditCost} crédit{creditCost > 1 ? 's' : ''}
+                  {isUnlimited ? (
+                    <>
+                      <InfinityIcon className="w-4 h-4 text-amber-500" />
+                      Débloquer
+                    </>
+                  ) : (
+                    <>
+                      <CreditCoin size="sm" />
+                      Débloquer avec {creditCost} crédit{creditCost > 1 ? 's' : ''}
+                    </>
+                  )}
                 </>
               ) : (
                 <>
