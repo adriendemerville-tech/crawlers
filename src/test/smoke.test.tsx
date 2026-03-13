@@ -90,7 +90,7 @@ describe("Smoke Tests — Critical Components", () => {
 
   it("StepperProgress renders steps", async () => {
     const { StepperProgress } = await import("@/components/ExpertAudit/StepperProgress");
-    render(<StepperProgress currentStep={2} completedSteps={[1]} />);
+    render(<StepperProgress currentStep={2} />);
     // Should render step indicators
     expect(document.querySelectorAll("[class]").length).toBeGreaterThan(0);
   });

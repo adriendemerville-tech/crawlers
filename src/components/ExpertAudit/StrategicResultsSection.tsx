@@ -147,8 +147,8 @@ export function StrategicResultsSection({
             })()}
 
             {/* AEO Score */}
-            {result.strategicAnalysis?.aeo_score && (
-              <AEOScoreCard aeoScore={result.strategicAnalysis.aeo_score} />
+            {result.strategicAnalysis && (
+              <AEOScoreCard result={result} />
             )}
           </motion.div>
 
