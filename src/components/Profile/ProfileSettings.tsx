@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { User, Save, Loader2, Globe, Music, X } from 'lucide-react';
+import { User, Save, Loader2, Globe, Music, X, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
