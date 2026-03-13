@@ -248,7 +248,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
 
   // Fetch stored conversations for paid users
   useEffect(() => {
-    if (!trackedSiteId || !userId || !isAgencyPro) return;
+    if (!trackedSiteId || !userId || !canViewConversations) return;
     supabase
       .from('llm_depth_conversations')
       .select('llm_name, iteration, prompt_text, response_summary')
