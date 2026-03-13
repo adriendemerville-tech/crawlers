@@ -2769,6 +2769,64 @@ Deno.serve(async (req) => {
     const code = generateCorrectiveScript(fixes, siteName, siteUrl, language, registryContext, aiContent, attribution, aiGeneratedFixes);
     const linesCount = code.split('\n').length;
 
+    // ══════════════════════════════════════════════════════════════
+    // ÉTAPE 4: Validation syntaxique + Minification
+    // ══════════════════════════════════════════════════════════════
+    const syntaxCheck = validateJsSyntax(code);
+    if (!syntaxCheck.valid) {
+      console.error(`⚠️ Erreur de syntaxe détectée: ${syntaxCheck.error}`);
+      // On continue quand même mais on log l'erreur
+    }
+    console.log(`✅ Validation syntaxique: ${syntaxCheck.valid ? 'OK' : 'ERREUR — ' + syntaxCheck.error}`);
+
+    const minifiedCode = minifyScript(code);
+    const minifiedSize = new TextEncoder().encode(minifiedCode).length;
+    const originalSize = new TextEncoder().encode(code).length;
+    const compressionRatio = Math.round((1 - minifiedSize / originalSize) * 100);
+    console.log(`📦 Minification: ${originalSize} → ${minifiedSize} octets (${compressionRatio}% réduit)`);
+
+    // ══════════════════════════════════════════════════════════════
+    // ÉTAPE 5: Scores de confiance par fix
+    // ══════════════════════════════════════════════════════════════
+    const confidenceScores: FixConfidence[] = enabledFixes.map(fix => 
+      computeFixConfidence(fix, libraryHits, solutionMatches, aiGeneratedFixes)
+    );
+
+    const avgConfidence = confidenceScores.length > 0 
+      ? Math.round(confidenceScores.reduce((sum, c) => sum + c.confidence, 0) / confidenceScores.length)
+      : 0;
+
+    // Estimation d'impact total
+    const totalImpactMin = confidenceScores.reduce((sum, c) => sum + c.estimatedImpact.seoPoints[0], 0);
+    const totalImpactMax = confidenceScores.reduce((sum, c) => sum + c.estimatedImpact.seoPoints[1], 0);
+
+    console.log(`🎯 Confiance moyenne: ${avgConfidence}% | Impact estimé: +${totalImpactMin} à +${totalImpactMax} points SEO`);
+
+    // ══════════════════════════════════════════════════════════════
+    // ÉTAPE 6: Versioning / Diff
+    // ══════════════════════════════════════════════════════════════
+    // Extract user_id from auth header if available
+    let userId: string | null = null;
+    try {
+      const authHeader = req.headers.get('Authorization') || '';
+      if (authHeader) {
+        const supabaseUrl2 = Deno.env.get('SUPABASE_URL') || '';
+        const supabaseKey2 = Deno.env.get('SUPABASE_ANON_KEY') || '';
+        if (supabaseUrl2 && supabaseKey2) {
+          const sb2 = createClient(supabaseUrl2, supabaseKey2, {
+            global: { headers: { Authorization: authHeader } }
+          });
+          const { data: { user } } = await sb2.auth.getUser();
+          userId = user?.id || null;
+        }
+      }
+    } catch { /* silent */ }
+
+    const versionDiff = await computeVersionDiff(userId, siteUrl, enabledFixes.map(f => f.id));
+    if (versionDiff.hasChanges) {
+      console.log(`📝 Diff: +${versionDiff.fixesAdded.length} fixes, -${versionDiff.fixesRemoved.length} fixes vs version précédente`);
+    }
+
     // Catégoriser les fixes pour le résumé
     const technicalFixes = enabledFixes.filter(f => ['seo', 'performance', 'accessibility'].includes(f.category));
     const trackingFixes = enabledFixes.filter(f => f.category === 'tracking');
@@ -2785,26 +2843,47 @@ Deno.serve(async (req) => {
     console.log('═══════════════════════════════════════════════════════════════');
     console.log(`✅ Script généré: ${linesCount} lignes (source: ${source})`);
     console.log(`   → Bibliothèque: ${libraryHits.length} | Nouveau: ${newGenerations.length}`);
+    console.log(`   → Confiance: ${avgConfidence}% | Impact: +${totalImpactMin}-${totalImpactMax} pts`);
+    console.log(`   → Minifié: ${(minifiedSize / 1024).toFixed(1)} Ko | Syntaxe: ${syntaxCheck.valid ? '✅' : '❌'}`);
     console.log('═══════════════════════════════════════════════════════════════');
 
     return new Response(
       JSON.stringify({
         success: true,
         code,
+        codeMinified: minifiedCode,
         fixesApplied: enabledFixes.length,
         linesCount,
-        source, // 'library' | 'hybrid' | 'new_generation'
+        source,
         libraryHits: libraryHits.length,
         newGenerations: newGenerations.length,
         registryRecommendationsCount: registryRecommendations.length,
         aiContentGenerated: Object.keys(aiContent).length > 0,
-        fixesSummary: enabledFixes.map(f => ({
-          id: f.id,
-          label: f.label,
-          category: f.category,
-          priority: f.priority,
-          fromLibrary: libraryHits.includes(f.id)
-        })),
+        // ═══ NOUVEAUTÉS v4.0 ═══
+        syntaxValid: syntaxCheck.valid,
+        syntaxError: syntaxCheck.error || null,
+        sizeBytes: { original: originalSize, minified: minifiedSize, compressionRatio },
+        confidenceScores,
+        averageConfidence: avgConfidence,
+        estimatedImpact: {
+          seoPointsMin: totalImpactMin,
+          seoPointsMax: totalImpactMax,
+          summary: `+${totalImpactMin} à +${totalImpactMax} points SEO estimés`
+        },
+        versionDiff: versionDiff.hasChanges ? versionDiff : null,
+        fixesSummary: enabledFixes.map(f => {
+          const conf = confidenceScores.find(c => c.fixId === f.id);
+          return {
+            id: f.id,
+            label: f.label,
+            category: f.category,
+            priority: f.priority,
+            fromLibrary: libraryHits.includes(f.id),
+            confidence: conf?.confidence || 0,
+            source: conf?.source || 'template',
+            estimatedImpact: conf?.estimatedImpact || null,
+          };
+        }),
         categorySummary: {
           technical: technicalFixes.length,
           tracking: trackingFixes.length,
