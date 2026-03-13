@@ -115,7 +115,7 @@ export function AffiliateManagement() {
     }
   };
 
-
+  const filtered = codes.filter(c =>
     c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (c.assigned_to_user_id && c.assigned_to_user_id.includes(searchQuery))
   );
