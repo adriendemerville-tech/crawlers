@@ -274,6 +274,11 @@ export function StrategicInsights({
             </RevealWrapper>
           )}
 
+          {/* 9b. Profondeur LLM (simulated) */}
+          <RevealWrapper delay={7000} isDataCard enabled={progressiveReveal}>
+            <SimulatedLLMDepthCard analysis={analysis} domain={domain} />
+          </RevealWrapper>
+
           {/* 10. Matrice de Risque Zéro-Clic */}
           <RevealWrapper delay={8000} isDataCard enabled={progressiveReveal}>
             <ZeroClickRiskCard analysis={analysis} domain={domain} />
