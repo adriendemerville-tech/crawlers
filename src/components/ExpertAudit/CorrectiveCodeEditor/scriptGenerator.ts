@@ -647,10 +647,10 @@ function generateFixCode(
     case 'fix_ga4':
       const measurementId = fix.data?.measurementId || 'G-XXXXXXXXXX';
       return {
-        fn: `  // Intégration Google Analytics 4
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Intégration Google Analytics 4
+  // Règle 4: Merge-override
   function injectGA4() {
-    if (hasLock('fix_ga4')) return;
+    clearLock('fix_ga4');
     try {
       if (window.gtag) return;
       var script = document.createElement('script');
