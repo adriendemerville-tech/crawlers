@@ -559,22 +559,40 @@ export default function SiteCrawl() {
     return () => clearInterval(interval);
   }, [crawlResult]);
 
-  // Fetch indexed pages count when crawl is completed
+  // Pre-scan: detect indexed pages when URL changes (debounced)
   useEffect(() => {
-    if (!crawlResult || crawlResult.status !== 'completed') {
-      setIndexedPagesCount(null);
-      return;
-    }
-    const domain = crawlResult.domain;
-    if (!domain) return;
-    supabase.functions.invoke('fetch-serp-kpis', {
-      body: { domain },
-    }).then(({ data }) => {
-      if (data?.data?.indexed_pages != null) {
-        setIndexedPagesCount(data.data.indexed_pages);
+    setIndexedPagesCount(null);
+    if (!url || url.length < 5) return;
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        let normalizedUrl = url.trim();
+        if (!normalizedUrl.startsWith('http')) normalizedUrl = `https://${normalizedUrl}`;
+        const domain = new URL(normalizedUrl).hostname;
+        if (!domain || domain.length < 3) return;
+
+        setIsDetectingPages(true);
+        const { data } = await supabase.functions.invoke('fetch-serp-kpis', {
+          body: { domain },
+        });
+        if (!cancelled && data?.data?.indexed_pages != null) {
+          const count = data.data.indexed_pages as number;
+          setIndexedPagesCount(count);
+          // Auto-cap slider if current value exceeds indexed pages
+          if (count > 0 && maxPages > Math.min(500, count)) {
+            setMaxPages(Math.min(500, count));
+          }
+        }
+      } catch {
+        // Silent — pre-scan is best-effort
+      } finally {
+        if (!cancelled) setIsDetectingPages(false);
       }
-    }).catch(() => {});
-  }, [crawlResult?.id, crawlResult?.status]);
+    }, 1200);
+
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [url]);
 
   if (loading || adminLoading) {
     return (
