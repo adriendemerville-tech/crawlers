@@ -1142,7 +1142,33 @@ export function MyTracking() {
                   </Card>
 
                   {/* SERP Ranking Banner (DataForSEO) */}
-                  <SerpKpiBanner data={latestSerpData} />
+                  <SerpKpiBanner 
+                    data={latestSerpData} 
+                    onRefresh={async () => {
+                      if (!currentSite || !user || refreshingSerp) return;
+                      setRefreshingSerp(true);
+                      try {
+                        const { data: serpRes } = await supabase.functions.invoke('fetch-serp-kpis', {
+                          body: { domain: currentSite.domain, url: `https://${currentSite.domain}` },
+                        });
+                        const serpData = serpRes?.data;
+                        if (serpData && latestStats) {
+                          const existingRaw = (latestStats as any)?.raw_data || {};
+                          await supabase.from('user_stats_history').update({
+                            raw_data: { ...existingRaw, serpData },
+                          }).eq('id', (latestStats as any).id);
+                          await fetchStats();
+                        }
+                        toast.success(language === 'fr' ? 'Données SERP mises à jour' : 'SERP data updated');
+                      } catch (err) {
+                        console.error('SERP refresh error:', err);
+                        toast.error(language === 'fr' ? 'Erreur de mise à jour SERP' : 'SERP update error');
+                      } finally {
+                        setRefreshingSerp(false);
+                      }
+                    }}
+                    isRefreshing={refreshingSerp}
+                  />
                 </div>
               )}
             </div>
