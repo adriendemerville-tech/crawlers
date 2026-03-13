@@ -756,10 +756,10 @@ function generateFixCode(
 
     case 'inject_breadcrumbs':
       return {
-        fn: `  // Règle 1: Breadcrumbs → JSON-LD BreadcrumbList dans <head>
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Règle 1: Breadcrumbs → JSON-LD BreadcrumbList dans <head>
+  // Règle 4: Merge-override
   function injectBreadcrumbs() {
-    if (hasLock('inject_breadcrumbs')) return;
+    clearLock('inject_breadcrumbs');
     try {
       var path = window.location.pathname.split('/').filter(Boolean);
       var items = [{ name: 'Accueil', url: '/' }];
