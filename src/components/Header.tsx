@@ -329,7 +329,7 @@ export function Header() {
         <div className="flex items-center gap-3">
 
           {/* Credit recharge button - on home and /audit-expert (show for all users) */}
-          {(isAuditExpertPage || location.pathname === '/') && (
+          {isAuditExpertPage && (
             <Suspense fallback={null}>
               <CreditRechargeButton showZeroForGuest />
             </Suspense>
