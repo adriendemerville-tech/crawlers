@@ -525,6 +525,11 @@ export function MyWallet() {
         onOpenChange={setShowTopUpModal}
         currentBalance={balance}
       />
+      <RetentionModal
+        open={showRetentionModal}
+        onOpenChange={setShowRetentionModal}
+        onProceedToPortal={handleOpenPortal}
+      />
       </>
     );
   }
