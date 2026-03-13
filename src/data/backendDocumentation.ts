@@ -560,6 +560,108 @@ Utilitaire d'enregistrement des URLs analysées.
 Traductions pour le contenu généré côté serveur (emails, rapports).
 `,
   },
+
+  // ───────────────────────────────────────────────
+  // SECTION : SERP KPIs (DataForSEO)
+  // ───────────────────────────────────────────────
+  {
+    id: 'serp-kpis',
+    title: 'SERP KPIs (DataForSEO)',
+    icon: 'BarChart3',
+    content: `
+# SERP KPIs — DataForSEO
+
+## Vue d'ensemble
+
+Les données SERP permettent de mesurer le positionnement Google d'un domaine : position moyenne, mots-clés classés, ETV (trafic estimé), distribution Top 3/10/50.
+
+## Source de données
+
+| Paramètre | Valeur |
+|-----------|--------|
+| **API** | DataForSEO Labs — \`ranked_keywords/live\` |
+| **Localisation** | France (code 2250) |
+| **Langue** | Français (\`fr\`) |
+| **Limite** | 1 000 mots-clés (triés par rang ascendant) |
+| **Secrets** | \`DATAFORSEO_LOGIN\`, \`DATAFORSEO_PASSWORD\` |
+
+## Edge Functions
+
+### \`fetch-serp-kpis\`
+Fonction unitaire : prend un \`domain\` et retourne les KPIs SERP calculés.
+
+**Payload d'entrée :**
+\`\`\`json
+{ "domain": "example.com", "url": "https://example.com" }
+\`\`\`
+
+**Payload de sortie :**
+\`\`\`json
+{
+  "data": {
+    "total_keywords": 142,
+    "avg_position": 28.3,
+    "homepage_position": 5,
+    "top_3": 3,
+    "top_10": 12,
+    "top_50": 67,
+    "etv": 1250,
+    "sample_keywords": [
+      { "keyword": "audit seo", "position": 3, "search_volume": 2400, "url": "..." }
+    ],
+    "measured_at": "2026-03-13T09:00:00Z"
+  }
+}
+\`\`\`
+
+### \`refresh-serp-all\`
+CRON hebdomadaire (lundi 05:00 Paris) : itère sur tous les \`tracked_sites\` et appelle \`fetch-serp-kpis\` pour chacun, puis met à jour l'entrée la plus récente de \`user_stats_history\`.
+
+## Stockage des données
+
+Les données SERP **ne sont pas dans une table dédiée**. Elles sont stockées dans la colonne \`raw_data\` (JSONB) de la table **\`user_stats_history\`**, sous la clé \`serpData\` :
+
+\`\`\`
+user_stats_history
+├── id (uuid)
+├── user_id (uuid)
+├── tracked_site_id (uuid)
+├── domain (text)
+├── raw_data (jsonb)
+│   ├── serpData ← 🎯 données SERP DataForSEO
+│   │   ├── total_keywords
+│   │   ├── avg_position
+│   │   ├── homepage_position
+│   │   ├── top_3 / top_10 / top_50
+│   │   ├── etv
+│   │   ├── sample_keywords[]
+│   │   └── measured_at
+│   ├── performanceScore
+│   ├── llmOverallScore
+│   └── ...autres KPIs
+└── recorded_at (timestamptz)
+\`\`\`
+
+## Déclencheurs de synchronisation
+
+| Déclencheur | Mécanisme |
+|-------------|-----------|
+| **Après audit technique** | Fire-and-forget via \`syncSerpToTrackedSite()\` dans \`ExpertAuditDashboard\` |
+| **Après audit stratégique** | Idem — même fonction appelée à la fin du flux stratégique |
+| **Rafraîchissement manuel** | Bouton 🔄 dans le bandeau SERP de 'Mes sites' (\`SerpKpiBanner\`) |
+| **CRON hebdomadaire** | \`refresh-serp-all\` tous les lundis à 05:00 (UTC+1) |
+
+## Affichage côté client
+
+Le composant \`SerpKpiBanner\` (dans \`src/components/Profile/SerpKpiBanner.tsx\`) affiche :
+- Position moyenne
+- Rang homepage
+- Total mots-clés (Top 100)
+- ETV (trafic mensuel estimé)
+
+Les données sont lues depuis la dernière entrée \`user_stats_history\` du site sélectionné.
+`,
+  },
 ];
 
 /**
@@ -567,8 +669,8 @@ Traductions pour le contenu généré côté serveur (emails, rapports).
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '1.0.0',
-  lastUpdated: '2026-03-12',
+  version: '1.1.0',
+  lastUpdated: '2026-03-13',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM',
   totalEdgeFunctions: 58,
   totalTables: '30+',
