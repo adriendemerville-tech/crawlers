@@ -1396,12 +1396,17 @@ export function MyTracking() {
                   />
 
                   {/* LLM Visibility Dashboard */}
-                  {currentSite && user && (
+                   {currentSite && user && (
                     <LLMVisibilityDashboard
                       trackedSiteId={currentSite.id}
                       userId={user.id}
                       domain={currentSite.domain}
                     />
+                  )}
+
+                  {/* LLM Depth Card – paid users only */}
+                  {currentSite && isAgencyPro && (
+                    <LLMDepthCard domain={currentSite.domain} />
                   )}
                 </div>
               )}
