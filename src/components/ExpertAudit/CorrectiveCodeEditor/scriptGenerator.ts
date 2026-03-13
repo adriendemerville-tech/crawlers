@@ -726,10 +726,10 @@ function generateFixCode(
 
     case 'inject_blog_section':
       return {
-        fn: `  // Règle 2B: Blog → Skeleton (espace réservé) + injection HTML
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Règle 2B: Blog → Skeleton (espace réservé) + injection HTML
+  // Règle 4: Merge-override
   function injectBlogSection() {
-    if (hasLock('inject_blog_section')) return;
+    clearLock('inject_blog_section');
     try {
       // Version complète générée côté serveur avec contenu IA
       console.log('[Crawlers.fr] 🏗️ Blog (Règle 2B — version complète côté serveur)');
