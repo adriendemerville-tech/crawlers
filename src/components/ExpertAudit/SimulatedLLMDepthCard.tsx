@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Layers, CheckCircle2, XCircle, Sparkles } from 'lucide-react';
+import { Layers, CheckCircle2, XCircle } from 'lucide-react';
 import { StrategicAnalysis } from '@/types/expertAudit';
 import { MethodologyPopover } from './MethodologyPopover';
 
