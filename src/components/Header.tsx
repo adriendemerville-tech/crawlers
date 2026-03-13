@@ -265,14 +265,14 @@ export function Header() {
                 <span className="text-sm">{lexiqueLabels[language]}</span>
               </Button>
             </a>
-          ) : (
+          ) : isHomePage ? (
             <Link to="/lexique">
               <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
                 <Book className="h-4 w-4" />
                 <span className="text-sm">{lexiqueLabels[language]}</span>
               </Button>
             </Link>
-          )}
+          ) : null}
           {isProfilePage ? null : (isAuditExpertPage || (user && (isAgencyPro || (profile?.plan_type && profile.plan_type !== 'free')))) ? (
             isAuditExpertPage ? (
               <a href="/console" target="_blank" rel="noopener noreferrer">
