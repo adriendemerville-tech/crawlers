@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { ensureSiteContext } from '../_shared/enrichSiteContext.ts'
 
 /**
  * calculate-llm-visibility v3
@@ -39,7 +40,7 @@ const MAX_RICHNESS_BONUS = 15
 // ─── LLM targets (via OpenRouter) ───
 const LLM_TARGETS = [
   { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-4o' },
-  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash-preview' },
+  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash' },
   { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar' },
 ]
 
@@ -398,8 +399,14 @@ Deno.serve(async (req) => {
       })
     }
 
-    const patterns = buildBrandPatterns(site)
-    const prompts = generatePrompts(site)
+    // ── Auto-enrich site identity card if context fields are empty ──
+    const enrichedContext = await ensureSiteContext(site)
+
+    // Merge enriched context back into site object for prompt generation
+    const enrichedSite = { ...site, ...enrichedContext }
+
+    const patterns = buildBrandPatterns(enrichedSite)
+    const prompts = generatePrompts(enrichedSite)
     const weekStart = getWeekStart()
 
     console.log(`[llm-vis] 🔍 ${site.domain} — patterns: ${patterns.exact.join(', ')} — ${prompts.length} prompts × ${LLM_TARGETS.length} LLMs (parallel)`)
