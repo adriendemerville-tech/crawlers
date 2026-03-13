@@ -423,6 +423,7 @@ export default function SiteCrawl() {
   const { balance: credits, isAgencyPro } = useCredits();
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAdmin, loading: adminLoading } = useAdmin();
   useCanonicalHreflang('/site-crawl');
   const t = crawlI18n[language];
