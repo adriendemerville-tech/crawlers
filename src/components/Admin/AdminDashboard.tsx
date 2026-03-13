@@ -6,6 +6,7 @@ import { SupportManagement } from './SupportManagement';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { PredictionsDashboard } from './PredictionEngine';
 import { BrowserlessAlert } from './BrowserlessAlert';
+import { ApiGatewayFallbackAlert } from './ApiGatewayFallbackAlert';
 import { CtoAgentDashboard } from './CtoAgentDashboard';
 import { BackendDocumentation } from './BackendDocumentation';
 import { CrawlManagement } from './CrawlManagement';
@@ -18,6 +19,7 @@ export function AdminDashboard() {
     <div className="space-y-6">
       <DemoModeToggle />
       <BrowserlessAlert />
+      <ApiGatewayFallbackAlert />
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-primary/10">
           <Shield className="h-6 w-6 text-primary" />
