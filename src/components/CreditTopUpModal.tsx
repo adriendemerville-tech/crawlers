@@ -335,7 +335,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Audits ∞' : language === 'es' ? 'Auditorías ∞' : 'Audits ∞'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Code className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Correctifs ∞' : language === 'es' ? 'Correctivos ∞' : 'Fixes ∞'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Globe className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '5 000 pages crawl/mois' : language === 'es' ? '5 000 páginas crawl/mes' : '5,000 crawl pages/mo'}</span>
-                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Zap className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Auto-fix en 1 clic' : language === 'es' ? 'Auto-fix en 1 clic' : '1-click auto-fix'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Zap className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '30 URL suivis inclus' : language === 'es' ? '30 URL seguidos' : '30 tracked URLs'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Users className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '3 comptes inclus' : language === 'es' ? '3 cuentas' : '3 accounts'}</span>
               </div>
             </div>

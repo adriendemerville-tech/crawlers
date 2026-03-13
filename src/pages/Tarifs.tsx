@@ -285,6 +285,7 @@ const translations = {
       'Auditoría experta ilimitada',
       'Código correctivo ilimitado',
       'Crawl: 5 000 páginas/mes incluidas',
+      '30 URL seguidos incluidos',
       'Opción Marca Blanca',
       '3 cuentas incluidas',
       'Soporte prioritario',
