@@ -1,4 +1,4 @@
-// Types for fix configuration - ARCHITECTE GÉNÉRATIF v3.0 — CLS-ZERO Protocol
+// Types for fix configuration - ARCHITECTE GÉNÉRATIF v3.2 — CLS-ZERO + Merge-Override Protocol
 export interface FixConfig {
   id: string;
   category: 'seo' | 'performance' | 'accessibility' | 'tracking' | 'hallucination' | 'strategic';
@@ -90,7 +90,8 @@ export const AVAILABLE_FIXES = {
 // Règle 3 — OPTIMISATIONS TECHNIQUES : loading="lazy" hors-écran,
 //           fetchpriority="high" sur image LCP, via MutationObserver.
 //
-// Règle 4 — LOCKS : data-crawlers-lock="<fixId>" pour éviter la double exécution.
+// Règle 4 — MERGE-OVERRIDE : clearLock(id) supprime l'ancien fix avant réinjection.
+//           Le dernier script déployé écrase les parties redondantes, conserve les uniques.
 //
 // Règle 5 — STRUCTURE : IIFE + try/catch + commentaires CLS.
 // ══════════════════════════════════════════════════════════════
@@ -129,7 +130,7 @@ export function generateCorrectiveScript(
   
   const script = `/**
  * ═══════════════════════════════════════════════════════════════
- * 🏗️ Crawlers.fr — ARCHITECTE GÉNÉRATIF v3.1 (CLS-ZERO + SDK Isolation)
+ * 🏗️ Crawlers.fr — ARCHITECTE GÉNÉRATIF v3.2 (CLS-ZERO + Merge-Override)
  * ═══════════════════════════════════════════════════════════════
  * 
  * Généré le ${new Date().toLocaleDateString(dateLocale)}
@@ -142,12 +143,13 @@ export function generateCorrectiveScript(
  *   → Stratégiques (JSON-LD sémantique): ${strategicFixes.length}
  *   → Anti-Hallucination IA: ${hallucinationFixes.length}
  *
- * Protocole CLS-ZERO + SDK Isolation:
+ * Protocole CLS-ZERO + Merge-Override:
  *   Règle 1  — Données sémantiques → JSON-LD <head> uniquement
  *   Règle 2A — Attribution → bas de page (footer)
  *   Règle 2B — Contenu visible → skeleton (min-height) avant injection
  *   Règle 3  — lazy/fetchpriority via MutationObserver
- *   Règle 4  — Locks (data-crawlers-lock) anti double-exécution
+ *   Règle 4  — Merge-Override: le dernier script écrase les fixes redondants
+ *              (clearLock supprime l'ancien DOM/JSON-LD avant réinjection)
  *   Règle 5  — IIFE + try/catch silencieux
  *   Règle 6  — requestIdleCallback (non-bloquant)
  *   Règle 7  — Kill Switch distant (sdk-status)
@@ -162,14 +164,17 @@ export function generateCorrectiveScript(
   // RÈGLE 8 — NO-GLOBAL POLICY
   // Aucune variable ne fuit dans window sauf le namespace dédié.
   // ═══════════════════════════════════════════════════════════
-  var __CRAWLERS_CONFIG__ = {
-    version: '3.1',
+   var __CRAWLERS_CONFIG__ = {
+    version: '3.2',
     site: '${siteUrl}',
     fixes: ${enabledFixes.length},
-    started: false
+    generatedAt: new Date().toISOString()
   };
-  // Exposer uniquement sous préfixe unique
-  try { Object.defineProperty(window, '__CRAWLERS_CONFIG__', { value: __CRAWLERS_CONFIG__, writable: false, configurable: false }); } catch(e) {}
+  // Exposer sous préfixe unique — configurable: true pour permettre l'écrasement par un script ultérieur
+  try {
+    if (window.__CRAWLERS_CONFIG__) { safeLog('[Crawlers.fr] ♻️ Script précédent détecté — merge-override actif'); }
+    Object.defineProperty(window, '__CRAWLERS_CONFIG__', { value: __CRAWLERS_CONFIG__, writable: false, configurable: true });
+  } catch(e) {}
 
   // ═══════════════════════════════════════════════════════════
   // RÈGLE 6 — EXECUTION DEFERRAL (Non-bloquant)
@@ -196,7 +201,22 @@ export function generateCorrectiveScript(
     else document.addEventListener('DOMContentLoaded', fn);
   }
 
-  // Règle 4: Système de Locks — empêche la double exécution
+  // Règle 4: Système de Locks — merge-override
+  // Si un lock existe déjà, on SUPPRIME l'ancien élément pour que le nouveau script le remplace.
+  function clearLock(id) {
+    var existing = document.querySelectorAll('[data-crawlers-lock="' + id + '"]');
+    for (var i = 0; i < existing.length; i++) {
+      // Pour les éléments <head> (meta, title), on ne supprime pas le noeud, juste l'attribut
+      if (existing[i].parentNode === document.head) {
+        existing[i].removeAttribute('data-crawlers-lock');
+      } else {
+        // Pour les éléments injectés dans le body (FAQ, blog section, skeleton…), on les retire
+        existing[i].parentNode && existing[i].parentNode.removeChild(existing[i]);
+      }
+      safeLog('[Crawlers.fr] ♻️ Lock précédent supprimé:', id);
+    }
+  }
+  // Rétro-compat : hasLock renvoie toujours false après clearLock
   function hasLock(id) {
     return !!document.querySelector('[data-crawlers-lock="' + id + '"]');
   }
@@ -204,9 +224,13 @@ export function generateCorrectiveScript(
     if (el && el.setAttribute) el.setAttribute('data-crawlers-lock', id);
   }
 
-  // Règle 1: Injection JSON-LD dans <head> (données sémantiques IA/GEO)
+  // Règle 1: Injection JSON-LD dans <head> — merge-override (remplace l'ancien si existant)
   function injectJsonLd(id, data) {
-    if (document.querySelector('script[data-crawlers-jsonld="' + id + '"]')) return;
+    var old = document.querySelector('script[data-crawlers-jsonld="' + id + '"]');
+    if (old) {
+      old.parentNode && old.parentNode.removeChild(old);
+      safeLog('[Crawlers.fr] ♻️ JSON-LD remplacé:', id);
+    }
     var script = document.createElement('script');
     script.type = 'application/ld+json';
     script.setAttribute('data-crawlers-jsonld', id);
@@ -264,7 +288,7 @@ ${fixFunctions.join('\n\n')}
   // "Optimisé pour les IA par crawlers.fr"
   // ═══════════════════════════════════════════════════════════
   function injectCrawlersAttribution() {
-    if (hasLock('attribution')) return;
+    clearLock('attribution');
 
     var link = document.createElement('a');
     link.href = 'https://crawlers.fr';
@@ -343,10 +367,8 @@ ${fixFunctions.join('\n\n')}
 
         // Règle 5: Global try-catch — SILENT failure
         try {
-          if (__CRAWLERS_CONFIG__.started) return; // Double-guard
-          __CRAWLERS_CONFIG__.started = true;
 
-          safeLog('[Crawlers.fr] 🏗️ Architecte Génératif v3.1 — CLS-ZERO + SDK Isolation');
+          safeLog('[Crawlers.fr] 🏗️ Architecte Génératif v3.2 — CLS-ZERO + Merge-Override');
 
 ${fixCalls.map(call => `          ${call}`).join('\n')}
 
@@ -383,10 +405,10 @@ function generateFixCode(
 
     case 'fix_title':
       return {
-        fn: `  // Correction de la balise Title (head — pas d'impact CLS)
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Correction de la balise Title (head — pas d'impact CLS)
+  // Règle 4: Merge-override — écrase le fix précédent si présent
   function fixTitle() {
-    if (hasLock('fix_title')) return;
+    clearLock('fix_title');
     try {
       var title = document.querySelector('title');
       var currentTitle = title ? title.textContent : '';
@@ -412,10 +434,10 @@ function generateFixCode(
     case 'fix_meta_desc':
       const customDesc = fix.data?.description || `Découvrez ${siteName} - Votre partenaire de confiance.`;
       return {
-        fn: `  // Meta Description (head — pas d'impact CLS)
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Meta Description (head — pas d'impact CLS)
+  // Règle 4: Merge-override
   function fixMetaDescription() {
-    if (hasLock('fix_meta_desc')) return;
+    clearLock('fix_meta_desc');
     try {
       var metaDesc = document.querySelector('meta[name="description"]');
       if (!metaDesc) {
@@ -433,10 +455,10 @@ function generateFixCode(
 
     case 'fix_h1':
       return {
-        fn: `  // Correction de la balise H1 — Remplacement dynamique White Hat
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Correction de la balise H1 — Remplacement dynamique White Hat
+  // Règle 4: Merge-override
   function fixH1() {
-    if (hasLock('fix_h1')) return;
+    clearLock('fix_h1');
     try {
       var h1s = document.querySelectorAll('h1');
       if (h1s.length === 0) {
@@ -476,9 +498,9 @@ function generateFixCode(
 
     case 'fix_jsonld':
       return {
-        fn: `  // Règle 1: Injection JSON-LD Organization dans <head> (données sémantiques)
+         fn: `  // Règle 1: Injection JSON-LD Organization dans <head> (données sémantiques)
   function injectOrganizationJsonLd() {
-    if (hasLock('fix_jsonld')) return;
+    clearLock('fix_jsonld');
     try {
       injectJsonLd('organization', {
         "@context": "https://schema.org",
@@ -499,9 +521,9 @@ function generateFixCode(
 
     case 'fix_lazy_images':
       return {
-        fn: `  // Règle 3: Lazy Loading images hors-écran + fetchpriority="high" sur image LCP
+         fn: `  // Règle 3: Lazy Loading images hors-écran + fetchpriority="high" sur image LCP
   function optimizeImages() {
-    if (hasLock('fix_lazy_images')) return;
+    clearLock('fix_lazy_images');
     try {
       var images = document.querySelectorAll('img');
       var viewportHeight = window.innerHeight;
@@ -568,10 +590,10 @@ function generateFixCode(
 
     case 'fix_contrast':
       return {
-        fn: `  // Amélioration du contraste
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Amélioration du contraste
+  // Règle 4: Merge-override
   function improveContrast() {
-    if (hasLock('fix_contrast')) return;
+    clearLock('fix_contrast');
     try {
       // Version simplifiée — version complète côté serveur
       setLock(document.body, 'fix_contrast');
@@ -583,10 +605,10 @@ function generateFixCode(
 
     case 'fix_alt_images':
       return {
-        fn: `  // Ajout des attributs alt
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Ajout des attributs alt
+  // Règle 4: Merge-override
   function fixImageAlts() {
-    if (hasLock('fix_alt_images')) return;
+    clearLock('fix_alt_images');
     try {
       var images = document.querySelectorAll('img:not([alt]), img[alt=""]');
       images.forEach(function(img, index) {
@@ -606,10 +628,10 @@ function generateFixCode(
     case 'fix_gtm':
       const gtmId = fix.data?.gtmId || 'GTM-XXXXXXX';
       return {
-        fn: `  // Intégration Google Tag Manager
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Intégration Google Tag Manager
+  // Règle 4: Merge-override
   function injectGTM() {
-    if (hasLock('fix_gtm')) return;
+    clearLock('fix_gtm');
     try {
       if (window.google_tag_manager) return;
       (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -627,10 +649,10 @@ function generateFixCode(
     case 'fix_ga4':
       const measurementId = fix.data?.measurementId || 'G-XXXXXXXXXX';
       return {
-        fn: `  // Intégration Google Analytics 4
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Intégration Google Analytics 4
+  // Règle 4: Merge-override
   function injectGA4() {
-    if (hasLock('fix_ga4')) return;
+    clearLock('fix_ga4');
     try {
       if (window.gtag) return;
       var script = document.createElement('script');
@@ -657,10 +679,10 @@ function generateFixCode(
       const hallucinationData = fix.data || {};
       const trueValue = hallucinationData.trueValue || siteName;
       return {
-        fn: `  // Règle 1: Correction Hallucination IA — JSON-LD dans <head> uniquement
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Règle 1: Correction Hallucination IA — JSON-LD dans <head> uniquement
+  // Règle 4: Merge-override
   function fixHallucination() {
-    if (hasLock('fix_hallucination')) return;
+    clearLock('fix_hallucination');
     try {
       // Données sémantiques via JSON-LD exclusivement (Règle 1)
       injectJsonLd('hallucination-fix', {
@@ -684,11 +706,11 @@ function generateFixCode(
 
     case 'inject_faq':
       return {
-        fn: `  // Règle 1: FAQ → JSON-LD FAQPage dans <head> (données sémantiques IA/GEO)
+         fn: `  // Règle 1: FAQ → JSON-LD FAQPage dans <head> (données sémantiques IA/GEO)
   // Pas de HTML visible = pas de CLS
-  // Règle 4: Lock anti double-exécution
+  // Règle 4: Merge-override
   function injectFAQSection() {
-    if (hasLock('inject_faq')) return;
+    clearLock('inject_faq');
     try {
       // Version complète générée côté serveur avec contenu IA
       // Frontend fallback: JSON-LD sémantique uniquement (Règle 1)
@@ -706,10 +728,10 @@ function generateFixCode(
 
     case 'inject_blog_section':
       return {
-        fn: `  // Règle 2B: Blog → Skeleton (espace réservé) + injection HTML
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Règle 2B: Blog → Skeleton (espace réservé) + injection HTML
+  // Règle 4: Merge-override
   function injectBlogSection() {
-    if (hasLock('inject_blog_section')) return;
+    clearLock('inject_blog_section');
     try {
       // Version complète générée côté serveur avec contenu IA
       console.log('[Crawlers.fr] 🏗️ Blog (Règle 2B — version complète côté serveur)');
@@ -721,10 +743,10 @@ function generateFixCode(
 
     case 'enhance_semantic_meta':
       return {
-        fn: `  // Enrichissement Sémantique — head uniquement (pas de CLS)
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Enrichissement Sémantique — head uniquement (pas de CLS)
+  // Règle 4: Merge-override
   function enhanceSemanticMeta() {
-    if (hasLock('enhance_semantic_meta')) return;
+    clearLock('enhance_semantic_meta');
     try {
       // Version complète générée côté serveur
       console.log('[Crawlers.fr] 🏗️ Sémantique (version complète côté serveur)');
@@ -736,10 +758,10 @@ function generateFixCode(
 
     case 'inject_breadcrumbs':
       return {
-        fn: `  // Règle 1: Breadcrumbs → JSON-LD BreadcrumbList dans <head>
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Règle 1: Breadcrumbs → JSON-LD BreadcrumbList dans <head>
+  // Règle 4: Merge-override
   function injectBreadcrumbs() {
-    if (hasLock('inject_breadcrumbs')) return;
+    clearLock('inject_breadcrumbs');
     try {
       var path = window.location.pathname.split('/').filter(Boolean);
       var items = [{ name: 'Accueil', url: '/' }];
@@ -773,10 +795,10 @@ function generateFixCode(
 
     case 'inject_local_business':
       return {
-        fn: `  // Règle 1: LocalBusiness → JSON-LD dans <head> (données sémantiques)
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Règle 1: LocalBusiness → JSON-LD dans <head> (données sémantiques)
+  // Règle 4: Merge-override
   function injectLocalBusiness() {
-    if (hasLock('inject_local_business')) return;
+    clearLock('inject_local_business');
     try {
       // Version complète générée côté serveur
       injectJsonLd('local-business', {
