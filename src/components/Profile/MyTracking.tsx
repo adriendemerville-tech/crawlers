@@ -1363,7 +1363,8 @@ export function MyTracking() {
 
                   {/* SERP Ranking Banner (DataForSEO) */}
                   <SerpKpiBanner 
-                    data={latestSerpData} 
+                    data={latestSerpData}
+                    previousIndexedPages={previousIndexedPages}
                     onRefresh={async () => {
                       if (!currentSite || !user || refreshingSerp) return;
                       setRefreshingSerp(true);
