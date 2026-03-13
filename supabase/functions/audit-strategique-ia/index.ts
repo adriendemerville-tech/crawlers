@@ -488,8 +488,8 @@ async function generateSeedsWithAI(
   mode: 'initial' | 'vertical' | 'horizontal' = 'initial',
   feedback?: string
 ): Promise<string[]> {
-  const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
-  if (!OPENROUTER_API_KEY) {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  if (!LOVABLE_API_KEY) {
     console.log('⚠️ No AI key for seed generation, falling back to metadata extraction');
     return [];
   }
