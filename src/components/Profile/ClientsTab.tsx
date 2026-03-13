@@ -196,23 +196,54 @@ export function ClientsTab() {
   const handleCreate = async () => {
     if (!user || !form.first_name.trim() || !form.last_name.trim()) return;
     setSaving(true);
-    const { error } = await supabase.from('agency_clients').insert({
-      owner_user_id: user.id,
+
+    const payload = {
       first_name: form.first_name.trim(),
       last_name: form.last_name.trim(),
       company: form.company.trim() || null,
       role: form.role.trim() || null,
       email: form.email.trim() || null,
-    });
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
+    };
+
+    if (editingClientId) {
+      const { error } = await supabase.from('agency_clients').update(payload).eq('id', editingClientId);
+      setSaving(false);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success(t.clientUpdated);
+        resetForm();
+        fetchClients();
+      }
     } else {
-      toast.success(t.clientAdded);
-      setForm({ first_name: '', last_name: '', company: '', role: '', email: '' });
-      setDialogOpen(false);
-      fetchClients();
+      const { error } = await supabase.from('agency_clients').insert({ ...payload, owner_user_id: user.id });
+      setSaving(false);
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success(t.clientAdded);
+        resetForm();
+        fetchClients();
+      }
     }
+  };
+
+  const resetForm = () => {
+    setForm({ first_name: '', last_name: '', company: '', role: '', email: '' });
+    setEditingClientId(null);
+    setDialogOpen(false);
+  };
+
+  const openEdit = (client: AgencyClient) => {
+    setEditingClientId(client.id);
+    setForm({
+      first_name: client.first_name,
+      last_name: client.last_name,
+      company: client.company || '',
+      role: client.role || '',
+      email: client.email || '',
+    });
+    setDialogOpen(true);
   };
 
   const handleDelete = async (clientId: string) => {
