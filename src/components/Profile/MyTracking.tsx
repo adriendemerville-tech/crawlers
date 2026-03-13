@@ -1048,7 +1048,10 @@ export function MyTracking() {
                   )}
 
                   {/* Google Search Console Chart */}
-                  <Card className={!gscConnected ? 'border-dashed opacity-60 pointer-events-auto' : ''}>
+                  <Card className={`relative ${!gscConnected ? 'border-dashed opacity-60 pointer-events-auto' : ''}`}>
+                    <button className="absolute top-2 right-2 z-10 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted transition-colors" aria-label="Déplacer">
+                      <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                    </button>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
                         <Search className="h-4 w-4" />
@@ -1060,7 +1063,7 @@ export function MyTracking() {
                           </span>
                         )}
                         {gscConnected && gscData && (
-                          <Badge variant="secondary" className="text-xs font-normal ml-auto">
+                          <Badge variant="secondary" className="text-xs font-normal ml-auto mr-6">
                             {gscData.date_range.start} → {gscData.date_range.end}
                           </Badge>
                         )}
