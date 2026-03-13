@@ -403,10 +403,10 @@ function generateFixCode(
 
     case 'fix_title':
       return {
-        fn: `  // Correction de la balise Title (head — pas d'impact CLS)
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Correction de la balise Title (head — pas d'impact CLS)
+  // Règle 4: Merge-override — écrase le fix précédent si présent
   function fixTitle() {
-    if (hasLock('fix_title')) return;
+    clearLock('fix_title');
     try {
       var title = document.querySelector('title');
       var currentTitle = title ? title.textContent : '';
