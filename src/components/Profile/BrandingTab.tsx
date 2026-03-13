@@ -189,7 +189,8 @@ export function BrandingTab() {
   // Detect which cards are dirty
   const isIdentityDirty = logoUrl !== (profile?.agency_logo_url || '')
     || primaryColor !== (profile?.agency_primary_color || '#7c3aed')
-    || brandName !== (profile?.agency_brand_name || '');
+    || brandName !== (profile?.agency_brand_name || '')
+    || reportFont !== ((profile as any)?.agency_report_font || '');
 
   const isContactDirty = contactFirstName !== (profile?.agency_contact_first_name || '')
     || contactLastName !== (profile?.agency_contact_last_name || '')
