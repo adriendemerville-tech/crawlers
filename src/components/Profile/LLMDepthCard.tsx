@@ -230,14 +230,42 @@ function MiniProgressRing({ iteration, found }: { iteration: number; found: bool
 
 export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initialData }: LLMDepthCardProps) {
   const { language } = useLanguage();
+  const { isAgencyPro } = useCredits();
   const t = translations[language] || translations.fr;
   const [data, setData] = useState<LLMDepthData | null>(initialData ?? null);
   const [loading, setLoading] = useState(false);
   const [banner, setBanner] = useState<'completed' | 'expert_required' | null>(null);
   const [hasPreviousData, setHasPreviousData] = useState<boolean | null>(null);
   const [streamProgress, setStreamProgress] = useState<Record<string, ModelProgress>>({});
+  const [conversations, setConversations] = useState<Record<string, ConversationTurn[]>>({});
+  const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const conversationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const simulatedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Fetch stored conversations for paid users
+  useEffect(() => {
+    if (!trackedSiteId || !userId || !isAgencyPro) return;
+    supabase
+      .from('llm_depth_conversations')
+      .select('llm_name, iteration, prompt_text, response_summary')
+      .eq('tracked_site_id', trackedSiteId)
+      .eq('user_id', userId)
+      .order('iteration', { ascending: true })
+      .then(({ data: convData }) => {
+        if (!convData?.length) return;
+        const grouped: Record<string, ConversationTurn[]> = {};
+        for (const row of convData) {
+          if (!grouped[row.llm_name]) grouped[row.llm_name] = [];
+          grouped[row.llm_name].push({
+            iteration: row.iteration,
+            prompt_text: row.prompt_text,
+            response_summary: row.response_summary,
+          });
+        }
+        setConversations(grouped);
+      });
+  }, [trackedSiteId, userId, isAgencyPro, data]);
 
   // Check if user has previous LLM depth data for this site
   useEffect(() => {
