@@ -2,11 +2,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
 /**
- * refresh-llm-visibility-all
+ * refresh-llm-visibility-all  v2
  * 
  * Weekly cron: triggers calculate-llm-visibility for all tracked sites.
- * Scheduled every Monday at 07:00 UTC (after SERP refresh at 06:00).
+ * Now supports cursor-based pagination + self-re-invocation to handle
+ * unlimited sites within Edge Function timeout.
  */
+
+const BATCH_SIZE = 15
+const DELAY_BETWEEN_SITES_MS = 2000
+const MAX_RUNTIME_MS = 240_000 // 240s safety margin
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -18,21 +23,41 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, serviceKey)
 
   try {
-    const { data: sites, error } = await supabase
+    const body = await req.json().catch(() => ({}))
+    const cursor: string | undefined = body.cursor
+
+    let query = supabase
       .from('tracked_sites')
       .select('id, domain, user_id')
+      .order('id', { ascending: true })
+      .limit(BATCH_SIZE)
+
+    if (cursor) {
+      query = query.gt('id', cursor)
+    }
+
+    const { data: sites, error } = await query
 
     if (error || !sites?.length) {
-      console.log('[refresh-llm-visibility-all] No sites or error:', error)
-      return new Response(JSON.stringify({ refreshed: 0 }), {
+      console.log('[refresh-llm-visibility-all] No (more) sites or error:', error)
+      return new Response(JSON.stringify({ refreshed: 0, next_cursor: null }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     let refreshed = 0
     let errors = 0
+    const startTime = Date.now()
+    let lastProcessedId: string | null = null
 
     for (const site of sites) {
+      if (Date.now() - startTime > MAX_RUNTIME_MS) {
+        console.warn(`[refresh-llm-visibility-all] ⏱ Watchdog: stopping after ${refreshed} sites`)
+        break
+      }
+
+      lastProcessedId = site.id
+
       try {
         const resp = await fetch(`${supabaseUrl}/functions/v1/calculate-llm-visibility`, {
           method: 'POST',
@@ -55,17 +80,32 @@ Deno.serve(async (req) => {
         refreshed++
         console.log(`[refresh-llm-visibility-all] ✅ ${site.domain}`)
 
-        // 2s delay between sites to avoid rate limiting (20 API calls per site)
-        await new Promise(r => setTimeout(r, 2000))
+        await new Promise(r => setTimeout(r, DELAY_BETWEEN_SITES_MS))
       } catch (err) {
         console.error(`[refresh-llm-visibility-all] Error for ${site.domain}:`, err)
         errors++
       }
     }
 
-    console.log(`[refresh-llm-visibility-all] Done: ${refreshed}/${sites.length} (${errors} errors)`)
+    const hasMore = sites.length === BATCH_SIZE && lastProcessedId !== null
+    const nextCursor = hasMore ? lastProcessedId : null
 
-    return new Response(JSON.stringify({ refreshed, errors, total: sites.length }), {
+    console.log(`[refresh-llm-visibility-all] Batch done: ${refreshed}/${sites.length} (${errors} errors)${nextCursor ? ` | next_cursor: ${nextCursor}` : ' | COMPLETE'}`)
+
+    // ═══ SELF-RE-INVOCATION: continue processing remaining sites ═══
+    if (nextCursor) {
+      console.log(`[refresh-llm-visibility-all] 🔄 Self-invoking for next batch (cursor: ${nextCursor})`)
+      fetch(`${supabaseUrl}/functions/v1/refresh-llm-visibility-all`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cursor: nextCursor }),
+      }).catch(err => console.error('[refresh-llm-visibility-all] Self-invoke failed:', err))
+    }
+
+    return new Response(JSON.stringify({ refreshed, errors, total: sites.length, next_cursor: nextCursor }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {

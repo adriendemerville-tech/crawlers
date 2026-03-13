@@ -2120,16 +2120,33 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const json = (data: any, status = 200) =>
+    new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+  // ═══ ASYNC JOB POLLING: GET ?job_id=xxx ═══
+  const reqUrl = new URL(req.url);
+  const pollJobId = reqUrl.searchParams.get('job_id');
+  if (pollJobId && req.method === 'GET') {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const sb = createClient(supabaseUrl, serviceKey);
+    const { data: job } = await sb.from('async_jobs').select('status, result_data, error_message, progress').eq('id', pollJobId).single();
+    if (!job) return json({ error: 'Job not found' }, 404);
+    if (job.status === 'completed') return json({ success: true, data: job.result_data, status: 'completed' });
+    if (job.status === 'failed') return json({ success: false, error: job.error_message, status: 'failed' });
+    return json({ status: job.status, progress: job.progress });
+  }
+
+  // ═══ ASYNC MODE: POST with { async: true } returns 202 + job_id ═══
   // ═══ GLOBAL DEADLINE: 8 min 30s — guarantees response before Edge Function timeout ═══
   const GLOBAL_DEADLINE = 510_000; // 8min30s
   const startTime = Date.now();
   const isOverDeadline = () => Date.now() - startTime > GLOBAL_DEADLINE;
 
-  const json = (data: any, status = 200) =>
-    new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
   try {
-    const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, lang } = await req.json();
+    const body = await req.json();
+    const { url, toolsData, hallucinationCorrections, competitorCorrections, cachedContext, lang } = body;
+    const asyncMode = body.async === true;
     const outputLang = lang || 'fr';
     const langLabel = outputLang === 'fr' ? 'français' : outputLang === 'es' ? 'espagnol' : 'anglais';
     const dfLangCode = outputLang === 'es' ? 'es' : outputLang === 'en' ? 'en' : 'fr';
