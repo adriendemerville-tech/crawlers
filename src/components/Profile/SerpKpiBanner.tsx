@@ -1,4 +1,4 @@
-import { Hash, TrendingUp, TrendingDown, Home, Award, Target, BarChart3, RefreshCw, Loader2, FileText, GripVertical } from 'lucide-react';
+import { Hash, TrendingUp, TrendingDown, Home, Award, Target, BarChart3, RefreshCw, Loader2, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -135,9 +135,6 @@ export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefresh
   if (!data || data.total_keywords === 0) {
     return (
       <Card className="border-dashed opacity-80 relative">
-        <button className="absolute top-2 right-2 z-10 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted transition-colors" aria-label="Déplacer">
-          <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-        </button>
         <CardContent className="py-6 text-center text-muted-foreground text-sm">
           <BarChart3 className="h-8 w-8 mx-auto mb-3 opacity-30" />
           <p>{t.noData}</p>
@@ -166,9 +163,6 @@ export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefresh
 
   return (
     <Card className="relative">
-      <button className="absolute top-2 right-2 z-10 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted transition-colors" aria-label="Déplacer">
-        <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-      </button>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <Award className="h-4 w-4" />
