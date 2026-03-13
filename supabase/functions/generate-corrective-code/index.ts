@@ -290,7 +290,7 @@ async function adaptSolutionWithAI(
 
     if (!response.ok) return null;
     const data = await response.json();
-    trackTokenUsage('generate-corrective-code', 'google/gemini-3-flash-preview', data.usage);
+    trackTokenUsage('generate-corrective-code', 'google/gemini-2.5-flash', data.usage);
     let content = data.choices?.[0]?.message?.content || null;
     if (content) {
       // Nettoyer les blocs markdown
