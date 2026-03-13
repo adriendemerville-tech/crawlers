@@ -96,6 +96,8 @@ export function useAuditState() {
     strategicProgressiveReveal, setStrategicProgressiveReveal,
     storedCorrections, setStoredCorrections,
     siteAutoTracked, setSiteAutoTracked,
+    fatalAuditError, setFatalAuditError,
+    auditFailCountRef,
 
     // Modal states
     isReportModalOpen, setIsReportModalOpen,
