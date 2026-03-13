@@ -352,6 +352,7 @@ async function runDepthConversation(
     : ['Generic need', 'Use case', 'Features', 'Budget', 'Geography', 'Niche', 'Exhaustive']
 
   const anglesTested: string[] = []
+  let lastAssistantContent = ''
 
   // Track which gateway is active (may change on fallback)
   let activeGateway: Gateway = modelDef.gateway
@@ -380,6 +381,7 @@ async function runDepthConversation(
 
       const data = await response.json()
       const content = data.choices?.[0]?.message?.content || ''
+      if (content) lastAssistantContent = content
 
       const provider = usedGateway === 'lovable' ? 'lovable-ai' : 'openrouter'
       trackPaidApiCall('check-llm-depth', provider, modelDef.model, domain)
@@ -417,7 +419,7 @@ async function runDepthConversation(
     iterations: MAX_ITERATIONS + 1,
     found: false,
     mentioned_as: null,
-    conversation_summary: '',
+    conversation_summary: lastAssistantContent.slice(0, 400),
     angles_tested: anglesTested,
   }
 }
