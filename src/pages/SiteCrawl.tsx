@@ -445,6 +445,7 @@ export default function SiteCrawl() {
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [indexedPagesCount, setIndexedPagesCount] = useState<number | null>(null);
+  const [isDetectingPages, setIsDetectingPages] = useState(false);
 
   // Advanced options
   const [showAdvanced, setShowAdvanced] = useState(false);
