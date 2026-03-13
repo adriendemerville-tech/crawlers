@@ -98,16 +98,23 @@ const Index = () => {
     metaDesc.setAttribute('content', descriptions[language] || descriptions.fr);
   }, [language]);
 
-  // Auto-redirect subscribed users to console
+  // Auto-redirect subscribed users to console with loading animation
   const { user: authUser } = useAuth();
   const { isAgencyPro: isSubscribed } = useCredits();
   const { isAdmin: isAdminUser } = useAdmin();
   const navTo = useNavigate();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   useEffect(() => {
     if (authUser && (isSubscribed || isAdminUser)) {
-      navTo('/console?tab=tracking', { replace: true });
+      setIsRedirecting(true);
+      const timer = setTimeout(() => {
+        navTo('/console?tab=tracking', { replace: true });
+      }, 900);
+      return () => clearTimeout(timer);
     }
   }, [authUser, isSubscribed, isAdminUser, navTo]);
+
+
 
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
   useStructuredData();
@@ -541,8 +548,18 @@ const Index = () => {
   };
 
 
-  // Check if any scan has results
   const hasResults = !!(crawlResult || geoResult || llmResult || mobilePageSpeedResult || desktopPageSpeedResult);
+
+  if (isRedirecting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background animate-fade-in">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground text-sm">Chargement de votre console…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
