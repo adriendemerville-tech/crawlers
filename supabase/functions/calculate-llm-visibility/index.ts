@@ -31,23 +31,87 @@ const NUM_PROMPTS = 5
 
 // ─── Prompt generation from site identity ───
 // CRITICAL: Prompts must NEVER contain brand name, site name, domain, or company name.
-// Including them would bias LLM responses and falsify visibility scores.
-// We rely solely on sector/audience/product descriptors for organic discovery.
+// Prompts simulate REAL END-USER queries — the potential customer, NOT the site owner.
+// They must sound like what someone would actually type into ChatGPT/Perplexity.
 function generatePrompts(site: any): string[] {
-  const sector = site.market_sector || 'numérique'
-  const target = site.target_audience || 'les professionnels'
-  const products = site.products_services || 'les services en ligne'
+  const sector = site.market_sector || ''
+  const target = site.target_audience || ''
+  const products = site.products_services || ''
   const area = site.commercial_area || ''
 
-  const templates = [
-    `Quels sont les meilleurs outils ou services dans le secteur "${sector}" pour ${target} ?`,
-    `Recommande-moi une solution pour ${products}${area ? ` dans la zone ${area}` : ''}.`,
-    `Quelles sont les entreprises les plus fiables pour ${products} destinés à ${target} ?`,
-    `Fais-moi un top 5 des acteurs du marché "${sector}"${area ? ` en ${area}` : ''}.`,
-    `Si je cherche ${products} pour ${target}, quelles sont les meilleures options disponibles ?`,
+  // ─── Intent-based prompt templates ───
+  // Mix of informational, commercial, and problem-solving intents
+  // written from the perspective of a potential customer/user.
+  const informational: string[] = []
+  const commercial: string[] = []
+  const problemSolving: string[] = []
+
+  if (products) {
+    // Customer looking for a solution
+    commercial.push(
+      area
+        ? `Je cherche ${products} ${area}, qu'est-ce que tu me conseilles ?`
+        : `Je cherche ${products}, qu'est-ce que tu me conseilles ?`
+    )
+    // Customer comparing options
+    commercial.push(
+      `C'est quoi les meilleures options pour ${products} en ce moment ?`
+    )
+    // Customer with a problem
+    problemSolving.push(
+      `J'ai besoin de ${products} mais je ne sais pas par où commencer, tu peux m'aider ?`
+    )
+  }
+
+  if (sector) {
+    // Curious user exploring a domain
+    informational.push(
+      `Comment ça marche ${sector} ? C'est quoi les outils ou services qui existent ?`
+    )
+    // User asking for advice
+    informational.push(
+      target
+        ? `Je suis ${target} et je veux me lancer dans ${sector}, tu recommandes quoi ?`
+        : `Je veux me lancer dans ${sector}, par quoi je commence ?`
+    )
+  }
+
+  if (target && products) {
+    // Very natural "friend asking a friend" style
+    problemSolving.push(
+      `En tant que ${target}, j'hésite entre plusieurs solutions pour ${products}. Tu as des recommandations ?`
+    )
+  }
+
+  if (area && products) {
+    // Local intent
+    commercial.push(
+      `Où trouver ${products} à ${area} ? Des adresses ou des sites à me recommander ?`
+    )
+  }
+
+  // Fallback generic prompts if identity data is sparse
+  if (informational.length === 0 && commercial.length === 0 && problemSolving.length === 0) {
+    const fallbackSector = sector || 'services en ligne'
+    return [
+      `Je cherche un bon prestataire pour ${fallbackSector}, tu connais ?`,
+      `C'est quoi les solutions les plus populaires dans le domaine ${fallbackSector} ?`,
+      `J'ai un projet dans ${fallbackSector}, tu me recommandes quoi comme outil ou service ?`,
+      `Quelles sont les alternatives les plus fiables pour ${fallbackSector} en ce moment ?`,
+      `Un ami m'a dit de regarder du côté de ${fallbackSector}, tu as des suggestions concrètes ?`,
+    ]
+  }
+
+  // Interleave intents for diversity: commercial, informational, problem-solving
+  const allPrompts = [
+    ...commercial,
+    ...informational,
+    ...problemSolving,
   ]
 
-  return templates.slice(0, NUM_PROMPTS)
+  // Deduplicate and pick up to NUM_PROMPTS
+  const unique = [...new Set(allPrompts)]
+  return unique.slice(0, NUM_PROMPTS)
 }
 
 // ─── Check if brand is mentioned in response ───
