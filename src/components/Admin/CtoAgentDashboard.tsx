@@ -242,6 +242,59 @@ export function CtoAgentDashboard() {
         </Card>
       </div>
 
+      {/* Cache Health Check */}
+      <Card className="border-muted">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <HeartPulse className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base">Santé du cache partagé</CardTitle>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={runCacheHealthCheck}
+              disabled={checkingCache}
+            >
+              {checkingCache ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <HeartPulse className="h-3.5 w-3.5 mr-1.5" />}
+              Vérifier
+            </Button>
+          </div>
+        </CardHeader>
+        {cacheHealth && (
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Badge variant={cacheHealth.status === 'healthy' ? 'default' : cacheHealth.status === 'warning' ? 'secondary' : 'destructive'}>
+                {cacheHealth.status === 'healthy' ? '✅ Sain' : cacheHealth.status === 'warning' ? '⚠️ Attention' : '🔴 Critique'}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {cacheHealth.total_entries} entrées · {cacheHealth.expired_entries} expirées · {cacheHealth.empty_results_count} vides
+              </span>
+            </div>
+            <div className="flex gap-4 text-xs">
+              {Object.entries(cacheHealth.entries_by_type).map(([type, count]) => (
+                <span key={type} className="text-muted-foreground">
+                  <span className="font-medium text-foreground">{count}</span> {type}
+                </span>
+              ))}
+            </div>
+            {cacheHealth.score_stats && (
+              <div className="text-xs text-muted-foreground">
+                Scores visibilité : moy {cacheHealth.score_stats.avg}% · min {cacheHealth.score_stats.min}% · max {cacheHealth.score_stats.max}% · σ {cacheHealth.score_stats.stddev}
+              </div>
+            )}
+            {cacheHealth.anomalies.length > 0 && (
+              <div className="space-y-1 p-2 rounded-md bg-destructive/5 border border-destructive/20">
+                <p className="text-xs font-medium text-destructive">Anomalies détectées :</p>
+                {cacheHealth.anomalies.map((a, i) => (
+                  <p key={i} className="text-xs text-muted-foreground">{a}</p>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+
       {/* Chart */}
       <Card>
         <CardHeader>
