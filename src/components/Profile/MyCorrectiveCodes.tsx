@@ -214,7 +214,20 @@ export function MyCorrectiveCodes() {
 
   return (
     <Card>
-      <CardContent className="pt-6">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardDescription>{t.description}</CardDescription>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/modifier-code-wordpress')}>
+                <Plug className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>WordPress</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </CardHeader>
+      <CardContent>
         {codes.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Code2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
