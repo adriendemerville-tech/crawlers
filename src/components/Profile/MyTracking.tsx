@@ -36,7 +36,7 @@ const translations = {
     removeConfirm: 'Site retiré du suivi',
     lastAudit: 'Dernier audit',
     never: 'Jamais',
-    seoScore: 'Score SEO',
+    seoScore: 'Visibilité IA',
     geoScore: 'Score GEO',
     citationRate: 'Taux de citation LLM',
     sentiment: 'Sentiment IA',
@@ -63,7 +63,7 @@ const translations = {
     removeConfirm: 'Site removed from tracking',
     lastAudit: 'Last audit',
     never: 'Never',
-    seoScore: 'SEO Score',
+    seoScore: 'AI Visibility',
     geoScore: 'GEO Score',
     citationRate: 'LLM Citation Rate',
     sentiment: 'AI Sentiment',
@@ -90,7 +90,7 @@ const translations = {
     removeConfirm: 'Sitio eliminado del seguimiento',
     lastAudit: 'Última auditoría',
     never: 'Nunca',
-    seoScore: 'Score SEO',
+    seoScore: 'Visibilidad IA',
     geoScore: 'Score GEO',
     citationRate: 'Tasa de citación LLM',
     sentiment: 'Sentimiento IA',
@@ -754,7 +754,7 @@ export function MyTracking() {
 
                   {/* KPI Cards */}
                   <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${!latestStats ? 'opacity-40 pointer-events-none' : ''}`}>
-                    <KPICard label={t.seoScore} value={latestStats?.seo_score ? `${latestStats.seo_score}/200` : '—'} icon={TrendingUp} />
+                    <KPICard label={t.seoScore} value={latestStats?.seo_score ? `${latestStats.seo_score}/100` : '—'} icon={Eye} />
                     <KPICard label={t.geoScore} value={latestStats?.geo_score ? `${latestStats.geo_score}%` : '—'} icon={Globe} />
                     <KPICard label={t.performance} value={latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—'} icon={Gauge} />
                     <KPICard label={t.citationRate} value={latestStats?.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—'} icon={Brain} />
