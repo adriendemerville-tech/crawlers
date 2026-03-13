@@ -34,6 +34,7 @@ import { LexicalFootprintCard } from './LexicalFootprintCard';
 import { ExpertiseSentimentCard } from './ExpertiseSentimentCard';
 import { RedTeamCard } from './RedTeamCard';
 import { GoogleMyBusinessCard } from './GoogleMyBusinessCard';
+import { SimulatedLLMDepthCard } from './SimulatedLLMDepthCard';
 interface StrategicInsightsProps {
   analysis: StrategicAnalysis;
   hideExecutiveSummary?: boolean;
@@ -272,6 +273,11 @@ export function StrategicInsights({
               <LLMVisibilityCard data={analysis.llm_visibility_raw} />
             </RevealWrapper>
           )}
+
+          {/* 9b. Profondeur LLM (simulated) */}
+          <RevealWrapper delay={7000} isDataCard enabled={progressiveReveal}>
+            <SimulatedLLMDepthCard analysis={analysis} domain={domain} />
+          </RevealWrapper>
 
           {/* 10. Matrice de Risque Zéro-Clic */}
           <RevealWrapper delay={8000} isDataCard enabled={progressiveReveal}>
