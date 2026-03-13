@@ -22,6 +22,7 @@ interface UserProfile {
   plan_type: string;
   created_at: string;
   updated_at: string;
+  affiliate_code_used?: string | null;
 }
 
 export function UserManagement() {
