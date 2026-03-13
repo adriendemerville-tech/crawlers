@@ -869,6 +869,11 @@ export function ExpertAuditDashboard() {
         setStrategicCachedContext(data.data._cachedContext);
       }
       setCompletedSteps(prev => [...prev.filter(s => s !== 2), 2]);
+      // Save to domain-level strategic cache for future audits
+      if (domain) {
+        setStrategicCache(domain, strategicData);
+        setStrategicCacheInfo({ auditCount: 1, maxBeforeRefresh: STRATEGIC_CACHE_MAX });
+      }
       // Fire-and-forget: CTO Agent analysis
       triggerCtoAgent(strategicData, 'strategic', normalizedUrl, new URL(normalizedUrl).hostname);
       // Clear any previous hallucination diagnosis since we re-analyzed
