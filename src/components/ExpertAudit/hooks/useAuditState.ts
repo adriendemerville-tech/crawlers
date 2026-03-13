@@ -25,6 +25,8 @@ export function useAuditState() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [storedCorrections, setStoredCorrections] = useState<any[]>([]);
   const [siteAutoTracked, setSiteAutoTracked] = useState(false);
+  const [fatalAuditError, setFatalAuditError] = useState(false);
+  const auditFailCountRef = useRef<Record<string, number>>({});
 
   // Modal states
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -53,6 +55,8 @@ export function useAuditState() {
     setCurrentStep(1);
     setCompletedSteps([]);
     setStrategicProgressiveReveal(false);
+    setFatalAuditError(false);
+    auditFailCountRef.current = {};
     sessionStorage.removeItem('audit_url');
     sessionStorage.removeItem('audit_technical_result');
     sessionStorage.removeItem('audit_strategic_result');
@@ -92,6 +96,8 @@ export function useAuditState() {
     strategicProgressiveReveal, setStrategicProgressiveReveal,
     storedCorrections, setStoredCorrections,
     siteAutoTracked, setSiteAutoTracked,
+    fatalAuditError, setFatalAuditError,
+    auditFailCountRef,
 
     // Modal states
     isReportModalOpen, setIsReportModalOpen,
