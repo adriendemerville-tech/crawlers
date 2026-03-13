@@ -364,7 +364,7 @@ export function AnalyticsDashboard() {
         byApiService,
       });
 
-      // Calculate average cost per paying subscriber
+      // Calculate business metrics: paying subscribers, credits purchased, MRR
       try {
         const { data: payingProfiles } = await supabase
           .from('profiles')
@@ -372,9 +372,22 @@ export function AnalyticsDashboard() {
           .eq('plan_type', 'agency_pro')
           .eq('subscription_status', 'active');
         
+        const payingCount = payingProfiles?.length || 0;
+
+        // Credits purchased (sum of positive 'purchase' transactions)
+        const { data: purchaseTx } = await supabase
+          .from('credit_transactions')
+          .select('amount')
+          .eq('transaction_type', 'purchase');
+        const creditsPurchased = (purchaseTx || []).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+
+        // MRR = paying subscribers × 59€
+        const mrr = payingCount * 59;
+
+        setBusinessMetrics({ payingSubscribers: payingCount, creditsPurchased, mrr });
+
         if (payingProfiles && payingProfiles.length > 0) {
           const payingUserIds = new Set(payingProfiles.map(p => p.user_id));
-          // Sum cost per paying user from token events
           const costPerUser: Record<string, number> = {};
           tokenEvents.forEach(e => {
             const data = e.event_data as Record<string, unknown> | null;
@@ -386,13 +399,12 @@ export function AnalyticsDashboard() {
               costPerUser[e.user_id] = (costPerUser[e.user_id] || 0) + cost;
             }
           });
-          // Also add paid API call costs (estimated at ~0.01€ per call for DataForSEO, ~0.005€ for others)
           const API_COST_ESTIMATES: Record<string, number> = {
             dataforseo: 0.01,
             browserless: 0.008,
             firecrawl: 0.005,
             'fly-playwright': 0.0001,
-            openrouter: 0, // already counted in tokens
+            openrouter: 0,
           };
           paidApiEvents.forEach(e => {
             const data = e.event_data as Record<string, unknown> | null;
@@ -411,7 +423,7 @@ export function AnalyticsDashboard() {
           setAvgCostPerSubscriber({ avg: 0, count: 0 });
         }
       } catch (err) {
-        console.error('Error calculating avg cost per subscriber:', err);
+        console.error('Error calculating business metrics:', err);
       }
 
       // Calculate daily data (last 30 days)
