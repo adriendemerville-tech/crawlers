@@ -233,7 +233,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
         </h2>
 
         {/* H3 Subheadline - SEO optimized */}
-        <p 
+        <h3 
           className="mx-auto mb-10 max-w-2xl text-base font-normal text-muted-foreground sm:text-xl"
           dangerouslySetInnerHTML={{ __html: content.subheadline }}
         />
