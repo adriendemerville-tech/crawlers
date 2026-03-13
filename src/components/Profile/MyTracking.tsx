@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCredits } from '@/contexts/CreditsContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area, Bar, BarChart, ComposedChart } from 'recharts';
@@ -157,6 +158,7 @@ export function MyTracking() {
   const { user, profile } = useAuth();
   const { language } = useLanguage();
   const { isAgencyPro } = useCredits();
+  const { isAdmin } = useAdmin();
   const t = translations[language] || translations.fr;
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1404,8 +1406,8 @@ export function MyTracking() {
                     />
                   )}
 
-                  {/* LLM Depth Card – paid users only */}
-                  {currentSite && isAgencyPro && (
+                  {/* LLM Depth Card – Pro Agency, collaborators & admins */}
+                  {currentSite && (isAgencyPro || isCollaborator || isAdmin) && (
                     <LLMDepthCard domain={currentSite.domain} />
                   )}
                 </div>
