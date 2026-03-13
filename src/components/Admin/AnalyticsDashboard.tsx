@@ -843,7 +843,7 @@ export function AnalyticsDashboard() {
               <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
                 <p className="text-xs text-rose-700 dark:text-rose-400 font-medium">Coût moyen / abonné</p>
                 <p className="text-lg font-bold text-rose-600 dark:text-rose-400">
-                  {avgCostPerSubscriber.avg.toFixed(4)}€
+                  {avgCostPerSubscriber.avg.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
                 </p>
                 <p className="text-[10px] text-rose-600/70 dark:text-rose-400/70 mt-0.5">
                   {avgCostPerSubscriber.count} abonné{avgCostPerSubscriber.count > 1 ? 's' : ''} actif{avgCostPerSubscriber.count > 1 ? 's' : ''}
