@@ -63,7 +63,7 @@ const translations = {
     removeConfirm: 'Site removed from tracking',
     lastAudit: 'Last audit',
     never: 'Never',
-    seoScore: 'SEO Score',
+    seoScore: 'AI Visibility',
     geoScore: 'GEO Score',
     citationRate: 'LLM Citation Rate',
     sentiment: 'AI Sentiment',
