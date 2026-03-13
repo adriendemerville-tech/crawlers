@@ -2137,8 +2137,8 @@ Deno.serve(async (req) => {
 
     if (!url) return json({ success: false, error: 'URL is required' }, 400);
 
-    const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
-    if (!OPENROUTER_API_KEY) return json({ success: false, error: 'AI service not configured' }, 500);
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) return json({ success: false, error: 'AI service not configured' }, 500);
 
     const effectiveToolsData: ToolsData = toolsData || {
       crawlers: { note: 'Non disponible' },
