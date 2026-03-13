@@ -162,6 +162,7 @@ const translations = {
       { icon: 'Code2', title: 'Unlimited corrective code', description: 'Generate customized fix scripts for each client without consuming credits.' },
       { icon: 'Globe', title: 'Multi-page crawl included', description: '5,000 crawled pages/month included (Fair Use). Beyond that, purchase additional credits Pay-As-You-Go. Structure, SEO score/200, broken links, AI summary.' },
       { icon: 'BarChart3', title: '30 tracked URLs included', description: 'Track up to 30 domains with SEO, GEO and LLM KPIs updated daily from your console.' },
+      { icon: 'TrendingUp', title: 'Strategic Alignment Index (SAI)', description: 'Automatically diagnose your GSC Brand / Non-Brand traffic balance by business model. Score, historization and sector benchmarks.' },
       { icon: 'Palette', title: 'White label', description: 'Customize your reports with your logo, colors and contact info. Clients only see your brand.' },
       { icon: 'Users', title: '3 accounts included', description: 'Invite your team members and manage them from a centralized console.' },
       { icon: 'Headphones', title: 'Priority support', description: 'Access dedicated support with reduced response times and personalized assistance.' },
