@@ -171,11 +171,11 @@ async function queryWithIterations(
       // Prepare follow-up for next iteration
       messages.push({ role: 'assistant', content })
 
-      // Follow-up prompts must also stay brand-agnostic to avoid bias
+      // Follow-up prompts stay conversational, like a real user digging deeper
       if (iteration === 1) {
-        messages.push({ role: 'user', content: "Y a-t-il d'autres alternatives ou options que tu n'as pas mentionnées ?" })
+        messages.push({ role: 'user', content: "Ok merci, mais t'as pas d'autres noms ? Des alternatives moins connues peut-être ?" })
       } else if (iteration === 2) {
-        messages.push({ role: 'user', content: "Peux-tu élargir ta liste ? Y a-t-il des acteurs plus petits ou spécialisés que tu aurais oubliés ?" })
+        messages.push({ role: 'user', content: "Et des petits acteurs ou des solutions de niche que t'aurais oubliées ?" })
       }
     } catch (err) {
       console.error(`[llm-visibility] ${model} iteration ${iteration} error:`, err)
