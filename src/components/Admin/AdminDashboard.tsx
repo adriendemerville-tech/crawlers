@@ -50,10 +50,6 @@ export function AdminDashboard() {
             <Bot className="h-4 w-4" />
             <span className="hidden sm:inline">Agent CTO</span>
           </TabsTrigger>
-          <TabsTrigger value="docs" className="flex-1 gap-2">
-            <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Documentation</span>
-          </TabsTrigger>
           <TabsTrigger value="crawls" className="flex-1 gap-2">
             <Globe className="h-4 w-4" />
             <span className="hidden sm:inline">Crawls</span>
