@@ -8,7 +8,7 @@ import { RefreshCw, Loader2, Brain, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const LLM_ORDER = ['ChatGPT', 'Gemini', 'Perplexity', 'Grok'] as const;
+const LLM_ORDER = ['ChatGPT', 'Gemini', 'Perplexity'] as const;
 
 interface VisibilityScore {
   llm_name: string;
