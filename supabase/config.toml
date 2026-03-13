@@ -71,5 +71,9 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.verify-email-code]
     verify_jwt = false
+  [functions.refresh-serp-all]
+    verify_jwt = false
+  [functions.fetch-serp-kpis]
+    verify_jwt = false
   [functions.wpsync]
     verify_jwt = false
