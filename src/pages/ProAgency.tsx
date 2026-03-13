@@ -168,6 +168,7 @@ const translations = {
       ['Technical audits', '1 credit / audit', 'Unlimited ∞'],
       ['Strategic AI audits', '2 credits / audit', 'Unlimited ∞'],
       ['Multi-page crawl', '5-30 credits / crawl', '5,000 pages/month included *'],
+      ['Tracked URLs', '—', '30 included'],
       ['Corrective code', '1 credit / code', 'Unlimited ∞'],
       ['White label', '—', '✓ Included'],
       ['Multi-accounts', '—', '3 accounts'],
