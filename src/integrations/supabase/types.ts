@@ -2028,6 +2028,65 @@ export type Database = {
         }
         Relationships: []
       }
+      serp_geo_correlations: {
+        Row: {
+          calculated_at: string
+          convergence_index: number | null
+          created_at: string
+          domain: string
+          id: string
+          llm_data_points: Json | null
+          pearson_etv_vs_llm: number | null
+          pearson_position_vs_llm: number | null
+          pearson_top10_vs_llm: number | null
+          serp_data_points: Json | null
+          tracked_site_id: string
+          trend_label: string | null
+          user_id: string
+          weeks_analyzed: number
+        }
+        Insert: {
+          calculated_at?: string
+          convergence_index?: number | null
+          created_at?: string
+          domain: string
+          id?: string
+          llm_data_points?: Json | null
+          pearson_etv_vs_llm?: number | null
+          pearson_position_vs_llm?: number | null
+          pearson_top10_vs_llm?: number | null
+          serp_data_points?: Json | null
+          tracked_site_id: string
+          trend_label?: string | null
+          user_id: string
+          weeks_analyzed?: number
+        }
+        Update: {
+          calculated_at?: string
+          convergence_index?: number | null
+          created_at?: string
+          domain?: string
+          id?: string
+          llm_data_points?: Json | null
+          pearson_etv_vs_llm?: number | null
+          pearson_position_vs_llm?: number | null
+          pearson_top10_vs_llm?: number | null
+          serp_data_points?: Json | null
+          tracked_site_id?: string
+          trend_label?: string | null
+          user_id?: string
+          weeks_analyzed?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "serp_geo_correlations_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       serp_snapshots: {
         Row: {
           avg_position: number | null
