@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Upload, Palette, Trash2, Save, Loader2, Image as ImageIcon, Building2, Contact, FileText, Check, Type } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -490,23 +491,22 @@ export function BrandingTab() {
               {t.fontLabel}
             </Label>
             <p className="text-xs text-muted-foreground">{t.fontHint}</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-w-lg">
-              {FONT_OPTIONS.map((font) => (
-                <button
-                  key={font.value}
-                  type="button"
-                  onClick={() => setReportFont(font.value)}
-                  className={`px-3 py-2.5 rounded-lg border text-sm transition-all text-left ${
-                    reportFont === font.value
-                      ? 'border-primary bg-primary/10 text-foreground font-medium ring-1 ring-primary/30'
-                      : 'border-border bg-background hover:border-primary/40 text-muted-foreground hover:text-foreground'
-                  }`}
-                  style={{ fontFamily: font.value || 'Inter Variable, sans-serif' }}
-                >
-                  {font.label}
-                </button>
-              ))}
-            </div>
+            <Select value={reportFont || '__default__'} onValueChange={(v) => setReportFont(v === '__default__' ? '' : v)}>
+              <SelectTrigger className="max-w-xs" style={{ fontFamily: reportFont || 'Inter Variable, sans-serif' }}>
+                <SelectValue placeholder="Par défaut (Inter)" />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_OPTIONS.map((font) => (
+                  <SelectItem
+                    key={font.value}
+                    value={font.value || '__default__'}
+                    style={{ fontFamily: font.value || 'Inter Variable, sans-serif' }}
+                  >
+                    {font.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {reportFont && (
               <div className="rounded-lg border border-border bg-muted/20 p-4 mt-2">
                 <p className="text-sm text-muted-foreground mb-1">Aperçu :</p>
