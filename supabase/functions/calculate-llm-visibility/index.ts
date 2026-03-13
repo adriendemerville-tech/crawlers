@@ -399,8 +399,14 @@ Deno.serve(async (req) => {
       })
     }
 
-    const patterns = buildBrandPatterns(site)
-    const prompts = generatePrompts(site)
+    // ── Auto-enrich site identity card if context fields are empty ──
+    const enrichedContext = await ensureSiteContext(site)
+
+    // Merge enriched context back into site object for prompt generation
+    const enrichedSite = { ...site, ...enrichedContext }
+
+    const patterns = buildBrandPatterns(enrichedSite)
+    const prompts = generatePrompts(enrichedSite)
     const weekStart = getWeekStart()
 
     console.log(`[llm-vis] 🔍 ${site.domain} — patterns: ${patterns.exact.join(', ')} — ${prompts.length} prompts × ${LLM_TARGETS.length} LLMs (parallel)`)
