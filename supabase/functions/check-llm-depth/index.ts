@@ -135,6 +135,39 @@ function buildPromptSequence(
   return [p1, p2, p3, p4, p5, p6, p7]
 }
 
+// ─── Dual-gateway fetch helper ───────────────────────────────────────────────
+
+interface ApiKeys { openrouter: string; lovable: string }
+
+function buildFetchArgs(
+  gateway: Gateway,
+  keys: ApiKeys,
+  model: string,
+  messages: { role: string; content: string }[],
+  opts: { temperature?: number; max_tokens?: number } = {},
+): [string, RequestInit] {
+  if (gateway === 'lovable') {
+    return [LOVABLE_AI_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${keys.lovable}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ model, messages, ...opts }),
+    }]
+  }
+  return [OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${keys.openrouter}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://crawlers.lovable.app',
+      'X-Title': 'Crawlers.fr - LLM Depth',
+    },
+    body: JSON.stringify({ model, messages, ...opts }),
+  }]
+}
+
 // ─── Semantic brand extraction ───────────────────────────────────────────────
 
 function extractBrand(domain: string): string {
