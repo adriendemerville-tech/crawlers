@@ -421,12 +421,12 @@ export function ClientsTab() {
       </CardContent>
 
       {/* New Client Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-violet-500" />
-              {t.newClient}
+              {editingClientId ? <Pencil className="h-5 w-5 text-violet-500" /> : <UserPlus className="h-5 w-5 text-violet-500" />}
+              {editingClientId ? t.editClient : t.newClient}
             </DialogTitle>
             <DialogDescription>
               {language === 'fr' ? 'Renseignez les informations du client.' : language === 'es' ? 'Complete la información del cliente.' : 'Fill in client details.'}
