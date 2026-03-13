@@ -1,6 +1,7 @@
 import crawlerHeroImage from '@/assets/blog/crawler-hero.webp';
 import paradoxeGoogleGeoHero from '@/assets/blog/paradoxe-google-geo-hero.webp';
 import sovLlmHero from '@/assets/blog/share-of-voice-llm-hero.webp';
+import iasGscHero from '@/assets/blog/indice-alignement-strategique-gsc-hero.webp';
 
 export interface BlogArticle {
   slug: string;
@@ -733,6 +734,57 @@ export const blogArticles: BlogArticle[] = [
       { title: 'Anthropic API Reference', url: 'https://docs.anthropic.com/' },
       { title: 'Perplexity AI', url: 'https://www.perplexity.ai/' },
       { title: 'Google Search Generative Experience', url: 'https://blog.google/products/search/' },
+    ],
+  },
+  // --- ARTICLE IAS (INDICE D'ALIGNEMENT STRATÉGIQUE) ---
+  {
+    slug: 'indice-alignement-strategique-gsc-2026',
+    type: 'pillar',
+    title: {
+      fr: 'Indice d\'Alignement Stratégique : la Search Console enfin exploitée pour piloter votre marketing',
+      en: 'Strategic Alignment Index: Search Console Finally Leveraged to Drive Your Marketing',
+      es: 'Índice de Alineamiento Estratégico: la Search Console por fin utilizada para pilotar su marketing',
+    },
+    description: {
+      fr: 'Google Search Console a évolué. Découvrez comment le nouvel Indice d\'Alignement Stratégique transforme vos données Brand / Non-Brand en diagnostic actionnable pour votre direction marketing.',
+      en: 'Google Search Console has evolved. Discover how the new Strategic Alignment Index transforms your Brand / Non-Brand data into an actionable diagnostic for your marketing team.',
+      es: 'Google Search Console ha evolucionado. Descubra cómo el nuevo Índice de Alineamiento Estratégico transforma sus datos Marca / Genérico en un diagnóstico accionable para su dirección de marketing.',
+    },
+    heroImage: iasGscHero,
+    heroAlt: {
+      fr: 'Dashboard Google Search Console montrant l\'analyse Brand vs Generic avec l\'Indice d\'Alignement Stratégique',
+      en: 'Google Search Console dashboard showing Brand vs Generic analysis with the Strategic Alignment Index',
+      es: 'Dashboard Google Search Console mostrando análisis Marca vs Genérico con el Índice de Alineamiento Estratégico',
+    },
+    author: 'Adrien de Volontat',
+    date: '2026-03-13',
+    summaryPoints: {
+      fr: [
+        'La Google Search Console a évolué en 2025-2026 avec des données enrichies sur le split Brand / Non-Brand.',
+        'L\'Indice d\'Alignement Stratégique (IAS) est le premier indicateur qui contextualise ce ratio par modèle économique.',
+        'Le score de 0 à 100 est calculé sur vos clics réels — pas des estimations synthétiques.',
+        'Le taux de pénétration de marque croise les clics GSC avec les volumes de recherche réels.',
+        'L\'IAS est réservé aux abonnés Pro Agency et nécessite une connexion Google Search Console.',
+      ],
+      en: [
+        'Google Search Console evolved in 2025-2026 with enriched Brand / Non-Brand split data.',
+        'The Strategic Alignment Index (SAI) is the first indicator contextualizing this ratio by business model.',
+        'The 0-100 score is calculated on your real clicks — not synthetic estimates.',
+        'The brand penetration rate cross-references GSC clicks with actual search volumes.',
+        'The SAI is reserved for Pro Agency subscribers and requires a Google Search Console connection.',
+      ],
+      es: [
+        'Google Search Console evolucionó en 2025-2026 con datos enriquecidos sobre la división Marca / Genérico.',
+        'El Índice de Alineamiento Estratégico (IAS) es el primer indicador que contextualiza este ratio por modelo de negocio.',
+        'El score de 0 a 100 se calcula sobre sus clics reales — no estimaciones sintéticas.',
+        'La tasa de penetración de marca cruza los clics GSC con los volúmenes de búsqueda reales.',
+        'El IAS está reservado para suscriptores Pro Agency y requiere conexión Google Search Console.',
+      ],
+    },
+    sources: [
+      { title: 'Google Search Central Blog', url: 'https://developers.google.com/search/blog' },
+      { title: 'Google Search Console Help', url: 'https://support.google.com/webmasters/' },
+      { title: 'Crawlers.fr — Indice d\'Alignement Stratégique', url: 'https://crawlers.fr/indice-alignement-strategique' },
     ],
   },
 ];

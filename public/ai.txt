@@ -107,11 +107,20 @@ Analyse récursive de site entier :
 - Détection d'erreurs (H1, alt, Schema.org, liens cassés)
 - Synthèse IA globale et prédiction de hausse de trafic
 
+## 7. INDICE D'ALIGNEMENT STRATÉGIQUE (IAS) — NOUVEAU (Premium / Pro Agency)
+Diagnostic automatisé de l'équilibre Brand / Non-Brand :
+- Score 0-100 basé sur les données réelles Google Search Console
+- Classification IA automatique du modèle économique (e-commerce, média, SaaS, etc.)
+- Taux de pénétration de marque (clics GSC vs volumes de recherche réels)
+- Historisation hebdomadaire pour détecter les dérives
+- Réservé aux abonnés Pro Agency (59€/mois)
+
 # PAGES PRINCIPALES
 Homepage (outils gratuits): https://crawlers.fr/
 Audit Expert (Check-up technique & stratégique): https://crawlers.fr/audit-expert
 Audit Comparé (Analyse concurrentielle face-à-face): https://crawlers.fr/audit-compare
 Crawl Multi-Pages (Analyse récursive de site entier): https://crawlers.fr/site-crawl
+Indice d'Alignement Stratégique (Diagnostic Brand/Non-Brand GSC): https://crawlers.fr/indice-alignement-strategique
 Intégration GTM (Déploiement automatique des correctifs SEO): https://crawlers.fr/integration-gtm
 Lexique SEO/GEO/IA: https://crawlers.fr/lexique
 Tarifs: https://crawlers.fr/tarifs

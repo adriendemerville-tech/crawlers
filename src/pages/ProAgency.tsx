@@ -59,6 +59,11 @@ const translations = {
         description: 'Suivez jusqu\'à 30 domaines avec KPIs SEO, GEO et LLM actualisés quotidiennement depuis votre console.',
       },
       {
+        icon: 'TrendingUp',
+        title: 'Indice d\'Alignement Stratégique (IAS)',
+        description: 'Diagnostiquez automatiquement l\'équilibre Brand / Non-Brand de votre trafic GSC par modèle économique. Score, historisation et benchmarks sectoriels.',
+      },
+      {
         icon: 'Palette',
         title: 'Marque blanche',
         description: 'Personnalisez vos rapports avec votre logo, vos couleurs et vos coordonnées. Vos clients ne voient que votre marque.',
@@ -157,6 +162,7 @@ const translations = {
       { icon: 'Code2', title: 'Unlimited corrective code', description: 'Generate customized fix scripts for each client without consuming credits.' },
       { icon: 'Globe', title: 'Multi-page crawl included', description: '5,000 crawled pages/month included (Fair Use). Beyond that, purchase additional credits Pay-As-You-Go. Structure, SEO score/200, broken links, AI summary.' },
       { icon: 'BarChart3', title: '30 tracked URLs included', description: 'Track up to 30 domains with SEO, GEO and LLM KPIs updated daily from your console.' },
+      { icon: 'TrendingUp', title: 'Strategic Alignment Index (SAI)', description: 'Automatically diagnose your GSC Brand / Non-Brand traffic balance by business model. Score, historization and sector benchmarks.' },
       { icon: 'Palette', title: 'White label', description: 'Customize your reports with your logo, colors and contact info. Clients only see your brand.' },
       { icon: 'Users', title: '3 accounts included', description: 'Invite your team members and manage them from a centralized console.' },
       { icon: 'Headphones', title: 'Priority support', description: 'Access dedicated support with reduced response times and personalized assistance.' },
@@ -216,6 +222,7 @@ const translations = {
       { icon: 'Code2', title: 'Código correctivo ilimitado', description: 'Genera scripts de corrección personalizados para cada cliente sin gastar créditos.' },
       { icon: 'Globe', title: 'Crawl multi-páginas incluido', description: '5 000 páginas rastreadas/mes incluidas (Fair Use). Más allá, compra de créditos adicionales Pay-As-You-Go. Estructura, puntuación SEO/200, enlaces rotos, resumen IA.' },
       { icon: 'BarChart3', title: '30 URL seguidos incluidos', description: 'Sigue hasta 30 dominios con KPIs SEO, GEO y LLM actualizados diariamente desde tu consola.' },
+      { icon: 'TrendingUp', title: 'Índice de Alineamiento Estratégico (IAS)', description: 'Diagnostique automáticamente el equilibrio Brand / Genérico de su tráfico GSC por modelo de negocio. Score, historización y benchmarks sectoriales.' },
       { icon: 'Palette', title: 'Marca blanca', description: 'Personaliza tus informes con tu logo, colores y datos de contacto.' },
       { icon: 'Users', title: '3 cuentas incluidas', description: 'Invita a tus colaboradores y gestiona tu equipo desde una consola centralizada.' },
       { icon: 'Headphones', title: 'Soporte prioritario', description: 'Accede a soporte dedicado con tiempos de respuesta reducidos.' },
@@ -264,6 +271,7 @@ const iconMap: Record<string, React.ReactNode> = {
   Users: <Users className="h-6 w-6" />,
   Headphones: <Headphones className="h-6 w-6" />,
   BarChart3: <BarChart3 className="h-6 w-6" />,
+  TrendingUp: <TrendingUp className="h-6 w-6" />,
 };
 
 export default function ProAgency() {

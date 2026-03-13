@@ -85,6 +85,14 @@ function FooterComponent() {
       isRoute: true,
       violet: true
     },
+    { 
+      icon: Gauge, 
+      label: t3(language, 'Indice IAS', 'SAI Index', 'Índice IAS'),
+      href: '/indice-alignement-strategique',
+      description: t3(language, 'Alignement stratégique Brand / Non-Brand', 'Strategic Brand / Non-Brand alignment', 'Alineamiento estratégico Marca / Genérico'),
+      gold: true,
+      isRoute: true
+    },
   ];
 
   const resourcesLinks = [

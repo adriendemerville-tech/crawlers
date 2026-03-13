@@ -359,6 +359,30 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/lexique"/>
   </url>
   
+  <!-- Indice d'Alignement Stratégique (IAS) -->
+  <url>
+    <loc>https://crawlers.fr/indice-alignement-strategique</loc>
+    <lastmod>2026-03-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/indice-alignement-strategique"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/indice-alignement-strategique?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/indice-alignement-strategique?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/indice-alignement-strategique"/>
+  </url>
+
+  <!-- Blog: Indice d'Alignement Stratégique GSC -->
+  <url>
+    <loc>https://crawlers.fr/blog/indice-alignement-strategique-gsc-2026</loc>
+    <lastmod>2026-03-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://crawlers.fr/blog/indice-alignement-strategique-gsc-2026"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://crawlers.fr/blog/indice-alignement-strategique-gsc-2026?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://crawlers.fr/blog/indice-alignement-strategique-gsc-2026?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://crawlers.fr/blog/indice-alignement-strategique-gsc-2026"/>
+  </url>
+
   <!-- Pages légales -->
   <url>
     <loc>https://crawlers.fr/mentions-legales</loc>
