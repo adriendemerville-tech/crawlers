@@ -531,6 +531,104 @@ export function MyTracking() {
     }
   };
 
+  // Streaming audit: fire each API independently and update stats progressively
+  const runStreamingAudit = async (site: TrackedSite) => {
+    if (!user) return;
+    setRefreshingSites(prev => new Set(prev).add(site.id));
+
+    const url = `https://${site.domain}`;
+    // Accumulator for raw_data — updated progressively
+    const rawAccumulator: Record<string, any> = {};
+    let currentSeoScore: number | null = null;
+    let currentGeoScore = 0;
+    let currentCitationRate = 0;
+    let currentSentiment = 'neutral';
+    let currentPerformance: number | null = null;
+    let currentLlmOverallScore: number | null = null;
+
+    const upsertStats = async () => {
+      await supabase.from('user_stats_history').insert({
+        user_id: user.id,
+        tracked_site_id: site.id,
+        domain: site.domain,
+        seo_score: currentSeoScore,
+        geo_score: Math.round(currentGeoScore),
+        llm_citation_rate: currentCitationRate,
+        ai_sentiment: currentSentiment,
+        voice_share: currentCitationRate || null,
+        raw_data: { ...rawAccumulator, performanceScore: currentPerformance, llmOverallScore: currentLlmOverallScore },
+      });
+      await fetchStats();
+    };
+
+    // Fire all 5 calls independently — each updates UI on resolve
+    const calls = [
+      // 1. Crawlers → SEO score
+      supabase.functions.invoke('check-crawlers', { body: { url } }).then(async (res) => {
+        const crawlersData = res.data;
+        const botResults = crawlersData?.data?.results || crawlersData?.results || [];
+        currentSeoScore = botResults.length > 0
+          ? Math.round((botResults.filter((b: any) => b.status === 'allowed').length / botResults.length) * 100)
+          : null;
+        rawAccumulator.crawlersData = crawlersData?.data || crawlersData;
+        await upsertStats();
+      }).catch(console.error),
+
+      // 2. PageSpeed → Performance
+      supabase.functions.invoke('check-pagespeed', { body: { url, lang: language } }).then(async (res) => {
+        const psiData = res.data;
+        currentPerformance = psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
+        rawAccumulator.psiData = psiData?.data;
+        await upsertStats();
+      }).catch(console.error),
+
+      // 3. GEO → GEO score
+      supabase.functions.invoke('check-geo', { body: { url, lang: language } }).then(async (res) => {
+        const geoData = res.data;
+        currentGeoScore = geoData?.data?.totalScore ?? geoData?.data?.overallScore ?? 0;
+        rawAccumulator.geoData = geoData?.data;
+        await upsertStats();
+      }).catch(console.error),
+
+      // 4. LLM → Citation, Sentiment, AI Visibility
+      supabase.functions.invoke('check-llm', { body: { url, lang: language } }).then(async (res) => {
+        const llmData = res.data;
+        const llmCitationRate = llmData?.data?.citationRate;
+        currentCitationRate = llmCitationRate
+          ? (llmCitationRate.cited / (llmCitationRate.total || 1)) * 100
+          : 0;
+        currentSentiment = llmData?.data?.overallSentiment || 'neutral';
+        currentLlmOverallScore = llmData?.data?.overallScore ?? null;
+        rawAccumulator.llmData = llmData?.data;
+        await upsertStats();
+      }).catch(console.error),
+
+      // 5. SERP KPIs
+      supabase.functions.invoke('fetch-serp-kpis', { body: { domain: site.domain, url, tracked_site_id: site.id, user_id: user.id } }).then(async (res) => {
+        rawAccumulator.serpData = res.data?.data || null;
+        await upsertStats();
+      }).catch(console.error),
+    ];
+
+    await Promise.allSettled(calls);
+
+    // Update last_audit_at
+    await supabase
+      .from('tracked_sites')
+      .update({ last_audit_at: new Date().toISOString() })
+      .eq('id', site.id);
+
+    await fetchSites();
+
+    setRefreshingSites(prev => {
+      const next = new Set(prev);
+      next.delete(site.id);
+      return next;
+    });
+
+    toast.success(language === 'fr' ? 'Analyse complète terminée' : language === 'es' ? 'Análisis completo terminado' : 'Full analysis completed');
+  };
+
   const handleAddSite = async () => {
     if (!user) return;
 
@@ -577,7 +675,12 @@ export function MyTracking() {
       setValidationResult({ valid: false, checked: false });
       await fetchSites();
 
-      // No background audit — user will audit manually
+      // Pro Agency: auto-launch streaming KPI refresh
+      if (isAgencyPro && site) {
+        setSelectedSite(site.id);
+        toast.info(language === 'fr' ? 'Analyse des KPIs en cours…' : language === 'es' ? 'Analizando KPIs…' : 'Analyzing KPIs…');
+        runStreamingAudit(site as TrackedSite);
+      }
     } catch {
       toast.error(t.invalidUrl);
     } finally {
