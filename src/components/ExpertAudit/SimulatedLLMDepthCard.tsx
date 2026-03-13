@@ -28,7 +28,7 @@ function generateSimulatedDepth(analysis: StrategicAnalysis): {
 } {
   // Extract signals
   const eeatScore = analysis.social_signals?.thought_leadership?.eeat_score ?? 5;
-  const geoScore = analysis.geo_score?.overall_score ?? analysis.geo_readiness?.readiness_score ?? 50;
+  const geoScore = analysis.geo_score?.score ?? (analysis.geo_readiness?.citability_score ?? 50);
   const overallScore = analysis.overallScore ?? 50;
   const hasLLMVisibility = !!analysis.llm_visibility_raw?.citationRate;
   const citationRate = hasLLMVisibility
