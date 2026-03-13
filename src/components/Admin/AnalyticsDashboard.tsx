@@ -170,6 +170,8 @@ export function AnalyticsDashboard() {
     openrouterCalls: 0,
     browserlessCalls: 0,
     firecrawlCalls: 0,
+    flyPlaywrightCalls: 0,
+    flyEstimatedCost: 0,
     byApiService: {},
   });
 
