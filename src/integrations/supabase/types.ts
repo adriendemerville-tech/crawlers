@@ -1099,6 +1099,50 @@ export type Database = {
         }
         Relationships: []
       }
+      llm_depth_conversations: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          iteration: number
+          llm_name: string
+          prompt_text: string
+          response_summary: string
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          iteration: number
+          llm_name: string
+          prompt_text: string
+          response_summary: string
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          iteration?: number
+          llm_name?: string
+          prompt_text?: string
+          response_summary?: string
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "llm_depth_conversations_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       llm_test_executions: {
         Row: {
           brand_found: boolean
@@ -2417,6 +2461,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cleanup_expired_depth_conversations: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

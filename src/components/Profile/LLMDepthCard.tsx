@@ -3,10 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle, FileSearch } from 'lucide-react';
+import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle, FileSearch, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCredits } from '@/contexts/CreditsContext';
 import { motion, AnimatePresence } from 'framer-motion';
+
+interface ConversationTurn {
+  iteration: number;
+  prompt_text: string;
+  response_summary: string;
+}
 
 interface DepthResult {
   llm: string;
@@ -223,14 +230,42 @@ function MiniProgressRing({ iteration, found }: { iteration: number; found: bool
 
 export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initialData }: LLMDepthCardProps) {
   const { language } = useLanguage();
+  const { isAgencyPro } = useCredits();
   const t = translations[language] || translations.fr;
   const [data, setData] = useState<LLMDepthData | null>(initialData ?? null);
   const [loading, setLoading] = useState(false);
   const [banner, setBanner] = useState<'completed' | 'expert_required' | null>(null);
   const [hasPreviousData, setHasPreviousData] = useState<boolean | null>(null);
   const [streamProgress, setStreamProgress] = useState<Record<string, ModelProgress>>({});
+  const [conversations, setConversations] = useState<Record<string, ConversationTurn[]>>({});
+  const [activeConversation, setActiveConversation] = useState<string | null>(null);
+  const conversationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const simulatedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Fetch stored conversations for paid users
+  useEffect(() => {
+    if (!trackedSiteId || !userId || !isAgencyPro) return;
+    supabase
+      .from('llm_depth_conversations')
+      .select('llm_name, iteration, prompt_text, response_summary')
+      .eq('tracked_site_id', trackedSiteId)
+      .eq('user_id', userId)
+      .order('iteration', { ascending: true })
+      .then(({ data: convData }) => {
+        if (!convData?.length) return;
+        const grouped: Record<string, ConversationTurn[]> = {};
+        for (const row of convData) {
+          if (!grouped[row.llm_name]) grouped[row.llm_name] = [];
+          grouped[row.llm_name].push({
+            iteration: row.iteration,
+            prompt_text: row.prompt_text,
+            response_summary: row.response_summary,
+          });
+        }
+        setConversations(grouped);
+      });
+  }, [trackedSiteId, userId, isAgencyPro, data]);
 
   // Check if user has previous LLM depth data for this site
   useEffect(() => {
@@ -573,9 +608,27 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
           {data.results.map((result) => {
             const isDark = document.documentElement.classList.contains('dark');
             const color = isDark ? iterationHslColorDark(result.iterations) : iterationHslColor(result.iterations);
+            const hasConv = isAgencyPro && conversations[result.llm]?.length > 0;
+            const isOpen = activeConversation === result.llm;
 
             return (
-              <div key={result.llm} className="rounded-lg border bg-card p-2.5 space-y-1.5">
+              <div
+                key={result.llm}
+                className="relative rounded-lg border bg-card p-2.5 space-y-1.5"
+                onMouseLeave={() => {
+                  if (isOpen) {
+                    conversationTimeoutRef.current = setTimeout(() => {
+                      setActiveConversation(null);
+                    }, 400);
+                  }
+                }}
+                onMouseEnter={() => {
+                  if (conversationTimeoutRef.current) {
+                    clearTimeout(conversationTimeoutRef.current);
+                    conversationTimeoutRef.current = null;
+                  }
+                }}
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">{result.llm}</span>
                   {result.found ? (
@@ -605,6 +658,64 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
                     {result.angles_tested.join(' → ')}
                   </p>
                 )}
+
+                {/* Conversation toggle arrow - paid users only */}
+                {hasConv && (
+                  <button
+                    className="absolute bottom-1.5 right-1.5 p-0.5 rounded hover:bg-muted/50 transition-colors"
+                    onClick={() => setActiveConversation(isOpen ? null : result.llm)}
+                    aria-label="Voir la conversation"
+                  >
+                    <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                )}
+
+                {/* Conversation popover */}
+                <AnimatePresence>
+                  {isOpen && hasConv && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4, scaleY: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                      exit={{ opacity: 0, y: -4, scaleY: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg border bg-card shadow-lg max-h-64 overflow-y-auto p-2 space-y-2"
+                      style={{ minWidth: '280px' }}
+                      onMouseEnter={() => {
+                        if (conversationTimeoutRef.current) {
+                          clearTimeout(conversationTimeoutRef.current);
+                          conversationTimeoutRef.current = null;
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        conversationTimeoutRef.current = setTimeout(() => {
+                          setActiveConversation(null);
+                        }, 300);
+                      }}
+                    >
+                      {conversations[result.llm].map((turn) => (
+                        <div key={turn.iteration} className="space-y-1">
+                          {/* Prompt (Crawlers) in violet */}
+                          <div className="flex gap-1.5">
+                            <span className="text-[9px] font-bold text-violet-500 shrink-0 mt-0.5">Q{turn.iteration}</span>
+                            <p className="text-[10px] text-violet-600 dark:text-violet-400 leading-tight">
+                              {turn.prompt_text.length > 120 ? turn.prompt_text.slice(0, 120) + '…' : turn.prompt_text}
+                            </p>
+                          </div>
+                          {/* Response summary */}
+                          <div className="flex gap-1.5 ml-3">
+                            <span className="text-[9px] font-bold text-muted-foreground shrink-0 mt-0.5">R</span>
+                            <p className="text-[10px] text-foreground/80 leading-tight">
+                              {turn.response_summary}
+                            </p>
+                          </div>
+                          {turn.iteration < (conversations[result.llm]?.length ?? 0) && (
+                            <div className="border-b border-border/50" />
+                          )}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}

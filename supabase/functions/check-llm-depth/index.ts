@@ -309,6 +309,12 @@ async function detectBrandSemantically(
 
 // ─── Core conversation engine ────────────────────────────────────────────────
 
+interface ConversationTurn {
+  iteration: number
+  prompt: string
+  response_summary: string
+}
+
 interface DepthResult {
   llm: string
   model: string
@@ -317,11 +323,43 @@ interface DepthResult {
   mentioned_as: string | null
   conversation_summary: string
   angles_tested: string[]
+  conversation_turns: ConversationTurn[]
 }
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 type StreamCallback = (event: { type: string; model: string; iteration?: number; found?: boolean; mentioned_as?: string | null }) => void
+
+/**
+ * Summarize a response to 3 sentences max using a fast LLM
+ */
+async function summarizeResponse(
+  keys: ApiKeys,
+  gateway: Gateway,
+  model: string,
+  responseText: string,
+  lang: string,
+): Promise<string> {
+  if (responseText.length < 200) return responseText
+
+  const prompt = lang === 'fr'
+    ? `Résume ce texte en 3 phrases maximum, en conservant les noms de marques/outils mentionnés :\n\n${responseText.slice(0, 2000)}`
+    : lang === 'es'
+    ? `Resume este texto en 3 frases máximo, conservando los nombres de marcas/herramientas mencionados:\n\n${responseText.slice(0, 2000)}`
+    : `Summarize this text in 3 sentences max, keeping brand/tool names mentioned:\n\n${responseText.slice(0, 2000)}`
+
+  try {
+    const [url, init] = buildFetchArgs(gateway, keys, model, [
+      { role: 'user', content: prompt },
+    ], { temperature: 0.2, max_tokens: 300 })
+    const resp = await fetch(url, init)
+    if (!resp.ok) return responseText.slice(0, 400)
+    const data = await resp.json()
+    return data.choices?.[0]?.message?.content?.trim() || responseText.slice(0, 400)
+  } catch {
+    return responseText.slice(0, 400)
+  }
+}
 
 async function runDepthConversation(
   keys: ApiKeys,
@@ -353,6 +391,7 @@ async function runDepthConversation(
 
   const anglesTested: string[] = []
   let lastAssistantContent = ''
+  const conversationTurns: ConversationTurn[] = []
 
   // Track which gateway is active (may change on fallback)
   let activeGateway: Gateway = modelDef.gateway
@@ -388,6 +427,14 @@ async function runDepthConversation(
 
       messages.push({ role: 'assistant', content })
 
+      // Summarize response to 3 sentences for storage
+      const summary = await summarizeResponse(keys, activeGateway, modelDef.model, content, lang)
+      conversationTurns.push({
+        iteration: i + 1,
+        prompt: prompts[i],
+        response_summary: summary,
+      })
+
       // Semantic brand detection (uses active gateway)
       const detection = await detectBrandSemantically(
         keys, activeGateway, modelDef.model, content, brand, domain, lang,
@@ -403,6 +450,7 @@ async function runDepthConversation(
           mentioned_as: detection.mentionedAs || brand,
           conversation_summary: content.slice(0, 400),
           angles_tested: anglesTested,
+          conversation_turns: conversationTurns,
         }
       }
 
@@ -421,6 +469,7 @@ async function runDepthConversation(
     mentioned_as: null,
     conversation_summary: lastAssistantContent.slice(0, 400),
     angles_tested: anglesTested,
+    conversation_turns: conversationTurns,
   }
 }
 
@@ -446,6 +495,30 @@ async function persistResults(
 
   const { error } = await supabase.from('llm_test_executions').insert(rows)
   if (error) console.error('[check-llm-depth] Persist error:', error)
+
+  // Store conversation turns for paid subscribers (7-day TTL handled by expires_at default)
+  const convRows = results.flatMap(r =>
+    r.conversation_turns.map(turn => ({
+      tracked_site_id: trackedSiteId,
+      user_id: userId,
+      llm_name: r.llm,
+      iteration: turn.iteration,
+      prompt_text: turn.prompt,
+      response_summary: turn.response_summary,
+    }))
+  )
+
+  if (convRows.length > 0) {
+    // Clean up old conversations for this site+user first
+    await supabase
+      .from('llm_depth_conversations')
+      .delete()
+      .eq('tracked_site_id', trackedSiteId)
+      .eq('user_id', userId)
+
+    const { error: convError } = await supabase.from('llm_depth_conversations').insert(convRows)
+    if (convError) console.error('[check-llm-depth] Conversation persist error:', convError)
+  }
 }
 
 // ─── Main handler ────────────────────────────────────────────────────────────

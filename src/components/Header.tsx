@@ -206,7 +206,14 @@ export function Header() {
                       <path d="M15 13v2"/>
                     </g>
                   </svg>
-                  <span className="hidden sm:inline text-lg font-display text-[#7c3aed]" style={{ fontWeight: 900 }}>Crawlers</span>
+                  <span className="hidden sm:inline text-lg font-display text-[#7c3aed]" style={{ fontWeight: 900 }}>
+                    {isProfilePage ? (
+                      <>
+                        <span className="text-foreground">Console</span>
+                        <span className="text-yellow-500 ml-1.5">∞</span>
+                      </>
+                    ) : 'Crawlers'}
+                  </span>
                 </div>
 
                 {/* Language selector below Crawlers */}
