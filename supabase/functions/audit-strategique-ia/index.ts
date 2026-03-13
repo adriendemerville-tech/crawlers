@@ -2251,10 +2251,10 @@ Deno.serve(async (req) => {
       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
 
       const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult] = await Promise.allSettled([
-        // Market data (DataForSEO keywords) — always needed for keyword analysis
+        // Market data (DataForSEO keywords) — reduced deadline to preserve LLM budget
         withDeadline(
           fetchMarketData(domain, context, pageContentContext, url),
-          180_000, 'market_data'
+          120_000, 'market_data'
         ),
         // LLM visibility check (sub-function call) — always needed
         needsLlmCheck && supabaseUrl && supabaseAnonKey
