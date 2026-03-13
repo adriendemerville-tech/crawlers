@@ -535,27 +535,49 @@ export function MyTracking() {
     }
   };
 
-  // Rate limit: max 2 KPI refreshes per day per site
-  const canRefreshSite = useCallback(async (siteId: string): Promise<boolean> => {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+  // Get the last Paris 5AM boundary (reset point)
+  const getParis5amBoundary = useCallback(() => {
+    const now = new Date();
+    // Get current Paris time
+    const parisNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+    const parisHour = parisNow.getHours();
+    // If before 5AM Paris, boundary is yesterday 5AM; otherwise today 5AM
+    const boundary = new Date(parisNow);
+    boundary.setHours(5, 0, 0, 0);
+    if (parisHour < 5) boundary.setDate(boundary.getDate() - 1);
+    // Convert back to UTC for DB comparison
+    const offset = now.getTime() - parisNow.getTime();
+    return new Date(boundary.getTime() + offset).toISOString();
+  }, []);
+
+  // Check if a site has exhausted its 2 daily refreshes
+  const checkRefreshExhausted = useCallback(async (siteId: string): Promise<boolean> => {
+    if (isAdmin) return false;
+    const since = getParis5amBoundary();
     const { count } = await supabase
       .from('user_stats_history')
       .select('id', { count: 'exact', head: true })
       .eq('tracked_site_id', siteId)
-      .gte('recorded_at', todayStart.toISOString());
-    if ((count ?? 0) >= 2) {
+      .gte('recorded_at', since);
+    return (count ?? 0) >= 2;
+  }, [isAdmin, getParis5amBoundary]);
+
+  // Rate limit: max 2 KPI refreshes per day per site (Paris 5AM reset)
+  const canRefreshSite = useCallback(async (siteId: string): Promise<boolean> => {
+    const exhausted = await checkRefreshExhausted(siteId);
+    if (exhausted) {
+      setRefreshExhaustedSites(prev => new Set(prev).add(siteId));
       toast.error(
         language === 'fr'
-          ? 'Limite atteinte : 2 actualisations par jour par site.'
+          ? 'Limite atteinte : 2 actualisations par jour par site (reset à 5h).'
           : language === 'es'
-            ? 'Límite alcanzado: 2 actualizaciones por día por sitio.'
-            : 'Limit reached: 2 refreshes per day per site.'
+            ? 'Límite alcanzado: 2 actualizaciones por día por sitio (reset a las 5h).'
+            : 'Limit reached: 2 refreshes per day per site (resets at 5AM).'
       );
       return false;
     }
     return true;
-  }, [language]);
+  }, [language, checkRefreshExhausted]);
 
   // Streaming audit: fire each API independently, insert ONCE at the end
   const runStreamingAudit = async (site: TrackedSite) => {
