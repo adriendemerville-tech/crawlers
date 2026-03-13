@@ -51,26 +51,26 @@ Deno.serve(async (req) => {
       const dataforseoUser = Deno.env.get('DATAFORSEO_LOGIN');
       const dataforseoPass = Deno.env.get('DATAFORSEO_PASSWORD');
       if (dataforseoUser && dataforseoPass) {
-        const dfsRes = await fetch('https://api.dataforseo.com/v3/domain_analytics/technologies/domain_technologies', {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const serpRes = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
           method: 'POST',
           headers: {
             'Authorization': 'Basic ' + btoa(`${dataforseoUser}:${dataforseoPass}`),
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify([{ target: domain, limit: 1 }]),
+          body: JSON.stringify([{
+            keyword: `site:${domain.replace(/^www\./, '')}`,
+            language_code: 'fr',
+            location_code: 2250,
+            device: 'desktop',
+            depth: 1,
+          }]),
+          signal: controller.signal,
         });
-        // Fallback: try ranked_keywords endpoint for indexed_pages
-        const serpRes = await fetch('https://api.dataforseo.com/v3/dataforseo_labs/google/domain_rank_overview/live', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Basic ' + btoa(`${dataforseoUser}:${dataforseoPass}`),
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify([{ target: domain, language_code: 'fr', location_code: 2250 }]),
-        });
+        clearTimeout(timeout);
         const serpData = await serpRes.json();
-        const metrics = serpData?.tasks?.[0]?.result?.[0];
-        const indexedPages = metrics?.metrics?.organic?.count;
+        const indexedPages = serpData?.tasks?.[0]?.result?.[0]?.se_results_count;
         if (indexedPages && indexedPages > 0) {
           const cappedLimit = Math.min(pageLimit, indexedPages);
           if (cappedLimit < pageLimit) {

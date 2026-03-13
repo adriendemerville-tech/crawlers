@@ -47,7 +47,9 @@ Deno.serve(async (req) => {
 
     const authHeader = 'Basic ' + btoa(`${login}:${password}`)
 
-    // Fetch ranked keywords (limit 1000 for comprehensive distribution)
+    // Fetch ranked keywords with timeout (#2)
+    const controller = new AbortController()
+    const fetchTimeout = setTimeout(() => controller.abort(), 30000)
     const resp = await fetch('https://api.dataforseo.com/v3/dataforseo_labs/google/ranked_keywords/live', {
       method: 'POST',
       headers: {
@@ -61,7 +63,9 @@ Deno.serve(async (req) => {
         limit: 1000,
         order_by: ['ranked_serp_element.serp_item.rank_absolute,asc'],
       }]),
+      signal: controller.signal,
     })
+    clearTimeout(fetchTimeout)
 
     if (!resp.ok) {
       const errorText = await resp.text()
