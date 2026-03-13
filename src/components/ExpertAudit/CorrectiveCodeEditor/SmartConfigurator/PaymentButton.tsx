@@ -9,7 +9,31 @@ import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import { CreditCoin } from '@/components/ui/CreditCoin';
-...
+import type { FixConfig } from './types';
+
+interface PaymentButtonProps {
+  siteUrl: string;
+  calculatedPrice?: number;
+  fixConfigs?: FixConfig[];
+  generatedCode?: string;
+  disabled?: boolean;
+  onPaymentSuccess?: () => void;
+  onUnlockWithCredit?: () => void;
+}
+
+export function PaymentButton({ 
+  siteUrl, 
+  calculatedPrice = 3,
+  fixConfigs = [],
+  generatedCode = '',
+  disabled = false,
+  onPaymentSuccess,
+  onUnlockWithCredit
+}: PaymentButtonProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [showTopUpModal, setShowTopUpModal] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
   const { balance, useCredit, refreshBalance, isAgencyPro } = useCredits();
   const { isAdmin } = useAdmin();
 
