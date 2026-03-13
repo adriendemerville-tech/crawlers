@@ -653,7 +653,7 @@ export function AnalyticsDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
         <StatCard 
           title="Visites totales" 
           value={stats.totalVisits} 
