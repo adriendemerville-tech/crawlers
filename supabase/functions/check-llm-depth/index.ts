@@ -168,6 +168,70 @@ function buildFetchArgs(
   }]
 }
 
+// ─── Resilient fetch with gateway fallback ──────────────────────────────────
+
+async function resilientFetch(
+  gateway: Gateway,
+  fallbackGateway: Gateway | undefined,
+  keys: ApiKeys,
+  model: string,
+  messages: { role: string; content: string }[],
+  opts: { temperature?: number; max_tokens?: number } = {},
+  context?: string,
+): Promise<{ response: Response; usedGateway: Gateway; didFallback: boolean }> {
+  const [url, init] = buildFetchArgs(gateway, keys, model, messages, opts)
+  const response = await fetch(url, init)
+
+  // If primary fails with 402/429 and we have a fallback, try it
+  if ((response.status === 402 || response.status === 429) && fallbackGateway && keys[fallbackGateway]) {
+    console.warn(`[check-llm-depth] ${gateway} returned ${response.status} for ${model}, falling back to ${fallbackGateway}${context ? ` (${context})` : ''}`)
+
+    // Log fallback event for admin monitoring
+    logFallbackEvent(gateway, fallbackGateway, model, response.status, context)
+
+    const [fbUrl, fbInit] = buildFetchArgs(fallbackGateway, keys, model, messages, opts)
+    const fbResponse = await fetch(fbUrl, fbInit)
+    return { response: fbResponse, usedGateway: fallbackGateway, didFallback: true }
+  }
+
+  return { response, usedGateway: gateway, didFallback: false }
+}
+
+// ─── Fallback event logger ──────────────────────────────────────────────────
+
+function logFallbackEvent(
+  primaryGateway: string,
+  fallbackGateway: string,
+  model: string,
+  statusCode: number,
+  context?: string,
+) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY')
+  if (!supabaseUrl || !serviceKey) return
+
+  fetch(`${supabaseUrl}/rest/v1/analytics_events`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${serviceKey}`,
+      'apikey': serviceKey,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
+    },
+    body: JSON.stringify({
+      event_type: 'api_gateway_fallback',
+      target_url: context || model,
+      event_data: {
+        primary_gateway: primaryGateway,
+        fallback_gateway: fallbackGateway,
+        model,
+        status_code: statusCode,
+        function_name: 'check-llm-depth',
+      },
+    }),
+  }).catch(e => console.error('[check-llm-depth] Fallback log error:', e))
+}
+
 // ─── Semantic brand extraction ───────────────────────────────────────────────
 
 function extractBrand(domain: string): string {
