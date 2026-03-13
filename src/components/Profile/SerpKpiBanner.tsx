@@ -1,4 +1,4 @@
-import { Hash, TrendingUp, Home, Award, Target, BarChart3, RefreshCw, Loader2 } from 'lucide-react';
+import { Hash, TrendingUp, Home, Award, Target, BarChart3, RefreshCw, Loader2, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ interface SerpData {
   top_10: number;
   top_50: number;
   etv: number;
+  indexed_pages?: number | null;
   measured_at?: string;
 }
 
@@ -29,6 +30,7 @@ const translations = {
     avgPosition: 'Position moyenne',
     homepageRank: 'Ranking page d\'accueil',
     totalKeywords: 'Mots-clés adressés',
+    indexedPages: 'Pages indexées',
     noData: 'Aucune donnée SERP disponible. Lancez un audit pour collecter les données.',
   },
   en: {
@@ -37,6 +39,7 @@ const translations = {
     avgPosition: 'Average Position',
     homepageRank: 'Homepage Ranking',
     totalKeywords: 'Ranked Keywords',
+    indexedPages: 'Indexed Pages',
     noData: 'No SERP data available. Run an audit to collect data.',
   },
   es: {
@@ -45,6 +48,7 @@ const translations = {
     avgPosition: 'Posición media',
     homepageRank: 'Ranking página principal',
     totalKeywords: 'Palabras clave posicionadas',
+    indexedPages: 'Páginas indexadas',
     noData: 'No hay datos SERP disponibles. Ejecute una auditoría para recopilar datos.',
   },
 };
@@ -73,10 +77,7 @@ function DistributionBar({ top3, top10, top50, total }: { top3: number; top10: n
           {pct3 > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div 
-                  className="bg-green-500 dark:bg-green-400 transition-all" 
-                  style={{ width: `${Math.max(pct3, 2)}%` }} 
-                />
+                <div className="bg-green-500 dark:bg-green-400 transition-all" style={{ width: `${Math.max(pct3, 2)}%` }} />
               </TooltipTrigger>
               <TooltipContent>Top 3: {top3} ({pct3.toFixed(1)}%)</TooltipContent>
             </Tooltip>
@@ -84,10 +85,7 @@ function DistributionBar({ top3, top10, top50, total }: { top3: number; top10: n
           {pct10 > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div 
-                  className="bg-emerald-400 dark:bg-emerald-500 transition-all" 
-                  style={{ width: `${Math.max(pct10, 2)}%` }} 
-                />
+                <div className="bg-emerald-400 dark:bg-emerald-500 transition-all" style={{ width: `${Math.max(pct10, 2)}%` }} />
               </TooltipTrigger>
               <TooltipContent>Top 4–10: {top10 - top3} ({pct10.toFixed(1)}%)</TooltipContent>
             </Tooltip>
@@ -95,10 +93,7 @@ function DistributionBar({ top3, top10, top50, total }: { top3: number; top10: n
           {pct50 > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div 
-                  className="bg-yellow-400 dark:bg-yellow-500 transition-all" 
-                  style={{ width: `${Math.max(pct50, 2)}%` }} 
-                />
+                <div className="bg-yellow-400 dark:bg-yellow-500 transition-all" style={{ width: `${Math.max(pct50, 2)}%` }} />
               </TooltipTrigger>
               <TooltipContent>Top 11–50: {top50 - top10} ({pct50.toFixed(1)}%)</TooltipContent>
             </Tooltip>
@@ -106,10 +101,7 @@ function DistributionBar({ top3, top10, top50, total }: { top3: number; top10: n
           {pctRest > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div 
-                  className="bg-muted transition-all" 
-                  style={{ width: `${Math.max(pctRest, 2)}%` }} 
-                />
+                <div className="bg-muted transition-all" style={{ width: `${Math.max(pctRest, 2)}%` }} />
               </TooltipTrigger>
               <TooltipContent>50+: {total - top50} ({pctRest.toFixed(1)}%)</TooltipContent>
             </Tooltip>
@@ -190,7 +182,7 @@ export function SerpKpiBanner({ data, onRefresh, isRefreshing }: SerpKpiBannerPr
       </CardHeader>
       <CardContent className="space-y-4">
         {/* KPI row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <div className="rounded-lg border bg-card p-3 space-y-1">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <TrendingUp className="h-3 w-3" />
@@ -225,6 +217,16 @@ export function SerpKpiBanner({ data, onRefresh, isRefreshing }: SerpKpiBannerPr
               ETV
             </div>
             <p className="text-lg font-semibold text-primary">{data.etv.toLocaleString()}</p>
+          </div>
+
+          <div className="rounded-lg border bg-card p-3 space-y-1">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <FileText className="h-3 w-3" />
+              {t.indexedPages}
+            </div>
+            <p className="text-lg font-semibold">
+              {data.indexed_pages != null ? data.indexed_pages.toLocaleString() : '—'}
+            </p>
           </div>
         </div>
 
