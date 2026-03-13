@@ -165,6 +165,12 @@ export function MyTracking() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newUrl, setNewUrl] = useState('');
   const [adding, setAdding] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState<{
+    valid: boolean;
+    suggestion?: string;
+    checked: boolean;
+  }>({ valid: false, checked: false });
   const [selectedSite, setSelectedSite] = useState<string | null>(null);
   const [refreshingSites, setRefreshingSites] = useState<Set<string>>(new Set());
   const [refreshingSerp, setRefreshingSerp] = useState(false);
