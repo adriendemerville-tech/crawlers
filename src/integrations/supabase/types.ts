@@ -2030,48 +2030,78 @@ export type Database = {
       }
       serp_geo_correlations: {
         Row: {
+          best_lag_etv: number | null
+          best_lag_position: number | null
+          best_lag_top10: number | null
           calculated_at: string
           convergence_index: number | null
           created_at: string
           domain: string
           id: string
+          llm_breakdown: Json | null
           llm_data_points: Json | null
+          p_value_etv: number | null
+          p_value_position: number | null
+          p_value_top10: number | null
           pearson_etv_vs_llm: number | null
           pearson_position_vs_llm: number | null
           pearson_top10_vs_llm: number | null
           serp_data_points: Json | null
+          spearman_etv_vs_llm: number | null
+          spearman_position_vs_llm: number | null
+          spearman_top10_vs_llm: number | null
           tracked_site_id: string
           trend_label: string | null
           user_id: string
           weeks_analyzed: number
         }
         Insert: {
+          best_lag_etv?: number | null
+          best_lag_position?: number | null
+          best_lag_top10?: number | null
           calculated_at?: string
           convergence_index?: number | null
           created_at?: string
           domain: string
           id?: string
+          llm_breakdown?: Json | null
           llm_data_points?: Json | null
+          p_value_etv?: number | null
+          p_value_position?: number | null
+          p_value_top10?: number | null
           pearson_etv_vs_llm?: number | null
           pearson_position_vs_llm?: number | null
           pearson_top10_vs_llm?: number | null
           serp_data_points?: Json | null
+          spearman_etv_vs_llm?: number | null
+          spearman_position_vs_llm?: number | null
+          spearman_top10_vs_llm?: number | null
           tracked_site_id: string
           trend_label?: string | null
           user_id: string
           weeks_analyzed?: number
         }
         Update: {
+          best_lag_etv?: number | null
+          best_lag_position?: number | null
+          best_lag_top10?: number | null
           calculated_at?: string
           convergence_index?: number | null
           created_at?: string
           domain?: string
           id?: string
+          llm_breakdown?: Json | null
           llm_data_points?: Json | null
+          p_value_etv?: number | null
+          p_value_position?: number | null
+          p_value_top10?: number | null
           pearson_etv_vs_llm?: number | null
           pearson_position_vs_llm?: number | null
           pearson_top10_vs_llm?: number | null
           serp_data_points?: Json | null
+          spearman_etv_vs_llm?: number | null
+          spearman_position_vs_llm?: number | null
+          spearman_top10_vs_llm?: number | null
           tracked_site_id?: string
           trend_label?: string | null
           user_id?: string
