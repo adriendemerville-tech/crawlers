@@ -400,7 +400,7 @@ export function UserManagement() {
                                     Retirer
                                   </Button>
                                 </div>
-                                <div className="border-t pt-4">
+                                <div className="border-t pt-4 space-y-2">
                                   <Button
                                     variant="secondary"
                                     onClick={handleRefund}
@@ -409,6 +409,18 @@ export function UserManagement() {
                                   >
                                     <RefreshCw className="h-4 w-4 mr-2" />
                                     Marquer dernier paiement comme remboursé
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      setAffiliateUser(user);
+                                      setAffiliateModalOpen(true);
+                                      setCreditDialogOpen(false);
+                                    }}
+                                    className="w-full border-violet-500/40 text-violet-600 dark:text-violet-400 hover:bg-violet-500/5"
+                                  >
+                                    <Link2 className="h-4 w-4 mr-2" />
+                                    Créer un code d'affiliation
                                   </Button>
                                 </div>
                               </div>
