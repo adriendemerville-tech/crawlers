@@ -23,13 +23,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const MAX_ITERATIONS = 7
 
 // ─── Models ──────────────────────────────────────────────────────────────────
-interface ModelDef { id: string; name: string; model: string }
+type Gateway = 'openrouter' | 'lovable'
+interface ModelDef { id: string; name: string; model: string; gateway: Gateway }
 const MODELS: ModelDef[] = [
-  { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-4o' },
-  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash' },
-  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-sonnet-4' },
-  { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar' },
+  { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-4o',              gateway: 'openrouter' },
+  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash',    gateway: 'lovable' },
+  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-sonnet-4',  gateway: 'openrouter' },
+  { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar',           gateway: 'openrouter' },
 ]
+
+const LOVABLE_AI_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 // ─── Site context (from tracked_sites) ───────────────────────────────────────
 interface SiteContext {
