@@ -2188,7 +2188,6 @@ Allow: /`}</pre>
     es: (
       <>
         <SummaryBox
-          title="Resumen"
           points={[
             "Google Search Console evolucionó en 2025-2026 con datos Brand / Genérico enriquecidos.",
             "El Índice de Alineamiento Estratégico (IAS) contextualiza este ratio por modelo de negocio.",
