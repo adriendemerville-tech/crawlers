@@ -883,6 +883,10 @@ function CrossComparisonSection({ cross, site1, site2, t }: { cross: CrossCompar
 
       {/* SERP Battlefield */}
       {cross.serp_battlefield && (
+        (cross.serp_battlefield.head_to_head?.length ?? 0) > 0 ||
+        (cross.serp_battlefield.exclusive_strengths_site1?.length ?? 0) > 0 ||
+        (cross.serp_battlefield.exclusive_strengths_site2?.length ?? 0) > 0
+      ) && (
         <Card className="border-border/50 bg-card/80">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
