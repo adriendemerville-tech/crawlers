@@ -90,7 +90,7 @@ const translations = {
     removeConfirm: 'Sitio eliminado del seguimiento',
     lastAudit: 'Última auditoría',
     never: 'Nunca',
-    seoScore: 'Score SEO',
+    seoScore: 'Visibilidad IA',
     geoScore: 'Score GEO',
     citationRate: 'Tasa de citación LLM',
     sentiment: 'Sentimiento IA',
