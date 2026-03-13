@@ -534,9 +534,38 @@ export function MyTracking() {
     }
   };
 
-  // Streaming audit: fire each API independently and update stats progressively
+  // Rate limit: max 2 KPI refreshes per day per site
+  const canRefreshSite = useCallback(async (siteId: string): Promise<boolean> => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const { count } = await supabase
+      .from('user_stats_history')
+      .select('id', { count: 'exact', head: true })
+      .eq('tracked_site_id', siteId)
+      .gte('recorded_at', todayStart.toISOString());
+    if ((count ?? 0) >= 2) {
+      toast.error(
+        language === 'fr'
+          ? 'Limite atteinte : 2 actualisations par jour par site.'
+          : language === 'es'
+            ? 'Límite alcanzado: 2 actualizaciones por día por sitio.'
+            : 'Limit reached: 2 refreshes per day per site.'
+      );
+      return false;
+    }
+    return true;
+  }, [language]);
+
+  // Streaming audit: fire each API independently, insert ONCE at the end
   const runStreamingAudit = async (site: TrackedSite) => {
     if (!user) return;
+
+    // Rate limit check (admins bypass)
+    if (!isAdmin) {
+      const allowed = await canRefreshSite(site.id);
+      if (!allowed) return;
+    }
+
     setRefreshingSites(prev => new Set(prev).add(site.id));
 
     const url = `https://${site.domain}`;
@@ -549,52 +578,34 @@ export function MyTracking() {
     let currentPerformance: number | null = null;
     let currentLlmOverallScore: number | null = null;
 
-    const upsertStats = async () => {
-      await supabase.from('user_stats_history').insert({
-        user_id: user.id,
-        tracked_site_id: site.id,
-        domain: site.domain,
-        seo_score: currentSeoScore,
-        geo_score: Math.round(currentGeoScore),
-        llm_citation_rate: currentCitationRate,
-        ai_sentiment: currentSentiment,
-        voice_share: currentCitationRate || null,
-        raw_data: { ...rawAccumulator, performanceScore: currentPerformance, llmOverallScore: currentLlmOverallScore },
-      });
-      await fetchStats();
-    };
-
-    // Fire all 5 calls independently — each updates UI on resolve
+    // Fire all 5 calls independently
     const calls = [
       // 1. Crawlers → SEO score
-      supabase.functions.invoke('check-crawlers', { body: { url } }).then(async (res) => {
+      supabase.functions.invoke('check-crawlers', { body: { url } }).then((res) => {
         const crawlersData = res.data;
         const botResults = crawlersData?.data?.results || crawlersData?.results || [];
         currentSeoScore = botResults.length > 0
           ? Math.round((botResults.filter((b: any) => b.status === 'allowed').length / botResults.length) * 100)
           : null;
         rawAccumulator.crawlersData = crawlersData?.data || crawlersData;
-        await upsertStats();
       }).catch(console.error),
 
       // 2. PageSpeed → Performance
-      supabase.functions.invoke('check-pagespeed', { body: { url, lang: language } }).then(async (res) => {
+      supabase.functions.invoke('check-pagespeed', { body: { url, lang: language } }).then((res) => {
         const psiData = res.data;
         currentPerformance = psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
         rawAccumulator.psiData = psiData?.data;
-        await upsertStats();
       }).catch(console.error),
 
       // 3. GEO → GEO score
-      supabase.functions.invoke('check-geo', { body: { url, lang: language } }).then(async (res) => {
+      supabase.functions.invoke('check-geo', { body: { url, lang: language } }).then((res) => {
         const geoData = res.data;
         currentGeoScore = geoData?.data?.totalScore ?? geoData?.data?.overallScore ?? 0;
         rawAccumulator.geoData = geoData?.data;
-        await upsertStats();
       }).catch(console.error),
 
       // 4. LLM → Citation, Sentiment, AI Visibility
-      supabase.functions.invoke('check-llm', { body: { url, lang: language } }).then(async (res) => {
+      supabase.functions.invoke('check-llm', { body: { url, lang: language } }).then((res) => {
         const llmData = res.data;
         const llmCitationRate = llmData?.data?.citationRate;
         currentCitationRate = llmCitationRate
@@ -603,17 +614,29 @@ export function MyTracking() {
         currentSentiment = llmData?.data?.overallSentiment || 'neutral';
         currentLlmOverallScore = llmData?.data?.overallScore ?? null;
         rawAccumulator.llmData = llmData?.data;
-        await upsertStats();
       }).catch(console.error),
 
       // 5. SERP KPIs
-      supabase.functions.invoke('fetch-serp-kpis', { body: { domain: site.domain, url, tracked_site_id: site.id, user_id: user.id } }).then(async (res) => {
+      supabase.functions.invoke('fetch-serp-kpis', { body: { domain: site.domain, url, tracked_site_id: site.id, user_id: user.id } }).then((res) => {
         rawAccumulator.serpData = res.data?.data || null;
-        await upsertStats();
       }).catch(console.error),
     ];
 
     await Promise.allSettled(calls);
+
+    // Insert ONE single snapshot with all collected data
+    await supabase.from('user_stats_history').insert({
+      user_id: user.id,
+      tracked_site_id: site.id,
+      domain: site.domain,
+      seo_score: currentSeoScore,
+      geo_score: Math.round(currentGeoScore),
+      llm_citation_rate: currentCitationRate,
+      ai_sentiment: currentSentiment,
+      voice_share: currentCitationRate || null,
+      raw_data: { ...rawAccumulator, performanceScore: currentPerformance, llmOverallScore: currentLlmOverallScore },
+    });
+    await fetchStats();
 
     // Update last_audit_at
     await supabase
