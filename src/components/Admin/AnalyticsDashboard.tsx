@@ -770,6 +770,16 @@ export function AnalyticsDashboard() {
                 {tokenUsage.firecrawlCalls.toLocaleString('fr-FR')}
               </p>
             </div>
+            <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
+                <Cpu className="h-3 w-3" /> Fly.io Playwright
+              </p>
+              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                {tokenUsage.flyPlaywrightCalls.toLocaleString('fr-FR')}
+              </p>
+              <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
+                ~{tokenUsage.flyEstimatedCost.toFixed(6)}€ ({(tokenUsage.flyEstimatedCost * 100).toFixed(4)}c)
+              </p>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">Coût estimé total</p>
               <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
