@@ -87,6 +87,8 @@ export const getReportStyles = () => `
     border-radius: 12px;
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     overflow: hidden;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   
   .card-shadow-lg {
