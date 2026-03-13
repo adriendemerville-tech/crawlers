@@ -793,10 +793,10 @@ function generateFixCode(
 
     case 'inject_local_business':
       return {
-        fn: `  // Règle 1: LocalBusiness → JSON-LD dans <head> (données sémantiques)
-  // Règle 4: Lock anti double-exécution
+         fn: `  // Règle 1: LocalBusiness → JSON-LD dans <head> (données sémantiques)
+  // Règle 4: Merge-override
   function injectLocalBusiness() {
-    if (hasLock('inject_local_business')) return;
+    clearLock('inject_local_business');
     try {
       // Version complète générée côté serveur
       injectJsonLd('local-business', {
