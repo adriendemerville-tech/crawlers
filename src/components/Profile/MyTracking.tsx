@@ -824,18 +824,36 @@ export function MyTracking() {
   const previousSerpData = currentStats.length >= 2 ? getSerpData(currentStats[currentStats.length - 2]) : null;
   const previousIndexedPages = previousSerpData?.indexed_pages ?? null;
 
-  const chartData = currentStats.map((entry) => {
-    const d = new Date(entry.recorded_at);
-    const dd = String(d.getDate()).padStart(2, '0');
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    return {
-      date: `${dd}/${mm}`,
-      seo: entry.seo_score || 0,
-      geo: entry.geo_score || 0,
-      citation: entry.llm_citation_rate || 0,
-      performance: getPerformanceScore(entry) || 0,
-    };
-  });
+  const chartData = useMemo(() => {
+    // Group entries by day, keep only the last 2 per day
+    const byDay: Record<string, StatsEntry[]> = {};
+    for (const entry of currentStats) {
+      const d = new Date(entry.recorded_at);
+      const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (!byDay[dayKey]) byDay[dayKey] = [];
+      byDay[dayKey].push(entry);
+    }
+    const deduped: StatsEntry[] = [];
+    for (const dayKey of Object.keys(byDay).sort()) {
+      const entries = byDay[dayKey];
+      // Sort by recorded_at desc, keep last 2
+      entries.sort((a, b) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime());
+      const kept = entries.slice(0, 2).reverse();
+      deduped.push(...kept);
+    }
+    return deduped.map((entry) => {
+      const d = new Date(entry.recorded_at);
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      return {
+        date: `${dd}/${mm}`,
+        seo: entry.seo_score || 0,
+        geo: entry.geo_score || 0,
+        citation: entry.llm_citation_rate || 0,
+        performance: getPerformanceScore(entry) || 0,
+      };
+    });
+  }, [currentStats]);
 
   if (loading) {
     return (
