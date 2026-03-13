@@ -235,6 +235,8 @@ export function ExpertAuditDashboard() {
     strategicProgressiveReveal, setStrategicProgressiveReveal,
     storedCorrections, setStoredCorrections,
     siteAutoTracked, setSiteAutoTracked,
+    fatalAuditError, setFatalAuditError,
+    auditFailCountRef,
     isReportModalOpen, setIsReportModalOpen,
     isPaymentModalOpen, setIsPaymentModalOpen,
     isCodeEditorOpen, setIsCodeEditorOpen,
