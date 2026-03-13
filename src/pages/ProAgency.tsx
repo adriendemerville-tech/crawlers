@@ -54,6 +54,11 @@ const translations = {
         description: '5 000 pages crawlées par mois incluses (Fair Use). Au-delà, achat de crédits supplémentaires en Pay-As-You-Go. Structure, score SEO/200, liens cassés, synthèse IA.',
       },
       {
+        icon: 'BarChart3',
+        title: '30 URL suivis inclus',
+        description: 'Suivez jusqu\'à 30 domaines avec KPIs SEO, GEO et LLM actualisés quotidiennement depuis votre console.',
+      },
+      {
         icon: 'Palette',
         title: 'Marque blanche',
         description: 'Personnalisez vos rapports avec votre logo, vos couleurs et vos coordonnées. Vos clients ne voient que votre marque.',
@@ -67,11 +72,6 @@ const translations = {
         icon: 'Headphones',
         title: 'Support prioritaire',
         description: 'Accédez à un support dédié avec des temps de réponse réduits et une assistance personnalisée.',
-      },
-      {
-        icon: 'BarChart3',
-        title: 'Console multi-clients',
-        description: 'Organisez vos clients, leurs sites et leurs rapports dans un espace structuré et professionnel.',
       },
     ],
     // Comparison
