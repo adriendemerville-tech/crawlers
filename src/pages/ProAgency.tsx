@@ -59,6 +59,11 @@ const translations = {
         description: 'Suivez jusqu\'à 30 domaines avec KPIs SEO, GEO et LLM actualisés quotidiennement depuis votre console.',
       },
       {
+        icon: 'TrendingUp',
+        title: 'Indice d\'Alignement Stratégique (IAS)',
+        description: 'Diagnostiquez automatiquement l\'équilibre Brand / Non-Brand de votre trafic GSC par modèle économique. Score, historisation et benchmarks sectoriels.',
+      },
+      {
         icon: 'Palette',
         title: 'Marque blanche',
         description: 'Personnalisez vos rapports avec votre logo, vos couleurs et vos coordonnées. Vos clients ne voient que votre marque.',
