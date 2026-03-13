@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, memo, lazy, Suspense, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Zap, Bot, Sparkles, Brain, Gauge, FileSearch, GitCompareArrows } from 'lucide-react';
+import { Search, Zap, Bot, Sparkles, Brain, Gauge, FileSearch } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -355,18 +355,6 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               <FileSearch className="h-5 w-5 text-primary" />
               <span className="font-bold text-foreground">
                 {language === 'fr' ? 'Audit Expert' : language === 'es' ? 'Auditoría Experta' : 'Expert Audit'}
-              </span>
-            </Button>
-          </Link>
-          <Link to="/audit-compare">
-            <Button
-              variant="outline"
-              size="lg"
-              className="gap-2 px-6 py-3 text-base border border-violet-500 text-violet-500 bg-transparent hover:bg-violet-500/10 hover:text-violet-400 font-medium shadow-[0_4px_12px_rgba(0,0,0,0.15)]"
-            >
-              <GitCompareArrows className="h-4 w-4" />
-              <span>
-                {language === 'fr' ? 'Audit Comparé' : language === 'es' ? 'Auditoría Comparada' : 'Compared Audit'}
               </span>
             </Button>
           </Link>
