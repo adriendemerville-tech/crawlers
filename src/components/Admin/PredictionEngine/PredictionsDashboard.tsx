@@ -10,6 +10,7 @@ import { ScoreGauge200 } from '@/components/ExpertAudit/ScoreGauge200';
 import { PdfUploader } from './PdfUploader';
 import { PredictionsList } from './PredictionsList';
 import { ActualResultsForm } from './ActualResultsForm';
+import { BacktestingDashboard } from './BacktestingDashboard';
 
 interface SystemMetrics {
   current_reliability_score: number;
