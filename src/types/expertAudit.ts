@@ -474,6 +474,9 @@ export interface StrategicAnalysis {
   lexical_footprint?: import('./newAuditMetrics').LexicalFootprint;
   expertise_sentiment?: import('./newAuditMetrics').ExpertiseSentiment;
   red_team?: import('./newAuditMetrics').RedTeamAnalysis;
+
+  // Google My Business
+  google_my_business?: GoogleMyBusinessData | null;
 }
 
  // Raw LLM visibility data from check-llm edge function
