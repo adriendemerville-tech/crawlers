@@ -154,6 +154,7 @@ export function AnalyticsDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [reliabilityScore, setReliabilityScore] = useState<{ score: number; audits: number; predictions: number } | null>(null);
+  const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
     totalTokens: 0,
     promptTokens: 0,
@@ -350,6 +351,55 @@ export function AnalyticsDashboard() {
         firecrawlCalls,
         byApiService,
       });
+
+      // Calculate average cost per paying subscriber
+      try {
+        const { data: payingProfiles } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('plan_type', 'agency_pro')
+          .eq('subscription_status', 'active');
+        
+        if (payingProfiles && payingProfiles.length > 0) {
+          const payingUserIds = new Set(payingProfiles.map(p => p.user_id));
+          // Sum cost per paying user from token events
+          const costPerUser: Record<string, number> = {};
+          tokenEvents.forEach(e => {
+            const data = e.event_data as Record<string, unknown> | null;
+            if (data && e.user_id && payingUserIds.has(e.user_id)) {
+              const p = Number(data.prompt_tokens) || 0;
+              const c = Number(data.completion_tokens) || 0;
+              const model = (data.model as string) || 'unknown';
+              const cost = estimateCost(model, p, c);
+              costPerUser[e.user_id] = (costPerUser[e.user_id] || 0) + cost;
+            }
+          });
+          // Also add paid API call costs (estimated at ~0.01€ per call for DataForSEO, ~0.005€ for others)
+          const API_COST_ESTIMATES: Record<string, number> = {
+            dataforseo: 0.01,
+            browserless: 0.008,
+            firecrawl: 0.005,
+            openrouter: 0, // already counted in tokens
+          };
+          paidApiEvents.forEach(e => {
+            const data = e.event_data as Record<string, unknown> | null;
+            if (data && e.user_id && payingUserIds.has(e.user_id)) {
+              const service = (data.api_service as string) || 'unknown';
+              const apiCost = API_COST_ESTIMATES[service] || 0.005;
+              costPerUser[e.user_id] = (costPerUser[e.user_id] || 0) + apiCost;
+            }
+          });
+          
+          const usersWithCosts = Object.values(costPerUser);
+          const totalCostSubscribers = usersWithCosts.reduce((sum, c) => sum + c, 0);
+          const avgCost = payingProfiles.length > 0 ? totalCostSubscribers / payingProfiles.length : 0;
+          setAvgCostPerSubscriber({ avg: avgCost, count: payingProfiles.length });
+        } else {
+          setAvgCostPerSubscriber({ avg: 0, count: 0 });
+        }
+      } catch (err) {
+        console.error('Error calculating avg cost per subscriber:', err);
+      }
 
       // Calculate daily data (last 30 days)
       const last30Days = Array.from({ length: 30 }, (_, i) => {
@@ -714,6 +764,17 @@ export function AnalyticsDashboard() {
                 {tokenUsage.totalEstimatedCost.toFixed(4)}€
               </p>
             </div>
+            {avgCostPerSubscriber && (
+              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                <p className="text-xs text-rose-700 dark:text-rose-400 font-medium">Coût moyen / abonné</p>
+                <p className="text-lg font-bold text-rose-600 dark:text-rose-400">
+                  {avgCostPerSubscriber.avg.toFixed(4)}€
+                </p>
+                <p className="text-[10px] text-rose-600/70 dark:text-rose-400/70 mt-0.5">
+                  {avgCostPerSubscriber.count} abonné{avgCostPerSubscriber.count > 1 ? 's' : ''} actif{avgCostPerSubscriber.count > 1 ? 's' : ''}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Per-API-service breakdown */}
