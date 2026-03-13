@@ -113,15 +113,9 @@ export function SimulatedLLMDepthCard({ analysis, domain }: SimulatedLLMDepthCar
             </div>
             Profondeur LLM
           </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-600 dark:text-violet-400">
-              <Sparkles className="h-3 w-3 mr-1" />
-              Estimation
-            </Badge>
-            <Badge className={`${depthColor(avgDepth)} bg-transparent border-current`}>
-              {avgDepth} / 7
-            </Badge>
-          </div>
+          <Badge className={`${depthColor(avgDepth)} bg-transparent border-current`}>
+            {avgDepth} / 7
+          </Badge>
         </div>
         <CardDescription>
           Estimation de la profondeur conversationnelle nécessaire pour citer {domain || 'votre marque'}
