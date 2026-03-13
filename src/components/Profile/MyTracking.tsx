@@ -1474,7 +1474,19 @@ export function MyTracking() {
 
                   {/* LLM Depth Card – Pro Agency, collaborators & admins */}
                   {currentSite && (isAgencyPro || isCollaborator || isAdmin) && (
-                    <LLMDepthCard domain={currentSite.domain} />
+                    <LLMDepthCard
+                      domain={currentSite.domain}
+                      trackedSiteId={currentSite.id}
+                      userId={user?.id}
+                      siteContext={{
+                        market_sector: currentSite.market_sector || undefined,
+                        products_services: currentSite.products_services || undefined,
+                        target_audience: currentSite.target_audience || undefined,
+                        address: currentSite.address || undefined,
+                        commercial_area: currentSite.commercial_area || undefined,
+                        company_size: currentSite.company_size || undefined,
+                      }}
+                    />
                   )}
                 </div>
               )}
