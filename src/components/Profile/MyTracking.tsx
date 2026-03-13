@@ -36,7 +36,7 @@ const translations = {
     removeConfirm: 'Site retiré du suivi',
     lastAudit: 'Dernier audit',
     never: 'Jamais',
-    seoScore: 'Score SEO',
+    seoScore: 'Visibilité IA',
     geoScore: 'Score GEO',
     citationRate: 'Taux de citation LLM',
     sentiment: 'Sentiment IA',
