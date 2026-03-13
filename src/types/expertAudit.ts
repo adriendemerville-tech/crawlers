@@ -415,6 +415,17 @@ export interface HallucinationCorrections {
   mainProducts?: string;
 }
 
+// Google My Business data
+export interface GoogleMyBusinessData {
+  title?: string;
+  rating?: number;
+  reviews_count?: number;
+  category?: string;
+  address?: string;
+  is_claimed?: boolean;
+  quick_wins?: string[];
+}
+
 // UPDATED: Premium Strategic Analysis
 export type AuditPageType = 'homepage' | 'editorial' | 'product' | 'deep';
 
