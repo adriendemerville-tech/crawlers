@@ -84,6 +84,10 @@ export function AdminDashboard() {
           <BackendDocumentation />
         </TabsContent>
 
+        <TabsContent value="crawls" forceMount className="data-[state=inactive]:hidden">
+          <CrawlManagement />
+        </TabsContent>
+
         <TabsContent value="support" forceMount className="data-[state=inactive]:hidden">
           <SupportManagement />
         </TabsContent>
