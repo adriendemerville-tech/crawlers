@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle, AlertTriangle, FileSearch } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -24,6 +24,7 @@ interface LLMDepthData {
   results: DepthResult[];
   prompt_strategy: string;
   measured_at: string;
+  error_code?: string;
 }
 
 interface SiteContext {
@@ -57,6 +58,10 @@ const translations = {
     mentionedAs: 'Cité comme',
     angles: 'Angles testés',
     tooltip: 'Conversation multi-tour avec 4 LLMs via des angles de plus en plus précis (besoin, métier, fonctionnalités, budget, géographie, niche, exhaustif). Détection sémantique de la marque.',
+    completed: 'Analyse terminée',
+    completedDesc: 'Les crédits API sont temporairement épuisés. Vos données précédentes restent affichées.',
+    expertRequired: 'Audit expert requis',
+    expertRequiredDesc: 'Lancez un audit stratégique pour obtenir votre profondeur LLM avec des données de simulation intelligentes.',
   },
   en: {
     title: 'LLM Depth',
@@ -71,6 +76,10 @@ const translations = {
     mentionedAs: 'Cited as',
     angles: 'Angles tested',
     tooltip: 'Multi-turn conversation with 4 LLMs using increasingly specific angles (need, profession, features, budget, geography, niche, exhaustive). Semantic brand detection.',
+    completed: 'Analysis complete',
+    completedDesc: 'API credits are temporarily exhausted. Your previous data remains displayed.',
+    expertRequired: 'Expert audit required',
+    expertRequiredDesc: 'Run a strategic audit to get your LLM depth with smart simulated data.',
   },
   es: {
     title: 'Profundidad LLM',
@@ -85,6 +94,10 @@ const translations = {
     mentionedAs: 'Citado como',
     angles: 'Ángulos probados',
     tooltip: 'Conversación multi-turno con 4 LLMs usando ángulos cada vez más específicos (necesidad, profesión, funcionalidades, presupuesto, geografía, nicho, exhaustivo). Detección semántica de marca.',
+    completed: 'Análisis completado',
+    completedDesc: 'Los créditos API están temporalmente agotados. Sus datos anteriores siguen mostrados.',
+    expertRequired: 'Auditoría experta requerida',
+    expertRequiredDesc: 'Ejecute una auditoría estratégica para obtener su profundidad LLM con datos simulados inteligentes.',
   },
 };
 
@@ -105,15 +118,39 @@ function depthLabel(depth: number, lang: string): string {
   return lang === 'fr' ? 'Invisible' : lang === 'es' ? 'Invisible' : 'Invisible';
 }
 
+const MAX_DISPLAY = 7;
+const SIMULATED_LOADING_MS = 30_000;
+
 export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initialData }: LLMDepthCardProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const [data, setData] = useState<LLMDepthData | null>(initialData ?? null);
   const [loading, setLoading] = useState(false);
+  const [banner, setBanner] = useState<'completed' | 'expert_required' | null>(null);
+  const [hasPreviousData, setHasPreviousData] = useState<boolean | null>(null);
+  const simulatedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Check if user has previous LLM depth data for this site
+  useEffect(() => {
+    if (!trackedSiteId || !userId) {
+      setHasPreviousData(false);
+      return;
+    }
+    supabase
+      .from('llm_test_executions')
+      .select('id', { count: 'exact', head: true })
+      .eq('tracked_site_id', trackedSiteId)
+      .eq('user_id', userId)
+      .then(({ count }) => {
+        setHasPreviousData((count ?? 0) > 0);
+      });
+  }, [trackedSiteId, userId]);
 
   const handleRefresh = async () => {
     if (loading) return;
     setLoading(true);
+    setBanner(null);
+
     try {
       const response = await supabase.functions.invoke('check-llm-depth', {
         body: {
@@ -124,8 +161,28 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
           site_context: siteContext,
         },
       });
-      if (response.data?.data) {
-        setData(response.data.data);
+
+      const responseData = response.data?.data as LLMDepthData | undefined;
+
+      // Credits exhausted scenario
+      if (responseData?.error_code === 'credits_exhausted') {
+        if (hasPreviousData || data) {
+          // User has previous data: simulate 30s loading then show "terminé" banner
+          await new Promise<void>((resolve) => {
+            simulatedTimerRef.current = setTimeout(resolve, SIMULATED_LOADING_MS);
+          });
+          setBanner('completed');
+        } else {
+          // User never used depth: show "audit expert requis" immediately
+          setBanner('expert_required');
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (responseData && responseData.results && responseData.results.length > 0) {
+        setData(responseData);
+        setHasPreviousData(true);
       }
     } catch (err) {
       console.error('[LLMDepthCard] refresh error:', err);
@@ -133,6 +190,76 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
       setLoading(false);
     }
   };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (simulatedTimerRef.current) clearTimeout(simulatedTimerRef.current);
+    };
+  }, []);
+
+  // Banner: "Analyse terminée" (user has prior data, credits exhausted)
+  if (banner === 'completed') {
+    return (
+      <Card className="relative border-2 border-violet-500/40 dark:border-violet-400/30">
+        <CardContent className="py-6 space-y-4">
+          {/* Show existing data if available */}
+          {data && (
+            <div className="space-y-3 mb-4">
+              <div className="rounded-lg border bg-card p-3 space-y-1">
+                <div className="text-xs text-muted-foreground">{t.avgDepth}</div>
+                <div className="flex items-baseline gap-2">
+                  <span className={`text-2xl font-bold ${depthColor(data.avg_depth)}`}>
+                    {data.avg_depth !== null ? data.avg_depth : '—'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">/ 7 {t.iterations}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-medium text-sm text-emerald-700 dark:text-emerald-300">{t.completed}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t.completedDesc}</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2"
+            onClick={() => setBanner(null)}
+          >
+            <RefreshCw className="h-3 w-3" />
+            OK
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Banner: "Audit expert requis" (user never used depth, credits exhausted)
+  if (banner === 'expert_required') {
+    return (
+      <Card className="relative border-2 border-violet-500/40 dark:border-violet-400/30">
+        <CardContent className="py-6 text-center space-y-3">
+          <FileSearch className="h-8 w-8 mx-auto text-amber-500 opacity-70" />
+          <div className="space-y-1">
+            <p className="font-semibold text-sm text-amber-700 dark:text-amber-400">{t.expertRequired}</p>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto">{t.expertRequiredDesc}</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2"
+            onClick={() => setBanner(null)}
+          >
+            OK
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!data) {
     return (
@@ -250,5 +377,3 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
     </Card>
   );
 }
-
-const MAX_DISPLAY = 7;
