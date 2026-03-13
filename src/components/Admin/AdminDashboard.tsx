@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot, BookOpen, Globe, FlaskConical } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot, BookOpen, Globe, FlaskConical, Link2 } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -11,6 +11,7 @@ import { BackendDocumentation } from './BackendDocumentation';
 import { CrawlManagement } from './CrawlManagement';
 import { DemoModeToggle } from './DemoModeToggle';
 import { CiTestsDashboard } from './CiTestsDashboard';
+import { AffiliateManagement } from './AffiliateManagement';
 
 export function AdminDashboard() {
   return (
@@ -65,6 +66,10 @@ export function AdminDashboard() {
             <FlaskConical className="h-4 w-4" />
             <span className="hidden sm:inline">CI Tests</span>
           </TabsTrigger>
+          <TabsTrigger value="affiliates" className="flex-1 gap-2">
+            <Link2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Affiliation</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="users" forceMount className="data-[state=inactive]:hidden">
@@ -101,6 +106,10 @@ export function AdminDashboard() {
 
         <TabsContent value="ci-tests" forceMount className="data-[state=inactive]:hidden">
           <CiTestsDashboard />
+        </TabsContent>
+
+        <TabsContent value="affiliates" forceMount className="data-[state=inactive]:hidden">
+          <AffiliateManagement />
         </TabsContent>
       </Tabs>
     </div>
