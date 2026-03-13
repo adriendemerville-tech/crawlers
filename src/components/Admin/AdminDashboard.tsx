@@ -20,15 +20,6 @@ export function AdminDashboard() {
       <DemoModeToggle />
       <BrowserlessAlert />
       <ApiGatewayFallbackAlert />
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-primary/10">
-          <Shield className="h-6 w-6 text-primary" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold">Administration</h2>
-          <p className="text-muted-foreground">Gérez les utilisateurs, le contenu et les statistiques</p>
-        </div>
-      </div>
 
       <Tabs defaultValue="analytics" className="space-y-6">
         <TabsList className="w-full flex flex-wrap h-auto gap-1">
