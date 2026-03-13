@@ -1054,6 +1054,88 @@ export type Database = {
         }
         Relationships: []
       }
+      llm_test_executions: {
+        Row: {
+          brand_found: boolean
+          created_at: string
+          id: string
+          iteration_found: number | null
+          llm_name: string
+          prompt_tested: string
+          response_text: string | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          brand_found?: boolean
+          created_at?: string
+          id?: string
+          iteration_found?: number | null
+          llm_name: string
+          prompt_tested: string
+          response_text?: string | null
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          brand_found?: boolean
+          created_at?: string
+          id?: string
+          iteration_found?: number | null
+          llm_name?: string
+          prompt_tested?: string
+          response_text?: string | null
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "llm_test_executions_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      llm_visibility_scores: {
+        Row: {
+          created_at: string
+          id: string
+          llm_name: string
+          score_percentage: number
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          llm_name: string
+          score_percentage?: number
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          llm_name?: string
+          score_percentage?: number
+          tracked_site_id?: string
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "llm_visibility_scores_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       magic_links: {
         Row: {
           created_at: string
