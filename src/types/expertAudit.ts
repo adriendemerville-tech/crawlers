@@ -343,6 +343,7 @@ export interface RankingOverview {
   };
   top_keywords: { keyword: string; position: number; volume: number; url: string }[];
   etv: number;
+  indexed_pages?: number | null;
 }
 
 export interface ContentFreshness {
