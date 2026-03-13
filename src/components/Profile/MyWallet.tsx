@@ -477,7 +477,7 @@ export function MyWallet() {
                           <p className="text-sm text-muted-foreground">{t.credits}</p>
                         </div>
                       </div>
-                      <Button onClick={() => setShowTopUp(true)} className="gap-2 bg-amber-500 hover:bg-amber-600 text-white">
+                      <Button onClick={() => setShowTopUpModal(true)} className="gap-2 bg-amber-500 hover:bg-amber-600 text-white">
                         <ShoppingCart className="h-4 w-4" />
                         {t.topUp}
                       </Button>
