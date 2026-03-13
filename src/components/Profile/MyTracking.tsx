@@ -163,6 +163,7 @@ export function MyTracking() {
   const [adding, setAdding] = useState(false);
   const [selectedSite, setSelectedSite] = useState<string | null>(null);
   const [refreshingSites, setRefreshingSites] = useState<Set<string>>(new Set());
+  const [refreshingSerp, setRefreshingSerp] = useState(false);
   
   // Architect modal state
   const [architectSiteId, setArchitectSiteId] = useState<string | null>(null);
