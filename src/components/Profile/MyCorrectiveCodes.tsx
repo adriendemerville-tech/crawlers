@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp } from 'lucide-react';
+import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,8 @@ import { format } from 'date-fns';
 import { fr, es, enUS } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 interface CorrectiveCodeFix {
   id: string;
@@ -75,6 +77,7 @@ const translations = {
 export function MyCorrectiveCodes() {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const t = translations[language];
   const [codes, setCodes] = useState<CorrectiveCode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -211,7 +214,20 @@ export function MyCorrectiveCodes() {
 
   return (
     <Card>
-      <CardContent className="pt-6">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardDescription>{t.description}</CardDescription>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/modifier-code-wordpress')}>
+                <Plug className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>WordPress</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </CardHeader>
+      <CardContent>
         {codes.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Code2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
