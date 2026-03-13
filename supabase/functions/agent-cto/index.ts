@@ -212,6 +212,132 @@ function parseAgentResponse(raw: string, evidenceBasis: AgentDecision['evidence_
   }
 }
 
+// ─── Cache Health Check ───────────────────────────────────────────────
+interface CacheHealthReport {
+  total_entries: number
+  expired_entries: number
+  entries_by_type: Record<string, number>
+  anomalies: string[]
+  score_stats: { avg: number; min: number; max: number; stddev: number } | null
+  empty_results_count: number
+  oldest_entry_age_hours: number
+  status: 'healthy' | 'warning' | 'critical'
+}
+
+async function checkCacheHealth(supabase: any): Promise<CacheHealthReport> {
+  const now = new Date().toISOString()
+
+  // Fetch all cache entries (recent 2 weeks)
+  const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+  const { data: entries, error } = await supabase
+    .from('domain_data_cache')
+    .select('domain, data_type, week_start_date, result_data, created_at, expires_at')
+    .gt('created_at', twoWeeksAgo)
+    .order('created_at', { ascending: false })
+    .limit(500)
+
+  if (error || !entries) {
+    return {
+      total_entries: 0, expired_entries: 0, entries_by_type: {},
+      anomalies: [`Erreur lecture cache: ${error?.message || 'no data'}`],
+      score_stats: null, empty_results_count: 0, oldest_entry_age_hours: 0,
+      status: 'critical',
+    }
+  }
+
+  const anomalies: string[] = []
+  const entriesByType: Record<string, number> = {}
+  let expiredCount = 0
+  let emptyCount = 0
+  const allScores: number[] = []
+
+  for (const e of entries) {
+    // Count by type
+    entriesByType[e.data_type] = (entriesByType[e.data_type] || 0) + 1
+
+    // Expired?
+    if (new Date(e.expires_at) < new Date(now)) expiredCount++
+
+    // Empty result_data?
+    const rd = e.result_data
+    if (!rd || (typeof rd === 'object' && Object.keys(rd).length === 0)) {
+      emptyCount++
+      anomalies.push(`⚠️ Résultat vide pour ${e.domain} (${e.data_type}, ${e.week_start_date || 'n/a'})`)
+    }
+
+    // Extract visibility scores for statistical analysis
+    if (e.data_type === 'llm_visibility' && rd?.scores && Array.isArray(rd.scores)) {
+      for (const s of rd.scores) {
+        if (typeof s.score_percentage === 'number') {
+          allScores.push(s.score_percentage)
+        }
+      }
+      // Check for all-zero scores (anomaly: brand never found)
+      const allZero = rd.scores.every((s: any) => s.score_percentage === 0)
+      if (allZero && rd.scores.length > 0) {
+        anomalies.push(`🔴 Tous les scores LLM à 0% pour ${e.domain} — possible erreur de détection de marque`)
+      }
+    }
+
+    // Check for llm_depth with degraded data
+    if (e.data_type === 'llm_depth' && rd) {
+      const depth = rd as any
+      if (depth.error || depth.status === 'error') {
+        anomalies.push(`🔴 Audit profondeur en erreur pour ${e.domain}`)
+      }
+    }
+  }
+
+  // Statistical analysis on visibility scores
+  let scoreStats: CacheHealthReport['score_stats'] = null
+  if (allScores.length >= 5) {
+    const avg = allScores.reduce((a, b) => a + b, 0) / allScores.length
+    const min = Math.min(...allScores)
+    const max = Math.max(...allScores)
+    const variance = allScores.reduce((sum, s) => sum + Math.pow(s - avg, 2), 0) / allScores.length
+    const stddev = Math.sqrt(variance)
+    scoreStats = { avg: Math.round(avg * 10) / 10, min, max, stddev: Math.round(stddev * 10) / 10 }
+
+    // Anomaly: sudden score collapse (all recent scores way below average)
+    const recentScores = allScores.slice(0, Math.min(10, allScores.length))
+    const recentAvg = recentScores.reduce((a, b) => a + b, 0) / recentScores.length
+    if (recentAvg < avg * 0.5 && avg > 10) {
+      anomalies.push(`📉 Chute brutale des scores récents: moyenne récente ${Math.round(recentAvg)}% vs globale ${Math.round(avg)}%`)
+    }
+
+    // Anomaly: abnormal standard deviation
+    if (stddev > 35 && allScores.length > 10) {
+      anomalies.push(`📊 Écart-type anormalement élevé (${scoreStats.stddev}) — possible instabilité des résultats LLM`)
+    }
+  }
+
+  // Oldest entry age
+  const oldestCreated = entries.length > 0 ? entries[entries.length - 1].created_at : now
+  const oldestAgeHours = Math.round((Date.now() - new Date(oldestCreated).getTime()) / (1000 * 60 * 60))
+
+  // Empty results threshold
+  if (emptyCount > entries.length * 0.1 && emptyCount > 2) {
+    anomalies.push(`⚠️ ${emptyCount}/${entries.length} entrées vides (>${Math.round(emptyCount / entries.length * 100)}%)`)
+  }
+
+  // Determine status
+  let status: CacheHealthReport['status'] = 'healthy'
+  if (anomalies.some(a => a.startsWith('🔴'))) status = 'critical'
+  else if (anomalies.length > 3) status = 'warning'
+  else if (emptyCount > 5) status = 'warning'
+
+  return {
+    total_entries: entries.length,
+    expired_entries: expiredCount,
+    entries_by_type: entriesByType,
+    anomalies,
+    score_stats: scoreStats,
+    empty_results_count: emptyCount,
+    oldest_entry_age_hours: oldestAgeHours,
+    status,
+  }
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -226,7 +352,38 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { auditResult, auditType, url, domain } = await req.json()
+    const body = await req.json()
+
+    // ─── Mode: Cache Health Check ─────────────────────────────────
+    if (body.action === 'cache_health_check') {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+      const report = await checkCacheHealth(supabase)
+
+      console.log(`[AGENT-CTO] 🏥 Cache health: ${report.status} — ${report.total_entries} entries, ${report.anomalies.length} anomalies`)
+
+      // Log the health check
+      await supabase.from('cto_agent_logs').insert({
+        audit_id: `cache_health_${Date.now()}`,
+        function_analyzed: 'domain_data_cache',
+        analysis_summary: `Cache santé: ${report.status}. ${report.total_entries} entrées, ${report.anomalies.length} anomalies détectées.`,
+        self_critique: report.anomalies.length > 0
+          ? `Anomalies: ${report.anomalies.join(' | ')}`
+          : 'Aucune anomalie détectée.',
+        confidence_score: report.status === 'healthy' ? 100 : report.status === 'warning' ? 60 : 20,
+        decision: report.status === 'critical' ? 'needs_review' : 'approved',
+        metadata: {
+          cache_health: report,
+          check_type: 'daily_automated',
+        },
+      })
+
+      return new Response(JSON.stringify({ success: true, report }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // ─── Mode: Standard audit analysis ────────────────────────────
+    const { auditResult, auditType, url, domain } = body
 
     if (!auditResult || !auditType) {
       return new Response(JSON.stringify({ success: false, error: 'Missing auditResult or auditType' }), {
