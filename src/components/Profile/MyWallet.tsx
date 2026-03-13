@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User, Terminal, Monitor, Radar, Globe } from 'lucide-react';
+import { CreditCard, History, TrendingUp, TrendingDown, Loader2, ShoppingCart, Activity, Crown, Infinity, FileText, Code, Headphones, ExternalLink, AlertTriangle, Receipt, User, Terminal, Monitor, Radar, Globe, Bot } from 'lucide-react';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
@@ -295,6 +295,7 @@ export function MyWallet() {
                   { value: 'invoices', icon: Receipt, label: language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices' },
                   { value: 'payment', icon: CreditCard, label: language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment' },
                   { value: 'profile', icon: User, label: language === 'fr' ? 'Comptes' : language === 'es' ? 'Cuentas' : 'Accounts' },
+                  { value: 'credits', icon: Bot, label: language === 'fr' ? 'Crédits' : language === 'es' ? 'Créditos' : 'Credits', color: 'text-amber-500' },
                 ].map((item, i) => (
                   <motion.div
                     key={item.value}
@@ -303,8 +304,8 @@ export function MyWallet() {
                     transition={{ delay: 0.1 + i * 0.06, duration: 0.25, ease: 'easeOut' }}
                   >
                     <TabsTrigger value={item.value} className="w-full justify-start gap-2 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-violet-600 data-[state=active]:border-violet-500 data-[state=active]:border data-[state=active]:shadow-none">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
+                      <item.icon className={`h-4 w-4 ${'color' in item && item.color ? item.color : ''}`} />
+                      <span className={'color' in item && item.color ? item.color : ''}>{item.label}</span>
                     </TabsTrigger>
                   </motion.div>
                 ))}
@@ -454,6 +455,42 @@ export function MyWallet() {
                   <ProfileSettings />
                 </div>
               </TabsContent>
+
+              {/* Credits Tab */}
+              <TabsContent value="credits" className="mt-0">
+                <Card className="border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2">
+                      <Bot className="h-5 w-5 text-amber-500" />
+                      {language === 'fr' ? 'Crédits' : language === 'es' ? 'Créditos' : 'Credits'}
+                    </CardTitle>
+                    <CardDescription>
+                      {language === 'fr' ? 'Rechargez vos crédits pour les audits et crawls' : language === 'es' ? 'Recargue sus créditos para auditorías y crawls' : 'Top up credits for audits and crawls'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <CreditCoin size="lg" />
+                        <div>
+                          <p className="text-3xl font-bold">{balance}</p>
+                          <p className="text-sm text-muted-foreground">{t.credits}</p>
+                        </div>
+                      </div>
+                      <Button onClick={() => setShowTopUpModal(true)} className="gap-2 bg-amber-500 hover:bg-amber-600 text-white">
+                        <ShoppingCart className="h-4 w-4" />
+                        {t.topUp}
+                      </Button>
+                    </div>
+
+                    {/* Transaction history */}
+                    <div className="pt-4 border-t">
+                      <h3 className="text-sm font-semibold mb-3">{t.allHistory}</h3>
+                      <TransactionList items={transactions || []} emptyMessage={t.noTransactions} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </div>
           </div>
         </Tabs>
@@ -481,6 +518,11 @@ export function MyWallet() {
           </div>
         </DialogContent>
       </Dialog>
+      <CreditTopUpModal
+        open={showTopUpModal}
+        onOpenChange={setShowTopUpModal}
+        currentBalance={balance}
+      />
       </>
     );
   }
