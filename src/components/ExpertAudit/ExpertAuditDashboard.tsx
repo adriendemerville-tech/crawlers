@@ -727,6 +727,11 @@ export function ExpertAuditDashboard() {
         
         // Fire-and-forget: CTO Agent analysis
         triggerCtoAgent(auditResult, 'technical', normalizedUrl, auditResult.domain || '');
+        // Fire-and-forget: sync SERP KPIs to tracked site
+        if (user) {
+          const auditDomain = auditResult.domain || new URL(normalizedUrl).hostname.replace('www.', '');
+          syncSerpToTrackedSite(auditDomain, user.id);
+        }
 
         const reliabilityInfo = auditResult.meta?.reliabilityScore 
           ? ` (Fiabilité: ${Math.round(auditResult.meta.reliabilityScore * 100)}%)`
