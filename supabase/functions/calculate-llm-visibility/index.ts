@@ -39,10 +39,10 @@ const MAX_RICHNESS_BONUS = 15
 
 // ─── LLM targets (via OpenRouter) ───
 const LLM_TARGETS = [
-  { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-4o' },
+  { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-4o-mini' },
   { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash' },
   { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar' },
-  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-sonnet-4' },
+  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-3-haiku' },
 ]
 
 const NUM_PROMPTS = 3 // reduced from 5 to fit within timeout
