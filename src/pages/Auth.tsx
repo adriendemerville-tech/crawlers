@@ -285,9 +285,8 @@ export default function Auth() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        <Link to="/" className="inline-flex items-center justify-center h-9 w-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent mb-6 transition-colors" aria-label={t.backToHome}>
           <ArrowLeft className="h-4 w-4" />
-          {t.backToHome}
         </Link>
 
         <Card className="border-border/50 shadow-xl backdrop-blur-sm">
