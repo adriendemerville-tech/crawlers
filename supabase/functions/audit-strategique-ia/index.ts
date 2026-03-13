@@ -2329,6 +2329,7 @@ Deno.serve(async (req) => {
       pageContentContext, brandSignals, eeatSignals,
       marketData, rankingOverview, founderInfo,
       llmData: effectiveToolsData.llm,
+      gmbData,
     };
 
     // ═══ CHECK DEADLINE before expensive LLM call ═══
