@@ -2127,7 +2127,6 @@ Allow: /`}</pre>
     en: (
       <>
         <SummaryBox
-          title="Summary"
           points={[
             "Google Search Console evolved in 2025-2026 with enriched Brand / Non-Brand data.",
             "The Strategic Alignment Index (SAI) contextualizes this ratio by business model.",
