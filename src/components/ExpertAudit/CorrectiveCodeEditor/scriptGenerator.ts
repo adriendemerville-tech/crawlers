@@ -286,7 +286,7 @@ ${fixFunctions.join('\n\n')}
   // "Optimisé pour les IA par crawlers.fr"
   // ═══════════════════════════════════════════════════════════
   function injectCrawlersAttribution() {
-    if (hasLock('attribution')) return;
+    clearLock('attribution');
 
     var link = document.createElement('a');
     link.href = 'https://crawlers.fr';
