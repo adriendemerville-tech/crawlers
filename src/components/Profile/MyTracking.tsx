@@ -567,8 +567,13 @@ export function MyTracking() {
     const raw = entry as any;
     return raw?.raw_data?.llmOverallScore ?? null;
   };
+  const getSerpData = (entry: StatsEntry) => {
+    const raw = entry as any;
+    return raw?.raw_data?.serpData ?? null;
+  };
   const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
   const latestAiVisibility = latestStats ? getAiVisibility(latestStats) : null;
+  const latestSerpData = latestStats ? getSerpData(latestStats) : null;
 
   const chartData = currentStats.map((entry) => {
     const d = new Date(entry.recorded_at);
