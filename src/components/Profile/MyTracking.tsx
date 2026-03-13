@@ -997,11 +997,6 @@ export function MyTracking() {
 
                           {/* GSC Chart */}
                           {(() => {
-                            // Find the first audit date for this site
-                            const siteStats = selectedSite ? statsMap[selectedSite] : undefined;
-                            const firstAuditDate = siteStats && siteStats.length > 0 ? siteStats[0].recorded_at?.split('T')[0] : null;
-                            const hasAudit = !!firstAuditDate;
-
                             const chartRows = gscAggregatedRows.map(row => ({
                               date: gscGranularity === 'monthly' ? row.date : row.date.slice(5),
                               rawDate: row.date,
@@ -1010,81 +1005,31 @@ export function MyTracking() {
                               position: typeof row.position === 'number' ? parseFloat(row.position.toFixed(1)) : 0,
                             }));
 
-                            // Compute the reference line x value (formatted the same as chart dates)
-                            let refLineX: string | null = null;
-                            if (firstAuditDate && chartRows.length > 0) {
-                              const formatted = gscGranularity === 'monthly' ? firstAuditDate.slice(0, 7) : firstAuditDate.slice(5);
-                              // Find closest date in chart data
-                              const idx = chartRows.findIndex(r => r.rawDate >= firstAuditDate);
-                              if (idx >= 0) refLineX = chartRows[idx].date;
-                              else if (firstAuditDate <= chartRows[chartRows.length - 1].rawDate) refLineX = formatted;
-                            }
-
-                            // Calculate gradient split ratio (0 to 1) for the audit date position
-                            let splitRatio = 0;
-                            if (refLineX && chartRows.length > 1) {
-                              const idx = chartRows.findIndex(r => r.date === refLineX);
-                              if (idx >= 0) splitRatio = idx / (chartRows.length - 1);
-                            }
-
                             return (
-                              <div className="h-[24.5rem] w-[108%] -ml-[2%]">
+                              <div className="h-[18.5rem] w-[108%] -ml-[2%]">
                                 <ResponsiveContainer width="100%" height="100%">
                                   <ComposedChart data={chartRows} margin={{ left: 0, right: 40, top: 5, bottom: 5 }}>
                                     <defs>
-                                      {hasAudit ? (
-                                        <>
-                                          {/* Clicks: gray before audit, primary after */}
-                                          <linearGradient id="gscClicksStroke" x1="0" y1="0" x2="1" y2="0">
-                                            <stop offset={`${splitRatio * 100}%`} stopColor="hsl(0, 0%, 60%)" />
-                                            <stop offset={`${splitRatio * 100}%`} stopColor="hsl(var(--primary))" />
-                                          </linearGradient>
-                                          <linearGradient id="gscClicksFill" x1="0" y1="0" x2="1" y2="0">
-                                            <stop offset={`${splitRatio * 100}%`} stopColor="hsl(0, 0%, 75%)" stopOpacity={0.15} />
-                                            <stop offset={`${splitRatio * 100}%`} stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                                          </linearGradient>
-                                          {/* Impressions: gray before audit, purple after */}
-                                          <linearGradient id="gscImpStroke" x1="0" y1="0" x2="1" y2="0">
-                                            <stop offset={`${splitRatio * 100}%`} stopColor="hsl(0, 0%, 40%)" />
-                                            <stop offset={`${splitRatio * 100}%`} stopColor="hsl(262, 83%, 58%)" />
-                                          </linearGradient>
-                                          <linearGradient id="gscImpFill" x1="0" y1="0" x2="1" y2="0">
-                                            <stop offset={`${splitRatio * 100}%`} stopColor="hsl(0, 0%, 60%)" stopOpacity={0.1} />
-                                            <stop offset={`${splitRatio * 100}%`} stopColor="hsl(262, 83%, 58%)" stopOpacity={0.2} />
-                                            <stop offset="100%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0} />
-                                          </linearGradient>
-                                          {/* Position: gray before, orange after */}
-                                          <linearGradient id="gscPosStroke" x1="0" y1="0" x2="1" y2="0">
-                                            <stop offset={`${splitRatio * 100}%`} stopColor="hsl(0, 0%, 50%)" />
-                                            <stop offset={`${splitRatio * 100}%`} stopColor="hsl(25, 95%, 53%)" />
-                                          </linearGradient>
-                                        </>
-                                      ) : (
-                                        <>
-                                          {/* No audit: full color everywhere */}
-                                          <linearGradient id="gscClicksStroke" x1="0" y1="0" x2="1" y2="0">
-                                            <stop offset="0%" stopColor="hsl(var(--primary))" />
-                                            <stop offset="100%" stopColor="hsl(var(--primary))" />
-                                          </linearGradient>
-                                          <linearGradient id="gscClicksFill" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                                          </linearGradient>
-                                          <linearGradient id="gscImpStroke" x1="0" y1="0" x2="1" y2="0">
-                                            <stop offset="0%" stopColor="hsl(262, 83%, 58%)" />
-                                            <stop offset="100%" stopColor="hsl(262, 83%, 58%)" />
-                                          </linearGradient>
-                                          <linearGradient id="gscImpFill" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0.2} />
-                                            <stop offset="100%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0} />
-                                          </linearGradient>
-                                          <linearGradient id="gscPosStroke" x1="0" y1="0" x2="1" y2="0">
-                                            <stop offset="0%" stopColor="hsl(25, 95%, 53%)" />
-                                            <stop offset="100%" stopColor="hsl(25, 95%, 53%)" />
-                                          </linearGradient>
-                                        </>
-                                      )}
+                                      <linearGradient id="gscClicksStroke" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stopColor="hsl(var(--primary))" />
+                                        <stop offset="100%" stopColor="hsl(var(--primary))" />
+                                      </linearGradient>
+                                      <linearGradient id="gscClicksFill" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                      </linearGradient>
+                                      <linearGradient id="gscImpStroke" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stopColor="hsl(262, 83%, 58%)" />
+                                        <stop offset="100%" stopColor="hsl(262, 83%, 58%)" />
+                                      </linearGradient>
+                                      <linearGradient id="gscImpFill" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0.2} />
+                                        <stop offset="100%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0} />
+                                      </linearGradient>
+                                      <linearGradient id="gscPosStroke" x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stopColor="hsl(25, 95%, 53%)" />
+                                        <stop offset="100%" stopColor="hsl(25, 95%, 53%)" />
+                                      </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                                     <XAxis dataKey="date" className="text-xs" interval="preserveStartEnd" tick={false} />
@@ -1108,22 +1053,6 @@ export function MyTracking() {
                                         { value: language === 'fr' ? 'Position moy.' : 'Avg. Position', type: 'line', color: 'hsl(25, 95%, 53%)' },
                                       ]}
                                     />
-                                    {refLineX && (
-                                      <ReferenceLine
-                                        x={refLineX}
-                                        yAxisId="left"
-                                        stroke="#7c3aed"
-                                        strokeWidth={1.5}
-                                        strokeDasharray="none"
-                                        label={{
-                                          value: language === 'fr' ? '1er audit' : '1st audit',
-                                          position: 'top',
-                                          fill: '#7c3aed',
-                                          fontSize: 10,
-                                          fontWeight: 600,
-                                        }}
-                                      />
-                                    )}
                                     <Area yAxisId="left" type="monotone" dataKey="clicks" name={language === 'fr' ? 'Clics' : 'Clicks'} stroke="url(#gscClicksStroke)" fill="url(#gscClicksFill)" strokeWidth={2} />
                                     <Area yAxisId="left" type="monotone" dataKey="impressions" name="Impressions" stroke="url(#gscImpStroke)" fill="url(#gscImpFill)" strokeWidth={2} />
                                     <Line yAxisId="right" type="monotone" dataKey="position" name={language === 'fr' ? 'Position moy.' : 'Avg. Position'} stroke="url(#gscPosStroke)" strokeWidth={2} dot={false} strokeDasharray="4 2" />
