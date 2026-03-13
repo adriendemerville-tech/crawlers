@@ -101,6 +101,7 @@ const translations = {
       'Audit expert illimité',
       'Code correctif illimité',
       'Crawl : 5 000 pages/mois incluses',
+      '30 URL suivis inclus',
       'Marque Blanche (White Label)',
       '3 comptes inclus',
       'Support prioritaire',
