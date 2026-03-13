@@ -162,12 +162,6 @@ export default function Profile() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="mb-4">
-              <h1 className="text-3xl font-bold">
-                {t.title}
-                {isProUser && <span className="text-yellow-500 font-bold text-2xl ml-2">∞</span>}
-              </h1>
-            </div>
 
             <FreeTrialBanner />
             <Tabs defaultValue={initialTab} className="space-y-6">
