@@ -830,7 +830,7 @@ export function AnalyticsDashboard() {
                 {tokenUsage.flyPlaywrightCalls.toLocaleString('fr-FR')}
               </p>
               <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
-                ~{tokenUsage.flyEstimatedCost.toFixed(6)}€ ({(tokenUsage.flyEstimatedCost * 100).toFixed(4)}c)
+                ~{tokenUsage.flyEstimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 6, maximumFractionDigits: 6 })}€ ({(tokenUsage.flyEstimatedCost * 100).toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}c)
               </p>
             </div>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
