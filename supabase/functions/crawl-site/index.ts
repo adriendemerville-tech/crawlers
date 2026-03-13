@@ -44,7 +44,44 @@ Deno.serve(async (req) => {
     let normalizedUrl = url.trim();
     if (!normalizedUrl.startsWith('http')) normalizedUrl = `https://${normalizedUrl}`;
     const domain = new URL(normalizedUrl).hostname;
-    const pageLimit = Math.min(maxPages, 500);
+    let pageLimit = Math.min(maxPages, 500);
+
+    // ── Pre-scan: cap to indexed pages count (DataForSEO) ──
+    try {
+      const dataforseoUser = Deno.env.get('DATAFORSEO_LOGIN');
+      const dataforseoPass = Deno.env.get('DATAFORSEO_PASSWORD');
+      if (dataforseoUser && dataforseoPass) {
+        const dfsRes = await fetch('https://api.dataforseo.com/v3/domain_analytics/technologies/domain_technologies', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Basic ' + btoa(`${dataforseoUser}:${dataforseoPass}`),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([{ target: domain, limit: 1 }]),
+        });
+        // Fallback: try ranked_keywords endpoint for indexed_pages
+        const serpRes = await fetch('https://api.dataforseo.com/v3/dataforseo_labs/google/domain_rank_overview/live', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Basic ' + btoa(`${dataforseoUser}:${dataforseoPass}`),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([{ target: domain, language_code: 'fr', location_code: 2250 }]),
+        });
+        const serpData = await serpRes.json();
+        const metrics = serpData?.tasks?.[0]?.result?.[0];
+        const indexedPages = metrics?.metrics?.organic?.count;
+        if (indexedPages && indexedPages > 0) {
+          const cappedLimit = Math.min(pageLimit, indexedPages);
+          if (cappedLimit < pageLimit) {
+            console.log(`[${domain}] Indexed pages cap: ${indexedPages} → limiting from ${pageLimit} to ${cappedLimit}`);
+            pageLimit = cappedLimit;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(`[${domain}] Indexed pages pre-scan failed (non-blocking):`, e);
+    }
 
     // Check if user is Pro Agency or Admin
     const { data: profile } = await supabase

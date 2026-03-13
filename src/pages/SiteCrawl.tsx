@@ -445,6 +445,7 @@ export default function SiteCrawl() {
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
   const [indexedPagesCount, setIndexedPagesCount] = useState<number | null>(null);
+  const [isDetectingPages, setIsDetectingPages] = useState(false);
 
   // Advanced options
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -558,22 +559,40 @@ export default function SiteCrawl() {
     return () => clearInterval(interval);
   }, [crawlResult]);
 
-  // Fetch indexed pages count when crawl is completed
+  // Pre-scan: detect indexed pages when URL changes (debounced)
   useEffect(() => {
-    if (!crawlResult || crawlResult.status !== 'completed') {
-      setIndexedPagesCount(null);
-      return;
-    }
-    const domain = crawlResult.domain;
-    if (!domain) return;
-    supabase.functions.invoke('fetch-serp-kpis', {
-      body: { domain },
-    }).then(({ data }) => {
-      if (data?.data?.indexed_pages != null) {
-        setIndexedPagesCount(data.data.indexed_pages);
+    setIndexedPagesCount(null);
+    if (!url || url.length < 5) return;
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        let normalizedUrl = url.trim();
+        if (!normalizedUrl.startsWith('http')) normalizedUrl = `https://${normalizedUrl}`;
+        const domain = new URL(normalizedUrl).hostname;
+        if (!domain || domain.length < 3) return;
+
+        setIsDetectingPages(true);
+        const { data } = await supabase.functions.invoke('fetch-serp-kpis', {
+          body: { domain },
+        });
+        if (!cancelled && data?.data?.indexed_pages != null) {
+          const count = data.data.indexed_pages as number;
+          setIndexedPagesCount(count);
+          // Auto-cap slider if current value exceeds indexed pages
+          if (count > 0 && maxPages > Math.min(500, count)) {
+            setMaxPages(Math.min(500, count));
+          }
+        }
+      } catch {
+        // Silent — pre-scan is best-effort
+      } finally {
+        if (!cancelled) setIsDetectingPages(false);
       }
-    }).catch(() => {});
-  }, [crawlResult?.id, crawlResult?.status]);
+    }, 1200);
+
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [url]);
 
   if (loading || adminLoading) {
     return (
@@ -901,18 +920,36 @@ export default function SiteCrawl() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div className="flex-1 space-y-2">
                     <label className="text-sm text-muted-foreground flex items-center justify-between">
-                      <span>{t.pagesToAnalyze}</span>
+                      <span className="flex items-center gap-2">
+                        {t.pagesToAnalyze}
+                        {isDetectingPages && <Loader2 className="h-3 w-3 animate-spin text-violet-400" />}
+                        {indexedPagesCount != null && indexedPagesCount > 0 && (
+                          <Badge variant="secondary" className="text-[10px] font-normal gap-1">
+                            <FileText className="h-2.5 w-2.5" />
+                            {indexedPagesCount.toLocaleString()} {language === 'fr' ? 'indexées' : language === 'es' ? 'indexadas' : 'indexed'}
+                          </Badge>
+                        )}
+                      </span>
                       <span className="font-semibold text-foreground">{maxPages}</span>
                     </label>
                     <Slider
                       value={[maxPages]}
                       onValueChange={v => setMaxPages(v[0])}
                       min={10}
-                      max={500}
+                      max={indexedPagesCount != null && indexedPagesCount > 0 ? Math.min(500, Math.max(10, indexedPagesCount)) : 500}
                       step={10}
                       disabled={isLoading}
                       className="[&_[role=slider]]:bg-violet-500 [&_[role=slider]]:border-violet-500 [&_.relative>div]:bg-violet-500"
                     />
+                    {indexedPagesCount != null && indexedPagesCount > 0 && indexedPagesCount < 500 && (
+                      <p className="text-[10px] text-muted-foreground">
+                        {language === 'fr' 
+                          ? `Maximum limité à ${Math.min(500, indexedPagesCount)} pages (pages indexées détectées par Google)` 
+                          : language === 'es' 
+                          ? `Máximo limitado a ${Math.min(500, indexedPagesCount)} páginas (páginas indexadas detectadas por Google)` 
+                          : `Max limited to ${Math.min(500, indexedPagesCount)} pages (Google indexed pages detected)`}
+                      </p>
+                    )}
                   </div>
                   <button type="button" onClick={() => setShowTopUp(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted border hover:bg-muted/70 transition-colors cursor-pointer">
                     {isUnlimited ? (
