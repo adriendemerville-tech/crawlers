@@ -908,7 +908,7 @@ export function AnalyticsDashboard() {
                         <span>{data.calls} appels</span>
                         <span>↑ {data.promptTokens.toLocaleString('fr-FR')} in</span>
                         <span>↓ {data.completionTokens.toLocaleString('fr-FR')} out</span>
-                        <span className="ml-auto font-medium">{costPercent.toFixed(1)}% du coût</span>
+                        <span className="ml-auto font-medium">{costPercent.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}% du coût</span>
                       </div>
                       {/* Cost bar */}
                       <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
