@@ -509,19 +509,24 @@ Deno.serve(async (req) => {
       .filter((r): r is PromiseFulfilledResult<DepthResult> => r.status === 'fulfilled')
       .map(r => r.value)
 
+    // Detect if ALL models failed (no conversation content = API credits exhausted)
+    const allEmpty = successResults.every(r => !r.found && !r.conversation_summary)
+    
     // Calculate weighted average depth
     const scores = successResults.map(r => r.iterations)
     const avgDepth = scores.length > 0
       ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1))
       : null
 
-    // Persist to database
+    // Persist to database (only if we have real data)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceKey)
-    await persistResults(supabase, tracked_site_id || null, user_id || null, successResults)
+    if (!allEmpty) {
+      await persistResults(supabase, tracked_site_id || null, user_id || null, successResults)
+    }
 
-    console.log(`[check-llm-depth] ✅ ${domain}: brand="${brand}" avgDepth=${avgDepth}`,
+    console.log(`[check-llm-depth] ${allEmpty ? '❌ ALL MODELS FAILED' : '✅'} ${domain}: brand="${brand}" avgDepth=${avgDepth}`,
       successResults.map(r => `${r.llm}=${r.iterations}${r.found ? '✓' : '✗'}`).join(', '))
 
     return new Response(JSON.stringify({
