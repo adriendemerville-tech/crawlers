@@ -30,20 +30,21 @@ const LLM_TARGETS = [
 const NUM_PROMPTS = 5
 
 // ─── Prompt generation from site identity ───
+// CRITICAL: Prompts must NEVER contain brand name, site name, domain, or company name.
+// Including them would bias LLM responses and falsify visibility scores.
+// We rely solely on sector/audience/product descriptors for organic discovery.
 function generatePrompts(site: any): string[] {
-  const brand = site.site_name || site.domain
-  const sector = site.market_sector || ''
-  const target = site.target_audience || ''
-  const products = site.products_services || ''
+  const sector = site.market_sector || 'numérique'
+  const target = site.target_audience || 'les professionnels'
+  const products = site.products_services || 'les services en ligne'
   const area = site.commercial_area || ''
-  const domain = site.domain
 
   const templates = [
-    `Quels sont les meilleurs outils ou services dans le secteur "${sector || 'numérique'}" pour ${target || 'les professionnels'} ?`,
-    `Recommande-moi une solution pour ${products || 'les services en ligne'} ${area ? `dans la zone ${area}` : ''}.`,
-    `Connais-tu ${brand} (${domain}) ? Que penses-tu de leurs services ?`,
-    `Quelles alternatives existent à ${brand} dans le domaine ${sector || 'du digital'} ?`,
-    `Si je cherche ${products || `un service comme ${brand}`}, quelles sont les meilleures options disponibles ?`,
+    `Quels sont les meilleurs outils ou services dans le secteur "${sector}" pour ${target} ?`,
+    `Recommande-moi une solution pour ${products}${area ? ` dans la zone ${area}` : ''}.`,
+    `Quelles sont les entreprises les plus fiables pour ${products} destinés à ${target} ?`,
+    `Fais-moi un top 5 des acteurs du marché "${sector}"${area ? ` en ${area}` : ''}.`,
+    `Si je cherche ${products} pour ${target}, quelles sont les meilleures options disponibles ?`,
   ]
 
   return templates.slice(0, NUM_PROMPTS)
@@ -106,10 +107,11 @@ async function queryWithIterations(
       // Prepare follow-up for next iteration
       messages.push({ role: 'assistant', content })
 
+      // Follow-up prompts must also stay brand-agnostic to avoid bias
       if (iteration === 1) {
         messages.push({ role: 'user', content: "Y a-t-il d'autres alternatives ou options que tu n'as pas mentionnées ?" })
       } else if (iteration === 2) {
-        messages.push({ role: 'user', content: `Connais-tu spécifiquement ${site.site_name || site.domain} ? Peux-tu me donner ton avis ?` })
+        messages.push({ role: 'user', content: "Peux-tu élargir ta liste ? Y a-t-il des acteurs plus petits ou spécialisés que tu aurais oubliés ?" })
       }
     } catch (err) {
       console.error(`[llm-visibility] ${model} iteration ${iteration} error:`, err)
