@@ -193,6 +193,7 @@ const translations = {
       'Unlimited expert audit',
       'Unlimited corrective code',
       'Crawl: 5,000 pages/month included',
+      '30 tracked URLs included',
       'White Label option',
       '3 accounts included',
       'Priority support',
