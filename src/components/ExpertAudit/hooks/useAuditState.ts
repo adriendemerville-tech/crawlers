@@ -25,6 +25,8 @@ export function useAuditState() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [storedCorrections, setStoredCorrections] = useState<any[]>([]);
   const [siteAutoTracked, setSiteAutoTracked] = useState(false);
+  const [fatalAuditError, setFatalAuditError] = useState(false);
+  const auditFailCountRef = useRef<Record<string, number>>({});
 
   // Modal states
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
