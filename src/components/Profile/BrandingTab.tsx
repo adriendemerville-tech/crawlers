@@ -220,6 +220,7 @@ export function BrandingTab() {
         agency_logo_url: logoUrl || null,
         agency_primary_color: primaryColor || null,
         agency_brand_name: brandName.trim() || null,
+        agency_report_font: reportFont || null,
         agency_contact_first_name: contactFirstName.trim() || null,
         agency_contact_last_name: contactLastName.trim() || null,
         agency_contact_phone: contactPhone.trim() || null,
