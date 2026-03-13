@@ -12,7 +12,9 @@ interface DepthResult {
   model: string;
   iterations: number;
   found: boolean;
+  mentioned_as: string | null;
   conversation_summary: string;
+  angles_tested: string[];
 }
 
 interface LLMDepthData {
@@ -20,11 +22,24 @@ interface LLMDepthData {
   domain: string;
   avg_depth: number | null;
   results: DepthResult[];
+  prompt_strategy: string;
   measured_at: string;
+}
+
+interface SiteContext {
+  market_sector?: string;
+  products_services?: string;
+  target_audience?: string;
+  address?: string;
+  commercial_area?: string;
+  company_size?: string;
 }
 
 interface LLMDepthCardProps {
   domain: string;
+  trackedSiteId?: string;
+  userId?: string;
+  siteContext?: SiteContext;
   initialData?: LLMDepthData | null;
 }
 
@@ -32,38 +47,44 @@ const translations = {
   fr: {
     title: 'Profondeur LLM',
     subtitle: 'Découvrabilité conversationnelle',
-    noData: 'Mesurez en combien d\'échanges les LLMs citent votre marque.',
+    noData: 'Mesurez en combien d\'échanges les LLMs citent votre marque via 7 angles d\'attaque.',
     analyze: 'Analyser',
-    analyzing: 'Analyse en cours…',
+    analyzing: 'Analyse multi-modèle…',
     avgDepth: 'Profondeur moyenne',
     iterations: 'itérations',
     found: 'Cité',
     notFound: 'Non cité',
-    tooltip: 'Nombre d\'échanges nécessaires avant que le LLM cite votre marque lors d\'une recherche naturelle. Plus le chiffre est bas, meilleure est votre visibilité.',
+    mentionedAs: 'Cité comme',
+    angles: 'Angles testés',
+    tooltip: 'Conversation multi-tour avec 4 LLMs via des angles de plus en plus précis (besoin, métier, fonctionnalités, budget, géographie, niche, exhaustif). Détection sémantique de la marque.',
   },
   en: {
     title: 'LLM Depth',
     subtitle: 'Conversational discoverability',
-    noData: 'Measure how many exchanges it takes for LLMs to cite your brand.',
+    noData: 'Measure how many exchanges it takes for LLMs to cite your brand across 7 angles.',
     analyze: 'Analyze',
-    analyzing: 'Analyzing…',
+    analyzing: 'Multi-model analysis…',
     avgDepth: 'Average depth',
     iterations: 'iterations',
     found: 'Cited',
     notFound: 'Not cited',
-    tooltip: 'Number of exchanges needed before the LLM cites your brand during a natural search. Lower is better.',
+    mentionedAs: 'Cited as',
+    angles: 'Angles tested',
+    tooltip: 'Multi-turn conversation with 4 LLMs using increasingly specific angles (need, profession, features, budget, geography, niche, exhaustive). Semantic brand detection.',
   },
   es: {
     title: 'Profundidad LLM',
     subtitle: 'Descubribilidad conversacional',
-    noData: 'Mida en cuántos intercambios los LLMs citan su marca.',
+    noData: 'Mida en cuántos intercambios los LLMs citan su marca a través de 7 ángulos.',
     analyze: 'Analizar',
-    analyzing: 'Analizando…',
+    analyzing: 'Análisis multi-modelo…',
     avgDepth: 'Profundidad promedio',
     iterations: 'iteraciones',
     found: 'Citado',
     notFound: 'No citado',
-    tooltip: 'Número de intercambios necesarios antes de que el LLM cite su marca durante una búsqueda natural. Menos es mejor.',
+    mentionedAs: 'Citado como',
+    angles: 'Ángulos probados',
+    tooltip: 'Conversación multi-turno con 4 LLMs usando ángulos cada vez más específicos (necesidad, profesión, funcionalidades, presupuesto, geografía, nicho, exhaustivo). Detección semántica de marca.',
   },
 };
 
@@ -72,7 +93,7 @@ function depthColor(depth: number | null): string {
   if (depth <= 1) return 'text-green-600 dark:text-green-400';
   if (depth <= 3) return 'text-emerald-600 dark:text-emerald-400';
   if (depth <= 5) return 'text-yellow-600 dark:text-yellow-400';
-  if (depth <= 8) return 'text-orange-600 dark:text-orange-400';
+  if (depth <= 7) return 'text-orange-600 dark:text-orange-400';
   return 'text-red-600 dark:text-red-400';
 }
 
@@ -80,11 +101,11 @@ function depthLabel(depth: number, lang: string): string {
   if (depth <= 1) return lang === 'fr' ? 'Excellent' : lang === 'es' ? 'Excelente' : 'Excellent';
   if (depth <= 3) return lang === 'fr' ? 'Bon' : lang === 'es' ? 'Bueno' : 'Good';
   if (depth <= 5) return lang === 'fr' ? 'Moyen' : lang === 'es' ? 'Medio' : 'Average';
-  if (depth <= 8) return lang === 'fr' ? 'Faible' : lang === 'es' ? 'Débil' : 'Weak';
+  if (depth <= 7) return lang === 'fr' ? 'Faible' : lang === 'es' ? 'Débil' : 'Weak';
   return lang === 'fr' ? 'Invisible' : lang === 'es' ? 'Invisible' : 'Invisible';
 }
 
-export function LLMDepthCard({ domain, initialData }: LLMDepthCardProps) {
+export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initialData }: LLMDepthCardProps) {
   const { language } = useLanguage();
   const t = translations[language] || translations.fr;
   const [data, setData] = useState<LLMDepthData | null>(initialData ?? null);
@@ -95,7 +116,13 @@ export function LLMDepthCard({ domain, initialData }: LLMDepthCardProps) {
     setLoading(true);
     try {
       const response = await supabase.functions.invoke('check-llm-depth', {
-        body: { domain, lang: language },
+        body: {
+          domain,
+          lang: language,
+          tracked_site_id: trackedSiteId,
+          user_id: userId,
+          site_context: siteContext,
+        },
       });
       if (response.data?.data) {
         setData(response.data.data);
@@ -177,27 +204,25 @@ export function LLMDepthCard({ domain, initialData }: LLMDepthCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Average depth score */}
-        <div className="flex items-center gap-4">
-          <div className="rounded-lg border bg-card p-3 flex-1 space-y-1">
-            <div className="text-xs text-muted-foreground">{t.avgDepth}</div>
-            <div className="flex items-baseline gap-2">
-              <span className={`text-2xl font-bold ${depthColor(data.avg_depth)}`}>
-                {data.avg_depth !== null ? data.avg_depth : '—'}
-              </span>
-              <span className="text-xs text-muted-foreground">{t.iterations}</span>
-              {data.avg_depth !== null && (
-                <Badge variant="outline" className={`text-[10px] ml-auto ${depthColor(data.avg_depth)}`}>
-                  {depthLabel(data.avg_depth, language)}
-                </Badge>
-              )}
-            </div>
+        <div className="rounded-lg border bg-card p-3 space-y-1">
+          <div className="text-xs text-muted-foreground">{t.avgDepth}</div>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-2xl font-bold ${depthColor(data.avg_depth)}`}>
+              {data.avg_depth !== null ? data.avg_depth : '—'}
+            </span>
+            <span className="text-xs text-muted-foreground">/ 7 {t.iterations}</span>
+            {data.avg_depth !== null && (
+              <Badge variant="outline" className={`text-[10px] ml-auto ${depthColor(data.avg_depth)}`}>
+                {depthLabel(data.avg_depth, language)}
+              </Badge>
+            )}
           </div>
         </div>
 
         {/* Per-model results */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {data.results.map((result) => (
-            <div key={result.llm} className="rounded-lg border bg-card p-3 space-y-2">
+            <div key={result.llm} className="rounded-lg border bg-card p-2.5 space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium">{result.llm}</span>
                 {result.found ? (
@@ -208,13 +233,22 @@ export function LLMDepthCard({ domain, initialData }: LLMDepthCardProps) {
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className={`text-lg font-semibold ${depthColor(result.iterations)}`}>
-                  {result.found ? result.iterations : `${result.iterations - 1}+`}
+                  {result.found ? result.iterations : `${MAX_DISPLAY}+`}
                 </span>
-                <span className="text-[10px] text-muted-foreground">{t.iterations}</span>
+                <span className="text-[10px] text-muted-foreground">
+                  {result.found ? t.found : t.notFound}
+                </span>
               </div>
-              <span className="text-[10px] text-muted-foreground">
-                {result.found ? t.found : t.notFound}
-              </span>
+              {result.found && result.mentioned_as && (
+                <p className="text-[10px] text-muted-foreground truncate" title={result.mentioned_as}>
+                  → {result.mentioned_as}
+                </p>
+              )}
+              {result.angles_tested?.length > 0 && (
+                <p className="text-[9px] text-muted-foreground/60 truncate" title={result.angles_tested.join(' → ')}>
+                  {result.angles_tested.join(' → ')}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -222,3 +256,5 @@ export function LLMDepthCard({ domain, initialData }: LLMDepthCardProps) {
     </Card>
   );
 }
+
+const MAX_DISPLAY = 7;
