@@ -2250,7 +2250,7 @@ Deno.serve(async (req) => {
       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
 
-      const [mktDataResult, llmCheckResult, localCompResult, founderResult] = await Promise.allSettled([
+      const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult] = await Promise.allSettled([
         // Market data (DataForSEO keywords) — always needed for keyword analysis
         withDeadline(
           fetchMarketData(domain, context, pageContentContext, url),
@@ -2285,6 +2285,13 @@ Deno.serve(async (req) => {
           ? withDeadline(
               searchFounderProfile(domain, context.location),
               15_000, 'founder'
+            )
+          : Promise.resolve(null),
+        // Google My Business detection — skip in content mode
+        !isContentMode && context.locationCode
+          ? withDeadline(
+              detectGoogleMyBusiness(domain, context.brandName, context.locationCode),
+              12_000, 'gmb'
             )
           : Promise.resolve(null),
       ]);
