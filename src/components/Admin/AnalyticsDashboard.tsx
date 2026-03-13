@@ -374,7 +374,8 @@ export function AnalyticsDashboard() {
           .from('profiles')
           .select('user_id')
           .eq('plan_type', 'agency_pro')
-          .eq('subscription_status', 'active');
+          .eq('subscription_status', 'active')
+          .not('stripe_subscription_id', 'is', null);
         
         const payingCount = payingProfiles?.length || 0;
 
