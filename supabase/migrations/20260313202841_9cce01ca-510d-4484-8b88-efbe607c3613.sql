@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX idx_serp_geo_corr_site_unique ON public.serp_geo_correlations (tracked_site_id);
