@@ -451,3 +451,17 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* URL/text inputs: hide caret on mobile, visible on desktop */
+@media (max-width: 767px) {
+  input[type="url"],
+  input[type="text"] {
+    caret-color: transparent;
+  }
+}
+@media (min-width: 768px) {
+  input[type="url"],
+  input[type="text"] {
+    caret-color: currentColor;
+  }
+}
