@@ -3,10 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle, FileSearch } from 'lucide-react';
+import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle, FileSearch, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCredits } from '@/contexts/CreditsContext';
 import { motion, AnimatePresence } from 'framer-motion';
+
+interface ConversationTurn {
+  iteration: number;
+  prompt_text: string;
+  response_summary: string;
+}
 
 interface DepthResult {
   llm: string;
