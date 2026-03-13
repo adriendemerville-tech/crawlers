@@ -2,12 +2,24 @@ import { useState, useEffect, useMemo } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Bot, Activity, CheckCircle2, XCircle, Loader2, TrendingUp, Clock, HeartPulse } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+interface CacheHealthReport {
+  total_entries: number;
+  expired_entries: number;
+  entries_by_type: Record<string, number>;
+  anomalies: string[];
+  score_stats: { avg: number; min: number; max: number; stddev: number } | null;
+  empty_results_count: number;
+  oldest_entry_age_hours: number;
+  status: 'healthy' | 'warning' | 'critical';
+}
 
 interface AgentLog {
   id: string;
