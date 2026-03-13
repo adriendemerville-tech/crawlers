@@ -755,24 +755,24 @@ export default function SiteCrawl() {
     }
   }
 
-  const sortedPages = [...pages].sort((a, b) => {
+  // #8: useMemo for expensive computations
+  const sortedPages = useMemo(() => [...pages].sort((a, b) => {
     if (sortBy === 'score_asc') return (a.seo_score || 0) - (b.seo_score || 0);
     if (sortBy === 'score_desc') return (b.seo_score || 0) - (a.seo_score || 0);
     return a.path.localeCompare(b.path);
-  });
+  }), [pages, sortBy]);
 
-  const issueStats = pages.reduce<Record<string, number>>((acc, p) => {
+  const issueStats = useMemo(() => pages.reduce<Record<string, number>>((acc, p) => {
     (p.issues || []).forEach((issue: string) => {
       acc[issue] = (acc[issue] || 0) + 1;
     });
     return acc;
-  }, {});
+  }, {}), [pages]);
 
-  // Duplicate content stats
-  const nearDuplicates = pages.filter(p => (p.issues || []).includes('near_duplicate_content'));
-  const schemaErrorPages = pages.filter(p => (p.issues || []).includes('schema_org_errors'));
+  const nearDuplicates = useMemo(() => pages.filter(p => (p.issues || []).includes('near_duplicate_content')), [pages]);
+  const schemaErrorPages = useMemo(() => pages.filter(p => (p.issues || []).includes('schema_org_errors')), [pages]);
 
-  const completedCrawls = pastCrawls.filter(c => c.status === 'completed');
+  const completedCrawls = useMemo(() => pastCrawls.filter(c => c.status === 'completed'), [pastCrawls]);
 
   return (
     <>
