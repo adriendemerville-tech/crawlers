@@ -20,6 +20,7 @@ import { BrandingTab } from '@/components/Profile/BrandingTab';
 import { ClientsTab } from '@/components/Profile/ClientsTab';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { AccountManager } from '@/components/Profile/AccountManager';
+import { RetentionModal } from '@/components/Profile/RetentionModal';
 
 const translations = {
   fr: {
