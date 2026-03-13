@@ -24,10 +24,10 @@ const MAX_ITERATIONS = 7
 
 // ─── Models ──────────────────────────────────────────────────────────────────
 type Gateway = 'openrouter' | 'lovable'
-interface ModelDef { id: string; name: string; model: string; gateway: Gateway }
+interface ModelDef { id: string; name: string; model: string; gateway: Gateway; fallbackGateway?: Gateway }
 const MODELS: ModelDef[] = [
   { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-4o',              gateway: 'openrouter' },
-  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash',    gateway: 'lovable' },
+  { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash',    gateway: 'openrouter', fallbackGateway: 'lovable' },
   { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-sonnet-4',  gateway: 'openrouter' },
   { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar',           gateway: 'openrouter' },
 ]
@@ -168,6 +168,70 @@ function buildFetchArgs(
   }]
 }
 
+// ─── Resilient fetch with gateway fallback ──────────────────────────────────
+
+async function resilientFetch(
+  gateway: Gateway,
+  fallbackGateway: Gateway | undefined,
+  keys: ApiKeys,
+  model: string,
+  messages: { role: string; content: string }[],
+  opts: { temperature?: number; max_tokens?: number } = {},
+  context?: string,
+): Promise<{ response: Response; usedGateway: Gateway; didFallback: boolean }> {
+  const [url, init] = buildFetchArgs(gateway, keys, model, messages, opts)
+  const response = await fetch(url, init)
+
+  // If primary fails with 402/429 and we have a fallback, try it
+  if ((response.status === 402 || response.status === 429) && fallbackGateway && keys[fallbackGateway]) {
+    console.warn(`[check-llm-depth] ${gateway} returned ${response.status} for ${model}, falling back to ${fallbackGateway}${context ? ` (${context})` : ''}`)
+
+    // Log fallback event for admin monitoring
+    logFallbackEvent(gateway, fallbackGateway, model, response.status, context)
+
+    const [fbUrl, fbInit] = buildFetchArgs(fallbackGateway, keys, model, messages, opts)
+    const fbResponse = await fetch(fbUrl, fbInit)
+    return { response: fbResponse, usedGateway: fallbackGateway, didFallback: true }
+  }
+
+  return { response, usedGateway: gateway, didFallback: false }
+}
+
+// ─── Fallback event logger ──────────────────────────────────────────────────
+
+function logFallbackEvent(
+  primaryGateway: string,
+  fallbackGateway: string,
+  model: string,
+  statusCode: number,
+  context?: string,
+) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY')
+  if (!supabaseUrl || !serviceKey) return
+
+  fetch(`${supabaseUrl}/rest/v1/analytics_events`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${serviceKey}`,
+      'apikey': serviceKey,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal',
+    },
+    body: JSON.stringify({
+      event_type: 'api_gateway_fallback',
+      target_url: context || model,
+      event_data: {
+        primary_gateway: primaryGateway,
+        fallback_gateway: fallbackGateway,
+        model,
+        status_code: statusCode,
+        function_name: 'check-llm-depth',
+      },
+    }),
+  }).catch(e => console.error('[check-llm-depth] Fallback log error:', e))
+}
+
 // ─── Semantic brand extraction ───────────────────────────────────────────────
 
 function extractBrand(domain: string): string {
@@ -286,30 +350,39 @@ async function runDepthConversation(
 
   const anglesTested: string[] = []
 
+  // Track which gateway is active (may change on fallback)
+  let activeGateway: Gateway = modelDef.gateway
+
   for (let i = 0; i < Math.min(prompts.length, MAX_ITERATIONS); i++) {
     messages.push({ role: 'user', content: prompts[i] })
     anglesTested.push(anglesLabels[i] || `Phase ${i + 1}`)
 
     try {
-      const [url, init] = buildFetchArgs(modelDef.gateway, keys, modelDef.model, messages, { temperature: 0.7, max_tokens: 1000 })
-      const response = await fetch(url, init)
+      const { response, usedGateway, didFallback } = await resilientFetch(
+        activeGateway, modelDef.fallbackGateway, keys, modelDef.model, messages,
+        { temperature: 0.7, max_tokens: 1000 },
+        `${domain} phase ${i + 1}`,
+      )
+
+      // If we fell back, stick with fallback for remaining phases
+      if (didFallback) activeGateway = usedGateway
 
       if (!response.ok) {
-        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status} (${modelDef.gateway})`)
+        console.error(`[check-llm-depth] API error ${modelDef.name} phase ${i + 1}: ${response.status} (${usedGateway})`)
         continue
       }
 
       const data = await response.json()
       const content = data.choices?.[0]?.message?.content || ''
 
-      const provider = modelDef.gateway === 'lovable' ? 'lovable-ai' : 'openrouter'
+      const provider = usedGateway === 'lovable' ? 'lovable-ai' : 'openrouter'
       trackPaidApiCall('check-llm-depth', provider, modelDef.model, domain)
 
       messages.push({ role: 'assistant', content })
 
-      // Semantic brand detection (uses same gateway as the model)
+      // Semantic brand detection (uses active gateway)
       const detection = await detectBrandSemantically(
-        keys, modelDef.gateway, modelDef.model, content, brand, domain, lang,
+        keys, activeGateway, modelDef.model, content, brand, domain, lang,
       )
 
       if (detection.found) {
