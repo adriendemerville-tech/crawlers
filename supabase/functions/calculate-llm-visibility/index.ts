@@ -42,6 +42,7 @@ const LLM_TARGETS = [
   { id: 'chatgpt',    name: 'ChatGPT',    model: 'openai/gpt-4o' },
   { id: 'gemini',     name: 'Gemini',      model: 'google/gemini-2.5-flash' },
   { id: 'perplexity', name: 'Perplexity',  model: 'perplexity/sonar' },
+  { id: 'claude',     name: 'Claude',      model: 'anthropic/claude-sonnet-4' },
 ]
 
 const NUM_PROMPTS = 3 // reduced from 5 to fit within timeout
