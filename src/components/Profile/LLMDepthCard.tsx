@@ -7,6 +7,7 @@ import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle, FileSearch, Ch
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCredits } from '@/contexts/CreditsContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ConversationTurn {
@@ -231,6 +232,8 @@ function MiniProgressRing({ iteration, found }: { iteration: number; found: bool
 export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initialData }: LLMDepthCardProps) {
   const { language } = useLanguage();
   const { isAgencyPro } = useCredits();
+  const { isAdmin } = useAdmin();
+  const canViewConversations = isAgencyPro || isAdmin;
   const t = translations[language] || translations.fr;
   const [data, setData] = useState<LLMDepthData | null>(initialData ?? null);
   const [loading, setLoading] = useState(false);
@@ -245,7 +248,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
 
   // Fetch stored conversations for paid users
   useEffect(() => {
-    if (!trackedSiteId || !userId || !isAgencyPro) return;
+    if (!trackedSiteId || !userId || !canViewConversations) return;
     supabase
       .from('llm_depth_conversations')
       .select('llm_name, iteration, prompt_text, response_summary')
@@ -265,7 +268,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
         }
         setConversations(grouped);
       });
-  }, [trackedSiteId, userId, isAgencyPro, data]);
+  }, [trackedSiteId, userId, canViewConversations, data]);
 
   // Check if user has previous LLM depth data for this site
   useEffect(() => {
@@ -608,7 +611,7 @@ export function LLMDepthCard({ domain, trackedSiteId, userId, siteContext, initi
           {data.results.map((result) => {
             const isDark = document.documentElement.classList.contains('dark');
             const color = isDark ? iterationHslColorDark(result.iterations) : iterationHslColor(result.iterations);
-            const hasConv = isAgencyPro && conversations[result.llm]?.length > 0;
+            const hasConv = canViewConversations && conversations[result.llm]?.length > 0;
             const isOpen = activeConversation === result.llm;
 
             return (
