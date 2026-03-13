@@ -1211,3 +1211,92 @@ function KPICard({ label, value, icon: Icon, valueClassName }: { label: string; 
     </div>
   );
 }
+
+const KPI_ORDER_STORAGE_KEY = 'tracking_kpi_order';
+
+function SortableKPICard({ id, label, value, icon: Icon, valueClassName }: { id: string; label: string; value: string; icon: ElementType; valueClassName?: string }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group rounded-lg border bg-card p-3 space-y-1">
+      <button
+        {...attributes}
+        {...listeners}
+        className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted"
+        aria-label="Réorganiser"
+      >
+        <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+      </button>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Icon className="h-3 w-3" />
+        {label}
+      </div>
+      <p className={`text-lg font-semibold ${valueClassName || ''}`}>{value}</p>
+    </div>
+  );
+}
+
+function SortableKPIGrid({ kpiDefinitions, defaultOrder, disabled }: {
+  kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string }>;
+  defaultOrder: string[];
+  disabled: boolean;
+}) {
+  const [order, setOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(KPI_ORDER_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as string[];
+        // Validate all keys exist
+        if (parsed.length === defaultOrder.length && parsed.every(k => defaultOrder.includes(k))) {
+          return parsed;
+        }
+      }
+    } catch { /* ignore */ }
+    return defaultOrder;
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setOrder(prev => {
+      const oldIndex = prev.indexOf(active.id as string);
+      const newIndex = prev.indexOf(over.id as string);
+      const newOrder = arrayMove(prev, oldIndex, newIndex);
+      localStorage.setItem(KPI_ORDER_STORAGE_KEY, JSON.stringify(newOrder));
+      return newOrder;
+    });
+  };
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={order} strategy={rectSortingStrategy}>
+        <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+          {order.map(id => {
+            const def = kpiDefinitions[id];
+            if (!def) return null;
+            return (
+              <SortableKPICard
+                key={id}
+                id={id}
+                label={def.label}
+                value={def.value}
+                icon={def.icon}
+                valueClassName={def.valueClassName}
+              />
+            );
+          })}
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+}
