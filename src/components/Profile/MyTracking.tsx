@@ -1124,9 +1124,6 @@ export function MyTracking() {
 
                   {/* Google Search Console Chart */}
                   <Card className={`relative ${!gscConnected ? 'border-dashed opacity-60 pointer-events-auto' : ''}`}>
-                    <button className="absolute top-2 right-2 z-10 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted transition-colors" aria-label="Déplacer">
-                      <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
                         <Search className="h-4 w-4" />
@@ -1681,15 +1678,6 @@ function SortableKPICard({ id, label, value, icon: Icon, valueClassName, onRefre
   return (
     <div ref={setNodeRef} style={style} className="relative group rounded-lg border bg-card p-3 space-y-1">
       {/* Drag handle — top left */}
-      <button
-        {...attributes}
-        {...listeners}
-        className="absolute top-1.5 left-1.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted"
-        style={{ touchAction: 'none' }}
-        aria-label="Déplacer"
-      >
-        <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-      </button>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className="h-3 w-3" />
         {label}
