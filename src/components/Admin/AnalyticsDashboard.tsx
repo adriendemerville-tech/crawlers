@@ -323,6 +323,7 @@ export function AnalyticsDashboard() {
       let openrouterCalls = 0;
       let browserlessCalls = 0;
       let firecrawlCalls = 0;
+      let flyPlaywrightCalls = 0;
       
       paidApiEvents.forEach(e => {
         const data = e.event_data as Record<string, unknown> | null;
@@ -337,8 +338,13 @@ export function AnalyticsDashboard() {
           if (service === 'openrouter') openrouterCalls++;
           if (service === 'browserless') browserlessCalls++;
           if (service === 'firecrawl') firecrawlCalls++;
+          if (service === 'fly-playwright') flyPlaywrightCalls++;
         }
       });
+
+      // Fly.io cost: shared-cpu-2x 1GB = $0.00000246/sec, ~40s per render
+      const FLY_COST_PER_RENDER_EUR = 0.00000246 * 40 * 0.92; // USD→EUR
+      const flyEstimatedCost = flyPlaywrightCalls * FLY_COST_PER_RENDER_EUR;
 
       setTokenUsage({
         totalTokens,
