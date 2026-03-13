@@ -7,6 +7,7 @@ import { Loader2, RefreshCw, Layers, Info, CheckCircle2, XCircle, FileSearch, Ch
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCredits } from '@/contexts/CreditsContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ConversationTurn {
