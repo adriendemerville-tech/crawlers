@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Loader2, AlertCircle, Linkedin, Infinity } from 'lucide-react';
+import { CreditCard, Loader2, AlertCircle, Linkedin, Infinity as InfinityIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,37 +9,16 @@ import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
 import { CreditTopUpModal } from '@/components/CreditTopUpModal';
 import { CreditCoin } from '@/components/ui/CreditCoin';
-import type { FixConfig } from './types';
+...
+  const { balance, useCredit, refreshBalance, isAgencyPro } = useCredits();
+  const { isAdmin } = useAdmin();
 
-interface PaymentButtonProps {
-  siteUrl: string;
-  calculatedPrice?: number;
-  fixConfigs?: FixConfig[];
-  generatedCode?: string;
-  disabled?: boolean;
-  onPaymentSuccess?: () => void;
-  onUnlockWithCredit?: () => void;
-}
-
-export function PaymentButton({ 
-  siteUrl, 
-  calculatedPrice = 3,
-  fixConfigs = [],
-  generatedCode = '',
-  disabled = false,
-  onPaymentSuccess,
-  onUnlockWithCredit
-}: PaymentButtonProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [showTopUpModal, setShowTopUpModal] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const { balance, useCredit, refreshBalance } = useCredits();
+  const isUnlimited = isAgencyPro || isAdmin;
 
   // Determine credit cost from calculatedPrice (1 credit = 0.50€)
   const enabledFixesCount = fixConfigs.filter(f => f.enabled).length;
   const creditCost = enabledFixesCount === 0 ? 0 : Math.max(1, Math.round(calculatedPrice / 0.5));
-  const hasEnoughCredits = balance >= creditCost;
+  const hasEnoughCredits = isUnlimited || balance >= creditCost;
 
   const handleCreditUnlock = async () => {
     if (!user) {
