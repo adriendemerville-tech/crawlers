@@ -137,6 +137,37 @@ Deno.serve(async (req) => {
       url: item.ranked_serp_element?.serp_item?.url,
     }))
 
+    // Fetch indexed pages count via SERP API (site:domain)
+    let indexed_pages: number | null = null
+    try {
+      const indexResp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced', {
+        method: 'POST',
+        headers: {
+          'Authorization': authHeader,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([{
+          keyword: `site:${bareHomepage}`,
+          language_code: 'fr',
+          location_code: 2250,
+          device: 'desktop',
+          depth: 1,
+        }]),
+      })
+
+      if (indexResp.ok) {
+        const indexData = await indexResp.json()
+        const indexResult = indexData?.tasks?.[0]?.result?.[0]
+        indexed_pages = indexResult?.se_results_count ?? null
+        console.log(`[fetch-serp-kpis] Indexed pages for ${bareHomepage}: ${indexed_pages}`)
+        trackPaidApiCall('fetch-serp-kpis', 'dataforseo', 'serp/organic/live (indexed pages)')
+      } else {
+        console.error('[fetch-serp-kpis] Indexed pages API error:', indexResp.status)
+      }
+    } catch (err) {
+      console.error('[fetch-serp-kpis] Indexed pages fetch error:', err)
+    }
+
     const serpData = {
       total_keywords: totalKeywords,
       avg_position: avgPosition,
@@ -145,6 +176,7 @@ Deno.serve(async (req) => {
       top_10: top10,
       top_50: top50,
       etv: Math.round(etv),
+      indexed_pages,
       sample_keywords: sampleKeywords,
       measured_at: new Date().toISOString(),
     }
