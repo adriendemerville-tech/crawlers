@@ -134,6 +134,7 @@ const App = () => (
                     </BrowserRouter>
                   </TooltipProvider>
                 </CreditsProvider>
+                </DemoModeProvider>
               </AuthProvider>
             </Suspense>
           </LanguageProvider>
