@@ -1792,6 +1792,7 @@ export type Database = {
           etv: number
           homepage_position: number | null
           id: string
+          indexed_pages: number | null
           measured_at: string
           sample_keywords: Json
           top_10: number
@@ -1808,6 +1809,7 @@ export type Database = {
           etv?: number
           homepage_position?: number | null
           id?: string
+          indexed_pages?: number | null
           measured_at?: string
           sample_keywords?: Json
           top_10?: number
@@ -1824,6 +1826,7 @@ export type Database = {
           etv?: number
           homepage_position?: number | null
           id?: string
+          indexed_pages?: number | null
           measured_at?: string
           sample_keywords?: Json
           top_10?: number

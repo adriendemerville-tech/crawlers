@@ -443,6 +443,7 @@ export default function SiteCrawl() {
   const [viewingCrawlId, setViewingCrawlId] = useState<string | null>(null);
   const [prediction, setPrediction] = useState<any>(null);
   const [isPredicting, setIsPredicting] = useState(false);
+  const [indexedPagesCount, setIndexedPagesCount] = useState<number | null>(null);
 
   // Advanced options
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -535,6 +536,23 @@ export default function SiteCrawl() {
     }, 5000);
     return () => clearInterval(interval);
   }, [crawlResult]);
+
+  // Fetch indexed pages count when crawl is completed
+  useEffect(() => {
+    if (!crawlResult || crawlResult.status !== 'completed') {
+      setIndexedPagesCount(null);
+      return;
+    }
+    const domain = crawlResult.domain;
+    if (!domain) return;
+    supabase.functions.invoke('fetch-serp-kpis', {
+      body: { domain },
+    }).then(({ data }) => {
+      if (data?.data?.indexed_pages != null) {
+        setIndexedPagesCount(data.data.indexed_pages);
+      }
+    }).catch(() => {});
+  }, [crawlResult?.id, crawlResult?.status]);
 
   if (loading || adminLoading) {
     return (
@@ -1036,6 +1054,17 @@ export default function SiteCrawl() {
                     </Card>
                   );
                 })()}
+                {/* Indexed pages (DataForSEO) */}
+                {indexedPagesCount != null && (
+                  <Card className="border">
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-primary">{indexedPagesCount.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {language === 'fr' ? 'Pages indexées (Google)' : language === 'es' ? 'Páginas indexadas (Google)' : 'Indexed pages (Google)'}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Near-duplicate & Schema.org alerts */}

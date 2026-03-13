@@ -304,7 +304,7 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                     {rankingOverview.total_ranked_keywords} mots-clés positionnés
                   </Badge>
                 </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                   <div className="p-3 rounded-lg bg-muted/50 text-center">
                     <Target className="h-4 w-4 text-primary mx-auto mb-1" />
                     <p className="text-lg font-bold text-foreground">
@@ -329,6 +329,13 @@ export function KeywordPositioningCard({ positioning, marketSummary, competitors
                     <p className="text-lg font-bold text-foreground">{rankingOverview.distribution.top10}</p>
                     <p className="text-xs text-muted-foreground">Mots-clés Top 10</p>
                   </div>
+                  {rankingOverview.indexed_pages != null && (
+                    <div className="p-3 rounded-lg bg-muted/50 text-center">
+                      <Layers className="h-4 w-4 text-primary mx-auto mb-1" />
+                      <p className="text-lg font-bold text-foreground">{rankingOverview.indexed_pages.toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground">Pages indexées</p>
+                    </div>
+                  )}
                 </div>
                 {/* Distribution bar */}
                 <div className="space-y-1">
