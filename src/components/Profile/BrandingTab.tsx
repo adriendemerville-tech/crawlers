@@ -119,11 +119,30 @@ const translations = {
     reportFooterPlaceholder: 'Ej: Para cualquier pregunta, no dude en contactarnos...',
     customTextsTitle: 'Textos personalizados del informe',
     customTextsDescription: 'Agrega mensajes personalizados al inicio y final de los informes',
-    error: 'Error al guardar el branding',
-    uploadError: 'Error al subir el logo',
-    fileTooLarge: 'El archivo supera los 2 MB',
-  },
-};
+     error: 'Error al guardar el branding',
+     uploadError: 'Error al subir el logo',
+     fileTooLarge: 'El archivo supera los 2 MB',
+     fontLabel: 'Tipografía',
+     fontHint: 'Aplicada a los títulos de tus informes de clientes',
+   },
+ };
+
+const FONT_OPTIONS = [
+  { value: '', label: 'Par défaut (Inter)' },
+  { value: 'Quicksand', label: 'Quicksand' },
+  { value: 'Roboto', label: 'Roboto' },
+  { value: 'Open Sans', label: 'Open Sans' },
+  { value: 'Lato', label: 'Lato' },
+  { value: 'Montserrat', label: 'Montserrat' },
+  { value: 'Poppins', label: 'Poppins' },
+  { value: 'Playfair Display', label: 'Playfair Display' },
+  { value: 'Merriweather', label: 'Merriweather' },
+  { value: 'Raleway', label: 'Raleway' },
+  { value: 'Nunito', label: 'Nunito' },
+  { value: 'Source Sans 3', label: 'Source Sans 3' },
+  { value: 'DM Sans', label: 'DM Sans' },
+  { value: 'Space Grotesk', label: 'Space Grotesk' },
+];
 
 type CardId = 'identity' | 'contact' | 'texts';
 
