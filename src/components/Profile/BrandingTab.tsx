@@ -280,7 +280,7 @@ export function BrandingTab() {
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logoUrl, primaryColor, brandName, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
+  }, [logoUrl, primaryColor, brandName, reportFont, contactFirstName, contactLastName, contactPhone, contactEmail, reportHeaderText, reportFooterText]);
 
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
