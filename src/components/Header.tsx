@@ -143,7 +143,7 @@ export function Header() {
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm" role="banner">
-      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4" aria-label="Navigation principale">
+      <nav className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4" aria-label="Navigation principale">
         {/* Left side: Back button OR Logo + Language selector */}
         <div className="flex items-center gap-4">
           {isAuditExpertPage ? (
