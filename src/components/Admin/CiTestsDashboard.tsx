@@ -206,35 +206,21 @@ export function CiTestsDashboard() {
               {history.map((entry, i) => {
                 const d = entry.event_data;
                 const date = new Date(entry.created_at);
+                const failedTests = d.results?.filter(r => !r.passed) || [];
+                const hasFails = failedTests.length > 0;
+
                 return (
-                  <div
+                  <HistoryRow
                     key={i}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm ${
-                      d.all_passed
-                        ? 'bg-green-50/50 dark:bg-green-900/5'
-                        : 'bg-red-50/50 dark:bg-red-900/5'
-                    }`}
-                  >
-                    {d.all_passed ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-                    )}
-                    <span className="text-muted-foreground text-xs">
-                      {date.toLocaleDateString('fr-FR')} {date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    <span className="font-medium">
-                      {d.passed}/{d.total}
-                    </span>
-                    {d.failed > 0 && (
-                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
-                        {d.failed} échec{d.failed > 1 ? 's' : ''}
-                      </Badge>
-                    )}
-                    <span className="text-muted-foreground text-xs ml-auto">
-                      {d.duration_ms}ms
-                    </span>
-                  </div>
+                    allPassed={d.all_passed}
+                    date={date}
+                    passed={d.passed}
+                    total={d.total}
+                    failed={d.failed}
+                    durationMs={d.duration_ms}
+                    failedTests={failedTests}
+                    hasFails={hasFails}
+                  />
                 );
               })}
             </div>
