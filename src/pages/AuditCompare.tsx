@@ -1469,7 +1469,7 @@ const AuditCompare = () => {
                 </div>
 
                 {/* Right infotainment card */}
-                <div className="hidden lg:block w-full justify-self-start">
+                <div className="hidden lg:block w-[70%] justify-self-start">
                   <PatienceCards isActive={isLoading} position="right" />
                 </div>
               </div>
