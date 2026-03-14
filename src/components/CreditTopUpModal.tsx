@@ -247,7 +247,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`relative rounded-xl border-2 p-4 ${pkg.borderColor} ${
+                  className={`relative rounded-xl border-2 p-5 ${pkg.borderColor} ${
                     pkg.popular ? 'ring-2 ring-emerald-500/50' : ''
                   } bg-card hover:border-primary/50 transition-all duration-300`}
                 >
@@ -260,17 +260,17 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                   )}
 
                   <div className="flex flex-col items-center text-center h-full justify-between">
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <div>
-                        <h3 className="font-semibold text-base">{pkg.name}</h3>
-                        <p className="text-2xl font-bold mt-1 flex items-center justify-center gap-1.5">
+                        <h3 className="font-semibold text-lg">{pkg.name}</h3>
+                        <p className="text-3xl font-bold mt-2 flex items-center justify-center gap-2">
                           {pkg.credits}
                           <CreditCoin size="md" />
                         </p>
                       </div>
 
-                      <div className="space-y-1">
-                        <p className="text-xl font-bold">{pkg.price}€</p>
+                      <div className="space-y-1.5">
+                        <p className="text-2xl font-bold">{pkg.price}€</p>
                         <p className="text-xs text-muted-foreground">
                           {pkg.pricePerCredit.toFixed(2).replace('.', ',')}€ {t.perCredit}
                         </p>
