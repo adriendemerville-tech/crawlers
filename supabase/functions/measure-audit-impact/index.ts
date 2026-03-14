@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
+import { fetchGA4Engagement, type GA4Engagement } from '../_shared/fetchGA4.ts'
 
 /**
  * measure-audit-impact (CRON — weekly)
