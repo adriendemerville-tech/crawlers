@@ -86,6 +86,14 @@ Patches prêts à l'emploi :
 - Correctifs d'accessibilité
 - **Déploiement automatique via GTM** : branchement en 30 secondes avec un snippet de 3 lignes
 
+## 4c. ARCHITECTE GÉNÉRATIF — CORRECTIF MULTI-PAGES (Premium / Pro Agency) — NOUVEAU
+Système de routage intelligent pour appliquer des correctifs différents selon l'URL :
+- Règles par URL : filtre exact, préfixe ou wildcard pour cibler les pages
+- Modules configurables : JSON-LD, Open Graph, Meta, Hreflang, FAQ, HowTo par règle
+- Garde-fous : validation JSON-LD, sandboxing sémantique, watchdog CRON, kill switches
+- Historique des versions : archivage automatique, restauration en un clic
+- Réservé aux abonnés Pro Agency (59€/mois)
+
 ## 4b. INTÉGRATION GTM / WIDGET (GRATUIT)
 Connexion simplifiée entre Crawlers.fr et n'importe quel site :
 - Snippet universel compatible Google Tag Manager ou injection directe avant </head>
