@@ -26,6 +26,7 @@ import { StrategicTab } from './StrategicTab';
 import { GenerativeTab } from './GenerativeTab';
 import { VisualPreview } from './VisualPreview';
 import { SecurityZone } from './SecurityZone';
+import { MultiPageRouter } from './MultiPageRouter';
 import { FixConfig, STRATEGIC_FIXES, GENERATIVE_FIXES, ViewMode } from './types';
 import { toast as sonnerToast } from 'sonner';
 
@@ -1366,6 +1367,15 @@ export function SmartConfigurator({
                     </span>
                   )}
                 </TabsTrigger>
+                {isAgencyPro && (
+                  <TabsTrigger 
+                    value="multipage" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-cyan-500 data-[state=active]:bg-transparent py-3 px-3"
+                  >
+                    <Globe className="w-4 h-4 mr-1" />
+                    Multi
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <ScrollArea className="flex-1 min-h-0">
@@ -1388,6 +1398,12 @@ export function SmartConfigurator({
                     onUpdateData={updateFixData}
                   />
                 </TabsContent>
+
+                {isAgencyPro && (
+                  <TabsContent forceMount value="multipage" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
+                    <MultiPageRouter domain={siteDomain} siteId={activeSiteId} />
+                  </TabsContent>
+                )}
               </ScrollArea>
             </Tabs>
           </div>

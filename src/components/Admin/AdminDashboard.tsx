@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -13,6 +13,7 @@ import { GA4OAuthToggle } from './GA4OAuthToggle';
 import { CiTestsDashboard } from './CiTestsDashboard';
 import { AffiliateManagement } from './AffiliateManagement';
 import { IntelligenceHub } from './IntelligenceHub';
+import { ScriptKillSwitches } from './ScriptKillSwitches';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const adminTranslations = {
@@ -25,6 +26,7 @@ const adminTranslations = {
     support: 'SAV',
     ciTests: 'CI Tests',
     affiliates: 'Affiliation',
+    scripts: 'Scripts',
     docs: 'Docs',
   },
   en: {
@@ -36,6 +38,7 @@ const adminTranslations = {
     support: 'Support',
     ciTests: 'CI Tests',
     affiliates: 'Affiliates',
+    scripts: 'Scripts',
     docs: 'Docs',
   },
   es: {
@@ -47,6 +50,7 @@ const adminTranslations = {
     support: 'Soporte',
     ciTests: 'CI Tests',
     affiliates: 'Afiliación',
+    scripts: 'Scripts',
     docs: 'Docs',
   },
 };
@@ -96,6 +100,10 @@ export function AdminDashboard() {
             <Link2 className="h-4 w-4" />
             <span className="hidden sm:inline">{t.affiliates}</span>
           </TabsTrigger>
+          <TabsTrigger value="scripts" className="flex-1 gap-2">
+            <ShieldAlert className="h-4 w-4" />
+            <span className="hidden sm:inline">{t.scripts}</span>
+          </TabsTrigger>
           <TabsTrigger value="docs" className="flex-1 gap-2">
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">{t.docs}</span>
@@ -136,6 +144,10 @@ export function AdminDashboard() {
 
         <TabsContent value="affiliates" forceMount className="data-[state=inactive]:hidden">
           <AffiliateManagement />
+        </TabsContent>
+
+        <TabsContent value="scripts" forceMount className="data-[state=inactive]:hidden">
+          <ScriptKillSwitches />
         </TabsContent>
       </Tabs>
     </div>

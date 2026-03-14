@@ -2581,6 +2581,56 @@ export type Database = {
         }
         Relationships: []
       }
+      site_script_rules: {
+        Row: {
+          created_at: string
+          domain_id: string
+          id: string
+          is_active: boolean
+          payload_data: Json
+          payload_type: string
+          status: string
+          telemetry_last_ping: string | null
+          updated_at: string
+          url_pattern: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          domain_id: string
+          id?: string
+          is_active?: boolean
+          payload_data?: Json
+          payload_type?: string
+          status?: string
+          telemetry_last_ping?: string | null
+          updated_at?: string
+          url_pattern?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          domain_id?: string
+          id?: string
+          is_active?: boolean
+          payload_data?: Json
+          payload_type?: string
+          status?: string
+          telemetry_last_ping?: string | null
+          updated_at?: string
+          url_pattern?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_script_rules_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solution_library: {
         Row: {
           category: string | null
