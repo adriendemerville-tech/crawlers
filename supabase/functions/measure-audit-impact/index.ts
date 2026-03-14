@@ -1,58 +1,21 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 
 /**
  * measure-audit-impact (CRON — weekly)
  * 
  * Phase 2+3 of the feedback loop:
  * - Finds snapshots due for measurement (next_measurement_at <= now)
- * - Re-pulls GSC/DataForSEO/PageSpeed metrics
+ * - Re-pulls GSC + GA4 + DataForSEO + PageSpeed metrics
  * - Computes deltas and correlation scores
  * - Updates reliability grades per audit function
  */
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
-// ─── GSC fetch (reused logic) ─────────────────────────────────────────
-async function getGscAccessToken(supabase: any, userId: string): Promise<string | null> {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('gsc_access_token, gsc_refresh_token, gsc_token_expiry')
-    .eq('user_id', userId)
-    .single()
-
-  if (!profile?.gsc_access_token) return null
-
-  let accessToken = profile.gsc_access_token
-
-  if (profile.gsc_token_expiry && new Date(profile.gsc_token_expiry) < new Date()) {
-    if (!profile.gsc_refresh_token) return null
-    const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
-    const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')!
-
-    const resp = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        refresh_token: profile.gsc_refresh_token,
-        grant_type: 'refresh_token',
-      }),
-    })
-    if (!resp.ok) return null
-    const data = await resp.json()
-    accessToken = data.access_token
-    await supabase.from('profiles').update({
-      gsc_access_token: accessToken,
-      gsc_token_expiry: new Date(Date.now() + (data.expires_in || 3600) * 1000).toISOString(),
-    }).eq('user_id', userId)
-  }
-
-  return accessToken
-}
+const GA4_API = 'https://analyticsdata.googleapis.com/v1beta'
 
 async function fetchGscForDomain(accessToken: string, domain: string): Promise<any> {
   const sitesResp = await fetch('https://www.googleapis.com/webmasters/v3/sites', {
