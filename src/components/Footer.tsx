@@ -252,7 +252,7 @@ function FooterComponent() {
             
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-foreground">Crawlers AI</span>
+                <span className="text-lg font-bold text-foreground">Crawlers</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {t3(language,
@@ -409,7 +409,7 @@ function FooterComponent() {
               </nav>
 
               <p className="text-xs text-muted-foreground">
-                © {new Date().getFullYear()} Crawlers AI - crawlers.fr | 
+                © {new Date().getFullYear()} Crawlers - crawlers.fr | 
                 {t3(language, ' Tous droits réservés', ' All rights reserved', ' Todos los derechos reservados')}
               </p>
             </div>
@@ -420,7 +420,7 @@ function FooterComponent() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
-            "name": "Crawlers AI",
+            "name": "Crawlers",
             "url": "https://crawlers.fr",
             "logo": "https://crawlers.fr/favicon.svg",
             "description": t3(language,
