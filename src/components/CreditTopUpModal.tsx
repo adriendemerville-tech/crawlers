@@ -334,13 +334,13 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                     ? 'Informes y correctivos ilimitados, 5 000 páginas de crawl/mes incluidas, marca blanca con su logo, y soporte prioritario — 59€/mes sin compromiso.'
                     : 'Unlimited reports & fixes, 5,000 crawl pages/month included, white-label reports with your logo, and priority support — €59/month, no commitment.'}
               </p>
-              <div className="flex flex-wrap gap-3 pt-1">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-1">
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><FileText className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Audits ∞' : language === 'es' ? 'Auditorías ∞' : 'Audits ∞'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Code className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? 'Correctifs ∞' : language === 'es' ? 'Correctivos ∞' : 'Fixes ∞'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Globe className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '5 000 pages crawl/mois' : language === 'es' ? '5 000 páginas crawl/mes' : '5,000 crawl pages/mo'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Zap className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '30 URL suivis inclus' : language === 'es' ? '30 URL seguidos' : '30 tracked URLs'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Users className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '3 comptes inclus' : language === 'es' ? '3 cuentas' : '3 accounts'}</span>
-                <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Zap className="h-3.5 w-3.5 text-amber-500" />{language === 'fr' ? '🆕 Indice IAS' : language === 'es' ? '🆕 Índice IAS' : '🆕 SAI Index'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400"><Zap className="h-3.5 w-3.5 text-amber-400" />{language === 'fr' ? 'Indice IAS' : language === 'es' ? 'Índice IAS' : 'SAI Index'}</span>
               </div>
             </div>
             <div className="flex flex-col items-center gap-2 shrink-0">
