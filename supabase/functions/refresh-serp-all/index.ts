@@ -417,7 +417,7 @@ Deno.serve(async (req) => {
         }
 
         refreshed++
-        console.log(`[refresh-serp-all] ✅ ${site.domain} (serp:${serpData ? '✓' : '✗'} gsc:${gscToken ? '✓' : '✗'} bl:${dfAuthHeader ? '✓' : '✗'})`)
+        console.log(`[refresh-serp-all] ✅ ${site.domain} (serp:${serpData ? '✓' : '✗'} gsc:${gscToken ? '✓' : '✗'} bl:${dfAuthHeader ? '✓' : '✗'} ga4:${stats.ga4 > 0 ? '✓' : '✗'})`)
 
         await new Promise(r => setTimeout(r, DELAY_BETWEEN_SITES_MS))
       } catch (err) {
