@@ -363,6 +363,7 @@ Deno.serve(async (req) => {
         recommendations_count: recommendations_count || 0,
         recommendations_data: recommendations_data || [],
         gsc_baseline: gscBaseline,
+        ga4_baseline: ga4Baseline,
         dataforseo_baseline: dataforseoBaseline,
         pagespeed_baseline: pagespeedBaseline,
         action_plan_progress: actionPlanProgress,
@@ -380,6 +381,7 @@ Deno.serve(async (req) => {
 
     const sourcesCollected = [
       gscBaseline ? 'GSC' : null,
+      ga4Baseline ? 'GA4' : null,
       dataforseoBaseline ? 'DataForSEO' : null,
       pagespeedBaseline ? 'PageSpeed' : null,
     ].filter(Boolean)
@@ -392,6 +394,7 @@ Deno.serve(async (req) => {
       sources_collected: sourcesCollected,
       next_measurement: nextMeasurement.toISOString(),
       has_gsc: !!gscBaseline,
+      has_ga4: !!ga4Baseline,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
