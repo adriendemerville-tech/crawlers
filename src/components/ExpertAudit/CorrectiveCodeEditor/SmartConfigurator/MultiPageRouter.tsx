@@ -59,6 +59,10 @@ const translations = {
     totalUrls: 'URLs détectées',
     cached: 'Données en cache',
     rules: 'règles actives',
+    version: 'v',
+    restore: 'Restaurer la version précédente',
+    restored: 'Version précédente restaurée',
+    noHistory: 'Aucune version précédente disponible',
   },
   en: {
     title: 'Multi-Page Router',
