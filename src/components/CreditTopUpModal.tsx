@@ -226,14 +226,17 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[960px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-0">
-          <DialogTitle className="text-base font-semibold">
+      <DialogContent className="sm:max-w-[1200px] max-h-[95vh] overflow-y-auto">
+        <DialogHeader className="pb-1">
+          <DialogTitle className="text-lg font-semibold">
             {t.title}
           </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            {t.subtitle}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 pt-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-5 pt-3 sm:grid-cols-2 lg:grid-cols-4">
           <AnimatePresence>
             {packages.map((pkg, index) => {
               const isLoading = loadingPackage === pkg.id;
@@ -244,7 +247,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`relative rounded-xl border-2 p-4 ${pkg.borderColor} ${
+                  className={`relative rounded-xl border-2 p-5 ${pkg.borderColor} ${
                     pkg.popular ? 'ring-2 ring-emerald-500/50' : ''
                   } bg-card hover:border-primary/50 transition-all duration-300`}
                 >
@@ -257,17 +260,17 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                   )}
 
                   <div className="flex flex-col items-center text-center h-full justify-between">
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <div>
-                        <h3 className="font-semibold text-base">{pkg.name}</h3>
-                        <p className="text-2xl font-bold mt-1 flex items-center justify-center gap-1.5">
+                        <h3 className="font-semibold text-lg">{pkg.name}</h3>
+                        <p className="text-3xl font-bold mt-2 flex items-center justify-center gap-2">
                           {pkg.credits}
                           <CreditCoin size="md" />
                         </p>
                       </div>
 
-                      <div className="space-y-1">
-                        <p className="text-xl font-bold">{pkg.price}€</p>
+                      <div className="space-y-1.5">
+                        <p className="text-2xl font-bold">{pkg.price}€</p>
                         <p className="text-xs text-muted-foreground">
                           {pkg.pricePerCredit.toFixed(2).replace('.', ',')}€ {t.perCredit}
                         </p>
@@ -285,8 +288,8 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                     <Button
                       onClick={() => handlePurchase(pkg.id)}
                       disabled={loadingPackage !== null}
-                      className={`w-full bg-gradient-to-r ${pkg.color} hover:opacity-90 text-white border-0 mt-3`}
-                      size="sm"
+                      className={`w-full bg-gradient-to-r ${pkg.color} hover:opacity-90 text-white border-0 mt-4`}
+                      size="default"
                     >
                       {isLoading ? (
                         <>
