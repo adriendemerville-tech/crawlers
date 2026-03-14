@@ -276,6 +276,7 @@ const translations = {
 const iconMap: Record<string, React.ReactNode> = {
   Infinity: <Infinity className="h-6 w-6" />,
   Code2: <Code2 className="h-6 w-6" />,
+  Layers: <Layers className="h-6 w-6" />,
   Globe: <Globe className="h-6 w-6" />,
   Palette: <Palette className="h-6 w-6" />,
   Users: <Users className="h-6 w-6" />,
