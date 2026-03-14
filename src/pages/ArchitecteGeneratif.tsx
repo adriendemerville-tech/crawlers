@@ -269,11 +269,12 @@ export default function ArchitecteGeneratif() {
                   {t3(language, 'Sécurité & Confiance', 'Security & Trust', 'Seguridad y Confianza')}
                 </Badge>
                 <h2 className="text-3xl sm:text-4xl font-extrabold">
-                  {t3(language,
-                    <>Vos garde-fous, <span className="text-violet-600 dark:text-violet-400">notre priorité</span></>,
-                    <>Your safeguards, <span className="text-violet-600 dark:text-violet-400">our priority</span></>,
-                    <>Sus protecciones, <span className="text-violet-600 dark:text-violet-400">nuestra prioridad</span></>
-                  )}
+                  {language === 'es'
+                    ? <>Sus protecciones, <span className="text-violet-600 dark:text-violet-400">nuestra prioridad</span></>
+                    : language === 'en'
+                      ? <>Your safeguards, <span className="text-violet-600 dark:text-violet-400">our priority</span></>
+                      : <>Vos garde-fous, <span className="text-violet-600 dark:text-violet-400">notre priorité</span></>
+                  }
                 </h2>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                   {t3(language,
