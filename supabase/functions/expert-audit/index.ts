@@ -2013,7 +2013,26 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ── IP Rate Limit (burst protection) ──
+  const clientIp = getClientIp(req);
+  const ipCheck = checkIpRate(clientIp, 'expert-audit', 15, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
+  // ── Concurrency guard (max 40 simultaneous) ──
+  if (!acquireConcurrency('expert-audit', 40)) return concurrencyResponse(corsHeaders);
+
   try {
+    // ── Fair Use check (invisible daily/hourly caps) ──
+    const userCtx = await getUserContext(req);
+    if (userCtx) {
+      const fairUse = await checkFairUse(userCtx.userId, 'expert_audit', userCtx.planType);
+      if (!fairUse.allowed) {
+        releaseConcurrency('expert-audit');
+        return new Response(JSON.stringify({ success: false, error: fairUse.reason }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
     const { url } = await req.json();
     
     if (!url) {
