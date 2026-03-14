@@ -425,8 +425,12 @@ Deno.serve(async (req) => {
     const currentPrompt = champion?.prompt_text || 'Aucun prompt enregistré — première analyse.'
 
     // Determine evidence basis
+    // Evidence basis: now factors in GA4 coverage
     let evidenceBasis: AgentDecision['evidence_basis'] = 'insufficient_data'
     if (reliability.snapshots_with_gsc >= 5 && reliability.total_snapshots >= 10) {
+      evidenceBasis = 'real_data'
+    } else if (reliability.snapshots_with_gsc >= 3 && reliability.snapshots_with_ga4 >= 2) {
+      // GA4 can supplement insufficient GSC to reach 'real_data' threshold
       evidenceBasis = 'real_data'
     } else if (reliability.total_snapshots >= 3) {
       evidenceBasis = 'heuristic'
