@@ -290,10 +290,15 @@ Deno.serve(async (req) => {
           updated_at: new Date().toISOString(),
         }
 
-        // Store GSC measurement for this phase
+        // Store GSC + GA4 measurement for this phase
         if (phase.gscField && gscCurrent) {
           updatePayload[phase.gscField] = gscCurrent
           updatePayload[phase.measuredField] = new Date().toISOString()
+        }
+        // Store GA4 for this phase
+        const ga4Field = phase.gscField?.replace('gsc_', 'ga4_')
+        if (ga4Field && ga4Current) {
+          updatePayload[ga4Field] = ga4Current
         }
 
         // Schedule next measurement
