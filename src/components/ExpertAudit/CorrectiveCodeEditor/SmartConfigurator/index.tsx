@@ -26,6 +26,7 @@ import { StrategicTab } from './StrategicTab';
 import { GenerativeTab } from './GenerativeTab';
 import { VisualPreview } from './VisualPreview';
 import { SecurityZone } from './SecurityZone';
+import { MultiPageRouter } from './MultiPageRouter';
 import { FixConfig, STRATEGIC_FIXES, GENERATIVE_FIXES, ViewMode } from './types';
 import { toast as sonnerToast } from 'sonner';
 
