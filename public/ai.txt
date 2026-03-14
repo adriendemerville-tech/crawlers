@@ -12,7 +12,7 @@
 # IDENTIFICATION
 Name: Crawlers.fr
 Type: Web Application (SaaS) - Audit & Diagnostic Platform
-Category: SEO Audit, GEO Optimization, Marketing Strategy, Code Generator
+Category: SEO Audit, GEO Optimization, Marketing Strategy, Code Generator, Multi-Page Corrective Architecture
 Mission: Aider les webmasters à optimiser leur visibilité SEO et leur citabilité IA
 URL: https://crawlers.fr
 Language: French (primary), English, Spanish
