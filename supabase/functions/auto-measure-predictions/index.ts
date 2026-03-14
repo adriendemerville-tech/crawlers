@@ -1,58 +1,21 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 
 /**
  * auto-measure-predictions (CRON — weekly)
  * 
  * Closes the prediction feedback loop:
  * 1. Finds predictions older than 90 days without actual_results
- * 2. Fetches real GSC data for each domain
+ * 2. Fetches real GSC + GA4 data for each domain
  * 3. Compares predicted_traffic to real traffic
- * 4. Inserts into actual_results with accuracy_gap
+ * 4. Inserts into actual_results with accuracy_gap + GA4 engagement
  * 5. Triggers recalculate_reliability()
  */
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
-// ─── GSC token refresh ─────────────────────────────────────────
-async function getGscAccessToken(supabase: any, userId: string): Promise<string | null> {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('gsc_access_token, gsc_refresh_token, gsc_token_expiry')
-    .eq('user_id', userId)
-    .single()
-
-  if (!profile?.gsc_access_token) return null
-
-  let accessToken = profile.gsc_access_token
-
-  if (profile.gsc_token_expiry && new Date(profile.gsc_token_expiry) < new Date()) {
-    if (!profile.gsc_refresh_token) return null
-    const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
-    const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')!
-
-    const resp = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        refresh_token: profile.gsc_refresh_token,
-        grant_type: 'refresh_token',
-      }),
-    })
-    if (!resp.ok) return null
-    const data = await resp.json()
-    accessToken = data.access_token
-    await supabase.from('profiles').update({
-      gsc_access_token: accessToken,
-      gsc_token_expiry: new Date(Date.now() + (data.expires_in || 3600) * 1000).toISOString(),
-    }).eq('user_id', userId)
-  }
-
-  return accessToken
-}
+const GA4_API = 'https://analyticsdata.googleapis.com/v1beta'
 
 // ─── Fetch GSC clicks for a domain (last 28 days) ──────────────
 async function fetchGscClicks(accessToken: string, domain: string): Promise<number | null> {
@@ -224,14 +187,57 @@ Deno.serve(async (req) => {
         impactReliabilityGrade = latestSnapshot.reliability_grade
       }
 
-      // ─── 5. Fetch GSC real traffic ───
+      // ─── 5. Fetch GSC + GA4 real traffic ───
       let realClicks: number | null = null
+      let ga4Engagement: any = null
+      const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
+      const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')!
 
       for (const site of (trackedSites || [])) {
-        const token = await getGscAccessToken(supabase, site.user_id)
-        if (!token) continue
+        const resolved = await resolveGoogleToken(supabase, site.user_id, domain, clientId, clientSecret)
+        if (!resolved) continue
 
-        realClicks = await fetchGscClicks(token, domain)
+        // GSC clicks
+        if (realClicks === null) {
+          realClicks = await fetchGscClicks(resolved.access_token, domain)
+        }
+
+        // GA4 engagement (if property configured)
+        if (!ga4Engagement && resolved.ga4_property_id) {
+          try {
+            const endDate = new Date().toISOString().split('T')[0]
+            const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            const resp = await fetch(`${GA4_API}/properties/${resolved.ga4_property_id}:runReport`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${resolved.access_token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                dateRanges: [{ startDate, endDate }],
+                metrics: [
+                  { name: 'sessions' },
+                  { name: 'totalUsers' },
+                  { name: 'bounceRate' },
+                  { name: 'engagementRate' },
+                  { name: 'averageSessionDuration' },
+                ],
+              }),
+            })
+            if (resp.ok) {
+              const data = await resp.json()
+              const row = data.rows?.[0]
+              if (row) {
+                const v = row.metricValues || []
+                ga4Engagement = {
+                  sessions: parseInt(v[0]?.value || '0'),
+                  total_users: parseInt(v[1]?.value || '0'),
+                  bounce_rate: parseFloat(v[2]?.value || '0'),
+                  engagement_rate: parseFloat(v[3]?.value || '0'),
+                  avg_session_duration: parseFloat(v[4]?.value || '0'),
+                }
+              }
+            }
+          } catch (_) { /* GA4 is best-effort */ }
+        }
+
         if (realClicks !== null) break
       }
 
@@ -250,6 +256,7 @@ Deno.serve(async (req) => {
         impact_reliability_grade: impactReliabilityGrade,
         snapshot_corrective_deployed: latestSnapshot?.corrective_code_deployed || false,
         snapshot_gsc_t90: latestSnapshot?.gsc_t90 || null,
+        ga4_engagement: ga4Engagement,
         measured_at: new Date().toISOString(),
       }
 

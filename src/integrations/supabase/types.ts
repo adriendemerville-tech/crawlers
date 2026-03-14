@@ -2287,6 +2287,7 @@ export type Database = {
           convergence_index: number | null
           created_at: string
           domain: string
+          ga4_engagement: Json | null
           id: string
           llm_breakdown: Json | null
           llm_data_points: Json | null
@@ -2313,6 +2314,7 @@ export type Database = {
           convergence_index?: number | null
           created_at?: string
           domain: string
+          ga4_engagement?: Json | null
           id?: string
           llm_breakdown?: Json | null
           llm_data_points?: Json | null
@@ -2339,6 +2341,7 @@ export type Database = {
           convergence_index?: number | null
           created_at?: string
           domain?: string
+          ga4_engagement?: Json | null
           id?: string
           llm_breakdown?: Json | null
           llm_data_points?: Json | null

@@ -1,58 +1,21 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 
 /**
  * measure-audit-impact (CRON — weekly)
  * 
  * Phase 2+3 of the feedback loop:
  * - Finds snapshots due for measurement (next_measurement_at <= now)
- * - Re-pulls GSC/DataForSEO/PageSpeed metrics
+ * - Re-pulls GSC + GA4 + DataForSEO + PageSpeed metrics
  * - Computes deltas and correlation scores
  * - Updates reliability grades per audit function
  */
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
-// ─── GSC fetch (reused logic) ─────────────────────────────────────────
-async function getGscAccessToken(supabase: any, userId: string): Promise<string | null> {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('gsc_access_token, gsc_refresh_token, gsc_token_expiry')
-    .eq('user_id', userId)
-    .single()
-
-  if (!profile?.gsc_access_token) return null
-
-  let accessToken = profile.gsc_access_token
-
-  if (profile.gsc_token_expiry && new Date(profile.gsc_token_expiry) < new Date()) {
-    if (!profile.gsc_refresh_token) return null
-    const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
-    const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')!
-
-    const resp = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        refresh_token: profile.gsc_refresh_token,
-        grant_type: 'refresh_token',
-      }),
-    })
-    if (!resp.ok) return null
-    const data = await resp.json()
-    accessToken = data.access_token
-    await supabase.from('profiles').update({
-      gsc_access_token: accessToken,
-      gsc_token_expiry: new Date(Date.now() + (data.expires_in || 3600) * 1000).toISOString(),
-    }).eq('user_id', userId)
-  }
-
-  return accessToken
-}
+const GA4_API = 'https://analyticsdata.googleapis.com/v1beta'
 
 async function fetchGscForDomain(accessToken: string, domain: string): Promise<any> {
   const sitesResp = await fetch('https://www.googleapis.com/webmasters/v3/sites', {
@@ -241,12 +204,55 @@ Deno.serve(async (req) => {
 
     for (const snapshot of pendingSnapshots) {
       try {
-        // Get GSC token for this user
-        const accessToken = await getGscAccessToken(supabase, snapshot.user_id)
+        // Get token via multi-account resolver
+        const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
+        const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')!
+        const resolved = await resolveGoogleToken(supabase, snapshot.user_id, snapshot.domain, clientId, clientSecret)
         let gscCurrent = null
+        let ga4Current = null
 
-        if (accessToken) {
-          gscCurrent = await fetchGscForDomain(accessToken, snapshot.domain)
+        if (resolved) {
+          gscCurrent = await fetchGscForDomain(resolved.access_token, snapshot.domain)
+
+          // Fetch GA4 if property configured
+          if (resolved.ga4_property_id) {
+            try {
+              const endDate = new Date().toISOString().split('T')[0]
+              const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+              const resp = await fetch(`${GA4_API}/properties/${resolved.ga4_property_id}:runReport`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${resolved.access_token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  dateRanges: [{ startDate, endDate }],
+                  metrics: [
+                    { name: 'sessions' },
+                    { name: 'totalUsers' },
+                    { name: 'bounceRate' },
+                    { name: 'engagementRate' },
+                    { name: 'averageSessionDuration' },
+                    { name: 'screenPageViews' },
+                  ],
+                }),
+              })
+              if (resp.ok) {
+                const data = await resp.json()
+                const row = data.rows?.[0]
+                if (row) {
+                  const v = row.metricValues || []
+                  ga4Current = {
+                    sessions: parseInt(v[0]?.value || '0'),
+                    total_users: parseInt(v[1]?.value || '0'),
+                    bounce_rate: parseFloat(v[2]?.value || '0'),
+                    engagement_rate: parseFloat(v[3]?.value || '0'),
+                    avg_session_duration: parseFloat(v[4]?.value || '0'),
+                    pageviews: parseInt(v[5]?.value || '0'),
+                    measured_at: new Date().toISOString(),
+                  }
+                  trackPaidApiCall('measure-audit-impact', 'google-ga4', 'runReport')
+                }
+              }
+            } catch (_) { /* GA4 best effort */ }
+          }
         }
 
         // Check current reco application status
@@ -284,10 +290,15 @@ Deno.serve(async (req) => {
           updated_at: new Date().toISOString(),
         }
 
-        // Store GSC measurement for this phase
+        // Store GSC + GA4 measurement for this phase
         if (phase.gscField && gscCurrent) {
           updatePayload[phase.gscField] = gscCurrent
           updatePayload[phase.measuredField] = new Date().toISOString()
+        }
+        // Store GA4 for this phase
+        const ga4Field = phase.gscField?.replace('gsc_', 'ga4_')
+        if (ga4Field && ga4Current) {
+          updatePayload[ga4Field] = ga4Current
         }
 
         // Schedule next measurement

@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 
 /**
  * Agent CTO v2 — Data-Driven Prompt Optimization
@@ -24,6 +25,7 @@ interface ReliabilityProfile {
   function_name: string
   total_snapshots: number
   snapshots_with_gsc: number
+  snapshots_with_ga4: number
   avg_impact_score: number
   grade_distribution: Record<string, number>
   avg_action_plan_progress: number
@@ -48,7 +50,7 @@ async function getReliabilityProfile(supabase: any, functionName: string): Promi
   const [{ data: snapshots }, { data: trackedSites }] = await Promise.all([
     supabase
       .from('audit_impact_snapshots')
-      .select('impact_score, reliability_grade, action_plan_progress, corrective_code_deployed, gsc_baseline, measurement_phase, created_at')
+      .select('impact_score, reliability_grade, action_plan_progress, corrective_code_deployed, gsc_baseline, ga4_baseline, ga4_t90, measurement_phase, created_at')
       .eq('audit_type', mapFunctionToAuditType(functionName))
       .order('created_at', { ascending: false })
       .limit(100),
@@ -60,6 +62,8 @@ async function getReliabilityProfile(supabase: any, functionName: string): Promi
 
   const all = snapshots || []
   const withGsc = all.filter((s: any) => s.gsc_baseline != null)
+  const withGa4 = all.filter((s: any) => s.ga4_baseline != null)
+  const completed = all.filter((s: any) => s.measurement_phase === 'complete' && s.impact_score != null)
   const completed = all.filter((s: any) => s.measurement_phase === 'complete' && s.impact_score != null)
 
   // Grade distribution
@@ -97,6 +101,7 @@ async function getReliabilityProfile(supabase: any, functionName: string): Promi
     function_name: functionName,
     total_snapshots: all.length,
     snapshots_with_gsc: withGsc.length,
+    snapshots_with_ga4: withGa4.length,
     avg_impact_score: completed.length > 0
       ? Math.round(completed.reduce((s: number, r: any) => s + r.impact_score, 0) / completed.length * 10) / 10
       : 0,
