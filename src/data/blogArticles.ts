@@ -746,9 +746,9 @@ export const blogArticles: BlogArticle[] = [
       es: 'Índice de Alineamiento Estratégico: la Search Console por fin utilizada para pilotar su marketing',
     },
     description: {
-      fr: 'Google Search Console a évolué. Découvrez comment le nouvel Indice d\'Alignement Stratégique transforme vos données Brand / Non-Brand en diagnostic actionnable pour votre direction marketing.',
-      en: 'Google Search Console has evolved. Discover how the new Strategic Alignment Index transforms your Brand / Non-Brand data into an actionable diagnostic for your marketing team.',
-      es: 'Google Search Console ha evolucionado. Descubra cómo el nuevo Índice de Alineamiento Estratégico transforma sus datos Marca / Genérico en un diagnóstico accionable para su dirección de marketing.',
+      fr: 'Comment mesurer la notoriété de votre site avec Google Search Console ? L\'Indice d\'Alignement Stratégique transforme vos données Brand / Non-Brand en diagnostic actionnable. Score 0-100, données réelles.',
+      en: 'How to measure your site\'s brand awareness with Google Search Console? The Strategic Alignment Index transforms Brand / Non-Brand data into an actionable diagnostic. 0-100 score, real data.',
+      es: '¿Cómo medir la notoriedad de su sitio con Google Search Console? El Índice de Alineamiento Estratégico transforma sus datos Marca / Genérico en diagnóstico accionable. Score 0-100, datos reales.',
     },
     heroImage: iasGscHero,
     heroAlt: {
