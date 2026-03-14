@@ -45,6 +45,8 @@ const translations = {
     validated: 'Validé ✓',
     validatedToast: 'Merci ! Script validé et ajouté à la bibliothèque éprouvée.',
     validateError: 'Erreur lors de la validation',
+    tabScripts: 'Scripts',
+    tabHistory: 'Historique',
   },
   en: {
     title: 'My Corrective Codes',
