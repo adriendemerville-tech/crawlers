@@ -2,6 +2,8 @@ import { getLLMTranslations, parseLanguage, type Language } from '../_shared/tra
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
+import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 
 interface LLMProvider {
   id: string;
