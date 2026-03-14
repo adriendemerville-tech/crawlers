@@ -226,14 +226,17 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[960px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-0">
-          <DialogTitle className="text-base font-semibold">
+      <DialogContent className="sm:max-w-[1200px] max-h-[95vh] overflow-y-auto">
+        <DialogHeader className="pb-1">
+          <DialogTitle className="text-lg font-semibold">
             {t.title}
           </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            {t.subtitle}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 pt-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-5 pt-3 sm:grid-cols-2 lg:grid-cols-4">
           <AnimatePresence>
             {packages.map((pkg, index) => {
               const isLoading = loadingPackage === pkg.id;
