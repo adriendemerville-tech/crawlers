@@ -100,6 +100,7 @@ async function getReliabilityProfile(supabase: any, functionName: string): Promi
     function_name: functionName,
     total_snapshots: all.length,
     snapshots_with_gsc: withGsc.length,
+    snapshots_with_ga4: withGa4.length,
     avg_impact_score: completed.length > 0
       ? Math.round(completed.reduce((s: number, r: any) => s + r.impact_score, 0) / completed.length * 10) / 10
       : 0,
