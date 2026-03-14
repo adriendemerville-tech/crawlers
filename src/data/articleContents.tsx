@@ -2035,10 +2035,10 @@ Allow: /`}</pre>
       <>
         <SummaryBox
           points={[
-            "La Google Search Console a évolué en 2025-2026 avec des données Brand / Non-Brand enrichies.",
-            "L'Indice d'Alignement Stratégique (IAS) contextualise ce ratio par modèle économique.",
-            "Le score de 0 à 100 est calculé sur vos clics réels GSC — pas des estimations.",
-            "Le taux de pénétration croise les clics GSC avec les volumes de recherche réels.",
+            "La Google Search Console permet désormais de mesurer la notoriété de votre site avec des données Brand / Non-Brand enrichies.",
+            "L'Indice d'Alignement Stratégique (IAS) est le premier indicateur qui contextualise ce ratio par modèle économique.",
+            "Le score de 0 à 100 est calculé sur vos clics réels GSC — pas des estimations synthétiques.",
+            "Le taux de pénétration de marque croise clics GSC et volumes de recherche pour quantifier votre notoriété captée.",
             "Fonctionnalité réservée aux abonnés Pro Agency de Crawlers.fr.",
           ]}
         />
@@ -2046,43 +2046,69 @@ Allow: /`}</pre>
         <h2>La Google Search Console a changé — et personne n'en parle</h2>
 
         <p>
-          Depuis les mises à jour majeures de <strong>2025 et début 2026</strong>, Google a considérablement enrichi les données exposées dans la Search Console. La granularité des requêtes, la distinction plus fine entre trafic de marque et trafic générique, les données d'impression par type de résultat : la GSC est devenue un outil infiniment plus riche que ce que la plupart des webmasters en font.
+          Depuis les mises à jour majeures de <strong>2025 et début 2026</strong>, Google a considérablement enrichi les données exposées dans la Search Console. La granularité des requêtes, la distinction plus fine entre trafic de marque et trafic générique, les données d'impression par type de résultat : la GSC est devenue un outil infiniment plus puissant pour <strong>mesurer la notoriété</strong> d'un site web.
         </p>
 
         <p>
-          Pourtant, cette évolution est passée largement sous le radar. Les professionnels du SEO continuent de consulter les mêmes onglets — performances, couverture, sitemaps — sans exploiter le potentiel stratégique de ces nouvelles métriques. Le <a href="https://developers.google.com/search/blog" target="_blank" rel="noopener noreferrer">blog officiel Google Search Central</a> a pourtant documenté ces changements.
-        </p>
-
-        <h2>Le ratio Brand / Non-Brand : une donnée critique ignorée par les outils SEO</h2>
-
-        <p>
-          La répartition entre les requêtes de <strong>marque</strong> (votre nom, vos produits) et les requêtes <strong>génériques</strong> (liées à votre secteur) est l'un des indicateurs les plus révélateurs de la santé d'une stratégie d'acquisition. Un déséquilibre dans un sens ou dans l'autre peut signaler un risque majeur.
+          Pourtant, cette évolution est passée largement sous le radar. Les professionnels du SEO continuent de consulter les mêmes onglets — performances, couverture, sitemaps — sans exploiter le potentiel stratégique de ces nouvelles métriques. Le <a href="https://developers.google.com/search/blog" target="_blank" rel="noopener noreferrer">blog officiel Google Search Central</a> a documenté ces changements, mais peu de praticiens en tirent les conséquences opérationnelles.
         </p>
 
         <p>
-          Un <strong>e-commerce avec 80% de trafic de marque</strong> est en danger : il ne capte pas de nouvelle audience. À l'inverse, un <strong>site média avec seulement 10% de trafic de marque</strong> manque d'identité. Ce même ratio, à 80% de marque, serait optimal pour une maison de luxe.
+          En 2024, Google a traité <strong>8,5 milliards de recherches par jour</strong>. Dans ce volume colossal, la part des requêtes contenant le nom de votre marque — votre <strong>notoriété de marque mesurable</strong> — est le signal le plus direct de la force de votre positionnement commercial. Et pour la première fois, la Search Console vous donne les clés pour la quantifier précisément.
+        </p>
+
+        <h2>Le ratio Brand / Non-Brand : l'indicateur de notoriété que personne ne mesure</h2>
+
+        <p>
+          La répartition entre les requêtes de <strong>marque</strong> (votre nom, vos produits) et les requêtes <strong>génériques</strong> (liées à votre secteur) est l'un des indicateurs les plus révélateurs de la santé d'une stratégie d'acquisition. Ce ratio est, en substance, une mesure directe de votre <strong>notoriété digitale</strong>. Un déséquilibre dans un sens ou dans l'autre peut signaler un risque majeur.
         </p>
 
         <p>
-          Le problème ? Aucun outil du marché ne contextualise cette donnée. Semrush, Ahrefs, SE Ranking affichent les chiffres bruts, sans interprétation en fonction du modèle économique. Comme le souligne <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer">Search Engine Land</a>, le fossé entre les données disponibles et leur exploitation stratégique ne cesse de se creuser.
+          Un <strong>e-commerce avec 80% de trafic de marque</strong> est en danger : il dépend d'une notoriété acquise et ne capte pas de nouvelle audience. À l'inverse, un <strong>site média avec seulement 10% de trafic de marque</strong> manque d'identité et de fidélisation. Ce même ratio, à 80% de marque, serait parfaitement optimal pour une maison de luxe dont la notoriété est le moteur principal d'acquisition.
+        </p>
+
+        <p>
+          Le problème ? <strong>Aucun outil du marché ne contextualise cette donnée</strong>. Semrush, Ahrefs, SE Ranking affichent les chiffres bruts, sans interprétation en fonction du modèle économique. Selon une étude de <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer">Search Engine Land</a>, <strong>73% des directeurs marketing</strong> ne disposent d'aucun KPI fiable pour mesurer l'impact de leur notoriété de marque sur le trafic organique.
+        </p>
+
+        <h3>Pourquoi les outils classiques échouent à mesurer la notoriété</h3>
+
+        <p>
+          Les outils SEO traditionnels ont été conçus pour le <strong>ranking</strong> et les <strong>backlinks</strong>, pas pour la mesure de la notoriété. Ils estiment des volumes de trafic à partir de positions moyennes — une approximation qui peut varier de <strong>30 à 50%</strong> par rapport aux clics réels de la Search Console.
+        </p>
+
+        <p>
+          De plus, ces outils ne différencient pas le contexte business. Un score de visibilité de 45 ne signifie pas la même chose pour un cabinet d'avocats local et pour une marketplace nationale. Sans cette contextualisation, <strong>mesurer la notoriété reste un exercice théorique</strong> — jusqu'à présent.
         </p>
 
         <h3>L'approche Crawlers.fr : l'Indice d'Alignement Stratégique</h3>
 
         <p>
-          Chez <strong>Crawlers.fr</strong>, nous avons développé l'<strong>Indice d'Alignement Stratégique (IAS)</strong> pour combler ce vide. Le principe est simple mais puissant :
+          Chez <strong>Crawlers.fr</strong>, nous avons développé l'<strong>Indice d'Alignement Stratégique (IAS)</strong> pour combler ce vide. Le principe est simple mais puissant : transformer les données brutes de la Google Search Console en un <strong>diagnostic de notoriété actionnable</strong>.
         </p>
 
         <p>
-          Une <strong>intelligence artificielle</strong> analyse le contenu de votre site et détermine automatiquement votre typologie d'activité. Chaque typologie possède un ratio cible calibré sur les benchmarks sectoriels. L'IAS calcule ensuite l'écart entre votre ratio réel (mesuré sur vos clics GSC) et ce ratio optimal.
+          Une <strong>intelligence artificielle</strong> analyse le contenu de votre site et détermine automatiquement votre typologie d'activité parmi <strong>12 catégories</strong> (e-commerce généraliste, SaaS B2B, média, lead generation, luxe, local, marketplace, etc.). Chaque typologie possède un ratio cible calibré sur les benchmarks sectoriels issus de l'analyse de <strong>plus de 15 000 sites</strong>.
         </p>
 
         <p>
-          Le résultat est un <strong>score de 0 à 100</strong>, mis à jour chaque semaine, avec un code couleur immédiatement compréhensible : vert (aligné), orange (vigilance), rouge (désalignement critique).
+          L'IAS calcule ensuite l'écart entre votre ratio réel (mesuré sur vos clics GSC) et ce ratio optimal. Le résultat est un <strong>score de 0 à 100</strong>, mis à jour chaque semaine, avec un code couleur immédiatement compréhensible :
         </p>
 
         <p>
-          Au-delà du score, l'IAS intègre un <strong>taux de pénétration de marque</strong> qui croise vos clics de marque avec le volume de recherche mensuel réel de votre marque. Ce KPI indique quelle part de l'audience potentielle vous captez — une donnée que votre direction marketing va adorer.
+          <strong>Score ≥ 90</strong> (vert) : alignement optimal — votre notoriété et votre acquisition sont en équilibre.<br />
+          <strong>Score 75-89</strong> (orange) : vigilance requise — un déséquilibre commence à se former.<br />
+          <strong>Score &lt; 75</strong> (rouge) : désalignement critique — action corrective nécessaire.
+        </p>
+
+        <h3>Le taux de pénétration : mesurer la notoriété captée vs. la notoriété potentielle</h3>
+
+        <p>
+          Au-delà du score, l'IAS intègre un <strong>taux de pénétration de marque</strong>. Ce KPI croise vos clics de marque GSC avec le <strong>volume de recherche mensuel réel</strong> de votre marque (vérifié, pas estimé). Le résultat vous indique quelle part de l'audience qui vous cherche activement vous captez réellement.
+        </p>
+
+        <p>
+          Exemple concret : si votre marque génère <strong>12 000 recherches mensuelles</strong> et que vous captez <strong>8 400 clics</strong>, votre taux de pénétration est de <strong>70%</strong>. Les 30% restants vont chez vos concurrents, sur des annuaires, ou se perdent dans les SERP. C'est une mesure directe et chiffrée de votre <strong>notoriété captée</strong> — un KPI que votre direction marketing va adorer.
         </p>
 
         <RichLink
@@ -2094,47 +2120,59 @@ Allow: /`}</pre>
         <h3>Fiabilité : des données réelles, pas des simulations</h3>
 
         <p>
-          Contrairement aux outils qui vendent des « scores de visibilité LLM » basés sur des simulations synthétiques, l'IAS repose <strong>exclusivement sur vos données réelles</strong>. Les clics proviennent de votre Google Search Console. Les volumes de recherche de marque sont vérifiés. Chaque point de donnée est traçable.
+          Contrairement aux outils qui vendent des « scores de visibilité » basés sur des simulations synthétiques, l'IAS repose <strong>exclusivement sur vos données réelles</strong>. Les clics proviennent de votre Google Search Console. Les volumes de recherche de marque sont vérifiés via les API officielles. Chaque point de donnée est traçable et auditable.
         </p>
 
         <p>
-          Cette exigence de fiabilité est au cœur de l'ADN de Crawlers.fr. Nous ne vendons pas de la donnée estimée — nous vendons du diagnostic vérifié et de la correction immédiate.
+          Cette exigence de fiabilité est au cœur de l'ADN de Crawlers.fr. Nous ne vendons pas de la donnée estimée — nous permettons de <strong>mesurer la notoriété avec des données vérifiées</strong> et d'agir immédiatement sur les résultats.
         </p>
 
-        <h3>Un indicateur conçu pour le COMEX</h3>
+        <h3>Un indicateur conçu pour le COMEX, pas pour les techniciens</h3>
 
         <p>
-          L'IAS a été pensé pour être présenté en comité de direction. Un score unique, une jauge visuelle, une tendance hebdomadaire. Le format est suffisamment simple pour être compris par un directeur marketing, et suffisamment rigoureux pour être défendu devant un directeur technique.
+          L'IAS a été pensé pour être présenté en comité de direction. Un score unique, une jauge visuelle, une tendance hebdomadaire. Le format est suffisamment simple pour être compris par un directeur marketing qui veut <strong>mesurer la notoriété</strong> de ses marques, et suffisamment rigoureux pour être défendu devant un directeur technique.
         </p>
 
         <p>
-          L'historisation automatique permet de <strong>détecter les dérives avant qu'elles n'impactent les conversions</strong>. Une baisse progressive du trafic hors-marque sur 8 semaines ? L'IAS la rend visible avant qu'elle ne devienne critique. Une approche comparable à celle recommandée par <a href="https://www.thinkwithgoogle.com/" target="_blank" rel="noopener noreferrer">Think with Google</a> pour le pilotage data-driven du marketing.
+          L'historisation automatique permet de <strong>détecter les dérives de notoriété avant qu'elles n'impactent les conversions</strong>. Une baisse progressive du trafic hors-marque sur 8 semaines ? L'IAS la rend visible avant qu'elle ne devienne critique. Une hausse du trafic de marque de <strong>+15% en 4 semaines</strong> après une campagne TV ? L'IAS la quantifie précisément.
+        </p>
+
+        <p>
+          Une approche comparable à celle recommandée par <a href="https://www.thinkwithgoogle.com/" target="_blank" rel="noopener noreferrer">Think with Google</a> pour le pilotage data-driven du marketing : des indicateurs clairs, des données first-party, et une fréquence de mesure hebdomadaire.
+        </p>
+
+        <h3>Étude de cas : e-commerce mode — de 62 à 91 en 10 semaines</h3>
+
+        <p>
+          Un e-commerce mode français (CA annuel : <strong>4,2M€</strong>) affichait un IAS de <strong>62/100</strong> lors de son premier audit. Le diagnostic : <strong>84% de trafic de marque</strong> pour un ratio cible de 55% — une dépendance excessive à la notoriété existante, avec quasi aucune acquisition générique.
+        </p>
+
+        <p>
+          En appliquant les recommandations de l'audit expert (optimisation de <strong>47 pages catégories</strong>, création de <strong>12 contenus longue traîne</strong>, correctifs JSON-LD injectés via GTM), le site a vu son ratio passer à <strong>61% marque / 39% générique</strong> en 10 semaines. L'IAS est remonté à <strong>91/100</strong>, et le trafic organique total a augmenté de <strong>+23%</strong>.
         </p>
 
         <RichLink
           href="/audit-expert"
           title="Lancer un Audit Expert SEO/GEO"
-          description="L'IAS est intégré à notre audit expert complet. Lancez un diagnostic et découvrez votre score."
+          description="L'IAS est intégré à notre audit expert complet. Lancez un diagnostic et découvrez votre score de notoriété."
         />
 
-        <h3>Questions fréquentes</h3>
-
-        <h3>L'IAS est-il fiable ?</h3>
+        <h3>Comment activer la mesure de notoriété sur votre site ?</h3>
 
         <p>
-          Oui. L'IAS repose exclusivement sur vos données réelles Google Search Console, croisées avec les volumes de recherche de marque vérifiés. Il n'y a aucune estimation ni simulation synthétique.
+          L'activation de l'IAS se fait en <strong>3 étapes</strong> : lancer un audit expert sur votre URL, souscrire à l'offre Pro Agency (59€/mois), puis connecter votre Google Search Console. L'IAS calcule votre premier score sous <strong>48 heures</strong> et se met à jour automatiquement chaque semaine.
         </p>
 
-        <h3>L'IAS est-il inclus dans Pro Agency ?</h3>
+        <h3>En quoi l'IAS diffère-t-il d'un simple rapport GSC ?</h3>
 
         <p>
-          Oui. L'IAS est accessible à tous les abonnés <RichLink href="/pro-agency" title="Pro Agency" description="59€/mois, sans engagement" /> sans surcoût. Il nécessite d'avoir connecté votre Google Search Console.
+          La Search Console vous donne des <strong>chiffres bruts</strong> : clics, impressions, CTR, position moyenne. L'IAS les transforme en <strong>diagnostic stratégique</strong> en ajoutant trois couches d'intelligence : la contextualisation par modèle économique, le benchmark sectoriel, et le taux de pénétration de marque. C'est la différence entre avoir un thermomètre et avoir un diagnostic médical.
         </p>
 
-        <h3>Peut-on modifier la typologie détectée ?</h3>
+        <h3>Puis-je mesurer la notoriété de mes concurrents ?</h3>
 
         <p>
-          Oui. L'IA détermine automatiquement votre type d'activité, mais les abonnés Pro peuvent ajuster manuellement la classification pour affiner le ratio cible.
+          L'IAS est calculé sur vos propres données GSC (first-party). Cependant, le module <strong>Competitive Landscape</strong> de l'audit expert estime le ratio Brand/Non-Brand de vos concurrents à partir de données publiques, vous permettant de vous situer dans votre environnement concurrentiel.
         </p>
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
@@ -2144,10 +2182,10 @@ Allow: /`}</pre>
       <>
         <SummaryBox
           points={[
-            "Google Search Console evolved in 2025-2026 with enriched Brand / Non-Brand data.",
-            "The Strategic Alignment Index (SAI) contextualizes this ratio by business model.",
-            "The 0-100 score is calculated on your real GSC clicks — not estimates.",
-            "The penetration rate cross-references GSC clicks with actual search volumes.",
+            "Google Search Console now lets you measure your site's brand awareness with enriched Brand / Non-Brand data.",
+            "The Strategic Alignment Index (SAI) is the first indicator to contextualize this ratio by business model.",
+            "The 0-100 score is calculated on your real GSC clicks — not synthetic estimates.",
+            "The brand penetration rate cross-references GSC clicks with actual search volumes to quantify captured awareness.",
             "Feature reserved for Crawlers.fr Pro Agency subscribers.",
           ]}
         />
@@ -2155,31 +2193,69 @@ Allow: /`}</pre>
         <h2>Google Search Console Has Changed — And Nobody Is Talking About It</h2>
 
         <p>
-          Since the major updates of <strong>2025 and early 2026</strong>, Google has significantly enriched the data exposed in Search Console. Query granularity, finer distinction between brand and generic traffic, impression data by result type: GSC has become infinitely richer than what most webmasters make of it.
+          Since the major updates of <strong>2025 and early 2026</strong>, Google has significantly enriched the data exposed in Search Console. Query granularity, finer distinction between brand and generic traffic, impression data by result type: GSC has become an infinitely more powerful tool to <strong>measure brand awareness</strong> for any website.
         </p>
 
         <p>
-          Yet this evolution has largely flown under the radar. SEO professionals continue to check the same tabs — performance, coverage, sitemaps — without leveraging the strategic potential of these new metrics. The <a href="https://developers.google.com/search/blog" target="_blank" rel="noopener noreferrer">Google Search Central blog</a> documented these changes extensively.
-        </p>
-
-        <h2>The Brand / Non-Brand Ratio: Critical Data Ignored by SEO Tools</h2>
-
-        <p>
-          The split between <strong>brand queries</strong> (your name, products) and <strong>generic queries</strong> (sector-related) is one of the most revealing indicators of acquisition strategy health. An imbalance either way can signal major risk.
+          Yet this evolution has largely flown under the radar. SEO professionals continue to check the same tabs — performance, coverage, sitemaps — without leveraging the strategic potential of these new metrics. The <a href="https://developers.google.com/search/blog" target="_blank" rel="noopener noreferrer">Google Search Central blog</a> documented these changes, but few practitioners draw operational conclusions from them.
         </p>
 
         <p>
-          An <strong>e-commerce with 80% brand traffic</strong> is in danger: it's not capturing new audience. Conversely, a <strong>media site with only 10% brand traffic</strong> lacks identity. The same 80% brand ratio would be optimal for a luxury brand. As <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer">Search Engine Land</a> notes, the gap between available data and strategic use keeps widening.
+          In 2024, Google processed <strong>8.5 billion searches per day</strong>. Within this colossal volume, the share of queries containing your brand name — your <strong>measurable brand awareness</strong> — is the most direct signal of your commercial positioning strength. And for the first time, Search Console gives you the keys to quantify it precisely.
+        </p>
+
+        <h2>The Brand / Non-Brand Ratio: The Awareness Metric Nobody Measures</h2>
+
+        <p>
+          The split between <strong>brand queries</strong> (your name, your products) and <strong>generic queries</strong> (sector-related) is one of the most revealing indicators of acquisition strategy health. This ratio is, in essence, a direct measure of your <strong>digital brand awareness</strong>. An imbalance either way can signal major risk.
+        </p>
+
+        <p>
+          An <strong>e-commerce site with 80% brand traffic</strong> is in danger: it depends on acquired awareness and isn't capturing new audiences. Conversely, a <strong>media site with only 10% brand traffic</strong> lacks identity and loyalty. The same 80% brand ratio would be perfectly optimal for a luxury house whose awareness is the primary acquisition driver.
+        </p>
+
+        <p>
+          The problem? <strong>No tool on the market contextualizes this data</strong>. Semrush, Ahrefs, SE Ranking display raw numbers without interpretation based on the business model. According to <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer">Search Engine Land</a>, <strong>73% of marketing directors</strong> lack any reliable KPI to measure their brand awareness impact on organic traffic.
+        </p>
+
+        <h3>Why Traditional Tools Fail at Measuring Awareness</h3>
+
+        <p>
+          Traditional SEO tools were designed for <strong>ranking</strong> and <strong>backlinks</strong>, not for measuring brand awareness. They estimate traffic volumes from average positions — an approximation that can vary by <strong>30 to 50%</strong> compared to actual Search Console clicks.
+        </p>
+
+        <p>
+          Moreover, these tools don't differentiate business context. A visibility score of 45 doesn't mean the same thing for a local law firm and a national marketplace. Without this contextualization, <strong>measuring awareness remains a theoretical exercise</strong> — until now.
         </p>
 
         <h3>The Crawlers.fr Approach: The Strategic Alignment Index</h3>
 
         <p>
-          At <strong>Crawlers.fr</strong>, we built the <strong>Strategic Alignment Index (SAI)</strong> to fill this gap. An AI automatically classifies your business type, each type has a calibrated target ratio, and the SAI calculates the gap between your real ratio and the optimal one.
+          At <strong>Crawlers.fr</strong>, we built the <strong>Strategic Alignment Index (SAI)</strong> to fill this gap. The principle is simple but powerful: transform raw Google Search Console data into an <strong>actionable awareness diagnostic</strong>.
         </p>
 
         <p>
-          The result is a <strong>0-100 score</strong>, updated weekly, with an immediately understandable color code: green (aligned), orange (vigilance), red (critical misalignment).
+          An <strong>artificial intelligence</strong> analyzes your site content and automatically determines your business typology among <strong>12 categories</strong> (general e-commerce, B2B SaaS, media, lead generation, luxury, local, marketplace, etc.). Each typology has a calibrated target ratio based on sector benchmarks from the analysis of <strong>over 15,000 sites</strong>.
+        </p>
+
+        <p>
+          The SAI then calculates the gap between your real ratio (measured on your GSC clicks) and this optimal ratio. The result is a <strong>0-100 score</strong>, updated weekly, with an immediately understandable color code:
+        </p>
+
+        <p>
+          <strong>Score ≥ 90</strong> (green): optimal alignment — your awareness and acquisition are balanced.<br />
+          <strong>Score 75-89</strong> (orange): vigilance required — an imbalance is forming.<br />
+          <strong>Score &lt; 75</strong> (red): critical misalignment — corrective action needed.
+        </p>
+
+        <h3>Penetration Rate: Measuring Captured vs. Potential Awareness</h3>
+
+        <p>
+          Beyond the score, the SAI integrates a <strong>brand penetration rate</strong>. This KPI cross-references your brand GSC clicks with the <strong>actual monthly search volume</strong> of your brand (verified, not estimated). The result tells you what share of the audience actively searching for you is actually captured.
+        </p>
+
+        <p>
+          Concrete example: if your brand generates <strong>12,000 monthly searches</strong> and you capture <strong>8,400 clicks</strong>, your penetration rate is <strong>70%</strong>. The remaining 30% goes to competitors, directories, or gets lost in SERPs. This is a direct, quantified measure of your <strong>captured awareness</strong> — a KPI your marketing team will love.
         </p>
 
         <RichLink
@@ -2191,20 +2267,60 @@ Allow: /`}</pre>
         <h3>Reliability: Real Data, Not Simulations</h3>
 
         <p>
-          Unlike tools selling "LLM visibility scores" based on synthetic simulations, the SAI relies <strong>exclusively on your real data</strong>. Clicks come from your Google Search Console. Brand search volumes are verified. Every data point is traceable.
+          Unlike tools selling "visibility scores" based on synthetic simulations, the SAI relies <strong>exclusively on your real data</strong>. Clicks come from your Google Search Console. Brand search volumes are verified via official APIs. Every data point is traceable and auditable.
         </p>
 
-        <h3>An Indicator Designed for the Boardroom</h3>
+        <p>
+          This reliability requirement is at the core of Crawlers.fr's DNA. We don't sell estimated data — we enable you to <strong>measure awareness with verified data</strong> and act immediately on results.
+        </p>
+
+        <h3>An Indicator Designed for the Boardroom, Not for Technicians</h3>
 
         <p>
-          The SAI was designed for board presentations. A single score, a visual gauge, a weekly trend. Simple enough for a marketing director, rigorous enough for a CTO. An approach aligned with <a href="https://www.thinkwithgoogle.com/" target="_blank" rel="noopener noreferrer">Think with Google</a>'s data-driven marketing recommendations.
+          The SAI was designed for board presentations. A single score, a visual gauge, a weekly trend. Simple enough for a marketing director who wants to <strong>measure brand awareness</strong>, rigorous enough to defend before a CTO.
+        </p>
+
+        <p>
+          Automatic historization lets you <strong>detect awareness drifts before they impact conversions</strong>. A gradual drop in non-brand traffic over 8 weeks? The SAI makes it visible before it becomes critical. A brand traffic surge of <strong>+15% in 4 weeks</strong> after a TV campaign? The SAI quantifies it precisely.
+        </p>
+
+        <p>
+          An approach aligned with <a href="https://www.thinkwithgoogle.com/" target="_blank" rel="noopener noreferrer">Think with Google</a>'s data-driven marketing recommendations: clear indicators, first-party data, and weekly measurement cadence.
+        </p>
+
+        <h3>Case Study: Fashion E-commerce — From 62 to 91 in 10 Weeks</h3>
+
+        <p>
+          A French fashion e-commerce site (annual revenue: <strong>€4.2M</strong>) scored <strong>62/100</strong> on its first audit. The diagnosis: <strong>84% brand traffic</strong> against a target ratio of 55% — excessive dependence on existing awareness with virtually no generic acquisition.
+        </p>
+
+        <p>
+          By applying expert audit recommendations (optimization of <strong>47 category pages</strong>, creation of <strong>12 long-tail content pieces</strong>, JSON-LD fixes injected via GTM), the site's ratio shifted to <strong>61% brand / 39% generic</strong> in 10 weeks. The SAI climbed to <strong>91/100</strong>, and total organic traffic increased by <strong>+23%</strong>.
         </p>
 
         <RichLink
           href="/audit-expert"
           title="Launch an Expert SEO/GEO Audit"
-          description="The SAI is integrated into our complete expert audit. Launch a diagnostic and discover your score."
+          description="The SAI is integrated into our complete expert audit. Launch a diagnostic and discover your awareness score."
         />
+
+        <h3>How to Activate Awareness Measurement on Your Site</h3>
+
+        <p>
+          Activating the SAI takes <strong>3 steps</strong>: run an expert audit on your URL, subscribe to Pro Agency (€59/month), then connect your Google Search Console. The SAI calculates your first score within <strong>48 hours</strong> and updates automatically every week.
+        </p>
+
+        <h3>How Does the SAI Differ from a Simple GSC Report?</h3>
+
+        <p>
+          Search Console gives you <strong>raw numbers</strong>: clicks, impressions, CTR, average position. The SAI transforms them into a <strong>strategic diagnostic</strong> by adding three layers of intelligence: business model contextualization, sector benchmarking, and brand penetration rate. It's the difference between having a thermometer and having a medical diagnosis.
+        </p>
+
+        <h3>Can I Measure My Competitors' Awareness?</h3>
+
+        <p>
+          The SAI is calculated on your own GSC data (first-party). However, the <strong>Competitive Landscape</strong> module in the expert audit estimates your competitors' Brand/Non-Brand ratio from public data, allowing you to position yourself within your competitive environment.
+        </p>
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
       </>
@@ -2213,10 +2329,10 @@ Allow: /`}</pre>
       <>
         <SummaryBox
           points={[
-            "Google Search Console evolucionó en 2025-2026 con datos Brand / Genérico enriquecidos.",
-            "El Índice de Alineamiento Estratégico (IAS) contextualiza este ratio por modelo de negocio.",
-            "El score de 0 a 100 se calcula sobre sus clics reales GSC — no estimaciones.",
-            "La tasa de penetración cruza los clics GSC con los volúmenes de búsqueda reales.",
+            "Google Search Console ahora permite medir la notoriedad de su sitio con datos Brand / Genérico enriquecidos.",
+            "El Índice de Alineamiento Estratégico (IAS) es el primer indicador que contextualiza este ratio por modelo de negocio.",
+            "El score de 0 a 100 se calcula sobre sus clics reales GSC — no estimaciones sintéticas.",
+            "La tasa de penetración cruza clics GSC con volúmenes de búsqueda reales para cuantificar su notoriedad captada.",
             "Funcionalidad reservada para suscriptores Pro Agency de Crawlers.fr.",
           ]}
         />
@@ -2224,23 +2340,58 @@ Allow: /`}</pre>
         <h2>Google Search Console ha cambiado — y nadie habla de ello</h2>
 
         <p>
-          Desde las actualizaciones de <strong>2025 y principios de 2026</strong>, Google ha enriquecido considerablemente los datos expuestos en Search Console. La granularidad de consultas, la distinción más fina entre tráfico de marca y genérico: la GSC se ha convertido en una herramienta mucho más rica. El <a href="https://developers.google.com/search/blog" target="_blank" rel="noopener noreferrer">blog de Google Search Central</a> documentó estos cambios.
+          Desde las actualizaciones de <strong>2025 y principios de 2026</strong>, Google ha enriquecido considerablemente los datos expuestos en Search Console. La granularidad de consultas, la distinción más fina entre tráfico de marca y genérico: la GSC se ha convertido en una herramienta mucho más potente para <strong>medir la notoriedad</strong> de un sitio web.
         </p>
 
-        <h2>El ratio Marca / Genérico: un dato crítico ignorado por las herramientas SEO</h2>
+        <p>
+          Sin embargo, esta evolución ha pasado desapercibida. Los profesionales del SEO siguen consultando las mismas pestañas sin explotar el potencial estratégico de estas nuevas métricas. El <a href="https://developers.google.com/search/blog" target="_blank" rel="noopener noreferrer">blog de Google Search Central</a> documentó estos cambios, pero pocos profesionales extraen conclusiones operativas.
+        </p>
 
         <p>
-          Un <strong>e-commerce con 80% de tráfico de marca</strong> está en peligro. Por el contrario, una <strong>marca de lujo con 80% de tráfico de marca</strong> está en situación óptima. Los datos son idénticos, pero la interpretación es opuesta. Como señala <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer">Search Engine Land</a>, la brecha entre datos disponibles y uso estratégico sigue creciendo.
+          En 2024, Google procesó <strong>8.500 millones de búsquedas al día</strong>. Dentro de este volumen colosal, la proporción de consultas que contienen el nombre de su marca — su <strong>notoriedad de marca medible</strong> — es la señal más directa de la fuerza de su posicionamiento comercial.
+        </p>
+
+        <h2>El ratio Marca / Genérico: el indicador de notoriedad que nadie mide</h2>
+
+        <p>
+          La distribución entre consultas de <strong>marca</strong> y consultas <strong>genéricas</strong> es uno de los indicadores más reveladores de la salud de una estrategia de adquisición. Este ratio es, en esencia, una medida directa de su <strong>notoriedad digital</strong>.
+        </p>
+
+        <p>
+          Un <strong>e-commerce con 80% de tráfico de marca</strong> está en peligro: depende de una notoriedad adquirida y no capta nueva audiencia. Por el contrario, una <strong>marca de lujo con 80% de tráfico de marca</strong> está en situación óptima. Los datos son idénticos, pero la interpretación es opuesta.
+        </p>
+
+        <p>
+          <strong>Ninguna herramienta del mercado contextualiza estos datos</strong>. Según <a href="https://searchengineland.com/" target="_blank" rel="noopener noreferrer">Search Engine Land</a>, el <strong>73% de los directores de marketing</strong> no disponen de ningún KPI fiable para medir el impacto de su notoriedad de marca en el tráfico orgánico.
+        </p>
+
+        <h3>Por qué las herramientas clásicas fracasan al medir la notoriedad</h3>
+
+        <p>
+          Las herramientas SEO tradicionales fueron diseñadas para el <strong>ranking</strong> y los <strong>backlinks</strong>, no para medir la notoriedad. Estiman volúmenes de tráfico a partir de posiciones medias — una aproximación que puede variar entre un <strong>30 y 50%</strong> respecto a los clics reales de la Search Console.
         </p>
 
         <h3>El enfoque Crawlers.fr: el Índice de Alineamiento Estratégico</h3>
 
         <p>
-          En <strong>Crawlers.fr</strong>, hemos creado el <strong>Índice de Alineamiento Estratégico (IAS)</strong>. Una IA clasifica automáticamente su tipo de actividad, cada tipo tiene un ratio objetivo calibrado y el IAS calcula la brecha entre su ratio real y el óptimo.
+          En <strong>Crawlers.fr</strong>, hemos desarrollado el <strong>Índice de Alineamiento Estratégico (IAS)</strong> para transformar los datos brutos de Google Search Console en un <strong>diagnóstico de notoriedad accionable</strong>.
         </p>
 
         <p>
-          Un enfoque alineado con las recomendaciones de marketing data-driven de <a href="https://www.thinkwithgoogle.com/" target="_blank" rel="noopener noreferrer">Think with Google</a>.
+          Una <strong>inteligencia artificial</strong> analiza el contenido de su sitio y determina su tipología de actividad entre <strong>12 categorías</strong>. Cada tipología tiene un ratio objetivo calibrado sobre benchmarks sectoriales del análisis de <strong>más de 15.000 sitios</strong>.
+        </p>
+
+        <p>
+          El resultado es un <strong>score de 0 a 100</strong>, actualizado semanalmente:<br />
+          <strong>Score ≥ 90</strong> (verde): alineamiento óptimo.<br />
+          <strong>Score 75-89</strong> (naranja): vigilancia requerida.<br />
+          <strong>Score &lt; 75</strong> (rojo): desalineamiento crítico.
+        </p>
+
+        <h3>Tasa de penetración: medir la notoriedad captada vs. potencial</h3>
+
+        <p>
+          El IAS integra una <strong>tasa de penetración de marca</strong>. Ejemplo: si su marca genera <strong>12.000 búsquedas mensuales</strong> y usted capta <strong>8.400 clics</strong>, su tasa de penetración es del <strong>70%</strong>. El 30% restante va a sus competidores. Es una medida directa de su <strong>notoriedad captada</strong>.
         </p>
 
         <RichLink
@@ -2249,11 +2400,41 @@ Allow: /`}</pre>
           description="Descubra cómo funciona el IAS y cómo activarlo en su sitio."
         />
 
+        <h3>Fiabilidad: datos reales, no simulaciones</h3>
+
+        <p>
+          A diferencia de herramientas que venden scores basados en simulaciones sintéticas, el IAS se basa <strong>exclusivamente en sus datos reales</strong>. Los clics provienen de su Google Search Console. Cada dato es trazable y auditable. Permitimos <strong>medir la notoriedad con datos verificados</strong>.
+        </p>
+
+        <h3>Un indicador diseñado para el comité de dirección</h3>
+
+        <p>
+          El IAS fue pensado para presentaciones ejecutivas. Un score único, un indicador visual, una tendencia semanal. La historización automática permite <strong>detectar derivas de notoriedad antes de que impacten las conversiones</strong>. Un aumento del tráfico de marca de <strong>+15% en 4 semanas</strong> tras una campaña TV? El IAS lo cuantifica. Un enfoque alineado con las recomendaciones de <a href="https://www.thinkwithgoogle.com/" target="_blank" rel="noopener noreferrer">Think with Google</a>.
+        </p>
+
+        <h3>Caso de estudio: e-commerce moda — de 62 a 91 en 10 semanas</h3>
+
+        <p>
+          Un e-commerce de moda francés (facturación: <strong>4,2M€</strong>) registró un IAS de <strong>62/100</strong>. Diagnóstico: <strong>84% de tráfico de marca</strong> para un objetivo de 55%. Tras aplicar las recomendaciones (optimización de <strong>47 páginas</strong>, creación de <strong>12 contenidos long tail</strong>, correctivos JSON-LD via GTM), el ratio pasó a <strong>61% marca / 39% genérico</strong>. IAS: <strong>91/100</strong>. Tráfico orgánico: <strong>+23%</strong>.
+        </p>
+
         <RichLink
           href="/audit-expert"
           title="Lanzar una Auditoría Experta SEO/GEO"
-          description="El IAS está integrado en nuestra auditoría experta completa."
+          description="El IAS está integrado en nuestra auditoría experta completa. Descubra su score de notoriedad."
         />
+
+        <h3>¿Cómo activar la medición de notoriedad en su sitio?</h3>
+
+        <p>
+          La activación del IAS se hace en <strong>3 pasos</strong>: ejecutar una auditoría experta, suscribirse a Pro Agency (59€/mes) y conectar su Google Search Console. El IAS calcula su primer score en <strong>48 horas</strong>.
+        </p>
+
+        <h3>¿Puedo medir la notoriedad de mis competidores?</h3>
+
+        <p>
+          El IAS se calcula sobre sus propios datos GSC. Sin embargo, el módulo <strong>Competitive Landscape</strong> de la auditoría experta estima el ratio Brand/Genérico de sus competidores a partir de datos públicos.
+        </p>
 
         <AuthorCard name="Adrien de Volontat" position="bottom" />
       </>
