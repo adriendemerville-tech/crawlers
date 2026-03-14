@@ -434,7 +434,7 @@ Deno.serve(async (req) => {
       console.warn(`[refresh-serp-all] ⚠️ ${stats.gsc_expired} site(s) with EXPIRED GSC tokens — users should reconnect`)
     }
 
-    console.log(`[refresh-serp-all] Batch done: ${refreshed}/${sites.length} refreshed, ${errors} errors. SERP:${stats.serp} GSC:${stats.gsc} BL:${stats.backlinks} GSC_expired:${stats.gsc_expired}${nextCursor ? ` | next_cursor: ${nextCursor}` : ' | COMPLETE'}`)
+    console.log(`[refresh-serp-all] Batch done: ${refreshed}/${sites.length} refreshed, ${errors} errors. SERP:${stats.serp} GSC:${stats.gsc} BL:${stats.backlinks} GA4:${stats.ga4} GSC_expired:${stats.gsc_expired}${nextCursor ? ` | next_cursor: ${nextCursor}` : ' | COMPLETE'}`)
 
     // ═══ SELF-RE-INVOCATION: continue processing remaining sites ═══
     if (nextCursor) {
