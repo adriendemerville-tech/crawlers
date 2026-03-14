@@ -2637,6 +2637,50 @@ export type Database = {
           },
         ]
       }
+      site_script_rules_history: {
+        Row: {
+          created_at: string
+          domain_id: string
+          id: string
+          payload_data: Json
+          payload_type: string
+          rule_id: string
+          url_pattern: string
+          user_id: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          domain_id: string
+          id?: string
+          payload_data?: Json
+          payload_type: string
+          rule_id: string
+          url_pattern: string
+          user_id: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          domain_id?: string
+          id?: string
+          payload_data?: Json
+          payload_type?: string
+          rule_id?: string
+          url_pattern?: string
+          user_id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_script_rules_history_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "site_script_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solution_library: {
         Row: {
           category: string | null
