@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, X, RefreshCw, ArrowRightLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { t3 } from '@/utils/i18n';
 
 interface FallbackInfo {
   count: number;
@@ -15,6 +17,7 @@ export function ApiGatewayFallbackAlert() {
   const [info, setInfo] = useState<FallbackInfo | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { language } = useLanguage();
 
   const fetchFallbacks = async () => {
     setLoading(true);
@@ -58,6 +61,8 @@ export function ApiGatewayFallbackAlert() {
 
   if (loading || !info || dismissed) return null;
 
+  const locale = language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US';
+
   return (
     <div className="relative rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 mb-6">
       <button
@@ -71,26 +76,26 @@ export function ApiGatewayFallbackAlert() {
         <ArrowRightLeft className="h-5 w-5 text-amber-600 mt-0.5 shrink-0 animate-pulse" />
         <div className="space-y-1 pr-6">
           <p className="font-semibold text-amber-700 dark:text-amber-400">
-            ⚡ API Fallback actif — {info.lastPrimary} → {info.lastFallback}
+            ⚡ {t3(language, 'API Fallback actif', 'API Fallback active', 'API Fallback activo')} — {info.lastPrimary} → {info.lastFallback}
           </p>
           <p className="text-sm text-amber-700/80 dark:text-amber-400/80">
-            <strong>{info.count}</strong> bascule{info.count > 1 ? 's' : ''} dans les 6 dernières heures.
-            Modèle : <code className="text-xs bg-amber-500/10 px-1 rounded">{info.lastModel}</code>
-            — Code HTTP : <code className="text-xs bg-amber-500/10 px-1 rounded">{info.lastStatusCode}</code>
+            <strong>{info.count}</strong> {t3(language, `bascule${info.count > 1 ? 's' : ''} dans les 6 dernières heures`, `switch${info.count > 1 ? 'es' : ''} in the last 6 hours`, `cambio${info.count > 1 ? 's' : ''} en las últimas 6 horas`)}.
+            {' '}{t3(language, 'Modèle', 'Model', 'Modelo')} : <code className="text-xs bg-amber-500/10 px-1 rounded">{info.lastModel}</code>
+            — {t3(language, 'Code HTTP', 'HTTP Code', 'Código HTTP')} : <code className="text-xs bg-amber-500/10 px-1 rounded">{info.lastStatusCode}</code>
           </p>
           <p className="text-xs text-muted-foreground">
             {info.lastStatusCode === 402
-              ? 'Crédits OpenRouter épuisés — les requêtes passent par Lovable AI.'
-              : 'Rate limit atteint — basculement automatique sur le gateway secondaire.'}
+              ? t3(language, 'Crédits OpenRouter épuisés — les requêtes passent par Lovable AI.', 'OpenRouter credits exhausted — requests routed through Lovable AI.', 'Créditos OpenRouter agotados — las solicitudes pasan por Lovable AI.')
+              : t3(language, 'Rate limit atteint — basculement automatique sur le gateway secondaire.', 'Rate limit reached — automatic fallback to secondary gateway.', 'Límite de tasa alcanzado — cambio automático al gateway secundario.')}
           </p>
           <p className="text-xs text-muted-foreground">
-            Dernier incident : {new Date(info.lastAt).toLocaleString('fr-FR')}
+            {t3(language, 'Dernier incident', 'Last incident', 'Último incidente')} : {new Date(info.lastAt).toLocaleString(locale)}
           </p>
           <button
             onClick={fetchFallbacks}
             className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 hover:text-amber-700 transition-colors"
           >
-            <RefreshCw className="h-3 w-3" /> Actualiser
+            <RefreshCw className="h-3 w-3" /> {t3(language, 'Actualiser', 'Refresh', 'Actualizar')}
           </button>
         </div>
       </div>

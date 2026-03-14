@@ -16,7 +16,7 @@ export function useCanonicalHreflang(path: string = '/') {
   useEffect(() => {
     const basePath = path === '/' ? '' : path;
     
-    // Build canonical: FR has no query param, EN/ES have ?lang=xx
+    // Strip any ?tab= or other non-lang query params — only ?lang= is canonical
     const canonicalUrl = language === 'fr'
       ? `${SITE_URL}${basePath || '/'}`
       : `${SITE_URL}${basePath || '/'}?lang=${language}`;

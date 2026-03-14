@@ -13,8 +13,48 @@ import { GA4OAuthToggle } from './GA4OAuthToggle';
 import { CiTestsDashboard } from './CiTestsDashboard';
 import { AffiliateManagement } from './AffiliateManagement';
 import { IntelligenceHub } from './IntelligenceHub';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+const adminTranslations = {
+  fr: {
+    users: 'Utilisateurs',
+    blog: 'Blog',
+    analytics: 'Statistiques',
+    intelligence: 'Intelligence',
+    crawls: 'Crawls',
+    support: 'SAV',
+    ciTests: 'CI Tests',
+    affiliates: 'Affiliation',
+    docs: 'Docs',
+  },
+  en: {
+    users: 'Users',
+    blog: 'Blog',
+    analytics: 'Analytics',
+    intelligence: 'Intelligence',
+    crawls: 'Crawls',
+    support: 'Support',
+    ciTests: 'CI Tests',
+    affiliates: 'Affiliates',
+    docs: 'Docs',
+  },
+  es: {
+    users: 'Usuarios',
+    blog: 'Blog',
+    analytics: 'Estadísticas',
+    intelligence: 'Inteligencia',
+    crawls: 'Crawls',
+    support: 'Soporte',
+    ciTests: 'CI Tests',
+    affiliates: 'Afiliación',
+    docs: 'Docs',
+  },
+};
 
 export function AdminDashboard() {
+  const { language } = useLanguage();
+  const t = adminTranslations[language] || adminTranslations.fr;
+
   return (
     <div className="space-y-6">
       <DemoModeToggle />
@@ -26,39 +66,39 @@ export function AdminDashboard() {
         <TabsList className="w-full flex flex-wrap h-auto gap-1">
           <TabsTrigger value="users" className="flex-1 gap-2">
             <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Utilisateurs</span>
+            <span className="hidden sm:inline">{t.users}</span>
           </TabsTrigger>
           <TabsTrigger value="blog" className="flex-1 gap-2">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Blog</span>
+            <span className="hidden sm:inline">{t.blog}</span>
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex-1 gap-2">
             <BarChart3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Statistiques</span>
+            <span className="hidden sm:inline">{t.analytics}</span>
           </TabsTrigger>
           <TabsTrigger value="intelligence" className="flex-1 gap-2">
             <Cpu className="h-4 w-4" />
-            <span className="hidden sm:inline">Intelligence</span>
+            <span className="hidden sm:inline">{t.intelligence}</span>
           </TabsTrigger>
           <TabsTrigger value="crawls" className="flex-1 gap-2">
             <Globe className="h-4 w-4" />
-            <span className="hidden sm:inline">Crawls</span>
+            <span className="hidden sm:inline">{t.crawls}</span>
           </TabsTrigger>
           <TabsTrigger value="support" className="flex-1 gap-2">
             <MessageCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">SAV</span>
+            <span className="hidden sm:inline">{t.support}</span>
           </TabsTrigger>
           <TabsTrigger value="ci-tests" className="flex-1 gap-2">
             <FlaskConical className="h-4 w-4" />
-            <span className="hidden sm:inline">CI Tests</span>
+            <span className="hidden sm:inline">{t.ciTests}</span>
           </TabsTrigger>
           <TabsTrigger value="affiliates" className="flex-1 gap-2">
             <Link2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Affiliation</span>
+            <span className="hidden sm:inline">{t.affiliates}</span>
           </TabsTrigger>
           <TabsTrigger value="docs" className="flex-1 gap-2">
             <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Docs</span>
+            <span className="hidden sm:inline">{t.docs}</span>
           </TabsTrigger>
         </TabsList>
 
