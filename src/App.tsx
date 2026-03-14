@@ -57,6 +57,7 @@ const SiteCrawl = lazy(() => import("./pages/SiteCrawl"));
 const AuditCompare = lazy(() => import("./pages/AuditCompare"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const IndiceAlignementStrategique = lazy(() => import("./pages/IndiceAlignementStrategique"));
+const ArchitecteGeneratif = lazy(() => import("./pages/ArchitecteGeneratif"));
 
 // Loading fallback
 const PageLoader = () => (
