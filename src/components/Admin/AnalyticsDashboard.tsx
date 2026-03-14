@@ -479,15 +479,21 @@ export function AnalyticsDashboard() {
         .slice(0, 10);
       setTopPages(sortedPages);
 
-      // Fetch analyzed URLs
-      const { data: urlsData, count: urlsCount } = await supabase
+      // Fetch analyzed URLs — exclude domains from tracked_sites (automatic monitoring scans)
+      const { data: trackedSites } = await supabase
+        .from('tracked_sites')
+        .select('domain');
+      const trackedDomains = new Set((trackedSites || []).map(s => s.domain?.toLowerCase()).filter(Boolean));
+
+      const { data: urlsDataRaw } = await supabase
         .from('analyzed_urls')
-        .select('*', { count: 'exact' })
+        .select('*')
         .order('last_analyzed_at', { ascending: false })
-        .limit(100);
-      
-      setAnalyzedUrlsCount(urlsCount || 0);
-      setAnalyzedUrls(urlsData || []);
+        .limit(500);
+
+      const filteredUrls = (urlsDataRaw || []).filter(u => !trackedDomains.has(u.domain?.toLowerCase()));
+      setAnalyzedUrlsCount(filteredUrls.length);
+      setAnalyzedUrls(filteredUrls.slice(0, 100));
 
       // Fetch error events with user emails
       const errorEventsRaw = events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final');
