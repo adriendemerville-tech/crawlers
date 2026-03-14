@@ -38,6 +38,7 @@ const adminTranslations = {
     support: 'Support',
     ciTests: 'CI Tests',
     affiliates: 'Affiliates',
+    scripts: 'Scripts',
     docs: 'Docs',
   },
   es: {
