@@ -490,9 +490,9 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Count how many metrics are statistically significant
-        const sigCount = [metrics.position, metrics.etv, metrics.top_10]
-          .filter(m => m.significant).length;
+        // Count how many metrics are statistically significant (now 4 possible)
+        const allMetrics = [metrics.position, metrics.etv, metrics.top_10, metrics.engagement].filter(Boolean);
+        const sigCount = allMetrics.filter(m => m?.significant).length;
 
         // ── Upsert ──
         const { error: upsertError } = await supabase
@@ -521,10 +521,12 @@ Deno.serve(async (req) => {
             best_lag_etv: metrics.etv.best_lag,
             best_lag_top10: metrics.top_10.best_lag,
             llm_breakdown: llmBreakdown,
-            ga4_engagement: ga4Engagement ? {
-              ...ga4Engagement,
-              correlation_insight: ga4CorrelationInsight,
-            } : null,
+            // v3: GA4 engagement correlation
+            pearson_engagement_vs_llm: metrics.engagement?.pearson ?? null,
+            spearman_engagement_vs_llm: metrics.engagement?.spearman ?? null,
+            p_value_engagement: metrics.engagement?.p_value ?? null,
+            best_lag_engagement: metrics.engagement?.best_lag ?? 0,
+            ga4_engagement: ga4CorrelationInsight,
           }, {
             onConflict: 'tracked_site_id',
             ignoreDuplicates: false,
@@ -535,9 +537,10 @@ Deno.serve(async (req) => {
         } else {
           processed++;
           results.push({ domain: site.domain, label, index, weeks: commonWeeks.length, significant_metrics: sigCount });
+          const engLabel = metrics.engagement?.significant ? `eng:r=${metrics.engagement.pearson},lag=${metrics.engagement.best_lag}w` : 'eng:n/a';
           console.log(
-            `[${site.domain}] ✅ ${label} (idx:${index}, ${commonWeeks.length}w, sig:${sigCount}/3, ` +
-            `lag_pos:${metrics.position.best_lag}w, r_pos=${metrics.position.pearson}, ρ_pos=${metrics.position.spearman}, p=${metrics.position.p_value})`
+            `[${site.domain}] ✅ ${label} (idx:${index}, ${commonWeeks.length}w, sig:${sigCount}/4, ` +
+            `lag_pos:${metrics.position.best_lag}w, r_pos=${metrics.position.pearson}, ${engLabel})`
           );
         }
       } catch (e) {
