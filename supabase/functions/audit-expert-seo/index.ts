@@ -1456,6 +1456,12 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const clientIp = getClientIp(req);
+  const ipCheck = checkIpRate(clientIp, 'audit-expert-seo', 15, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
+  if (!acquireConcurrency('audit-expert-seo', 40)) return concurrencyResponse(corsHeaders);
+
   try {
     const { url, lang } = await req.json();
     const outputLang = lang || 'fr';
