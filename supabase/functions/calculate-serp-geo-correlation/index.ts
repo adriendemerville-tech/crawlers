@@ -235,13 +235,17 @@ function classifyConvergence(metrics: MetricCorrelations, weeks: number): Conver
 
   // Position: invert sign (lower position = better = positive effect)
   if (metrics.position.significant && metrics.position.pearson !== null) {
-    significantValues.push({ value: -metrics.position.pearson, weight: 0.4 });
+    significantValues.push({ value: -metrics.position.pearson, weight: 0.35 });
   }
   if (metrics.etv.significant && metrics.etv.pearson !== null) {
-    significantValues.push({ value: metrics.etv.pearson, weight: 0.35 });
+    significantValues.push({ value: metrics.etv.pearson, weight: 0.30 });
   }
   if (metrics.top_10.significant && metrics.top_10.pearson !== null) {
-    significantValues.push({ value: metrics.top_10.pearson, weight: 0.25 });
+    significantValues.push({ value: metrics.top_10.pearson, weight: 0.20 });
+  }
+  // 4th dimension: engagement (positive correlation = LLM visibility improves UX)
+  if (metrics.engagement?.significant && metrics.engagement.pearson !== null) {
+    significantValues.push({ value: metrics.engagement.pearson, weight: 0.15 });
   }
 
   if (significantValues.length === 0) {
