@@ -2803,5 +2803,7 @@ Deno.serve(async (req) => {
         _error: error instanceof Error ? error.message : 'Unknown error',
       },
     });
+  } finally {
+    releaseConcurrency('audit-strategique-ia');
   }
 });

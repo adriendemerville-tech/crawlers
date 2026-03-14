@@ -907,5 +907,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ success: false, reliabilityScore: 0, blockingError: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+  } finally {
+    releaseConcurrency('check-geo');
   }
 });
