@@ -166,6 +166,7 @@ const translations = {
     features: [
       { icon: 'Infinity', title: 'Unlimited reports', description: 'Run as many technical SEO, strategic, GEO and LLM audits as you want. No caps, no restrictions.' },
       { icon: 'Code2', title: 'Unlimited corrective code', description: 'Generate customized fix scripts for each client without consuming credits.' },
+      { icon: 'Layers', title: 'Multi-page corrective code', description: 'Configure different correction rules for each URL on your site. The Generative Architect automatically adapts the injected code page by page.' },
       { icon: 'Globe', title: 'Multi-page crawl included', description: '5,000 crawled pages/month included (Fair Use). Beyond that, purchase additional credits Pay-As-You-Go. Structure, SEO score/200, broken links, AI summary.' },
       { icon: 'BarChart3', title: '30 tracked URLs included', description: 'Track up to 30 domains with SEO, GEO and LLM KPIs updated daily from your console.' },
       { icon: 'TrendingUp', title: 'Strategic Alignment Index (SAI)', description: 'Automatically diagnose your GSC Brand / Non-Brand traffic balance by business model. Score, historization and sector benchmarks.' },
