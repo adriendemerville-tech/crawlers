@@ -2,6 +2,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { withCircuitBreaker } from '../_shared/circuitBreaker.ts'
+import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
+import { fetchGA4Engagement } from '../_shared/fetchGA4.ts'
 
 /**
  * refresh-serp-all  v2
