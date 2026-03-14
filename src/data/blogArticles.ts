@@ -757,7 +757,7 @@ export const blogArticles: BlogArticle[] = [
       es: 'Dashboard Google Search Console mostrando análisis Marca vs Genérico con el Índice de Alineamiento Estratégico',
     },
     author: 'Adrien de Volontat',
-    date: '2026-03-13',
+    date: '2026-03-14',
     summaryPoints: {
       fr: [
         'La Google Search Console a évolué en 2025-2026 avec des données enrichies sur le split Brand / Non-Brand.',
