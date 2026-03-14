@@ -115,6 +115,9 @@ export function ProfileSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const { playlistUri, savePlaylist, clearPlaylist } = useCustomPlaylist();
   const [playlistInput, setPlaylistInput] = useState('');
+  const [gscConnecting, setGscConnecting] = useState(false);
+
+  const gscConnected = !!profile?.gsc_access_token;
 
   useEffect(() => {
     if (profile) {
@@ -136,6 +139,25 @@ export function ProfileSettings() {
     } else {
       toast.success(t.saved);
       await refreshProfile();
+    }
+  };
+
+  const handleUpdateGscConnection = async () => {
+    if (!user) return;
+    setGscConnecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('gsc-auth', {
+        body: { action: 'login', user_id: user.id, frontend_origin: window.location.origin },
+      });
+      if (error) throw error;
+      if (data?.auth_url) {
+        window.location.href = data.auth_url;
+      }
+    } catch (err: any) {
+      console.error('GSC update error:', err);
+      toast.error(language === 'fr' ? 'Erreur de connexion' : language === 'es' ? 'Error de conexión' : 'Connection error');
+    } finally {
+      setGscConnecting(false);
     }
   };
 
