@@ -245,6 +245,7 @@ const translations = {
       ['Crawl multi-páginas', '5-30 créditos / crawl', '5 000 páginas/mes incluidas *'],
       ['URL seguidos', '—', '30 incluidos'],
       ['Código correctivo', '1 crédito / código', 'Ilimitado ∞'],
+      ['Correctivo multi-páginas', '—', '✓ Incluido'],
       ['Marca blanca', '—', '✓ Incluido'],
       ['Multi-cuentas', '—', '3 cuentas'],
       ['Soporte prioritario', '—', '✓ Incluido'],
