@@ -155,6 +155,12 @@ function FooterComponent() {
       href: '/integration-gtm',
       description: t3(language, 'Déployez vos correctifs via Google Tag Manager', 'Deploy your fixes via Google Tag Manager', 'Despliegue sus correcciones vía Google Tag Manager')
     },
+    {
+      label: t3(language, 'Architecte Génératif', 'Generative Architect', 'Arquitecto Generativo'),
+      href: '/architecte-generatif',
+      description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'),
+      gold: true
+    },
   ];
 
   const legalLinks = [
