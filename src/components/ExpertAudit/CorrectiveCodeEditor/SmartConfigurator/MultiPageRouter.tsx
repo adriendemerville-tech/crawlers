@@ -137,6 +137,7 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
   const [manualType, setManualType] = useState('GLOBAL_FIXES');
   const [saving, setSaving] = useState(false);
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
+  const [rulesWithVersion, setRulesWithVersion] = useState<Array<{ id: string; version: number; hasPrevious: boolean }>>([]);
 
   // Fetch the sitemap tree
   const fetchTree = useCallback(async () => {
