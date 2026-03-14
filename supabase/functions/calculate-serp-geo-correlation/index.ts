@@ -512,7 +512,10 @@ Deno.serve(async (req) => {
             best_lag_etv: metrics.etv.best_lag,
             best_lag_top10: metrics.top_10.best_lag,
             llm_breakdown: llmBreakdown,
-            ga4_engagement: ga4Engagement,
+            ga4_engagement: ga4Engagement ? {
+              ...ga4Engagement,
+              correlation_insight: ga4CorrelationInsight,
+            } : null,
           }, {
             onConflict: 'tracked_site_id',
             ignoreDuplicates: false,

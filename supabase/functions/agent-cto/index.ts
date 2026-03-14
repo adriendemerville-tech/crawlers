@@ -445,6 +445,7 @@ DONNÉES DE FIABILITÉ (statistiques mesurées sur de vrais utilisateurs) :
 - Fonction analysée : ${functionName}
 - Snapshots totaux : ${reliability.total_snapshots}
 - Snapshots avec données GSC : ${reliability.snapshots_with_gsc}
+- Snapshots avec données GA4 : ${reliability.snapshots_with_ga4}
 - Score d'impact moyen : ${reliability.avg_impact_score}/100
 - Distribution des grades : ${JSON.stringify(reliability.grade_distribution)}
 - Progression moyenne des plans d'action : ${reliability.avg_action_plan_progress}%
