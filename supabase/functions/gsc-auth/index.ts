@@ -178,6 +178,18 @@ Deno.serve(async (req) => {
   try {
     const { action, site_url, user_id, frontend_origin, start_date, end_date } = await req.json();
 
+    // Check if GA4 scope is enabled via system_config
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    let ga4Enabled = false;
+    const { data: ga4Config } = await supabase
+      .from('system_config')
+      .select('value')
+      .eq('key', 'ga4_oauth_enabled')
+      .maybeSingle();
+    if (ga4Config?.value && typeof ga4Config.value === 'object' && (ga4Config.value as any).active === true) {
+      ga4Enabled = true;
+    }
+
     // === LOGIN: Generate OAuth URL ===
     if (action === 'login') {
       // state carries user_id + frontend origin for the GET callback redirect
