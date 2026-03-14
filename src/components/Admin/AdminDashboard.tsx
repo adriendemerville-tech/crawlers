@@ -9,6 +9,7 @@ import { ApiGatewayFallbackAlert } from './ApiGatewayFallbackAlert';
 import { BackendDocumentation } from './BackendDocumentation';
 import { CrawlManagement } from './CrawlManagement';
 import { DemoModeToggle } from './DemoModeToggle';
+import { GA4OAuthToggle } from './GA4OAuthToggle';
 import { CiTestsDashboard } from './CiTestsDashboard';
 import { AffiliateManagement } from './AffiliateManagement';
 import { IntelligenceHub } from './IntelligenceHub';
@@ -17,6 +18,7 @@ export function AdminDashboard() {
   return (
     <div className="space-y-6">
       <DemoModeToggle />
+      <GA4OAuthToggle />
       <BrowserlessAlert />
       <ApiGatewayFallbackAlert />
 
