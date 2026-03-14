@@ -85,3 +85,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.calculate-ias]
     verify_jwt = false
+  [functions.agent-seo]
+    verify_jwt = false

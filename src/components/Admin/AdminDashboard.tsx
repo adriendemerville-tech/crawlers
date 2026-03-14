@@ -1,18 +1,17 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, FileText, BarChart3, MessageCircle, Shield, Brain, Bot, BookOpen, Globe, FlaskConical, Link2 } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
-import { PredictionsDashboard } from './PredictionEngine';
 import { BrowserlessAlert } from './BrowserlessAlert';
 import { ApiGatewayFallbackAlert } from './ApiGatewayFallbackAlert';
-import { CtoAgentDashboard } from './CtoAgentDashboard';
 import { BackendDocumentation } from './BackendDocumentation';
 import { CrawlManagement } from './CrawlManagement';
 import { DemoModeToggle } from './DemoModeToggle';
 import { CiTestsDashboard } from './CiTestsDashboard';
 import { AffiliateManagement } from './AffiliateManagement';
+import { IntelligenceHub } from './IntelligenceHub';
 
 export function AdminDashboard() {
   return (
@@ -35,13 +34,9 @@ export function AdminDashboard() {
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Statistiques</span>
           </TabsTrigger>
-          <TabsTrigger value="predictions" className="flex-1 gap-2">
-            <Brain className="h-4 w-4" />
-            <span className="hidden sm:inline">Prédictions</span>
-          </TabsTrigger>
-          <TabsTrigger value="cto-agent" className="flex-1 gap-2">
-            <Bot className="h-4 w-4" />
-            <span className="hidden sm:inline">Agent CTO</span>
+          <TabsTrigger value="intelligence" className="flex-1 gap-2">
+            <Cpu className="h-4 w-4" />
+            <span className="hidden sm:inline">Intelligence</span>
           </TabsTrigger>
           <TabsTrigger value="crawls" className="flex-1 gap-2">
             <Globe className="h-4 w-4" />
@@ -77,12 +72,8 @@ export function AdminDashboard() {
           <AnalyticsDashboard />
         </TabsContent>
 
-        <TabsContent value="predictions" forceMount className="data-[state=inactive]:hidden">
-          <PredictionsDashboard />
-        </TabsContent>
-
-        <TabsContent value="cto-agent" forceMount className="data-[state=inactive]:hidden">
-          <CtoAgentDashboard />
+        <TabsContent value="intelligence" forceMount className="data-[state=inactive]:hidden">
+          <IntelligenceHub />
         </TabsContent>
 
         <TabsContent value="docs" forceMount className="data-[state=inactive]:hidden">
