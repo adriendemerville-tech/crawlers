@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
         client_id: clientId,
         redirect_uri: REDIRECT_URI,
         response_type: 'code',
-        scope: 'https://www.googleapis.com/auth/webmasters.readonly',
+        scope: 'https://www.googleapis.com/auth/webmasters.readonly https://www.googleapis.com/auth/analytics.readonly',
         access_type: 'offline',
         prompt: 'consent',
         state: stateValue,
