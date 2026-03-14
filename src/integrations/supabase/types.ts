@@ -1812,6 +1812,7 @@ export type Database = {
           credits_balance: number
           email: string
           first_name: string
+          ga4_property_id: string | null
           gsc_access_token: string | null
           gsc_refresh_token: string | null
           gsc_site_url: string | null
@@ -1847,6 +1848,7 @@ export type Database = {
           credits_balance?: number
           email: string
           first_name: string
+          ga4_property_id?: string | null
           gsc_access_token?: string | null
           gsc_refresh_token?: string | null
           gsc_site_url?: string | null
@@ -1882,6 +1884,7 @@ export type Database = {
           credits_balance?: number
           email?: string
           first_name?: string
+          ga4_property_id?: string | null
           gsc_access_token?: string | null
           gsc_refresh_token?: string | null
           gsc_site_url?: string | null
