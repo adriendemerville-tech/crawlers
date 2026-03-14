@@ -25,6 +25,7 @@ interface ReliabilityProfile {
   function_name: string
   total_snapshots: number
   snapshots_with_gsc: number
+  snapshots_with_ga4: number
   avg_impact_score: number
   grade_distribution: Record<string, number>
   avg_action_plan_progress: number
