@@ -84,6 +84,10 @@ const translations = {
     totalUrls: 'URLs detected',
     cached: 'Cached data',
     rules: 'active rules',
+    version: 'v',
+    restore: 'Restore previous version',
+    restored: 'Previous version restored',
+    noHistory: 'No previous version available',
   },
   es: {
     title: 'Router Multi-Páginas',
