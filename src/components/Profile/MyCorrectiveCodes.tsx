@@ -236,101 +236,119 @@ export function MyCorrectiveCodes() {
         </TooltipProvider>
       </CardHeader>
       <CardContent>
-        {codes.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Code2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
-            <p className="font-medium">{t.empty}</p>
-            <p className="text-sm mt-1">{t.emptyDesc}</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {codes.map((code) => {
-              const isValidated = validatedIds.has(code.id);
-              const isValidating = validatingId === code.id;
+        <Tabs defaultValue="scripts" className="w-full">
+          <TabsList className="mb-3 h-8">
+            <TabsTrigger value="scripts" className="text-xs gap-1.5 h-7">
+              <Code2 className="w-3 h-3" />
+              {t.tabScripts}
+            </TabsTrigger>
+            <TabsTrigger value="history" className="text-xs gap-1.5 h-7">
+              <History className="w-3 h-3" />
+              {t.tabHistory}
+            </TabsTrigger>
+          </TabsList>
 
-              return (
-                <div
-                  key={code.id}
-                  className="group flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-medium truncate">{code.title}</h4>
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(code.created_at), 'dd MMM yyyy', { locale: dateLocale })}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                      <ExternalLink className="h-3 w-3" />
-                      <span className="truncate max-w-[200px]">{code.url}</span>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-1">
-                      {code.fixes_applied.slice(0, 4).map((fix: any, idx: number) => (
-                        <Badge
-                          key={idx}
-                          variant="secondary"
-                          className={`text-[10px] px-1.5 py-0 ${getCategoryColor(fix.category)}`}
+          <TabsContent value="scripts">
+            {codes.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Code2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                <p className="font-medium">{t.empty}</p>
+                <p className="text-sm mt-1">{t.emptyDesc}</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {codes.map((code) => {
+                  const isValidated = validatedIds.has(code.id);
+                  const isValidating = validatingId === code.id;
+
+                  return (
+                    <div
+                      key={code.id}
+                      className="group flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium truncate">{code.title}</h4>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(code.created_at), 'dd MMM yyyy', { locale: dateLocale })}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                          <ExternalLink className="h-3 w-3" />
+                          <span className="truncate max-w-[200px]">{code.url}</span>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-1">
+                          {code.fixes_applied.slice(0, 4).map((fix: any, idx: number) => (
+                            <Badge
+                              key={idx}
+                              variant="secondary"
+                              className={`text-[10px] px-1.5 py-0 ${getCategoryColor(fix.category)}`}
+                            >
+                              {fix.label}
+                            </Badge>
+                          ))}
+                          {code.fixes_applied.length > 4 && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                              +{code.fixes_applied.length - 4}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 ml-4">
+                        {isValidated ? (
+                          <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                            <Check className="w-3 h-3" /> {t.validated}
+                          </Badge>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+                            onClick={() => validateCode(code)}
+                            disabled={isValidating}
+                            aria-label={t.itWorks}
+                          >
+                            <ThumbsUp className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">{t.itWorks}</span>
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                          onClick={() => deleteCode(code.id)}
+                          aria-label="Supprimer le code"
                         >
-                          {fix.label}
-                        </Badge>
-                      ))}
-                      {code.fixes_applied.length > 4 && (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                          +{code.fixes_applied.length - 4}
-                        </Badge>
-                      )}
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          onClick={() => copyCode(code)}
+                          aria-label="Copier le code"
+                        >
+                          {copiedId === code.id ? (
+                            <Check className="h-4 w-4 text-green-500" aria-hidden="true" />
+                          ) : (
+                            <Copy className="h-4 w-4" aria-hidden="true" />
+                          )}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
 
-                  <div className="flex items-center gap-1 ml-4">
-                    {/* Feedback button: "Ça marche !" */}
-                    {isValidated ? (
-                      <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
-                        <Check className="w-3 h-3" /> {t.validated}
-                      </Badge>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
-                        onClick={() => validateCode(code)}
-                        disabled={isValidating}
-                        aria-label={t.itWorks}
-                      >
-                        <ThumbsUp className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">{t.itWorks}</span>
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                      onClick={() => deleteCode(code.id)}
-                      aria-label="Supprimer le code"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-primary"
-                      onClick={() => copyCode(code)}
-                      aria-label="Copier le code"
-                    >
-                      {copiedId === code.id ? (
-                        <Check className="h-4 w-4 text-green-500" aria-hidden="true" />
-                      ) : (
-                        <Copy className="h-4 w-4" aria-hidden="true" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+          <TabsContent value="history">
+            <MyScriptRulesHistory />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
