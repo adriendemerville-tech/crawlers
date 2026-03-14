@@ -95,7 +95,7 @@ export function ScriptKillSwitches() {
       for (const cfg of (configs || [])) {
         if (cfg.key === 'enable_multipage_router') setMultipageEnabled(cfg.value !== false);
         if (cfg.key === 'sdk_enabled') setSdkEnabled(cfg.value !== false);
-        if (cfg.key === 'sdk_blocked_domains') setBlockedDomains(Array.isArray(cfg.value) ? cfg.value : []);
+        if (cfg.key === 'sdk_blocked_domains') setBlockedDomains(Array.isArray(cfg.value) ? (cfg.value as string[]) : []);
       }
     } catch (err) {
       console.error('Error fetching kill switch config:', err);
