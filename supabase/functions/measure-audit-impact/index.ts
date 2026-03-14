@@ -82,10 +82,14 @@ interface CorrelationInput {
   actionPlanProgress: number
 }
 
-function computeCorrelation(input: CorrelationInput): { impact_score: number; reliability_grade: string; correlation_data: any } {
-  const { gscBaseline, gscCurrent, recosApplied, totalRecos, codeDeployed, actionPlanProgress } = input
+interface CorrelationInputV2 extends CorrelationInput {
+  ga4Baseline?: GA4Engagement | null
+  ga4Current?: GA4Engagement | null
+}
 
-  // If no GSC data, we can't compute real impact
+function computeCorrelation(input: CorrelationInputV2): { impact_score: number; reliability_grade: string; correlation_data: any } {
+  const { gscBaseline, gscCurrent, recosApplied, totalRecos, codeDeployed, actionPlanProgress, ga4Baseline, ga4Current } = input
+
   if (!gscBaseline || !gscCurrent) {
     return {
       impact_score: 0,
@@ -94,53 +98,95 @@ function computeCorrelation(input: CorrelationInput): { impact_score: number; re
     }
   }
 
-  // ─── Delta calculations ────────────────────────────────────────
+  // ─── GSC Delta calculations ────────────────────────────────────
   const clicksDelta = gscCurrent.total_clicks - gscBaseline.total_clicks
   const clicksDeltaPct = gscBaseline.total_clicks > 0
-    ? (clicksDelta / gscBaseline.total_clicks) * 100
-    : 0
+    ? (clicksDelta / gscBaseline.total_clicks) * 100 : 0
 
   const impressionsDelta = gscCurrent.total_impressions - gscBaseline.total_impressions
   const impressionsDeltaPct = gscBaseline.total_impressions > 0
-    ? (impressionsDelta / gscBaseline.total_impressions) * 100
-    : 0
+    ? (impressionsDelta / gscBaseline.total_impressions) * 100 : 0
 
   const ctrDelta = gscCurrent.avg_ctr - gscBaseline.avg_ctr
-  const positionDelta = gscBaseline.avg_position - gscCurrent.avg_position // positive = improvement
+  const positionDelta = gscBaseline.avg_position - gscCurrent.avg_position
 
-  // ─── Impact score (0-100) ──────────────────────────────────────
-  // Weighted combination of real metrics
-  const weights = {
-    clicks: 0.35,      // Traffic is king
-    impressions: 0.20,  // Visibility matters
-    ctr: 0.25,          // Engagement signal
-    position: 0.20,     // Ranking improvement
-  }
-
-  // Normalize each delta to a -100 to +100 scale
   const normalize = (delta: number, maxExpected: number) =>
     Math.max(-100, Math.min(100, (delta / maxExpected) * 100))
 
-  const clicksScore = normalize(clicksDeltaPct, 50)    // ±50% is max expected
+  const clicksScore = normalize(clicksDeltaPct, 50)
   const impressionsScore = normalize(impressionsDeltaPct, 50)
-  const ctrScore = normalize(ctrDelta * 100, 5)         // ±5pp CTR change
-  const positionScore = normalize(positionDelta, 10)     // ±10 positions
+  const ctrScore = normalize(ctrDelta * 100, 5)
+  const positionScore = normalize(positionDelta, 10)
+
+  // ─── GA4 Delta calculations (NEW) ─────────────────────────────
+  let ga4SessionsScore = 0
+  let ga4EngagementScore = 0
+  let ga4BounceScore = 0
+  let hasGa4 = false
+  const ga4Deltas: any = {}
+
+  if (ga4Baseline && ga4Current) {
+    hasGa4 = true
+
+    // Sessions delta
+    const sessionsDelta = ga4Current.sessions - ga4Baseline.sessions
+    const sessionsDeltaPct = ga4Baseline.sessions > 0
+      ? (sessionsDelta / ga4Baseline.sessions) * 100 : 0
+    ga4SessionsScore = normalize(sessionsDeltaPct, 50)
+
+    // Engagement rate delta (0-1 scale)
+    const engDelta = (ga4Current.engagement_rate - ga4Baseline.engagement_rate) * 100 // to pp
+    ga4EngagementScore = normalize(engDelta, 10) // ±10pp
+
+    // Bounce rate delta (inverted: lower = better)
+    const bounceDelta = (ga4Baseline.bounce_rate - ga4Current.bounce_rate) * 100
+    ga4BounceScore = normalize(bounceDelta, 10)
+
+    ga4Deltas.sessions = { absolute: sessionsDelta, pct: Math.round(sessionsDeltaPct * 10) / 10 }
+    ga4Deltas.engagement_rate = { delta_pp: Math.round(engDelta * 10) / 10 }
+    ga4Deltas.bounce_rate = { delta_pp: Math.round(-bounceDelta * 10) / 10, direction: bounceDelta > 0 ? 'improved' : 'declined' }
+    ga4Deltas.avg_session_duration = {
+      baseline: Math.round(ga4Baseline.avg_session_duration),
+      current: Math.round(ga4Current.avg_session_duration),
+    }
+  }
+
+  // ─── Blended impact score ─────────────────────────────────────
+  // With GA4: rebalance weights to include engagement signals
+  const weights = hasGa4 ? {
+    clicks: 0.25,
+    impressions: 0.15,
+    ctr: 0.15,
+    position: 0.15,
+    ga4_sessions: 0.10,
+    ga4_engagement: 0.10,
+    ga4_bounce: 0.10,
+  } : {
+    clicks: 0.35,
+    impressions: 0.20,
+    ctr: 0.25,
+    position: 0.20,
+    ga4_sessions: 0,
+    ga4_engagement: 0,
+    ga4_bounce: 0,
+  }
 
   const rawImpact =
     clicksScore * weights.clicks +
     impressionsScore * weights.impressions +
     ctrScore * weights.ctr +
-    positionScore * weights.position
+    positionScore * weights.position +
+    ga4SessionsScore * weights.ga4_sessions +
+    ga4EngagementScore * weights.ga4_engagement +
+    ga4BounceScore * weights.ga4_bounce
 
-  // Adjust for effort: more recos applied = more credit to the audit
   const effortMultiplier = totalRecos > 0
-    ? 0.5 + 0.5 * (recosApplied / totalRecos) // 0.5 to 1.0
-    : 0.75 // default if no recos tracked
+    ? 0.5 + 0.5 * (recosApplied / totalRecos)
+    : 0.75
   const codeBonus = codeDeployed ? 1.1 : 1.0
 
   const impact_score = Math.round(Math.max(-100, Math.min(100, rawImpact * effortMultiplier * codeBonus)))
 
-  // ─── Reliability grade ─────────────────────────────────────────
   let reliability_grade: string
   if (impact_score >= 30) reliability_grade = 'A'
   else if (impact_score >= 10) reliability_grade = 'B'
@@ -157,14 +203,21 @@ function computeCorrelation(input: CorrelationInput): { impact_score: number; re
         impressions: { absolute: impressionsDelta, pct: Math.round(impressionsDeltaPct * 10) / 10 },
         ctr: { absolute: Math.round(ctrDelta * 10000) / 100, unit: 'pp' },
         position: { absolute: Math.round(positionDelta * 10) / 10, direction: positionDelta > 0 ? 'improved' : 'declined' },
+        ...(hasGa4 ? { ga4: ga4Deltas } : {}),
       },
       scores: {
         clicks: Math.round(clicksScore),
         impressions: Math.round(impressionsScore),
         ctr: Math.round(ctrScore),
         position: Math.round(positionScore),
+        ...(hasGa4 ? {
+          ga4_sessions: Math.round(ga4SessionsScore),
+          ga4_engagement: Math.round(ga4EngagementScore),
+          ga4_bounce: Math.round(ga4BounceScore),
+        } : {}),
       },
       weights,
+      has_ga4: hasGa4,
       effort_multiplier: Math.round(effortMultiplier * 100) / 100,
       code_deployed: codeDeployed,
       action_plan_progress: Math.round(actionPlanProgress),
