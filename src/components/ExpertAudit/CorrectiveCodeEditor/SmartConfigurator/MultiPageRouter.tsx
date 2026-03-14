@@ -231,14 +231,14 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
           user_id: user.id,
           url_pattern: a.urlPattern,
           payload_type: a.payloadType,
-          payload_data: a.payloadData,
+          payload_data: a.payloadData as any,
           is_active: true,
           status: 'active',
         }));
 
         const { error } = await supabase
           .from('site_script_rules')
-          .insert(rows);
+          .insert(rows as any);
 
         if (error) throw error;
       }

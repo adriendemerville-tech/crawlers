@@ -111,7 +111,7 @@ export function ScriptKillSwitches() {
     try {
       await supabase
         .from('system_config')
-        .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+        .upsert({ key, value: value as any, updated_at: new Date().toISOString() } as any, { onConflict: 'key' });
 
       toast({ title: t.saved });
     } catch (err) {
