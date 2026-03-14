@@ -420,7 +420,7 @@ function FooterComponent() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
-            "name": "Crawlers AI",
+            "name": "Crawlers",
             "url": "https://crawlers.fr",
             "logo": "https://crawlers.fr/favicon.svg",
             "description": t3(language,
