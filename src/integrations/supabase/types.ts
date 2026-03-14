@@ -1197,6 +1197,45 @@ export type Database = {
         }
         Relationships: []
       }
+      google_connections: {
+        Row: {
+          access_token: string
+          created_at: string | null
+          ga4_property_id: string | null
+          google_email: string
+          gsc_site_urls: Json | null
+          id: string
+          refresh_token: string | null
+          token_expiry: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string | null
+          ga4_property_id?: string | null
+          google_email: string
+          gsc_site_urls?: Json | null
+          id?: string
+          refresh_token?: string | null
+          token_expiry?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string | null
+          ga4_property_id?: string | null
+          google_email?: string
+          gsc_site_urls?: Json | null
+          id?: string
+          refresh_token?: string | null
+          token_expiry?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       gsc_history_log: {
         Row: {
           avg_position: number | null
@@ -2714,6 +2753,7 @@ export type Database = {
           created_at: string
           current_config: Json
           domain: string
+          google_connection_id: string | null
           id: string
           last_audit_at: string | null
           last_widget_ping: string | null
@@ -2733,6 +2773,7 @@ export type Database = {
           created_at?: string
           current_config?: Json
           domain: string
+          google_connection_id?: string | null
           id?: string
           last_audit_at?: string | null
           last_widget_ping?: string | null
@@ -2752,6 +2793,7 @@ export type Database = {
           created_at?: string
           current_config?: Json
           domain?: string
+          google_connection_id?: string | null
           id?: string
           last_audit_at?: string | null
           last_widget_ping?: string | null
@@ -2762,7 +2804,15 @@ export type Database = {
           target_audience?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tracked_sites_google_connection_id_fkey"
+            columns: ["google_connection_id"]
+            isOneToOne: false
+            referencedRelation: "google_connections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       url_correction_decisions: {
         Row: {

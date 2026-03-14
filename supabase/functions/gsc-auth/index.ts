@@ -84,17 +84,83 @@ Deno.serve(async (req) => {
       const tokens = await tokenResp.json();
       const expiresAt = new Date(Date.now() + (tokens.expires_in || 3600) * 1000).toISOString();
 
-      // Store tokens in profile
+      // Fetch the Google email for this connection
+      let googleEmail = 'unknown';
+      try {
+        const infoResp = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+        });
+        if (infoResp.ok) {
+          const info = await infoResp.json();
+          googleEmail = info.email || 'unknown';
+        }
+      } catch (_) { /* best effort */ }
+
+      // Fetch GSC site list for this connection
+      let gscSiteUrls: string[] = [];
+      try {
+        const sitesResp = await fetch('https://www.googleapis.com/webmasters/v3/sites', {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+        });
+        if (sitesResp.ok) {
+          const { siteEntry = [] } = await sitesResp.json();
+          gscSiteUrls = siteEntry.map((s: any) => s.siteUrl);
+        }
+      } catch (_) { /* best effort */ }
+
+      // Upsert into google_connections (multi-account support)
+      await supabase.from('google_connections').upsert({
+        user_id: userId,
+        google_email: googleEmail,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token || null,
+        token_expiry: expiresAt,
+        gsc_site_urls: gscSiteUrls,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,google_email' });
+
+      // Also update profiles for backward compatibility
       await supabase.from('profiles').update({
         gsc_access_token: tokens.access_token,
         gsc_refresh_token: tokens.refresh_token || null,
         gsc_token_expiry: expiresAt,
       }).eq('user_id', userId);
 
+      // Auto-link tracked sites to this connection
+      const { data: conn } = await supabase
+        .from('google_connections')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('google_email', googleEmail)
+        .single();
+
+      if (conn) {
+        for (const siteUrl of gscSiteUrls) {
+          const bare = siteUrl
+            .replace(/^sc-domain:/, '')
+            .replace(/^https?:\/\//, '')
+            .replace(/^www\./, '')
+            .replace(/\/+$/, '')
+            .toLowerCase();
+          // Link any tracked_sites matching this domain
+          await supabase
+            .from('tracked_sites')
+            .update({ google_connection_id: conn.id })
+            .eq('user_id', userId)
+            .eq('domain', bare);
+          // Also try with www prefix
+          await supabase
+            .from('tracked_sites')
+            .update({ google_connection_id: conn.id })
+            .eq('user_id', userId)
+            .eq('domain', `www.${bare}`);
+        }
+      }
+
       // Redirect back to frontend with success
       return new Response(null, {
         status: 302,
-        headers: { Location: `${redirectBase}/console?gsc_connected=true` },
+        headers: { Location: `${redirectBase}/console?gsc_connected=true&google_email=${encodeURIComponent(googleEmail)}` },
       });
 
     } catch (e) {
