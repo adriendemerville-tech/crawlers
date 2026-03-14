@@ -445,7 +445,19 @@ Deno.serve(async (req) => {
           };
         }
 
-        const { index, label } = classifyConvergence(metrics, commonWeeks.length);
+        // Apply GA4 confidence modifier to convergence index
+        let { index, label } = classifyConvergence(metrics, commonWeeks.length);
+        if (ga4CorrelationInsight?.confidence_modifier && ga4CorrelationInsight.confidence_modifier !== 1.0) {
+          // Amplify or dampen the convergence signal based on engagement quality
+          const modifier = ga4CorrelationInsight.confidence_modifier;
+          const adjusted = Math.round((index - 50) * modifier + 50);
+          index = Math.max(0, Math.min(100, adjusted));
+          // Re-classify if threshold crossed
+          const weighted = (index - 50) / 50;
+          if (weighted > 0.4) label = 'convergent';
+          else if (weighted < -0.4) label = 'divergent';
+          else label = label; // keep original for borderline
+        }
 
         // ── Per-LLM breakdown ──
         const llmBreakdown: LlmBreakdown[] = [];
