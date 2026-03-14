@@ -274,10 +274,10 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
-    // Get user profile for GSC tokens
+    // Get user profile for GSC + GA4 tokens
     const { data: profile } = await supabase
       .from('profiles')
-      .select('gsc_access_token, gsc_refresh_token, gsc_token_expiry, gsc_site_url')
+      .select('gsc_access_token, gsc_refresh_token, gsc_token_expiry, gsc_site_url, ga4_property_id')
       .eq('user_id', user_id)
       .single()
 
@@ -291,8 +291,9 @@ Deno.serve(async (req) => {
 
     // ─── Parallel data collection ────────────────────────────────────
     let gscBaseline = null
+    let ga4Baseline = null
 
-    // GSC: only if user has connected
+    // GSC + GA4: only if user has connected
     if (profile?.gsc_access_token) {
       const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
       const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')!
@@ -306,7 +307,17 @@ Deno.serve(async (req) => {
         }
       }
 
-      gscBaseline = await fetchGscMetrics(accessToken, profile.gsc_site_url || url, domain)
+      // Fetch GSC + GA4 in parallel
+      const ga4Promise = profile.ga4_property_id
+        ? fetchGA4Baseline(accessToken, profile.ga4_property_id)
+        : Promise.resolve(null)
+
+      const [gscResult, ga4Result] = await Promise.all([
+        fetchGscMetrics(accessToken, profile.gsc_site_url || url, domain),
+        ga4Promise,
+      ])
+      gscBaseline = gscResult
+      ga4Baseline = ga4Result
     }
 
     // DataForSEO + PageSpeed in parallel
