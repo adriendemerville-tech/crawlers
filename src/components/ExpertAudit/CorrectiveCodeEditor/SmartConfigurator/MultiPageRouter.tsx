@@ -165,7 +165,7 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
     try {
       const { data } = await supabase
         .from('site_script_rules')
-        .select('url_pattern, payload_type, payload_data, is_active')
+        .select('id, url_pattern, payload_type, payload_data, is_active, version, previous_payload_data')
         .eq('domain_id', siteId)
         .eq('user_id', user.id)
         .eq('is_active', true);
@@ -176,11 +176,53 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
           payloadType: r.payload_type,
           payloadData: (r.payload_data as Record<string, unknown>) || {},
         })));
+        setRulesWithVersion(data.map(r => ({
+          id: r.id as string,
+          version: (r as any).version ?? 1,
+          hasPrevious: !!(r as any).previous_payload_data,
+        })));
       }
     } catch (err) {
       console.error('[MultiPageRouter] Error fetching rules:', err);
     }
   }, [siteId, user]);
+
+  // Restore a rule to its previous version
+  const handleRestore = async (index: number) => {
+    const meta = rulesWithVersion[index];
+    if (!meta?.hasPrevious || !meta.id) {
+      toast({ title: t.noHistory, variant: 'destructive' });
+      return;
+    }
+
+    try {
+      // Fetch the rule with previous_payload_data
+      const { data: rule } = await supabase
+        .from('site_script_rules')
+        .select('previous_payload_data')
+        .eq('id', meta.id)
+        .single();
+
+      if (!rule?.previous_payload_data) {
+        toast({ title: t.noHistory, variant: 'destructive' });
+        return;
+      }
+
+      // Update: set payload_data = previous_payload_data (trigger will auto-archive current)
+      const { error } = await supabase
+        .from('site_script_rules')
+        .update({ payload_data: rule.previous_payload_data as any })
+        .eq('id', meta.id);
+
+      if (error) throw error;
+
+      toast({ title: t.restored });
+      fetchExistingRules();
+    } catch (err) {
+      console.error('[MultiPageRouter] Restore error:', err);
+      toast({ title: 'Erreur', variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     fetchTree();
