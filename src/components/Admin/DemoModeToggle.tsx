@@ -5,15 +5,44 @@ import { Switch } from '@/components/ui/switch';
 import { Monitor, ShieldCheck, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+const translations = {
+  fr: {
+    title: 'Mode Démo',
+    active: 'ACTIF',
+    desc: 'Tolérance zéro erreur : suppression des erreurs front, retry auto, masquage des cards en échec',
+    enabled: 'Mode Démo activé — tolérance zéro erreur',
+    disabled: 'Mode Démo désactivé',
+    error: 'Erreur lors du changement de mode',
+  },
+  en: {
+    title: 'Demo Mode',
+    active: 'ACTIVE',
+    desc: 'Zero error tolerance: suppress front-end errors, auto retry, hide failed cards',
+    enabled: 'Demo Mode enabled — zero error tolerance',
+    disabled: 'Demo Mode disabled',
+    error: 'Error changing mode',
+  },
+  es: {
+    title: 'Modo Demo',
+    active: 'ACTIVO',
+    desc: 'Tolerancia cero errores: supresión de errores front, reintento auto, ocultación de cards fallidas',
+    enabled: 'Modo Demo activado — tolerancia cero errores',
+    disabled: 'Modo Demo desactivado',
+    error: 'Error al cambiar el modo',
+  },
+};
 
 export function DemoModeToggle() {
   const { isDemoMode } = useDemoMode();
+  const { language } = useLanguage();
+  const t = translations[language] || translations.fr;
   const [toggling, setToggling] = useState(false);
 
   const handleToggle = async (checked: boolean) => {
     setToggling(true);
     try {
-      // Upsert demo_mode in system_config
       const { error } = await supabase
         .from('system_config')
         .upsert(
@@ -22,10 +51,10 @@ export function DemoModeToggle() {
         );
 
       if (error) throw error;
-      toast.success(checked ? 'Mode Démo activé — tolérance zéro erreur' : 'Mode Démo désactivé');
+      toast.success(checked ? t.enabled : t.disabled);
     } catch (err) {
       console.error('Erreur toggle demo mode:', err);
-      toast.error('Erreur lors du changement de mode');
+      toast.error(t.error);
     } finally {
       setToggling(false);
     }
@@ -40,16 +69,16 @@ export function DemoModeToggle() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-sm">Mode Démo</h3>
+              <h3 className="font-semibold text-sm">{t.title}</h3>
               {isDemoMode && (
                 <span className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                   <ShieldCheck className="h-3 w-3" />
-                  ACTIF
+                  {t.active}
                 </span>
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Tolérance zéro erreur : suppression des erreurs front, retry auto, masquage des cards en échec
+              {t.desc}
             </p>
           </div>
         </div>
