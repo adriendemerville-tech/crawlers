@@ -100,6 +100,7 @@ const translations = {
     agencyFeatures: [
       'Audit expert illimité',
       'Code correctif illimité',
+      'Correctif multi-pages',
       'Crawl : 5 000 pages/mois incluses',
       '30 URL suivis inclus',
       'Marque Blanche (White Label)',
