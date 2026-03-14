@@ -77,6 +77,8 @@ const translations = {
     validated: 'Validado ✓',
     validatedToast: '¡Gracias! Script validado y añadido a la biblioteca probada.',
     validateError: 'Error al validar',
+    tabScripts: 'Scripts',
+    tabHistory: 'Historial',
   },
 };
 
