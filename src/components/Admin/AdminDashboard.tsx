@@ -26,6 +26,7 @@ const adminTranslations = {
     support: 'SAV',
     ciTests: 'CI Tests',
     affiliates: 'Affiliation',
+    scripts: 'Scripts',
     docs: 'Docs',
   },
   en: {
