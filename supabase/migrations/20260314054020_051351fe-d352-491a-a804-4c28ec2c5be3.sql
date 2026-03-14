@@ -1,0 +1,1 @@
+ALTER TABLE public.serp_geo_correlations ADD COLUMN IF NOT EXISTS ga4_engagement jsonb DEFAULT null;

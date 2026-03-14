@@ -49,7 +49,7 @@ async function getReliabilityProfile(supabase: any, functionName: string): Promi
   const [{ data: snapshots }, { data: trackedSites }] = await Promise.all([
     supabase
       .from('audit_impact_snapshots')
-      .select('impact_score, reliability_grade, action_plan_progress, corrective_code_deployed, gsc_baseline, measurement_phase, created_at')
+      .select('impact_score, reliability_grade, action_plan_progress, corrective_code_deployed, gsc_baseline, ga4_baseline, ga4_t90, measurement_phase, created_at')
       .eq('audit_type', mapFunctionToAuditType(functionName))
       .order('created_at', { ascending: false })
       .limit(100),
