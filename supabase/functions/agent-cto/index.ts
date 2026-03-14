@@ -518,6 +518,7 @@ Analyse cet audit en te basant UNIQUEMENT sur les données de fiabilité fournie
         reliability_profile: {
           total_snapshots: reliability.total_snapshots,
           snapshots_with_gsc: reliability.snapshots_with_gsc,
+          snapshots_with_ga4: reliability.snapshots_with_ga4,
           avg_impact_score: reliability.avg_impact_score,
           trend: reliability.trend,
           grade_distribution: reliability.grade_distribution,
