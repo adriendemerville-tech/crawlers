@@ -109,6 +109,10 @@ const translations = {
     totalUrls: 'URLs detectadas',
     cached: 'Datos en caché',
     rules: 'reglas activas',
+    version: 'v',
+    restore: 'Restaurar versión anterior',
+    restored: 'Versión anterior restaurada',
+    noHistory: 'No hay versión anterior disponible',
   },
 };
 
