@@ -335,6 +335,48 @@ Deno.serve(async (req) => {
 
         if (!serpRows?.length || !llmRows?.length) { skipped++; continue; }
 
+        // ── Fetch GA4 engagement for enrichment ──
+        let ga4Engagement: any = null;
+        const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
+        const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
+        if (clientId && clientSecret) {
+          const resolved = await resolveGoogleToken(supabase, site.user_id, site.domain, clientId, clientSecret);
+          if (resolved?.ga4_property_id) {
+            try {
+              const GA4_API = 'https://analyticsdata.googleapis.com/v1beta';
+              const endDate = new Date().toISOString().split('T')[0];
+              const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+              const resp = await fetch(`${GA4_API}/properties/${resolved.ga4_property_id}:runReport`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${resolved.access_token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  dateRanges: [{ startDate, endDate }],
+                  metrics: [
+                    { name: 'sessions' },
+                    { name: 'engagementRate' },
+                    { name: 'bounceRate' },
+                    { name: 'averageSessionDuration' },
+                  ],
+                }),
+              });
+              if (resp.ok) {
+                const data = await resp.json();
+                const row = data.rows?.[0];
+                if (row) {
+                  const v = row.metricValues || [];
+                  ga4Engagement = {
+                    sessions: parseInt(v[0]?.value || '0'),
+                    engagement_rate: parseFloat(v[1]?.value || '0'),
+                    bounce_rate: parseFloat(v[2]?.value || '0'),
+                    avg_session_duration: parseFloat(v[3]?.value || '0'),
+                  };
+                  trackPaidApiCall('calculate-serp-geo-correlation', 'google-ga4', 'runReport');
+                }
+              }
+            } catch (_) { /* GA4 best-effort */ }
+          }
+        }
+
         // ── Normalize SERP by ISO week ──
         const serpByWeek = new Map<string, WeeklySerp>();
         for (const row of serpRows) {
