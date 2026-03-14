@@ -301,7 +301,7 @@ const translations = {
   },
 };
 
-const agencyIcons = [Infinity, Infinity, Shield, ScanSearch, Shield, Users, Headphones];
+const agencyIcons = [Infinity, Infinity, Layers, Shield, ScanSearch, Shield, Users, Headphones];
 
 export default function Tarifs() {
   const { language } = useLanguage();
