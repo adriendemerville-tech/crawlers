@@ -450,19 +450,34 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
       {/* Active assignments list */}
       {assignments.length > 0 && (
         <div className="space-y-1">
-          {assignments.map((a, i) => (
-            <div key={i} className="flex items-center gap-2 text-xs bg-muted/50 rounded px-2 py-1.5">
-              <Badge variant="outline" className="text-[9px] font-mono">{a.urlPattern}</Badge>
-              <span className="text-muted-foreground">→</span>
-              <Badge className="text-[9px]">{PAYLOAD_TYPES.find(p => p.value === a.payloadType)?.label || a.payloadType}</Badge>
-              <button
-                onClick={() => removeAssignment(i)}
-                className="ml-auto text-muted-foreground hover:text-destructive"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+          {assignments.map((a, i) => {
+            const meta = rulesWithVersion[i];
+            return (
+              <div key={i} className="flex items-center gap-2 text-xs bg-muted/50 rounded px-2 py-1.5">
+                <Badge variant="outline" className="text-[9px] font-mono">{a.urlPattern}</Badge>
+                <span className="text-muted-foreground">→</span>
+                <Badge className="text-[9px]">{PAYLOAD_TYPES.find(p => p.value === a.payloadType)?.label || a.payloadType}</Badge>
+                {meta?.version > 1 && (
+                  <Badge variant="secondary" className="text-[8px] h-3.5 px-1">{t.version}{meta.version}</Badge>
+                )}
+                {meta?.hasPrevious && (
+                  <button
+                    onClick={() => handleRestore(i)}
+                    className="text-muted-foreground hover:text-primary"
+                    title={t.restore}
+                  >
+                    <Undo2 className="w-3 h-3" />
+                  </button>
+                )}
+                <button
+                  onClick={() => removeAssignment(i)}
+                  className="ml-auto text-muted-foreground hover:text-destructive"
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
