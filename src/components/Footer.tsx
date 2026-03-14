@@ -409,7 +409,7 @@ function FooterComponent() {
               </nav>
 
               <p className="text-xs text-muted-foreground">
-                © {new Date().getFullYear()} Crawlers AI - crawlers.fr | 
+                © {new Date().getFullYear()} Crawlers - crawlers.fr | 
                 {t3(language, ' Tous droits réservés', ' All rights reserved', ' Todos los derechos reservados')}
               </p>
             </div>
