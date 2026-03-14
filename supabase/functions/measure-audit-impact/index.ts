@@ -335,7 +335,7 @@ Deno.serve(async (req) => {
           updatePayload.next_measurement_at = null
         }
 
-        // If reaching T+90 or complete, compute final correlation
+        // If reaching T+90 or complete, compute final correlation with GA4
         if (phase.nextPhase === 'complete' || phase.nextPhase === 't90') {
           const latestGsc = gscCurrent || snapshot.gsc_t60 || snapshot.gsc_t30
           if (latestGsc && snapshot.gsc_baseline) {
@@ -346,6 +346,9 @@ Deno.serve(async (req) => {
               totalRecos: snapshot.recommendations_count || 0,
               codeDeployed,
               actionPlanProgress,
+              // GA4 enrichment: compare baseline vs current
+              ga4Baseline: snapshot.ga4_baseline as GA4Engagement | null,
+              ga4Current: ga4Current || snapshot.ga4_t60 || snapshot.ga4_t30,
             })
             updatePayload.impact_score = correlation.impact_score
             updatePayload.reliability_grade = correlation.reliability_grade
