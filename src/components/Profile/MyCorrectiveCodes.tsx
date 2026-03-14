@@ -61,6 +61,8 @@ const translations = {
     validated: 'Validated ✓',
     validatedToast: 'Thanks! Script validated and added to the proven library.',
     validateError: 'Error validating',
+    tabScripts: 'Scripts',
+    tabHistory: 'History',
   },
   es: {
     title: 'Mis Códigos Correctivos',
