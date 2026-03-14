@@ -44,6 +44,7 @@ interface MetricCorrelations {
   position: CorrelationResult;
   etv: CorrelationResult;
   top_10: CorrelationResult;
+  engagement: CorrelationResult | null; // GA4 4th dimension
 }
 
 interface LlmBreakdown {
