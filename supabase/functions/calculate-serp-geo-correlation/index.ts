@@ -420,6 +420,31 @@ Deno.serve(async (req) => {
           top_10: bestLagCorrelation(top10s, llmAvgs),
         };
 
+        // ── GA4 engagement correlation (NEW) ──
+        // If GA4 available, compute correlation between engagement_rate and LLM visibility
+        // This measures: "Does higher LLM visibility lead to better user engagement?"
+        let ga4CorrelationInsight: any = null;
+        if (ga4Engagement && ga4Engagement.engagement_rate > 0) {
+          // We can't do time-series correlation with a single GA4 point,
+          // but we CAN enrich the convergence classification:
+          // High engagement + convergent → strong signal
+          // High engagement + divergent → SEO/LLM mismatch despite good UX
+          const engagementQuality = ga4Engagement.engagement_rate > 0.6 ? 'high' :
+            ga4Engagement.engagement_rate > 0.4 ? 'medium' : 'low';
+          const bounceQuality = ga4Engagement.bounce_rate < 0.4 ? 'low' :
+            ga4Engagement.bounce_rate < 0.6 ? 'medium' : 'high';
+
+          ga4CorrelationInsight = {
+            engagement_quality: engagementQuality,
+            bounce_quality: bounceQuality,
+            sessions: ga4Engagement.sessions,
+            avg_duration: Math.round(ga4Engagement.avg_session_duration),
+            // Confidence boost: if engagement is high, the convergence signal is more trustworthy
+            confidence_modifier: engagementQuality === 'high' ? 1.15 :
+              engagementQuality === 'medium' ? 1.0 : 0.85,
+          };
+        }
+
         const { index, label } = classifyConvergence(metrics, commonWeeks.length);
 
         // ── Per-LLM breakdown ──
