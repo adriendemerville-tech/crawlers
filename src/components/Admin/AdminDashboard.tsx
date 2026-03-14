@@ -100,6 +100,10 @@ export function AdminDashboard() {
             <Link2 className="h-4 w-4" />
             <span className="hidden sm:inline">{t.affiliates}</span>
           </TabsTrigger>
+          <TabsTrigger value="scripts" className="flex-1 gap-2">
+            <ShieldAlert className="h-4 w-4" />
+            <span className="hidden sm:inline">{t.scripts}</span>
+          </TabsTrigger>
           <TabsTrigger value="docs" className="flex-1 gap-2">
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">{t.docs}</span>
@@ -140,6 +144,10 @@ export function AdminDashboard() {
 
         <TabsContent value="affiliates" forceMount className="data-[state=inactive]:hidden">
           <AffiliateManagement />
+        </TabsContent>
+
+        <TabsContent value="scripts" forceMount className="data-[state=inactive]:hidden">
+          <ScriptKillSwitches />
         </TabsContent>
       </Tabs>
     </div>
