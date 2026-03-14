@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
+import { fetchGA4Engagement } from '../_shared/fetchGA4.ts';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
 /**
@@ -335,45 +336,20 @@ Deno.serve(async (req) => {
 
         if (!serpRows?.length || !llmRows?.length) { skipped++; continue; }
 
-        // ── Fetch GA4 engagement for enrichment ──
+        // ── Fetch GA4 engagement via shared helper ──
         let ga4Engagement: any = null;
         const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
         const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
         if (clientId && clientSecret) {
           const resolved = await resolveGoogleToken(supabase, site.user_id, site.domain, clientId, clientSecret);
           if (resolved?.ga4_property_id) {
-            try {
-              const GA4_API = 'https://analyticsdata.googleapis.com/v1beta';
-              const endDate = new Date().toISOString().split('T')[0];
-              const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-              const resp = await fetch(`${GA4_API}/properties/${resolved.ga4_property_id}:runReport`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${resolved.access_token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  dateRanges: [{ startDate, endDate }],
-                  metrics: [
-                    { name: 'sessions' },
-                    { name: 'engagementRate' },
-                    { name: 'bounceRate' },
-                    { name: 'averageSessionDuration' },
-                  ],
-                }),
-              });
-              if (resp.ok) {
-                const data = await resp.json();
-                const row = data.rows?.[0];
-                if (row) {
-                  const v = row.metricValues || [];
-                  ga4Engagement = {
-                    sessions: parseInt(v[0]?.value || '0'),
-                    engagement_rate: parseFloat(v[1]?.value || '0'),
-                    bounce_rate: parseFloat(v[2]?.value || '0'),
-                    avg_session_duration: parseFloat(v[3]?.value || '0'),
-                  };
-                  trackPaidApiCall('calculate-serp-geo-correlation', 'google-ga4', 'runReport');
-                }
-              }
-            } catch (_) { /* GA4 best-effort */ }
+            ga4Engagement = await fetchGA4Engagement({
+              accessToken: resolved.access_token,
+              propertyId: resolved.ga4_property_id,
+            });
+            if (ga4Engagement) {
+              trackPaidApiCall('calculate-serp-geo-correlation', 'google-ga4', 'runReport');
+            }
           }
         }
 
@@ -444,7 +420,44 @@ Deno.serve(async (req) => {
           top_10: bestLagCorrelation(top10s, llmAvgs),
         };
 
-        const { index, label } = classifyConvergence(metrics, commonWeeks.length);
+        // ── GA4 engagement correlation (NEW) ──
+        // If GA4 available, compute correlation between engagement_rate and LLM visibility
+        // This measures: "Does higher LLM visibility lead to better user engagement?"
+        let ga4CorrelationInsight: any = null;
+        if (ga4Engagement && ga4Engagement.engagement_rate > 0) {
+          // We can't do time-series correlation with a single GA4 point,
+          // but we CAN enrich the convergence classification:
+          // High engagement + convergent → strong signal
+          // High engagement + divergent → SEO/LLM mismatch despite good UX
+          const engagementQuality = ga4Engagement.engagement_rate > 0.6 ? 'high' :
+            ga4Engagement.engagement_rate > 0.4 ? 'medium' : 'low';
+          const bounceQuality = ga4Engagement.bounce_rate < 0.4 ? 'low' :
+            ga4Engagement.bounce_rate < 0.6 ? 'medium' : 'high';
+
+          ga4CorrelationInsight = {
+            engagement_quality: engagementQuality,
+            bounce_quality: bounceQuality,
+            sessions: ga4Engagement.sessions,
+            avg_duration: Math.round(ga4Engagement.avg_session_duration),
+            // Confidence boost: if engagement is high, the convergence signal is more trustworthy
+            confidence_modifier: engagementQuality === 'high' ? 1.15 :
+              engagementQuality === 'medium' ? 1.0 : 0.85,
+          };
+        }
+
+        // Apply GA4 confidence modifier to convergence index
+        let { index, label } = classifyConvergence(metrics, commonWeeks.length);
+        if (ga4CorrelationInsight?.confidence_modifier && ga4CorrelationInsight.confidence_modifier !== 1.0) {
+          // Amplify or dampen the convergence signal based on engagement quality
+          const modifier = ga4CorrelationInsight.confidence_modifier;
+          const adjusted = Math.round((index - 50) * modifier + 50);
+          index = Math.max(0, Math.min(100, adjusted));
+          // Re-classify if threshold crossed
+          const weighted = (index - 50) / 50;
+          if (weighted > 0.4) label = 'convergent';
+          else if (weighted < -0.4) label = 'divergent';
+          else label = label; // keep original for borderline
+        }
 
         // ── Per-LLM breakdown ──
         const llmBreakdown: LlmBreakdown[] = [];
@@ -499,7 +512,10 @@ Deno.serve(async (req) => {
             best_lag_etv: metrics.etv.best_lag,
             best_lag_top10: metrics.top_10.best_lag,
             llm_breakdown: llmBreakdown,
-            ga4_engagement: ga4Engagement,
+            ga4_engagement: ga4Engagement ? {
+              ...ga4Engagement,
+              correlation_insight: ga4CorrelationInsight,
+            } : null,
           }, {
             onConflict: 'tracked_site_id',
             ignoreDuplicates: false,

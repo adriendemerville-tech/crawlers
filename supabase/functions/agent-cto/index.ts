@@ -64,7 +64,6 @@ async function getReliabilityProfile(supabase: any, functionName: string): Promi
   const withGsc = all.filter((s: any) => s.gsc_baseline != null)
   const withGa4 = all.filter((s: any) => s.ga4_baseline != null)
   const completed = all.filter((s: any) => s.measurement_phase === 'complete' && s.impact_score != null)
-  const completed = all.filter((s: any) => s.measurement_phase === 'complete' && s.impact_score != null)
 
   // Grade distribution
   const grades: Record<string, number> = { A: 0, B: 0, C: 0, D: 0, F: 0, 'N/A': 0 }
@@ -426,8 +425,12 @@ Deno.serve(async (req) => {
     const currentPrompt = champion?.prompt_text || 'Aucun prompt enregistré — première analyse.'
 
     // Determine evidence basis
+    // Evidence basis: now factors in GA4 coverage
     let evidenceBasis: AgentDecision['evidence_basis'] = 'insufficient_data'
     if (reliability.snapshots_with_gsc >= 5 && reliability.total_snapshots >= 10) {
+      evidenceBasis = 'real_data'
+    } else if (reliability.snapshots_with_gsc >= 3 && reliability.snapshots_with_ga4 >= 2) {
+      // GA4 can supplement insufficient GSC to reach 'real_data' threshold
       evidenceBasis = 'real_data'
     } else if (reliability.total_snapshots >= 3) {
       evidenceBasis = 'heuristic'
@@ -442,6 +445,7 @@ DONNÉES DE FIABILITÉ (statistiques mesurées sur de vrais utilisateurs) :
 - Fonction analysée : ${functionName}
 - Snapshots totaux : ${reliability.total_snapshots}
 - Snapshots avec données GSC : ${reliability.snapshots_with_gsc}
+- Snapshots avec données GA4 : ${reliability.snapshots_with_ga4}
 - Score d'impact moyen : ${reliability.avg_impact_score}/100
 - Distribution des grades : ${JSON.stringify(reliability.grade_distribution)}
 - Progression moyenne des plans d'action : ${reliability.avg_action_plan_progress}%
@@ -514,6 +518,7 @@ Analyse cet audit en te basant UNIQUEMENT sur les données de fiabilité fournie
         reliability_profile: {
           total_snapshots: reliability.total_snapshots,
           snapshots_with_gsc: reliability.snapshots_with_gsc,
+          snapshots_with_ga4: reliability.snapshots_with_ga4,
           avg_impact_score: reliability.avg_impact_score,
           trend: reliability.trend,
           grade_distribution: reliability.grade_distribution,
