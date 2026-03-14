@@ -183,6 +183,7 @@ const translations = {
       ['Multi-page crawl', '5-30 credits / crawl', '5,000 pages/month included *'],
       ['Tracked URLs', '—', '30 included'],
       ['Corrective code', '1 credit / code', 'Unlimited ∞'],
+      ['Multi-page corrective', '—', '✓ Included'],
       ['White label', '—', '✓ Included'],
       ['Multi-accounts', '—', '3 accounts'],
       ['Priority support', '—', '✓ Included'],
