@@ -16,7 +16,7 @@ import {
   CheckCircle2, Zap, CreditCard, FileText, Code2, 
   Bot, Globe, Gauge, Brain, ArrowRight, Gift,
   Crown, Infinity, Shield, Headphones, Loader2, Users, Star,
-  ScanSearch, GitCompareArrows
+  ScanSearch, GitCompareArrows, Layers
 } from 'lucide-react';
 
 const translations = {
