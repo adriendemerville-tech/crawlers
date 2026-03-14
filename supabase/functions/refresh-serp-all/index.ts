@@ -2,6 +2,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { withCircuitBreaker } from '../_shared/circuitBreaker.ts'
+import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
+import { fetchGA4Engagement } from '../_shared/fetchGA4.ts'
 
 /**
  * refresh-serp-all  v2
@@ -245,7 +247,7 @@ Deno.serve(async (req) => {
 
     let refreshed = 0
     let errors = 0
-    const stats = { serp: 0, gsc: 0, backlinks: 0, gsc_expired: 0 }
+    const stats = { serp: 0, gsc: 0, backlinks: 0, ga4: 0, gsc_expired: 0 }
     const startTime = Date.now()
     let lastProcessedId: string | null = null
 
@@ -357,7 +359,44 @@ Deno.serve(async (req) => {
           }
         }
 
-        // ═══ 4. Backward compat: update user_stats_history ═══
+        // ═══ 4. GA4 HISTORY LOG — via resolveGoogleToken + shared helper ═══
+        const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
+        const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')
+        if (clientId && clientSecret) {
+          try {
+            const resolved = await resolveGoogleToken(supabase, site.user_id, site.domain, clientId, clientSecret)
+            if (resolved?.ga4_property_id) {
+              const ga4Data = await fetchGA4Engagement({
+                accessToken: resolved.access_token,
+                propertyId: resolved.ga4_property_id,
+              })
+              if (ga4Data) {
+                const { error: ga4Error } = await supabase
+                  .from('ga4_history_log')
+                  .upsert({
+                    tracked_site_id: site.id,
+                    user_id: site.user_id,
+                    domain: site.domain,
+                    sessions: ga4Data.sessions,
+                    total_users: ga4Data.total_users,
+                    engagement_rate: ga4Data.engagement_rate,
+                    bounce_rate: ga4Data.bounce_rate,
+                    avg_session_duration: ga4Data.avg_session_duration,
+                    pageviews: ga4Data.pageviews,
+                    week_start_date: weekStart,
+                  }, { onConflict: 'tracked_site_id,week_start_date' })
+                if (!ga4Error) {
+                  stats.ga4++
+                  trackPaidApiCall('refresh-serp-all', 'google-ga4', 'runReport')
+                } else {
+                  console.error(`[${site.domain}] GA4 insert error:`, ga4Error)
+                }
+              }
+            }
+          } catch { /* GA4 best-effort */ }
+        }
+
+        // ═══ 5. Backward compat: update user_stats_history ═══
         if (serpData) {
           const { data: latestEntry } = await supabase
             .from('user_stats_history')
@@ -378,7 +417,7 @@ Deno.serve(async (req) => {
         }
 
         refreshed++
-        console.log(`[refresh-serp-all] ✅ ${site.domain} (serp:${serpData ? '✓' : '✗'} gsc:${gscToken ? '✓' : '✗'} bl:${dfAuthHeader ? '✓' : '✗'})`)
+        console.log(`[refresh-serp-all] ✅ ${site.domain} (serp:${serpData ? '✓' : '✗'} gsc:${gscToken ? '✓' : '✗'} bl:${dfAuthHeader ? '✓' : '✗'} ga4:${stats.ga4 > 0 ? '✓' : '✗'})`)
 
         await new Promise(r => setTimeout(r, DELAY_BETWEEN_SITES_MS))
       } catch (err) {
@@ -395,7 +434,7 @@ Deno.serve(async (req) => {
       console.warn(`[refresh-serp-all] ⚠️ ${stats.gsc_expired} site(s) with EXPIRED GSC tokens — users should reconnect`)
     }
 
-    console.log(`[refresh-serp-all] Batch done: ${refreshed}/${sites.length} refreshed, ${errors} errors. SERP:${stats.serp} GSC:${stats.gsc} BL:${stats.backlinks} GSC_expired:${stats.gsc_expired}${nextCursor ? ` | next_cursor: ${nextCursor}` : ' | COMPLETE'}`)
+    console.log(`[refresh-serp-all] Batch done: ${refreshed}/${sites.length} refreshed, ${errors} errors. SERP:${stats.serp} GSC:${stats.gsc} BL:${stats.backlinks} GA4:${stats.ga4} GSC_expired:${stats.gsc_expired}${nextCursor ? ` | next_cursor: ${nextCursor}` : ' | COMPLETE'}`)
 
     // ═══ SELF-RE-INVOCATION: continue processing remaining sites ═══
     if (nextCursor) {

@@ -1,7 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts';
-import { fetchGA4Engagement } from '../_shared/fetchGA4.ts';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 
 /**
@@ -44,6 +42,7 @@ interface MetricCorrelations {
   position: CorrelationResult;
   etv: CorrelationResult;
   top_10: CorrelationResult;
+  engagement: CorrelationResult | null; // GA4 4th dimension
 }
 
 interface LlmBreakdown {
@@ -234,13 +233,17 @@ function classifyConvergence(metrics: MetricCorrelations, weeks: number): Conver
 
   // Position: invert sign (lower position = better = positive effect)
   if (metrics.position.significant && metrics.position.pearson !== null) {
-    significantValues.push({ value: -metrics.position.pearson, weight: 0.4 });
+    significantValues.push({ value: -metrics.position.pearson, weight: 0.35 });
   }
   if (metrics.etv.significant && metrics.etv.pearson !== null) {
-    significantValues.push({ value: metrics.etv.pearson, weight: 0.35 });
+    significantValues.push({ value: metrics.etv.pearson, weight: 0.30 });
   }
   if (metrics.top_10.significant && metrics.top_10.pearson !== null) {
-    significantValues.push({ value: metrics.top_10.pearson, weight: 0.25 });
+    significantValues.push({ value: metrics.top_10.pearson, weight: 0.20 });
+  }
+  // 4th dimension: engagement (positive correlation = LLM visibility improves UX)
+  if (metrics.engagement?.significant && metrics.engagement.pearson !== null) {
+    significantValues.push({ value: metrics.engagement.pearson, weight: 0.15 });
   }
 
   if (significantValues.length === 0) {
@@ -315,8 +318,8 @@ Deno.serve(async (req) => {
 
     for (const site of sites) {
       try {
-        // Fetch up to 52 weeks of SERP + up to 1000 LLM scores (~5 models × 52w × ~4)
-        const [serpRes, llmRes] = await Promise.all([
+        // Fetch up to 52 weeks of SERP + LLM scores + GA4 history in parallel
+        const [serpRes, llmRes, ga4HistRes] = await Promise.all([
           supabase
             .from('serp_snapshots')
             .select('measured_at, avg_position, etv, top_10')
@@ -329,28 +332,25 @@ Deno.serve(async (req) => {
             .eq('tracked_site_id', site.id)
             .order('week_start_date', { ascending: true })
             .limit(1000),
+          supabase
+            .from('ga4_history_log')
+            .select('week_start_date, engagement_rate, sessions, bounce_rate, avg_session_duration')
+            .eq('tracked_site_id', site.id)
+            .order('week_start_date', { ascending: true })
+            .limit(52),
         ]);
 
         const serpRows = serpRes.data;
         const llmRows = llmRes.data;
+        const ga4HistRows = ga4HistRes.data || [];
 
         if (!serpRows?.length || !llmRows?.length) { skipped++; continue; }
 
-        // ── Fetch GA4 engagement via shared helper ──
-        let ga4Engagement: any = null;
-        const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID');
-        const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET');
-        if (clientId && clientSecret) {
-          const resolved = await resolveGoogleToken(supabase, site.user_id, site.domain, clientId, clientSecret);
-          if (resolved?.ga4_property_id) {
-            ga4Engagement = await fetchGA4Engagement({
-              accessToken: resolved.access_token,
-              propertyId: resolved.ga4_property_id,
-            });
-            if (ga4Engagement) {
-              trackPaidApiCall('calculate-serp-geo-correlation', 'google-ga4', 'runReport');
-            }
-          }
+        // ── Normalize GA4 history by ISO week ──
+        const ga4ByWeek = new Map<string, number>();
+        for (const row of ga4HistRows) {
+          const wk = isoWeekFromStr(row.week_start_date);
+          ga4ByWeek.set(wk, Number(row.engagement_rate) || 0);
         }
 
         // ── Normalize SERP by ISO week ──
@@ -413,51 +413,58 @@ Deno.serve(async (req) => {
           llmPoints.push({ week: wk, avg_score: avg });
         }
 
-        // ── Compute correlations with lag analysis ──
+        // ── Compute correlations with lag analysis (3 SERP dimensions) ──
         const metrics: MetricCorrelations = {
           position: bestLagCorrelation(positions, llmAvgs),
           etv: bestLagCorrelation(etvs, llmAvgs),
           top_10: bestLagCorrelation(top10s, llmAvgs),
+          engagement: null,
         };
 
-        // ── GA4 engagement correlation (NEW) ──
-        // If GA4 available, compute correlation between engagement_rate and LLM visibility
-        // This measures: "Does higher LLM visibility lead to better user engagement?"
+        // ── 4th dimension: GA4 engagement × LLM visibility ──
+        // "Does higher LLM visibility correlate with better user engagement?"
+        const ga4CommonWeeks = commonWeeks.filter(w => ga4ByWeek.has(w));
         let ga4CorrelationInsight: any = null;
-        if (ga4Engagement && ga4Engagement.engagement_rate > 0) {
-          // We can't do time-series correlation with a single GA4 point,
-          // but we CAN enrich the convergence classification:
-          // High engagement + convergent → strong signal
-          // High engagement + divergent → SEO/LLM mismatch despite good UX
-          const engagementQuality = ga4Engagement.engagement_rate > 0.6 ? 'high' :
-            ga4Engagement.engagement_rate > 0.4 ? 'medium' : 'low';
-          const bounceQuality = ga4Engagement.bounce_rate < 0.4 ? 'low' :
-            ga4Engagement.bounce_rate < 0.6 ? 'medium' : 'high';
 
+        if (ga4CommonWeeks.length >= MIN_WEEKS) {
+          // Build aligned engagement series
+          const engagementRates = ga4CommonWeeks.map(w => ga4ByWeek.get(w)!);
+          const llmForGa4 = ga4CommonWeeks.map(w => {
+            const l = llmByWeekAll.get(w)!;
+            return l.total / l.count;
+          });
+
+          metrics.engagement = bestLagCorrelation(engagementRates, llmForGa4);
+
+          // Build insight summary
+          const latestEng = engagementRates[engagementRates.length - 1];
           ga4CorrelationInsight = {
-            engagement_quality: engagementQuality,
-            bounce_quality: bounceQuality,
-            sessions: ga4Engagement.sessions,
-            avg_duration: Math.round(ga4Engagement.avg_session_duration),
-            // Confidence boost: if engagement is high, the convergence signal is more trustworthy
-            confidence_modifier: engagementQuality === 'high' ? 1.15 :
-              engagementQuality === 'medium' ? 1.0 : 0.85,
+            weeks_analyzed: ga4CommonWeeks.length,
+            pearson: metrics.engagement.pearson,
+            spearman: metrics.engagement.spearman,
+            p_value: metrics.engagement.p_value,
+            best_lag: metrics.engagement.best_lag,
+            significant: metrics.engagement.significant,
+            latest_engagement_rate: round3(latestEng),
+            interpretation: metrics.engagement.significant
+              ? (metrics.engagement.pearson! > 0
+                ? 'LLM visibility positively correlates with user engagement'
+                : 'LLM visibility negatively correlates with user engagement')
+              : 'No statistically significant correlation between LLM visibility and engagement',
+          };
+        } else if (ga4HistRows.length > 0) {
+          // Not enough weeks for correlation but have some data
+          const latestRow = ga4HistRows[ga4HistRows.length - 1];
+          ga4CorrelationInsight = {
+            weeks_analyzed: ga4CommonWeeks.length,
+            status: 'insufficient_data',
+            weeks_needed: MIN_WEEKS,
+            latest_engagement_rate: Number(latestRow.engagement_rate) || 0,
           };
         }
 
-        // Apply GA4 confidence modifier to convergence index
+        // ── Classify convergence (now includes engagement if significant) ──
         let { index, label } = classifyConvergence(metrics, commonWeeks.length);
-        if (ga4CorrelationInsight?.confidence_modifier && ga4CorrelationInsight.confidence_modifier !== 1.0) {
-          // Amplify or dampen the convergence signal based on engagement quality
-          const modifier = ga4CorrelationInsight.confidence_modifier;
-          const adjusted = Math.round((index - 50) * modifier + 50);
-          index = Math.max(0, Math.min(100, adjusted));
-          // Re-classify if threshold crossed
-          const weighted = (index - 50) / 50;
-          if (weighted > 0.4) label = 'convergent';
-          else if (weighted < -0.4) label = 'divergent';
-          else label = label; // keep original for borderline
-        }
 
         // ── Per-LLM breakdown ──
         const llmBreakdown: LlmBreakdown[] = [];
@@ -481,9 +488,9 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Count how many metrics are statistically significant
-        const sigCount = [metrics.position, metrics.etv, metrics.top_10]
-          .filter(m => m.significant).length;
+        // Count how many metrics are statistically significant (now 4 possible)
+        const allMetrics = [metrics.position, metrics.etv, metrics.top_10, metrics.engagement].filter(Boolean);
+        const sigCount = allMetrics.filter(m => m?.significant).length;
 
         // ── Upsert ──
         const { error: upsertError } = await supabase
@@ -512,10 +519,12 @@ Deno.serve(async (req) => {
             best_lag_etv: metrics.etv.best_lag,
             best_lag_top10: metrics.top_10.best_lag,
             llm_breakdown: llmBreakdown,
-            ga4_engagement: ga4Engagement ? {
-              ...ga4Engagement,
-              correlation_insight: ga4CorrelationInsight,
-            } : null,
+            // v3: GA4 engagement correlation
+            pearson_engagement_vs_llm: metrics.engagement?.pearson ?? null,
+            spearman_engagement_vs_llm: metrics.engagement?.spearman ?? null,
+            p_value_engagement: metrics.engagement?.p_value ?? null,
+            best_lag_engagement: metrics.engagement?.best_lag ?? 0,
+            ga4_engagement: ga4CorrelationInsight,
           }, {
             onConflict: 'tracked_site_id',
             ignoreDuplicates: false,
@@ -526,9 +535,10 @@ Deno.serve(async (req) => {
         } else {
           processed++;
           results.push({ domain: site.domain, label, index, weeks: commonWeeks.length, significant_metrics: sigCount });
+          const engLabel = metrics.engagement?.significant ? `eng:r=${metrics.engagement.pearson},lag=${metrics.engagement.best_lag}w` : 'eng:n/a';
           console.log(
-            `[${site.domain}] ✅ ${label} (idx:${index}, ${commonWeeks.length}w, sig:${sigCount}/3, ` +
-            `lag_pos:${metrics.position.best_lag}w, r_pos=${metrics.position.pearson}, ρ_pos=${metrics.position.spearman}, p=${metrics.position.p_value})`
+            `[${site.domain}] ✅ ${label} (idx:${index}, ${commonWeeks.length}w, sig:${sigCount}/4, ` +
+            `lag_pos:${metrics.position.best_lag}w, r_pos=${metrics.position.pearson}, ${engLabel})`
           );
         }
       } catch (e) {

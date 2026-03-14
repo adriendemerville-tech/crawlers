@@ -135,6 +135,7 @@ const RGPD = () => {
                     <li>• {t3(language, 'Rapports sauvegardés et plans d\'action', 'Saved reports and action plans', 'Informes guardados y planes de acción')}</li>
                     <li>• {t3(language, 'Codes correctifs générés et configurations associées', 'Generated corrective codes and associated configurations', 'Códigos correctivos generados y configuraciones asociadas')}</li>
                     <li>• {t3(language, 'Données de crawl multi-pages (contenu HTML, structure, liens)', 'Multi-page crawl data (HTML content, structure, links)', 'Datos de crawl multi-páginas (contenido HTML, estructura, enlaces)')}</li>
+                    <li>• {t3(language, 'Données d\'engagement GA4 agrégées (sessions, taux d\'engagement, taux de rebond, durée de session) — collectées via OAuth avec votre consentement explicite, conservées 13 mois', 'Aggregated GA4 engagement data (sessions, engagement rate, bounce rate, session duration) — collected via OAuth with your explicit consent, retained for 13 months', 'Datos de engagement GA4 agregados (sesiones, tasa de engagement, tasa de rebote, duración de sesión) — recopilados vía OAuth con su consentimiento explícito, conservados 13 meses')}</li>
                   </ul>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-6">

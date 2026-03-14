@@ -1197,6 +1197,62 @@ export type Database = {
         }
         Relationships: []
       }
+      ga4_history_log: {
+        Row: {
+          avg_session_duration: number
+          bounce_rate: number
+          created_at: string
+          domain: string
+          engagement_rate: number
+          id: string
+          measured_at: string
+          pageviews: number
+          sessions: number
+          total_users: number
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          avg_session_duration?: number
+          bounce_rate?: number
+          created_at?: string
+          domain: string
+          engagement_rate?: number
+          id?: string
+          measured_at?: string
+          pageviews?: number
+          sessions?: number
+          total_users?: number
+          tracked_site_id: string
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          avg_session_duration?: number
+          bounce_rate?: number
+          created_at?: string
+          domain?: string
+          engagement_rate?: number
+          id?: string
+          measured_at?: string
+          pageviews?: number
+          sessions?: number
+          total_users?: number
+          tracked_site_id?: string
+          user_id?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ga4_history_log_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_connections: {
         Row: {
           access_token: string
@@ -2280,6 +2336,7 @@ export type Database = {
       }
       serp_geo_correlations: {
         Row: {
+          best_lag_engagement: number | null
           best_lag_etv: number | null
           best_lag_position: number | null
           best_lag_top10: number | null
@@ -2291,13 +2348,16 @@ export type Database = {
           id: string
           llm_breakdown: Json | null
           llm_data_points: Json | null
+          p_value_engagement: number | null
           p_value_etv: number | null
           p_value_position: number | null
           p_value_top10: number | null
+          pearson_engagement_vs_llm: number | null
           pearson_etv_vs_llm: number | null
           pearson_position_vs_llm: number | null
           pearson_top10_vs_llm: number | null
           serp_data_points: Json | null
+          spearman_engagement_vs_llm: number | null
           spearman_etv_vs_llm: number | null
           spearman_position_vs_llm: number | null
           spearman_top10_vs_llm: number | null
@@ -2307,6 +2367,7 @@ export type Database = {
           weeks_analyzed: number
         }
         Insert: {
+          best_lag_engagement?: number | null
           best_lag_etv?: number | null
           best_lag_position?: number | null
           best_lag_top10?: number | null
@@ -2318,13 +2379,16 @@ export type Database = {
           id?: string
           llm_breakdown?: Json | null
           llm_data_points?: Json | null
+          p_value_engagement?: number | null
           p_value_etv?: number | null
           p_value_position?: number | null
           p_value_top10?: number | null
+          pearson_engagement_vs_llm?: number | null
           pearson_etv_vs_llm?: number | null
           pearson_position_vs_llm?: number | null
           pearson_top10_vs_llm?: number | null
           serp_data_points?: Json | null
+          spearman_engagement_vs_llm?: number | null
           spearman_etv_vs_llm?: number | null
           spearman_position_vs_llm?: number | null
           spearman_top10_vs_llm?: number | null
@@ -2334,6 +2398,7 @@ export type Database = {
           weeks_analyzed?: number
         }
         Update: {
+          best_lag_engagement?: number | null
           best_lag_etv?: number | null
           best_lag_position?: number | null
           best_lag_top10?: number | null
@@ -2345,13 +2410,16 @@ export type Database = {
           id?: string
           llm_breakdown?: Json | null
           llm_data_points?: Json | null
+          p_value_engagement?: number | null
           p_value_etv?: number | null
           p_value_position?: number | null
           p_value_top10?: number | null
+          pearson_engagement_vs_llm?: number | null
           pearson_etv_vs_llm?: number | null
           pearson_position_vs_llm?: number | null
           pearson_top10_vs_llm?: number | null
           serp_data_points?: Json | null
+          spearman_engagement_vs_llm?: number | null
           spearman_etv_vs_llm?: number | null
           spearman_position_vs_llm?: number | null
           spearman_top10_vs_llm?: number | null
