@@ -252,7 +252,7 @@ function FooterComponent() {
             
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-foreground">Crawlers AI</span>
+                <span className="text-lg font-bold text-foreground">Crawlers</span>
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {t3(language,
