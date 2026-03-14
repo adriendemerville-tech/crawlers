@@ -483,7 +483,7 @@ export default function Tarifs() {
           "itemOffered": {
             "@type": "Service",
             "name": "Pro Agency Subscription",
-            "description": "White Label / Marque Blanche, Dashboard Agence dédié, Export de rapports personnalisés, Rapports et correctifs illimités, Intégration Google Search Console, Suivi KPI d'audience"
+            "description": "White Label / Marque Blanche, Dashboard Agence dédié, Export de rapports personnalisés, Rapports et correctifs illimités, Correctif multi-pages (règles par URL), Intégration Google Search Console, Suivi KPI d'audience"
           }
         }
       ]
