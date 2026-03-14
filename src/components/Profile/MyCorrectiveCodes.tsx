@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug } from 'lucide-react';
+import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, History } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -12,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { MyScriptRulesHistory } from './MyScriptRulesHistory';
 
 interface CorrectiveCodeFix {
   id: string;
