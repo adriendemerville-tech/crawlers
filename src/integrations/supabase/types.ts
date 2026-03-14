@@ -2173,6 +2173,57 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_agent_logs: {
+        Row: {
+          action_type: string
+          changes_detail: Json
+          changes_summary: string
+          confidence_score: number
+          created_at: string
+          id: string
+          model_used: string
+          page_slug: string
+          page_type: string
+          page_url: string
+          seo_score_after: number | null
+          seo_score_before: number | null
+          status: string
+          tokens_used: Json | null
+        }
+        Insert: {
+          action_type?: string
+          changes_detail?: Json
+          changes_summary: string
+          confidence_score?: number
+          created_at?: string
+          id?: string
+          model_used?: string
+          page_slug: string
+          page_type?: string
+          page_url: string
+          seo_score_after?: number | null
+          seo_score_before?: number | null
+          status?: string
+          tokens_used?: Json | null
+        }
+        Update: {
+          action_type?: string
+          changes_detail?: Json
+          changes_summary?: string
+          confidence_score?: number
+          created_at?: string
+          id?: string
+          model_used?: string
+          page_slug?: string
+          page_type?: string
+          page_url?: string
+          seo_score_after?: number | null
+          seo_score_before?: number | null
+          status?: string
+          tokens_used?: Json | null
+        }
+        Relationships: []
+      }
       serp_geo_correlations: {
         Row: {
           best_lag_etv: number | null
