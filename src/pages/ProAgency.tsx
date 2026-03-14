@@ -49,6 +49,11 @@ const translations = {
         description: 'Générez des scripts correctifs personnalisés pour chaque client, sans consommer de crédits.',
       },
       {
+        icon: 'Layers',
+        title: 'Correctif multi-pages',
+        description: 'Configurez des règles de correction différentes pour chaque URL de votre site. L\'Architecte Génératif adapte automatiquement le code injecté page par page.',
+      },
+      {
         icon: 'Globe',
         title: 'Crawl multi-pages inclus',
         description: '5 000 pages crawlées par mois incluses (Fair Use). Au-delà, achat de crédits supplémentaires en Pay-As-You-Go. Structure, score SEO/200, liens cassés, synthèse IA.',
