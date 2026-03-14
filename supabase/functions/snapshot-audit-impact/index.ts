@@ -201,6 +201,62 @@ async function fetchPageSpeedBaseline(url: string): Promise<any> {
   }
 }
 
+// ─── GA4 helper ───────────────────────────────────────────────────────
+async function fetchGA4Baseline(accessToken: string, propertyId: string): Promise<any> {
+  const GA4_API = 'https://analyticsdata.googleapis.com/v1beta'
+  const endDate = new Date().toISOString().split('T')[0]
+  const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+  try {
+    const resp = await fetch(`${GA4_API}/properties/${propertyId}:runReport`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        dateRanges: [{ startDate, endDate }],
+        metrics: [
+          { name: 'sessions' },
+          { name: 'totalUsers' },
+          { name: 'screenPageViews' },
+          { name: 'averageSessionDuration' },
+          { name: 'bounceRate' },
+          { name: 'engagementRate' },
+          { name: 'engagedSessions' },
+        ],
+      }),
+    })
+
+    if (!resp.ok) {
+      console.error('[snapshot] GA4 error:', await resp.text())
+      return null
+    }
+
+    const data = await resp.json()
+    const row = data.rows?.[0]
+    if (!row) return null
+
+    const vals = row.metricValues || []
+    trackPaidApiCall('snapshot-audit-impact', 'google-ga4', 'runReport')
+
+    return {
+      sessions: parseInt(vals[0]?.value || '0'),
+      total_users: parseInt(vals[1]?.value || '0'),
+      pageviews: parseInt(vals[2]?.value || '0'),
+      avg_session_duration: parseFloat(vals[3]?.value || '0'),
+      bounce_rate: parseFloat(vals[4]?.value || '0'),
+      engagement_rate: parseFloat(vals[5]?.value || '0'),
+      engaged_sessions: parseInt(vals[6]?.value || '0'),
+      measured_at: new Date().toISOString(),
+      period: { start_date: startDate, end_date: endDate },
+    }
+  } catch (e) {
+    console.error('[snapshot] GA4 error:', e)
+    return null
+  }
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -218,10 +274,10 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY)
 
-    // Get user profile for GSC tokens
+    // Get user profile for GSC + GA4 tokens
     const { data: profile } = await supabase
       .from('profiles')
-      .select('gsc_access_token, gsc_refresh_token, gsc_token_expiry, gsc_site_url')
+      .select('gsc_access_token, gsc_refresh_token, gsc_token_expiry, gsc_site_url, ga4_property_id')
       .eq('user_id', user_id)
       .single()
 
@@ -235,8 +291,9 @@ Deno.serve(async (req) => {
 
     // ─── Parallel data collection ────────────────────────────────────
     let gscBaseline = null
+    let ga4Baseline = null
 
-    // GSC: only if user has connected
+    // GSC + GA4: only if user has connected
     if (profile?.gsc_access_token) {
       const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
       const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')!
@@ -250,7 +307,17 @@ Deno.serve(async (req) => {
         }
       }
 
-      gscBaseline = await fetchGscMetrics(accessToken, profile.gsc_site_url || url, domain)
+      // Fetch GSC + GA4 in parallel
+      const ga4Promise = profile.ga4_property_id
+        ? fetchGA4Baseline(accessToken, profile.ga4_property_id)
+        : Promise.resolve(null)
+
+      const [gscResult, ga4Result] = await Promise.all([
+        fetchGscMetrics(accessToken, profile.gsc_site_url || url, domain),
+        ga4Promise,
+      ])
+      gscBaseline = gscResult
+      ga4Baseline = ga4Result
     }
 
     // DataForSEO + PageSpeed in parallel
@@ -296,6 +363,7 @@ Deno.serve(async (req) => {
         recommendations_count: recommendations_count || 0,
         recommendations_data: recommendations_data || [],
         gsc_baseline: gscBaseline,
+        ga4_baseline: ga4Baseline,
         dataforseo_baseline: dataforseoBaseline,
         pagespeed_baseline: pagespeedBaseline,
         action_plan_progress: actionPlanProgress,
@@ -313,6 +381,7 @@ Deno.serve(async (req) => {
 
     const sourcesCollected = [
       gscBaseline ? 'GSC' : null,
+      ga4Baseline ? 'GA4' : null,
       dataforseoBaseline ? 'DataForSEO' : null,
       pagespeedBaseline ? 'PageSpeed' : null,
     ].filter(Boolean)
@@ -325,6 +394,7 @@ Deno.serve(async (req) => {
       sources_collected: sourcesCollected,
       next_measurement: nextMeasurement.toISOString(),
       has_gsc: !!gscBaseline,
+      has_ga4: !!ga4Baseline,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

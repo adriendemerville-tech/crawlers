@@ -424,6 +424,10 @@ export type Database = {
           dataforseo_baseline: Json | null
           dataforseo_t90: Json | null
           domain: string
+          ga4_baseline: Json | null
+          ga4_t30: Json | null
+          ga4_t60: Json | null
+          ga4_t90: Json | null
           gsc_baseline: Json | null
           gsc_t30: Json | null
           gsc_t30_measured_at: string | null
@@ -458,6 +462,10 @@ export type Database = {
           dataforseo_baseline?: Json | null
           dataforseo_t90?: Json | null
           domain: string
+          ga4_baseline?: Json | null
+          ga4_t30?: Json | null
+          ga4_t60?: Json | null
+          ga4_t90?: Json | null
           gsc_baseline?: Json | null
           gsc_t30?: Json | null
           gsc_t30_measured_at?: string | null
@@ -492,6 +500,10 @@ export type Database = {
           dataforseo_baseline?: Json | null
           dataforseo_t90?: Json | null
           domain?: string
+          ga4_baseline?: Json | null
+          ga4_t30?: Json | null
+          ga4_t60?: Json | null
+          ga4_t90?: Json | null
           gsc_baseline?: Json | null
           gsc_t30?: Json | null
           gsc_t30_measured_at?: string | null
@@ -1812,6 +1824,7 @@ export type Database = {
           credits_balance: number
           email: string
           first_name: string
+          ga4_property_id: string | null
           gsc_access_token: string | null
           gsc_refresh_token: string | null
           gsc_site_url: string | null
@@ -1847,6 +1860,7 @@ export type Database = {
           credits_balance?: number
           email: string
           first_name: string
+          ga4_property_id?: string | null
           gsc_access_token?: string | null
           gsc_refresh_token?: string | null
           gsc_site_url?: string | null
@@ -1882,6 +1896,7 @@ export type Database = {
           credits_balance?: number
           email?: string
           first_name?: string
+          ga4_property_id?: string | null
           gsc_access_token?: string | null
           gsc_refresh_token?: string | null
           gsc_site_url?: string | null
