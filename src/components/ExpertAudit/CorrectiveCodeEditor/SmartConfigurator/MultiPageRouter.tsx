@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, FolderTree, Globe, ChevronRight, ChevronDown, FileText, AlertCircle, Sparkles, Save } from 'lucide-react';
+import { Loader2, FolderTree, Globe, ChevronRight, ChevronDown, FileText, AlertCircle, Sparkles, Save, Undo2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
@@ -59,6 +59,10 @@ const translations = {
     totalUrls: 'URLs détectées',
     cached: 'Données en cache',
     rules: 'règles actives',
+    version: 'v',
+    restore: 'Restaurer la version précédente',
+    restored: 'Version précédente restaurée',
+    noHistory: 'Aucune version précédente disponible',
   },
   en: {
     title: 'Multi-Page Router',
@@ -80,6 +84,10 @@ const translations = {
     totalUrls: 'URLs detected',
     cached: 'Cached data',
     rules: 'active rules',
+    version: 'v',
+    restore: 'Restore previous version',
+    restored: 'Previous version restored',
+    noHistory: 'No previous version available',
   },
   es: {
     title: 'Router Multi-Páginas',
@@ -101,6 +109,10 @@ const translations = {
     totalUrls: 'URLs detectadas',
     cached: 'Datos en caché',
     rules: 'reglas activas',
+    version: 'v',
+    restore: 'Restaurar versión anterior',
+    restored: 'Versión anterior restaurada',
+    noHistory: 'No hay versión anterior disponible',
   },
 };
 
@@ -125,6 +137,7 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
   const [manualType, setManualType] = useState('GLOBAL_FIXES');
   const [saving, setSaving] = useState(false);
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
+  const [rulesWithVersion, setRulesWithVersion] = useState<Array<{ id: string; version: number; hasPrevious: boolean }>>([]);
 
   // Fetch the sitemap tree
   const fetchTree = useCallback(async () => {
@@ -152,7 +165,7 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
     try {
       const { data } = await supabase
         .from('site_script_rules')
-        .select('url_pattern, payload_type, payload_data, is_active')
+        .select('id, url_pattern, payload_type, payload_data, is_active, version, previous_payload_data')
         .eq('domain_id', siteId)
         .eq('user_id', user.id)
         .eq('is_active', true);
@@ -163,11 +176,53 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
           payloadType: r.payload_type,
           payloadData: (r.payload_data as Record<string, unknown>) || {},
         })));
+        setRulesWithVersion(data.map(r => ({
+          id: r.id as string,
+          version: (r as any).version ?? 1,
+          hasPrevious: !!(r as any).previous_payload_data,
+        })));
       }
     } catch (err) {
       console.error('[MultiPageRouter] Error fetching rules:', err);
     }
   }, [siteId, user]);
+
+  // Restore a rule to its previous version
+  const handleRestore = async (index: number) => {
+    const meta = rulesWithVersion[index];
+    if (!meta?.hasPrevious || !meta.id) {
+      toast({ title: t.noHistory, variant: 'destructive' });
+      return;
+    }
+
+    try {
+      // Fetch the rule with previous_payload_data
+      const { data: rule } = await supabase
+        .from('site_script_rules')
+        .select('previous_payload_data')
+        .eq('id', meta.id)
+        .single();
+
+      if (!rule?.previous_payload_data) {
+        toast({ title: t.noHistory, variant: 'destructive' });
+        return;
+      }
+
+      // Update: set payload_data = previous_payload_data (trigger will auto-archive current)
+      const { error } = await supabase
+        .from('site_script_rules')
+        .update({ payload_data: rule.previous_payload_data as any })
+        .eq('id', meta.id);
+
+      if (error) throw error;
+
+      toast({ title: t.restored });
+      fetchExistingRules();
+    } catch (err) {
+      console.error('[MultiPageRouter] Restore error:', err);
+      toast({ title: 'Erreur', variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     fetchTree();
@@ -395,19 +450,34 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
       {/* Active assignments list */}
       {assignments.length > 0 && (
         <div className="space-y-1">
-          {assignments.map((a, i) => (
-            <div key={i} className="flex items-center gap-2 text-xs bg-muted/50 rounded px-2 py-1.5">
-              <Badge variant="outline" className="text-[9px] font-mono">{a.urlPattern}</Badge>
-              <span className="text-muted-foreground">→</span>
-              <Badge className="text-[9px]">{PAYLOAD_TYPES.find(p => p.value === a.payloadType)?.label || a.payloadType}</Badge>
-              <button
-                onClick={() => removeAssignment(i)}
-                className="ml-auto text-muted-foreground hover:text-destructive"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+          {assignments.map((a, i) => {
+            const meta = rulesWithVersion[i];
+            return (
+              <div key={i} className="flex items-center gap-2 text-xs bg-muted/50 rounded px-2 py-1.5">
+                <Badge variant="outline" className="text-[9px] font-mono">{a.urlPattern}</Badge>
+                <span className="text-muted-foreground">→</span>
+                <Badge className="text-[9px]">{PAYLOAD_TYPES.find(p => p.value === a.payloadType)?.label || a.payloadType}</Badge>
+                {meta?.version > 1 && (
+                  <Badge variant="secondary" className="text-[8px] h-3.5 px-1">{t.version}{meta.version}</Badge>
+                )}
+                {meta?.hasPrevious && (
+                  <button
+                    onClick={() => handleRestore(i)}
+                    className="text-muted-foreground hover:text-primary"
+                    title={t.restore}
+                  >
+                    <Undo2 className="w-3 h-3" />
+                  </button>
+                )}
+                <button
+                  onClick={() => removeAssignment(i)}
+                  className="ml-auto text-muted-foreground hover:text-destructive"
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 

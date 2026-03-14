@@ -2589,11 +2589,13 @@ export type Database = {
           is_active: boolean
           payload_data: Json
           payload_type: string
+          previous_payload_data: Json | null
           status: string
           telemetry_last_ping: string | null
           updated_at: string
           url_pattern: string
           user_id: string
+          version: number
         }
         Insert: {
           created_at?: string
@@ -2602,11 +2604,13 @@ export type Database = {
           is_active?: boolean
           payload_data?: Json
           payload_type?: string
+          previous_payload_data?: Json | null
           status?: string
           telemetry_last_ping?: string | null
           updated_at?: string
           url_pattern?: string
           user_id: string
+          version?: number
         }
         Update: {
           created_at?: string
@@ -2615,11 +2619,13 @@ export type Database = {
           is_active?: boolean
           payload_data?: Json
           payload_type?: string
+          previous_payload_data?: Json | null
           status?: string
           telemetry_last_ping?: string | null
           updated_at?: string
           url_pattern?: string
           user_id?: string
+          version?: number
         }
         Relationships: [
           {
