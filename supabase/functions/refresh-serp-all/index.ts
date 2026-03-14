@@ -247,7 +247,7 @@ Deno.serve(async (req) => {
 
     let refreshed = 0
     let errors = 0
-    const stats = { serp: 0, gsc: 0, backlinks: 0, gsc_expired: 0 }
+    const stats = { serp: 0, gsc: 0, backlinks: 0, ga4: 0, gsc_expired: 0 }
     const startTime = Date.now()
     let lastProcessedId: string | null = null
 
