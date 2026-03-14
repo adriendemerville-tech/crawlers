@@ -226,7 +226,86 @@ export function ProfileSettings() {
         </CardContent>
       </Card>
 
-      {/* Spotify Playlist */}
+      {/* Google Search Console & Analytics Connection */}
+      <Card className="border-border/60">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Google Search Console & Analytics
+          </CardTitle>
+          <CardDescription>
+            {language === 'fr'
+              ? 'Connectez ou mettez à jour votre accès Google pour synchroniser Search Console et Google Analytics (GA4).'
+              : language === 'es'
+                ? 'Conecte o actualice su acceso a Google para sincronizar Search Console y Google Analytics (GA4).'
+                : 'Connect or update your Google access to sync Search Console and Google Analytics (GA4).'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border">
+            <div className="flex items-center gap-3">
+              {gscConnected ? (
+                <div className="h-9 w-9 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                </div>
+              ) : (
+                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                  <Search className="h-5 w-5 text-muted-foreground" />
+                </div>
+              )}
+              <div>
+                <p className="font-medium text-sm">
+                  {gscConnected
+                    ? (language === 'fr' ? 'Compte Google connecté' : language === 'es' ? 'Cuenta Google conectada' : 'Google account connected')
+                    : (language === 'fr' ? 'Non connecté' : language === 'es' ? 'No conectado' : 'Not connected')}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {gscConnected
+                    ? (language === 'fr'
+                        ? 'Mettez à jour pour activer de nouvelles permissions (ex : GA4).'
+                        : language === 'es'
+                          ? 'Actualice para activar nuevos permisos (ej: GA4).'
+                          : 'Update to enable new permissions (e.g. GA4).')
+                    : (language === 'fr'
+                        ? 'Connectez votre compte Google pour accéder aux données Search Console et Analytics.'
+                        : language === 'es'
+                          ? 'Conecte su cuenta Google para acceder a los datos de Search Console y Analytics.'
+                          : 'Connect your Google account to access Search Console and Analytics data.')}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant={gscConnected ? 'outline' : 'default'}
+              size="sm"
+              className="gap-2 shrink-0"
+              disabled={gscConnecting}
+              onClick={handleUpdateGscConnection}
+            >
+              {gscConnecting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : gscConnected ? (
+                <RefreshCw className="h-4 w-4" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+              {gscConnected
+                ? (language === 'fr' ? 'Mettre à jour' : language === 'es' ? 'Actualizar' : 'Update')
+                : (language === 'fr' ? 'Connecter' : language === 'es' ? 'Conectar' : 'Connect')}
+            </Button>
+          </div>
+          {gscConnected && (
+            <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+              {language === 'fr'
+                ? 'La reconnexion conserve vos données existantes et ajoute les nouvelles permissions.'
+                : language === 'es'
+                  ? 'La reconexión conserva sus datos existentes y agrega los nuevos permisos.'
+                  : 'Reconnecting preserves your existing data and adds new permissions.'}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
