@@ -157,11 +157,12 @@ export default function ArchitecteGeneratif() {
                 <Crown className="h-3 w-3 mr-1" /> Pro Agency
               </Badge>
               <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-balance">
-                {t3(language,
-                  <>Un correctif <span className="text-primary">différent</span> pour chaque page de votre site</>,
-                  <>A <span className="text-primary">different</span> fix for each page of your site</>,
-                  <>Una corrección <span className="text-primary">diferente</span> para cada página de su sitio</>
-                )}
+                {language === 'es'
+                  ? <>Una corrección <span className="text-primary">diferente</span> para cada página de su sitio</>
+                  : language === 'en'
+                    ? <>A <span className="text-primary">different</span> fix for each page of your site</>
+                    : <>Un correctif <span className="text-primary">différent</span> pour chaque page de votre site</>
+                }
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 {t3(language,
