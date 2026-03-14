@@ -288,8 +288,8 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                     <Button
                       onClick={() => handlePurchase(pkg.id)}
                       disabled={loadingPackage !== null}
-                      className={`w-full bg-gradient-to-r ${pkg.color} hover:opacity-90 text-white border-0 mt-3`}
-                      size="sm"
+                      className={`w-full bg-gradient-to-r ${pkg.color} hover:opacity-90 text-white border-0 mt-4`}
+                      size="default"
                     >
                       {isLoading ? (
                         <>
