@@ -187,14 +187,57 @@ Deno.serve(async (req) => {
         impactReliabilityGrade = latestSnapshot.reliability_grade
       }
 
-      // ─── 5. Fetch GSC real traffic ───
+      // ─── 5. Fetch GSC + GA4 real traffic ───
       let realClicks: number | null = null
+      let ga4Engagement: any = null
+      const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')!
+      const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')!
 
       for (const site of (trackedSites || [])) {
-        const token = await getGscAccessToken(supabase, site.user_id)
-        if (!token) continue
+        const resolved = await resolveGoogleToken(supabase, site.user_id, domain, clientId, clientSecret)
+        if (!resolved) continue
 
-        realClicks = await fetchGscClicks(token, domain)
+        // GSC clicks
+        if (realClicks === null) {
+          realClicks = await fetchGscClicks(resolved.access_token, domain)
+        }
+
+        // GA4 engagement (if property configured)
+        if (!ga4Engagement && resolved.ga4_property_id) {
+          try {
+            const endDate = new Date().toISOString().split('T')[0]
+            const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            const resp = await fetch(`${GA4_API}/properties/${resolved.ga4_property_id}:runReport`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${resolved.access_token}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                dateRanges: [{ startDate, endDate }],
+                metrics: [
+                  { name: 'sessions' },
+                  { name: 'totalUsers' },
+                  { name: 'bounceRate' },
+                  { name: 'engagementRate' },
+                  { name: 'averageSessionDuration' },
+                ],
+              }),
+            })
+            if (resp.ok) {
+              const data = await resp.json()
+              const row = data.rows?.[0]
+              if (row) {
+                const v = row.metricValues || []
+                ga4Engagement = {
+                  sessions: parseInt(v[0]?.value || '0'),
+                  total_users: parseInt(v[1]?.value || '0'),
+                  bounce_rate: parseFloat(v[2]?.value || '0'),
+                  engagement_rate: parseFloat(v[3]?.value || '0'),
+                  avg_session_duration: parseFloat(v[4]?.value || '0'),
+                }
+              }
+            }
+          } catch (_) { /* GA4 is best-effort */ }
+        }
+
         if (realClicks !== null) break
       }
 
