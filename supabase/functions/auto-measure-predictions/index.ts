@@ -256,6 +256,7 @@ Deno.serve(async (req) => {
         impact_reliability_grade: impactReliabilityGrade,
         snapshot_corrective_deployed: latestSnapshot?.corrective_code_deployed || false,
         snapshot_gsc_t90: latestSnapshot?.gsc_t90 || null,
+        ga4_engagement: ga4Engagement,
         measured_at: new Date().toISOString(),
       }
 
