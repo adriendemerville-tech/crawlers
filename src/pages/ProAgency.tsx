@@ -16,7 +16,7 @@ import { DownloadAuthGate } from '@/components/DownloadAuthGate';
 import {
   Crown, Infinity, Shield, Users, Headphones, Loader2,
   CheckCircle2, ArrowRight, Zap, FileText, Code2, BarChart3,
-  Palette, Globe, Brain, TrendingUp, Lock, Star
+  Palette, Globe, Brain, TrendingUp, Lock, Star, Layers
 } from 'lucide-react';
 
 const translations = {
@@ -47,6 +47,11 @@ const translations = {
         icon: 'Code2',
         title: 'Codes correctifs illimités',
         description: 'Générez des scripts correctifs personnalisés pour chaque client, sans consommer de crédits.',
+      },
+      {
+        icon: 'Layers',
+        title: 'Correctif multi-pages',
+        description: 'Configurez des règles de correction différentes pour chaque URL de votre site. L\'Architecte Génératif adapte automatiquement le code injecté page par page.',
       },
       {
         icon: 'Globe',
@@ -89,6 +94,7 @@ const translations = {
       ['Crawl multi-pages', '5-30 crédits / crawl', '5 000 pages/mois incluses *'],
       ['URL suivis (tracking)', '—', '30 inclus'],
       ['Codes correctifs', '1 crédit / code', 'Illimité ∞'],
+      ['Correctif multi-pages', '—', '✓ Inclus'],
       ['Marque blanche', '—', '✓ Inclus'],
       ['Multi-comptes', '—', '3 comptes'],
       ['Support prioritaire', '—', '✓ Inclus'],
@@ -160,6 +166,7 @@ const translations = {
     features: [
       { icon: 'Infinity', title: 'Unlimited reports', description: 'Run as many technical SEO, strategic, GEO and LLM audits as you want. No caps, no restrictions.' },
       { icon: 'Code2', title: 'Unlimited corrective code', description: 'Generate customized fix scripts for each client without consuming credits.' },
+      { icon: 'Layers', title: 'Multi-page corrective code', description: 'Configure different correction rules for each URL on your site. The Generative Architect automatically adapts the injected code page by page.' },
       { icon: 'Globe', title: 'Multi-page crawl included', description: '5,000 crawled pages/month included (Fair Use). Beyond that, purchase additional credits Pay-As-You-Go. Structure, SEO score/200, broken links, AI summary.' },
       { icon: 'BarChart3', title: '30 tracked URLs included', description: 'Track up to 30 domains with SEO, GEO and LLM KPIs updated daily from your console.' },
       { icon: 'TrendingUp', title: 'Strategic Alignment Index (SAI)', description: 'Automatically diagnose your GSC Brand / Non-Brand traffic balance by business model. Score, historization and sector benchmarks.' },
@@ -176,6 +183,7 @@ const translations = {
       ['Multi-page crawl', '5-30 credits / crawl', '5,000 pages/month included *'],
       ['Tracked URLs', '—', '30 included'],
       ['Corrective code', '1 credit / code', 'Unlimited ∞'],
+      ['Multi-page corrective', '—', '✓ Included'],
       ['White label', '—', '✓ Included'],
       ['Multi-accounts', '—', '3 accounts'],
       ['Priority support', '—', '✓ Included'],
@@ -220,6 +228,7 @@ const translations = {
     features: [
       { icon: 'Infinity', title: 'Informes ilimitados', description: 'Lanza todas las auditorías SEO, GEO y LLM que necesites. Sin tope, sin restricción.' },
       { icon: 'Code2', title: 'Código correctivo ilimitado', description: 'Genera scripts de corrección personalizados para cada cliente sin gastar créditos.' },
+      { icon: 'Layers', title: 'Correctivo multi-páginas', description: 'Configura reglas de corrección diferentes para cada URL de tu sitio. El Arquitecto Generativo adapta automáticamente el código inyectado página por página.' },
       { icon: 'Globe', title: 'Crawl multi-páginas incluido', description: '5 000 páginas rastreadas/mes incluidas (Fair Use). Más allá, compra de créditos adicionales Pay-As-You-Go. Estructura, puntuación SEO/200, enlaces rotos, resumen IA.' },
       { icon: 'BarChart3', title: '30 URL seguidos incluidos', description: 'Sigue hasta 30 dominios con KPIs SEO, GEO y LLM actualizados diariamente desde tu consola.' },
       { icon: 'TrendingUp', title: 'Índice de Alineamiento Estratégico (IAS)', description: 'Diagnostique automáticamente el equilibrio Brand / Genérico de su tráfico GSC por modelo de negocio. Score, historización y benchmarks sectoriales.' },
@@ -236,6 +245,7 @@ const translations = {
       ['Crawl multi-páginas', '5-30 créditos / crawl', '5 000 páginas/mes incluidas *'],
       ['URL seguidos', '—', '30 incluidos'],
       ['Código correctivo', '1 crédito / código', 'Ilimitado ∞'],
+      ['Correctivo multi-páginas', '—', '✓ Incluido'],
       ['Marca blanca', '—', '✓ Incluido'],
       ['Multi-cuentas', '—', '3 cuentas'],
       ['Soporte prioritario', '—', '✓ Incluido'],
@@ -266,6 +276,7 @@ const translations = {
 const iconMap: Record<string, React.ReactNode> = {
   Infinity: <Infinity className="h-6 w-6" />,
   Code2: <Code2 className="h-6 w-6" />,
+  Layers: <Layers className="h-6 w-6" />,
   Globe: <Globe className="h-6 w-6" />,
   Palette: <Palette className="h-6 w-6" />,
   Users: <Users className="h-6 w-6" />,

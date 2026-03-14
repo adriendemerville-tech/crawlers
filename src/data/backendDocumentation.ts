@@ -669,10 +669,10 @@ Les données sont lues depuis la dernière entrée \`user_stats_history\` du sit
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '1.1.0',
-  lastUpdated: '2026-03-13',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM',
-  totalEdgeFunctions: 58,
-  totalTables: '30+',
-  totalLinesOfCode: '110 000+',
+  version: '1.2.0',
+  lastUpdated: '2026-03-14',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif',
+  totalEdgeFunctions: 81,
+  totalTables: '35+',
+  totalLinesOfCode: '118 000+',
 };

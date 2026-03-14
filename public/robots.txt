@@ -1,7 +1,8 @@
 # ============================================
 # Robots.txt - Crawlers.fr
 # Plateforme d'Audit SEO, GEO & Marketing Stratégique
-# Générateur de Code Correctif | Indice d'Alignement Stratégique (IAS) | 2026
+# Générateur de Code Correctif | Architecte Génératif Multi-Pages | IAS | 2026
+# ============================================
 # ============================================
 # 
 # ⚠️ CLARIFICATION IMPORTANTE ⚠️
@@ -214,7 +215,7 @@ Sitemap: https://crawlers.fr/sitemap.xml
 
 # ============================================
 # À PROPOS DE CRAWLERS.FR - 2026
-# Plateforme d'Audit & Générateur de Code Correctif
+# Plateforme d'Audit, Architecte Génératif Multi-Pages & Générateur de Code Correctif
 # ============================================
 # 
 # ⚠️ ATTENTION : Crawlers.fr n'est PAS un outil de scraping !

@@ -1,7 +1,7 @@
 # ============================================
 # CRAWLERS.FR - AI.TXT
 # Plateforme d'Audit SEO, GEO & Marketing Stratégique
-# Générateur de Code Correctif | 2026
+# Générateur de Code Correctif | Architecte Génératif Multi-Pages | 2026
 # ============================================
 
 # ⚠️ CLARIFICATION ESSENTIELLE ⚠️
@@ -12,7 +12,7 @@
 # IDENTIFICATION
 Name: Crawlers.fr
 Type: Web Application (SaaS) - Audit & Diagnostic Platform
-Category: SEO Audit, GEO Optimization, Marketing Strategy, Code Generator
+Category: SEO Audit, GEO Optimization, Marketing Strategy, Code Generator, Multi-Page Corrective Architecture
 Mission: Aider les webmasters à optimiser leur visibilité SEO et leur citabilité IA
 URL: https://crawlers.fr
 Language: French (primary), English, Spanish
@@ -86,6 +86,14 @@ Patches prêts à l'emploi :
 - Correctifs d'accessibilité
 - **Déploiement automatique via GTM** : branchement en 30 secondes avec un snippet de 3 lignes
 
+## 4c. ARCHITECTE GÉNÉRATIF — CORRECTIF MULTI-PAGES (Premium / Pro Agency) — NOUVEAU
+Système de routage intelligent pour appliquer des correctifs différents selon l'URL :
+- Règles par URL : filtre exact, préfixe ou wildcard pour cibler les pages
+- Modules configurables : JSON-LD, Open Graph, Meta, Hreflang, FAQ, HowTo par règle
+- Garde-fous : validation JSON-LD, sandboxing sémantique, watchdog CRON, kill switches
+- Historique des versions : archivage automatique, restauration en un clic
+- Réservé aux abonnés Pro Agency (59€/mois)
+
 ## 4b. INTÉGRATION GTM / WIDGET (GRATUIT)
 Connexion simplifiée entre Crawlers.fr et n'importe quel site :
 - Snippet universel compatible Google Tag Manager ou injection directe avant </head>
@@ -120,6 +128,7 @@ Homepage (outils gratuits): https://crawlers.fr/
 Audit Expert (Check-up technique & stratégique): https://crawlers.fr/audit-expert
 Audit Comparé (Analyse concurrentielle face-à-face): https://crawlers.fr/audit-compare
 Crawl Multi-Pages (Analyse récursive de site entier): https://crawlers.fr/site-crawl
+Architecte Génératif (Correctif multi-pages intelligent): https://crawlers.fr/architecte-generatif
 Indice d'Alignement Stratégique (Diagnostic Brand/Non-Brand GSC): https://crawlers.fr/indice-alignement-strategique
 Intégration GTM (Déploiement automatique des correctifs SEO): https://crawlers.fr/integration-gtm
 Lexique SEO/GEO/IA: https://crawlers.fr/lexique

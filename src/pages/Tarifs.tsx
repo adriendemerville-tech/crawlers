@@ -16,7 +16,7 @@ import {
   CheckCircle2, Zap, CreditCard, FileText, Code2, 
   Bot, Globe, Gauge, Brain, ArrowRight, Gift,
   Crown, Infinity, Shield, Headphones, Loader2, Users, Star,
-  ScanSearch, GitCompareArrows
+  ScanSearch, GitCompareArrows, Layers
 } from 'lucide-react';
 
 const translations = {
@@ -100,6 +100,7 @@ const translations = {
     agencyFeatures: [
       'Audit expert illimité',
       'Code correctif illimité',
+      'Correctif multi-pages',
       'Crawl : 5 000 pages/mois incluses',
       '30 URL suivis inclus',
       'Marque Blanche (White Label)',
@@ -192,6 +193,7 @@ const translations = {
     agencyFeatures: [
       'Unlimited expert audit',
       'Unlimited corrective code',
+      'Multi-page corrective code',
       'Crawl: 5,000 pages/month included',
       '30 tracked URLs included',
       'White Label option',
@@ -284,6 +286,7 @@ const translations = {
     agencyFeatures: [
       'Auditoría experta ilimitada',
       'Código correctivo ilimitado',
+      'Correctivo multi-páginas',
       'Crawl: 5 000 páginas/mes incluidas',
       '30 URL seguidos incluidos',
       'Opción Marca Blanca',
@@ -298,7 +301,7 @@ const translations = {
   },
 };
 
-const agencyIcons = [Infinity, Infinity, Shield, ScanSearch, Shield, Users, Headphones];
+const agencyIcons = [Infinity, Infinity, Layers, Shield, ScanSearch, Shield, Users, Headphones];
 
 export default function Tarifs() {
   const { language } = useLanguage();
@@ -460,7 +463,7 @@ export default function Tarifs() {
         {
           "@type": "Offer",
           "name": "Pro Agency — Monthly Subscription",
-          "description": "Unlimited SEO/GEO reports, unlimited corrective code generation, White Label branding, 3 team accounts, priority support, Google Search Console integration, AI visibility monitoring dashboard.",
+          "description": "Unlimited SEO/GEO reports, unlimited corrective code generation, multi-page corrective code (per-URL rules), White Label branding, 3 team accounts, priority support, Google Search Console integration, AI visibility monitoring dashboard.",
           "price": "59.00",
           "priceCurrency": "EUR",
           "availability": "https://schema.org/InStock",
@@ -480,7 +483,7 @@ export default function Tarifs() {
           "itemOffered": {
             "@type": "Service",
             "name": "Pro Agency Subscription",
-            "description": "White Label / Marque Blanche, Dashboard Agence dédié, Export de rapports personnalisés, Rapports et correctifs illimités, Intégration Google Search Console, Suivi KPI d'audience"
+            "description": "White Label / Marque Blanche, Dashboard Agence dédié, Export de rapports personnalisés, Rapports et correctifs illimités, Correctif multi-pages (règles par URL), Intégration Google Search Console, Suivi KPI d'audience"
           }
         }
       ]
