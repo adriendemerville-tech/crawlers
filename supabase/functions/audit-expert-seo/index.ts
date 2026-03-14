@@ -1723,5 +1723,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Audit failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+  } finally {
+    releaseConcurrency('audit-expert-seo');
   }
 });

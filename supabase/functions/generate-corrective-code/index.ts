@@ -2624,12 +2624,28 @@ async function computeVersionDiff(
 // ══════════════════════════════════════════════════════════════
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const clientIp = getClientIp(req);
+  const ipCheck = checkIpRate(clientIp, 'generate-corrective-code', 10, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
+  if (!acquireConcurrency('generate-corrective-code', 20)) return concurrencyResponse(corsHeaders);
+
   try {
+    // ── Fair Use ──
+    const userCtx = await getUserContext(req);
+    if (userCtx) {
+      const fairUse = await checkFairUse(userCtx.userId, 'corrective_code', userCtx.planType);
+      if (!fairUse.allowed) {
+        releaseConcurrency('generate-corrective-code');
+        return new Response(JSON.stringify({ success: false, error: fairUse.reason }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
     const { 
       fixes, 
       siteName, 

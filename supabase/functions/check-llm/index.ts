@@ -394,5 +394,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Analysis failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+  } finally {
+    releaseConcurrency('check-llm');
   }
 });

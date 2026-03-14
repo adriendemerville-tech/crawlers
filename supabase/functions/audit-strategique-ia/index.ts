@@ -2122,6 +2122,12 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const clientIp = getClientIp(req);
+  const ipCheck = checkIpRate(clientIp, 'audit-strategique-ia', 10, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
+  if (!acquireConcurrency('audit-strategique-ia', 25)) return concurrencyResponse(corsHeaders);
+
   const json = (data: any, status = 200) =>
     new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
