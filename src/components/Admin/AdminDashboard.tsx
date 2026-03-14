@@ -50,6 +50,7 @@ const adminTranslations = {
     support: 'Soporte',
     ciTests: 'CI Tests',
     affiliates: 'Afiliación',
+    scripts: 'Scripts',
     docs: 'Docs',
   },
 };
