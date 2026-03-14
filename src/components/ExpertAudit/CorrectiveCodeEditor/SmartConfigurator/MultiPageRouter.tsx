@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, FolderTree, Globe, ChevronRight, ChevronDown, FileText, AlertCircle, Sparkles, Save } from 'lucide-react';
+import { Loader2, FolderTree, Globe, ChevronRight, ChevronDown, FileText, AlertCircle, Sparkles, Save, Undo2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
