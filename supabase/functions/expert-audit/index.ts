@@ -5,6 +5,8 @@ import { fetchAndRenderPage } from '../_shared/renderPage.ts'
 import { cacheKey, getCached, setCache, checkRateLimit } from '../_shared/auditCache.ts'
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
+import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 
 // Mapping des recommandations vers les types de fix pour le générateur de code
 const RECOMMENDATION_TO_FIX_MAP: Record<string, { fixType: string | null; category: string }> = {
@@ -2011,7 +2013,26 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ── IP Rate Limit (burst protection) ──
+  const clientIp = getClientIp(req);
+  const ipCheck = checkIpRate(clientIp, 'expert-audit', 15, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
+  // ── Concurrency guard (max 40 simultaneous) ──
+  if (!acquireConcurrency('expert-audit', 40)) return concurrencyResponse(corsHeaders);
+
   try {
+    // ── Fair Use check (invisible daily/hourly caps) ──
+    const userCtx = await getUserContext(req);
+    if (userCtx) {
+      const fairUse = await checkFairUse(userCtx.userId, 'expert_audit', userCtx.planType);
+      if (!fairUse.allowed) {
+        releaseConcurrency('expert-audit');
+        return new Response(JSON.stringify({ success: false, error: fairUse.reason }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
     const { url } = await req.json();
     
     if (!url) {
@@ -2304,5 +2325,7 @@ Réponds avec ce JSON exact:
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Audit failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+  } finally {
+    releaseConcurrency('expert-audit');
   }
 });

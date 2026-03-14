@@ -1,6 +1,8 @@
 import { DOMParser, Element, HTMLDocument } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts"
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
+import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
@@ -1454,6 +1456,12 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const clientIp = getClientIp(req);
+  const ipCheck = checkIpRate(clientIp, 'audit-expert-seo', 15, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
+  if (!acquireConcurrency('audit-expert-seo', 40)) return concurrencyResponse(corsHeaders);
+
   try {
     const { url, lang } = await req.json();
     const outputLang = lang || 'fr';
@@ -1715,5 +1723,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Audit failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+  } finally {
+    releaseConcurrency('audit-expert-seo');
   }
 });

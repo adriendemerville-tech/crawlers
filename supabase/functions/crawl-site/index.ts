@@ -1,6 +1,8 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
+import { checkFairUse } from '../_shared/fairUse.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 
@@ -12,6 +14,11 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // ── IP Rate Limit (anti-bot) ──
+  const clientIp = getClientIp(req);
+  const ipCheck = checkIpRate(clientIp, 'crawl-site', 5, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -83,6 +90,10 @@ Deno.serve(async (req) => {
       console.warn(`[${domain}] Indexed pages pre-scan failed (non-blocking):`, e);
     }
 
+    // ── Fair Use check ──
+    const fairUse = await checkFairUse(userId, 'crawl_site', 'free'); // planType checked below
+    // We'll refine after fetching profile
+
     // Check if user is Pro Agency or Admin
     const { data: profile } = await supabase
       .from('profiles')
@@ -91,6 +102,17 @@ Deno.serve(async (req) => {
       .single();
 
     const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
+
+    // Re-check fair use with actual plan type
+    const isProAgencyPlan = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
+    if (!isAdmin) {
+      const realFairUse = await checkFairUse(userId, 'crawl_site', isProAgencyPlan ? 'agency_pro' : 'free');
+      if (!realFairUse.allowed) {
+        return new Response(JSON.stringify({ success: false, error: realFairUse.reason }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     const isProAgency = profile?.plan_type === 'agency_pro' && profile?.subscription_status === 'active';
     const isUnlimited = isAdmin === true;

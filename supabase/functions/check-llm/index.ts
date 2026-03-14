@@ -2,6 +2,8 @@ import { getLLMTranslations, parseLanguage, type Language } from '../_shared/tra
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
+import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 
 interface LLMProvider {
   id: string;
@@ -213,12 +215,29 @@ async function queryLLM(
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ── IP Rate Limit ──
+  const clientIp = getClientIp(req);
+  const ipCheck = checkIpRate(clientIp, 'check-llm', 10, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
+  if (!acquireConcurrency('check-llm', 30)) return concurrencyResponse(corsHeaders);
+
   try {
+    // ── Fair Use ──
+    const userCtx = await getUserContext(req);
+    if (userCtx) {
+      const fairUse = await checkFairUse(userCtx.userId, 'llm_check', userCtx.planType);
+      if (!fairUse.allowed) {
+        releaseConcurrency('check-llm');
+        return new Response(JSON.stringify({ success: false, error: fairUse.reason }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
     const { url, lang: requestLang, correction } = await req.json();
     const lang = parseLanguage(requestLang);
     const t = getLLMTranslations(lang);
@@ -375,5 +394,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Analysis failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+  } finally {
+    releaseConcurrency('check-llm');
   }
 });

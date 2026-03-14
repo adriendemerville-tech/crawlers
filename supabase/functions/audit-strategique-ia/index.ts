@@ -2,6 +2,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
+import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
 
 // Fonction pour générer un résumé promptable depuis le rapport stratégique
 function generateStrategicPromptSummary(title: string, description: string, priority: string): string {
@@ -2120,6 +2122,12 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const clientIp = getClientIp(req);
+  const ipCheck = checkIpRate(clientIp, 'audit-strategique-ia', 10, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
+  if (!acquireConcurrency('audit-strategique-ia', 25)) return concurrencyResponse(corsHeaders);
+
   const json = (data: any, status = 200) =>
     new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
@@ -2795,5 +2803,7 @@ Deno.serve(async (req) => {
         _error: error instanceof Error ? error.message : 'Unknown error',
       },
     });
+  } finally {
+    releaseConcurrency('audit-strategique-ia');
   }
 });
