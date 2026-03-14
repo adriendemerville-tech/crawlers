@@ -985,7 +985,7 @@ export function MyTracking() {
                         )}
                       </Button>
 
-                      {!gscConnected ? (
+                      {!gscConnected && (
                         <Button 
                           size="sm" 
                           variant="outline"
@@ -995,18 +995,6 @@ export function MyTracking() {
                         >
                           {gscConnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plug className="h-3.5 w-3.5" />}
                           Search Console
-                        </Button>
-                      ) : (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="gap-1.5 text-amber-600 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950"
-                          disabled={gscConnecting}
-                          onClick={handleConnectGsc}
-                          title={language === 'fr' ? 'Reconnecter pour activer Google Analytics (GA4)' : language === 'es' ? 'Reconectar para activar Google Analytics (GA4)' : 'Reconnect to enable Google Analytics (GA4)'}
-                        >
-                          {gscConnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-                          {language === 'fr' ? 'MAJ connexion GSC' : language === 'es' ? 'Actualizar conexión GSC' : 'Update GSC connection'}
                         </Button>
                       )}
 

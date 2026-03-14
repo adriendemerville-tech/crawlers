@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { User, Save, Loader2, Globe, Music, X, Sun, Moon } from 'lucide-react';
+import { User, Save, Loader2, Globe, Music, X, Sun, Moon, RefreshCw, CheckCircle2, Search } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
