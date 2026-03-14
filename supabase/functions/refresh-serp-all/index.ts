@@ -359,7 +359,44 @@ Deno.serve(async (req) => {
           }
         }
 
-        // ═══ 4. Backward compat: update user_stats_history ═══
+        // ═══ 4. GA4 HISTORY LOG — via resolveGoogleToken + shared helper ═══
+        const clientId = Deno.env.get('GOOGLE_GSC_CLIENT_ID')
+        const clientSecret = Deno.env.get('GOOGLE_GSC_CLIENT_SECRET')
+        if (clientId && clientSecret) {
+          try {
+            const resolved = await resolveGoogleToken(supabase, site.user_id, site.domain, clientId, clientSecret)
+            if (resolved?.ga4_property_id) {
+              const ga4Data = await fetchGA4Engagement({
+                accessToken: resolved.access_token,
+                propertyId: resolved.ga4_property_id,
+              })
+              if (ga4Data) {
+                const { error: ga4Error } = await supabase
+                  .from('ga4_history_log')
+                  .upsert({
+                    tracked_site_id: site.id,
+                    user_id: site.user_id,
+                    domain: site.domain,
+                    sessions: ga4Data.sessions,
+                    total_users: ga4Data.total_users,
+                    engagement_rate: ga4Data.engagement_rate,
+                    bounce_rate: ga4Data.bounce_rate,
+                    avg_session_duration: ga4Data.avg_session_duration,
+                    pageviews: ga4Data.pageviews,
+                    week_start_date: weekStart,
+                  }, { onConflict: 'tracked_site_id,week_start_date' })
+                if (!ga4Error) {
+                  stats.ga4++
+                  trackPaidApiCall('refresh-serp-all', 'google-ga4', 'runReport')
+                } else {
+                  console.error(`[${site.domain}] GA4 insert error:`, ga4Error)
+                }
+              }
+            }
+          } catch { /* GA4 best-effort */ }
+        }
+
+        // ═══ 5. Backward compat: update user_stats_history ═══
         if (serpData) {
           const { data: latestEntry } = await supabase
             .from('user_stats_history')
