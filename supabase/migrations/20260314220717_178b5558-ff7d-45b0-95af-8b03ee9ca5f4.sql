@@ -1,0 +1,1 @@
+DELETE FROM analyzed_urls WHERE LOWER(domain) IN (SELECT LOWER(domain) FROM tracked_sites);
