@@ -64,7 +64,6 @@ async function getReliabilityProfile(supabase: any, functionName: string): Promi
   const withGsc = all.filter((s: any) => s.gsc_baseline != null)
   const withGa4 = all.filter((s: any) => s.ga4_baseline != null)
   const completed = all.filter((s: any) => s.measurement_phase === 'complete' && s.impact_score != null)
-  const completed = all.filter((s: any) => s.measurement_phase === 'complete' && s.impact_score != null)
 
   // Grade distribution
   const grades: Record<string, number> = { A: 0, B: 0, C: 0, D: 0, F: 0, 'N/A': 0 }
