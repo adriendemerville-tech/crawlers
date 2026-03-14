@@ -741,7 +741,7 @@ export const blogArticles: BlogArticle[] = [
     slug: 'indice-alignement-strategique-gsc-2026',
     type: 'pillar',
     title: {
-      fr: 'Indice d\'Alignement Stratégique : la Search Console enfin exploitée pour piloter votre marketing',
+      fr: 'Comment enfin mesurer la notoriété de votre site avec Google Search Console',
       en: 'Strategic Alignment Index: Search Console Finally Leveraged to Drive Your Marketing',
       es: 'Índice de Alineamiento Estratégico: la Search Console por fin utilizada para pilotar su marketing',
     },
