@@ -201,6 +201,62 @@ async function fetchPageSpeedBaseline(url: string): Promise<any> {
   }
 }
 
+// ─── GA4 helper ───────────────────────────────────────────────────────
+async function fetchGA4Baseline(accessToken: string, propertyId: string): Promise<any> {
+  const GA4_API = 'https://analyticsdata.googleapis.com/v1beta'
+  const endDate = new Date().toISOString().split('T')[0]
+  const startDate = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+  try {
+    const resp = await fetch(`${GA4_API}/properties/${propertyId}:runReport`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        dateRanges: [{ startDate, endDate }],
+        metrics: [
+          { name: 'sessions' },
+          { name: 'totalUsers' },
+          { name: 'screenPageViews' },
+          { name: 'averageSessionDuration' },
+          { name: 'bounceRate' },
+          { name: 'engagementRate' },
+          { name: 'engagedSessions' },
+        ],
+      }),
+    })
+
+    if (!resp.ok) {
+      console.error('[snapshot] GA4 error:', await resp.text())
+      return null
+    }
+
+    const data = await resp.json()
+    const row = data.rows?.[0]
+    if (!row) return null
+
+    const vals = row.metricValues || []
+    trackPaidApiCall('snapshot-audit-impact', 'google-ga4', 'runReport')
+
+    return {
+      sessions: parseInt(vals[0]?.value || '0'),
+      total_users: parseInt(vals[1]?.value || '0'),
+      pageviews: parseInt(vals[2]?.value || '0'),
+      avg_session_duration: parseFloat(vals[3]?.value || '0'),
+      bounce_rate: parseFloat(vals[4]?.value || '0'),
+      engagement_rate: parseFloat(vals[5]?.value || '0'),
+      engaged_sessions: parseInt(vals[6]?.value || '0'),
+      measured_at: new Date().toISOString(),
+      period: { start_date: startDate, end_date: endDate },
+    }
+  } catch (e) {
+    console.error('[snapshot] GA4 error:', e)
+    return null
+  }
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
