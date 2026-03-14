@@ -267,7 +267,10 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
     setAssignments(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Save all rules via bulk upsert
+  // Payload types that need AI generation (queued)
+  const AI_GENERATED_TYPES = ['FAQPage', 'HTML_INJECTION', 'Article'];
+
+  // Save all rules via bulk upsert with queuing for AI-generated payloads
   const handleSaveAll = async () => {
     if (!siteId || !user) return;
     setSaving(true);
@@ -279,26 +282,43 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
         .eq('domain_id', siteId)
         .eq('user_id', user.id);
 
-      // Insert new rules
+      // Insert new rules with appropriate generation_status
       if (assignments.length > 0) {
-        const rows = assignments.map(a => ({
-          domain_id: siteId,
-          user_id: user.id,
-          url_pattern: a.urlPattern,
-          payload_type: a.payloadType,
-          payload_data: a.payloadData as any,
-          is_active: true,
-          status: 'active',
-        }));
+        const rows = assignments.map(a => {
+          const needsAI = AI_GENERATED_TYPES.includes(a.payloadType) && 
+            (!a.payloadData || Object.keys(a.payloadData).length <= 1);
+          return {
+            domain_id: siteId,
+            user_id: user.id,
+            url_pattern: a.urlPattern,
+            payload_type: a.payloadType,
+            payload_data: a.payloadData as any,
+            is_active: true,
+            status: 'active',
+            generation_status: needsAI ? 'pending' : 'ready',
+            queued_at: needsAI ? new Date().toISOString() : null,
+          };
+        });
 
         const { error } = await supabase
           .from('site_script_rules')
           .insert(rows as any);
 
         if (error) throw error;
-      }
 
-      toast({ title: t.saved });
+        // If any rules need AI generation, trigger the queue worker
+        const hasAIRules = rows.some(r => r.generation_status === 'pending');
+        if (hasAIRules) {
+          supabase.functions.invoke('process-script-queue', {
+            body: { domain_id: siteId },
+          }).catch(() => {});
+          toast({ title: t.saved, description: `${rows.filter(r => r.generation_status === 'pending').length} règles en file d'attente pour génération IA` });
+        } else {
+          toast({ title: t.saved });
+        }
+      } else {
+        toast({ title: t.saved });
+      }
     } catch (err) {
       console.error('[MultiPageRouter] Save error:', err);
       toast({ title: 'Erreur', variant: 'destructive' });

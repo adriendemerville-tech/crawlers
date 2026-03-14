@@ -2585,11 +2585,15 @@ export type Database = {
         Row: {
           created_at: string
           domain_id: string
+          generated_at: string | null
+          generation_error: string | null
+          generation_status: string
           id: string
           is_active: boolean
           payload_data: Json
           payload_type: string
           previous_payload_data: Json | null
+          queued_at: string | null
           status: string
           telemetry_last_ping: string | null
           updated_at: string
@@ -2600,11 +2604,15 @@ export type Database = {
         Insert: {
           created_at?: string
           domain_id: string
+          generated_at?: string | null
+          generation_error?: string | null
+          generation_status?: string
           id?: string
           is_active?: boolean
           payload_data?: Json
           payload_type?: string
           previous_payload_data?: Json | null
+          queued_at?: string | null
           status?: string
           telemetry_last_ping?: string | null
           updated_at?: string
@@ -2615,11 +2623,15 @@ export type Database = {
         Update: {
           created_at?: string
           domain_id?: string
+          generated_at?: string | null
+          generation_error?: string | null
+          generation_status?: string
           id?: string
           is_active?: boolean
           payload_data?: Json
           payload_type?: string
           previous_payload_data?: Json | null
+          queued_at?: string | null
           status?: string
           telemetry_last_ping?: string | null
           updated_at?: string
