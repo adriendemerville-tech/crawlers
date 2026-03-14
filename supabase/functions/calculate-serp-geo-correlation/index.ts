@@ -316,8 +316,8 @@ Deno.serve(async (req) => {
 
     for (const site of sites) {
       try {
-        // Fetch up to 52 weeks of SERP + up to 1000 LLM scores (~5 models × 52w × ~4)
-        const [serpRes, llmRes] = await Promise.all([
+        // Fetch up to 52 weeks of SERP + LLM scores + GA4 history in parallel
+        const [serpRes, llmRes, ga4HistRes] = await Promise.all([
           supabase
             .from('serp_snapshots')
             .select('measured_at, avg_position, etv, top_10')
@@ -330,10 +330,17 @@ Deno.serve(async (req) => {
             .eq('tracked_site_id', site.id)
             .order('week_start_date', { ascending: true })
             .limit(1000),
+          supabase
+            .from('ga4_history_log')
+            .select('week_start_date, engagement_rate, sessions, bounce_rate, avg_session_duration')
+            .eq('tracked_site_id', site.id)
+            .order('week_start_date', { ascending: true })
+            .limit(52),
         ]);
 
         const serpRows = serpRes.data;
         const llmRows = llmRes.data;
+        const ga4HistRows = ga4HistRes.data || [];
 
         if (!serpRows?.length || !llmRows?.length) { skipped++; continue; }
 
