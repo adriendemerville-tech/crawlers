@@ -2,8 +2,8 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { Network, TrendingUp, Eye, Zap, Globe, Brain, ArrowRight, Shield, BarChart3, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 const features = [
   {
