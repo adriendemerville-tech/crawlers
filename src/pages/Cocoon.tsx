@@ -600,7 +600,7 @@ export default function Cocoon() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#fbbf24]/10 border border-[#fbbf24]/20 text-[#fbbf24] hover:bg-[#fbbf24]/20 transition-colors text-xs font-medium backdrop-blur-md"
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
-            Console
+            {t.console}
           </button>
         </div>
 
