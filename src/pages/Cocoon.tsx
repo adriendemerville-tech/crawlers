@@ -517,6 +517,24 @@ export default function Cocoon() {
               <CocoonNodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />
             )}
           </div>
+
+          {/* Legend — below graph */}
+          {nodes.length > 0 && (
+            <div className="flex items-center gap-4 mt-3 px-1 flex-wrap">
+              {[
+                { label: 'Transactionnel', color: '#fbbf24' },
+                { label: 'Commercial', color: '#a78bfa' },
+                { label: 'Informationnel', color: '#7c3aed' },
+                { label: 'Navigationnel', color: '#6366f1' },
+              ].map(({ label, color }) => (
+                <div key={label} className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+                  <span className="text-white/50 text-xs">{label}</span>
+                </div>
+              ))}
+              <span className="text-white/30 text-xs ml-auto">Chaque point = 1 page crawlée</span>
+            </div>
+          )}
         </main>
 
         {/* AI Chat for interpreting results */}
