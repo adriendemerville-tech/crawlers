@@ -156,6 +156,7 @@ export function CocoonHelpModal() {
 
           await supabase.from('support_messages').insert({
             conversation_id: conversationId,
+            sender_id: user.id,
             content: `**${subject}**\n\n${message}${imageUrl ? `\n\n![screenshot](${imageUrl})` : ''}`,
             is_admin: false,
           });
