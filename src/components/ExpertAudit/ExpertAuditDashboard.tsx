@@ -269,7 +269,6 @@ export function ExpertAuditDashboard() {
   const [forceStrategicRefresh, setForceStrategicRefresh] = useState(false);
   const [fromCocoon, setFromCocoon] = useState(false);
   const [cocoonDomain, setCocoonDomain] = useState<string>('');
-  const [forceStrategicRefresh, setForceStrategicRefresh] = useState(false);
 
   const STRATEGIC_CACHE_MAX = 10;
 
