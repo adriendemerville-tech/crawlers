@@ -276,7 +276,7 @@ function NodeSphere({
         onPointerOut={(e) => { e.stopPropagation(); onPointerOut(); }}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
       >
-        <sphereGeometry args={[node.radius, 24, 24]} />
+        <sphereGeometry args={[scaledRadius, 24, 24]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
