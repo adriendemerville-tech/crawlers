@@ -437,35 +437,52 @@ export function CocoonForceGraph({
 
         // ─── Home Sun: rotating elliptical corona with tilt ───
         if (node.isHome && !isGhost) {
-          ctx.save();
-          ctx.translate(node.x, node.y);
-          // 10% tilt rotation
-          ctx.rotate(0.1 * Math.PI);
-          // Horizontal elliptical rotation animation
-          const rotAngle = time * 0.4;
-
-          // Outer corona layers (flowing effect)
-          for (let layer = 0; layer < 4; layer++) {
-            const coronaR = r * (1.3 + layer * 0.5);
-            const layerAngle = rotAngle + layer * 0.5;
-            const squish = 0.55 + Math.sin(time * 0.3 + layer) * 0.1;
-            const coronaAlpha = (0.15 - layer * 0.03) * (0.8 + Math.sin(time * 1.5 + layer * 1.2) * 0.2);
-
+          if (isXRayMode) {
+            // X-Ray: subtle blue glow + slow idle rotation
             ctx.save();
-            ctx.rotate(layerAngle);
-            ctx.scale(1, squish);
+            ctx.translate(node.x, node.y);
+            const idleAngle = time * 0.15;
+            ctx.rotate(idleAngle);
+            const idleR = r * 2;
+            const idleAlpha = 0.12 + Math.sin(time * 0.8) * 0.04;
+            const idleGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, idleR);
+            idleGrad.addColorStop(0, `rgba(94, 147, 224, ${idleAlpha})`);
+            idleGrad.addColorStop(0.6, `rgba(94, 147, 224, ${idleAlpha * 0.3})`);
+            idleGrad.addColorStop(1, `rgba(94, 147, 224, 0)`);
             ctx.beginPath();
-            ctx.arc(0, 0, coronaR, 0, Math.PI * 2);
-            const coronaGrad = ctx.createRadialGradient(0, 0, coronaR * 0.3, 0, 0, coronaR);
-            coronaGrad.addColorStop(0, `rgba(255, 220, 80, ${coronaAlpha})`);
-            coronaGrad.addColorStop(0.5, `rgba(255, 180, 40, ${coronaAlpha * 0.4})`);
-            coronaGrad.addColorStop(1, `rgba(255, 140, 20, 0)`);
-            ctx.fillStyle = coronaGrad;
+            ctx.arc(0, 0, idleR, 0, Math.PI * 2);
+            ctx.fillStyle = idleGrad;
             ctx.fill();
             ctx.restore();
-          }
+          } else {
+            // Normal mode: rotating elliptical corona (no change) but glow pulses
+            ctx.save();
+            ctx.translate(node.x, node.y);
+            ctx.rotate(0.1 * Math.PI);
+            const rotAngle = time * 0.4;
 
-          ctx.restore();
+            for (let layer = 0; layer < 4; layer++) {
+              const coronaR = r * (1.3 + layer * 0.5);
+              const layerAngle = rotAngle + layer * 0.5;
+              const squish = 0.55 + Math.sin(time * 0.3 + layer) * 0.1;
+              const coronaAlpha = (0.15 - layer * 0.03) * (0.8 + Math.sin(time * 1.5 + layer * 1.2) * 0.2);
+
+              ctx.save();
+              ctx.rotate(layerAngle);
+              ctx.scale(1, squish);
+              ctx.beginPath();
+              ctx.arc(0, 0, coronaR, 0, Math.PI * 2);
+              const coronaGrad = ctx.createRadialGradient(0, 0, coronaR * 0.3, 0, 0, coronaR);
+              coronaGrad.addColorStop(0, `rgba(255, 220, 80, ${coronaAlpha})`);
+              coronaGrad.addColorStop(0.5, `rgba(255, 180, 40, ${coronaAlpha * 0.4})`);
+              coronaGrad.addColorStop(1, `rgba(255, 140, 20, 0)`);
+              ctx.fillStyle = coronaGrad;
+              ctx.fill();
+              ctx.restore();
+            }
+
+            ctx.restore();
+          }
         }
 
         // ─── Outer glow rings (Jarvis energy rings) ───
