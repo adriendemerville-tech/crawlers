@@ -26,19 +26,13 @@ const ResultsDashboard = lazy(() => import('@/components/ResultsDashboard').then
 const PageSpeedDashboard = lazy(() => import('@/components/PageSpeedDashboard').then(m => ({ default: m.PageSpeedDashboard })));
 const GeoDashboard = lazy(() => import('@/components/GeoDashboard').then(m => ({ default: m.GeoDashboard })));
 const LLMDashboard = lazy(() => import('@/components/LLMDashboard').then(m => ({ default: m.LLMDashboard })));
-const QuotaExceeded = lazy(() => import('@/components/QuotaExceeded').then(m => ({ default: m.QuotaExceeded })));
 
 // Lazy load below-the-fold components with higher priority grouping
 const FAQSection = lazy(() => import('@/components/FAQSection').then(m => ({ default: m.FAQSection })));
-const WhyVital2026Section = lazy(() => import('@/components/WhyVital2026Section').then(m => ({ default: m.WhyVital2026Section })));
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
-const GEOComparisonTable = lazy(() => import('@/components/GEOComparisonTable').then(m => ({ default: m.GEOComparisonTable })));
-const SolutionSection = lazy(() => import('@/components/SolutionSection').then(m => ({ default: m.SolutionSection })));
 
 // Lazy load Footer - not needed for initial render
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
-const FloatingReportButton = lazy(() => import('@/components/FloatingReportButton').then(m => ({ default: m.FloatingReportButton })));
-const OnboardingTutorial = lazy(() => import('@/components/OnboardingTutorial').then(m => ({ default: m.OnboardingTutorial })));
 
 // Lightweight skeleton for dashboards
 const DashboardSkeleton = memo(() => (
@@ -462,8 +456,9 @@ const Index = () => {
     // Afficher le dashboard de l'onglet actif en premier
     if (activeTab === 'pagespeed' && quotaExceeded) {
       dashboards.push(
-        <div key="pagespeed-quota" className="border-b border-border/50 pb-8">
-          <QuotaExceeded onRetry={handleRetry} />
+        <div key="pagespeed-quota" className="border-b border-border/50 pb-8 p-8 text-center">
+          <p className="text-destructive font-semibold">Quota PageSpeed dépassé</p>
+          <button onClick={handleRetry} className="mt-2 text-sm text-primary underline">Réessayer</button>
         </div>
       );
     } else if (activeTab === 'crawlers') {
@@ -627,16 +622,6 @@ const Index = () => {
         {/* Mobile-only Lexique button */}
         <MobileLexiqueButton />
         
-        <Suspense fallback={<SectionSkeleton />}>
-          <SolutionSection />
-        </Suspense>
-
-        <Suspense fallback={<SectionSkeleton />}>
-          <WhyVital2026Section />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <GEOComparisonTable />
-        </Suspense>
 
         {/* CTA Observatoire */}
         <section className="border-y border-border bg-gradient-to-r from-violet-50/50 via-muted/30 to-amber-50/50 dark:from-violet-950/10 dark:via-muted/10 dark:to-amber-950/10 py-14 md:py-20">
@@ -665,24 +650,6 @@ const Index = () => {
         <Footer />
       </Suspense>
       
-      {/* Bouton rapport flottant - lazy loaded */}
-      <Suspense fallback={null}>
-        <FloatingReportButton
-          crawlResult={crawlResult}
-          geoResult={geoResult}
-          llmResult={llmResult}
-          pageSpeedResult={mobilePageSpeedResult || desktopPageSpeedResult}
-          currentUrl={currentUrl}
-        />
-      </Suspense>
-
-      {/* Onboarding tutorial - disabled, kept in reserve */}
-      {/* <Suspense fallback={null}>
-        <OnboardingTutorial
-          active={showTutorial}
-          onComplete={() => setShowTutorial(false)}
-        />
-      </Suspense> */}
     </div>
   );
 };

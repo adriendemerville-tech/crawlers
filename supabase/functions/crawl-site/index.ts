@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse } from '../_shared/fairUse.ts';
+import { logSilentError, fireAndLog } from '../_shared/silentErrorLogger.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 
@@ -215,7 +216,7 @@ Deno.serve(async (req) => {
     });
 
     const mapData = await mapResponse.json();
-    await trackPaidApiCall('crawl-site', 'firecrawl', '/map', normalizedUrl).catch(() => {});
+    await trackPaidApiCall('crawl-site', 'firecrawl', '/map', normalizedUrl).catch((e) => logSilentError('crawl-site', 'track-map-api-call', e, { severity: 'low', impact: 'tracking_miss' }));
     if (!mapResponse.ok || !mapData.links?.length) {
       await supabase.from('site_crawls').update({ status: 'error', error_message: 'Impossible de mapper le site' }).eq('id', crawlId);
       return new Response(JSON.stringify({ success: false, error: 'Map échoué', crawlId }), {
@@ -275,8 +276,8 @@ Deno.serve(async (req) => {
 
     console.log(`[${crawlId}] ✅ Job ${job.id} créé avec ${urls.length} URLs — en attente du worker`);
 
-    // Trigger the worker immediately (fire-and-forget)
-    try {
+    // Trigger the worker immediately (fire-and-forget with logging)
+    fireAndLog(
       fetch(`${supabaseUrl}/functions/v1/process-crawl-queue`, {
         method: 'POST',
         headers: {
@@ -284,8 +285,9 @@ Deno.serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ trigger: 'immediate' }),
-      }).catch(() => {});
-    } catch {}
+      }),
+      'crawl-site', 'trigger-worker', { severity: 'critical', impact: 'crawl_stuck', crawlId, domain }
+    );
 
     return new Response(JSON.stringify({
       success: true,
@@ -298,7 +300,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Erreur crawl-site:', error);
-    await trackEdgeFunctionError('crawl-site', error instanceof Error ? error.message : 'Erreur interne').catch(() => {});
+    await trackEdgeFunctionError('crawl-site', error instanceof Error ? error.message : 'Erreur interne').catch((e) => logSilentError('crawl-site', 'track-error', e, { severity: 'medium', impact: 'tracking_miss' }));
     return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur interne',

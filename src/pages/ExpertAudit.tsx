@@ -6,7 +6,7 @@ import { useCanonicalHreflang } from '@/hooks/useCanonicalHreflang';
 
 // Lazy load components
 const NewsCarousel = lazy(() => import('@/components/NewsCarousel').then(m => ({ default: m.NewsCarousel })));
-const SEOComparisonTable = lazy(() => import('@/components/SEOComparisonTable').then(m => ({ default: m.SEOComparisonTable })));
+
 const Footer = lazy(() => import('@/components/Footer').then(m => ({ default: m.Footer })));
 
 // FAQ data for Schema.org
@@ -183,9 +183,6 @@ const ExpertAudit = () => {
         <ExpertAuditDashboard />
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
           <NewsCarousel />
-        </Suspense>
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
-          <SEOComparisonTable />
         </Suspense>
         <ExpertAuditContent />
         <ExpertAuditFAQ />
