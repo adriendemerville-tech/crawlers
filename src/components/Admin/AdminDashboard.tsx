@@ -176,7 +176,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       label: t.technical,
       items: [
         { id: 'crawls', label: t.crawls, icon: Globe, group: 'technical' },
-        { id: 'scripts', label: t.scripts, icon: ShieldAlert, group: 'technical' },
+        ...(!readOnly ? [{ id: 'scripts', label: t.scripts, icon: ShieldAlert, group: 'technical' }] : []),
         ...(showAlgos ? [{ id: 'algos', label: t.algos, icon: Brain, group: 'technical' }] : []),
         { id: 'functions', label: t.functions, icon: Code2, group: 'technical' },
       ],
