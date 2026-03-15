@@ -556,6 +556,7 @@ export function CocoonForceGraph3D({
   particlesEnabled = true,
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const { graphNodes, graphLinks, nodeMap } = useMemo(() => {
     const urlToId = new Map<string, string>();
@@ -579,7 +580,6 @@ export function CocoonForceGraph3D({
     const gNodes: GraphNode3D[] = nodes.map((n, i) => {
       const crawlDepth = n.crawl_depth ?? n.depth ?? 0;
       const isHome = n.id === homeId;
-      // Distribute on sphere surface (golden angle)
       const phi = Math.acos(1 - (2 * (i + 0.5)) / nodes.length);
       const theta = Math.PI * (1 + Math.sqrt(5)) * i;
       const sphereR = 50 + crawlDepth * 20;
@@ -648,25 +648,41 @@ export function CocoonForceGraph3D({
       }
     }
 
-    // Run 3D force simulation
     simulate3D(gNodes, gLinks, 400);
 
     const nMap = new Map(gNodes.map((n) => [n.id, n]));
     return { graphNodes: gNodes, graphLinks: gLinks, nodeMap: nMap };
   }, [nodes]);
 
+  // Zoom handler: dispatches wheel events to the canvas to trigger OrbitControls zoom
+  const handleZoom = useCallback((direction: "in" | "out") => {
+    const canvas = document.querySelector("canvas");
+    if (!canvas) return;
+    const delta = direction === "in" ? -300 : 300;
+    canvas.dispatchEvent(
+      new WheelEvent("wheel", { deltaY: delta, bubbles: true })
+    );
+  }, []);
+
+  const handleReset = useCallback(() => {
+    // Re-render by forcing a remount isn't ideal; instead dispatch a double-click to reset OrbitControls
+    const canvas = document.querySelector("canvas");
+    if (!canvas) return;
+    canvas.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+  }, []);
+
   return (
     <div
-      className={`relative w-full h-full min-h-[500px] rounded-xl overflow-hidden shadow-2xl shadow-violet-950/40 transition-all ${
+      className={`relative w-full h-full transition-all ${
         isPickingMode
-          ? "border border-[#fbbf24] ring-2 ring-[#fbbf24]/30"
-          : "border border-violet-900/30"
+          ? "ring-2 ring-[#fbbf24]/30"
+          : ""
       }`}
     >
       <Canvas
         camera={{ position: [0, 0, 150], fov: 50, near: 0.1, far: 1000 }}
         gl={{ antialias: true, alpha: false }}
-        style={{ background: "#080515" }}
+        style={{ background: "#080515", width: "100%", height: "100%" }}
         onPointerMissed={() => onNodeSelect(null)}
       >
         <SceneContent
@@ -683,6 +699,34 @@ export function CocoonForceGraph3D({
           rawNodes={nodes}
         />
       </Canvas>
+
+      {/* Zoom controls */}
+      <div className="absolute bottom-4 right-4 flex flex-col gap-1.5 z-10">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-7 h-7 bg-black/40 backdrop-blur-md border border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60"
+          onClick={() => handleZoom("in")}
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-7 h-7 bg-black/40 backdrop-blur-md border border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60"
+          onClick={() => handleZoom("out")}
+        >
+          <Minus className="w-3.5 h-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-7 h-7 bg-black/40 backdrop-blur-md border border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60"
+          onClick={handleReset}
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+        </Button>
+      </div>
 
       {/* Stats overlay */}
       <div className="absolute top-4 right-4 text-[10px] text-white/30 font-mono space-y-0.5 text-right pointer-events-none">
