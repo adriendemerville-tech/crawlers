@@ -23,7 +23,8 @@ import {
   ScanSearch,
   Coins,
   CreditCard,
-  Users
+  Users,
+  HardDrive
 } from 'lucide-react';
 import { 
   LineChart, 
