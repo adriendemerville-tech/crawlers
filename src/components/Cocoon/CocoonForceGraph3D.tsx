@@ -450,7 +450,7 @@ function HudTooltip({ node }: { node: GraphNode3D }) {
 
   return (
     <Html
-      position={[node.x, node.y + node.radius + 3, node.z]}
+      position={[node.x, node.y + node.radius + 3, node.z]} // tooltip positioned relative to node group
       center
       style={{ pointerEvents: "none" }}
     >
