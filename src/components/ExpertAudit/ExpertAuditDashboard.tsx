@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { 
   Zap, Settings2, FileText, Brain, Shield, 
-  ExternalLink, Sparkles, FileDown, RotateCcw, Bot
+  ExternalLink, Sparkles, FileDown, RotateCcw, Bot, RotateCw
 } from 'lucide-react';
 import { TrackSiteButton } from './TrackSiteButton';
 import { ScoreGauge200 } from './ScoreGauge200';
