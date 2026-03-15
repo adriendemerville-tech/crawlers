@@ -498,35 +498,48 @@ export default function Cocoon() {
             )}
           </div>
 
-          {/* Legend — below graph */}
-          {nodes.length > 0 && (
-            <div className="flex items-center gap-4 mt-3 px-1 flex-wrap">
-              {[
-                { label: 'Accueil', color: '#fbbf24' },
-                { label: 'Blog', color: '#a78bfa' },
-                { label: 'Produit', color: '#34d399' },
-                { label: 'Catégorie', color: '#60a5fa' },
-                { label: 'FAQ', color: '#fb923c' },
-                { label: 'Guide', color: '#c084fc' },
-                { label: 'Page', color: '#8b5cf6' },
-              ].map(({ label, color }) => (
-                <div key={label} className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-                  <span className="text-white/50 text-xs">{label}</span>
+          {/* Legend — dynamic, based on actual node types */}
+          {nodes.length > 0 && (() => {
+            const typeColorMap: Record<string, { color: string; label: Record<string, string> }> = {
+              homepage: { color: '#fbbf24', label: { fr: 'Accueil', en: 'Home', es: 'Inicio' } },
+              blog: { color: '#a78bfa', label: { fr: 'Blog', en: 'Blog', es: 'Blog' } },
+              produit: { color: '#34d399', label: { fr: 'Produit', en: 'Product', es: 'Producto' } },
+              'catégorie': { color: '#60a5fa', label: { fr: 'Catégorie', en: 'Category', es: 'Categoría' } },
+              faq: { color: '#fb923c', label: { fr: 'FAQ', en: 'FAQ', es: 'FAQ' } },
+              guide: { color: '#c084fc', label: { fr: 'Guide', en: 'Guide', es: 'Guía' } },
+              contact: { color: '#f472b6', label: { fr: 'Contact', en: 'Contact', es: 'Contacto' } },
+              tarifs: { color: '#facc15', label: { fr: 'Tarifs', en: 'Pricing', es: 'Precios' } },
+              'légal': { color: '#94a3b8', label: { fr: 'Légal', en: 'Legal', es: 'Legal' } },
+              'à propos': { color: '#67e8f9', label: { fr: 'À propos', en: 'About', es: 'Acerca de' } },
+              page: { color: '#8b5cf6', label: { fr: 'Page', en: 'Page', es: 'Página' } },
+            };
+            const presentTypes = new Set(nodes.map((n: any) => n.page_type));
+            const legendItems = Object.entries(typeColorMap).filter(([type]) => presentTypes.has(type));
+
+            return (
+              <div
+                className="flex items-center gap-4 mt-3 px-1 flex-wrap opacity-0 animate-fade-in"
+                style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
+              >
+                {legendItems.map(([type, { color, label }]) => (
+                  <div key={type} className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+                    <span className="text-white/50 text-xs">{label[language] || label.fr}</span>
+                  </div>
+                ))}
+                <span className="text-white/20 mx-1">|</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
+                  <span className="text-white/40 text-[10px]">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
                 </div>
-              ))}
-              <span className="text-white/20 mx-1">|</span>
-              <div className="flex items-center gap-1.5">
-                <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
-                <span className="text-white/40 text-[10px]">↓ descendant</span>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
+                  <span className="text-white/40 text-[10px]">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
+                </div>
+                <span className="text-white/30 text-xs ml-auto">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
-                <span className="text-white/40 text-[10px]">↑ ascendant</span>
-              </div>
-              <span className="text-white/30 text-xs ml-auto">⌂ = Home · Taille ∝ profondeur</span>
-            </div>
-          )}
+            );
+          })()}
         </main>
 
         {/* AI Chat for interpreting results */}
