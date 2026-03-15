@@ -91,6 +91,13 @@ const i18n = {
     errorGeneric: "No se pudo calcular el cocoon semántico",
     successTitle: "Cocoon generado",
     successDesc: (nodes: number, clusters: number) => `${nodes} nodos · ${clusters} clusters`,
+    upsellTitle: "Cocoon · Organismo Vivo",
+    upsellDesc: "Visualice la arquitectura semántica de su sitio, optimice su enlazado interno y prediga el ROI de cada página con el módulo Cocoon.",
+    upsellFeatures: ['Auditoría experta ilimitada', 'Código correctivo ilimitado', 'Cocoon semántico ilimitado', 'Marca Blanca (White Label)'],
+    upsellPrice: '59€',
+    upsellPer: 'mes',
+    upsellCta: 'Suscribirse',
+    upsellRedirecting: 'Redirigiendo…',
   },
 };
 
