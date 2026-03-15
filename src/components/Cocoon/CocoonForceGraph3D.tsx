@@ -467,6 +467,124 @@ function HudTooltip({ node }: { node: GraphNode3D }) {
   );
 }
 
+// ─── Cluster Halo Shader Material ───
+const haloVertexShader = `
+  varying vec3 vPosition;
+  varying vec3 vNormal;
+  void main() {
+    vPosition = position;
+    vNormal = normalize(normalMatrix * normal);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const haloFragmentShader = `
+  uniform vec3 uColor;
+  uniform float uOpacity;
+  varying vec3 vPosition;
+  varying vec3 vNormal;
+  void main() {
+    float dist = length(vPosition);
+    // Radial fade: full opacity at center, fades to 0 at edges
+    float fade = 1.0 - smoothstep(0.0, 1.0, dist);
+    // Additional edge softness using normal facing
+    float rim = 1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0)));
+    float edgeFade = 1.0 - smoothstep(0.6, 1.0, rim);
+    float alpha = fade * edgeFade * uOpacity;
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`;
+
+// ─── Cluster Halos Component ───
+function ClusterHalos({
+  graphNodes,
+  spreadScale,
+  haloOpacity,
+  haloColors,
+}: {
+  graphNodes: GraphNode3D[];
+  spreadScale: number;
+  haloOpacity: number;
+  haloColors: string[];
+}) {
+  const halos = useMemo(() => {
+    if (haloOpacity <= 0) return [];
+
+    // Group nodes by cluster
+    const clusterMap = new Map<string, GraphNode3D[]>();
+    for (const node of graphNodes) {
+      if (node.cluster === "unclustered") continue;
+      const existing = clusterMap.get(node.cluster) || [];
+      existing.push(node);
+      clusterMap.set(node.cluster, existing);
+    }
+
+    // Sort by size, take top 5
+    const sorted = Array.from(clusterMap.entries())
+      .filter(([, nodes]) => nodes.length >= 2)
+      .sort((a, b) => b[1].length - a[1].length)
+      .slice(0, 5);
+
+    return sorted.map(([clusterId, clusterNodes], idx) => {
+      // Compute centroid
+      let cx = 0, cy = 0, cz = 0;
+      for (const n of clusterNodes) {
+        cx += n.x;
+        cy += n.y;
+        cz += n.z;
+      }
+      cx /= clusterNodes.length;
+      cy /= clusterNodes.length;
+      cz /= clusterNodes.length;
+
+      // Compute bounding radius (max distance from centroid + padding)
+      let maxDist = 0;
+      for (const n of clusterNodes) {
+        const d = Math.sqrt((n.x - cx) ** 2 + (n.y - cy) ** 2 + (n.z - cz) ** 2);
+        if (d > maxDist) maxDist = d;
+      }
+      const radius = maxDist + 8; // padding
+
+      const color = haloColors[idx % haloColors.length];
+
+      return { clusterId, cx, cy, cz, radius, color };
+    });
+  }, [graphNodes, haloColors, haloOpacity]);
+
+  if (haloOpacity <= 0) return null;
+
+  return (
+    <>
+      {halos.map((halo) => {
+        const colorVec = new THREE.Color(halo.color);
+        return (
+          <mesh
+            key={halo.clusterId}
+            position={[
+              halo.cx * spreadScale,
+              halo.cy * spreadScale,
+              halo.cz * spreadScale,
+            ]}
+          >
+            <sphereGeometry args={[halo.radius * spreadScale, 32, 32]} />
+            <shaderMaterial
+              vertexShader={haloVertexShader}
+              fragmentShader={haloFragmentShader}
+              uniforms={{
+                uColor: { value: new THREE.Vector3(colorVec.r, colorVec.g, colorVec.b) },
+                uOpacity: { value: haloOpacity },
+              }}
+              transparent
+              depthWrite={false}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        );
+      })}
+    </>
+  );
+}
+
 // ─── Scene Content ───
 function SceneContent({
   graphNodes,
@@ -479,6 +597,8 @@ function SceneContent({
   customNodeColors,
   customParticleColors,
   spreadScale,
+  haloOpacity,
+  haloColors,
   onNodeSelect,
   onNodeHover,
   onNodeUnhover,
@@ -494,6 +614,8 @@ function SceneContent({
   customNodeColors: Record<string, string>;
   customParticleColors: Record<string, string>;
   spreadScale: number;
+  haloOpacity: number;
+  haloColors: string[];
   onNodeSelect: (node: SemanticNode | null) => void;
   onNodeHover: (id: string) => void;
   onNodeUnhover: () => void;
