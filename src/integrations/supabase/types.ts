@@ -1320,6 +1320,63 @@ export type Database = {
         }
         Relationships: []
       }
+      function_access_requests: {
+        Row: {
+          created_at: string
+          function_name: string
+          id: string
+          requester_email: string
+          requester_user_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          function_name: string
+          id?: string
+          requester_email: string
+          requester_user_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          function_name?: string
+          id?: string
+          requester_email?: string
+          requester_user_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      function_consultation_log: {
+        Row: {
+          consulted_at: string
+          function_name: string
+          id: string
+          user_email: string
+          user_id: string
+        }
+        Insert: {
+          consulted_at?: string
+          function_name: string
+          id?: string
+          user_email: string
+          user_id: string
+        }
+        Update: {
+          consulted_at?: string
+          function_name?: string
+          id?: string
+          user_email?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ga4_history_log: {
         Row: {
           avg_session_duration: number
