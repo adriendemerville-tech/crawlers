@@ -85,6 +85,7 @@ const adminTranslations = {
     algos: 'Algos ML',
     documentation: 'Documentación',
     docs: 'Docs',
+    functions: 'Functions',
     hideDocsForViewers: 'Ocultar docs de viewers',
     showDocsForViewers: 'Docs visibles para viewers',
   },
