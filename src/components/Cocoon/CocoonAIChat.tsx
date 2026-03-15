@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Bot, Send, Loader2, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Bot, Send, Loader2, ChevronDown, ChevronUp, Trash2, Plus, X, Sparkles, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -18,6 +18,10 @@ const labels = {
     error: 'Erreur de communication avec l\'IA. Réessayez.',
     rateLimit: 'Trop de requêtes. Patientez quelques instants.',
     clear: 'Effacer',
+    selectNode: 'Sélectionner un point',
+    pickFromGraph: 'Cliquez sur un nœud dans le graphe…',
+    analyze: 'Analyser',
+    cancel: 'Annuler',
   },
   en: {
     title: 'Cocoon Assistant',
@@ -27,6 +31,10 @@ const labels = {
     error: 'AI communication error. Please retry.',
     rateLimit: 'Too many requests. Please wait a moment.',
     clear: 'Clear',
+    selectNode: 'Select a node',
+    pickFromGraph: 'Click a node on the graph…',
+    analyze: 'Analyze',
+    cancel: 'Cancel',
   },
   es: {
     title: 'Asistente Cocoon',
@@ -36,22 +44,49 @@ const labels = {
     error: 'Error de comunicación con la IA. Reinténtelo.',
     rateLimit: 'Demasiadas solicitudes. Espere un momento.',
     clear: 'Borrar',
+    selectNode: 'Seleccionar un nodo',
+    pickFromGraph: 'Haz clic en un nodo del grafo…',
+    analyze: 'Analizar',
+    cancel: 'Cancelar',
   },
 };
+
+interface SelectedNodeSlot {
+  id: string;
+  title: string;
+  url: string;
+  slug: string;
+  nodeData: any;
+}
 
 interface CocoonAIChatProps {
   nodes: any[];
   selectedNodeId?: string | null;
+  onRequestNodePick?: (callback: (node: any) => void) => void;
+  onCancelPick?: () => void;
 }
 
-export function CocoonAIChat({ nodes, selectedNodeId }: CocoonAIChatProps) {
+function getSlug(url: string): string {
+  try {
+    const path = new URL(url).pathname;
+    if (path === '/' || path === '') return '/accueil';
+    return path.length > 30 ? '/' + path.split('/').filter(Boolean).pop()?.slice(0, 25) || path.slice(-25) : path;
+  } catch {
+    return url.slice(-25);
+  }
+}
+
+export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCancelPick }: CocoonAIChatProps) {
   const { language } = useLanguage();
   const t = labels[language] || labels.fr;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedSlots, setSelectedSlots] = useState<SelectedNodeSlot[]>([]);
+  const [pickingIndex, setPickingIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const MAX_SLOTS = 5;
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -60,7 +95,7 @@ export function CocoonAIChat({ nodes, selectedNodeId }: CocoonAIChatProps) {
   }, [messages]);
 
   // Build context summary from graph data
-  const buildContext = () => {
+  const buildContext = useCallback(() => {
     if (!nodes.length) return '';
     const clusters = new Map<string, number>();
     nodes.forEach(n => {
@@ -83,16 +118,89 @@ export function CocoonAIChat({ nodes, selectedNodeId }: CocoonAIChatProps) {
       : '';
 
     return `Cocoon sémantique: ${nodes.length} nœuds. Clusters: ${clusterSummary}.\nTop 5 pages par ROI:\n${top5}${selectedInfo}`;
-  };
+  }, [nodes, selectedNodeId]);
 
-  const sendMessage = async () => {
-    const text = input.trim();
+  // Build multi-node analysis context
+  const buildMultiNodeContext = useCallback(() => {
+    if (selectedSlots.length === 0) return '';
+    const nodesData = selectedSlots.map((slot, i) => {
+      const n = slot.nodeData;
+      return `Page ${i + 1}: "${n.title || slot.url}" (${slot.url})
+  - Profondeur: ${n.crawl_depth ?? n.depth ?? '?'}
+  - Type: ${n.page_type || 'page'}
+  - Intent: ${n.intent || '?'}
+  - ROI prédictif: ${n.roi_predictive?.toFixed(0) || '?'}€
+  - GEO score: ${n.geo_score ?? '?'}
+  - Citabilité LLM: ${n.citability_score ?? '?'}
+  - E-E-A-T: ${n.eeat_score ?? '?'}
+  - Liens internes entrants: ${n.internal_links_in ?? '?'}
+  - Liens internes sortants: ${n.internal_links_out ?? '?'}
+  - Cluster: ${n.cluster_id || 'non-classé'}
+  - Mots: ${n.word_count ?? '?'}
+  - Mots-clés: ${(n.keywords || []).join(', ')}`;
+    }).join('\n\n');
+
+    // Check similarity edges between selected nodes
+    const selectedUrls = new Set(selectedSlots.map(s => s.url));
+    const interLinks: string[] = [];
+    for (const slot of selectedSlots) {
+      const n = slot.nodeData;
+      for (const edge of n.similarity_edges || []) {
+        if (selectedUrls.has(edge.target_url)) {
+          interLinks.push(`"${slot.slug}" → "${getSlug(edge.target_url)}" (score: ${edge.score?.toFixed(2)}, type: ${edge.type})`);
+        }
+      }
+    }
+
+    return `ANALYSE MULTI-PAGES (${selectedSlots.length} pages sélectionnées):\n\n${nodesData}\n\nLiens sémantiques entre ces pages:\n${interLinks.length ? interLinks.join('\n') : 'Aucun lien direct détecté'}`;
+  }, [selectedSlots]);
+
+  const handleNodePicked = useCallback((node: any) => {
+    if (pickingIndex === null) return;
+    
+    const slug = getSlug(node.url);
+    const newSlot: SelectedNodeSlot = {
+      id: node.id,
+      title: node.title || slug,
+      url: node.url,
+      slug,
+      nodeData: node,
+    };
+
+    setSelectedSlots(prev => {
+      const updated = [...prev];
+      if (pickingIndex < updated.length) {
+        updated[pickingIndex] = newSlot;
+      } else {
+        updated.push(newSlot);
+      }
+      return updated;
+    });
+    setPickingIndex(null);
+  }, [pickingIndex]);
+
+  const startPicking = useCallback((index: number) => {
+    setPickingIndex(index);
+    onRequestNodePick?.(handleNodePicked);
+  }, [onRequestNodePick, handleNodePicked]);
+
+  const cancelPicking = useCallback(() => {
+    setPickingIndex(null);
+    onCancelPick?.();
+  }, [onCancelPick]);
+
+  const removeSlot = useCallback((index: number) => {
+    setSelectedSlots(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const sendMessage = async (overrideContext?: string) => {
+    const text = overrideContext || input.trim();
     if (!text || isLoading) return;
 
     const userMsg: Msg = { role: 'user', content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
-    setInput('');
+    if (!overrideContext) setInput('');
     setIsLoading(true);
 
     let assistantSoFar = '';
@@ -116,20 +224,13 @@ export function CocoonAIChat({ nodes, selectedNodeId }: CocoonAIChatProps) {
         },
         body: JSON.stringify({
           messages: newMessages,
-          context: buildContext(),
+          context: overrideContext ? buildMultiNodeContext() + '\n\n' + buildContext() : buildContext(),
+          analysisMode: !!overrideContext,
         }),
       });
 
-      if (resp.status === 429) {
-        upsertAssistant(t.rateLimit);
-        setIsLoading(false);
-        return;
-      }
-      if (resp.status === 402) {
-        upsertAssistant('⚠️ Credits insuffisants.');
-        setIsLoading(false);
-        return;
-      }
+      if (resp.status === 429) { upsertAssistant(t.rateLimit); setIsLoading(false); return; }
+      if (resp.status === 402) { upsertAssistant('⚠️ Credits insuffisants.'); setIsLoading(false); return; }
       if (!resp.ok || !resp.body) throw new Error('Stream failed');
 
       const reader = resp.body.getReader();
@@ -184,6 +285,19 @@ export function CocoonAIChat({ nodes, selectedNodeId }: CocoonAIChatProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAnalyze = () => {
+    const slugList = selectedSlots.map(s => s.slug).join(', ');
+    const prompt = `Analyse comparative et contextuelle des pages suivantes: ${slugList}. 
+Décris la relation sémantique, hiérarchique et le flux de juice entre ces pages.
+Utilise un format structuré avec:
+- 🟢 Forces (en vert)
+- 🔵 Faiblesses (en bleu) 
+- 🔴 Gaps (en rouge)
+- ✨ Quick Wins possibles`;
+    sendMessage(prompt);
+    setSelectedSlots([]);
   };
 
   return (
@@ -245,6 +359,59 @@ export function CocoonAIChat({ nodes, selectedNodeId }: CocoonAIChatProps) {
             )}
           </div>
 
+          {/* Node Selection Slots */}
+          <div className="px-4 py-2 space-y-1.5">
+            {selectedSlots.map((slot, i) => (
+              <div key={slot.id} className="flex items-center gap-2 group">
+                <div className="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#fbbf24]/10 border border-[#fbbf24]/20 text-xs">
+                  <div className="w-2 h-2 rounded-full bg-[#fbbf24]" />
+                  <span className="text-[#fbbf24] font-mono truncate">{slot.slug}</span>
+                </div>
+                <button
+                  onClick={() => removeSlot(i)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10"
+                >
+                  <X className="w-3 h-3 text-white/40" />
+                </button>
+              </div>
+            ))}
+
+            {/* Picking indicator */}
+            {pickingIndex !== null && (
+              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#fbbf24]/5 border border-[#fbbf24]/30 border-dashed animate-pulse">
+                <Search className="w-3 h-3 text-[#fbbf24]" />
+                <span className="text-[10px] text-[#fbbf24]/70">{t.pickFromGraph}</span>
+                <button onClick={cancelPicking} className="ml-auto text-white/40 hover:text-white/60">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
+            {/* Add slot button */}
+            {selectedSlots.length < MAX_SLOTS && pickingIndex === null && (
+              <button
+                onClick={() => startPicking(selectedSlots.length)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-dashed border-white/15 hover:border-[#fbbf24]/40 hover:bg-[#fbbf24]/5 transition-colors text-xs text-white/40 hover:text-[#fbbf24]/70 w-full"
+              >
+                <Plus className="w-3 h-3" />
+                <span>{t.selectNode}</span>
+              </button>
+            )}
+          </div>
+
+          {/* Analyze button — appears when 2+ nodes selected */}
+          {selectedSlots.length >= 2 && !isLoading && (
+            <div className="px-4 pb-2 flex justify-center">
+              <button
+                onClick={handleAnalyze}
+                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-[#0f0a1e] font-semibold text-sm hover:shadow-lg hover:shadow-[#fbbf24]/20 transition-all hover:-translate-y-0.5"
+              >
+                <Sparkles className="w-4 h-4" />
+                {t.analyze}
+              </button>
+            </div>
+          )}
+
           {/* Input */}
           <div className="px-4 pb-4 pt-1">
             <div className="flex gap-2">
@@ -261,7 +428,7 @@ export function CocoonAIChat({ nodes, selectedNodeId }: CocoonAIChatProps) {
               <div className="flex flex-col gap-1.5">
                 <Button
                   size="icon"
-                  onClick={sendMessage}
+                  onClick={() => sendMessage()}
                   disabled={!input.trim() || isLoading}
                   className="h-8 w-8 bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] disabled:opacity-30"
                 >
