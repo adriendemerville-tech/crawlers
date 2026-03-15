@@ -273,7 +273,9 @@ export function AnalyticsDashboard() {
         expertAuditStep3: events.filter(e => e.event_type === 'expert_audit_step_3').length,
         errorCount: events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final' || e.event_type === 'edge_function_error').length,
         auditCompareLaunched: events.filter(e => e.event_type === 'audit_compare_launched').length,
-        multiPageCrawls: 0, // will be set from site_crawls table below
+        multiPageCrawls: 0,
+        cocoonGenerated: 0,
+        cocoonChatSessions: 0,
       };
 
       // Count multi-page crawls from site_crawls table (30 days)
@@ -282,6 +284,18 @@ export function AnalyticsDashboard() {
         .select('*', { count: 'exact', head: true })
         .gte('created_at', thirtyDaysAgo);
       newStats.multiPageCrawls = crawlsCount || 0;
+
+      // Count cocoon sessions generated (30 days)
+      const { count: cocoonCount } = await (supabase.from as any)('cocoon_sessions')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', thirtyDaysAgo);
+      newStats.cocoonGenerated = cocoonCount || 0;
+
+      // Count cocoon chat conversations (30 days)
+      const { count: chatCount } = await (supabase.from as any)('cocoon_chat_histories')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', thirtyDaysAgo);
+      newStats.cocoonChatSessions = chatCount || 0;
 
       setStats(newStats);
 
