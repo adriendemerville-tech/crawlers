@@ -586,7 +586,7 @@ export default function Cocoon() {
           {/* Navigation buttons — bottom right, same line */}
           <div className="flex items-center gap-2 shrink-0">
             <a
-              href="/crawl-multipages"
+              href="https://crawlers.fr/site-crawl"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => { externalClickTimestamp.current = Date.now(); }}
