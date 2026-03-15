@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2 } from 'lucide-react';
+import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
 
@@ -37,29 +38,44 @@ export function UserManagement() {
   const [kpiUser, setKpiUser] = useState<UserProfile | null>(null);
   const [kpiModalOpen, setKpiModalOpen] = useState(false);
   const [adminUserIds, setAdminUserIds] = useState<Set<string>>(new Set());
+  const [viewerUserIds, setViewerUserIds] = useState<Set<string>>(new Set());
+  const [viewer2UserIds, setViewer2UserIds] = useState<Set<string>>(new Set());
   const [stripDialogOpen, setStripDialogOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
   const [affiliateUser, setAffiliateUser] = useState<UserProfile | null>(null);
 
-  const fetchAdminRoles = async () => {
+  const fetchAllRoles = async () => {
     const { data } = await supabase
       .from('user_roles')
-      .select('user_id')
-      .eq('role', 'admin');
-    if (data) setAdminUserIds(new Set(data.map(r => r.user_id)));
+      .select('user_id, role');
+    if (data) {
+      const admins = new Set<string>();
+      const viewers = new Set<string>();
+      const viewers2 = new Set<string>();
+      data.forEach((r: any) => {
+        if (r.role === 'admin') admins.add(r.user_id);
+        if (r.role === 'viewer') viewers.add(r.user_id);
+        if (r.role === 'viewer_level2') viewers2.add(r.user_id);
+      });
+      setAdminUserIds(admins);
+      setViewerUserIds(viewers);
+      setViewer2UserIds(viewers2);
+    }
   };
 
-  const toggleAdmin = async (userId: string) => {
-    const isAdmin = adminUserIds.has(userId);
+  const toggleRole = async (userId: string, role: string) => {
+    const currentSet = role === 'admin' ? adminUserIds : role === 'viewer' ? viewerUserIds : viewer2UserIds;
+    const hasRole = currentSet.has(userId);
+    const labels: Record<string, string> = { admin: 'Créateur', viewer: 'Viewer', viewer_level2: 'Viewer L2' };
     try {
-      if (isAdmin) {
-        await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', 'admin');
-        toast.success('Rôle admin retiré');
+      if (hasRole) {
+        await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', role as any);
+        toast.success(`Rôle ${labels[role]} retiré`);
       } else {
-        await supabase.from('user_roles').insert({ user_id: userId, role: 'admin' });
-        toast.success('Rôle admin attribué');
+        await supabase.from('user_roles').insert({ user_id: userId, role: role as any });
+        toast.success(`Rôle ${labels[role]} attribué`);
       }
-      fetchAdminRoles();
+      fetchAllRoles();
     } catch {
       toast.error('Erreur lors de la modification du rôle');
     }
@@ -86,7 +102,7 @@ export function UserManagement() {
 
   useEffect(() => {
     fetchUsers();
-    fetchAdminRoles();
+    fetchAllRoles();
   }, []);
 
   const filteredUsers = users.filter(user => 
@@ -278,7 +294,13 @@ export function UserManagement() {
                         <div className="flex items-center gap-2 flex-wrap">
                           {user.first_name} {user.last_name}
                           {adminUserIds.has(user.user_id) && (
-                            <Badge variant="outline" className="text-xs border-primary text-primary">Admin</Badge>
+                            <Badge variant="outline" className="text-xs border-primary text-primary">Créateur</Badge>
+                          )}
+                          {viewerUserIds.has(user.user_id) && (
+                            <Badge variant="outline" className="text-xs border-emerald-500 text-emerald-600 dark:text-emerald-400">Viewer</Badge>
+                          )}
+                          {viewer2UserIds.has(user.user_id) && (
+                            <Badge variant="outline" className="text-xs border-sky-500 text-sky-600 dark:text-sky-400">Viewer L2</Badge>
                           )}
                           {user.affiliate_code_used && (
                             <Badge variant="outline" className="text-xs border-violet-500 text-violet-600 dark:text-violet-400 gap-1">
@@ -299,15 +321,35 @@ export function UserManagement() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant={adminUserIds.has(user.user_id) ? 'default' : 'outline'}
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => toggleAdmin(user.user_id)}
-                            title={adminUserIds.has(user.user_id) ? 'Retirer admin' : 'Rendre admin'}
-                          >
-                            <ShieldCheck className="h-4 w-4" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant={(adminUserIds.has(user.user_id) || viewerUserIds.has(user.user_id) || viewer2UserIds.has(user.user_id)) ? 'default' : 'outline'}
+                                size="sm"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity gap-1"
+                              >
+                                <ShieldCheck className="h-4 w-4" />
+                                <ChevronDown className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel className="text-xs text-muted-foreground">Rôles</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => toggleRole(user.user_id, 'admin')}>
+                                <ShieldCheck className="h-4 w-4 mr-2" />
+                                {adminUserIds.has(user.user_id) ? '✓ Créateur' : 'Créateur'}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => toggleRole(user.user_id, 'viewer')}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                {viewerUserIds.has(user.user_id) ? '✓ Viewer' : 'Viewer'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => toggleRole(user.user_id, 'viewer_level2')}>
+                                <EyeOff className="h-4 w-4 mr-2" />
+                                {viewer2UserIds.has(user.user_id) ? '✓ Viewer L2' : 'Viewer L2'}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                           {user.plan_type === 'agency_pro' && (
                             <Dialog open={stripDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                               setStripDialogOpen(open);
