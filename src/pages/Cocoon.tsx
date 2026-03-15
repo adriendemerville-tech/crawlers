@@ -399,7 +399,7 @@ export default function Cocoon() {
         </div>
       )}
 
-      <div className="min-h-screen bg-[#0f0a1e] flex flex-col relative">
+      <div className="min-h-screen bg-[#0f0a1e] flex flex-col relative pt-4">
 
         {/* Top Bar */}
         <header className="shrink-0 border-b border-[hsl(263,70%,20%)] bg-[#0f0a1e]/80 backdrop-blur-xl px-4 py-3">
