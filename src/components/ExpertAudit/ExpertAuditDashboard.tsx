@@ -412,7 +412,22 @@ export function ExpertAuditDashboard() {
     }
 
     const fromSites = searchParams.get('from') === 'sites';
+    const isFromCocoon = searchParams.get('from') === 'cocoon';
     const isNewAudit = searchParams.get('new') === '1';
+
+    // Track cocoon origin for return button
+    if (isFromCocoon) {
+      const cocoonUrl = searchParams.get('url') || '';
+      setFromCocoon(true);
+      if (cocoonUrl) {
+        try {
+          const domain = new URL(cocoonUrl.startsWith('http') ? cocoonUrl : `https://${cocoonUrl}`).hostname.replace(/^www\./, '');
+          setCocoonDomain(domain);
+        } catch {
+          setCocoonDomain(cocoonUrl);
+        }
+      }
+    }
 
     // Coming from Console "Nouvel audit" CTA → force clean slate
     if (isNewAudit) {
