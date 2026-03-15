@@ -474,6 +474,26 @@ async function scrapePage(
       }
 
       await trackPaidApiCall('process-crawl-queue', 'firecrawl', '/scrape', pageUrl).catch(() => {});
+      
+      // Fallback to stealthFetch on 403/503 (Cloudflare/WAF blocks)
+      if ((statusCode === 403 || statusCode === 503 || !html) && !useBrowserless) {
+        try {
+          const { stealthFetch } = await import('../_shared/stealthFetch.ts');
+          console.log(`[Worker] Firecrawl got ${statusCode} for ${pageUrl}, trying stealthFetch fallback...`);
+          const fallbackStart = Date.now();
+          const { response: fallbackResp } = await stealthFetch(pageUrl, { timeout: 10000, maxRetries: 2 });
+          const fallbackHtml = await fallbackResp.text();
+          if (fallbackResp.ok && fallbackHtml.length > 500) {
+            html = fallbackHtml;
+            statusCode = fallbackResp.status;
+            responseTime = Date.now() - fallbackStart;
+            console.log(`[Worker] stealthFetch fallback succeeded for ${pageUrl} (${fallbackHtml.length} chars)`);
+          }
+        } catch (fallbackErr) {
+          console.warn(`[Worker] stealthFetch fallback failed for ${pageUrl}:`, fallbackErr);
+        }
+      }
+      
       if (!html) return null;
     }
 
