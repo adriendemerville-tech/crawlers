@@ -29,6 +29,7 @@ const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, currentUrl }: HeroSectionProps) {
   const [searchParams] = useSearchParams();
   const [url, setUrl] = useState(() => searchParams.get('url') || '');
+  const { t, language } = useLanguage();
   const validation = useUrlValidation(language);
   const [wordIndex, setWordIndex] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
