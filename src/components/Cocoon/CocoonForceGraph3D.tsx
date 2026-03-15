@@ -385,13 +385,13 @@ function Links({
       if (!src || !tgt) return null;
       return {
         points: [
-          [src.x, src.y, src.z] as [number, number, number],
-          [tgt.x, tgt.y, tgt.z] as [number, number, number],
+          [src.x * spreadScale, src.y * spreadScale, src.z * spreadScale] as [number, number, number],
+          [tgt.x * spreadScale, tgt.y * spreadScale, tgt.z * spreadScale] as [number, number, number],
         ],
         link,
       };
     }).filter(Boolean) as { points: [number, number, number][]; link: GraphLink3D }[];
-  }, [links, nodeMap]);
+  }, [links, nodeMap, spreadScale]);
 
   return (
     <>
