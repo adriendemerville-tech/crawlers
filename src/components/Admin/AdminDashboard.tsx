@@ -157,6 +157,10 @@ export function AdminDashboard() {
         <TabsContent value="scripts" forceMount className="data-[state=inactive]:hidden">
           <ScriptKillSwitches />
         </TabsContent>
+
+        <TabsContent value="silent-errors" forceMount className="data-[state=inactive]:hidden">
+          <SilentErrorsRegistry />
+        </TabsContent>
       </Tabs>
     </div>
   );
