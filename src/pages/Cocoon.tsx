@@ -612,7 +612,7 @@ export default function Cocoon() {
           {/* Console button — bottom left */}
           <button
             onClick={() => navigate('/console')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors text-xs font-medium backdrop-blur-md shrink-0"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors text-xs font-medium backdrop-blur-md shrink-0 ml-4"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             {t.console}
