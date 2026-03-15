@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { checkIpRate, getClientIp, rateLimitResponse } from "../_shared/ipRateLimiter.ts";
+import { logSilentError } from "../_shared/silentErrorLogger.ts";
 
 /**
  * Edge Function: persist-cocoon-session
