@@ -364,6 +364,16 @@ export default function Cocoon() {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={handleCompute}
+                disabled={isComputing || !selectedSiteId}
+                className="h-8 text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1.5"
+              >
+                {isComputing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
+                Actualiser data
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setIsXRayMode(!isXRayMode)}
                 className={`h-8 text-xs border-[hsl(263,70%,20%)] ${
                   isXRayMode
