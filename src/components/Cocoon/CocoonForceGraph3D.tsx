@@ -541,7 +541,11 @@ function SceneContent({
       ))}
 
       {/* Tooltip */}
-      {hoveredNode && <HudTooltip node={hoveredNode} />}
+      {hoveredNode && (
+        <group position={[hoveredNode.x * spreadScale, hoveredNode.y * spreadScale, hoveredNode.z * spreadScale]}>
+          <HudTooltip node={hoveredNode} />
+        </group>
+      )}
 
       {/* Orbit controls */}
       <OrbitControls
