@@ -217,7 +217,7 @@ export function CocoonNodePanel({ node, onClose, onRefresh }: CocoonNodePanelPro
             <button
               onClick={() => navigate(`/audit-expert?url=${encodeURIComponent(node.url)}`)}
               title={language === 'en' ? 'Expert Audit' : language === 'es' ? 'Auditoría experta' : 'Audit Expert'}
-              className="p-1.5 rounded-md hover:bg-[#3b82f6]/10 text-white/40 hover:text-[#60a5fa] transition-colors"
+              className="p-1.5 rounded-md border border-[#3b82f6]/30 hover:bg-[#3b82f6]/10 text-white/40 hover:text-[#60a5fa] transition-colors"
             >
               <Search className="w-4 h-4" />
             </button>
