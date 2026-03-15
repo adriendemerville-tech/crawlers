@@ -151,6 +151,7 @@ export default function Cocoon() {
   const t = i18n[language] || i18n.fr;
   const { theme: cocoonTheme } = useCocoonTheme();
 
+  const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
   const [nodes, setNodes] = useState<any[]>([]);
   const [selectedNode, setSelectedNode] = useState<any>(null);
