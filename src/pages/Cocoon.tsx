@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
@@ -11,10 +12,78 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 
+const i18n = {
+  fr: {
+    title: "Cocoon — Architecture Sémantique | Crawlers.fr",
+    metaDesc: "Visualisez l'architecture sémantique de votre site comme un organisme vivant. Analyse GEO, ROI prédictif et maillage intelligent.",
+    accessTitle: "Accès Pro Agency",
+    accessDesc: "Le module Cocoon est réservé aux abonnés Pro Agency. Visualisez l'architecture sémantique de votre site, optimisez votre maillage et prédisez le ROI de chaque page.",
+    login: "Se connecter",
+    discoverPro: "Découvrir Pro Agency",
+    organism: "Organisme Vivant",
+    selectSite: "Sélectionner un site",
+    xray: "X-Ray",
+    computing: "Calcul...",
+    generate: "Générer le Cocon",
+    loading: "Chargement du graphe sémantique…",
+    noGraph: "Aucun cocon généré",
+    noGraphDesc: "Sélectionnez un site tracké puis cliquez sur \"Générer le Cocon\" pour construire l'architecture sémantique à partir de vos données de crawl.",
+    errorTitle: "Erreur",
+    errorCompute: "Erreur lors du calcul du cocon",
+    errorGeneric: "Impossible de calculer le cocon sémantique",
+    successTitle: "Cocon généré",
+    successDesc: (nodes: number, clusters: number) => `${nodes} nœuds · ${clusters} clusters`,
+  },
+  en: {
+    title: "Cocoon — Semantic Architecture | Crawlers.fr",
+    metaDesc: "Visualize your site's semantic architecture as a living organism. GEO analysis, predictive ROI and smart internal linking.",
+    accessTitle: "Pro Agency Access",
+    accessDesc: "The Cocoon module is reserved for Pro Agency subscribers. Visualize your site's semantic architecture, optimize your internal linking and predict each page's ROI.",
+    login: "Sign in",
+    discoverPro: "Discover Pro Agency",
+    organism: "Living Organism",
+    selectSite: "Select a site",
+    xray: "X-Ray",
+    computing: "Computing...",
+    generate: "Generate Cocoon",
+    loading: "Loading semantic graph…",
+    noGraph: "No cocoon generated",
+    noGraphDesc: "Select a tracked site then click \"Generate Cocoon\" to build the semantic architecture from your crawl data.",
+    errorTitle: "Error",
+    errorCompute: "Error computing the cocoon",
+    errorGeneric: "Unable to compute the semantic cocoon",
+    successTitle: "Cocoon generated",
+    successDesc: (nodes: number, clusters: number) => `${nodes} nodes · ${clusters} clusters`,
+  },
+  es: {
+    title: "Cocoon — Arquitectura Semántica | Crawlers.fr",
+    metaDesc: "Visualice la arquitectura semántica de su sitio como un organismo vivo. Análisis GEO, ROI predictivo y enlazado inteligente.",
+    accessTitle: "Acceso Pro Agency",
+    accessDesc: "El módulo Cocoon está reservado para suscriptores Pro Agency. Visualice la arquitectura semántica de su sitio, optimice su enlazado interno y prediga el ROI de cada página.",
+    login: "Iniciar sesión",
+    discoverPro: "Descubrir Pro Agency",
+    organism: "Organismo Vivo",
+    selectSite: "Seleccionar un sitio",
+    xray: "X-Ray",
+    computing: "Calculando...",
+    generate: "Generar Cocoon",
+    loading: "Cargando grafo semántico…",
+    noGraph: "Ningún cocoon generado",
+    noGraphDesc: "Seleccione un sitio rastreado y haga clic en \"Generar Cocoon\" para construir la arquitectura semántica a partir de sus datos de rastreo.",
+    errorTitle: "Error",
+    errorCompute: "Error al calcular el cocoon",
+    errorGeneric: "No se pudo calcular el cocoon semántico",
+    successTitle: "Cocoon generado",
+    successDesc: (nodes: number, clusters: number) => `${nodes} nodos · ${clusters} clusters`,
+  },
+};
+
 export default function Cocoon() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { language } = useLanguage();
   useCanonicalHreflang('/cocoon');
+  const t = i18n[language] || i18n.fr;
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
@@ -86,21 +155,20 @@ export default function Cocoon() {
     setIsComputing(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       const resp = await supabase.functions.invoke("calculate-cocoon-logic", {
         body: { tracked_site_id: selectedSiteId },
       });
 
       if (resp.error) {
         toast({
-          title: "Erreur",
-          description: resp.error.message || "Erreur lors du calcul du cocon",
+          title: t.errorTitle,
+          description: resp.error.message || t.errorCompute,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Cocon généré",
-          description: `${resp.data?.stats?.nodes_count || 0} nœuds · ${resp.data?.stats?.clusters_count || 0} clusters`,
+          title: t.successTitle,
+          description: t.successDesc(resp.data?.stats?.nodes_count || 0, resp.data?.stats?.clusters_count || 0),
         });
         // Reload nodes
         const { data } = await supabase
@@ -113,8 +181,8 @@ export default function Cocoon() {
       }
     } catch (e) {
       toast({
-        title: "Erreur",
-        description: "Impossible de calculer le cocon sémantique",
+        title: t.errorTitle,
+        description: t.errorGeneric,
         variant: "destructive",
       });
     }
@@ -127,34 +195,30 @@ export default function Cocoon() {
     return (
       <>
         <Helmet>
-          <title>Cocoon — Architecture Sémantique | Crawlers.fr</title>
-          <meta name="description" content="Visualisez l'architecture sémantique de votre site comme un organisme vivant. Analyse GEO, ROI prédictif et maillage intelligent." />
+          <title>{t.title}</title>
+          <meta name="description" content={t.metaDesc} />
         </Helmet>
         <div className="min-h-screen bg-[#0f0a1e] flex items-center justify-center p-6">
           <div className="text-center max-w-md space-y-6">
             <div className="w-16 h-16 rounded-2xl bg-[#4c1d95]/30 flex items-center justify-center mx-auto border border-[#4c1d95]/20">
               <Lock className="w-8 h-8 text-[#fbbf24]" />
             </div>
-            <h1 className="text-2xl font-bold text-white font-display">Accès Pro Agency</h1>
-            <p className="text-white/50 text-sm leading-relaxed">
-              Le module Cocoon est réservé aux abonnés Pro Agency.
-              Visualisez l'architecture sémantique de votre site, optimisez votre maillage
-              et prédisez le ROI de chaque page.
-            </p>
+            <h1 className="text-2xl font-bold text-white font-display">{t.accessTitle}</h1>
+            <p className="text-white/50 text-sm leading-relaxed">{t.accessDesc}</p>
             <div className="flex gap-3 justify-center">
               {!user && (
                 <Button
                   onClick={() => navigate("/auth")}
                   className="bg-[#4c1d95] hover:bg-[#5b21b6] text-white"
                 >
-                  Se connecter
+                  {t.login}
                 </Button>
               )}
               <Button
                 onClick={() => navigate("/pro-agency")}
                 className="bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold"
               >
-                Découvrir Pro Agency
+                {t.discoverPro}
               </Button>
             </div>
           </div>
@@ -163,13 +227,11 @@ export default function Cocoon() {
     );
   }
 
-  const selectedSite = trackedSites.find((s) => s.id === selectedSiteId);
-
   return (
     <>
       <Helmet>
-        <title>Cocoon — Architecture Sémantique | Crawlers.fr</title>
-        <meta name="description" content="Visualisez l'architecture sémantique de votre site comme un organisme vivant. Analyse GEO, ROI prédictif et maillage intelligent." />
+        <title>{t.title}</title>
+        <meta name="description" content={t.metaDesc} />
       </Helmet>
 
       <div className="min-h-screen bg-[#0f0a1e] flex flex-col">
@@ -179,14 +241,14 @@ export default function Cocoon() {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[#fbbf24] animate-pulse" />
               <h1 className="text-sm font-bold text-white font-display tracking-tight">
-                Cocoon <span className="text-[#fbbf24]">·</span> Organisme Vivant
+                Cocoon <span className="text-[#fbbf24]">·</span> {t.organism}
               </h1>
             </div>
 
             {/* Site selector */}
             <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
               <SelectTrigger className="w-[240px] bg-white/5 border-[hsl(263,70%,20%)] text-white text-xs h-8">
-                <SelectValue placeholder="Sélectionner un site" />
+                <SelectValue placeholder={t.selectSite} />
               </SelectTrigger>
               <SelectContent className="bg-[#1a1035] border-[hsl(263,70%,20%)]">
                 {trackedSites.map((site) => (
@@ -210,7 +272,7 @@ export default function Cocoon() {
                 }`}
               >
                 {isXRayMode ? <EyeOff className="w-3.5 h-3.5 mr-1.5" /> : <Eye className="w-3.5 h-3.5 mr-1.5" />}
-                X-Ray
+                {t.xray}
               </Button>
 
               {/* Compute button */}
@@ -225,7 +287,7 @@ export default function Cocoon() {
                 ) : (
                   <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
                 )}
-                {isComputing ? "Calcul..." : "Générer le Cocon"}
+                {isComputing ? t.computing : t.generate}
               </Button>
             </div>
           </div>
@@ -237,7 +299,7 @@ export default function Cocoon() {
             <div className="flex items-center justify-center h-full">
               <div className="flex flex-col items-center gap-3">
                 <Loader2 className="w-8 h-8 animate-spin text-[#fbbf24]" />
-                <p className="text-white/40 text-sm">Chargement du graphe sémantique…</p>
+                <p className="text-white/40 text-sm">{t.loading}</p>
               </div>
             </div>
           ) : nodes.length === 0 ? (
@@ -246,11 +308,8 @@ export default function Cocoon() {
                 <div className="w-20 h-20 rounded-2xl bg-[#4c1d95]/20 flex items-center justify-center mx-auto border border-[#4c1d95]/15">
                   <RefreshCw className="w-8 h-8 text-[#a78bfa]" />
                 </div>
-                <h2 className="text-lg font-semibold text-white">Aucun cocon généré</h2>
-                <p className="text-white/40 text-sm">
-                  Sélectionnez un site tracké puis cliquez sur "Générer le Cocon" pour construire
-                  l'architecture sémantique à partir de vos données de crawl.
-                </p>
+                <h2 className="text-lg font-semibold text-white">{t.noGraph}</h2>
+                <p className="text-white/40 text-sm">{t.noGraphDesc}</p>
               </div>
             </div>
           ) : (
