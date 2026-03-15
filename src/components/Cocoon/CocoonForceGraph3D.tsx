@@ -248,13 +248,12 @@ function NodeSphere({
       // Slow organic heartbeat: 3.5s cycle
       const heartbeat = 1 + Math.sin(t * 1.8) * 0.05 + Math.sin(t * 0.7) * 0.03;
       meshRef.current.scale.setScalar(scale * heartbeat);
-      // Halo breathing — slower, wider amplitude
+      // Halo breathing — pulsation visible
       if (haloRef.current) {
-        const haloBreath = 1 + Math.sin(t * 0.9) * 0.12 + Math.sin(t * 2.1) * 0.04;
+        const haloBreath = 1 + Math.sin(t * 0.9) * 0.08 + Math.sin(t * 2.1) * 0.03;
         haloRef.current.scale.setScalar(haloBreath);
         const mat = haloRef.current.material as THREE.MeshBasicMaterial;
-        // Opacity oscillates between 0.03 and 0.09 (subtle)
-        mat.opacity = 0.03 + (Math.sin(t * 0.9) * 0.5 + 0.5) * 0.06;
+        mat.opacity = 0.04 + (Math.sin(t * 0.9) * 0.5 + 0.5) * 0.05;
       }
       // Border ring pulse
       if (glowRef.current) {
