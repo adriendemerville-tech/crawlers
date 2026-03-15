@@ -402,25 +402,26 @@ export default function Cocoon() {
         </div>
       )}
 
-      <div className="h-screen bg-[#0f0a1e] flex flex-col relative pt-4 overflow-hidden">
+      <div className="h-screen bg-[#0f0a1e] flex flex-col relative pt-2 sm:pt-4 overflow-hidden">
 
         {/* Top Bar */}
-        <header className="shrink-0 bg-[#0f0a1e]/80 backdrop-blur-xl px-4 py-2">
-          <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 relative">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#fbbf24] animate-pulse" />
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-bold text-white font-display tracking-tight leading-none">
-                  Cocoon <span className="text-[#fbbf24]">·</span> {t.organism}
+        <header className="shrink-0 bg-[#0f0a1e]/80 backdrop-blur-xl px-3 sm:px-4 py-2">
+          <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 gap-x-2">
+            {/* Title */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-2 h-2 rounded-full bg-[#fbbf24] animate-pulse hidden sm:block" />
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="text-xs sm:text-sm font-bold text-white font-display tracking-tight leading-none">
+                  Cocoon <span className="text-[#fbbf24]">·</span> <span className="hidden xs:inline">{t.organism}</span>
                 </h1>
-                <span className="text-[10px] text-white/30 font-medium tracking-wider uppercase leading-none px-1.5 py-0.5 rounded bg-white/5 border border-white/10">beta</span>
+                <span className="text-[9px] sm:text-[10px] text-white/30 font-medium tracking-wider uppercase leading-none px-1 sm:px-1.5 py-0.5 rounded bg-white/5 border border-white/10">beta</span>
               </div>
             </div>
 
-            {/* Site selector — centered */}
-            <div className="absolute left-1/2 -translate-x-1/2">
+            {/* Site selector — centered on desktop, full row on mobile */}
+            <div className="order-last sm:order-none w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2">
               <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
-                <SelectTrigger className="w-[240px] bg-white/5 border-[hsl(263,70%,20%)] text-white text-xs h-8">
+                <SelectTrigger className="w-full sm:w-[240px] bg-white/5 border-[hsl(263,70%,20%)] text-white text-xs h-8">
                   <SelectValue placeholder={t.selectSite} />
                 </SelectTrigger>
                 <SelectContent className="bg-[#1a1035] border-[hsl(263,70%,20%)]">
@@ -433,32 +434,32 @@ export default function Cocoon() {
               </Select>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Controls */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <CocoonHelpModal />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleCompute}
                 disabled={isComputing || !selectedSiteId}
-                className="h-8 text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1.5"
+                className="h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1 sm:gap-1.5 px-2 sm:px-3"
               >
-                {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                {(isComputing || isAutoRefreshing) ? t.analyzingData : t.refreshData}
+                {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3 sm:w-3.5 h-3 sm:h-3.5 animate-spin" /> : <RefreshCw className="w-3 sm:w-3.5 h-3 sm:h-3.5" />}
+                <span className="hidden sm:inline">{(isComputing || isAutoRefreshing) ? t.analyzingData : t.refreshData}</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsXRayMode(!isXRayMode)}
-                className={`h-8 text-xs border-[hsl(263,70%,20%)] ${
+                className={`h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] px-2 sm:px-3 ${
                   isXRayMode
                     ? "bg-[#4c1d95]/50 text-[#fbbf24]"
                     : "bg-transparent text-white/60 hover:text-white"
                 }`}
               >
-                {isXRayMode ? <EyeOff className="w-3.5 h-3.5 mr-1.5" /> : <Eye className="w-3.5 h-3.5 mr-1.5" />}
+                {isXRayMode ? <EyeOff className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" /> : <Eye className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" />}
                 {t.xray}
               </Button>
-
             </div>
           </div>
         </header>
@@ -479,7 +480,7 @@ export default function Cocoon() {
         )}
 
         {/* Main Graph */}
-        <main className="flex-1 relative px-4 md:px-6 pb-9 min-h-0">
+        <main className="flex-1 relative px-2 sm:px-4 md:px-6 pb-9 min-h-0">
           <div className="h-full rounded-xl overflow-hidden border border-[hsl(263,70%,20%)] relative">
             {/* 2D / 3D toggle */}
             {nodes.length > 0 && (
@@ -569,28 +570,28 @@ export default function Cocoon() {
 
             return (
               <div
-                className="flex items-center gap-4 mt-3 px-1 flex-wrap opacity-0 animate-fade-in"
+                className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 px-1 flex-wrap opacity-0 animate-fade-in"
                 style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
               >
                 {legendItems.map(([type, { color, label }]) => (
-                  <div key={type} className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-                    <span className="text-white/50 text-xs">{label[language] || label.fr}</span>
+                  <div key={type} className="flex items-center gap-1 sm:gap-1.5">
+                    <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color }} />
+                    <span className="text-white/50 text-[10px] sm:text-xs">{label[language] || label.fr}</span>
                   </div>
                 ))}
-                <span className="text-white/20 mx-1">|</span>
-                <div className="flex items-center gap-1.5">
+                <span className="text-white/20 mx-0.5 sm:mx-1 hidden sm:inline">|</span>
+                <div className="hidden sm:flex items-center gap-1.5">
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
                   <span className="text-white/40 text-[10px]">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="hidden sm:flex items-center gap-1.5">
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
                   <span className="text-white/40 text-[10px]">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
                 </div>
-                <span className="text-white/30 text-xs ml-auto">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
+                <span className="text-white/30 text-[9px] sm:text-xs ml-auto hidden sm:inline">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
                 <button
                   onClick={() => setParticlesEnabled(p => !p)}
-                  className={`ml-2 flex items-center gap-1 px-2 py-0.5 rounded text-[10px] transition-colors border ${
+                  className={`ml-auto sm:ml-2 flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] transition-colors border ${
                     particlesEnabled
                       ? 'bg-white/5 border-white/10 text-white/40 hover:text-white/60'
                       : 'bg-white/5 border-white/10 text-white/20 hover:text-white/40'
@@ -608,14 +609,14 @@ export default function Cocoon() {
         </main>
 
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
-        <div className="shrink-0 px-4 md:px-6 py-3 flex items-end gap-4 flex-wrap">
+        <div className="shrink-0 px-3 sm:px-4 md:px-6 py-9 flex items-end gap-2 sm:gap-4 flex-wrap">
           {/* Console button — bottom left */}
           <button
             onClick={() => navigate('/console')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors text-xs font-medium backdrop-blur-md shrink-0 ml-4"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md shrink-0 ml-2 sm:ml-4"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            {t.console}
+            <ArrowLeft className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+            <span className="hidden xs:inline">{t.console}</span>
           </button>
 
           {/* AI Chat — shifted right */}
@@ -635,8 +636,8 @@ export default function Cocoon() {
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Navigation buttons — bottom right, same line */}
-          <div className="flex items-center gap-2 shrink-0 mr-4">
+          {/* Navigation buttons — bottom right */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 mr-2 sm:mr-4">
             <a
               href={(() => {
                 const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
@@ -645,10 +646,10 @@ export default function Cocoon() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => { externalClickTimestamp.current = Date.now(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3b82f6]/10 border border-[#3b82f6]/25 text-[#60a5fa] hover:bg-[#3b82f6]/20 hover:text-[#93bbfd] transition-colors text-xs font-medium backdrop-blur-md"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-[#3b82f6]/10 border border-[#3b82f6]/25 text-[#60a5fa] hover:bg-[#3b82f6]/20 hover:text-[#93bbfd] transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md"
             >
               <Search className="w-3 h-3" />
-              {t.crawlMulti}
+              <span className="hidden sm:inline">{t.crawlMulti}</span>
               <ExternalLink className="w-2.5 h-2.5" />
             </a>
             <a
@@ -661,10 +662,10 @@ export default function Cocoon() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => { externalClickTimestamp.current = Date.now(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/25 text-[#c084fc] hover:bg-[#a855f7]/20 hover:text-[#d8b4fe] transition-colors text-xs font-medium backdrop-blur-md"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/25 text-[#c084fc] hover:bg-[#a855f7]/20 hover:text-[#d8b4fe] transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md"
             >
               <FileText className="w-3 h-3" />
-              {t.auditExpert}
+              <span className="hidden sm:inline">{t.auditExpert}</span>
               <ExternalLink className="w-2.5 h-2.5" />
             </a>
           </div>
