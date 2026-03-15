@@ -3,6 +3,7 @@ import { getGeoTranslations, parseLanguage, type Language } from '../_shared/tra
 import { assertSafeUrl } from '../_shared/ssrf.ts';
 import { fetchAndRenderPage } from '../_shared/renderPage.ts';
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
+import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
