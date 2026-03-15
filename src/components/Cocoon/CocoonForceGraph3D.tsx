@@ -269,28 +269,28 @@ function NodeSphere({
 
   return (
     <group position={[node.x * spreadScale, node.y * spreadScale, node.z * spreadScale]}>
-      {/* ── Home: Pulsating bio halo (outermost layer, blurred) ── */}
+      {/* ── Home: Outer halo with orange-yellow gradient feel (blurred edge) ── */}
       {node.isHome && (
         <mesh ref={haloRef}>
-          <sphereGeometry args={[node.radius * 3.5, 32, 32]} />
+          <sphereGeometry args={[node.radius * 2.8, 32, 32]} />
           <meshBasicMaterial
-            color={color}
+            color="#ff8c20"
             transparent
-            opacity={0.10}
+            opacity={0.06}
             depthWrite={false}
             side={THREE.BackSide}
           />
         </mesh>
       )}
 
-      {/* ── Home: Secondary soft glow ring ── */}
+      {/* ── Home: Inner warm glow ring (yellow core bleed) ── */}
       {node.isHome && (
         <mesh>
-          <sphereGeometry args={[node.radius * 2.2, 28, 28]} />
+          <sphereGeometry args={[node.radius * 1.8, 28, 28]} />
           <meshBasicMaterial
-            color={color}
+            color="#ffc83c"
             transparent
-            opacity={0.07}
+            opacity={0.05}
             depthWrite={false}
             side={THREE.BackSide}
           />
