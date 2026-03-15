@@ -199,10 +199,20 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       const updated = [...prev];
       if (idx < updated.length) updated[idx] = newSlot;
       else updated.push(newSlot);
+      // Auto-continue picking if under MAX_SLOTS
+      if (updated.length < MAX_SLOTS) {
+        setAutoPicking(true);
+        setTimeout(() => {
+          setPickingIndex(updated.length);
+          onRequestNodePick?.(handleNodePicked);
+        }, 50);
+      } else {
+        setPickingIndex(null);
+        setAutoPicking(false);
+      }
       return updated;
     });
-    setPickingIndex(null);
-  }, []);
+  }, [onRequestNodePick]);
 
   const startPicking = useCallback((index: number) => {
     setPickingIndex(index);
