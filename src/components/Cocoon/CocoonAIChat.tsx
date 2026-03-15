@@ -301,8 +301,8 @@ Utilise un format structuré avec:
   };
 
   return (
-    <div className="border border-[hsl(263,70%,20%)] rounded-xl bg-[#0f0a1e]/90 backdrop-blur-xl overflow-hidden">
-      {/* Toggle header */}
+    <div className="border border-[hsl(263,70%,20%)] rounded-xl bg-[#0f0a1e]/90 backdrop-blur-xl overflow-hidden flex flex-col-reverse">
+      {/* Toggle header — always at bottom */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between px-5 py-3 hover:bg-white/5 transition-colors"
@@ -326,9 +326,9 @@ Utilise un format structuré avec:
         </div>
       </button>
 
-      {/* Expandable chat */}
+      {/* Expandable chat — opens upward */}
       {isExpanded && (
-        <div className="border-t border-[hsl(263,70%,20%)]">
+        <div className="border-b border-[hsl(263,70%,20%)]">
           {/* Messages */}
           <div ref={scrollRef} className="max-h-64 overflow-y-auto px-4 py-3 space-y-3">
             {messages.length === 0 && (
@@ -399,7 +399,7 @@ Utilise un format structuré avec:
             )}
           </div>
 
-          {/* Analyze button — appears when 2+ nodes selected */}
+          {/* Analyze button */}
           {selectedSlots.length >= 2 && !isLoading && (
             <div className="px-4 pb-2 flex justify-center">
               <button
