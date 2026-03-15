@@ -108,6 +108,10 @@ export function AdminDashboard() {
             <ShieldAlert className="h-4 w-4" />
             <span className="hidden sm:inline">{t.scripts}</span>
           </TabsTrigger>
+          <TabsTrigger value="silent-errors" className="flex-1 gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            <span className="hidden sm:inline">{t.silentErrors}</span>
+          </TabsTrigger>
           <TabsTrigger value="docs" className="flex-1 gap-2">
             <BookOpen className="h-4 w-4" />
             <span className="hidden sm:inline">{t.docs}</span>
