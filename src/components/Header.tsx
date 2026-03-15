@@ -118,6 +118,27 @@ export function Header() {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
+  const handleKillViewers = async () => {
+    if (!showKillConfirm) {
+      setShowKillConfirm(true);
+      return;
+    }
+    setIsKilling(true);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.functions.invoke('kill-all-viewers');
+      if (error) throw error;
+      const count = data?.removed_count || 0;
+      alert(`${count} accès viewer(s) révoqué(s).`);
+    } catch (err: any) {
+      alert('Erreur: ' + (err.message || err));
+    } finally {
+      setIsKilling(false);
+      setShowKillConfirm(false);
+      setIsProfileOpen(false);
+    }
+  };
+
   const handleLogout = async () => {
     setIsProfileOpen(false);
     await signOut();
