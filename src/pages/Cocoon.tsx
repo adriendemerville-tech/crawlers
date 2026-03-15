@@ -170,6 +170,7 @@ export default function Cocoon() {
   const [truncationInfo, setTruncationInfo] = useState<{ truncated: boolean; total: number; used: number } | null>(null);
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
+  const [waitingAuditUrl, setWaitingAuditUrl] = useState<string | null>(null);
   const autoLaunchTriggered = useRef(false);
   const externalClickTimestamp = useRef<number | null>(null);
   const waitingAuditNodeUrl = useRef<string | null>(null);
