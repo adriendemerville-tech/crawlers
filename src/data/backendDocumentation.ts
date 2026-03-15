@@ -186,9 +186,24 @@ actual_results.prediction_id → predictions.id (N:1)
 ## Row-Level Security (RLS)
 
 Toutes les tables utilisateur ont RLS activé. Patterns :
-- **Isolation utilisateur** : \`auth.uid() = user_id\`
-- **Admin bypass** : via \`has_role(auth.uid(), 'admin')\`
-- **Données publiques** : \`patience_cards\`, \`market_trends\` (lecture publique)
+- **Isolation utilisateur** : \\\`auth.uid() = user_id\\\`
+- **Admin bypass** : via \\\`has_role(auth.uid(), 'admin')\\\`
+- **Données publiques** : \\\`patience_cards\\\`, \\\`market_trends\\\` (lecture publique)
+
+## Système de rôles (RBAC)
+
+| Rôle DB | Label UI | Droits |
+|---------|----------|--------|
+| \\\`admin\\\` | **Créateur** | Accès total : lecture, écriture, configuration, gestion des rôles |
+| \\\`viewer\\\` | **Viewer** | Dashboard en lecture seule. Tous les onglets (sauf si docs masquées). Actions désactivées front + serveur |
+| \\\`viewer_level2\\\` | **Viewer L2** | Comme viewer mais **sans** Docs ni Algos ML |
+
+### Sécurité des rôles
+
+- Rôles stockés dans \\\`user_roles\\\` (table séparée, jamais sur \\\`profiles\\\`)
+- Fonction \\\`has_role()\\\` (SECURITY DEFINER) empêche la récursion RLS
+- Les edge functions vérifient \\\`has_role(uid, 'admin')\\\` côté serveur
+- Le Créateur peut masquer la documentation pour tous les viewers via toggle
 `,
   },
 
