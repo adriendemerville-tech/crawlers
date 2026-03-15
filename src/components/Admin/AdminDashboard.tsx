@@ -76,6 +76,7 @@ const adminTranslations = {
     analytics: 'Estadísticas',
     intelligence: 'Inteligencia',
     silentErrors: 'Errores',
+    scannedUrls: 'URLs escaneadas',
     ciTests: 'CI Tests',
     contentUsers: 'Contenido & Usuarios',
     users: 'Usuarios',
