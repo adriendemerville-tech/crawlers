@@ -163,6 +163,19 @@ export default function Profile() {
             transition={{ duration: 0.5 }}
           >
 
+            {/* Header with Cocoon button */}
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-bold">{t.title}</h1>
+              {isProUser && (
+                <Button variant="outline" asChild className="gap-2 border-amber-500/30 hover:bg-amber-500/10">
+                  <Link to="/cocoon">
+                    <Network className="h-4 w-4 text-amber-500" />
+                    <span className="text-amber-500 font-semibold">Cocoon</span>
+                  </Link>
+                </Button>
+              )}
+            </div>
+
             <FreeTrialBanner />
             <Tabs defaultValue={initialTab} className="space-y-6">
               <TabsList className="w-full flex">
@@ -189,14 +202,6 @@ export default function Profile() {
                   <span className="hidden sm:inline">Crawls</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
-                {isProUser && (
-                  <a href="/cocoon" className="flex-1">
-                    <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none gap-2 h-full hover:bg-accent hover:text-accent-foreground w-full">
-                      <Network className="h-4 w-4 text-amber-500" />
-                      <span className="hidden sm:inline text-amber-500 font-semibold">Cocoon</span>
-                    </div>
-                  </a>
-                )}
                 <TabsTrigger value="action-plans" className="flex-1 gap-2">
                   <CheckSquare className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.actionPlans}</span>
