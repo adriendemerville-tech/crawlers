@@ -276,8 +276,8 @@ Deno.serve(async (req) => {
 
     console.log(`[${crawlId}] ✅ Job ${job.id} créé avec ${urls.length} URLs — en attente du worker`);
 
-    // Trigger the worker immediately (fire-and-forget)
-    try {
+    // Trigger the worker immediately (fire-and-forget with logging)
+    fireAndLog(
       fetch(`${supabaseUrl}/functions/v1/process-crawl-queue`, {
         method: 'POST',
         headers: {
@@ -285,8 +285,9 @@ Deno.serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ trigger: 'immediate' }),
-      }).catch(() => {});
-    } catch {}
+      }),
+      'crawl-site', 'trigger-worker', { severity: 'critical', impact: 'crawl_stuck', crawlId, domain }
+    );
 
     return new Response(JSON.stringify({
       success: true,
