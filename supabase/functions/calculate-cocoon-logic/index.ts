@@ -426,9 +426,69 @@ Deno.serve(async (req) => {
       }));
     }
 
-    // Also set edges for nodes that appear as targets but computed from j > i
-    // (handled by the i < j loop — edges are only stored on node i, 
-    //  but similarity_edges reference target_url so the graph can be bidirectional in the UI)
+    // ─── 4b. Fallback: structural edges from URL path similarity + internal links ───
+    const totalTfidfEdges = nodeData.reduce((s: number, n: any) => s + (n.similarity_edges?.length || 0), 0);
+    console.log(`[Cocoon] TF-IDF edges: ${totalTfidfEdges}`);
+
+    if (totalTfidfEdges === 0) {
+      console.log(`[Cocoon] No TF-IDF edges found, building structural + link-based edges`);
+      
+      // Build URL index for anchor-based linking
+      const urlToIdx = new Map<string, number>();
+      for (let i = 0; i < nodeData.length; i++) {
+        urlToIdx.set(nodeData[i].url.replace(/\/+$/, "").toLowerCase(), i);
+      }
+
+      for (let i = 0; i < nodeData.length; i++) {
+        const edges: { idx: number; score: number; type: string }[] = [];
+        const pageI = validPages[i];
+        const pathI = new URL(nodeData[i].url).pathname.split("/").filter(Boolean);
+
+        // Structural: URL path prefix similarity
+        for (let j = 0; j < nodeData.length; j++) {
+          if (i === j) continue;
+          const pathJ = new URL(nodeData[j].url).pathname.split("/").filter(Boolean);
+          const commonPrefix = pathI.filter((seg, idx) => pathJ[idx] === seg).length;
+          const maxLen = Math.max(pathI.length, pathJ.length, 1);
+          const structScore = commonPrefix / maxLen;
+          if (structScore >= 0.3) {
+            edges.push({ idx: j, score: Math.round(structScore * 1000) / 1000, type: "structural" });
+          }
+        }
+
+        // Link-based: pages that link to each other via anchor_texts
+        const anchors = pageI.anchor_texts || [];
+        for (const anchor of anchors) {
+          if (anchor.type !== "internal") continue;
+          const targetUrl = (anchor.href || "").replace(/\/+$/, "").toLowerCase();
+          const targetIdx = urlToIdx.get(targetUrl);
+          if (targetIdx !== undefined && targetIdx !== i) {
+            // Check not already in edges
+            if (!edges.some(e => e.idx === targetIdx)) {
+              edges.push({ idx: targetIdx, score: 0.5, type: "link" });
+            }
+          }
+        }
+
+        // Merge with existing (empty) similarity_edges
+        edges.sort((a, b) => b.score - a.score);
+        const existing = nodeData[i].similarity_edges || [];
+        const merged = [...existing, ...edges.slice(0, 10)].slice(0, 10);
+        nodeData[i].similarity_edges = merged.map((e: any) => ({
+          target_url: e.target_url || nodeData[e.idx]?.url,
+          score: e.score,
+          type: e.type || "structural",
+        }));
+
+        // Also update adjacency for clustering
+        for (const edge of edges) {
+          if (edge.score >= 0.3) {
+            adjacency.get(i)!.push(edge.idx);
+            adjacency.get(edge.idx)!.push(i);
+          }
+        }
+      }
+    }
 
     // ─── 5. Cluster via connected components ───
     const clusterMap = clusterByComponents(adjacency, nodeData.length);
