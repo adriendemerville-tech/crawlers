@@ -574,7 +574,7 @@ export function CocoonForceGraph3D({
   particleColors = {},
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
-  const [nodeScale, setNodeScale] = useState(1);
+  const [spreadScale, setSpreadScale] = useState(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const { graphNodes, graphLinks, nodeMap } = useMemo(() => {
