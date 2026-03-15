@@ -428,6 +428,21 @@ export default function Cocoon() {
           </div>
         </header>
 
+        {/* Truncation banner */}
+        {truncationInfo?.truncated && (
+          <div className="shrink-0 px-4 py-2 bg-[#4c1d95]/30 border-b border-[hsl(263,70%,20%)] flex items-center gap-2 text-xs text-[#fbbf24]">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              {language === 'en'
+                ? `Your site has ${truncationInfo.total} crawled pages — Cocoon analyzed the top ${truncationInfo.used} (sorted by depth) for optimal precision.`
+                : language === 'es'
+                  ? `Su sitio tiene ${truncationInfo.total} páginas rastreadas — Cocoon analizó las ${truncationInfo.used} principales (por profundidad) para una precisión óptima.`
+                  : `Votre site contient ${truncationInfo.total} pages crawlées — Cocoon a analysé les ${truncationInfo.used} plus stratégiques (triées par profondeur) pour une précision optimale.`
+              }
+            </span>
+          </div>
+        )}
+
         {/* Main Graph */}
         <main className={`flex-1 relative ${!hasAccess ? 'pointer-events-none select-none opacity-40' : ''}`}>
           {isLoading ? (
