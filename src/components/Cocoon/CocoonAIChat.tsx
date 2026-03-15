@@ -1,10 +1,91 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare } from 'lucide-react';
+import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
+import type { Components } from 'react-markdown';
+
+// SEO lexicon terms mapping for auto-linking
+const LEXICON_TERMS: Record<string, string> = {
+  'juice': 'link-juice',
+  'link juice': 'link-juice',
+  'maillage interne': 'maillage-interne',
+  'maillage': 'maillage-interne',
+  'cocon sémantique': 'cocon-semantique',
+  'cocon': 'cocon-semantique',
+  'e-e-a-t': 'eeat',
+  'eeat': 'eeat',
+  'crawl': 'crawl',
+  'backlink': 'backlink',
+  'backlinks': 'backlink',
+  'canonical': 'balise-canonical',
+  'canonique': 'balise-canonical',
+  'serp': 'serp',
+  'schema.org': 'schema-org',
+  'json-ld': 'json-ld',
+  'sitemap': 'sitemap',
+  'robots.txt': 'robots-txt',
+  'title': 'balise-title',
+  'balise title': 'balise-title',
+  'meta description': 'meta-description',
+  'h1': 'balise-h1',
+  'pagerank': 'pagerank',
+  'ancre': 'texte-ancre',
+  'anchor text': 'texte-ancre',
+  'thin content': 'thin-content',
+  'contenu dupliqué': 'contenu-duplique',
+  'duplicate content': 'contenu-duplique',
+  'geo': 'geo',
+  'llm': 'llm',
+  'tf-idf': 'tf-idf',
+  'citabilité': 'citabilite',
+  'roi': 'roi-seo',
+  'cannibalization': 'cannibalisation',
+  'cannibalisation': 'cannibalisation',
+  'intent': 'intention-recherche',
+  'intention de recherche': 'intention-recherche',
+  'profondeur': 'profondeur-crawl',
+  'crawl depth': 'profondeur-crawl',
+};
+
+// Build regex from terms (longest first to avoid partial matches)
+const lexiconRegex = new RegExp(
+  `\\b(${Object.keys(LEXICON_TERMS).sort((a, b) => b.length - a.length).map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`,
+  'gi'
+);
+
+function injectLexiconLinks(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  const regex = new RegExp(lexiconRegex.source, lexiconRegex.flags);
+  
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    const term = match[0];
+    const anchor = LEXICON_TERMS[term.toLowerCase()];
+    parts.push(
+      <a
+        key={`${match.index}-${term}`}
+        href={`/lexique#${anchor}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-violet-400 hover:text-violet-300 underline decoration-violet-400/40 hover:decoration-violet-300/60 transition-colors cursor-pointer"
+      >
+        {term}
+      </a>
+    );
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  return parts.length > 0 ? parts : [text];
+}
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -104,6 +185,9 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const chatHistoryId = useRef<string | null>(null);
   const MAX_SLOTS = 3;
   const [autoPicking, setAutoPicking] = useState(false);
+  const [fontSize, setFontSize] = useState(12); // px base for messages
+  const FONT_MIN = 10;
+  const FONT_MAX = 18;
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -404,6 +488,14 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
               <p className="text-[10px] text-white/40">{t.subtitle}</p>
             </div>
             <div className="flex items-center gap-1">
+              <button onClick={() => setFontSize(s => Math.max(FONT_MIN, s - 1))} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title="Réduire le texte">
+                <ZoomOut className="w-3 h-3 text-white/30 hover:text-white/60" />
+              </button>
+              <span className="text-[9px] text-white/25 font-mono min-w-[20px] text-center">{fontSize}</span>
+              <button onClick={() => setFontSize(s => Math.min(FONT_MAX, s + 1))} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title="Agrandir le texte">
+                <ZoomIn className="w-3 h-3 text-white/30 hover:text-white/60" />
+              </button>
+              <div className="w-px h-3 bg-white/10 mx-0.5" />
               {messages.length > 0 && (
                 <button onClick={clearChat} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title={t.clear}>
                   <Trash2 className="w-3 h-3 text-white/30 hover:text-white/60" />
@@ -422,14 +514,38 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
             )}
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
-                  msg.role === 'user'
-                    ? 'bg-[#fbbf24]/15 text-white border border-[#fbbf24]/20 rounded-br-md'
-                    : 'bg-white/5 text-white/80 border border-white/10 rounded-bl-md'
-                }`}>
+                <div
+                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed ${
+                    msg.role === 'user'
+                      ? 'bg-[#fbbf24]/15 text-white border border-[#fbbf24]/20 rounded-br-md'
+                      : 'bg-white/5 text-white/80 border border-white/10 rounded-bl-md'
+                  }`}
+                  style={{ fontSize: `${fontSize}px` }}
+                >
                   {msg.role === 'assistant' ? (
-                    <div className="prose prose-invert prose-xs max-w-none [&_p]:m-0 [&_ul]:m-0 [&_li]:m-0 [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_code]:text-[10px] [&_code]:bg-white/10 [&_code]:px-1 [&_code]:rounded">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <div className="prose prose-invert max-w-none
+                      [&_p]:mb-3 [&_p]:mt-1 [&_p:last-child]:mb-0
+                      [&_ul]:mb-3 [&_ul]:mt-1 [&_ul]:pl-4
+                      [&_ol]:mb-3 [&_ol]:mt-1 [&_ol]:pl-4
+                      [&_li]:mb-1.5 [&_li]:leading-relaxed
+                      [&_h1]:text-[1.15em] [&_h1]:font-bold [&_h1]:mt-4 [&_h1]:mb-2
+                      [&_h2]:text-[1.1em] [&_h2]:font-semibold [&_h2]:mt-3.5 [&_h2]:mb-2
+                      [&_h3]:text-[1.05em] [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1.5
+                      [&_strong]:text-white [&_strong]:font-semibold
+                      [&_code]:text-[0.85em] [&_code]:bg-white/10 [&_code]:px-1 [&_code]:rounded
+                      [&_hr]:my-3 [&_hr]:border-white/10
+                      [&_blockquote]:border-l-2 [&_blockquote]:border-violet-400/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-white/60"
+                      style={{ fontSize: 'inherit' }}
+                    >
+                      <ReactMarkdown
+                        components={{
+                          p: ({ children }) => <p>{typeof children === 'string' ? injectLexiconLinks(children) : children}</p>,
+                          li: ({ children }) => <li>{typeof children === 'string' ? injectLexiconLinks(children) : children}</li>,
+                          strong: ({ children }) => <strong>{typeof children === 'string' ? injectLexiconLinks(children as string) : children}</strong>,
+                        } as Components}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
                     </div>
                   ) : msg.content}
                 </div>
