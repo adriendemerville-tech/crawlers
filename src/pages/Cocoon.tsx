@@ -172,6 +172,17 @@ export default function Cocoon() {
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
   const autoLaunchTriggered = useRef(false);
   const externalClickTimestamp = useRef<number | null>(null);
+  const waitingAuditNodeUrl = useRef<string | null>(null);
+
+  // Sync selectedNode with latest nodes data after recompute
+  useEffect(() => {
+    if (selectedNode && nodes.length > 0) {
+      const updated = nodes.find((n: any) => n.url === selectedNode.url);
+      if (updated && JSON.stringify(updated) !== JSON.stringify(selectedNode)) {
+        setSelectedNode(updated);
+      }
+    }
+  }, [nodes]);
 
   // Check access: Pro Agency or Admin
   useEffect(() => {
