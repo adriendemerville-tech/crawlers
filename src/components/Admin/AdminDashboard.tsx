@@ -169,6 +169,10 @@ export function AdminDashboard() {
         <TabsContent value="silent-errors" forceMount className="data-[state=inactive]:hidden">
           <SilentErrorsRegistry />
         </TabsContent>
+
+        <TabsContent value="algos" forceMount className="data-[state=inactive]:hidden">
+          <AlgoTrainingDashboard />
+        </TabsContent>
       </Tabs>
     </div>
   );
