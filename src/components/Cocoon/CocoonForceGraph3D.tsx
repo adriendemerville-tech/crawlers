@@ -507,6 +507,7 @@ function SceneContent({
         nodeMap={nodeMap}
         selectedNodeId={selectedNodeId}
         particlesEnabled={particlesEnabled}
+        customParticleColors={customParticleColors}
       />
 
       {/* Nodes */}
