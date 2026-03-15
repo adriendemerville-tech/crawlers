@@ -276,6 +276,9 @@ export function ScannedUrlsRegistry() {
                       className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {lastAuditMap[item.url] && (
+                          <div className="shrink-0">{getLastAuditIcon(lastAuditMap[item.url])}</div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <a
                             href={item.url}
