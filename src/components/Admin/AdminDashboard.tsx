@@ -54,6 +54,7 @@ const adminTranslations = {
     ciTests: 'CI Tests',
     affiliates: 'Afiliación',
     scripts: 'Scripts',
+    silentErrors: 'Errores',
     docs: 'Docs',
   },
 };
