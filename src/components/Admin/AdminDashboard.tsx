@@ -44,6 +44,7 @@ const adminTranslations = {
     affiliates: 'Affiliates',
     scripts: 'Scripts',
     silentErrors: 'Errors',
+    algos: 'ML Algos',
     docs: 'Docs',
   },
   es: {
