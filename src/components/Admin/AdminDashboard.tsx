@@ -217,12 +217,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
     <AdminProvider value={{ readOnly, canSeeDocs: showDocs, canSeeAlgos: showAlgos, docsHiddenForViewers }}>
       <div className="space-y-3">
         {readOnly && <ReadOnlyBanner />}
-        {!readOnly && (
-          <div className="flex flex-wrap items-center gap-2">
-            <DemoModeToggle />
-            <GA4OAuthToggle />
-          </div>
-        )}
+        {/* toggles moved to Scripts tab */}
         <BrowserlessAlert />
         <ApiGatewayFallbackAlert />
 
