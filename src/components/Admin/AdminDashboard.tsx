@@ -15,6 +15,7 @@ import { AffiliateManagement } from './AffiliateManagement';
 import { IntelligenceHub } from './IntelligenceHub';
 import { ScriptKillSwitches } from './ScriptKillSwitches';
 import { SilentErrorsRegistry } from './SilentErrorsRegistry';
+import { AlgoTrainingDashboard } from './AlgoTrainingDashboard';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const adminTranslations = {
