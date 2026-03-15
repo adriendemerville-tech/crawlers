@@ -793,6 +793,22 @@ export function AnalyticsDashboard() {
             <p className="text-[10px] text-muted-foreground mt-0.5">{businessMetrics.payingSubscribers} × 59 €/mois</p>
           </CardContent>
         </Card>
+        {dbSize && (
+          <Card className="border-cyan-500/30">
+            <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">Poids-mémoire BDD</CardTitle>
+              <HardDrive className="h-3.5 w-3.5 text-cyan-500" />
+            </CardHeader>
+            <CardContent className="p-3 pt-0">
+              <div className="text-lg font-bold">
+                {dbSize.total_gb >= 1
+                  ? `${dbSize.total_gb.toLocaleString('fr-FR')} Go`
+                  : `${dbSize.total_mb.toLocaleString('fr-FR')} Mo`}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Stockage total base de données</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Token Usage Card */}
