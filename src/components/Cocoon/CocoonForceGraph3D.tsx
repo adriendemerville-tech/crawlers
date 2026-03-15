@@ -693,6 +693,9 @@ function SceneContent({
   );
 }
 
+// ─── Default halo colors ───
+const DEFAULT_HALO_COLORS = ["#1e3a5f", "#0d4f4f", "#5f3a1e", "#3a1e5f", "#1e5f3a"];
+
 // ─── Main Component ───
 export function CocoonForceGraph3D({
   nodes,
@@ -703,9 +706,11 @@ export function CocoonForceGraph3D({
   particlesEnabled = true,
   nodeColors = {},
   particleColors = {},
+  haloColors = DEFAULT_HALO_COLORS,
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [spreadScale, setSpreadScale] = useState(1);
+  const [haloOpacity, setHaloOpacity] = useState(0.20);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const { graphNodes, graphLinks, nodeMap } = useMemo(() => {
