@@ -408,7 +408,7 @@ export default function Cocoon() {
       <div className="h-screen bg-[#0f0a1e] flex flex-col relative pt-2 sm:pt-4 overflow-hidden">
 
         {/* Top Bar */}
-        <header className="shrink-0 bg-[#0f0a1e]/80 backdrop-blur-xl px-3 sm:px-4 py-2">
+        <header className="shrink-0 bg-[#0f0a1e]/80 backdrop-blur-xl px-2 sm:px-4 md:px-6 py-2">
           <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 gap-x-2">
             {/* Title */}
             <div className="flex items-center gap-2 shrink-0">
