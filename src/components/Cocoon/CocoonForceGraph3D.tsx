@@ -997,7 +997,7 @@ export function CocoonForceGraph3D({
       </div>
 
       {/* Scale slider */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2.5 opacity-30 hover:opacity-70 transition-opacity duration-500">
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[5] flex items-center gap-2.5 opacity-50 hover:opacity-80 transition-opacity duration-500">
         <Slider
           min={0.3}
           max={3}
