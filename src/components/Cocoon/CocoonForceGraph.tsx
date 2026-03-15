@@ -107,6 +107,7 @@ export function CocoonForceGraph({
   selectedNodeId,
   onNodeSelect,
   isXRayMode,
+  isPickingMode = false,
 }: CocoonForceGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
