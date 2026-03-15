@@ -150,6 +150,25 @@ function classifyIntent(title: string, h1: string, keywords: string[]): string {
   return "informational";
 }
 
+// ─── Page Type Classification ───
+function classifyPageType(url: string, title: string, h1: string): string {
+  const path = url.toLowerCase();
+  const text = `${title} ${h1}`.toLowerCase();
+
+  if (path === "/" || path.endsWith(".com") || path.endsWith(".fr") || path.match(/^https?:\/\/[^/]+\/?$/)) return "homepage";
+  if (path.match(/\/blog|\/article|\/actualit|\/news|\/post/)) return "blog";
+  if (path.match(/\/produit|\/product|\/shop|\/boutique|\/item/)) return "produit";
+  if (path.match(/\/categor|\/collection|\/rayon/)) return "catégorie";
+  if (path.match(/\/faq|\/aide|\/help|\/support/)) return "faq";
+  if (path.match(/\/contact|\/nous-contacter/)) return "contact";
+  if (path.match(/\/tarif|\/pricing|\/prix|\/plan/)) return "tarifs";
+  if (path.match(/\/mention|\/legal|\/cgu|\/cgv|\/politique|\/privacy/)) return "légal";
+  if (path.match(/\/a-propos|\/about|\/qui-sommes/)) return "à propos";
+  if (text.match(/guide|tutoriel|tutorial|comment|how to/)) return "guide";
+
+  return "page";
+}
+
 // ─── Connected Components Clustering ───
 function clusterByComponents(
   adjacency: Map<number, number[]>,
