@@ -484,42 +484,48 @@ export default function Cocoon() {
         )}
 
         {/* Main Graph */}
-        <main className={`flex-1 relative ${!hasAccess ? 'pointer-events-none select-none opacity-40' : ''}`}>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="w-8 h-8 animate-spin text-[#fbbf24]" />
-                <p className="text-white/40 text-sm">{t.loading}</p>
-              </div>
-            </div>
-          ) : nodes.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center max-w-sm space-y-4">
-                <div className="w-20 h-20 rounded-2xl bg-[#4c1d95]/20 flex items-center justify-center mx-auto border border-[#4c1d95]/15">
-                  <RefreshCw className="w-8 h-8 text-[#a78bfa]" />
+        <main className={`flex-1 relative px-4 md:px-6 pb-6 ${!hasAccess ? 'pointer-events-none select-none opacity-40' : ''}`}>
+          <div className="h-full rounded-xl overflow-hidden border border-[hsl(263,70%,20%)] relative">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#fbbf24]" />
+                  <p className="text-white/40 text-sm">{t.loading}</p>
                 </div>
-                <h2 className="text-lg font-semibold text-white">{t.noGraph}</h2>
-                <p className="text-white/40 text-sm">{t.noGraphDesc}</p>
               </div>
-            </div>
-          ) : (
-            <CocoonForceGraph
-              nodes={nodes}
-              selectedNodeId={selectedNode?.id || null}
-              onNodeSelect={setSelectedNode}
-              isXRayMode={isXRayMode}
-            />
-          )}
+            ) : nodes.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center max-w-sm space-y-4">
+                  <div className="w-20 h-20 rounded-2xl bg-[#4c1d95]/20 flex items-center justify-center mx-auto border border-[#4c1d95]/15">
+                    <RefreshCw className="w-8 h-8 text-[#a78bfa]" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-white">{t.noGraph}</h2>
+                  <p className="text-white/40 text-sm">{t.noGraphDesc}</p>
+                </div>
+              </div>
+            ) : (
+              <CocoonForceGraph
+                nodes={nodes}
+                selectedNodeId={selectedNode?.id || null}
+                onNodeSelect={setSelectedNode}
+                isXRayMode={isXRayMode}
+              />
+            )}
 
-          {/* Side Panel */}
-          {selectedNode && (
-            <CocoonNodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />
-          )}
+            {/* Side Panel */}
+            {selectedNode && (
+              <CocoonNodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />
+            )}
+          </div>
         </main>
 
         {/* AI Chat for interpreting results */}
         {hasAccess && nodes.length > 0 && (
-          <CocoonAIChat nodes={nodes} selectedNodeId={selectedNode?.id} />
+          <div className="px-4 md:px-6 pb-4 md:pb-6">
+            <div className="w-full max-w-[400px]">
+              <CocoonAIChat nodes={nodes} selectedNodeId={selectedNode?.id} />
+            </div>
+          </div>
         )}
 
         {/* Prerequisites Modal */}

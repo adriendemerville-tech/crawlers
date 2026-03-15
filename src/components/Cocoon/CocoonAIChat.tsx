@@ -187,7 +187,7 @@ export function CocoonAIChat({ nodes, selectedNodeId }: CocoonAIChatProps) {
   };
 
   return (
-    <div className="border-t border-[hsl(263,70%,20%)] bg-[#0f0a1e]/90 backdrop-blur-xl">
+    <div className="border border-[hsl(263,70%,20%)] rounded-xl bg-[#0f0a1e]/90 backdrop-blur-xl overflow-hidden">
       {/* Toggle header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
