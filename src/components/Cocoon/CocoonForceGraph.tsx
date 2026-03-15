@@ -182,15 +182,15 @@ export function CocoonForceGraph({
       for (const edge of node.similarity_edges || []) {
         const targetId = urlToId.get(edge.target_url);
         if (targetId && idSet.has(targetId) && node.id < targetId) {
-          const srcDepth = node.crawl_depth ?? node.depth ?? 0;
-          const tgtDepth = urlToDepth.get(edge.target_url) ?? 0;
+          const isHomeSrc = node.id === homeId;
+          const isHomeTgt = targetId === homeId;
           gLinks.push({
             source: node.id,
             target: targetId,
             strength: edge.score,
             type: edge.type,
-            sourceDepth: srcDepth,
-            targetDepth: tgtDepth,
+            sourceDepth: isHomeSrc ? 0 : 1,
+            targetDepth: isHomeTgt ? 0 : 1,
           });
         }
       }
