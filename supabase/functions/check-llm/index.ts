@@ -390,6 +390,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Error analyzing LLM visibility:', error);
+    await trackEdgeFunctionError('check-llm', error instanceof Error ? error.message : 'Analysis failed').catch(() => {});
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Analysis failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

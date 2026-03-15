@@ -904,6 +904,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[GEO-AUDIT] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to analyze GEO';
+    await trackEdgeFunctionError('check-geo', errorMessage).catch(() => {});
     return new Response(
       JSON.stringify({ success: false, reliabilityScore: 0, blockingError: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

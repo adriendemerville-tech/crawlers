@@ -275,6 +275,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to check URL';
+    await trackEdgeFunctionError('check-crawlers', errorMessage).catch(() => {});
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
