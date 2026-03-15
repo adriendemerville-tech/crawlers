@@ -441,10 +441,13 @@ export default function Cocoon() {
           {nodes.length > 0 && (
             <div className="flex items-center gap-4 mt-3 px-1 flex-wrap">
               {[
-                { label: 'Transactionnel', color: '#fbbf24' },
-                { label: 'Commercial', color: '#a78bfa' },
-                { label: 'Informationnel', color: '#7c3aed' },
-                { label: 'Navigationnel', color: '#6366f1' },
+                { label: 'Accueil', color: '#fbbf24' },
+                { label: 'Blog', color: '#a78bfa' },
+                { label: 'Produit', color: '#34d399' },
+                { label: 'Catégorie', color: '#60a5fa' },
+                { label: 'FAQ', color: '#fb923c' },
+                { label: 'Guide', color: '#c084fc' },
+                { label: 'Page', color: '#8b5cf6' },
               ].map(({ label, color }) => (
                 <div key={label} className="flex items-center gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
