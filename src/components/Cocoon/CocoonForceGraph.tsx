@@ -273,7 +273,7 @@ export function CocoonForceGraph({
           })
           .strength((d) => d.strength * 0.25),
       )
-      .force("charge", forceManyBody().strength(-180))
+      .force("charge", forceManyBody().strength(-180 * Math.max(0.5, Math.min(1, nodes.length / 15))))
       .force("center", forceCenter(0, 0))
       .force("collide", forceCollide<GraphNode>().radius((d) => d.radius + 8))
       .alphaDecay(0.02)
