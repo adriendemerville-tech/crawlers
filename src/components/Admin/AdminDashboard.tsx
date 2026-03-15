@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -14,6 +14,7 @@ import { CiTestsDashboard } from './CiTestsDashboard';
 import { AffiliateManagement } from './AffiliateManagement';
 import { IntelligenceHub } from './IntelligenceHub';
 import { ScriptKillSwitches } from './ScriptKillSwitches';
+import { SilentErrorsRegistry } from './SilentErrorsRegistry';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const adminTranslations = {
