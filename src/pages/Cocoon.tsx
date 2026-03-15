@@ -5,7 +5,7 @@ import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
+import { CocoonForceGraph3D } from "@/components/Cocoon/CocoonForceGraph3D";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
