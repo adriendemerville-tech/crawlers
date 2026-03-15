@@ -328,7 +328,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     <div className="relative">
       {/* Floating chat window — opens upward */}
       {isOpen && (
-        <div className="absolute bottom-full mb-2 left-0 w-[380px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50"
+        <div className="absolute bottom-full mb-2 left-0 w-[475px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50"
           style={{ maxHeight: 'min(500px, 60vh)' }}
         >
           {/* Header */}
