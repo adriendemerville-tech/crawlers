@@ -158,6 +158,7 @@ export default function Cocoon() {
   const [nodePickerCallback, setNodePickerCallback] = useState<((node: any) => void) | null>(null);
   const [isXRayMode, setIsXRayMode] = useState(false);
   const [particlesEnabled, setParticlesEnabled] = useState(true);
+  const [showClusters, setShowClusters] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [is3DMode, setIs3DMode] = useState(true);
   const [isComputing, setIsComputing] = useState(false);
@@ -530,6 +531,7 @@ export default function Cocoon() {
                 nodeColors={cocoonTheme.nodeColors}
                 particleColors={cocoonTheme.particleColors}
                 haloColors={cocoonTheme.haloColors}
+                showClusters={showClusters}
               />
             ) : (
               <CocoonForceGraph
@@ -608,6 +610,17 @@ export default function Cocoon() {
                     : (language === 'en' ? 'Particles off' : language === 'es' ? 'Sin partículas' : 'Particules off')
                   }
                 </button>
+                <label className="flex items-center gap-1 sm:gap-1.5 cursor-pointer ml-1 sm:ml-2">
+                  <input
+                    type="checkbox"
+                    checked={showClusters}
+                    onChange={(e) => setShowClusters(e.target.checked)}
+                    className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm border border-white/20 bg-white/5 accent-white/40 cursor-pointer"
+                  />
+                  <span className="text-white/40 text-[9px] sm:text-[10px] select-none">
+                    {language === 'en' ? 'Clusters' : language === 'es' ? 'Clústeres' : 'Clusters'}
+                  </span>
+                </label>
               </div>
             );
           })()}
