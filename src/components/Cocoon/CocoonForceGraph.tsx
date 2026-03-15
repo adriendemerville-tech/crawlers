@@ -113,6 +113,7 @@ export function CocoonForceGraph({
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
+  const [hasAutoFitted, setHasAutoFitted] = useState(false);
   const animFrameRef = useRef<number>(0);
   const graphNodesRef = useRef<GraphNode[]>([]);
   const graphLinksRef = useRef<GraphLink[]>([]);
