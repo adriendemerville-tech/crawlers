@@ -323,12 +323,16 @@ export default function Cocoon() {
         <meta name="description" content={t.metaDesc} />
       </Helmet>
 
-      {/* Access gate for non-subscribers */}
+      {/* Access gate overlay for non-subscribers */}
       {hasAccess === false && (
-        <CocoonAccessGate language={language} />
+        <div className="fixed inset-0 z-50">
+          <div className="absolute inset-0 backdrop-blur-md bg-black/30" />
+          <div className="relative z-10 h-full">
+            <CocoonAccessGate language={language} />
+          </div>
+        </div>
       )}
 
-      {hasAccess !== false && (
       <div className="min-h-screen bg-[#0f0a1e] flex flex-col relative">
 
         {/* Top Bar */}
@@ -584,7 +588,6 @@ export default function Cocoon() {
           </DialogContent>
         </Dialog>
       </div>
-      )}
     </>
   );
 }
