@@ -49,6 +49,8 @@ const i18n = {
     loginCta: "Iniciar sesión",
     signupCta: "Registrarse",
     redirecting: "Redirigiendo…",
+    back: "Inicio",
+    errorGeneric: "Error",
   },
 };
 
