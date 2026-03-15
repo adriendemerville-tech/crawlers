@@ -601,6 +601,11 @@ export function CocoonForceGraph({
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        lastClickPos.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      }
       const node = getNodeAtPos(e.clientX, e.clientY);
       if (node) {
         const original = nodes.find((n) => n.id === node.id) || null;
