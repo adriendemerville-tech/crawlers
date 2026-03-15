@@ -402,7 +402,7 @@ export default function Cocoon() {
         </div>
       )}
 
-      <div className="min-h-screen bg-[#0f0a1e] flex flex-col relative pt-4">
+      <div className="h-screen bg-[#0f0a1e] flex flex-col relative pt-4 overflow-hidden">
 
         {/* Top Bar */}
         <header className="shrink-0 bg-[#0f0a1e]/80 backdrop-blur-xl px-4 py-2">
