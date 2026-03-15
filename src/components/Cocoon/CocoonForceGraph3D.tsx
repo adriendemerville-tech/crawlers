@@ -2,8 +2,9 @@ import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Canvas, useFrame, extend } from "@react-three/fiber";
 import { OrbitControls, Html, Billboard, Text, Line } from "@react-three/drei";
 import * as THREE from "three";
-import { Plus, Minus, Maximize2 } from "lucide-react";
+import { Plus, Minus, Maximize2, CircleDot } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 
 // ─── Types ───
 interface SemanticNode {
