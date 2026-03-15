@@ -25,6 +25,18 @@ interface TypeCounts {
   cocoon: number;
 }
 
+type LastAuditType = 'magnet' | 'audit' | 'crawl' | 'cocoon' | null;
+
+function getLastAuditIcon(type: LastAuditType) {
+  switch (type) {
+    case 'magnet': return <Magnet className="h-3.5 w-3.5 text-blue-500" title="Lead Magnet" />;
+    case 'audit': return <FileSearch className="h-3.5 w-3.5 text-violet-500" title="Audit Stratégique" />;
+    case 'crawl': return <ScanSearch className="h-3.5 w-3.5 text-amber-500" title="Crawl" />;
+    case 'cocoon': return <Network className="h-3.5 w-3.5 text-emerald-500" title="Cocoon" />;
+    default: return null;
+  }
+}
+
 export function ScannedUrlsRegistry() {
   const [urls, setUrls] = useState<AnalyzedUrl[]>([]);
   const [totalCount, setTotalCount] = useState(0);
