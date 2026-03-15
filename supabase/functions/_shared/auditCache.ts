@@ -1,14 +1,15 @@
 /**
  * Audit Cache — avoids re-paying IA for identical requests within TTL.
- * Used by Edge Functions via service role key.
+ * Uses singleton service client for connection reuse.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getServiceClient } from './supabaseClient.ts';
 
 function getClient() {
-  const url = Deno.env.get('SUPABASE_URL');
-  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!url || !key) return null;
-  return createClient(url, key);
+  try {
+    return getServiceClient();
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -71,7 +72,6 @@ export async function setCache(
 
 /**
  * Check rate limit for a user+action combo.
- * Returns { allowed: boolean, current_count, limit }
  */
 export async function checkRateLimit(
   userId: string,

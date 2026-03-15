@@ -1,18 +1,109 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 /**
  * Edge Function: serve-client-script
  * 
- * Serves the dynamic client-side router JS for a given tracked_site API key.
- * The script includes all active rules and implements:
- * - Longest-match-wins routing
- * - Anti-XSS (DOMPurify-lite sanitization)
- * - Anti-cloaking (forced visibility CSS)
- * - JSON-LD dedup (removes pre-existing ld+json)
- * - Telemetry ping
- * - Kill switch check
+ * Optimized with:
+ * - In-memory cache (TTL 60s) for rules — avoids DB reads on every SDK ping
+ * - Batched last_widget_ping updates (max 1 write per 5 min per site)
+ * - Singleton Supabase client
  */
+
+// ── In-memory caches ────────────────────────────────────────
+interface CachedRules {
+  rules: any[];
+  domain: string;
+  legacyScript: string;
+  siteId: string;
+  fetchedAt: number;
+}
+
+const rulesCache = new Map<string, CachedRules>();
+const CACHE_TTL_MS = 60_000; // 1 minute
+
+// Throttle last_widget_ping to max once per 5 minutes per site
+const lastPingUpdate = new Map<string, number>();
+const PING_THROTTLE_MS = 5 * 60_000;
+
+// Global kill switch cache
+let globalSwitchCache: { enabled: boolean; fetchedAt: number } | null = null;
+const GLOBAL_SWITCH_TTL_MS = 30_000; // 30s
+
+async function isGloballyEnabled(): Promise<boolean> {
+  const now = Date.now();
+  if (globalSwitchCache && (now - globalSwitchCache.fetchedAt) < GLOBAL_SWITCH_TTL_MS) {
+    return globalSwitchCache.enabled;
+  }
+  try {
+    const supabase = getServiceClient();
+    const { data } = await supabase
+      .from('system_config')
+      .select('value')
+      .eq('key', 'sdk_enabled')
+      .maybeSingle();
+    const enabled = !(data && data.value === false);
+    globalSwitchCache = { enabled, fetchedAt: now };
+    return enabled;
+  } catch {
+    return true; // fail-open
+  }
+}
+
+async function getSiteRules(apiKey: string): Promise<CachedRules | null> {
+  const now = Date.now();
+  const cached = rulesCache.get(apiKey);
+  if (cached && (now - cached.fetchedAt) < CACHE_TTL_MS) {
+    return cached;
+  }
+
+  const supabase = getServiceClient();
+
+  const { data: site, error: siteErr } = await supabase
+    .from('tracked_sites')
+    .select('id, domain, user_id, current_config')
+    .eq('api_key', apiKey)
+    .maybeSingle();
+
+  if (siteErr || !site) return null;
+
+  const { data: rules } = await supabase
+    .from('site_script_rules')
+    .select('url_pattern, payload_type, payload_data, is_active')
+    .eq('domain_id', site.id)
+    .eq('is_active', true)
+    .order('url_pattern', { ascending: true });
+
+  const activeRules = (rules || []).filter((r: any) => r.is_active);
+  const legacyScript = (site.current_config as Record<string, any>)?.corrective_script || '';
+
+  const entry: CachedRules = {
+    rules: activeRules,
+    domain: site.domain,
+    legacyScript,
+    siteId: site.id,
+    fetchedAt: now,
+  };
+
+  rulesCache.set(apiKey, entry);
+  return entry;
+}
+
+function throttledPingUpdate(siteId: string) {
+  const now = Date.now();
+  const lastPing = lastPingUpdate.get(siteId) || 0;
+  if (now - lastPing < PING_THROTTLE_MS) return; // skip
+
+  lastPingUpdate.set(siteId, now);
+  // Fire-and-forget
+  const supabase = getServiceClient();
+  supabase
+    .from('tracked_sites')
+    .update({ last_widget_ping: new Date().toISOString() })
+    .eq('id', siteId)
+    .then(() => {})
+    .catch(() => {});
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,7 +111,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // API key from query string or header
     const url = new URL(req.url);
     const apiKey = url.searchParams.get('key') || req.headers.get('x-crawlers-key') || '';
 
@@ -30,76 +120,39 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, serviceKey);
-
-    // 1. Look up the tracked site by API key
-    const { data: site, error: siteErr } = await supabase
-      .from('tracked_sites')
-      .select('id, domain, user_id, current_config')
-      .eq('api_key', apiKey)
-      .maybeSingle();
-
-    if (siteErr || !site) {
-      return new Response('// Crawlers.fr: invalid API key', {
-        headers: { ...corsHeaders, 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=300' },
-      });
-    }
-
-    // 2. Check global kill switch
-    const { data: globalSwitch } = await supabase
-      .from('system_config')
-      .select('value')
-      .eq('key', 'sdk_enabled')
-      .maybeSingle();
-
-    if (globalSwitch && globalSwitch.value === false) {
+    // 1. Global kill switch (cached 30s)
+    if (!await isGloballyEnabled()) {
       return new Response('// Crawlers.fr: SDK globally disabled', {
         headers: { ...corsHeaders, 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=60' },
       });
     }
 
-    // 3. Check feature flag for multipage router
-    const { data: featureFlag } = await supabase
-      .from('system_config')
-      .select('value')
-      .eq('key', 'enable_multipage_router')
-      .maybeSingle();
-
-    const multipageEnabled = featureFlag?.value !== false;
-
-    // 4. Fetch active rules for this domain
-    const { data: rules, error: rulesErr } = await supabase
-      .from('site_script_rules')
-      .select('url_pattern, payload_type, payload_data, is_active')
-      .eq('domain_id', site.id)
-      .eq('is_active', true)
-      .order('url_pattern', { ascending: true });
-
-    if (rulesErr) {
-      console.error('[serve-client-script] Rules fetch error:', rulesErr);
+    // 2. Get rules (cached 60s)
+    const site = await getSiteRules(apiKey);
+    if (!site) {
+      return new Response('// Crawlers.fr: invalid API key', {
+        headers: { ...corsHeaders, 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=300' },
+      });
     }
 
-    const activeRules = (rules || []).filter(r => r.is_active);
+    // 3. Throttled ping update (max 1 write per 5 min)
+    throttledPingUpdate(site.siteId);
 
-    // 5. Also get the legacy corrective_script from current_config
-    const legacyScript = (site.current_config as Record<string, any>)?.corrective_script || '';
-
-    // 6. Build the client-side router script
+    // 4. Build script
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const sdkStatusUrl = `${supabaseUrl}/functions/v1/sdk-status`;
     const telemetryUrl = `${supabaseUrl}/functions/v1/sdk-status`;
 
-    const rulesJson = JSON.stringify(activeRules.map(r => ({
+    const rulesJson = JSON.stringify(site.rules.map((r: any) => ({
       p: r.url_pattern,
       t: r.payload_type,
       d: r.payload_data,
     })));
 
     const script = `/**
- * Crawlers.fr — Dynamic Multi-Page Router v1.0
+ * Crawlers.fr — Dynamic Multi-Page Router v1.1
  * Domain: ${site.domain}
- * Rules: ${activeRules.length}
+ * Rules: ${site.rules.length}
  * Generated: ${new Date().toISOString()}
  */
 (function(){
@@ -110,10 +163,8 @@ var DOMAIN='${site.domain}';
 var SDK_STATUS='${sdkStatusUrl}';
 var TELEMETRY='${telemetryUrl}';
 
-// ═══ ANTI-XSS: Sanitize HTML payloads ═══
 function sanitizeHtml(html){
   if(!html||typeof html!=='string')return'';
-  // Strip script tags, event handlers, javascript: URIs
   return html
     .replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi,'')
     .replace(/\\son\\w+\\s*=/gi,' data-blocked=')
@@ -121,7 +172,6 @@ function sanitizeHtml(html){
     .replace(/data\\s*:/gi,'blocked:');
 }
 
-// ═══ ANTI-CLOAKING: Force visibility on injected elements ═══
 function forceVisible(el){
   if(!el||!el.style)return;
   el.style.setProperty('display','block','important');
@@ -132,7 +182,6 @@ function forceVisible(el){
   el.style.setProperty('clip-path','none','important');
 }
 
-// ═══ JSON-LD DEDUP: Remove pre-existing ld+json to prevent conflicts ═══
 function cleanExistingJsonLd(type){
   try{
     var existing=document.querySelectorAll('script[type="application/ld+json"]');
@@ -147,7 +196,6 @@ function cleanExistingJsonLd(type){
   }catch(e){}
 }
 
-// ═══ ROUTING: Longest-match-wins ═══
 function matchRule(pathname){
   var matched=[];
   for(var i=0;i<RULES.length;i++){
@@ -156,29 +204,24 @@ function matchRule(pathname){
       matched.push({rule:r,specificity:0});
       continue;
     }
-    // Wildcard pattern: /blog/* matches /blog/anything
     if(r.p.endsWith('/*')){
       var prefix=r.p.slice(0,-1);
       if(pathname.indexOf(prefix)===0){
         matched.push({rule:r,specificity:prefix.length});
       }
     }
-    // Exact match
     else if(pathname===r.p||pathname===r.p+'/'){
       matched.push({rule:r,specificity:r.p.length+1000});
     }
   }
-  // Sort by specificity descending (longest match wins)
   matched.sort(function(a,b){return b.specificity-a.specificity;});
   return matched.map(function(m){return m.rule;});
 }
 
-// ═══ INJECT PAYLOAD ═══
 function injectPayload(rule){
   var d=rule.d||{};
   var type=rule.t;
 
-  // JSON-LD payloads → inject in <head>
   if(type==='FAQPage'||type==='Organization'||type==='LocalBusiness'||type==='BreadcrumbList'||type==='Article'||type==='Product'){
     cleanExistingJsonLd(type);
     var s=document.createElement('script');
@@ -189,7 +232,6 @@ function injectPayload(rule){
     return;
   }
 
-  // HTML payloads → sanitize + inject with forced visibility
   if(type==='HTML_INJECTION'&&d.html){
     var container=document.createElement('div');
     container.setAttribute('data-crawlers-rule','html');
@@ -209,7 +251,6 @@ function injectPayload(rule){
     return;
   }
 
-  // GLOBAL_FIXES → execute the corrective script
   if(type==='GLOBAL_FIXES'&&d.script){
     try{
       var fn=new Function(d.script);
@@ -221,7 +262,6 @@ function injectPayload(rule){
   }
 }
 
-// ═══ TELEMETRY ═══
 function sendTelemetry(fixesApplied){
   try{
     if(navigator.sendBeacon){
@@ -236,7 +276,6 @@ function sendTelemetry(fixesApplied){
   }catch(e){}
 }
 
-// ═══ KILL SWITCH CHECK ═══
 function checkAndExecute(){
   try{
     var ctrl=new AbortController();
@@ -254,7 +293,6 @@ function checkAndExecute(){
       executeRouter();
     }).catch(function(){
       clearTimeout(tid);
-      // Fail-open
       executeRouter();
     });
   }catch(e){
@@ -262,16 +300,14 @@ function checkAndExecute(){
   }
 }
 
-// ═══ MAIN ROUTER ═══
 function executeRouter(){
   try{
     var pathname=location.pathname;
     var matched=matchRule(pathname);
     if(matched.length===0){
-      ${legacyScript ? `
-      // Fallback to legacy corrective script
+      ${site.legacyScript ? `
       try{
-        ${legacyScript.replace(/`/g, '\\`').slice(0, 50000)}
+        ${site.legacyScript.replace(/`/g, '\\`').slice(0, 50000)}
       }catch(e){}` : '// No rules matched and no legacy script'}
       return;
     }
@@ -292,7 +328,6 @@ function executeRouter(){
   }
 }
 
-// ═══ ENTRY POINT ═══
 if(document.readyState==='loading'){
   document.addEventListener('DOMContentLoaded',checkAndExecute);
 }else{
@@ -302,18 +337,12 @@ if(document.readyState==='loading'){
 
 })();`;
 
-    // Update last_widget_ping
-    await supabase
-      .from('tracked_sites')
-      .update({ last_widget_ping: new Date().toISOString() })
-      .eq('id', site.id);
-
     return new Response(script, {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/javascript; charset=utf-8',
         'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
-        'X-Crawlers-Rules': String(activeRules.length),
+        'X-Crawlers-Rules': String(site.rules.length),
       },
     });
 

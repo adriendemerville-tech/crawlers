@@ -1,6 +1,8 @@
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
+import { checkFairUse, getUserContext } from '../_shared/fairUse.ts';
 
 interface PageSpeedResult {
   performance: number;
@@ -93,7 +95,26 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ── IP Rate Limit ──
+  const clientIp = getClientIp(req);
+  const ipCheck = checkIpRate(clientIp, 'check-pagespeed', 15, 60_000);
+  if (!ipCheck.allowed) return rateLimitResponse(corsHeaders, ipCheck.retryAfterMs);
+
+  if (!acquireConcurrency('check-pagespeed', 30)) return concurrencyResponse(corsHeaders);
+
   try {
+    // ── Fair Use ──
+    const userCtx = await getUserContext(req);
+    if (userCtx) {
+      const fairUse = await checkFairUse(userCtx.userId, 'pagespeed_check', userCtx.planType);
+      if (!fairUse.allowed) {
+        releaseConcurrency('check-pagespeed');
+        return new Response(JSON.stringify({ success: false, error: fairUse.reason }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     const { url, strategy = 'mobile' } = await req.json();
 
     if (!url) {
@@ -220,5 +241,7 @@ Deno.serve(async (req) => {
       JSON.stringify({ success: false, error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+  } finally {
+    releaseConcurrency('check-pagespeed');
   }
 });

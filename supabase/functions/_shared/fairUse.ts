@@ -1,17 +1,12 @@
 /**
- * Fair Use Policy — invisible daily/hourly caps for ALL users (including Pro).
+ * Fair Use Policy v2 — uses consolidated RPC for 1 DB call instead of 3.
  * 
  * Commercially labeled "Illimité" for Pro Agency, but silently enforces
  * reasonable usage limits to prevent API cost explosion.
- * 
- * Uses analytics_events table for counting (already exists, no new table needed).
- * Falls back to in-memory counters if DB is unavailable.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getServiceClient, getUserClient } from './supabaseClient.ts';
 
 // ── Fair Use Limits by plan ─────────────────────────────────────────
-// These are intentionally generous — only meant to block bots/scrapers/abuse
-
 interface FairUseLimits {
   hourly: number;
   daily: number;
@@ -31,7 +26,6 @@ type ActionType =
   | 'target_queries';
 
 const LIMITS: Record<string, Record<ActionType, FairUseLimits>> = {
-  // Free users: low limits (credits already gate them, this is anti-bot)
   free: {
     expert_audit:            { hourly: 5,  daily: 15 },
     geo_check:               { hourly: 10, daily: 30 },
@@ -45,7 +39,6 @@ const LIMITS: Record<string, Record<ActionType, FairUseLimits>> = {
     hallucination_diagnosis: { hourly: 3,  daily: 10 },
     target_queries:          { hourly: 5,  daily: 15 },
   },
-  // Pro Agency: generous but capped — these are HIGH, meant only to stop abuse
   agency_pro: {
     expert_audit:            { hourly: 20, daily: 100 },
     geo_check:               { hourly: 30, daily: 200 },
@@ -61,7 +54,7 @@ const LIMITS: Record<string, Record<ActionType, FairUseLimits>> = {
   },
 };
 
-// ── In-memory fallback counter (per-isolate, resets on cold start) ──
+// ── In-memory fallback counter ──
 const memoryCounters = new Map<string, { count: number; resetAt: number }>();
 
 function checkMemoryLimit(key: string, limit: number, windowMs: number): boolean {
@@ -75,7 +68,7 @@ function checkMemoryLimit(key: string, limit: number, windowMs: number): boolean
   return entry.count <= limit;
 }
 
-// ── Main function ───────────────────────────────────────────────────
+// ── Main function ───────────────────────────────────────────
 
 interface FairUseResult {
   allowed: boolean;
@@ -88,22 +81,16 @@ interface FairUseResult {
 
 /**
  * Check if a user is within fair use limits.
- * Returns { allowed: true } or { allowed: false, reason: '...' }.
- * 
- * IMPORTANT: Admins bypass all limits.
+ * Uses consolidated RPC: 1 DB call = admin check + hourly count + daily count + record usage.
  */
 export async function checkFairUse(
   userId: string,
   action: ActionType,
   planType: string = 'free',
 ): Promise<FairUseResult> {
-  // Get limits for this plan (default to free)
   const planLimits = LIMITS[planType] || LIMITS.free;
   const actionLimits = planLimits[action];
-  if (!actionLimits) {
-    // Unknown action — allow (don't break things)
-    return { allowed: true };
-  }
+  if (!actionLimits) return { allowed: true };
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -117,76 +104,49 @@ export async function checkFairUse(
     return { allowed: true };
   }
 
-  const supabase = createClient(supabaseUrl, serviceKey);
-
   try {
-    // Check admin status — admins are truly unlimited
-    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
-    if (isAdmin === true) return { allowed: true };
+    const supabase = getServiceClient();
 
-    const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 3600_000).toISOString();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    // Single RPC call: checks admin + counts + records usage atomically
+    const { data, error } = await supabase.rpc('check_fair_use_v2', {
+      p_user_id: userId,
+      p_action: action,
+      p_hourly_limit: actionLimits.hourly,
+      p_daily_limit: actionLimits.daily,
+    });
 
-    // Count hourly usage
-    const { count: hourlyCount } = await supabase
-      .from('analytics_events')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('event_type', `fair_use:${action}`)
-      .gte('created_at', oneHourAgo);
-
-    // Count daily usage
-    const { count: dailyCount } = await supabase
-      .from('analytics_events')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('event_type', `fair_use:${action}`)
-      .gte('created_at', todayStart);
-
-    const hCount = hourlyCount || 0;
-    const dCount = dailyCount || 0;
-
-    if (hCount >= actionLimits.hourly) {
-      console.warn(`[FairUse] BLOCKED ${userId} on ${action}: ${hCount}/${actionLimits.hourly} hourly`);
-      return {
-        allowed: false,
-        reason: 'Vous avez atteint la limite d\'utilisation horaire. Réessayez dans quelques minutes.',
-        hourly_count: hCount,
-        daily_count: dCount,
-        hourly_limit: actionLimits.hourly,
-        daily_limit: actionLimits.daily,
-      };
+    if (error) {
+      console.error('[FairUse] RPC error (allowing):', error);
+      return { allowed: true };
     }
 
-    if (dCount >= actionLimits.daily) {
-      console.warn(`[FairUse] BLOCKED ${userId} on ${action}: ${dCount}/${actionLimits.daily} daily`);
+    const result = data as any;
+
+    if (result.is_admin) return { allowed: true };
+
+    if (!result.allowed) {
+      const isHourly = result.reason === 'hourly_limit';
+      console.warn(`[FairUse] BLOCKED ${userId} on ${action}: ${isHourly ? 'hourly' : 'daily'} limit`);
       return {
         allowed: false,
-        reason: 'Vous avez atteint la limite d\'utilisation journalière. Réessayez demain.',
-        hourly_count: hCount,
-        daily_count: dCount,
-        hourly_limit: actionLimits.hourly,
-        daily_limit: actionLimits.daily,
+        reason: isHourly
+          ? 'Vous avez atteint la limite d\'utilisation horaire. Réessayez dans quelques minutes.'
+          : 'Vous avez atteint la limite d\'utilisation journalière. Réessayez demain.',
+        hourly_count: result.hourly_count,
+        daily_count: result.daily_count,
+        hourly_limit: result.hourly_limit,
+        daily_limit: result.daily_limit,
       };
     }
-
-    // Record this usage (fire-and-forget)
-    supabase.from('analytics_events').insert({
-      user_id: userId,
-      event_type: `fair_use:${action}`,
-      event_data: { plan: planType, action },
-    }).then(() => {}).catch(() => {});
 
     return {
       allowed: true,
-      hourly_count: hCount + 1,
-      daily_count: dCount + 1,
-      hourly_limit: actionLimits.hourly,
-      daily_limit: actionLimits.daily,
+      hourly_count: result.hourly_count,
+      daily_count: result.daily_count,
+      hourly_limit: result.hourly_limit,
+      daily_limit: result.daily_limit,
     };
   } catch (e) {
-    // On error, allow (fail-open) — don't break production
     console.error('[FairUse] Error (allowing):', e);
     return { allowed: true };
   }
@@ -194,27 +154,20 @@ export async function checkFairUse(
 
 /**
  * Helper: extract userId and planType from request + supabase.
- * Returns null if user not authenticated.
  */
 export async function getUserContext(req: Request): Promise<{
   userId: string;
   planType: string;
-  supabase: ReturnType<typeof createClient>;
+  supabase: ReturnType<typeof getUserClient>;
 } | null> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-
   const authHeader = req.headers.get('Authorization') || '';
-  const supabase = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  const supabase = getUserClient(authHeader);
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
   // Fetch plan type
-  const adminClient = createClient(supabaseUrl, serviceKey);
+  const adminClient = getServiceClient();
   const { data: profile } = await adminClient
     .from('profiles')
     .select('plan_type, subscription_status')
