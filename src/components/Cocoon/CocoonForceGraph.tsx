@@ -643,7 +643,6 @@ export function CocoonForceGraph({
   }, [dimensions]);
 
   // Zoom buttons center on last clicked point or canvas center
-  const lastClickPos = useRef<{ x: number; y: number } | null>(null);
 
   const zoomAtPoint = useCallback((factor: number) => {
     setTransform((t) => {
