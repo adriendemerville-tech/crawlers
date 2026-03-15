@@ -2,8 +2,9 @@ import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Canvas, useFrame, extend } from "@react-three/fiber";
 import { OrbitControls, Html, Billboard, Text, Line } from "@react-three/drei";
 import * as THREE from "three";
-import { Plus, Minus, Maximize2 } from "lucide-react";
+import { Plus, Minus, Maximize2, CircleDot } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 
 // ─── Types ───
 interface SemanticNode {
@@ -211,6 +212,7 @@ function NodeSphere({
   isHovered,
   isXRayMode,
   customNodeColors,
+  nodeScale,
   onPointerOver,
   onPointerOut,
   onClick,
@@ -220,6 +222,7 @@ function NodeSphere({
   isHovered: boolean;
   isXRayMode: boolean;
   customNodeColors: Record<string, string>;
+  nodeScale: number;
   onPointerOver: () => void;
   onPointerOut: () => void;
   onClick: () => void;
@@ -232,8 +235,9 @@ function NodeSphere({
     : activeColors[node.pageType] || activeColors.unknown;
 
   const emissiveIntensity = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.8 : 0.3;
-  const scale = isSelected ? 1.3 : isHovered ? 1.15 : 1;
+  const scale = (isSelected ? 1.3 : isHovered ? 1.15 : 1) * nodeScale;
   const isGhost = isXRayMode && node.traffic < 10;
+  const scaledRadius = node.radius * nodeScale;
 
   useFrame(({ clock }) => {
     if (!meshRef.current) return;
@@ -257,7 +261,7 @@ function NodeSphere({
     <group position={[node.x, node.y, node.z]}>
       {/* Opaque border ring (slightly larger sphere behind) */}
       <mesh>
-        <sphereGeometry args={[node.radius * 1.12, 24, 24]} />
+        <sphereGeometry args={[scaledRadius * 1.12, 24, 24]} />
         <meshBasicMaterial
           color={color}
           transparent
@@ -272,7 +276,7 @@ function NodeSphere({
         onPointerOut={(e) => { e.stopPropagation(); onPointerOut(); }}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
       >
-        <sphereGeometry args={[node.radius, 24, 24]} />
+        <sphereGeometry args={[scaledRadius, 24, 24]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
@@ -286,7 +290,7 @@ function NodeSphere({
 
       {/* Label — always for home, hover/select only for others */}
       {(node.isHome || isSelected || isHovered) && (
-        <Billboard position={[0, -node.radius - 1.5, 0]}>
+        <Billboard position={[0, -scaledRadius - 1.5, 0]}>
           <Text
             fontSize={node.isHome ? 1.2 : 0.63}
             color={isSelected || node.isHome ? "#ffdc64" : "#ffffffb3"}
@@ -472,6 +476,7 @@ function SceneContent({
   particlesEnabled,
   customNodeColors,
   customParticleColors,
+  nodeScale,
   onNodeSelect,
   onNodeHover,
   onNodeUnhover,
@@ -486,6 +491,7 @@ function SceneContent({
   particlesEnabled: boolean;
   customNodeColors: Record<string, string>;
   customParticleColors: Record<string, string>;
+  nodeScale: number;
   onNodeSelect: (node: SemanticNode | null) => void;
   onNodeHover: (id: string) => void;
   onNodeUnhover: () => void;
@@ -522,6 +528,7 @@ function SceneContent({
           isHovered={node.id === hoveredNodeId}
           isXRayMode={isXRayMode}
           customNodeColors={customNodeColors}
+          nodeScale={nodeScale}
           onPointerOver={() => onNodeHover(node.id)}
           onPointerOut={onNodeUnhover}
           onClick={() => {
@@ -561,6 +568,7 @@ export function CocoonForceGraph3D({
   particleColors = {},
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [nodeScale, setNodeScale] = useState(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const { graphNodes, graphLinks, nodeMap } = useMemo(() => {
@@ -700,6 +708,7 @@ export function CocoonForceGraph3D({
           particlesEnabled={particlesEnabled}
           customNodeColors={nodeColors}
           customParticleColors={particleColors}
+          nodeScale={nodeScale}
           onNodeSelect={onNodeSelect}
           onNodeHover={setHoveredNodeId}
           onNodeUnhover={() => setHoveredNodeId(null)}
@@ -747,6 +756,20 @@ export function CocoonForceGraph3D({
         >
           <Maximize2 className="w-3.5 h-3.5" />
         </Button>
+      </div>
+
+      {/* Scale slider */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-black/50 backdrop-blur-md border border-white/10 rounded-lg px-3 py-1.5">
+        <CircleDot className="w-3 h-3 text-white/40 shrink-0" />
+        <Slider
+          min={0.3}
+          max={3}
+          step={0.1}
+          value={[nodeScale]}
+          onValueChange={([v]) => setNodeScale(v)}
+          className="w-28"
+        />
+        <span className="text-[9px] text-white/40 font-mono w-8 text-right">{nodeScale.toFixed(1)}×</span>
       </div>
 
       {/* Stats overlay */}
