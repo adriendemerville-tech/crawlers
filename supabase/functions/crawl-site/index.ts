@@ -298,6 +298,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Erreur crawl-site:', error);
+    await trackEdgeFunctionError('crawl-site', error instanceof Error ? error.message : 'Erreur interne').catch(() => {});
     return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur interne',

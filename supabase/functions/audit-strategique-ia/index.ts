@@ -2780,6 +2780,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('❌ Fatal error:', error);
+    await trackEdgeFunctionError('audit-strategique-ia', error instanceof Error ? error.message : 'Fatal error').catch(() => {});
 
     // ═══ ASYNC JOB: Mark as failed ═══
     if (jobSb && jobId) {

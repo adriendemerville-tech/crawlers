@@ -2321,6 +2321,7 @@ Réponds avec ce JSON exact:
     
   } catch (error) {
     console.error('Expert Audit error:', error);
+    await trackEdgeFunctionError('expert-audit', error instanceof Error ? error.message : 'Audit failed').catch(() => {});
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Audit failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
