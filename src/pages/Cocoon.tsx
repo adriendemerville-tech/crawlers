@@ -10,7 +10,7 @@ import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
-import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Database } from "lucide-react";
+import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
@@ -434,7 +434,7 @@ export default function Cocoon() {
                 disabled={isComputing || !selectedSiteId}
                 className="h-8 text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1.5"
               >
-                {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
+                {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                 {(isComputing || isAutoRefreshing) ? t.analyzingData : t.refreshData}
               </Button>
               <Button
@@ -586,7 +586,7 @@ export default function Cocoon() {
           {/* Navigation buttons — bottom right, same line */}
           <div className="flex items-center gap-2 shrink-0">
             <a
-              href="/crawl-multipages"
+              href="https://crawlers.fr/site-crawl"
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => { externalClickTimestamp.current = Date.now(); }}
