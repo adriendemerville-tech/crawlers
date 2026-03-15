@@ -115,10 +115,10 @@ const i18n = {
     upsellRedirecting: 'Redirigiendo…',
     prereqTitle: 'Acciones requeridas',
     prereqCrawl: 'Crawl multi-página',
-    prereqAudit: 'Auditoría experta completa',
+    prereqAudit: 'Auditoría estratégica',
     prereqDesc: 'Para generar el Cocoon semántico, estos pasos deben completarse en el sitio seleccionado.',
     prereqCrawlCta: 'Iniciar un crawl',
-    prereqAuditCta: 'Iniciar una auditoría',
+    prereqAuditCta: 'Iniciar una auditoría estratégica',
     prereqClose: 'Entendido',
   },
 };
