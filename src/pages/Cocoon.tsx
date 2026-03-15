@@ -171,6 +171,17 @@ export default function Cocoon() {
     return () => clearTimeout(timer);
   }, [hasAccess]);
 
+  // Read autolaunch param on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const domain = params.get('autolaunch');
+    if (domain) {
+      setAutoLaunchDomain(domain);
+      // Clean URL
+      navigate('/cocoon', { replace: true });
+    }
+  }, [navigate]);
+
   // Load tracked sites
   useEffect(() => {
     if (!user || !hasAccess) return;
@@ -182,10 +193,34 @@ export default function Cocoon() {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       setTrackedSites(data || []);
-      if (data?.[0]) setSelectedSiteId(data[0].id);
+
+      // Auto-select site matching autolaunch domain
+      if (autoLaunchDomain && data?.length) {
+        const match = data.find((s: any) => s.domain === autoLaunchDomain);
+        if (match) {
+          setSelectedSiteId(match.id);
+        } else if (data[0]) {
+          setSelectedSiteId(data[0].id);
+        }
+      } else if (data?.[0]) {
+        setSelectedSiteId(data[0].id);
+      }
     };
     loadSites();
-  }, [user, hasAccess]);
+  }, [user, hasAccess, autoLaunchDomain]);
+
+  // Auto-launch cocoon 2s after site is selected (from autolaunch flow)
+  useEffect(() => {
+    if (!autoLaunchDomain || !selectedSiteId || autoLaunchTriggered.current) return;
+    const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
+    if (!selectedSite || selectedSite.domain !== autoLaunchDomain) return;
+
+    autoLaunchTriggered.current = true;
+    const timer = setTimeout(() => {
+      handleCompute();
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [autoLaunchDomain, selectedSiteId, trackedSites]);
 
   // Load existing nodes for selected site
   useEffect(() => {
