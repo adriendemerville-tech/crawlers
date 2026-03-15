@@ -267,6 +267,14 @@ export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWai
           )}
         </div>
 
+        {/* Waiting for audit */}
+        {isWaitingAudit && (
+          <div className="flex items-center gap-1.5 mt-2 text-[10px] text-[#60a5fa] animate-pulse">
+            <RefreshCw className="w-3 h-3 animate-spin" />
+            {language === 'en' ? 'Waiting for audit results…' : language === 'es' ? 'Esperando resultados…' : 'En attente des résultats…'}
+          </div>
+        )}
+
         {/* Last updated */}
         {node.page_updated_at && (
           <div className="flex items-center gap-1.5 mt-2 text-[10px] text-white/40">
