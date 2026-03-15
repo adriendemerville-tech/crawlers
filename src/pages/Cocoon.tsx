@@ -403,7 +403,7 @@ export default function Cocoon() {
         )}
 
         {/* Main Graph */}
-        <main className={`flex-1 relative px-4 md:px-6 pb-6 ${!hasAccess ? 'pointer-events-none select-none opacity-40' : ''}`}>
+        <main className={`flex-1 relative px-4 md:px-6 pb-6`}>
           <div className="h-full rounded-xl overflow-hidden border border-[hsl(263,70%,20%)] relative">
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
