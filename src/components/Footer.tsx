@@ -283,14 +283,14 @@ function FooterComponent() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="sm:col-span-2 space-y-4">
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 {t3(language, 'Nos Outils', 'Our Tools', 'Herramientas')}
               </h3>
               <nav aria-label="Outils d'analyse">
-                <ul className="space-y-3">
+                <ul className="grid grid-cols-2 gap-x-6 gap-y-3">
                   {toolsLinks.map((link) => (
-                    <li key={link.href}>
+                    <li key={link.href + link.label}>
                       {link.isRoute ? (
                         <SmartLink
                           to={link.href}
