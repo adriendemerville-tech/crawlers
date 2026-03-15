@@ -23,7 +23,8 @@ import {
   ScanSearch,
   Coins,
   CreditCard,
-  Users
+  Users,
+  HardDrive
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -165,6 +166,7 @@ export function AnalyticsDashboard() {
   const [reliabilityScore, setReliabilityScore] = useState<{ score: number; audits: number; predictions: number } | null>(null);
   const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
   const [businessMetrics, setBusinessMetrics] = useState<{ payingSubscribers: number; creditsPurchased: number; mrr: number }>({ payingSubscribers: 0, creditsPurchased: 0, mrr: 0 });
+  const [dbSize, setDbSize] = useState<{ total_mb: number; total_gb: number } | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
     totalTokens: 0,
     promptTokens: 0,
@@ -575,6 +577,12 @@ export function AnalyticsDashboard() {
         });
       }
 
+      // Fetch database size
+      try {
+        const { data: sizeData } = await supabase.rpc('get_database_size');
+        if (sizeData) setDbSize(sizeData as any);
+      } catch {}
+
       setLastUpdated(new Date());
 
     } catch (error) {
@@ -754,7 +762,7 @@ export function AnalyticsDashboard() {
       </div>
 
       {/* Business Metrics */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-emerald-500/30">
           <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
             <CardTitle className="text-xs font-medium text-muted-foreground">Abonnés payants</CardTitle>
@@ -785,6 +793,22 @@ export function AnalyticsDashboard() {
             <p className="text-[10px] text-muted-foreground mt-0.5">{businessMetrics.payingSubscribers} × 59 €/mois</p>
           </CardContent>
         </Card>
+        {dbSize && (
+          <Card className="border-cyan-500/30">
+            <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+              <CardTitle className="text-xs font-medium text-muted-foreground">Poids-mémoire BDD</CardTitle>
+              <HardDrive className="h-3.5 w-3.5 text-cyan-500" />
+            </CardHeader>
+            <CardContent className="p-3 pt-0">
+              <div className="text-lg font-bold">
+                {dbSize.total_gb >= 1
+                  ? `${dbSize.total_gb.toLocaleString('fr-FR')} Go`
+                  : `${dbSize.total_mb.toLocaleString('fr-FR')} Mo`}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Stockage total base de données</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Token Usage Card */}
