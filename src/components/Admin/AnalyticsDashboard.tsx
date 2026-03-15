@@ -496,7 +496,7 @@ export function AnalyticsDashboard() {
       setAnalyzedUrls(filteredUrls.slice(0, 100));
 
       // Fetch error events with user emails
-      const errorEventsRaw = events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final');
+      const errorEventsRaw = events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final' || e.event_type === 'edge_function_error');
       
       // Get unique user_ids from error events
       const errorUserIds = [...new Set(errorEventsRaw
