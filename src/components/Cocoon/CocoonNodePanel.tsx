@@ -236,7 +236,7 @@ export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWai
               className="p-1.5 rounded-md border border-[#3b82f6]/30 hover:bg-[#3b82f6]/10 text-white/40 hover:text-[#60a5fa] transition-colors"
             >
               {isWaitingAudit ? (
-                <RefreshCw className="w-4 h-4 text-[#60a5fa]" style={{ animation: 'spin 2s linear infinite' }} />
+                <Search className="w-4 h-4 text-[#60a5fa]" />
               ) : (
                 <Search className="w-4 h-4" />
               )}
