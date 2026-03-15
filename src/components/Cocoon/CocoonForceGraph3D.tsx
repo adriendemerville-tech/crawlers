@@ -326,8 +326,8 @@ function NodeSphere({
         />
       </mesh>
 
-      {/* Label — always for home, hover/select only for others */}
-      {(node.isHome || isSelected || isHovered) && (
+      {/* Label — hover/select only (including home) */}
+      {(isSelected || isHovered) && (
         <Billboard position={[0, -node.radius - 1.5, 0]}>
           <Text
             fontSize={node.isHome ? 1.2 : 0.63}
