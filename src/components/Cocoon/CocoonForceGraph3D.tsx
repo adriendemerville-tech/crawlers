@@ -919,6 +919,24 @@ export function CocoonForceGraph3D({
       <div className="absolute top-4 right-4 text-[10px] text-white/30 font-mono space-y-0.5 text-right pointer-events-none">
         <div>{nodes.length} nœuds · {graphLinks.length} liens</div>
       </div>
+
+      {/* Halo opacity vertical slider — bottom right */}
+      <div className="absolute bottom-4 right-4 z-10 flex flex-col items-center gap-1.5 opacity-30 hover:opacity-70 transition-opacity duration-500">
+        <span className="text-[8px] text-white/40 font-mono select-none tracking-wider">Halo</span>
+        <div className="h-24 flex items-center">
+          <Slider
+            orientation="vertical"
+            min={0}
+            max={0.3}
+            step={0.01}
+            value={[haloOpacity]}
+            onValueChange={([v]) => setHaloOpacity(v)}
+            className="h-24 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/50 [&_[data-orientation=vertical]]:w-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=vertical]>span:first-child]:bg-white/20"
+            thumbLabel="Opacité halo"
+          />
+        </div>
+        <span className="text-[8px] text-white/30 font-mono select-none">{Math.round(haloOpacity * 100)}%</span>
+      </div>
     </div>
   );
 }
