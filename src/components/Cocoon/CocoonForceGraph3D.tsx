@@ -235,8 +235,9 @@ function NodeSphere({
     : activeColors[node.pageType] || activeColors.unknown;
 
   const emissiveIntensity = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.8 : 0.3;
-  const scale = isSelected ? 1.3 : isHovered ? 1.15 : 1;
+  const scale = (isSelected ? 1.3 : isHovered ? 1.15 : 1) * nodeScale;
   const isGhost = isXRayMode && node.traffic < 10;
+  const scaledRadius = node.radius * nodeScale;
 
   useFrame(({ clock }) => {
     if (!meshRef.current) return;
