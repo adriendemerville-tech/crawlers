@@ -6,6 +6,7 @@ export function useAdmin() {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isViewer, setIsViewer] = useState(false);
+  const [isViewerLevel2, setIsViewerLevel2] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,6 +14,7 @@ export function useAdmin() {
       if (!user) {
         setIsAdmin(false);
         setIsViewer(false);
+        setIsViewerLevel2(false);
         setLoading(false);
         return;
       }
@@ -27,15 +29,18 @@ export function useAdmin() {
           console.error('Error checking roles:', error);
           setIsAdmin(false);
           setIsViewer(false);
+          setIsViewerLevel2(false);
         } else {
           const roles = (data || []).map((r: any) => r.role);
           setIsAdmin(roles.includes('admin'));
           setIsViewer(roles.includes('viewer'));
+          setIsViewerLevel2(roles.includes('viewer_level2'));
         }
       } catch (err) {
         console.error('Error checking roles:', err);
         setIsAdmin(false);
         setIsViewer(false);
+        setIsViewerLevel2(false);
       } finally {
         setLoading(false);
       }
@@ -44,9 +49,21 @@ export function useAdmin() {
     checkRoles();
   }, [user]);
 
-  // A viewer can see the admin dashboard but in read-only mode
-  const hasAdminAccess = isAdmin || isViewer;
-  const isReadOnly = isViewer && !isAdmin;
+  // Hierarchy: admin (créateur) > viewer > viewer_level2
+  const hasAdminAccess = isAdmin || isViewer || isViewerLevel2;
+  const isReadOnly = (isViewer || isViewerLevel2) && !isAdmin;
+  // viewer_level2 can't see docs or ML algos
+  const canSeeDocs = isAdmin || isViewer;
+  const canSeeAlgos = isAdmin || isViewer;
 
-  return { isAdmin, isViewer, hasAdminAccess, isReadOnly, loading };
+  return { 
+    isAdmin, 
+    isViewer, 
+    isViewerLevel2, 
+    hasAdminAccess, 
+    isReadOnly, 
+    canSeeDocs, 
+    canSeeAlgos, 
+    loading 
+  };
 }
