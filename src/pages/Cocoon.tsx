@@ -133,6 +133,11 @@ const i18n = {
     prereqCrawlCta: 'Iniciar un crawl',
     prereqAuditCta: 'Iniciar una auditoría estratégica',
     prereqClose: 'Entendido',
+    refreshData: 'Actualizar datos',
+    analyzingData: 'Analizando datos...',
+    auditExpert: 'Auditoría Experta',
+    crawlMulti: 'Crawl Multi-página',
+    console: 'Consola',
   },
 };
 
