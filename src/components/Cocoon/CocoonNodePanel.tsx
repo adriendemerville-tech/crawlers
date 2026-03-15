@@ -192,6 +192,16 @@ export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWai
   const { language } = useLanguage();
   const navigate = useNavigate();
   const t = i18n[language] || i18n.fr;
+  const [fadeKey, setFadeKey] = useState(0);
+  const prevNodeRef = useRef(node);
+
+  // Trigger fade-in when node data changes (new scores, etc.)
+  useEffect(() => {
+    if (prevNodeRef.current !== node && prevNodeRef.current.url === node.url) {
+      setFadeKey(k => k + 1);
+    }
+    prevNodeRef.current = node;
+  }, [node]);
 
   const depthLabel = (t.depths as Record<number, string>)[node.crawl_depth ?? 0] ||
     `${t.depths[1]}${"⁴⁵⁶⁷⁸⁹"[(node.crawl_depth ?? 4) - 4] || `^${node.crawl_depth}`}`;
@@ -200,7 +210,7 @@ export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWai
   const intentLabel = (t.intents as Record<string, string>)[node.intent] || node.intent;
 
   return (
-    <div className="absolute top-4 right-4 bottom-4 w-[360px] rounded-xl bg-[#0f0a1e]/95 backdrop-blur-xl border border-[hsl(263,70%,20%)] overflow-y-auto z-20 animate-slide-in shadow-2xl shadow-black/40">
+    <div key={fadeKey} className="absolute top-4 right-4 bottom-4 w-[360px] rounded-xl bg-[#0f0a1e]/95 backdrop-blur-xl border border-[hsl(263,70%,20%)] overflow-y-auto z-20 shadow-2xl shadow-black/40 animate-fade-in" style={{ animationDuration: '0.3s' }}>
       {/* Header */}
       <div className="sticky top-0 bg-[#0f0a1e]/90 backdrop-blur p-4 border-b border-[hsl(263,70%,20%)]">
         <div className="flex items-start justify-between gap-3">
