@@ -529,6 +529,7 @@ export default function Cocoon() {
                 particlesEnabled={particlesEnabled}
                 nodeColors={cocoonTheme.nodeColors}
                 particleColors={cocoonTheme.particleColors}
+                haloColors={cocoonTheme.haloColors}
               />
             ) : (
               <CocoonForceGraph

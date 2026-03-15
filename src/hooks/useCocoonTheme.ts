@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export interface CocoonTheme {
   nodeColors: Record<string, string>;
   particleColors: Record<string, string>;
+  haloColors: string[];
 }
 
 const DEFAULT_NODE_COLORS: Record<string, string> = {
@@ -29,9 +30,18 @@ const DEFAULT_PARTICLE_COLORS: Record<string, string> = {
   hierarchy: "#b464ff",
 };
 
+const DEFAULT_HALO_COLORS: string[] = [
+  "#1e3a5f", // Sapphire blue
+  "#0d4f4f", // Deep cyan
+  "#5f3a1e", // Amber
+  "#3a1e5f", // Violet
+  "#1e5f3a", // Emerald
+];
+
 export const DEFAULT_THEME: CocoonTheme = {
   nodeColors: DEFAULT_NODE_COLORS,
   particleColors: DEFAULT_PARTICLE_COLORS,
+  haloColors: DEFAULT_HALO_COLORS,
 };
 
 export function useCocoonTheme() {
@@ -79,6 +89,9 @@ export function useCocoonTheme() {
         setTheme({
           nodeColors: { ...DEFAULT_NODE_COLORS, ...(d.node_colors as Record<string, string>) },
           particleColors: { ...DEFAULT_PARTICLE_COLORS, ...(d.particle_colors as Record<string, string>) },
+          haloColors: Array.isArray(d.halo_colors) && d.halo_colors.length > 0 
+            ? d.halo_colors 
+            : DEFAULT_HALO_COLORS,
         });
       } else {
         setTheme(DEFAULT_THEME);

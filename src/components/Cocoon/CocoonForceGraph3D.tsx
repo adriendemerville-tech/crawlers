@@ -96,6 +96,7 @@ interface CocoonForceGraph3DProps {
   particlesEnabled?: boolean;
   nodeColors?: Record<string, string>;
   particleColors?: Record<string, string>;
+  haloColors?: string[];
 }
 
 // ─── 3D Force Simulation (manual spring-charge model) ───
@@ -466,6 +467,124 @@ function HudTooltip({ node }: { node: GraphNode3D }) {
   );
 }
 
+// ─── Cluster Halo Shader Material ───
+const haloVertexShader = `
+  varying vec3 vPosition;
+  varying vec3 vNormal;
+  void main() {
+    vPosition = position;
+    vNormal = normalize(normalMatrix * normal);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const haloFragmentShader = `
+  uniform vec3 uColor;
+  uniform float uOpacity;
+  varying vec3 vPosition;
+  varying vec3 vNormal;
+  void main() {
+    float dist = length(vPosition);
+    // Radial fade: full opacity at center, fades to 0 at edges
+    float fade = 1.0 - smoothstep(0.0, 1.0, dist);
+    // Additional edge softness using normal facing
+    float rim = 1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0)));
+    float edgeFade = 1.0 - smoothstep(0.6, 1.0, rim);
+    float alpha = fade * edgeFade * uOpacity;
+    gl_FragColor = vec4(uColor, alpha);
+  }
+`;
+
+// ─── Cluster Halos Component ───
+function ClusterHalos({
+  graphNodes,
+  spreadScale,
+  haloOpacity,
+  haloColors,
+}: {
+  graphNodes: GraphNode3D[];
+  spreadScale: number;
+  haloOpacity: number;
+  haloColors: string[];
+}) {
+  const halos = useMemo(() => {
+    if (haloOpacity <= 0) return [];
+
+    // Group nodes by cluster
+    const clusterMap = new Map<string, GraphNode3D[]>();
+    for (const node of graphNodes) {
+      if (node.cluster === "unclustered") continue;
+      const existing = clusterMap.get(node.cluster) || [];
+      existing.push(node);
+      clusterMap.set(node.cluster, existing);
+    }
+
+    // Sort by size, take top 5
+    const sorted = Array.from(clusterMap.entries())
+      .filter(([, nodes]) => nodes.length >= 2)
+      .sort((a, b) => b[1].length - a[1].length)
+      .slice(0, 5);
+
+    return sorted.map(([clusterId, clusterNodes], idx) => {
+      // Compute centroid
+      let cx = 0, cy = 0, cz = 0;
+      for (const n of clusterNodes) {
+        cx += n.x;
+        cy += n.y;
+        cz += n.z;
+      }
+      cx /= clusterNodes.length;
+      cy /= clusterNodes.length;
+      cz /= clusterNodes.length;
+
+      // Compute bounding radius (max distance from centroid + padding)
+      let maxDist = 0;
+      for (const n of clusterNodes) {
+        const d = Math.sqrt((n.x - cx) ** 2 + (n.y - cy) ** 2 + (n.z - cz) ** 2);
+        if (d > maxDist) maxDist = d;
+      }
+      const radius = maxDist + 8; // padding
+
+      const color = haloColors[idx % haloColors.length];
+
+      return { clusterId, cx, cy, cz, radius, color };
+    });
+  }, [graphNodes, haloColors, haloOpacity]);
+
+  if (haloOpacity <= 0) return null;
+
+  return (
+    <>
+      {halos.map((halo) => {
+        const colorVec = new THREE.Color(halo.color);
+        return (
+          <mesh
+            key={halo.clusterId}
+            position={[
+              halo.cx * spreadScale,
+              halo.cy * spreadScale,
+              halo.cz * spreadScale,
+            ]}
+          >
+            <sphereGeometry args={[halo.radius * spreadScale, 32, 32]} />
+            <shaderMaterial
+              vertexShader={haloVertexShader}
+              fragmentShader={haloFragmentShader}
+              uniforms={{
+                uColor: { value: new THREE.Vector3(colorVec.r, colorVec.g, colorVec.b) },
+                uOpacity: { value: haloOpacity },
+              }}
+              transparent
+              depthWrite={false}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        );
+      })}
+    </>
+  );
+}
+
 // ─── Scene Content ───
 function SceneContent({
   graphNodes,
@@ -478,6 +597,8 @@ function SceneContent({
   customNodeColors,
   customParticleColors,
   spreadScale,
+  haloOpacity,
+  haloColors,
   onNodeSelect,
   onNodeHover,
   onNodeUnhover,
@@ -493,6 +614,8 @@ function SceneContent({
   customNodeColors: Record<string, string>;
   customParticleColors: Record<string, string>;
   spreadScale: number;
+  haloOpacity: number;
+  haloColors: string[];
   onNodeSelect: (node: SemanticNode | null) => void;
   onNodeHover: (id: string) => void;
   onNodeUnhover: () => void;
@@ -510,6 +633,14 @@ function SceneContent({
       {/* Deep space background */}
       <color attach="background" args={["#06060e"]} />
       <fog attach="fog" args={["#06060e", 150, 500]} />
+
+      {/* Cluster Halos — behind everything */}
+      <ClusterHalos
+        graphNodes={graphNodes}
+        spreadScale={spreadScale}
+        haloOpacity={haloOpacity}
+        haloColors={haloColors}
+      />
 
       {/* Links */}
       <Links
@@ -562,6 +693,9 @@ function SceneContent({
   );
 }
 
+// ─── Default halo colors ───
+const DEFAULT_HALO_COLORS = ["#1e3a5f", "#0d4f4f", "#5f3a1e", "#3a1e5f", "#1e5f3a"];
+
 // ─── Main Component ───
 export function CocoonForceGraph3D({
   nodes,
@@ -572,9 +706,11 @@ export function CocoonForceGraph3D({
   particlesEnabled = true,
   nodeColors = {},
   particleColors = {},
+  haloColors = DEFAULT_HALO_COLORS,
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [spreadScale, setSpreadScale] = useState(1);
+  const [haloOpacity, setHaloOpacity] = useState(0.20);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const { graphNodes, graphLinks, nodeMap } = useMemo(() => {
@@ -715,6 +851,8 @@ export function CocoonForceGraph3D({
           customNodeColors={nodeColors}
           customParticleColors={particleColors}
           spreadScale={spreadScale}
+          haloOpacity={haloOpacity}
+          haloColors={haloColors}
           onNodeSelect={onNodeSelect}
           onNodeHover={setHoveredNodeId}
           onNodeUnhover={() => setHoveredNodeId(null)}
@@ -780,6 +918,24 @@ export function CocoonForceGraph3D({
       {/* Stats overlay */}
       <div className="absolute top-4 right-4 text-[10px] text-white/30 font-mono space-y-0.5 text-right pointer-events-none">
         <div>{nodes.length} nœuds · {graphLinks.length} liens</div>
+      </div>
+
+      {/* Halo opacity vertical slider — bottom right */}
+      <div className="absolute bottom-4 right-4 z-10 flex flex-col items-center gap-1.5 opacity-30 hover:opacity-70 transition-opacity duration-500">
+        <span className="text-[8px] text-white/40 font-mono select-none tracking-wider">Halo</span>
+        <div className="h-24 flex items-center">
+          <Slider
+            orientation="vertical"
+            min={0}
+            max={0.3}
+            step={0.01}
+            value={[haloOpacity]}
+            onValueChange={([v]) => setHaloOpacity(v)}
+            className="h-24 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/50 [&_[data-orientation=vertical]]:w-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=vertical]>span:first-child]:bg-white/20"
+            thumbLabel="Opacité halo"
+          />
+        </div>
+        <span className="text-[8px] text-white/30 font-mono select-none">{Math.round(haloOpacity * 100)}%</span>
       </div>
     </div>
   );
