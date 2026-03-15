@@ -1,4 +1,5 @@
-import { X, TrendingUp, Target, Globe, Zap, Link2, ExternalLink, Layers, FileText, Clock } from "lucide-react";
+import { X, TrendingUp, Target, Globe, Zap, Link2, ExternalLink, Layers, FileText, Clock, Search, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SemanticNode {
@@ -33,6 +34,7 @@ interface SemanticNode {
 interface CocoonNodePanelProps {
   node: SemanticNode;
   onClose: () => void;
+  onRefresh?: () => void;
 }
 
 const i18n = {
@@ -183,8 +185,9 @@ function formatDate(dateStr: string | undefined, lang: string): string {
   }
 }
 
-export function CocoonNodePanel({ node, onClose }: CocoonNodePanelProps) {
+export function CocoonNodePanel({ node, onClose, onRefresh }: CocoonNodePanelProps) {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const t = i18n[language] || i18n.fr;
 
   const depthLabel = (t.depths as Record<number, string>)[node.crawl_depth ?? 0] ||
@@ -210,12 +213,28 @@ export function CocoonNodePanel({ node, onClose }: CocoonNodePanelProps) {
               <ExternalLink className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
             </a>
           </div>
-          <button
-            onClick={onClose}
-            className="shrink-0 p-1.5 rounded-md hover:bg-white/10 text-white/50 hover:text-white transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => navigate(`/audit-expert?url=${encodeURIComponent(node.url)}`)}
+              title={language === 'en' ? 'Expert Audit' : language === 'es' ? 'Auditoría experta' : 'Audit Expert'}
+              className="p-1.5 rounded-md hover:bg-white/10 text-white/40 hover:text-[#fbbf24] transition-colors"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onRefresh}
+              title={language === 'en' ? 'Refresh data' : language === 'es' ? 'Actualizar datos' : 'Rafraîchir les données'}
+              className="p-1.5 rounded-md hover:bg-white/10 text-white/40 hover:text-white transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-md hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Tags row */}
