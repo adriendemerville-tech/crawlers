@@ -265,9 +265,9 @@ export default function Profile() {
               )}
 
 
-              {isAdmin && (
+              {hasAdminAccess && (
                 <TabsContent value="admin">
-                  <AdminDashboard />
+                  <AdminDashboard readOnly={isReadOnly} />
                 </TabsContent>
               )}
             </Tabs>
