@@ -210,6 +210,7 @@ function NodeSphere({
   isSelected,
   isHovered,
   isXRayMode,
+  customNodeColors,
   onPointerOver,
   onPointerOut,
   onClick,
@@ -218,15 +219,17 @@ function NodeSphere({
   isSelected: boolean;
   isHovered: boolean;
   isXRayMode: boolean;
+  customNodeColors: Record<string, string>;
   onPointerOver: () => void;
   onPointerOut: () => void;
   onClick: () => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
+  const activeColors = { ...PAGE_TYPE_COLORS, ...customNodeColors };
   const color = node.isHome
-    ? isXRayMode ? "#1261d4" : "#ffc83c"
-    : PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown;
+    ? isXRayMode ? "#1261d4" : (customNodeColors.homepage || "#ffc83c")
+    : activeColors[node.pageType] || activeColors.unknown;
 
   const emissiveIntensity = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.8 : 0.3;
   const scale = isSelected ? 1.3 : isHovered ? 1.15 : 1;
