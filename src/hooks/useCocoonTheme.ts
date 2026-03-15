@@ -89,6 +89,9 @@ export function useCocoonTheme() {
         setTheme({
           nodeColors: { ...DEFAULT_NODE_COLORS, ...(d.node_colors as Record<string, string>) },
           particleColors: { ...DEFAULT_PARTICLE_COLORS, ...(d.particle_colors as Record<string, string>) },
+          haloColors: Array.isArray(d.halo_colors) && d.halo_colors.length > 0 
+            ? d.halo_colors 
+            : DEFAULT_HALO_COLORS,
         });
       } else {
         setTheme(DEFAULT_THEME);
