@@ -762,7 +762,7 @@ export function AnalyticsDashboard() {
       </div>
 
       {/* Business Metrics */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-emerald-500/30">
           <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
             <CardTitle className="text-xs font-medium text-muted-foreground">Abonnés payants</CardTitle>
