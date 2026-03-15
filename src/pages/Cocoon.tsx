@@ -453,6 +453,89 @@ export default function Cocoon() {
             <CocoonNodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />
           )}
         </main>
+
+        {/* Prerequisites Modal */}
+        <Dialog open={showPrereqModal} onOpenChange={setShowPrereqModal}>
+          <DialogContent className="bg-[#1a1035] border-[hsl(263,70%,20%)] text-white max-w-md p-0 overflow-hidden">
+            <div className="p-8 space-y-6">
+              <DialogHeader className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-[#fbbf24]/10 border border-[#fbbf24]/20">
+                    <AlertTriangle className="h-5 w-5 text-[#fbbf24]" />
+                  </div>
+                  <DialogTitle className="text-xl font-bold text-white tracking-tight">
+                    {t.prereqTitle}
+                  </DialogTitle>
+                </div>
+                <DialogDescription className="text-white/50 text-sm leading-relaxed pt-1">
+                  {t.prereqDesc}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3">
+                {/* Crawl status */}
+                <div className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+                  prereqStatus.hasCrawl
+                    ? 'bg-emerald-500/5 border-emerald-500/20'
+                    : 'bg-red-500/5 border-red-500/20'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${prereqStatus.hasCrawl ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+                      <Search className={`h-4 w-4 ${prereqStatus.hasCrawl ? 'text-emerald-400' : 'text-red-400'}`} />
+                    </div>
+                    <span className="font-medium text-[15px] tracking-tight">{t.prereqCrawl}</span>
+                  </div>
+                  {prereqStatus.hasCrawl ? (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs border-red-500/30 text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                      onClick={() => { setShowPrereqModal(false); navigate('/site-crawl'); }}
+                    >
+                      {t.prereqCrawlCta}
+                    </Button>
+                  )}
+                </div>
+
+                {/* Audit status */}
+                <div className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+                  prereqStatus.hasAudit
+                    ? 'bg-emerald-500/5 border-emerald-500/20'
+                    : 'bg-red-500/5 border-red-500/20'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${prereqStatus.hasAudit ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+                      <FileText className={`h-4 w-4 ${prereqStatus.hasAudit ? 'text-emerald-400' : 'text-red-400'}`} />
+                    </div>
+                    <span className="font-medium text-[15px] tracking-tight">{t.prereqAudit}</span>
+                  </div>
+                  {prereqStatus.hasAudit ? (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs border-red-500/30 text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                      onClick={() => { setShowPrereqModal(false); navigate('/audit-expert'); }}
+                    >
+                      {t.prereqAuditCta}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                className="w-full bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                variant="outline"
+                onClick={() => setShowPrereqModal(false)}
+              >
+                {t.prereqClose}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
