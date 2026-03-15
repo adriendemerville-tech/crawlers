@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2 } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -16,6 +16,7 @@ import { IntelligenceHub } from './IntelligenceHub';
 import { ScriptKillSwitches } from './ScriptKillSwitches';
 import { SilentErrorsRegistry } from './SilentErrorsRegistry';
 import { AlgoTrainingDashboard } from './AlgoTrainingDashboard';
+import { ScannedUrlsRegistry } from './ScannedUrlsRegistry';
 import { FunctionsManagement } from './FunctionsManagement';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
@@ -31,6 +32,7 @@ const adminTranslations = {
     analytics: 'Statistiques',
     intelligence: 'Intelligence',
     silentErrors: 'Erreurs',
+    scannedUrls: 'URLs scannées',
     ciTests: 'CI Tests',
     contentUsers: 'Contenu & Users',
     users: 'Utilisateurs',
@@ -52,6 +54,7 @@ const adminTranslations = {
     analytics: 'Analytics',
     intelligence: 'Intelligence',
     silentErrors: 'Errors',
+    scannedUrls: 'Scanned URLs',
     ciTests: 'CI Tests',
     contentUsers: 'Content & Users',
     users: 'Users',
@@ -73,6 +76,7 @@ const adminTranslations = {
     analytics: 'Estadísticas',
     intelligence: 'Inteligencia',
     silentErrors: 'Errores',
+    scannedUrls: 'URLs escaneadas',
     ciTests: 'CI Tests',
     contentUsers: 'Contenido & Usuarios',
     users: 'Usuarios',
@@ -156,6 +160,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring' },
         { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring' },
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
+        { id: 'scanned-urls', label: t.scannedUrls, icon: ScanSearch, group: 'monitoring' },
       ],
     },
     {
@@ -194,6 +199,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'intelligence': return <IntelligenceHub />;
       case 'silent-errors': return <SilentErrorsRegistry />;
       case 'ci-tests': return <CiTestsDashboard />;
+      case 'scanned-urls': return <ScannedUrlsRegistry />;
       case 'users': return wrap(<UserManagement />);
       case 'blog': return wrap(<BlogManagement />);
       case 'support': return wrap(<SupportManagement />);
