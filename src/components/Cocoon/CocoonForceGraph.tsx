@@ -196,8 +196,39 @@ export function CocoonForceGraph({
     return () => ro.disconnect();
   }, []);
 
+  // Fit-to-view: compute bounding box and set transform
+  const fitToView = useCallback(() => {
+    const gNodes = graphNodesRef.current;
+    if (gNodes.length === 0) return;
+    
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const n of gNodes) {
+      if (n.x == null || n.y == null) continue;
+      const r = n.radius;
+      minX = Math.min(minX, n.x - r);
+      maxX = Math.max(maxX, n.x + r);
+      minY = Math.min(minY, n.y - r);
+      maxY = Math.max(maxY, n.y + r);
+    }
+    
+    if (!isFinite(minX)) return;
+    
+    const graphW = maxX - minX;
+    const graphH = maxY - minY;
+    const padding = 60;
+    const scaleX = (dimensions.width - padding * 2) / graphW;
+    const scaleY = (dimensions.height - padding * 2) / graphH;
+    const k = Math.min(scaleX, scaleY, 2) * 0.85; // 85% to leave breathing room
+    
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    
+    setTransform({ x: -cx * k, y: -cy * k, k });
+  }, [dimensions]);
+
   // D3 Force simulation
   useEffect(() => {
+    setHasAutoFitted(false);
     graphNodesRef.current = graphNodes;
     graphLinksRef.current = graphLinks;
 
@@ -218,6 +249,16 @@ export function CocoonForceGraph({
     simulationRef.current = sim;
     return () => { sim.stop(); };
   }, [graphNodes, graphLinks]);
+
+  // Auto-fit after simulation settles
+  useEffect(() => {
+    if (hasAutoFitted || graphNodes.length === 0) return;
+    const timer = setTimeout(() => {
+      fitToView();
+      setHasAutoFitted(true);
+    }, 1500); // Wait for simulation to settle
+    return () => clearTimeout(timer);
+  }, [graphNodes, hasAutoFitted, fitToView]);
 
   // Canvas rendering loop
   useEffect(() => {
