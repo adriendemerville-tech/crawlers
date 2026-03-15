@@ -311,9 +311,51 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const handleAnalyze = () => {
     const slugList = selectedSlots.map(s => s.slug).join(', ');
     const prompts: Record<string, string> = {
-      fr: `Analyse comparative et contextuelle des pages suivantes: ${slugList}. Décris la relation sémantique, hiérarchique et le flux de juice entre ces pages. Utilise un format structuré avec: 🟢 Forces, 🔵 Faiblesses, 🔴 Gaps, ✨ Quick Wins possibles`,
-      en: `Comparative and contextual analysis of the following pages: ${slugList}. Describe the semantic relationship, hierarchy and juice flow. Use: 🟢 Strengths, 🔵 Weaknesses, 🔴 Gaps, ✨ Quick Wins`,
-      es: `Análisis comparativo y contextual de las siguientes páginas: ${slugList}. Describe la relación semántica, jerárquica y el flujo de juice. Usa: 🟢 Fortalezas, 🔵 Debilidades, 🔴 Brechas, ✨ Quick Wins`,
+      fr: `Analyse les pages suivantes: ${slugList}. Réponds EXACTEMENT dans ce format:
+
+**🔗 Fonction & Relation**
+- En 1 phrase: décris la fonction de chaque page et leur relation hiérarchique (page mère → page fille, pages sœurs, ou aucun lien).
+
+**⚡ Flux de Juice**
+- Sens du juice: de quelle page vers quelle page (descendant/ascendant/bidirectionnel)
+- Intensité: faible / moyenne / forte (basé sur les liens internes entrants/sortants)
+- Dynamique: flux en hausse, stable ou en baisse (basé sur la densité de liens et le maillage)
+
+**🧠 Liens sémantiques**
+En exactement 3 phrases, analyse la proximité sémantique entre ces pages (clusters, mots-clés partagés, intent commun ou divergent).
+
+**✨ 3 Quick Wins**
+Liste exactement 3 actions concrètes et rapides à implémenter pour améliorer le maillage entre ces pages.`,
+      en: `Analyze the following pages: ${slugList}. Respond EXACTLY in this format:
+
+**🔗 Function & Relationship**
+- In 1 sentence: describe each page's function and their hierarchical relationship (parent → child, sibling pages, or no link).
+
+**⚡ Juice Flow**
+- Direction: from which page to which (descending/ascending/bidirectional)
+- Intensity: weak / medium / strong (based on internal links in/out)
+- Dynamic: flow increasing, stable or decreasing (based on link density and interlinking)
+
+**🧠 Semantic Links**
+In exactly 3 sentences, analyze the semantic proximity between these pages (clusters, shared keywords, common or divergent intent).
+
+**✨ 3 Quick Wins**
+List exactly 3 concrete, quick actions to improve interlinking between these pages.`,
+      es: `Analiza las siguientes páginas: ${slugList}. Responde EXACTAMENTE en este formato:
+
+**🔗 Función y Relación**
+- En 1 frase: describe la función de cada página y su relación jerárquica (página madre → hija, páginas hermanas, o sin enlace).
+
+**⚡ Flujo de Juice**
+- Dirección: de qué página a cuál (descendente/ascendente/bidireccional)
+- Intensidad: débil / media / fuerte (basado en enlaces internos entrantes/salientes)
+- Dinámica: flujo en alza, estable o en baja (basado en la densidad de enlaces)
+
+**🧠 Enlaces semánticos**
+En exactamente 3 frases, analiza la proximidad semántica entre estas páginas (clusters, palabras clave compartidas, intent común o divergente).
+
+**✨ 3 Quick Wins**
+Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado interno entre estas páginas.`,
     };
     sendMessage(prompts[language] || prompts.fr);
     setSelectedSlots([]);
@@ -328,7 +370,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     <div className="relative">
       {/* Floating chat window — opens upward */}
       {isOpen && (
-        <div className="absolute bottom-full mb-2 left-0 w-[380px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50"
+        <div className="absolute bottom-full mb-2 left-0 w-[475px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50"
           style={{ maxHeight: 'min(500px, 60vh)' }}
         >
           {/* Header */}
