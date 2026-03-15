@@ -422,8 +422,49 @@ Deno.serve(async (req) => {
         await new Promise(r => setTimeout(r, DELAY_BETWEEN_SITES_MS))
       } catch (err) {
         console.error(`[refresh-serp-all] Error for ${site.domain}:`, err)
+        await trackEdgeFunctionError('refresh-serp-all', err instanceof Error ? err.message : String(err), {
+          domain: site.domain, user_id: site.user_id,
+        }).catch(() => {})
         errors++
       }
+    }
+
+    // ═══ 6. COCOON REFRESH for Pro Agency users ═══
+    try {
+      const { data: proProfiles } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('plan_type', 'agency_pro')
+      const proUserIds = new Set((proProfiles || []).map(p => p.user_id))
+
+      const cocoonSites = sites.filter(s => proUserIds.has(s.user_id))
+      let cocoonRefreshed = 0
+
+      for (const site of cocoonSites) {
+        if (Date.now() - startTime > MAX_RUNTIME_MS) break
+        try {
+          const resp = await fetch(`${supabaseUrl}/functions/v1/calculate-cocoon-logic`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${serviceKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ tracked_site_id: site.id }),
+          })
+          if (resp.ok) {
+            cocoonRefreshed++
+            console.log(`[refresh-serp-all] 🕸️ Cocoon refreshed for ${site.domain}`)
+          }
+        } catch (err) {
+          console.error(`[refresh-serp-all] Cocoon error for ${site.domain}:`, err)
+        }
+        await new Promise(r => setTimeout(r, 1000))
+      }
+      if (cocoonRefreshed > 0) {
+        console.log(`[refresh-serp-all] 🕸️ Cocoon: ${cocoonRefreshed}/${cocoonSites.length} refreshed`)
+      }
+    } catch (cocoonErr) {
+      console.error('[refresh-serp-all] Cocoon batch error:', cocoonErr)
     }
 
     // Determine if there are more sites to process
