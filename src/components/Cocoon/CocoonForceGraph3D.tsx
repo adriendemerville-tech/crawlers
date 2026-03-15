@@ -1016,7 +1016,7 @@ export function CocoonForceGraph3D({
 
       {/* Halo opacity vertical slider — bottom right, only when clusters visible */}
       {showClusters && (
-        <div className="absolute bottom-4 right-4 z-10 flex flex-col items-center gap-1.5 opacity-30 hover:opacity-70 transition-opacity duration-500">
+        <div className="absolute bottom-4 right-4 z-[5] flex flex-col items-center gap-1.5 opacity-50 hover:opacity-80 transition-opacity duration-500">
           <span className="text-[8px] text-white/40 font-mono select-none tracking-wider">Halo</span>
           <div className="h-24 flex items-center">
             <Slider
