@@ -284,5 +284,6 @@ export function ScriptKillSwitches() {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }
