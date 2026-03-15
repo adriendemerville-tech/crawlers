@@ -577,6 +577,12 @@ export function AnalyticsDashboard() {
         });
       }
 
+      // Fetch database size
+      try {
+        const { data: sizeData } = await supabase.rpc('get_database_size');
+        if (sizeData) setDbSize(sizeData as any);
+      } catch {}
+
       setLastUpdated(new Date());
 
     } catch (error) {
