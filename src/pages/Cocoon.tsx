@@ -636,7 +636,7 @@ export default function Cocoon() {
           <div className="flex-1" />
 
           {/* Navigation buttons — bottom right, same line */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 mr-4">
             <a
               href={(() => {
                 const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
