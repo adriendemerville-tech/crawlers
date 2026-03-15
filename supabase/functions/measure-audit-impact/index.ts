@@ -381,6 +381,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('[measure] Fatal error:', error)
+    await trackEdgeFunctionError('measure-audit-impact', error instanceof Error ? error.message : 'Unknown error').catch(() => {})
     return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

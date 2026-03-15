@@ -328,6 +328,7 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('[auto-measure-predictions] error:', msg)
+    await trackEdgeFunctionError('auto-measure-predictions', msg).catch(() => {})
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

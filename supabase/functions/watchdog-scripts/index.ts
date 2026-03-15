@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('[watchdog] Fatal error:', error);
+    await trackEdgeFunctionError('watchdog-scripts', String(error)).catch(() => {});
     return new Response(JSON.stringify({ success: false, error: String(error) }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
