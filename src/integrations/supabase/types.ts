@@ -929,6 +929,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cocoon_theme_settings: {
+        Row: {
+          created_at: string
+          id: string
+          node_colors: Json
+          owner_user_id: string
+          particle_colors: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          node_colors?: Json
+          owner_user_id: string
+          particle_colors?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          node_colors?: Json
+          owner_user_id?: string
+          particle_colors?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crawl_jobs: {
         Row: {
           completed_at: string | null
