@@ -36,6 +36,8 @@ const i18n = {
     loginCta: "Sign in",
     signupCta: "Sign up",
     redirecting: "Redirecting…",
+    back: "Home",
+    errorGeneric: "Error",
   },
   es: {
     heroTitle: "Reservado para Pros",
