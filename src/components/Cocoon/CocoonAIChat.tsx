@@ -84,7 +84,7 @@ function getSessionHash(): string {
   const key = 'cocoon_chat_session';
   let hash = sessionStorage.getItem(key);
   if (!hash) {
-    hash = uuidv4();
+    hash = crypto.randomUUID();
     sessionStorage.setItem(key, hash);
   }
   return hash;
