@@ -479,7 +479,13 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
             <div className="flex gap-2">
               <Textarea
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  if (e.target.value.length > 0 && autoPicking) {
+                    setAutoPicking(false);
+                    cancelPicking();
+                  }
+                }}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                 placeholder={t.placeholder}
                 rows={1}
