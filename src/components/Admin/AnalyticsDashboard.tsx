@@ -267,7 +267,7 @@ export function AnalyticsDashboard() {
         expertAuditStep1: events.filter(e => e.event_type === 'expert_audit_step_1').length,
         expertAuditStep2: events.filter(e => e.event_type === 'expert_audit_step_2').length,
         expertAuditStep3: events.filter(e => e.event_type === 'expert_audit_step_3').length,
-        errorCount: events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final').length,
+        errorCount: events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final' || e.event_type === 'edge_function_error').length,
         auditCompareLaunched: events.filter(e => e.event_type === 'audit_compare_launched').length,
         multiPageCrawls: 0, // will be set from site_crawls table below
       };
