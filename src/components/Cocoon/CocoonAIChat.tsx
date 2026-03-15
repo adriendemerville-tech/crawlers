@@ -99,9 +99,15 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [isOpen, setIsOpen] = useState(false);
   const [selectedSlots, setSelectedSlots] = useState<SelectedNodeSlot[]>([]);
   const [pickingIndex, setPickingIndex] = useState<number | null>(null);
+  const pickingIndexRef = useRef<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const chatHistoryId = useRef<string | null>(null);
   const MAX_SLOTS = 5;
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    pickingIndexRef.current = pickingIndex;
+  }, [pickingIndex]);
 
   useEffect(() => {
     if (scrollRef.current) {
