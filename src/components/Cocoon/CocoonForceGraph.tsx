@@ -567,7 +567,7 @@ export function CocoonForceGraph({
   const zoomPercent = Math.round(transform.k * 100);
 
   return (
-    <div ref={containerRef} className="relative w-full h-full min-h-[500px] rounded-xl overflow-hidden border border-violet-900/50 shadow-2xl shadow-violet-950/30">
+    <div ref={containerRef} className={`relative w-full h-full min-h-[500px] rounded-xl overflow-hidden border shadow-2xl shadow-violet-950/30 transition-all ${isPickingMode ? 'border-[#fbbf24] ring-2 ring-[#fbbf24]/30' : 'border-violet-900/50'}`}>
       <canvas
         ref={canvasRef}
         className="w-full h-full"
