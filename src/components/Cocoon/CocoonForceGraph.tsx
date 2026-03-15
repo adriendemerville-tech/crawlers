@@ -105,6 +105,7 @@ export function CocoonForceGraph({
   const graphNodesRef = useRef<GraphNode[]>([]);
   const graphLinksRef = useRef<GraphLink[]>([]);
   const particlesRef = useRef<Particle[]>([]);
+  const lastClickPos = useRef<{ x: number; y: number } | null>(null);
 
   // Depth → radius: ultra-compact Jarvis-style dots
   const depthToRadius = (depth: number): number => {
