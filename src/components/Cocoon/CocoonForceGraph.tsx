@@ -8,6 +8,8 @@ import {
   type SimulationNodeDatum,
   type SimulationLinkDatum,
 } from "d3-force";
+import { Plus, Minus, Maximize2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // ─── Types ───
 interface SemanticNode {
@@ -190,6 +192,10 @@ export function CocoonForceGraph({
       const gNodes = graphNodesRef.current;
       const gLinks = graphLinksRef.current;
 
+      // Adaptive scale factor: nodes & labels stay readable when zoomed
+      const invK = 1 / transform.k;
+      const nodeScale = Math.max(0.5, Math.min(2, invK * 0.6 + 0.4));
+
       // Draw edges
       for (const link of gLinks) {
         const source = link.source as GraphNode;
@@ -205,7 +211,7 @@ export function CocoonForceGraph({
         ctx.strokeStyle = isHighlighted
           ? "rgba(251, 191, 36, 0.8)"
           : EDGE_COLORS[link.type] || EDGE_COLORS.weak;
-        ctx.lineWidth = isHighlighted ? 2 : link.strength * 1.5;
+        ctx.lineWidth = (isHighlighted ? 2 : link.strength * 1.5) * nodeScale;
         ctx.stroke();
       }
 
@@ -221,7 +227,13 @@ export function CocoonForceGraph({
         // Pulse animation (indexed on traffic)
         const pulseFreq = Math.max(0.5, Math.min(3, node.traffic / 100));
         const pulse = 1 + Math.sin(time * pulseFreq + node.pulsePhase) * 0.08;
-        const r = node.radius * pulse;
+        const r = node.radius * pulse * nodeScale;
+
+        // Drop shadow (slight black shade)
+        ctx.beginPath();
+        ctx.arc(node.x + 2 * nodeScale, node.y + 2 * nodeScale, r * 1.05, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+        ctx.fill();
 
         // Node glow
         if (isSelected || isHovered) {
@@ -250,27 +262,28 @@ export function CocoonForceGraph({
           : isHovered
             ? "#a78bfa"
             : "rgba(255,255,255,0.15)";
-        ctx.lineWidth = isSelected ? 2.5 : 1;
+        ctx.lineWidth = (isSelected ? 2.5 : 1) * nodeScale;
         ctx.stroke();
 
-        // Label (only for larger/selected nodes)
+        // Label (only for larger/selected nodes) — scale with zoom
         if (r > 10 || isSelected || isHovered) {
           ctx.fillStyle = isGhost ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.9)";
-          ctx.font = `${isSelected ? "bold " : ""}${Math.max(9, r * 0.7)}px Inter, sans-serif`;
+          const fontSize = Math.max(9, node.radius * 0.7) * nodeScale;
+          ctx.font = `${isSelected ? "bold " : ""}${fontSize}px Inter, sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "top";
           const label = node.label.length > 25 ? node.label.slice(0, 22) + "…" : node.label;
-          ctx.fillText(label, node.x, node.y + r + 4);
+          ctx.fillText(label, node.x, node.y + r + 4 * nodeScale);
         }
       }
 
       ctx.restore();
 
-      // Tooltip
+      // Tooltip — drawn OUTSIDE the transform so it's never zoomed
       if (hoveredNode && hoveredNode.x != null && hoveredNode.y != null) {
         const tx = hoveredNode.x * transform.k + width / 2 + transform.x;
         const ty = hoveredNode.y * transform.k + height / 2 + transform.y - 60;
-        drawTooltip(ctx, hoveredNode, tx, ty);
+        drawTooltip(ctx, hoveredNode, tx, ty, width);
       }
 
       animFrameRef.current = requestAnimationFrame(render);
@@ -289,11 +302,16 @@ export function CocoonForceGraph({
       const mx = (clientX - rect.left - dimensions.width / 2 - transform.x) / transform.k;
       const my = (clientY - rect.top - dimensions.height / 2 - transform.y) / transform.k;
 
+      // Use nodeScale-adjusted radii for hit detection
+      const invK = 1 / transform.k;
+      const nodeScale = Math.max(0.5, Math.min(2, invK * 0.6 + 0.4));
+
       for (const node of graphNodesRef.current) {
         if (!node.x || !node.y) continue;
         const dx = node.x - mx;
         const dy = node.y - my;
-        if (dx * dx + dy * dy < node.radius * node.radius * 1.5) return node;
+        const hitRadius = node.radius * nodeScale;
+        if (dx * dx + dy * dy < hitRadius * hitRadius * 1.5) return node;
       }
       return null;
     },
@@ -324,14 +342,28 @@ export function CocoonForceGraph({
     [getNodeAtPos, nodes, onNodeSelect],
   );
 
-  // Zoom with wheel
+  // Zoom with wheel — contained, no page scroll
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     const factor = e.deltaY > 0 ? 0.92 : 1.08;
     setTransform((t) => ({
       ...t,
-      k: Math.max(0.2, Math.min(5, t.k * factor)),
+      k: Math.max(0.15, Math.min(8, t.k * factor)),
     }));
+  }, []);
+
+  // Zoom buttons
+  const zoomIn = useCallback(() => {
+    setTransform((t) => ({ ...t, k: Math.min(8, t.k * 1.25) }));
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    setTransform((t) => ({ ...t, k: Math.max(0.15, t.k * 0.8) }));
+  }, []);
+
+  const zoomReset = useCallback(() => {
+    setTransform({ x: 0, y: 0, k: 1 });
   }, []);
 
   // Pan with drag
@@ -357,8 +389,10 @@ export function CocoonForceGraph({
     setTransform((t) => ({ ...t, x: t.x + dx, y: t.y + dy }));
   }, []);
 
+  const zoomPercent = Math.round(transform.k * 100);
+
   return (
-    <div ref={containerRef} className="relative w-full h-full min-h-[500px] rounded-xl overflow-hidden border border-[hsl(263,70%,20%)]">
+    <div ref={containerRef} className="relative w-full h-full min-h-[500px] rounded-xl overflow-hidden border border-violet-900/50 shadow-2xl shadow-violet-950/30">
       <canvas
         ref={canvasRef}
         className="w-full h-full"
@@ -370,8 +404,43 @@ export function CocoonForceGraph({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       />
+
+      {/* Zoom controls — bottom left */}
+      <div className="absolute bottom-14 left-4 flex flex-col gap-1.5 z-10">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8 bg-background/80 backdrop-blur-sm border-violet-800/50 hover:bg-violet-900/40 text-foreground"
+          onClick={zoomIn}
+          title="Zoom +"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+        <div className="text-[10px] text-center text-muted-foreground font-mono tabular-nums">
+          {zoomPercent}%
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8 bg-background/80 backdrop-blur-sm border-violet-800/50 hover:bg-violet-900/40 text-foreground"
+          onClick={zoomOut}
+          title="Zoom −"
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8 bg-background/80 backdrop-blur-sm border-violet-800/50 hover:bg-violet-900/40 text-foreground mt-1"
+          onClick={zoomReset}
+          title="Reset"
+        >
+          <Maximize2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
       {/* Legend */}
-      <div className="absolute bottom-4 left-4 flex gap-3 text-xs">
+      <div className="absolute bottom-4 left-16 flex gap-3 text-xs">
         {Object.entries(INTENT_COLORS).map(([intent, color]) => (
           <div key={intent} className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
@@ -379,6 +448,7 @@ export function CocoonForceGraph({
           </div>
         ))}
       </div>
+
       {/* Stats overlay */}
       <div className="absolute top-4 right-4 text-xs text-white/50 font-mono">
         {nodes.length} nœuds · {graphLinks.length} liens
@@ -387,8 +457,8 @@ export function CocoonForceGraph({
   );
 }
 
-// ─── Tooltip renderer ───
-function drawTooltip(ctx: CanvasRenderingContext2D, node: GraphNode, x: number, y: number) {
+// ─── Tooltip renderer (fixed size, never zoomed) ───
+function drawTooltip(ctx: CanvasRenderingContext2D, node: GraphNode, x: number, y: number, canvasWidth: number) {
   const lines = [
     node.label.slice(0, 35),
     `Intent: ${node.intent}`,
@@ -401,19 +471,25 @@ function drawTooltip(ctx: CanvasRenderingContext2D, node: GraphNode, x: number, 
   const w = 220;
   const h = lines.length * lineHeight + padding * 2;
 
+  // Clamp tooltip within canvas bounds
+  let tx = x - w / 2;
+  let ty = y - h;
+  if (tx < 8) tx = 8;
+  if (tx + w > canvasWidth - 8) tx = canvasWidth - w - 8;
+  if (ty < 8) ty = y + 20; // flip below if too high
+
   ctx.fillStyle = "rgba(15, 10, 30, 0.95)";
   ctx.strokeStyle = "rgba(251, 191, 36, 0.4)";
   ctx.lineWidth = 1;
-  roundRect(ctx, x - w / 2, y - h, w, h, 6);
+  roundRect(ctx, tx, ty, w, h, 6);
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = "#ffffff";
   ctx.font = "11px Inter, sans-serif";
   ctx.textAlign = "left";
   lines.forEach((line, i) => {
     ctx.fillStyle = i === 0 ? "#fbbf24" : "rgba(255,255,255,0.7)";
-    ctx.fillText(line, x - w / 2 + padding, y - h + padding + i * lineHeight + 12);
+    ctx.fillText(line, tx + padding, ty + padding + i * lineHeight + 12);
   });
 }
 
