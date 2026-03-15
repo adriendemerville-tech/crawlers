@@ -223,7 +223,7 @@ export default function Profile() {
                     <Settings className="h-4 w-4" />
                   </TabsTrigger>
                 )}
-                {isAdmin && (
+                {hasAdminAccess && (
                   <TabsTrigger value="admin" className="gap-2 text-primary">
                     <Shield className="h-4 w-4" />
                     <span className="hidden sm:inline">Admin</span>
