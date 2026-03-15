@@ -159,6 +159,8 @@ async function queryLLM(
       }),
     });
 
+    clearTimeout(timeout);
+
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Error from ${model}:`, response.status, errorText);
