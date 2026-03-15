@@ -140,6 +140,7 @@ Audit Comparé (Analyse concurrentielle face-à-face): https://crawlers.fr/audit
 Crawl Multi-Pages (Analyse récursive de site entier): https://crawlers.fr/site-crawl
 Architecte Génératif (Correctif multi-pages intelligent): https://crawlers.fr/architecte-generatif
 Indice d'Alignement Stratégique (Diagnostic Brand/Non-Brand GSC): https://crawlers.fr/indice-alignement-strategique
+Cocoon - Architecture Sémantique Vivante (Anti-Wiki, ROI prédictif, Citabilité LLM): https://crawlers.fr/cocoon
 Intégration GTM (Déploiement automatique des correctifs SEO): https://crawlers.fr/integration-gtm
 Lexique SEO/GEO/IA: https://crawlers.fr/lexique
 Tarifs: https://crawlers.fr/tarifs

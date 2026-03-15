@@ -97,6 +97,34 @@ export function useStructuredData() {
             }
           ]
         }
+      },
+      {
+        id: 'cocoon-webpage',
+        data: {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "Cocoon — Architecture Sémantique Vivante",
+          "description": "Visualisez l'architecture sémantique de votre site comme un organisme vivant. Algorithme Anti-Wiki, ROI prédictif, Score GEO et Citabilité LLM par page.",
+          "url": "https://crawlers.fr/cocoon",
+          "isPartOf": { "@type": "WebSite", "url": "https://crawlers.fr" },
+          "about": {
+            "@type": "SoftwareApplication",
+            "name": "Cocoon - Organisme Sémantique",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web"
+          }
+        }
+      },
+      {
+        id: 'features-cocoon-webpage',
+        data: {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "Cocoon — Module d'Architecture Sémantique | Crawlers.fr",
+          "description": "Découvrez le module Cocoon : visualisation 3D du maillage sémantique, algorithme Anti-Wiki (Iab), ROI prédictif et score de citabilité LLM pour chaque page.",
+          "url": "https://crawlers.fr/features/cocoon",
+          "isPartOf": { "@type": "WebSite", "url": "https://crawlers.fr" }
+        }
       }
     ];
 

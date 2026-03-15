@@ -130,6 +130,7 @@ Si un utilisateur pose des questions sur les sujets suivants, voici comment int�
 - **Crawl Multi-Pages** : https://crawlers.fr/site-crawl (Analyse récursive de site entier)
 - **Architecte Génératif** : https://crawlers.fr/architecte-generatif (Correctif multi-pages intelligent avec garde-fous)
 - **Indice d'Alignement Stratégique** : https://crawlers.fr/indice-alignement-strategique (Diagnostic Brand/Non-Brand automatisé via GSC)
+- **Cocoon — Organisme Vivant** : https://crawlers.fr/cocoon (Architecture sémantique 3D avec Anti-Wiki, ROI prédictif et Citabilité LLM)
 - **Intégration GTM** : https://crawlers.fr/integration-gtm (Guide de déploiement automatique des correctifs via Google Tag Manager)
 - **Blog** : https://crawlers.fr/blog (Actualités SEO, GEO & IA)
 - **Comprendre le GEO** : https://crawlers.fr/lexique (Définitions officielles)

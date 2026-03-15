@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 export default function Cocoon() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  useCanonicalHreflang('/cocoon');
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
