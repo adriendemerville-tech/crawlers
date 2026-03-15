@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { 
   Zap, Settings2, FileText, Brain, Shield, 
-  ExternalLink, Sparkles, FileDown, RotateCcw, Bot
+  ExternalLink, Sparkles, FileDown, RotateCcw, Bot, RotateCw
 } from 'lucide-react';
 import { TrackSiteButton } from './TrackSiteButton';
 import { ScoreGauge200 } from './ScoreGauge200';
@@ -267,6 +267,8 @@ export function ExpertAuditDashboard() {
   const isLoggedIn = !!user;
   const [strategicCacheInfo, setStrategicCacheInfo] = useState<{ auditCount: number; maxBeforeRefresh: number } | null>(null);
   const [forceStrategicRefresh, setForceStrategicRefresh] = useState(false);
+  const [fromCocoon, setFromCocoon] = useState(false);
+  const [cocoonDomain, setCocoonDomain] = useState<string>('');
 
   const STRATEGIC_CACHE_MAX = 10;
 
@@ -410,7 +412,22 @@ export function ExpertAuditDashboard() {
     }
 
     const fromSites = searchParams.get('from') === 'sites';
+    const isFromCocoon = searchParams.get('from') === 'cocoon';
     const isNewAudit = searchParams.get('new') === '1';
+
+    // Track cocoon origin for return button
+    if (isFromCocoon) {
+      const cocoonUrl = searchParams.get('url') || '';
+      setFromCocoon(true);
+      if (cocoonUrl) {
+        try {
+          const domain = new URL(cocoonUrl.startsWith('http') ? cocoonUrl : `https://${cocoonUrl}`).hostname.replace(/^www\./, '');
+          setCocoonDomain(domain);
+        } catch {
+          setCocoonDomain(cocoonUrl);
+        }
+      }
+    }
 
     // Coming from Console "Nouvel audit" CTA → force clean slate
     if (isNewAudit) {
@@ -1222,6 +1239,25 @@ export function ExpertAuditDashboard() {
             : language === 'es'
               ? 'No se pudo completar la auditoría. Contacte al soporte.'
               : 'Unable to complete the audit. Contact support.'}
+        </motion.div>
+      )}
+      {/* Return to Cocoon banner — when coming from /cocoon prerequisite flow */}
+      {fromCocoon && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4"
+        >
+          <Button
+            onClick={() => {
+              const domain = cocoonDomain || (technicalResult?.domain) || '';
+              navigate(`/cocoon${domain ? `?autolaunch=${encodeURIComponent(domain)}` : ''}`);
+            }}
+            className="gap-2 font-semibold bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] shadow-lg shadow-[#fbbf24]/20"
+          >
+            <RotateCw className="h-4 w-4" />
+            {language === 'es' ? 'Reanudar Cocoon' : language === 'en' ? 'Resume Cocoon' : 'Reprendre Cocoon'}
+          </Button>
         </motion.div>
       )}
       {/* New Audit Button - show when there are results */}
