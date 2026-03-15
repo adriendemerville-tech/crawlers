@@ -385,19 +385,6 @@ export default function Cocoon() {
                 {t.xray}
               </Button>
 
-              <Button
-                size="sm"
-                onClick={handleCompute}
-                disabled={isComputing || !selectedSiteId}
-                className="h-8 text-xs bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold disabled:opacity-50"
-              >
-                {isComputing ? (
-                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-                )}
-                {isComputing ? t.computing : t.generate}
-              </Button>
             </div>
           </div>
         </header>
