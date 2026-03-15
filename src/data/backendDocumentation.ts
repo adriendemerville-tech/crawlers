@@ -60,7 +60,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ PostgREST / SQL
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE POSTGRESQL                        │
-│  30+ tables avec RLS, fonctions PL/pgSQL, triggers      │
+│  40+ tables avec RLS, fonctions PL/pgSQL, triggers      │
 │  Schémas : public (app), auth (Supabase), storage       │
 └─────────────────────────────────────────────────────────┘
 \`\`\`
