@@ -466,3 +466,31 @@
     caret-color: currentColor;
   }
 }
+
+/* Admin read-only mode: disable all interactive elements */
+.admin-readonly button,
+.admin-readonly input,
+.admin-readonly textarea,
+.admin-readonly select,
+.admin-readonly [role="switch"],
+.admin-readonly [role="combobox"],
+.admin-readonly [data-slot="trigger"] {
+  pointer-events: none !important;
+  opacity: 0.5 !important;
+}
+
+.admin-readonly a {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.admin-readonly table,
+.admin-readonly [role="tablist"] {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.admin-readonly [role="tablist"] button {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}

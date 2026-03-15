@@ -118,7 +118,7 @@ const translations = {
 export default function Profile() {
   const { user, profile, signOut, loading } = useAuth();
   const { language } = useLanguage();
-  const { isAdmin, loading: adminLoading } = useAdmin();
+  const { isAdmin, hasAdminAccess, isReadOnly, loading: adminLoading } = useAdmin();
   const { isAgencyPro, balance } = useCredits();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -223,7 +223,7 @@ export default function Profile() {
                     <Settings className="h-4 w-4" />
                   </TabsTrigger>
                 )}
-                {isAdmin && (
+                {hasAdminAccess && (
                   <TabsTrigger value="admin" className="gap-2 text-primary">
                     <Shield className="h-4 w-4" />
                     <span className="hidden sm:inline">Admin</span>
@@ -265,9 +265,9 @@ export default function Profile() {
               )}
 
 
-              {isAdmin && (
+              {hasAdminAccess && (
                 <TabsContent value="admin">
-                  <AdminDashboard />
+                  <AdminDashboard readOnly={isReadOnly} />
                 </TabsContent>
               )}
             </Tabs>

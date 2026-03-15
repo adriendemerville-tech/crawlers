@@ -16,6 +16,8 @@ import { IntelligenceHub } from './IntelligenceHub';
 import { ScriptKillSwitches } from './ScriptKillSwitches';
 import { SilentErrorsRegistry } from './SilentErrorsRegistry';
 import { AlgoTrainingDashboard } from './AlgoTrainingDashboard';
+import { ReadOnlyBanner } from './ReadOnlyBanner';
+import { AdminProvider } from '@/contexts/AdminContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const adminTranslations = {
@@ -63,14 +65,20 @@ const adminTranslations = {
   },
 };
 
-export function AdminDashboard() {
+interface AdminDashboardProps {
+  readOnly?: boolean;
+}
+
+export function AdminDashboard({ readOnly = false }: AdminDashboardProps) {
   const { language } = useLanguage();
   const t = adminTranslations[language] || adminTranslations.fr;
 
   return (
+    <AdminProvider value={{ readOnly }}>
     <div className="space-y-6">
-      <DemoModeToggle />
-      <GA4OAuthToggle />
+      {readOnly && <ReadOnlyBanner />}
+      {!readOnly && <DemoModeToggle />}
+      {!readOnly && <GA4OAuthToggle />}
       <BrowserlessAlert />
       <ApiGatewayFallbackAlert />
 
@@ -127,11 +135,15 @@ export function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="users" forceMount className="data-[state=inactive]:hidden">
-          <UserManagement />
+          <div className={readOnly ? 'admin-readonly' : ''}>
+            <UserManagement />
+          </div>
         </TabsContent>
 
         <TabsContent value="blog" forceMount className="data-[state=inactive]:hidden">
-          <BlogManagement />
+          <div className={readOnly ? 'admin-readonly' : ''}>
+            <BlogManagement />
+          </div>
         </TabsContent>
 
         <TabsContent value="analytics" forceMount className="data-[state=inactive]:hidden">
@@ -147,11 +159,15 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="crawls" forceMount className="data-[state=inactive]:hidden">
-          <CrawlManagement />
+          <div className={readOnly ? 'admin-readonly' : ''}>
+            <CrawlManagement />
+          </div>
         </TabsContent>
 
         <TabsContent value="support" forceMount className="data-[state=inactive]:hidden">
-          <SupportManagement />
+          <div className={readOnly ? 'admin-readonly' : ''}>
+            <SupportManagement />
+          </div>
         </TabsContent>
 
         <TabsContent value="ci-tests" forceMount className="data-[state=inactive]:hidden">
@@ -159,11 +175,15 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="affiliates" forceMount className="data-[state=inactive]:hidden">
-          <AffiliateManagement />
+          <div className={readOnly ? 'admin-readonly' : ''}>
+            <AffiliateManagement />
+          </div>
         </TabsContent>
 
         <TabsContent value="scripts" forceMount className="data-[state=inactive]:hidden">
-          <ScriptKillSwitches />
+          <div className={readOnly ? 'admin-readonly' : ''}>
+            <ScriptKillSwitches />
+          </div>
         </TabsContent>
 
         <TabsContent value="silent-errors" forceMount className="data-[state=inactive]:hidden">
@@ -171,9 +191,12 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="algos" forceMount className="data-[state=inactive]:hidden">
-          <AlgoTrainingDashboard />
+          <div className={readOnly ? 'admin-readonly' : ''}>
+            <AlgoTrainingDashboard />
+          </div>
         </TabsContent>
       </Tabs>
     </div>
+    </AdminProvider>
   );
 }
