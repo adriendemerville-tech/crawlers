@@ -93,6 +93,14 @@ function FooterComponent() {
       gold: true,
       isRoute: true
     },
+    {
+      icon: Network,
+      label: 'Cocoon',
+      href: '/cocoon',
+      description: t3(language, 'Architecture sémantique en organisme vivant', 'Living organism semantic architecture', 'Arquitectura semántica como organismo vivo'),
+      gold: true,
+      isRoute: true
+    },
   ];
 
   const resourcesLinks = [
