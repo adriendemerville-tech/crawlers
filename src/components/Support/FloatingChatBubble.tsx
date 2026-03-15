@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ export function FloatingChatBubble() {
   const { isAgencyPro } = useCredits();
   const [unreadCount, setUnreadCount] = useState(0);
   const isMobile = useIsMobile();
+  const location = useLocation();
 
   // Fetch unread messages count
   useEffect(() => {
@@ -106,6 +108,7 @@ export function FloatingChatBubble() {
   };
 
   if (isMobile) return null;
+  if (location.pathname === '/cocoon') return null;
 
   return (
     <>
