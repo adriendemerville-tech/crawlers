@@ -297,17 +297,44 @@ function NodeSphere({
         </mesh>
       )}
 
+      {/* ── Non-Home: Silver-white halo (small radius, blurred) ── */}
+      {!node.isHome && !isGhost && (
+        <mesh>
+          <sphereGeometry args={[node.radius * 1.55, 24, 24]} />
+          <meshBasicMaterial
+            color="#e0e8f0"
+            transparent
+            opacity={0.07}
+            depthWrite={false}
+            side={THREE.BackSide}
+          />
+        </mesh>
+      )}
+
+      {/* ── Non-Home: Dark shadow beneath the node ── */}
+      {!node.isHome && !isGhost && (
+        <mesh position={[0, -node.radius * 0.35, 0]}>
+          <sphereGeometry args={[node.radius * 1.25, 20, 20]} />
+          <meshBasicMaterial
+            color="#000000"
+            transparent
+            opacity={0.18}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+
       {/* Opaque border ring (slightly larger sphere behind) */}
       <mesh ref={node.isHome ? glowRef : undefined}>
         <sphereGeometry args={[node.radius * (node.isHome ? 1.18 : 1.12), 24, 24]} />
         <meshBasicMaterial
-          color={color}
+          color={node.isHome ? color : "#d0d8e0"}
           transparent
-          opacity={isGhost ? 0.3 : node.isHome ? 0.65 : 0.9}
+          opacity={isGhost ? 0.3 : node.isHome ? 0.65 : 0.55}
         />
       </mesh>
 
-      {/* Core sphere — Home: 12% opacity (discrete), others: 25% */}
+      {/* Core sphere — Home: 12% opacity, others: gradient-like with top-lit coloring */}
       <mesh
         ref={meshRef}
         onPointerOver={(e) => { e.stopPropagation(); onPointerOver(); }}
@@ -316,13 +343,13 @@ function NodeSphere({
       >
         <sphereGeometry args={[node.radius, 24, 24]} />
         <meshStandardMaterial
-          color={color}
+          color={node.isHome ? color : color}
           emissive={color}
-          emissiveIntensity={emissiveIntensity}
+          emissiveIntensity={node.isHome ? emissiveIntensity : emissiveIntensity * 0.7}
           transparent
-          opacity={isGhost ? 0.08 : node.isHome ? 0.12 : 0.25}
-          roughness={0.3}
-          metalness={0.6}
+          opacity={isGhost ? 0.08 : node.isHome ? 0.12 : 0.35}
+          roughness={node.isHome ? 0.3 : 0.45}
+          metalness={node.isHome ? 0.6 : 0.75}
         />
       </mesh>
 
@@ -666,6 +693,8 @@ function SceneContent({
       {/* Ambient + directional light */}
       <ambientLight intensity={0.15} color="#6c5ce7" />
       <directionalLight position={[10, 10, 10]} intensity={0.4} color="#ffffff" />
+      {/* Top-down light for biomimetic gradient (lit top → dark bottom) */}
+      <directionalLight position={[0, 30, 5]} intensity={0.5} color="#c8d0e0" />
       <pointLight position={[0, 0, 0]} intensity={0.6} color="#ffc83c" distance={200} decay={2} />
 
       {/* Deep space background */}
