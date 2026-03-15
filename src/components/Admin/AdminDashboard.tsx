@@ -58,6 +58,7 @@ const adminTranslations = {
     affiliates: 'Afiliación',
     scripts: 'Scripts',
     silentErrors: 'Errores',
+    algos: 'Algos ML',
     docs: 'Docs',
   },
 };
