@@ -546,7 +546,12 @@ export default function Cocoon() {
                       size="sm"
                       variant="outline"
                       className="h-8 text-xs border-red-500/30 text-red-300 hover:bg-red-500/10 hover:text-red-200"
-                      onClick={() => { setShowPrereqModal(false); navigate('/audit-expert'); }}
+                      onClick={() => {
+                        const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
+                        const domain = selectedSite?.domain || '';
+                        setShowPrereqModal(false);
+                        navigate(`/?url=${encodeURIComponent(domain)}`);
+                      }}
                     >
                       {t.prereqAuditCta}
                     </Button>
