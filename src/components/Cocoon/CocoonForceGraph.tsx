@@ -574,7 +574,7 @@ export function CocoonForceGraph({
           : isHovered
             ? `rgba(${cr}, ${cg}, ${cb}, 0.8)`
             : node.isHome
-              ? `rgba(255, 200, 60, 0.6)`
+              ? (isXRayMode ? `rgba(18, 97, 212, 0.6)` : `rgba(255, 200, 60, 0.6)`)
               : `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.3})`;
         ctx.lineWidth = (isSelected || node.isHome ? 1.2 : 0.5) * nodeScale;
         ctx.stroke();
