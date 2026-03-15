@@ -87,6 +87,40 @@ function injectLexiconLinks(text: string): React.ReactNode[] {
   return parts.length > 0 ? parts : [text];
 }
 
+// ─── Analysis prompt helpers ───
+const ANALYSIS_PREFIXES = ['Analyse les pages suivantes:', 'Analyze the following pages:', 'Analiza las siguientes páginas:'];
+
+function isAnalysisPrompt(content: string): boolean {
+  return ANALYSIS_PREFIXES.some(p => content.startsWith(p));
+}
+
+function getAnalysisLabel(content: string, lang: string): string {
+  const match = content.match(/pages suivantes:\s*(.+?)\.\s*Réponds|following pages:\s*(.+?)\.\s*Respond|siguientes páginas:\s*(.+?)\.\s*Responde/);
+  const pages = match?.[1] || match?.[2] || match?.[3] || '';
+  if (lang === 'en') return `📊 Multi-page analysis: ${pages}`;
+  if (lang === 'es') return `📊 Análisis multi-página: ${pages}`;
+  return `📊 Analyse multi-pages : ${pages}`;
+}
+
+// ─── Copy button ───
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="absolute bottom-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-white/10"
+      title="Copier"
+    >
+      {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-white/40" />}
+    </button>
+  );
+}
+
 type Msg = { role: 'user' | 'assistant'; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cocoon-chat`;
