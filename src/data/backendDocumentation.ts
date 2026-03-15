@@ -662,6 +662,91 @@ Le composant \`SerpKpiBanner\` (dans \`src/components/Profile/SerpKpiBanner.tsx\
 Les données sont lues depuis la dernière entrée \`user_stats_history\` du site sélectionné.
 `,
   },
+
+  // ───────────────────────────────────────────────
+  // SECTION : COCOON — ARCHITECTURE SÉMANTIQUE
+  // ───────────────────────────────────────────────
+  {
+    id: 'cocoon',
+    title: 'Cocoon — Architecture Sémantique',
+    icon: 'Network',
+    content: `
+# Cocoon — Architecture Sémantique Vivante
+
+## Vue d'ensemble
+
+Le module Cocoon transforme les données de crawl d'un site en une **visualisation organique** du maillage sémantique. Chaque page est un nœud pulsant, chaque lien une connexion neuronale. Réservé aux abonnés **Pro Agency** et aux admins.
+
+## Table \`semantic_nodes\`
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| \`id\` | uuid | Identifiant unique du nœud |
+| \`tracked_site_id\` | uuid (FK) | Référence vers \`tracked_sites\` |
+| \`user_id\` | uuid | Propriétaire du nœud |
+| \`url\` | text | URL de la page |
+| \`title\` | text | Titre SEO de la page |
+| \`cluster_id\` | text | Identifiant du cluster sémantique |
+| \`cluster_label\` | text | Label lisible du cluster |
+| \`depth\` | int | Profondeur dans l'arborescence du site |
+| \`internal_links_in\` | int | Nombre de liens entrants internes |
+| \`internal_links_out\` | int | Nombre de liens sortants internes |
+| \`word_count\` | int | Nombre de mots de la page |
+| \`traffic_estimate\` | float | Estimation du trafic mensuel |
+| \`cpc_estimate\` | float | CPC moyen estimé |
+| \`keyword_volume\` | int | Volume de recherche du mot-clé principal |
+| \`iab_score\` | float | Score Anti-Wiki (0-100) — difficulté SERP |
+| \`geo_score\` | float | Score GEO (0-100) — optimisation IA |
+| \`roi_predictive\` | float | ROI annualisé prédictif (€) |
+| \`citability_score\` | float | Score de citabilité LLM (0-1) |
+| \`embedding_vector\` | jsonb | Vecteur d'embedding 64 dimensions |
+| \`similarity_edges\` | jsonb | Top 10 nœuds les plus proches |
+| \`x\` / \`y\` | float | Coordonnées de positionnement du graphe |
+
+## Edge Function : \`calculate-cocoon-logic\`
+
+### Flux de calcul
+
+1. **Authentification** : Vérifie JWT + plan agency_pro/agency_premium ou admin
+2. **Récupération des données** : Charge les pages du dernier crawl (\`crawl_pages\`) et les données SERP (\`user_stats_history\`)
+3. **Génération d'embeddings** : Via Lovable AI (Gemini Flash), batch de 5
+4. **Calcul de similarité** : Cosinus entre tous les paires de vecteurs
+5. **Clustering** : Algorithme greedy par seuils de similarité (fort > 0.75, moyen > 0.55)
+6. **Score Iab** : Classification des concurrents SERP (Wiki, Gov, Social, News) → score de difficulté
+7. **ROI prédictif** : \`traffic_estimate × cpc_estimate × conversion_rate × 12\`
+8. **Upsert** : Les nœuds sont insérés/mis à jour dans \`semantic_nodes\`
+
+### Algorithme Anti-Wiki (Iab)
+
+Le score Iab (0-100) mesure la difficulté de ranking face aux sites d'autorité :
+- **Wikipedia / .gov / .edu** : +30 points de difficulté
+- **Réseaux sociaux** (youtube, twitter, linkedin) : +15 points
+- **Sites d'actualité** : +10 points
+- Score final = \`100 - difficulté_totale\` (clampé 0-100)
+
+### Circuit Breaker
+
+Les appels d'embedding utilisent un circuit breaker (5 échecs max) avec retry exponentiel pour éviter les cascades de timeout.
+
+## Frontend
+
+### Route : \`/cocoon\`
+
+- **Rendu Canvas D3.js** via \`CocoonForceGraph.tsx\` — supporte 500+ nœuds interactifs
+- **CocoonNodePanel.tsx** : Panneau latéral détaillé avec métriques Iab, GEO, ROI et liens de proximité
+- **Mode X-Ray** : Toggle pour révéler les nœuds fantômes (faible trafic)
+- **Gate d'accès** : Vérification \`agency_pro\` / \`agency_premium\` / admin
+
+### Route : \`/features/cocoon\`
+
+Landing page marketing avec comparaison GEO vs SEO et grille de fonctionnalités.
+
+## RLS Policies
+
+- \`SELECT\` : \`user_id = auth.uid() OR has_role(auth.uid(), 'admin')\`
+- \`INSERT / UPDATE / DELETE\` : \`user_id = auth.uid()\`
+`,
+  },
 ];
 
 /**
@@ -669,10 +754,10 @@ Les données sont lues depuis la dernière entrée \`user_stats_history\` du sit
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '1.2.0',
-  lastUpdated: '2026-03-14',
-  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif',
-  totalEdgeFunctions: 81,
-  totalTables: '35+',
-  totalLinesOfCode: '118 000+',
+  version: '1.3.0',
+  lastUpdated: '2026-03-15',
+  projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon',
+  totalEdgeFunctions: 82,
+  totalTables: '36+',
+  totalLinesOfCode: '120 000+',
 };
