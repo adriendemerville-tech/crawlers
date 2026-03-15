@@ -254,9 +254,16 @@ export default function Cocoon() {
           variant: "destructive",
         });
       } else {
+        const stats = resp.data?.stats;
+        // Track truncation info
+        if (stats?.truncated) {
+          setTruncationInfo({ truncated: true, total: stats.total_crawl_pages, used: stats.nodes_count });
+        } else {
+          setTruncationInfo(null);
+        }
         toast({
           title: t.successTitle,
-          description: t.successDesc(resp.data?.stats?.nodes_count || 0, resp.data?.stats?.clusters_count || 0),
+          description: t.successDesc(stats?.nodes_count || 0, stats?.clusters_count || 0),
         });
         const { data } = await supabase
           .from("semantic_nodes" as any)
