@@ -129,6 +129,12 @@ function FooterComponent() {
       href: '/blog',
       description: t3(language, 'Articles et guides SEO/GEO', 'SEO/GEO articles and guides', 'Artículos y guías SEO/GEO')
     },
+    {
+      label: t3(language, 'Cocoon — Architecture Sémantique', 'Cocoon — Semantic Architecture', 'Cocoon — Arquitectura Semántica'),
+      href: '/features/cocoon',
+      description: t3(language, 'Découvrez le module Cocoon', 'Discover the Cocoon module', 'Descubra el módulo Cocoon'),
+      gold: true
+    },
     { 
       label: 'Pro Agency',
       href: '/pro-agency',
