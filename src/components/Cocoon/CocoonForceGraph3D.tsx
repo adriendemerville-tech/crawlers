@@ -315,12 +315,14 @@ function Links({
   selectedNodeId,
   particlesEnabled,
   customParticleColors,
+  spreadScale,
 }: {
   links: GraphLink3D[];
   nodeMap: Map<string, GraphNode3D>;
   selectedNodeId: string | null;
   particlesEnabled: boolean;
   customParticleColors: Record<string, string>;
+  spreadScale: number;
 }) {
   const linesRef = useRef<THREE.Group>(null);
   const particleGroupRef = useRef<THREE.Group>(null);
