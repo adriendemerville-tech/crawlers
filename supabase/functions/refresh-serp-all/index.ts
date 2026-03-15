@@ -467,6 +467,31 @@ Deno.serve(async (req) => {
       console.error('[refresh-serp-all] Cocoon batch error:', cocoonErr)
     }
 
+    // ═══ 7. CLEANUP: Old cocoon chat histories (>90 days) & stale sessions ═══
+    try {
+      const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+      
+      // Clean old anonymous chat histories
+      const { count: chatCleaned } = await supabase
+        .from('cocoon_chat_histories')
+        .delete({ count: 'exact' })
+        .lt('created_at', ninetyDaysAgo)
+      
+      // Clean stale cocoon sessions (>180 days, no outcome measured)
+      const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString()
+      const { count: sessionsCleaned } = await supabase
+        .from('cocoon_sessions')
+        .delete({ count: 'exact' })
+        .lt('created_at', sixMonthsAgo)
+        .is('outcome_measured_at', null)
+      
+      if ((chatCleaned || 0) > 0 || (sessionsCleaned || 0) > 0) {
+        console.log(`[refresh-serp-all] 🧹 Cocoon cleanup: ${chatCleaned || 0} chat histories, ${sessionsCleaned || 0} stale sessions removed`)
+      }
+    } catch (cleanupErr) {
+      console.error('[refresh-serp-all] Cocoon cleanup error:', cleanupErr)
+    }
+
     // Determine if there are more sites to process
     const hasMore = sites.length === BATCH_SIZE
     const nextCursor = hasMore ? lastProcessedId : null

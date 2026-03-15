@@ -412,6 +412,10 @@ Deno.serve(async (req) => {
       'local-seo': 'audit-local-seo',
       'corrective-code': 'generate-corrective-code',
       'llm-volumes': 'calculate-llm-volumes',
+      'cocoon': 'calculate-cocoon-logic',
+      'cocoon-chat': 'cocoon-chat',
+      'cocoon-pagerank': 'calculate-internal-pagerank',
+      'cocoon-session': 'persist-cocoon-session',
     }
     const functionName = AUDIT_TYPE_TO_FUNCTION[auditType] || auditType
 
