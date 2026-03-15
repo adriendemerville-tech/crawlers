@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, Send, Loader2, ChevronDown, ChevronUp, Trash2, Plus, X, Sparkles, Search } from 'lucide-react';
+import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
@@ -13,7 +14,7 @@ const labels = {
   fr: {
     title: 'Assistant Cocoon',
     subtitle: 'Posez vos questions sur l\'architecture sémantique',
-    placeholder: 'Ex: Quelles pages devraient être reliées ? Quel cluster est le plus faible ?',
+    placeholder: 'Ex: Quelles pages devraient être reliées ?',
     empty: 'Décrivez votre cocon ou posez une question pour que l\'IA vous aide à interpréter les résultats.',
     error: 'Erreur de communication avec l\'IA. Réessayez.',
     rateLimit: 'Trop de requêtes. Patientez quelques instants.',
@@ -26,7 +27,7 @@ const labels = {
   en: {
     title: 'Cocoon Assistant',
     subtitle: 'Ask questions about your semantic architecture',
-    placeholder: 'E.g.: Which pages should be linked? Which cluster is weakest?',
+    placeholder: 'E.g.: Which pages should be linked?',
     empty: 'Describe your cocoon or ask a question for AI-powered interpretation.',
     error: 'AI communication error. Please retry.',
     rateLimit: 'Too many requests. Please wait a moment.',
@@ -39,7 +40,7 @@ const labels = {
   es: {
     title: 'Asistente Cocoon',
     subtitle: 'Haga preguntas sobre la arquitectura semántica',
-    placeholder: 'Ej: ¿Qué páginas deberían estar vinculadas? ¿Qué cluster es más débil?',
+    placeholder: 'Ej: ¿Qué páginas deberían estar vinculadas?',
     empty: 'Describa su cocoon o haga una pregunta para obtener interpretación con IA.',
     error: 'Error de comunicación con la IA. Reinténtelo.',
     rateLimit: 'Demasiadas solicitudes. Espere un momento.',
@@ -64,6 +65,8 @@ interface CocoonAIChatProps {
   selectedNodeId?: string | null;
   onRequestNodePick?: (callback: (node: any) => void) => void;
   onCancelPick?: () => void;
+  trackedSiteId?: string;
+  domain?: string;
 }
 
 function getSlug(url: string): string {
@@ -76,16 +79,28 @@ function getSlug(url: string): string {
   }
 }
 
-export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCancelPick }: CocoonAIChatProps) {
+// Generate anonymous session hash (not linked to user)
+function getSessionHash(): string {
+  const key = 'cocoon_chat_session';
+  let hash = sessionStorage.getItem(key);
+  if (!hash) {
+    hash = crypto.randomUUID();
+    sessionStorage.setItem(key, hash);
+  }
+  return hash;
+}
+
+export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCancelPick, trackedSiteId, domain }: CocoonAIChatProps) {
   const { language } = useLanguage();
   const t = labels[language] || labels.fr;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedSlots, setSelectedSlots] = useState<SelectedNodeSlot[]>([]);
   const [pickingIndex, setPickingIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const chatHistoryId = useRef<string | null>(null);
   const MAX_SLOTS = 5;
 
   useEffect(() => {
@@ -94,7 +109,29 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     }
   }, [messages]);
 
-  // Build context summary from graph data
+  // Save chat history anonymously
+  const saveHistory = useCallback(async (msgs: Msg[]) => {
+    if (!trackedSiteId || !domain || msgs.length === 0) return;
+    try {
+      const sessionHash = getSessionHash();
+      if (chatHistoryId.current) {
+        await (supabase.from as any)('cocoon_chat_histories').update({
+          messages: msgs,
+          message_count: msgs.length,
+        }).eq('id', chatHistoryId.current);
+      } else {
+        const { data } = await (supabase.from as any)('cocoon_chat_histories').insert({
+          session_hash: sessionHash,
+          tracked_site_id: trackedSiteId,
+          domain,
+          messages: msgs,
+          message_count: msgs.length,
+        }).select('id').single();
+        if (data) chatHistoryId.current = data.id;
+      }
+    } catch { /* silent */ }
+  }, [trackedSiteId, domain]);
+
   const buildContext = useCallback(() => {
     if (!nodes.length) return '';
     const clusters = new Map<string, number>();
@@ -107,20 +144,14 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       .slice(0, 5)
       .map((n: any) => `- ${n.title || n.url} (ROI: ${n.roi_predictive?.toFixed(0)}€, GEO: ${n.geo_score}, Citabilité: ${n.citability_score})`)
       .join('\n');
-
-    const clusterSummary = Array.from(clusters.entries())
-      .map(([name, count]) => `${name}: ${count} pages`)
-      .join(', ');
-
+    const clusterSummary = Array.from(clusters.entries()).map(([name, count]) => `${name}: ${count} pages`).join(', ');
     const selected = selectedNodeId ? nodes.find((n: any) => n.id === selectedNodeId) : null;
     const selectedInfo = selected
       ? `\nPage sélectionnée: "${selected.title}" (${selected.url}), ROI: ${selected.roi_predictive?.toFixed(0)}€, GEO: ${selected.geo_score}, Citabilité LLM: ${selected.citability_score}, Intent: ${selected.intent}, Links in: ${selected.internal_links_in}, Links out: ${selected.internal_links_out}`
       : '';
-
     return `Cocoon sémantique: ${nodes.length} nœuds. Clusters: ${clusterSummary}.\nTop 5 pages par ROI:\n${top5}${selectedInfo}`;
   }, [nodes, selectedNodeId]);
 
-  // Build multi-node analysis context
   const buildMultiNodeContext = useCallback(() => {
     if (selectedSlots.length === 0) return '';
     const nodesData = selectedSlots.map((slot, i) => {
@@ -139,8 +170,6 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   - Mots: ${n.word_count ?? '?'}
   - Mots-clés: ${(n.keywords || []).join(', ')}`;
     }).join('\n\n');
-
-    // Check similarity edges between selected nodes
     const selectedUrls = new Set(selectedSlots.map(s => s.url));
     const interLinks: string[] = [];
     for (const slot of selectedSlots) {
@@ -151,29 +180,17 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
         }
       }
     }
-
     return `ANALYSE MULTI-PAGES (${selectedSlots.length} pages sélectionnées):\n\n${nodesData}\n\nLiens sémantiques entre ces pages:\n${interLinks.length ? interLinks.join('\n') : 'Aucun lien direct détecté'}`;
   }, [selectedSlots]);
 
   const handleNodePicked = useCallback((node: any) => {
     if (pickingIndex === null) return;
-    
     const slug = getSlug(node.url);
-    const newSlot: SelectedNodeSlot = {
-      id: node.id,
-      title: node.title || slug,
-      url: node.url,
-      slug,
-      nodeData: node,
-    };
-
+    const newSlot: SelectedNodeSlot = { id: node.id, title: node.title || slug, url: node.url, slug, nodeData: node };
     setSelectedSlots(prev => {
       const updated = [...prev];
-      if (pickingIndex < updated.length) {
-        updated[pickingIndex] = newSlot;
-      } else {
-        updated.push(newSlot);
-      }
+      if (pickingIndex < updated.length) updated[pickingIndex] = newSlot;
+      else updated.push(newSlot);
       return updated;
     });
     setPickingIndex(null);
@@ -196,7 +213,6 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const sendMessage = async (overrideContext?: string) => {
     const text = overrideContext || input.trim();
     if (!text || isLoading) return;
-
     const userMsg: Msg = { role: 'user', content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -208,9 +224,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       assistantSoFar += chunk;
       setMessages(prev => {
         const last = prev[prev.length - 1];
-        if (last?.role === 'assistant') {
-          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
-        }
+        if (last?.role === 'assistant') return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
         return [...prev, { role: 'assistant', content: assistantSoFar }];
       });
     };
@@ -218,10 +232,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     try {
       const resp = await fetch(CHAT_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
         body: JSON.stringify({
           messages: newMessages,
           context: overrideContext ? buildMultiNodeContext() + '\n\n' + buildContext() : buildContext(),
@@ -242,7 +253,6 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
         const { done, value } = await reader.read();
         if (done) break;
         textBuffer += decoder.decode(value, { stream: true });
-
         let newlineIndex: number;
         while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
           let line = textBuffer.slice(0, newlineIndex);
@@ -263,7 +273,6 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
         }
       }
 
-      // Flush remaining
       if (textBuffer.trim()) {
         for (let raw of textBuffer.split('\n')) {
           if (!raw) continue;
@@ -284,78 +293,71 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       upsertAssistant(t.error);
     } finally {
       setIsLoading(false);
+      // Save after each exchange
+      setMessages(prev => {
+        saveHistory(prev);
+        return prev;
+      });
     }
   };
 
   const handleAnalyze = () => {
     const slugList = selectedSlots.map(s => s.slug).join(', ');
     const prompts: Record<string, string> = {
-      fr: `Analyse comparative et contextuelle des pages suivantes: ${slugList}. 
-Décris la relation sémantique, hiérarchique et le flux de juice entre ces pages.
-Utilise un format structuré avec:
-- 🟢 Forces (en vert)
-- 🔵 Faiblesses (en bleu) 
-- 🔴 Gaps (en rouge)
-- ✨ Quick Wins possibles`,
-      en: `Comparative and contextual analysis of the following pages: ${slugList}. 
-Describe the semantic relationship, hierarchy and juice flow between these pages.
-Use a structured format with:
-- 🟢 Strengths
-- 🔵 Weaknesses
-- 🔴 Gaps
-- ✨ Possible Quick Wins`,
-      es: `Análisis comparativo y contextual de las siguientes páginas: ${slugList}. 
-Describe la relación semántica, jerárquica y el flujo de juice entre estas páginas.
-Usa un formato estructurado con:
-- 🟢 Fortalezas
-- 🔵 Debilidades
-- 🔴 Brechas
-- ✨ Quick Wins posibles`,
+      fr: `Analyse comparative et contextuelle des pages suivantes: ${slugList}. Décris la relation sémantique, hiérarchique et le flux de juice entre ces pages. Utilise un format structuré avec: 🟢 Forces, 🔵 Faiblesses, 🔴 Gaps, ✨ Quick Wins possibles`,
+      en: `Comparative and contextual analysis of the following pages: ${slugList}. Describe the semantic relationship, hierarchy and juice flow. Use: 🟢 Strengths, 🔵 Weaknesses, 🔴 Gaps, ✨ Quick Wins`,
+      es: `Análisis comparativo y contextual de las siguientes páginas: ${slugList}. Describe la relación semántica, jerárquica y el flujo de juice. Usa: 🟢 Fortalezas, 🔵 Debilidades, 🔴 Brechas, ✨ Quick Wins`,
     };
     sendMessage(prompts[language] || prompts.fr);
     setSelectedSlots([]);
   };
 
-  return (
-    <div className="border border-[hsl(263,70%,20%)] rounded-xl bg-[#0f0a1e]/90 backdrop-blur-xl overflow-hidden flex flex-col-reverse">
-      {/* Toggle header — always at bottom */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-5 py-3 hover:bg-white/5 transition-colors"
-      >
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-lg bg-[#fbbf24]/10 border border-[#fbbf24]/20">
-            <Bot className="w-4 h-4 text-[#fbbf24]" />
-          </div>
-          <div className="text-left">
-            <span className="text-sm font-semibold text-white">{t.title}</span>
-            <p className="text-[10px] text-white/40">{t.subtitle}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {messages.length > 0 && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#fbbf24]/10 text-[#fbbf24] font-mono">
-              {messages.length}
-            </span>
-          )}
-          {isExpanded ? <ChevronDown className="w-4 h-4 text-white/40" /> : <ChevronUp className="w-4 h-4 text-white/40" />}
-        </div>
-      </button>
+  const clearChat = () => {
+    setMessages([]);
+    chatHistoryId.current = null;
+  };
 
-      {/* Expandable chat — opens upward */}
-      {isExpanded && (
-        <div className="border-b border-[hsl(263,70%,20%)]">
+  return (
+    <div className="relative">
+      {/* Floating chat window — opens upward */}
+      {isOpen && (
+        <div className="absolute bottom-full mb-2 left-0 w-[380px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50"
+          style={{ maxHeight: 'min(500px, 60vh)' }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-lg bg-[#fbbf24]/10 border border-[#fbbf24]/20">
+                <Bot className="w-4 h-4 text-[#fbbf24]" />
+              </div>
+              <div>
+                <span className="text-sm font-semibold text-white">{t.title}</span>
+                <p className="text-[10px] text-white/40 leading-tight">{t.subtitle}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {messages.length > 0 && (
+                <button onClick={clearChat} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" title={t.clear}>
+                  <Trash2 className="w-3.5 h-3.5 text-white/30 hover:text-white/60" />
+                </button>
+              )}
+              <button onClick={() => setIsOpen(false)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
+                <X className="w-4 h-4 text-white/50 hover:text-white/80" />
+              </button>
+            </div>
+          </div>
+
           {/* Messages */}
-          <div ref={scrollRef} className="max-h-64 overflow-y-auto px-4 py-3 space-y-3">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{ minHeight: '200px' }}>
             {messages.length === 0 && (
-              <p className="text-xs text-white/30 text-center py-4">{t.empty}</p>
+              <p className="text-xs text-white/30 text-center py-8">{t.empty}</p>
             )}
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${
+                <div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-[#4c1d95]/50 text-white border border-[#4c1d95]/30'
-                    : 'bg-white/5 text-white/80 border border-white/10'
+                    ? 'bg-[#fbbf24]/15 text-white border border-[#fbbf24]/20 rounded-br-md'
+                    : 'bg-white/5 text-white/80 border border-white/10 rounded-bl-md'
                 }`}>
                   {msg.role === 'assistant' ? (
                     <div className="prose prose-invert prose-xs max-w-none [&_p]:m-0 [&_ul]:m-0 [&_li]:m-0 [&_h1]:text-sm [&_h2]:text-xs [&_h3]:text-xs [&_code]:text-[10px] [&_code]:bg-white/10 [&_code]:px-1 [&_code]:rounded">
@@ -367,105 +369,91 @@ Usa un formato estructurado con:
             ))}
             {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
               <div className="flex justify-start">
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+                <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white/5 border border-white/10">
                   <Loader2 className="w-3 h-3 animate-spin text-[#fbbf24]" />
-                  <span className="text-[10px] text-white/40">{language === 'en' ? 'Analyzing…' : language === 'es' ? 'Analizando…' : 'Analyse…'}</span>
+                  <span className="text-[10px] text-white/40">
+                    {language === 'en' ? 'Analyzing…' : language === 'es' ? 'Analizando…' : 'Analyse…'}
+                  </span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Node Selection Slots */}
-          <div className="px-4 py-2 space-y-1.5">
-            {selectedSlots.map((slot, i) => (
-              <div key={slot.id} className="flex items-center gap-2 group">
-                <div className="flex-1 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#fbbf24]/10 border border-[#fbbf24]/20 text-xs">
-                  <div className="w-2 h-2 rounded-full bg-[#fbbf24]" />
-                  <span className="text-[#fbbf24] font-mono truncate">{slot.slug}</span>
+          {/* Node slots */}
+          {(selectedSlots.length > 0 || pickingIndex !== null) && (
+            <div className="px-4 py-2 space-y-1.5 border-t border-white/5">
+              {selectedSlots.map((slot, i) => (
+                <div key={slot.id} className="flex items-center gap-2 group">
+                  <div className="flex-1 flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#fbbf24]/10 border border-[#fbbf24]/20 text-xs">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#fbbf24]" />
+                    <span className="text-[#fbbf24] font-mono truncate text-[11px]">{slot.slug}</span>
+                  </div>
+                  <button onClick={() => removeSlot(i)} className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-white/10">
+                    <X className="w-3 h-3 text-white/40" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => removeSlot(i)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10"
-                >
-                  <X className="w-3 h-3 text-white/40" />
-                </button>
-              </div>
-            ))}
-
-            {/* Picking indicator */}
-            {pickingIndex !== null && (
-              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#fbbf24]/5 border border-[#fbbf24]/30 border-dashed animate-pulse">
-                <Search className="w-3 h-3 text-[#fbbf24]" />
-                <span className="text-[10px] text-[#fbbf24]/70">{t.pickFromGraph}</span>
-                <button onClick={cancelPicking} className="ml-auto text-white/40 hover:text-white/60">
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            )}
-
-            {/* Add slot button */}
-            {selectedSlots.length < MAX_SLOTS && pickingIndex === null && (
-              <button
-                onClick={() => startPicking(selectedSlots.length)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-dashed border-white/15 hover:border-[#fbbf24]/40 hover:bg-[#fbbf24]/5 transition-colors text-xs text-white/40 hover:text-[#fbbf24]/70 w-full"
-              >
-                <Plus className="w-3 h-3" />
-                <span>{t.selectNode}</span>
-              </button>
-            )}
-          </div>
-
-          {/* Analyze button */}
-          {selectedSlots.length >= 2 && !isLoading && (
-            <div className="px-4 pb-2 flex justify-center">
-              <button
-                onClick={handleAnalyze}
-                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-[#0f0a1e] font-semibold text-sm hover:shadow-lg hover:shadow-[#fbbf24]/20 transition-all hover:-translate-y-0.5"
-              >
-                <Sparkles className="w-4 h-4" />
-                {t.analyze}
-              </button>
+              ))}
+              {pickingIndex !== null && (
+                <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#fbbf24]/5 border border-[#fbbf24]/30 border-dashed animate-pulse">
+                  <Search className="w-3 h-3 text-[#fbbf24]" />
+                  <span className="text-[10px] text-[#fbbf24]/70">{t.pickFromGraph}</span>
+                  <button onClick={cancelPicking} className="ml-auto text-white/40 hover:text-white/60"><X className="w-3 h-3" /></button>
+                </div>
+              )}
             </div>
           )}
 
+          {/* Add node + analyze */}
+          <div className="px-4 py-2 flex items-center gap-2 border-t border-white/5">
+            {selectedSlots.length < MAX_SLOTS && pickingIndex === null && (
+              <button onClick={() => startPicking(selectedSlots.length)}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-white/15 hover:border-[#fbbf24]/40 hover:bg-[#fbbf24]/5 transition-colors text-[10px] text-white/40 hover:text-[#fbbf24]/70">
+                <Plus className="w-2.5 h-2.5" />{t.selectNode}
+              </button>
+            )}
+            {selectedSlots.length >= 2 && !isLoading && (
+              <button onClick={handleAnalyze}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-[#0f0a1e] font-semibold text-[11px] hover:shadow-lg hover:shadow-[#fbbf24]/20 transition-all ml-auto">
+                <Sparkles className="w-3 h-3" />{t.analyze}
+              </button>
+            )}
+          </div>
+
           {/* Input */}
-          <div className="px-4 pb-4 pt-1">
+          <div className="px-3 pb-3 pt-1 border-t border-white/5">
             <div className="flex gap-2">
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-                }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                 placeholder={t.placeholder}
-                rows={2}
-                className="flex-1 bg-white/5 border-[hsl(263,70%,20%)] text-white text-xs placeholder:text-white/25 resize-none min-h-[44px] focus-visible:ring-[#fbbf24]/30"
+                rows={1}
+                className="flex-1 bg-white/5 border-white/10 text-white text-xs placeholder:text-white/25 resize-none min-h-[36px] focus-visible:ring-[#fbbf24]/30 rounded-xl"
               />
-              <div className="flex flex-col gap-1.5">
-                <Button
-                  size="icon"
-                  onClick={() => sendMessage()}
-                  disabled={!input.trim() || isLoading}
-                  className="h-8 w-8 bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] disabled:opacity-30"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                </Button>
-                {messages.length > 0 && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setMessages([])}
-                    className="h-8 w-8 text-white/30 hover:text-white/60 hover:bg-white/5"
-                    title={t.clear}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                )}
-              </div>
+              <Button size="icon" onClick={() => sendMessage()} disabled={!input.trim() || isLoading}
+                className="h-9 w-9 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] disabled:opacity-30 shrink-0">
+                <Send className="w-3.5 h-3.5" />
+              </Button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Toggle button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border transition-all ${
+          isOpen
+            ? 'bg-[#fbbf24]/15 border-[#fbbf24]/30 text-[#fbbf24]'
+            : 'bg-[#fbbf24]/10 border-[#fbbf24]/20 text-[#fbbf24] hover:bg-[#fbbf24]/20'
+        } backdrop-blur-md`}
+      >
+        <MessageSquare className="w-4 h-4" />
+        <span className="text-xs font-medium">{t.title}</span>
+        {messages.length > 0 && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#fbbf24]/20 font-mono">{messages.length}</span>
+        )}
+      </button>
     </div>
   );
 }

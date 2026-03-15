@@ -806,6 +806,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cocoon_chat_histories: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          message_count: number
+          messages: Json
+          session_hash: string
+          tracked_site_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          message_count?: number
+          messages?: Json
+          session_hash: string
+          tracked_site_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          message_count?: number
+          messages?: Json
+          session_hash?: string
+          tracked_site_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cocoon_sessions: {
         Row: {
           avg_cannibalization_risk: number | null

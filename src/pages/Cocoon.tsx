@@ -558,7 +558,7 @@ export default function Cocoon() {
         </main>
 
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
-        <div className="px-4 md:px-6 pb-4 md:pb-6 flex items-end gap-4 flex-wrap">
+        <div className="px-4 md:px-6 pb-8 md:pb-10 mb-4 flex items-end gap-4 flex-wrap">
           {/* Console button — bottom left */}
           <button
             onClick={() => navigate('/console')}
@@ -570,12 +570,14 @@ export default function Cocoon() {
 
           {/* AI Chat — shifted right */}
           {hasAccess && nodes.length > 0 && (
-            <div className="w-full max-w-[400px]">
+            <div className="relative">
               <CocoonAIChat
                 nodes={nodes}
                 selectedNodeId={selectedNode?.id}
                 onRequestNodePick={(cb) => setNodePickerCallback(() => cb)}
                 onCancelPick={() => setNodePickerCallback(null)}
+                trackedSiteId={selectedSiteId}
+                domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
               />
             </div>
           )}
