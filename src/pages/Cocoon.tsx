@@ -137,6 +137,7 @@ export default function Cocoon() {
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
   const [nodes, setNodes] = useState<any[]>([]);
   const [selectedNode, setSelectedNode] = useState<any>(null);
+  const [nodePickerCallback, setNodePickerCallback] = useState<((node: any) => void) | null>(null);
   const [isXRayMode, setIsXRayMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isComputing, setIsComputing] = useState(false);
