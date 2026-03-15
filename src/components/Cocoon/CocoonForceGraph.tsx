@@ -129,10 +129,10 @@ export function CocoonForceGraph({
 
   // Depth → radius: ultra-compact Jarvis-style dots
   const depthToRadius = (depth: number): number => {
-    if (depth === 0) return 4.5; // home base radius (bigger sun)
-    if (depth === 1) return 3.5;
-    if (depth === 2) return 2.5;
-    return 2;
+    if (depth === 0) return 11; // home base radius (bigger sun)
+    if (depth === 1) return 7;
+    if (depth === 2) return 4.5;
+    return 3.5;
   };
 
   // Home node sun coefficient: dynamically reaches 3x at max dezoom, 1x at max zoom-in
