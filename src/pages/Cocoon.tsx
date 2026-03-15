@@ -591,7 +591,10 @@ export default function Cocoon() {
           {/* Navigation buttons — bottom right, same line */}
           <div className="flex items-center gap-2 shrink-0">
             <a
-              href="https://crawlers.fr/site-crawl"
+              href={(() => {
+                const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
+                return domain ? `https://crawlers.fr/site-crawl?url=${encodeURIComponent(domain)}` : 'https://crawlers.fr/site-crawl';
+              })()}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => { externalClickTimestamp.current = Date.now(); }}
@@ -602,7 +605,12 @@ export default function Cocoon() {
               <ExternalLink className="w-2.5 h-2.5" />
             </a>
             <a
-              href="/audit-expert"
+              href={(() => {
+                const nodeUrl = selectedNode?.url;
+                const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
+                const urlParam = nodeUrl || domain;
+                return urlParam ? `/audit-expert?url=${encodeURIComponent(urlParam)}` : '/audit-expert';
+              })()}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => { externalClickTimestamp.current = Date.now(); }}
