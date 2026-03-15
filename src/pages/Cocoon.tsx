@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
-import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText } from "lucide-react";
+import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
