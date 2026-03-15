@@ -250,11 +250,11 @@ function NodeSphere({
       meshRef.current.scale.setScalar(scale * heartbeat);
       // Halo breathing — slower, wider amplitude
       if (haloRef.current) {
-        const haloBreath = 1 + Math.sin(t * 0.9) * 0.15 + Math.sin(t * 2.1) * 0.05;
+        const haloBreath = 1 + Math.sin(t * 0.9) * 0.12 + Math.sin(t * 2.1) * 0.04;
         haloRef.current.scale.setScalar(haloBreath);
         const mat = haloRef.current.material as THREE.MeshBasicMaterial;
-        // Opacity oscillates between 0.06 and 0.16
-        mat.opacity = 0.06 + (Math.sin(t * 0.9) * 0.5 + 0.5) * 0.10;
+        // Opacity oscillates between 0.03 and 0.09 (subtle)
+        mat.opacity = 0.03 + (Math.sin(t * 0.9) * 0.5 + 0.5) * 0.06;
       }
       // Border ring pulse
       if (glowRef.current) {
