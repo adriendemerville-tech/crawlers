@@ -667,7 +667,7 @@ export default function Cocoon() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => { externalClickTimestamp.current = Date.now(); }}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-[#3b82f6]/10 border border-[#3b82f6]/25 text-[#60a5fa] hover:bg-[#3b82f6]/20 hover:text-[#93bbfd] transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/25 text-[#c084fc] hover:bg-[#a855f7]/20 hover:text-[#d8b4fe] transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md"
             >
               <Search className="w-3 h-3" />
               <span className="hidden sm:inline">{t.crawlMulti}</span>
