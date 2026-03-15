@@ -1,180 +1,207 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { checkIpRate, getClientIp, rateLimitResponse } from "../_shared/ipRateLimiter.ts";
-import { withCircuitBreaker } from "../_shared/circuitBreaker.ts";
 import { trackEdgeFunctionError } from "../_shared/tokenTracker.ts";
+import { logSilentError } from "../_shared/silentErrorLogger.ts";
 
 /**
  * Edge Function: calculate-cocoon-logic
  *
- * Builds the semantic graph ("Cocoon") for a tracked site by:
- * 1. Ingesting crawl_pages + audit data into semantic_nodes
- * 2. Computing embeddings via Lovable AI (Gemini)
- * 3. Calculating cosine similarity between all node pairs
- * 4. Computing Iab (Anti-Wiki) scores from SERP competitor classification
- * 5. Predicting ROI (CPC × conversion potential) and traffic estimates
+ * Builds the semantic graph ("Cocoon") for a tracked site:
+ * 1. Ingests crawl_pages data into semantic_nodes
+ * 2. Computes TF-IDF vectors (deterministic, no LLM)
+ * 3. Calculates cosine similarity between node pairs
+ * 4. Enriches with audit data (CPC, search volume, KD)
+ * 5. Computes Iab (Anti-Wiki) scores, ROI predictions, traffic estimates
+ * 6. Clusters via connected components with similarity threshold
  *
  * Access: Pro Agency / Admin only
  */
 
-// ─── Cosine Similarity (pure math, no pgvector) ───
-function cosineSimilarity(a: number[], b: number[]): number {
-  if (!a || !b || a.length !== b.length || a.length === 0) return 0;
-  let dot = 0, magA = 0, magB = 0;
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    magA += a[i] * a[i];
-    magB += b[i] * b[i];
+// ─── TF-IDF Vectorization ───
+
+const STOPWORDS = new Set([
+  "le", "la", "les", "de", "du", "des", "un", "une", "et", "en", "à", "au", "aux",
+  "pour", "par", "sur", "dans", "avec", "est", "son", "ses", "ce", "cette", "qui",
+  "que", "ne", "pas", "plus", "the", "a", "an", "and", "or", "of", "to", "in", "for",
+  "is", "it", "on", "at", "by", "with", "from", "as", "are", "was", "be", "has",
+  "nous", "vous", "ils", "elles", "leur", "leurs", "tout", "tous", "très", "bien",
+  "aussi", "mais", "donc", "car", "alors", "comme", "this", "that", "these", "those",
+  "not", "but", "can", "will", "our", "your", "they", "have", "been", "had", "were",
+]);
+
+function tokenize(text: string): string[] {
+  return (text.toLowerCase().match(/[a-zàâäéèêëïîôùûüç]{3,}/g) || [])
+    .filter((w) => !STOPWORDS.has(w));
+}
+
+/** Build TF-IDF vectors for a corpus of documents */
+function buildTfIdfVectors(docs: string[][]): Map<string, number>[] {
+  const n = docs.length;
+  if (n === 0) return [];
+
+  // Document frequency: how many docs contain each term
+  const df = new Map<string, number>();
+  for (const doc of docs) {
+    const seen = new Set(doc);
+    for (const term of seen) {
+      df.set(term, (df.get(term) || 0) + 1);
+    }
   }
+
+  // Build TF-IDF vector per document
+  return docs.map((doc) => {
+    const tf = new Map<string, number>();
+    for (const term of doc) {
+      tf.set(term, (tf.get(term) || 0) + 1);
+    }
+
+    const tfidf = new Map<string, number>();
+    for (const [term, count] of tf) {
+      const termDf = df.get(term) || 1;
+      // TF = log(1 + count), IDF = log(N / df)
+      const score = Math.log(1 + count) * Math.log(n / termDf);
+      if (score > 0) tfidf.set(term, score);
+    }
+    return tfidf;
+  });
+}
+
+/** Cosine similarity between two sparse TF-IDF vectors */
+function cosineSimilaritySparse(a: Map<string, number>, b: Map<string, number>): number {
+  if (a.size === 0 || b.size === 0) return 0;
+
+  let dot = 0;
+  let magA = 0;
+  let magB = 0;
+
+  // Iterate over smaller map for efficiency
+  const [smaller, larger] = a.size <= b.size ? [a, b] : [b, a];
+  for (const [term, valA] of smaller) {
+    const valB = larger.get(term);
+    if (valB !== undefined) dot += valA * valB;
+  }
+
+  for (const v of a.values()) magA += v * v;
+  for (const v of b.values()) magB += v * v;
+
   const denom = Math.sqrt(magA) * Math.sqrt(magB);
   return denom === 0 ? 0 : dot / denom;
 }
 
 // ─── Iab Score (Anti-Wiki Index) ───
-// Classifies SERP competitors: high ratio of authoritative/generic sites = high Iab
 function calculateIabScore(serpCompetitors: string[]): number {
   if (!serpCompetitors || serpCompetitors.length === 0) return 50;
 
   const wikiDomains = [
-    'wikipedia.org', 'wikimedia.org', 'wiktionary.org',
-    'larousse.fr', 'linternaute.fr', 'journaldunet.com',
-    'commentcamarche.net', 'futura-sciences.com',
-    'investopedia.com', 'britannica.com', 'webmd.com',
+    "wikipedia.org", "wikimedia.org", "wiktionary.org",
+    "larousse.fr", "linternaute.fr", "journaldunet.com",
+    "commentcamarche.net", "futura-sciences.com",
+    "investopedia.com", "britannica.com", "webmd.com",
   ];
-  const govDomains = ['.gouv.fr', '.gov', '.edu', '.ac-'];
-  const socialDomains = ['youtube.com', 'reddit.com', 'quora.com', 'linkedin.com', 'twitter.com', 'facebook.com'];
+  const govDomains = [".gouv.fr", ".gov", ".edu", ".ac-"];
+  const socialDomains = ["youtube.com", "reddit.com", "quora.com", "linkedin.com", "twitter.com", "facebook.com"];
 
   let wikiCount = 0, govCount = 0, socialCount = 0;
-
   for (const comp of serpCompetitors) {
     const domain = comp.toLowerCase();
-    if (wikiDomains.some(w => domain.includes(w))) wikiCount++;
-    else if (govDomains.some(g => domain.includes(g))) govCount++;
-    else if (socialDomains.some(s => domain.includes(s))) socialCount++;
+    if (wikiDomains.some((w) => domain.includes(w))) wikiCount++;
+    else if (govDomains.some((g) => domain.includes(g))) govCount++;
+    else if (socialDomains.some((s) => domain.includes(s))) socialCount++;
   }
 
   const total = serpCompetitors.length;
-  // High Iab = few wiki/gov competitors = easier to rank
   const authorityRatio = (wikiCount + govCount) / total;
   const socialRatio = socialCount / total;
-
-  // Score: 100 = no authority sites, 0 = all authority sites
   const baseScore = (1 - authorityRatio) * 70 + (1 - socialRatio) * 30;
   return Math.round(Math.min(100, Math.max(0, baseScore)));
 }
 
 // ─── ROI Prediction ───
-function calculateRoiPredictive(
-  cpc: number,
-  searchVolume: number,
-  keywordDifficulty: number,
-  conversionPotential: number,
-): number {
-  // Estimated CTR based on difficulty (lower KD = higher expected CTR)
-  const estimatedCTR = Math.max(0.01, (100 - keywordDifficulty) / 100 * 0.15);
-  const estimatedTraffic = searchVolume * estimatedCTR;
-  const conversionRate = conversionPotential / 100 * 0.03; // 3% max conversion
-  const roi = estimatedTraffic * cpc * conversionRate * 12; // annualized
-  return Math.round(roi * 100) / 100;
+function calculateRoiPredictive(cpc: number, volume: number, kd: number, convPotential: number): number {
+  const estimatedCTR = Math.max(0.01, (100 - kd) / 100 * 0.15);
+  const traffic = volume * estimatedCTR;
+  const convRate = convPotential / 100 * 0.03;
+  return Math.round(traffic * cpc * convRate * 12 * 100) / 100;
 }
 
 // ─── Traffic Estimate ───
-function estimateTraffic(searchVolume: number, keywordDifficulty: number, serpPosition: number | null): number {
-  const ctrByPosition: Record<number, number> = {
+function estimateTraffic(volume: number, kd: number, serpPos: number | null): number {
+  const ctrByPos: Record<number, number> = {
     1: 0.28, 2: 0.15, 3: 0.11, 4: 0.08, 5: 0.06,
     6: 0.05, 7: 0.04, 8: 0.03, 9: 0.025, 10: 0.02,
   };
-
-  if (serpPosition && serpPosition <= 10) {
-    const ctr = ctrByPosition[Math.round(serpPosition)] || 0.02;
-    return Math.round(searchVolume * ctr);
+  if (serpPos && serpPos <= 10) {
+    return Math.round(volume * (ctrByPos[Math.round(serpPos)] || 0.02));
   }
-
-  // Not ranked yet: estimate based on KD
-  const potentialCTR = Math.max(0.01, (100 - keywordDifficulty) / 100 * 0.10);
-  return Math.round(searchVolume * potentialCTR);
+  return Math.round(volume * Math.max(0.01, (100 - kd) / 100 * 0.10));
 }
 
 // ─── Intent Classification ───
 function classifyIntent(title: string, h1: string, keywords: string[]): string {
-  const text = `${title} ${h1} ${keywords.join(' ')}`.toLowerCase();
+  const text = `${title} ${h1} ${keywords.join(" ")}`.toLowerCase();
+  const transactional = ["acheter", "prix", "tarif", "devis", "commander", "buy", "price", "order", "discount", "promo"];
+  const navigational = ["connexion", "login", "mon compte", "dashboard", "contact", "about"];
+  const commercial = ["meilleur", "comparatif", "avis", "test", "vs", "best", "review", "top", "alternative"];
 
-  const transactional = ['acheter', 'prix', 'tarif', 'devis', 'commander', 'buy', 'price', 'order', 'discount', 'promo', 'solde'];
-  const navigational = ['connexion', 'login', 'mon compte', 'dashboard', 'contact', 'about'];
-  const commercial = ['meilleur', 'comparatif', 'avis', 'test', 'vs', 'best', 'review', 'top', 'alternative'];
-
-  if (transactional.some(w => text.includes(w))) return 'transactional';
-  if (navigational.some(w => text.includes(w))) return 'navigational';
-  if (commercial.some(w => text.includes(w))) return 'commercial';
-  return 'informational';
+  if (transactional.some((w) => text.includes(w))) return "transactional";
+  if (navigational.some((w) => text.includes(w))) return "navigational";
+  if (commercial.some((w) => text.includes(w))) return "commercial";
+  return "informational";
 }
 
-// ─── Embedding via Lovable AI ───
-async function getEmbeddings(texts: string[]): Promise<number[][]> {
-  const apiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!apiKey) {
-    console.warn("[Cocoon] No LOVABLE_API_KEY, skipping embeddings");
-    return texts.map(() => []);
-  }
+// ─── Connected Components Clustering ───
+function clusterByComponents(
+  adjacency: Map<number, number[]>,
+  nodeCount: number,
+): Map<number, string> {
+  const visited = new Set<number>();
+  const clusters = new Map<number, string>();
+  let clusterIdx = 0;
 
-  const results: number[][] = [];
-  // Batch texts in groups of 5 to avoid timeout
-  for (let i = 0; i < texts.length; i += 5) {
-    const batch = texts.slice(i, i + 5);
-    const embeddings = await Promise.all(
-      batch.map(async (text) => {
-        try {
-          const resp = await fetch("https://api.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "google/gemini-2.5-flash-lite",
-              messages: [
-                {
-                  role: "system",
-                  content: "Tu es un extracteur sémantique. Retourne UNIQUEMENT un tableau JSON de 64 nombres flottants entre -1 et 1 représentant l'embedding sémantique du texte. Pas d'explication.",
-                },
-                { role: "user", content: text.slice(0, 2000) },
-              ],
-              temperature: 0,
-              max_tokens: 500,
-            }),
-          });
+  for (let i = 0; i < nodeCount; i++) {
+    if (visited.has(i)) continue;
 
-          if (!resp.ok) return Array(64).fill(0);
+    const clusterId = `cluster_${clusterIdx++}`;
+    // BFS
+    const queue = [i];
+    visited.add(i);
 
-          const data = await resp.json();
-          const content = data.choices?.[0]?.message?.content || "[]";
-          // Parse the JSON array from the response
-          const match = content.match(/\[[\s\S]*?\]/);
-          if (match) {
-            const arr = JSON.parse(match[0]);
-            if (Array.isArray(arr) && arr.length > 0) {
-              // Normalize to 64 dimensions
-              return arr.slice(0, 64).map((v: number) => Number(v) || 0);
-            }
-          }
-          return Array(64).fill(0);
-        } catch {
-          return Array(64).fill(0);
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      clusters.set(curr, clusterId);
+
+      for (const neighbor of adjacency.get(curr) || []) {
+        if (!visited.has(neighbor)) {
+          visited.add(neighbor);
+          queue.push(neighbor);
         }
-      }),
-    );
-    results.push(...embeddings);
+      }
+    }
   }
 
-  return results;
+  return clusters;
 }
+
+// ─── Keyword Extraction (TF-based) ───
+function extractKeywords(title: string, h1: string, description: string): string[] {
+  const words = tokenize(`${title} ${h1} ${description}`);
+  const freq = new Map<string, number>();
+  for (const w of words) freq.set(w, (freq.get(w) || 0) + 1);
+
+  return [...freq.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([w]) => w);
+}
+
+// ─── Main Handler ───
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Rate limiting
   const ip = getClientIp(req);
   const rateCheck = checkIpRate(ip, "calculate-cocoon-logic", 5, 60_000);
   if (!rateCheck.allowed) return rateLimitResponse(corsHeaders, rateCheck.retryAfterMs);
@@ -192,90 +219,103 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Get auth user
+    // ─── Auth ───
     const authHeader = req.headers.get("Authorization");
     let userId: string | null = null;
-
     if (authHeader) {
       const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
       userId = user?.id || null;
     }
-
     if (!userId) {
       return new Response(JSON.stringify({ error: "Non autorisé" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Check plan: Pro Agency or admin only
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("plan_type")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // ─── Plan check ───
+    const [{ data: profile }, { data: isAdmin }] = await Promise.all([
+      supabase.from("profiles").select("plan_type").eq("user_id", userId).maybeSingle(),
+      supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+    ]);
 
-    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-
-    const allowedPlans = ["agency_pro", "agency_premium"];
-    if (!isAdmin && !allowedPlans.includes(profile?.plan_type || "")) {
+    if (!isAdmin && !["agency_pro", "agency_premium"].includes(profile?.plan_type || "")) {
       return new Response(JSON.stringify({ error: "Accès réservé Pro Agency" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Verify tracked site ownership
+    // ─── Verify site ownership ───
     const { data: site } = await supabase
-      .from("tracked_sites")
-      .select("id, domain, user_id")
-      .eq("id", tracked_site_id)
-      .maybeSingle();
+      .from("tracked_sites").select("id, domain, user_id")
+      .eq("id", tracked_site_id).maybeSingle();
 
     if (!site || (site.user_id !== userId && !isAdmin)) {
       return new Response(JSON.stringify({ error: "Site non trouvé" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // 1. Fetch crawl pages for this domain (latest crawl)
+    // ─── 1. Fetch crawl pages (latest crawl) ───
     const { data: crawls } = await supabase
-      .from("site_crawls" as any)
-      .select("id")
-      .eq("domain", site.domain)
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1);
+      .from("site_crawls" as any).select("id")
+      .eq("domain", site.domain).eq("user_id", userId)
+      .order("created_at", { ascending: false }).limit(1);
 
     const latestCrawlId = crawls?.[0]?.id;
-    let crawlPages: any[] = [];
-
-    if (latestCrawlId) {
-      const { data } = await supabase
-        .from("crawl_pages")
-        .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description")
-        .eq("crawl_id", latestCrawlId)
-        .limit(500);
-      crawlPages = data || [];
-    }
-
-    if (crawlPages.length === 0) {
+    if (!latestCrawlId) {
       return new Response(
         JSON.stringify({ error: "Aucune page crawlée trouvée. Lancez d'abord un crawl du site." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // 2. Build semantic nodes from crawl data
-    const nodeTexts: string[] = [];
+    const { data: crawlPages } = await supabase
+      .from("crawl_pages")
+      .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description")
+      .eq("crawl_id", latestCrawlId).limit(500);
+
+    if (!crawlPages?.length) {
+      return new Response(
+        JSON.stringify({ error: "Aucune page crawlée trouvée. Lancez d'abord un crawl du site." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ─── 2. Enrich from existing audit data ───
+    const { data: auditData } = await supabase
+      .from("audits")
+      .select("url, audit_data")
+      .eq("domain", site.domain)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    // Build a lookup: url → audit metrics
+    const auditLookup = new Map<string, any>();
+    for (const audit of auditData || []) {
+      if (!audit.url || !audit.audit_data) continue;
+      const data = typeof audit.audit_data === "string" ? JSON.parse(audit.audit_data) : audit.audit_data;
+      auditLookup.set(audit.url.replace(/\/+$/, "").toLowerCase(), data);
+    }
+
+    // ─── 3. Build node data ───
     const nodeData: any[] = [];
+    const tokenizedDocs: string[][] = [];
 
     for (const page of crawlPages) {
       const keywords = extractKeywords(page.title || "", page.h1 || "", page.meta_description || "");
       const intent = classifyIntent(page.title || "", page.h1 || "", keywords);
-      const text = `${page.title || ""} ${page.h1 || ""} ${page.meta_description || ""}`.trim();
-      nodeTexts.push(text);
+      const fullText = `${page.title || ""} ${page.h1 || ""} ${page.meta_description || ""} ${keywords.join(" ")}`;
+      tokenizedDocs.push(tokenize(fullText));
+
+      // Try to enrich from audit data
+      const normalizedUrl = page.url.replace(/\/+$/, "").toLowerCase();
+      const audit = auditLookup.get(normalizedUrl);
+      const serpData = audit?.serp_competitors || audit?.competitors || [];
+      const cpc = audit?.cpc_value || audit?.cpc || 0;
+      const volume = audit?.search_volume || audit?.volume || 0;
+      const kd = audit?.keyword_difficulty || audit?.kd || 50;
+      const serpPosition = audit?.serp_position || audit?.position || null;
 
       nodeData.push({
         user_id: userId,
@@ -287,127 +327,122 @@ Deno.serve(async (req) => {
         keywords,
         word_count: page.word_count || 0,
         intent,
-        internal_links_in: 0, // Will be computed from link graph
+        internal_links_in: 0,
         internal_links_out: page.internal_links || 0,
         eeat_score: page.seo_score || 0,
+        // Enriched from audit
+        cpc_value: cpc,
+        search_volume: volume,
+        keyword_difficulty: kd,
+        serp_position: serpPosition,
+        serp_competitors: serpData,
+        conversion_potential: intent === "transactional" ? 80 : intent === "commercial" ? 60 : 30,
         status: "pending",
       });
     }
 
-    // 3. Compute embeddings (with circuit breaker)
-    const embeddings = await withCircuitBreaker(
-      "cocoon-embeddings",
-      () => getEmbeddings(nodeTexts),
-      { threshold: 3, resetMs: 300_000 },
-    );
+    // ─── 4. Compute TF-IDF vectors & cosine similarity ───
+    console.log(`[Cocoon] Computing TF-IDF for ${tokenizedDocs.length} documents`);
+    const tfidfVectors = buildTfIdfVectors(tokenizedDocs);
 
-    // 4. Assign embeddings and compute similarities
-    const nodesWithEmbeddings = nodeData.map((node, i) => ({
-      ...node,
-      embedding: embeddings?.[i] || null,
-    }));
+    // Similarity threshold for edges
+    const STRONG_THRESHOLD = 0.4;
+    const MEDIUM_THRESHOLD = 0.2;
+    const WEAK_THRESHOLD = 0.1;
 
-    // 5. Compute pairwise cosine similarity (top 10 edges per node)
-    for (let i = 0; i < nodesWithEmbeddings.length; i++) {
-      const edges: { target_idx: number; score: number; target_url: string }[] = [];
-      const embA = nodesWithEmbeddings[i].embedding;
-      if (!embA || embA.length === 0) continue;
+    // Build adjacency for clustering (medium+ edges)
+    const adjacency = new Map<number, number[]>();
+    for (let i = 0; i < nodeData.length; i++) adjacency.set(i, []);
 
-      for (let j = 0; j < nodesWithEmbeddings.length; j++) {
-        if (i === j) continue;
-        const embB = nodesWithEmbeddings[j].embedding;
-        if (!embB || embB.length === 0) continue;
+    for (let i = 0; i < tfidfVectors.length; i++) {
+      const edges: { idx: number; score: number }[] = [];
 
-        const sim = cosineSimilarity(embA, embB);
-        if (sim > 0.3) {
-          edges.push({ target_idx: j, score: Math.round(sim * 1000) / 1000, target_url: nodesWithEmbeddings[j].url });
+      for (let j = i + 1; j < tfidfVectors.length; j++) {
+        const sim = cosineSimilaritySparse(tfidfVectors[i], tfidfVectors[j]);
+        if (sim >= WEAK_THRESHOLD) {
+          edges.push({ idx: j, score: sim });
+
+          // Build adjacency for clustering (medium+ only)
+          if (sim >= MEDIUM_THRESHOLD) {
+            adjacency.get(i)!.push(j);
+            adjacency.get(j)!.push(i);
+          }
         }
       }
 
       // Keep top 10 most similar
       edges.sort((a, b) => b.score - a.score);
-      nodesWithEmbeddings[i].similarity_edges = edges.slice(0, 10).map((e) => ({
-        target_url: e.target_url,
-        score: e.score,
-        type: e.score > 0.7 ? "strong" : e.score > 0.5 ? "medium" : "weak",
+      nodeData[i].similarity_edges = edges.slice(0, 10).map((e) => ({
+        target_url: nodeData[e.idx].url,
+        score: Math.round(e.score * 1000) / 1000,
+        type: e.score >= STRONG_THRESHOLD ? "strong" : e.score >= MEDIUM_THRESHOLD ? "medium" : "weak",
       }));
     }
 
-    // 6. Compute Iab scores and ROI predictions (mock SERP data for now)
-    for (const node of nodesWithEmbeddings) {
+    // Also set edges for nodes that appear as targets but computed from j > i
+    // (handled by the i < j loop — edges are only stored on node i, 
+    //  but similarity_edges reference target_url so the graph can be bidirectional in the UI)
+
+    // ─── 5. Cluster via connected components ───
+    const clusterMap = clusterByComponents(adjacency, nodeData.length);
+
+    for (let i = 0; i < nodeData.length; i++) {
+      nodeData[i].cluster_id = clusterMap.get(i) || `cluster_singleton_${i}`;
+      // Depth: 0 = cluster seed (first found), 1 = member
+      const clusterNodes = [...clusterMap.entries()].filter(([, c]) => c === nodeData[i].cluster_id);
+      nodeData[i].depth = clusterNodes[0]?.[0] === i ? 0 : 1;
+    }
+
+    // ─── 6. Compute Iab, ROI, traffic ───
+    for (const node of nodeData) {
       node.iab_score = calculateIabScore(node.serp_competitors || []);
       node.roi_predictive = calculateRoiPredictive(
         node.cpc_value || 0,
         node.search_volume || 0,
-        node.keyword_difficulty || 0,
+        node.keyword_difficulty || 50,
         node.conversion_potential || 50,
       );
       node.traffic_estimate = estimateTraffic(
         node.search_volume || 0,
-        node.keyword_difficulty || 0,
+        node.keyword_difficulty || 50,
         node.serp_position || null,
       );
       node.status = "computed";
+
+      // Clean up temp fields before insert
+      delete node.serp_competitors;
+      delete node.serp_position;
+      delete node.conversion_potential;
     }
 
-    // 7. Compute internal link graph (in-links)
-    // Count how many pages link to each page
-    const urlToIdx = new Map<string, number>();
-    nodesWithEmbeddings.forEach((n, i) => urlToIdx.set(n.url, i));
-
-    // 8. Auto-cluster by similarity (simple greedy clustering)
-    let clusterIdx = 0;
-    const assigned = new Set<number>();
-    for (let i = 0; i < nodesWithEmbeddings.length; i++) {
-      if (assigned.has(i)) continue;
-      const clusterId = `cluster_${clusterIdx++}`;
-      nodesWithEmbeddings[i].cluster_id = clusterId;
-      nodesWithEmbeddings[i].depth = 0;
-      assigned.add(i);
-
-      // Add strongly similar nodes to same cluster
-      const edges = nodesWithEmbeddings[i].similarity_edges || [];
-      for (const edge of edges) {
-        if (edge.type === "strong" || edge.type === "medium") {
-          const j = nodesWithEmbeddings.findIndex((n) => n.url === edge.target_url);
-          if (j >= 0 && !assigned.has(j)) {
-            nodesWithEmbeddings[j].cluster_id = clusterId;
-            nodesWithEmbeddings[j].depth = 1;
-            nodesWithEmbeddings[j].parent_node_id = null; // Will be set after insert with actual UUIDs
-            assigned.add(j);
-          }
-        }
-      }
-    }
-
-    // 9. Upsert nodes into semantic_nodes
-    // Delete old nodes for this site first
+    // ─── 7. Upsert into semantic_nodes ───
     await supabase
       .from("semantic_nodes" as any)
       .delete()
       .eq("tracked_site_id", tracked_site_id);
 
-    // Insert in batches of 50
     let insertedCount = 0;
-    for (let i = 0; i < nodesWithEmbeddings.length; i += 50) {
-      const batch = nodesWithEmbeddings.slice(i, i + 50).map((n) => {
-        // Remove temp fields
-        const { parent_node_id, ...rest } = n;
-        return rest;
-      });
-
+    for (let i = 0; i < nodeData.length; i += 50) {
+      const batch = nodeData.slice(i, i + 50);
       const { error } = await supabase.from("semantic_nodes" as any).insert(batch);
       if (error) {
         console.error("[Cocoon] Insert error:", error);
+        await logSilentError("calculate-cocoon-logic", "insert-batch", error.message, {
+          severity: "high",
+          impact: "data_loss",
+          metadata: { batch_start: i, batch_size: batch.length },
+        }).catch(() => {});
       } else {
         insertedCount += batch.length;
       }
     }
 
-    // 10. Compute summary stats
-    const clusters = new Set(nodesWithEmbeddings.map((n) => n.cluster_id)).size;
-    const avgIab = nodesWithEmbeddings.reduce((s, n) => s + (n.iab_score || 0), 0) / nodesWithEmbeddings.length;
-    const totalEdges = nodesWithEmbeddings.reduce((s, n) => s + (n.similarity_edges?.length || 0), 0);
+    // ─── 8. Summary stats ───
+    const clusters = new Set(nodeData.map((n) => n.cluster_id)).size;
+    const avgIab = nodeData.reduce((s, n) => s + (n.iab_score || 0), 0) / nodeData.length;
+    const totalEdges = nodeData.reduce((s, n) => s + (n.similarity_edges?.length || 0), 0);
+
+    console.log(`[Cocoon] Done: ${insertedCount} nodes, ${clusters} clusters, ${totalEdges} edges`);
 
     return new Response(
       JSON.stringify({
@@ -424,34 +459,10 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("[Cocoon] Error:", error);
-    await trackEdgeFunctionError('calculate-cocoon-logic', error instanceof Error ? error.message : String(error)).catch(() => {});
+    await trackEdgeFunctionError("calculate-cocoon-logic", error instanceof Error ? error.message : String(error)).catch(() => {});
     return new Response(JSON.stringify({ error: "Erreur interne du module Cocoon" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
-
-// ─── Keyword Extraction (simple TF-based) ───
-function extractKeywords(title: string, h1: string, description: string): string[] {
-  const stopwords = new Set([
-    "le", "la", "les", "de", "du", "des", "un", "une", "et", "en", "à", "au", "aux",
-    "pour", "par", "sur", "dans", "avec", "est", "son", "ses", "ce", "cette", "qui",
-    "que", "ne", "pas", "plus", "the", "a", "an", "and", "or", "of", "to", "in", "for",
-    "is", "it", "on", "at", "by", "with", "from", "as", "are", "was", "be", "has",
-  ]);
-
-  const text = `${title} ${h1} ${description}`.toLowerCase();
-  const words = text.match(/[a-zàâäéèêëïîôùûüç]{3,}/g) || [];
-  const freq = new Map<string, number>();
-
-  for (const w of words) {
-    if (stopwords.has(w)) continue;
-    freq.set(w, (freq.get(w) || 0) + 1);
-  }
-
-  return [...freq.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([w]) => w);
-}
