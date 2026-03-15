@@ -592,7 +592,7 @@ export default function Cocoon() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors text-xs backdrop-blur-md"
           >
             <Search className="w-3 h-3" />
-            Crawl Multi-pages
+            {t.crawlMulti}
             <ExternalLink className="w-2.5 h-2.5" />
           </a>
           <button
