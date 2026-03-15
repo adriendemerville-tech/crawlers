@@ -225,7 +225,7 @@ export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWai
               className="p-1.5 rounded-md border border-[#3b82f6]/30 hover:bg-[#3b82f6]/10 text-white/40 hover:text-[#60a5fa] transition-colors"
             >
               {isWaitingAudit ? (
-                <RefreshCw className="w-4 h-4 animate-spin text-[#60a5fa]" />
+                <RefreshCw className="w-4 h-4 text-[#60a5fa]" style={{ animation: 'spin 2s linear infinite' }} />
               ) : (
                 <Search className="w-4 h-4" />
               )}
@@ -267,13 +267,6 @@ export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWai
           )}
         </div>
 
-        {/* Waiting for audit */}
-        {isWaitingAudit && (
-          <div className="flex items-center gap-1.5 mt-2 text-[10px] text-[#60a5fa] animate-pulse">
-            <RefreshCw className="w-3 h-3 animate-spin" />
-            {language === 'en' ? 'Waiting for audit results…' : language === 'es' ? 'Esperando resultados…' : 'En attente des résultats…'}
-          </div>
-        )}
 
         {/* Last updated */}
         {node.page_updated_at && (

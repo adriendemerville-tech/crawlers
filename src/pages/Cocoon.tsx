@@ -569,6 +569,7 @@ export default function Cocoon() {
               <CocoonNodePanel
                 node={selectedNode}
                 onClose={() => { setSelectedNode(null); setWaitingAuditUrl(null); }}
+                onRefresh={() => handleCompute()}
                 onAuditLaunch={() => {
                   externalClickTimestamp.current = Date.now();
                   setWaitingAuditUrl(selectedNode.url);
