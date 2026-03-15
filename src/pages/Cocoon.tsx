@@ -7,10 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
-import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown } from "lucide-react";
+import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const i18n = {
   fr: {
@@ -33,6 +35,13 @@ const i18n = {
     errorGeneric: "Impossible de calculer le cocon sémantique",
     successTitle: "Cocon généré",
     successDesc: (nodes: number, clusters: number) => `${nodes} nœuds · ${clusters} clusters`,
+    upsellTitle: "Cocoon · Organisme Vivant",
+    upsellDesc: "Visualisez l'architecture sémantique de votre site, optimisez votre maillage et prédisez le ROI de chaque page avec le module Cocoon.",
+    upsellFeatures: ['Audit expert illimité', 'Code correctif illimité', 'Cocoon sémantique illimité', 'Marque Blanche (White Label)'],
+    upsellPrice: '59€',
+    upsellPer: 'mois',
+    upsellCta: "S'abonner",
+    upsellRedirecting: 'Redirection…',
   },
   en: {
     title: "Cocoon — Semantic Architecture | Crawlers.fr",
@@ -54,6 +63,13 @@ const i18n = {
     errorGeneric: "Unable to compute the semantic cocoon",
     successTitle: "Cocoon generated",
     successDesc: (nodes: number, clusters: number) => `${nodes} nodes · ${clusters} clusters`,
+    upsellTitle: "Cocoon · Living Organism",
+    upsellDesc: "Visualize your site's semantic architecture, optimize internal linking and predict each page's ROI with the Cocoon module.",
+    upsellFeatures: ['Unlimited expert audit', 'Unlimited corrective code', 'Unlimited semantic Cocoon', 'White Label branding'],
+    upsellPrice: '€59',
+    upsellPer: 'month',
+    upsellCta: 'Subscribe',
+    upsellRedirecting: 'Redirecting…',
   },
   es: {
     title: "Cocoon — Arquitectura Semántica | Crawlers.fr",
@@ -75,6 +91,13 @@ const i18n = {
     errorGeneric: "No se pudo calcular el cocoon semántico",
     successTitle: "Cocoon generado",
     successDesc: (nodes: number, clusters: number) => `${nodes} nodos · ${clusters} clusters`,
+    upsellTitle: "Cocoon · Organismo Vivo",
+    upsellDesc: "Visualice la arquitectura semántica de su sitio, optimice su enlazado interno y prediga el ROI de cada página con el módulo Cocoon.",
+    upsellFeatures: ['Auditoría experta ilimitada', 'Código correctivo ilimitado', 'Cocoon semántico ilimitado', 'Marca Blanca (White Label)'],
+    upsellPrice: '59€',
+    upsellPer: 'mes',
+    upsellCta: 'Suscribirse',
+    upsellRedirecting: 'Redirigiendo…',
   },
 };
 
@@ -93,6 +116,8 @@ export default function Cocoon() {
   const [isLoading, setIsLoading] = useState(false);
   const [isComputing, setIsComputing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [showUpsell, setShowUpsell] = useState(false);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
 
   // Check access: Pro Agency or Admin
   useEffect(() => {
@@ -111,6 +136,13 @@ export default function Cocoon() {
     };
     checkAccess();
   }, [user]);
+
+  // Delayed upsell reveal for non-pro users
+  useEffect(() => {
+    if (hasAccess) return;
+    const timer = setTimeout(() => setShowUpsell(true), 5000);
+    return () => clearTimeout(timer);
+  }, [hasAccess]);
 
   // Load tracked sites
   useEffect(() => {
@@ -170,7 +202,6 @@ export default function Cocoon() {
           title: t.successTitle,
           description: t.successDesc(resp.data?.stats?.nodes_count || 0, resp.data?.stats?.clusters_count || 0),
         });
-        // Reload nodes
         const { data } = await supabase
           .from("semantic_nodes" as any)
           .select("*")
@@ -190,43 +221,6 @@ export default function Cocoon() {
     setIsComputing(false);
   };
 
-  // Access gate
-  if (hasAccess === false) {
-    return (
-      <>
-        <Helmet>
-          <title>{t.title}</title>
-          <meta name="description" content={t.metaDesc} />
-        </Helmet>
-        <div className="min-h-screen bg-[#0f0a1e] flex items-center justify-center p-6">
-          <div className="text-center max-w-md space-y-6">
-            <div className="w-16 h-16 rounded-2xl bg-[#4c1d95]/30 flex items-center justify-center mx-auto border border-[#4c1d95]/20">
-              <Lock className="w-8 h-8 text-[#fbbf24]" />
-            </div>
-            <h1 className="text-2xl font-bold text-white font-display">{t.accessTitle}</h1>
-            <p className="text-white/50 text-sm leading-relaxed">{t.accessDesc}</p>
-            <div className="flex gap-3 justify-center">
-              {!user && (
-                <Button
-                  onClick={() => navigate("/auth")}
-                  className="bg-[#4c1d95] hover:bg-[#5b21b6] text-white"
-                >
-                  {t.login}
-                </Button>
-              )}
-              <Button
-                onClick={() => navigate("/pro-agency")}
-                className="bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold"
-              >
-                {t.discoverPro}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
       <Helmet>
@@ -234,7 +228,87 @@ export default function Cocoon() {
         <meta name="description" content={t.metaDesc} />
       </Helmet>
 
-      <div className="min-h-screen bg-[#0f0a1e] flex flex-col">
+      <div className="min-h-screen bg-[#0f0a1e] flex flex-col relative">
+        {/* Pro Agency upsell overlay for non-subscribers */}
+        {!hasAccess && (
+          <div className={`fixed inset-0 z-30 flex items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className="absolute inset-0 bg-[#0f0a1e]/60 backdrop-blur-[2px]" />
+            <Card className="relative z-10 w-full max-w-lg mx-4 border-2 border-violet-500 ring-2 ring-violet-500/30 bg-gradient-to-br from-violet-500/5 via-background to-yellow-500/5 shadow-xl shadow-violet-500/10">
+              <div className="absolute top-0 left-0">
+                <Badge className="rounded-none rounded-br-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-black border-0 px-3 py-1 text-xs font-bold gap-1.5 shadow-lg">
+                  <Star className="h-3 w-3 fill-current" />
+                  Pro Agency
+                </Badge>
+              </div>
+              <div className="absolute top-0 right-0">
+                <Badge className="rounded-none rounded-bl-lg bg-violet-600 text-white border-0 px-3 py-1 text-xs font-bold gap-1.5">
+                  <Lock className="h-3 w-3" />
+                  Pro
+                </Badge>
+              </div>
+              <CardHeader className="pb-3 pt-10">
+                <CardTitle className="text-xl flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-yellow-500/10 border border-violet-500/20">
+                    <Crown className="h-5 w-5 text-yellow-500" />
+                  </div>
+                  <span>{t.upsellTitle}</span>
+                </CardTitle>
+                <CardDescription className="text-sm">
+                  {t.upsellDesc}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="grid gap-2">
+                  {t.upsellFeatures.map((feature: string, i: number) => (
+                    <li key={i} className="flex items-center gap-2 p-2 rounded-lg bg-card/50 border border-violet-500/10">
+                      <div className={`p-1 rounded-md ${i === 0 ? 'bg-amber-500/10' : 'bg-violet-500/10'}`}>
+                        <CheckCircle2 className={`h-3.5 w-3.5 ${i === 0 ? 'text-amber-500' : 'text-violet-500'}`} />
+                      </div>
+                      <span className={`text-sm font-medium ${i === 0 ? 'text-amber-500' : ''}`}>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="flex items-baseline gap-1 justify-center">
+                  <span className="text-3xl font-extrabold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent">
+                    {t.upsellPrice}
+                  </span>
+                  <span className="text-sm text-muted-foreground">/ {t.upsellPer}</span>
+                </div>
+                <Button
+                  size="lg"
+                  className="w-full gap-2 font-bold bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white shadow-lg shadow-violet-500/25"
+                  disabled={subscribeLoading}
+                  onClick={async () => {
+                    if (!user) {
+                      navigate('/auth?returnTo=/cocoon');
+                      return;
+                    }
+                    setSubscribeLoading(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke('create-subscription-session', {
+                        body: { returnUrl: window.location.href }
+                      });
+                      if (error) throw error;
+                      if (data?.url) window.open(data.url, '_blank', 'noopener');
+                    } catch (e: any) {
+                      toast({
+                        title: t.errorTitle,
+                        description: e.message || t.errorGeneric,
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setSubscribeLoading(false);
+                    }
+                  }}
+                >
+                  <Crown className="h-4 w-4 text-yellow-300" />
+                  {subscribeLoading ? t.upsellRedirecting : t.upsellCta}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Top Bar */}
         <header className="shrink-0 border-b border-[hsl(263,70%,20%)] bg-[#0f0a1e]/80 backdrop-blur-xl px-4 py-3">
           <div className="max-w-[1600px] mx-auto flex items-center gap-4 flex-wrap">
@@ -260,7 +334,6 @@ export default function Cocoon() {
             </Select>
 
             <div className="flex items-center gap-2 ml-auto">
-              {/* X-Ray toggle */}
               <Button
                 variant="outline"
                 size="sm"
@@ -275,7 +348,6 @@ export default function Cocoon() {
                 {t.xray}
               </Button>
 
-              {/* Compute button */}
               <Button
                 size="sm"
                 onClick={handleCompute}
@@ -294,7 +366,7 @@ export default function Cocoon() {
         </header>
 
         {/* Main Graph */}
-        <main className="flex-1 relative">
+        <main className={`flex-1 relative ${!hasAccess ? 'pointer-events-none select-none opacity-40' : ''}`}>
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <div className="flex flex-col items-center gap-3">

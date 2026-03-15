@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch } from 'lucide-react';
+import { Bot, Gauge, Globe, Brain, FileText, Shield, Mail, ExternalLink, CreditCard, BookOpen, Radar, Crown, GitCompareArrows, ScanSearch, Network } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { blogArticles } from '@/data/blogArticles';
@@ -93,6 +93,14 @@ function FooterComponent() {
       gold: true,
       isRoute: true
     },
+    {
+      icon: Network,
+      label: 'Cocoon',
+      href: '/cocoon',
+      description: t3(language, 'Architecture sémantique en organisme vivant', 'Living organism semantic architecture', 'Arquitectura semántica como organismo vivo'),
+      gold: true,
+      isRoute: true
+    },
   ];
 
   const resourcesLinks = [
@@ -120,6 +128,12 @@ function FooterComponent() {
       label: 'Blog',
       href: '/blog',
       description: t3(language, 'Articles et guides SEO/GEO', 'SEO/GEO articles and guides', 'Artículos y guías SEO/GEO')
+    },
+    {
+      label: t3(language, 'Cocoon — Architecture Sémantique', 'Cocoon — Semantic Architecture', 'Cocoon — Arquitectura Semántica'),
+      href: '/features/cocoon',
+      description: t3(language, 'Découvrez le module Cocoon', 'Discover the Cocoon module', 'Descubra el módulo Cocoon'),
+      gold: true
     },
     { 
       label: 'Pro Agency',
@@ -159,12 +173,6 @@ function FooterComponent() {
       label: t3(language, 'Architecte Génératif', 'Generative Architect', 'Arquitecto Generativo'),
       href: '/architecte-generatif',
       description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'),
-      gold: true
-    },
-    {
-      label: 'Cocoon',
-      href: '/cocoon',
-      description: t3(language, 'Architecture sémantique en organisme vivant', 'Living organism semantic architecture', 'Arquitectura semántica como organismo vivo'),
       gold: true
     },
   ];
@@ -260,7 +268,7 @@ function FooterComponent() {
 
       <footer className="border-t border-border bg-card" role="contentinfo">
         <div className="mx-auto max-w-7xl px-4 py-12">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-6">
             
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -281,14 +289,14 @@ function FooterComponent() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="sm:col-span-2 space-y-4">
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">
                 {t3(language, 'Nos Outils', 'Our Tools', 'Herramientas')}
               </h3>
               <nav aria-label="Outils d'analyse">
-                <ul className="space-y-3">
+                <ul className="grid grid-cols-2 gap-x-6 gap-y-3">
                   {toolsLinks.map((link) => (
-                    <li key={link.href}>
+                    <li key={link.href + link.label}>
                       {link.isRoute ? (
                         <SmartLink
                           to={link.href}
