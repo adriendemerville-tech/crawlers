@@ -327,11 +327,13 @@ function Links({
     linkIdx: number;
     mesh: THREE.Mesh | null;
   }[]>([]);
+  const [particleCount, setParticleCount] = useState(0);
 
   // Initialize particles
   useEffect(() => {
     if (!particlesEnabled) {
       particleData.current = [];
+      setParticleCount(0);
       return;
     }
     const count = Math.min(links.length * 3, 200);
@@ -341,6 +343,7 @@ function Links({
       linkIdx: Math.floor(Math.random() * links.length),
       mesh: null,
     }));
+    setParticleCount(count);
   }, [links, particlesEnabled]);
 
   useFrame(() => {
