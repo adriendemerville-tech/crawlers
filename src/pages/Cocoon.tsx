@@ -481,6 +481,17 @@ export default function Cocoon() {
         {/* Main Graph */}
         <main className={`flex-1 relative px-4 md:px-6 pb-6`}>
           <div className="h-full rounded-xl overflow-hidden border border-[hsl(263,70%,20%)] relative">
+            {/* 2D / 3D toggle */}
+            {nodes.length > 0 && (
+              <button
+                onClick={() => setIs3DMode(v => !v)}
+                className="absolute top-3 left-3 z-20 flex items-center gap-1 px-2 py-1 rounded-md bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-mono text-white/40 hover:text-white/70 hover:border-white/20 transition-colors"
+              >
+                <span className={is3DMode ? 'text-white/25' : 'text-white/70 font-semibold'}>2D</span>
+                <span className="text-white/15">·</span>
+                <span className={is3DMode ? 'text-white/70 font-semibold' : 'text-white/25'}>3D</span>
+              </button>
+            )}
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="flex flex-col items-center gap-3">
