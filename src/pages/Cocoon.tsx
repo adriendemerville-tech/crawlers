@@ -587,7 +587,7 @@ export default function Cocoon() {
                         const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
                         const domain = selectedSite?.domain || '';
                         setShowPrereqModal(false);
-                        navigate(`/?url=${encodeURIComponent(domain)}`);
+                        navigate(`/audit-expert${domain ? `?url=${encodeURIComponent(domain)}&from=cocoon` : '?from=cocoon'}`);
                       }}
                     >
                       {t.prereqAuditCta}
