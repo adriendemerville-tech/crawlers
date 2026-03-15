@@ -570,28 +570,28 @@ export default function Cocoon() {
 
             return (
               <div
-                className="flex items-center gap-4 mt-3 px-1 flex-wrap opacity-0 animate-fade-in"
+                className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 px-1 flex-wrap opacity-0 animate-fade-in"
                 style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
               >
                 {legendItems.map(([type, { color, label }]) => (
-                  <div key={type} className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-                    <span className="text-white/50 text-xs">{label[language] || label.fr}</span>
+                  <div key={type} className="flex items-center gap-1 sm:gap-1.5">
+                    <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color }} />
+                    <span className="text-white/50 text-[10px] sm:text-xs">{label[language] || label.fr}</span>
                   </div>
                 ))}
-                <span className="text-white/20 mx-1">|</span>
-                <div className="flex items-center gap-1.5">
+                <span className="text-white/20 mx-0.5 sm:mx-1 hidden sm:inline">|</span>
+                <div className="hidden sm:flex items-center gap-1.5">
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
                   <span className="text-white/40 text-[10px]">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="hidden sm:flex items-center gap-1.5">
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
                   <span className="text-white/40 text-[10px]">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
                 </div>
-                <span className="text-white/30 text-xs ml-auto">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
+                <span className="text-white/30 text-[9px] sm:text-xs ml-auto hidden sm:inline">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
                 <button
                   onClick={() => setParticlesEnabled(p => !p)}
-                  className={`ml-2 flex items-center gap-1 px-2 py-0.5 rounded text-[10px] transition-colors border ${
+                  className={`ml-auto sm:ml-2 flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] transition-colors border ${
                     particlesEnabled
                       ? 'bg-white/5 border-white/10 text-white/40 hover:text-white/60'
                       : 'bg-white/5 border-white/10 text-white/20 hover:text-white/40'
