@@ -368,9 +368,9 @@ function Links({
       if (!src || !tgt || !children[i]) continue;
       const t = p.progress;
       children[i].position.set(
-        src.x + (tgt.x - src.x) * t,
-        src.y + (tgt.y - src.y) * t,
-        src.z + (tgt.z - src.z) * t
+        (src.x + (tgt.x - src.x) * t) * spreadScale,
+        (src.y + (tgt.y - src.y) * t) * spreadScale,
+        (src.z + (tgt.z - src.z) * t) * spreadScale
       );
       const fadeEdge = Math.sin(t * Math.PI);
       const mat = children[i].material as THREE.MeshBasicMaterial;
