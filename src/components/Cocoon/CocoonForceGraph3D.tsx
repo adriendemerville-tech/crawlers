@@ -93,6 +93,8 @@ interface CocoonForceGraph3DProps {
   isXRayMode: boolean;
   isPickingMode?: boolean;
   particlesEnabled?: boolean;
+  nodeColors?: Record<string, string>;
+  particleColors?: Record<string, string>;
 }
 
 // ─── 3D Force Simulation (manual spring-charge model) ───
@@ -208,6 +210,7 @@ function NodeSphere({
   isSelected,
   isHovered,
   isXRayMode,
+  customNodeColors,
   onPointerOver,
   onPointerOut,
   onClick,
@@ -216,15 +219,17 @@ function NodeSphere({
   isSelected: boolean;
   isHovered: boolean;
   isXRayMode: boolean;
+  customNodeColors: Record<string, string>;
   onPointerOver: () => void;
   onPointerOut: () => void;
   onClick: () => void;
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
+  const activeColors = { ...PAGE_TYPE_COLORS, ...customNodeColors };
   const color = node.isHome
-    ? isXRayMode ? "#1261d4" : "#ffc83c"
-    : PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown;
+    ? isXRayMode ? "#1261d4" : (customNodeColors.homepage || "#ffc83c")
+    : activeColors[node.pageType] || activeColors.unknown;
 
   const emissiveIntensity = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.8 : 0.3;
   const scale = isSelected ? 1.3 : isHovered ? 1.15 : 1;
@@ -306,11 +311,13 @@ function Links({
   nodeMap,
   selectedNodeId,
   particlesEnabled,
+  customParticleColors,
 }: {
   links: GraphLink3D[];
   nodeMap: Map<string, GraphNode3D>;
   selectedNodeId: string | null;
   particlesEnabled: boolean;
+  customParticleColors: Record<string, string>;
 }) {
   const linesRef = useRef<THREE.Group>(null);
   const particleGroupRef = useRef<THREE.Group>(null);
@@ -382,11 +389,12 @@ function Links({
     <>
       <group ref={linesRef}>
         {lineData.map(({ points, link }, i) => {
+          const activeJuice = { ...JUICE_COLORS, ...customParticleColors };
           const isSelectedLink =
             selectedNodeId && (link.sourceId === selectedNodeId || link.targetId === selectedNodeId);
           const color = isSelectedLink
             ? "#ffc83c"
-            : JUICE_COLORS[link.juiceType] || "#7864dc";
+            : activeJuice[link.juiceType] || "#7864dc";
           const opacity = isSelectedLink ? 0.6 : Math.min(link.strength * 0.35, 0.2);
           return (
             <Line
@@ -406,7 +414,8 @@ function Links({
         <group ref={particleGroupRef}>
           {particleData.current.map((p, i) => {
             const link = links[p.linkIdx];
-            const color = link ? JUICE_COLORS[link.juiceType] : "#508cff";
+            const activeJuice2 = { ...JUICE_COLORS, ...customParticleColors };
+            const color = link ? activeJuice2[link.juiceType] : "#508cff";
             return (
               <mesh key={i} position={[0, 0, 0]}>
                 <sphereGeometry args={[0.25, 6, 6]} />
@@ -458,6 +467,8 @@ function SceneContent({
   hoveredNodeId,
   isXRayMode,
   particlesEnabled,
+  customNodeColors,
+  customParticleColors,
   onNodeSelect,
   onNodeHover,
   onNodeUnhover,
@@ -470,6 +481,8 @@ function SceneContent({
   hoveredNodeId: string | null;
   isXRayMode: boolean;
   particlesEnabled: boolean;
+  customNodeColors: Record<string, string>;
+  customParticleColors: Record<string, string>;
   onNodeSelect: (node: SemanticNode | null) => void;
   onNodeHover: (id: string) => void;
   onNodeUnhover: () => void;
@@ -494,6 +507,7 @@ function SceneContent({
         nodeMap={nodeMap}
         selectedNodeId={selectedNodeId}
         particlesEnabled={particlesEnabled}
+        customParticleColors={customParticleColors}
       />
 
       {/* Nodes */}
@@ -504,6 +518,7 @@ function SceneContent({
           isSelected={node.id === selectedNodeId}
           isHovered={node.id === hoveredNodeId}
           isXRayMode={isXRayMode}
+          customNodeColors={customNodeColors}
           onPointerOver={() => onNodeHover(node.id)}
           onPointerOut={onNodeUnhover}
           onClick={() => {
@@ -539,6 +554,8 @@ export function CocoonForceGraph3D({
   isXRayMode,
   isPickingMode = false,
   particlesEnabled = true,
+  nodeColors = {},
+  particleColors = {},
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -678,6 +695,8 @@ export function CocoonForceGraph3D({
           hoveredNodeId={hoveredNodeId}
           isXRayMode={isXRayMode}
           particlesEnabled={particlesEnabled}
+          customNodeColors={nodeColors}
+          customParticleColors={particleColors}
           onNodeSelect={onNodeSelect}
           onNodeHover={setHoveredNodeId}
           onNodeUnhover={() => setHoveredNodeId(null)}

@@ -5,6 +5,7 @@ import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useCocoonTheme } from "@/hooks/useCocoonTheme";
 import { CocoonForceGraph3D } from "@/components/Cocoon/CocoonForceGraph3D";
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
@@ -148,6 +149,7 @@ export default function Cocoon() {
   const { language } = useLanguage();
   useCanonicalHreflang('/cocoon');
   const t = i18n[language] || i18n.fr;
+  const { theme: cocoonTheme } = useCocoonTheme();
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
@@ -525,6 +527,8 @@ export default function Cocoon() {
                 isXRayMode={isXRayMode}
                 isPickingMode={!!nodePickerCallback}
                 particlesEnabled={particlesEnabled}
+                nodeColors={cocoonTheme.nodeColors}
+                particleColors={cocoonTheme.particleColors}
               />
             ) : (
               <CocoonForceGraph

@@ -15,8 +15,9 @@ import { useQuery } from '@tanstack/react-query';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { useToast } from '@/hooks/use-toast';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Palette } from 'lucide-react';
+import { Palette, Network } from 'lucide-react';
 import { BrandingTab } from '@/components/Profile/BrandingTab';
+import { CocoonTab } from '@/components/Profile/CocoonTab';
 import { ClientsTab } from '@/components/Profile/ClientsTab';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { AccountManager } from '@/components/Profile/AccountManager';
@@ -293,6 +294,7 @@ export function MyWallet() {
               <TabsList className="flex flex-col h-fit w-48 bg-muted/50 border-2 border-violet-500/40 rounded-lg p-1.5 gap-1 sticky top-20">
                 {[
                   { value: 'branding', icon: Palette, label: 'Branding' },
+                  { value: 'cocoon', icon: Network, label: 'Cocoon' },
                   { value: 'clients', icon: Activity, label: 'Clients' },
                   { value: 'invoices', icon: Receipt, label: language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices' },
                   { value: 'payment', icon: CreditCard, label: language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment' },
@@ -334,7 +336,11 @@ export function MyWallet() {
                 <BrandingTab />
               </TabsContent>
 
-              {/* Clients Tab */}
+              {/* Cocoon Tab */}
+              <TabsContent value="cocoon" className="mt-0">
+                <CocoonTab />
+              </TabsContent>
+
               <TabsContent value="clients" className="mt-0">
                 <ClientsTab />
               </TabsContent>
