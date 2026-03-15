@@ -332,23 +332,7 @@ export function CocoonForceGraph({
       }
       ctx.restore();
 
-      // ─── Radial scanning line ───
-      ctx.save();
-      const scanAngle = time * 0.3;
-      const scanGrad = ctx.createLinearGradient(
-        width / 2, height / 2,
-        width / 2 + Math.cos(scanAngle) * width, height / 2 + Math.sin(scanAngle) * height
-      );
-      scanGrad.addColorStop(0, "rgba(108, 92, 231, 0.08)");
-      scanGrad.addColorStop(0.3, "rgba(108, 92, 231, 0.02)");
-      scanGrad.addColorStop(1, "rgba(108, 92, 231, 0)");
-      ctx.beginPath();
-      ctx.moveTo(width / 2, height / 2);
-      ctx.arc(width / 2, height / 2, Math.max(width, height), scanAngle - 0.15, scanAngle + 0.15);
-      ctx.closePath();
-      ctx.fillStyle = scanGrad;
-      ctx.fill();
-      ctx.restore();
+      // (radar animation removed)
 
       // ─── Transform into graph space ───
       ctx.save();
