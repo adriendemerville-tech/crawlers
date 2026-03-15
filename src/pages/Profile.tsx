@@ -2,7 +2,7 @@ import { useEffect, lazy, Suspense, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock } from 'lucide-react';
+import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -189,6 +189,14 @@ export default function Profile() {
                   <span className="hidden sm:inline">Crawls</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
+                {isProUser && (
+                  <a href="/cocoon" className="flex-1">
+                    <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none gap-2 h-full hover:bg-accent hover:text-accent-foreground w-full">
+                      <Network className="h-4 w-4 text-amber-500" />
+                      <span className="hidden sm:inline text-amber-500 font-semibold">Cocoon</span>
+                    </div>
+                  </a>
+                )}
                 <TabsTrigger value="action-plans" className="flex-1 gap-2">
                   <CheckSquare className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.actionPlans}</span>
