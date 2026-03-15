@@ -994,20 +994,6 @@ export function AnalyticsDashboard() {
         </CardContent>
       </Card>
 
-      {/* URLs analysées */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base">URLs analysées uniques</CardTitle>
-              <CardDescription>Sites distincts analysés par les utilisateurs</CardDescription>
-            </div>
-            <div className="text-3xl font-bold text-primary">
-              {analyzedUrlsCount.toLocaleString('fr-FR')}
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
 
       {/* Charts */}
       <div className="grid md:grid-cols-2 gap-6">
