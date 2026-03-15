@@ -9,6 +9,7 @@ import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
+import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -321,95 +322,13 @@ export default function Cocoon() {
         <meta name="description" content={t.metaDesc} />
       </Helmet>
 
+      {/* Access gate for non-subscribers */}
+      {hasAccess === false && (
+        <CocoonAccessGate language={language} />
+      )}
+
+      {hasAccess !== false && (
       <div className="min-h-screen bg-[#0f0a1e] flex flex-col relative">
-        {/* Pro Agency upsell overlay for non-subscribers */}
-        {!hasAccess && (
-          <div className={`fixed inset-0 z-30 flex flex-col items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <div className="absolute inset-0 bg-[#0f0a1e]/60 backdrop-blur-[2px]" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="relative z-10 mb-4 gap-2 text-muted-foreground hover:text-foreground"
-              onClick={() => navigate('/')}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Retour à l'accueil
-            </Button>
-            <Card className="relative z-10 w-full max-w-lg mx-4 border-2 border-violet-500 ring-2 ring-violet-500/30 bg-gradient-to-br from-violet-500/5 via-background to-yellow-500/5 shadow-xl shadow-violet-500/10">
-              <div className="absolute top-0 left-0">
-                <Badge className="rounded-none rounded-br-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-black border-0 px-3 py-1 text-xs font-bold gap-1.5 shadow-lg">
-                  <Star className="h-3 w-3 fill-current" />
-                  Pro Agency
-                </Badge>
-              </div>
-              <div className="absolute top-0 right-0">
-                <Badge className="rounded-none rounded-bl-lg bg-violet-600 text-white border-0 px-3 py-1 text-xs font-bold gap-1.5">
-                  <Lock className="h-3 w-3" />
-                  Pro
-                </Badge>
-              </div>
-              <CardHeader className="pb-3 pt-10">
-                <CardTitle className="text-xl flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-yellow-500/10 border border-violet-500/20">
-                    <Crown className="h-5 w-5 text-yellow-500" />
-                  </div>
-                  <span>{t.upsellTitle}</span>
-                </CardTitle>
-                <CardDescription className="text-sm">
-                  {t.upsellDesc}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="grid gap-2">
-                  {t.upsellFeatures.map((feature: string, i: number) => (
-                    <li key={i} className="flex items-center gap-2 p-2 rounded-lg bg-card/50 border border-violet-500/10">
-                      <div className={`p-1 rounded-md ${i === 0 ? 'bg-amber-500/10' : 'bg-violet-500/10'}`}>
-                        <CheckCircle2 className={`h-3.5 w-3.5 ${i === 0 ? 'text-amber-500' : 'text-violet-500'}`} />
-                      </div>
-                      <span className={`text-sm font-medium ${i === 0 ? 'text-amber-500' : ''}`}>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex items-baseline gap-1 justify-center">
-                  <span className="text-3xl font-extrabold bg-gradient-to-r from-violet-600 to-violet-400 bg-clip-text text-transparent">
-                    {t.upsellPrice}
-                  </span>
-                  <span className="text-sm text-muted-foreground">/ {t.upsellPer}</span>
-                </div>
-                <Button
-                  size="lg"
-                  className="w-full gap-2 font-bold bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 text-white shadow-lg shadow-violet-500/25"
-                  disabled={subscribeLoading}
-                  onClick={async () => {
-                    if (!user) {
-                      navigate('/auth?returnTo=/cocoon');
-                      return;
-                    }
-                    setSubscribeLoading(true);
-                    try {
-                      const { data, error } = await supabase.functions.invoke('create-subscription-session', {
-                        body: { returnUrl: window.location.href }
-                      });
-                      if (error) throw error;
-                      if (data?.url) window.open(data.url, '_blank', 'noopener');
-                    } catch (e: any) {
-                      toast({
-                        title: t.errorTitle,
-                        description: e.message || t.errorGeneric,
-                        variant: "destructive",
-                      });
-                    } finally {
-                      setSubscribeLoading(false);
-                    }
-                  }}
-                >
-                  <Crown className="h-4 w-4 text-yellow-300" />
-                  {subscribeLoading ? t.upsellRedirecting : t.upsellCta}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Top Bar */}
         <header className="shrink-0 border-b border-[hsl(263,70%,20%)] bg-[#0f0a1e]/80 backdrop-blur-xl px-4 py-3">
@@ -484,7 +403,7 @@ export default function Cocoon() {
         )}
 
         {/* Main Graph */}
-        <main className={`flex-1 relative px-4 md:px-6 pb-6 ${!hasAccess ? 'pointer-events-none select-none opacity-40' : ''}`}>
+        <main className={`flex-1 relative px-4 md:px-6 pb-6`}>
           <div className="h-full rounded-xl overflow-hidden border border-[hsl(263,70%,20%)] relative">
             {isLoading ? (
               <div className="flex items-center justify-center h-full">
@@ -522,17 +441,29 @@ export default function Cocoon() {
           {nodes.length > 0 && (
             <div className="flex items-center gap-4 mt-3 px-1 flex-wrap">
               {[
-                { label: 'Transactionnel', color: '#fbbf24' },
-                { label: 'Commercial', color: '#a78bfa' },
-                { label: 'Informationnel', color: '#7c3aed' },
-                { label: 'Navigationnel', color: '#6366f1' },
+                { label: 'Accueil', color: '#fbbf24' },
+                { label: 'Blog', color: '#a78bfa' },
+                { label: 'Produit', color: '#34d399' },
+                { label: 'Catégorie', color: '#60a5fa' },
+                { label: 'FAQ', color: '#fb923c' },
+                { label: 'Guide', color: '#c084fc' },
+                { label: 'Page', color: '#8b5cf6' },
               ].map(({ label, color }) => (
                 <div key={label} className="flex items-center gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
                   <span className="text-white/50 text-xs">{label}</span>
                 </div>
               ))}
-              <span className="text-white/30 text-xs ml-auto">Chaque point = 1 page crawlée</span>
+              <span className="text-white/20 mx-1">|</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
+                <span className="text-white/40 text-[10px]">↓ descendant</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
+                <span className="text-white/40 text-[10px]">↑ ascendant</span>
+              </div>
+              <span className="text-white/30 text-xs ml-auto">⌂ = Home · Taille ∝ profondeur</span>
             </div>
           )}
         </main>
@@ -639,6 +570,7 @@ export default function Cocoon() {
           </DialogContent>
         </Dialog>
       </div>
+      )}
     </>
   );
 }
