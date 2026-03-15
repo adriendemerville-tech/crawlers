@@ -650,24 +650,6 @@ const Index = () => {
         <Footer />
       </Suspense>
       
-      {/* Bouton rapport flottant - lazy loaded */}
-      <Suspense fallback={null}>
-        <FloatingReportButton
-          crawlResult={crawlResult}
-          geoResult={geoResult}
-          llmResult={llmResult}
-          pageSpeedResult={mobilePageSpeedResult || desktopPageSpeedResult}
-          currentUrl={currentUrl}
-        />
-      </Suspense>
-
-      {/* Onboarding tutorial - disabled, kept in reserve */}
-      {/* <Suspense fallback={null}>
-        <OnboardingTutorial
-          active={showTutorial}
-          onComplete={() => setShowTutorial(false)}
-        />
-      </Suspense> */}
     </div>
   );
 };
