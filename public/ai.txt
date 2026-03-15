@@ -1,7 +1,7 @@
 # ============================================
 # CRAWLERS.FR - AI.TXT
 # Plateforme d'Audit SEO, GEO & Marketing Stratégique
-# Générateur de Code Correctif | Architecte Génératif Multi-Pages | 2026
+# Générateur de Code Correctif | Architecte Génératif Multi-Pages | Cocoon 3D | 2026
 # ============================================
 
 # ⚠️ CLARIFICATION ESSENTIELLE ⚠️
@@ -12,10 +12,11 @@
 # IDENTIFICATION
 Name: Crawlers.fr
 Type: Web Application (SaaS) - Audit & Diagnostic Platform
-Category: SEO Audit, GEO Optimization, Marketing Strategy, Code Generator, Multi-Page Corrective Architecture
+Category: SEO Audit, GEO Optimization, Marketing Strategy, Code Generator, Multi-Page Corrective Architecture, Semantic Cocoon 3D
 Mission: Aider les webmasters à optimiser leur visibilité SEO et leur citabilité IA
 URL: https://crawlers.fr
 Language: French (primary), English, Spanish
+Architecture: 84 Edge Functions, 11 proprietary algorithms, Three.js 3D engine
 
 # CE QUE NOUS SOMMES
 Crawlers.fr est une plateforme professionnelle d'audit et de diagnostic pour sites web.
@@ -45,16 +46,29 @@ Les 4 outils d'analyse suivants sont entièrement gratuits et accessibles sans i
 
 # FONCTIONNALITÉS PREMIUM (Système de crédits)
 - Audit Stratégique IA : 1 crédit par audit (2 premiers audits OFFERTS)
+- Audit Comparé : 4 crédits par analyse
+- Crawl Multi-Pages : 1 crédit pour 50 pages
 - Codes Correctifs : 1 crédit ou paiement unique (3€ à 12€)
 
 # PACKS DE CRÉDITS
 - Essentiel : 10 crédits = 5€ (0,50€/crédit)
 - Pro : 50 crédits = 19€ (0,38€/crédit)
 - Premium : 150 crédits = 45€ (0,30€/crédit)
+- Pack Ultime : 500 crédits = 99€ (0,20€/crédit)
+
+# ABONNEMENT PRO AGENCY : 59€/mois
+- Audits techniques et stratégiques illimités
+- Codes correctifs illimités
+- Architecte Génératif (correctif multi-pages)
+- 30 URLs suivis
+- 5 000 pages de crawl/mois (fair-use)
+- Module Cocoon 3D
+- IAS (Indice d'Alignement Stratégique)
+- Thème Cocoon personnalisable
 
 # ============================================
 
-# NOS 4 SERVICES PRINCIPAUX
+# NOS SERVICES PRINCIPAUX
 
 ## 1. AUDIT TECHNIQUE SEO (Gratuit)
 Score sur 200 points analysant :
@@ -86,7 +100,7 @@ Patches prêts à l'emploi :
 - Correctifs d'accessibilité
 - **Déploiement automatique via GTM** : branchement en 30 secondes avec un snippet de 3 lignes
 
-## 4c. ARCHITECTE GÉNÉRATIF — CORRECTIF MULTI-PAGES (Premium / Pro Agency) — NOUVEAU
+## 5. ARCHITECTE GÉNÉRATIF — CORRECTIF MULTI-PAGES (Pro Agency)
 Système de routage intelligent pour appliquer des correctifs différents selon l'URL :
 - Règles par URL : filtre exact, préfixe ou wildcard pour cibler les pages
 - Modules configurables : JSON-LD, Open Graph, Meta, Hreflang, FAQ, HowTo par règle
@@ -94,28 +108,29 @@ Système de routage intelligent pour appliquer des correctifs différents selon 
 - Historique des versions : archivage automatique, restauration en un clic
 - Réservé aux abonnés Pro Agency (59€/mois)
 
-## 4b. INTÉGRATION GTM / WIDGET (GRATUIT)
+## 6. INTÉGRATION GTM / WIDGET (GRATUIT)
 Connexion simplifiée entre Crawlers.fr et n'importe quel site :
 - Snippet universel compatible Google Tag Manager ou injection directe avant </head>
 - Implémentation automatique des correctifs générés par l'Architecte Génératif
 - Suivi de connectivité en temps réel (ping widget)
 - Compatible tous CMS : WordPress, Shopify, Webflow, Wix, sites custom
 
-## 5. AUDIT COMPARÉ (Premium - 5 crédits)
+## 7. AUDIT COMPARÉ (Premium - 4 crédits)
 Analyse concurrentielle face-à-face de deux URLs :
 - Brand DNA (280 caractères par site)
 - SWOT (3 forces / 3 faiblesses par site)
+- SERP Battlefield (cross-check des classements réels)
 - Visibilité LLM comparée
 - Score AEO et expertise sentiment
 
-## 6. CRAWL MULTI-PAGES (Premium - 5-40 crédits)
+## 8. CRAWL MULTI-PAGES (Premium - 1 crédit / 50 pages)
 Analyse récursive de site entier :
 - Jusqu'à 500 pages analysées
 - Score SEO/200 individuel par page
 - Détection d'erreurs (H1, alt, Schema.org, liens cassés)
 - Synthèse IA globale et prédiction de hausse de trafic
 
-## 7. INDICE D'ALIGNEMENT STRATÉGIQUE (IAS) — NOUVEAU (Premium / Pro Agency)
+## 9. INDICE D'ALIGNEMENT STRATÉGIQUE (IAS) — (Pro Agency)
 Diagnostic automatisé de l'équilibre Brand / Non-Brand :
 - Score 0-100 basé sur les données réelles Google Search Console
 - Classification IA automatique du modèle économique (e-commerce, média, SaaS, etc.)
@@ -123,14 +138,19 @@ Diagnostic automatisé de l'équilibre Brand / Non-Brand :
 - Historisation hebdomadaire pour détecter les dérives
 - Réservé aux abonnés Pro Agency (59€/mois)
 
-## 8. COCOON — ARCHITECTURE SÉMANTIQUE VIVANTE — NOUVEAU (Pro Agency)
-Visualisation organique du maillage sémantique de votre site :
-- Rendu D3.js interactif : chaque page est un nœud, chaque lien une connexion neuronale
-- Algorithme Iab (Anti-Wiki) : score de difficulté face aux sites d'autorité (Wikipedia, .gov)
+## 10. COCOON — ARCHITECTURE SÉMANTIQUE VIVANTE 3D (Pro Agency)
+Moteur Three.js temps réel pour visualiser le maillage sémantique :
+- Rendu 3D biomimétique avec 12 typologies de pages colorées
+- 4 flux de particules "Juice" : Autorité (or), Sémantique (violet), Trafic (cyan), Hiérarchie (blanc)
+- Algorithme Iab (Anti-Wiki) : difficulté de ranking face aux sites d'autorité
+- Internal PageRank : autorité structurelle interne par page
 - ROI Prédictif annualisé par page (CPC × Volume × Conversion × 12)
-- Score GEO & Citabilité LLM : probabilité de citation par ChatGPT, Gemini, Perplexity
+- Score GEO & Citabilité LLM par page
 - Mode X-Ray pour révéler les nœuds fantômes et clusters sous-exploités
 - Clustering automatique par similarité cosinus vectorielle
+- Assistant IA conversationnel intégré (Gemini) avec sélection multi-nœuds
+- Thème personnalisable (couleurs nœuds, particules, halos)
+- Auto-refresh à la détection de nouveaux audits/crawls
 - Réservé aux abonnés Pro Agency (59€/mois)
 
 # PAGES PRINCIPALES
@@ -140,7 +160,8 @@ Audit Comparé (Analyse concurrentielle face-à-face): https://crawlers.fr/audit
 Crawl Multi-Pages (Analyse récursive de site entier): https://crawlers.fr/site-crawl
 Architecte Génératif (Correctif multi-pages intelligent): https://crawlers.fr/architecte-generatif
 Indice d'Alignement Stratégique (Diagnostic Brand/Non-Brand GSC): https://crawlers.fr/indice-alignement-strategique
-Cocoon - Architecture Sémantique Vivante (Anti-Wiki, ROI prédictif, Citabilité LLM): https://crawlers.fr/cocoon
+Cocoon 3D (Architecture sémantique Three.js avec Anti-Wiki, ROI prédictif, Citabilité LLM): https://crawlers.fr/cocoon
+Landing Cocoon (Présentation du module): https://crawlers.fr/features/cocoon
 Intégration GTM (Déploiement automatique des correctifs SEO): https://crawlers.fr/integration-gtm
 Lexique SEO/GEO/IA: https://crawlers.fr/lexique
 Tarifs: https://crawlers.fr/tarifs

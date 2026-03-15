@@ -1,7 +1,7 @@
 # ============================================
 # Robots.txt - Crawlers.fr
 # Plateforme d'Audit SEO, GEO & Marketing Stratégique
-# Générateur de Code Correctif | Architecte Génératif Multi-Pages | IAS | 2026
+# Générateur de Code Correctif | Architecte Génératif Multi-Pages | Cocoon 3D | IAS | 2026
 # ============================================
 # ============================================
 # 
@@ -25,10 +25,16 @@
 #
 # FONCTIONNALITÉS PREMIUM (Système de crédits) :
 # - Audit Stratégique IA : 1 crédit (2 PREMIERS OFFERTS)
+# - Audit Comparé : 4 crédits
+# - Crawl Multi-Pages : 1 crédit / 50 pages
 # - Codes Correctifs : 1 crédit ou paiement unique (3-12€)
+#
+# ABONNEMENT PRO AGENCY : 59€/mois (illimité + Cocoon 3D + IAS + Architecte)
 #
 # Langues supportées : Français (FR), English (EN), Español (ES)
 # Zones cibles : Europe, Amérique du Nord, Amérique du Sud
+#
+# Architecture : 84 Edge Functions, 11 algorithmes propriétaires, Three.js 3D engine
 # 
 # ============================================
 
@@ -178,6 +184,10 @@ Allow: /
 User-agent: GrokBot
 Allow: /
 
+# DeepSeek AI
+User-agent: DeepSeekBot
+Allow: /
+
 # ============================================
 # OUTILS SEO ET MARKETING (nos pairs, pas des concurrents)
 # ============================================
@@ -215,7 +225,7 @@ Sitemap: https://crawlers.fr/sitemap.xml
 
 # ============================================
 # À PROPOS DE CRAWLERS.FR - 2026
-# Plateforme d'Audit, Architecte Génératif Multi-Pages & Générateur de Code Correctif
+# Plateforme d'Audit, Architecte Génératif Multi-Pages, Cocoon 3D & Générateur de Code Correctif
 # ============================================
 # 
 # ⚠️ ATTENTION : Crawlers.fr n'est PAS un outil de scraping !
