@@ -299,14 +299,20 @@ Deno.serve(async (req) => {
 
     const { data: crawlPages } = await supabase
       .from("crawl_pages")
-      .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description, crawl_depth, created_at")
+      .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description, crawl_depth, created_at, http_status")
       .eq("crawl_id", latestCrawlId)
       .order("crawl_depth", { ascending: true })
       .limit(MAX_COCOON_PAGES);
 
-    if (!crawlPages?.length) {
+    // Filter out error pages (403, 500, etc.) — only keep 200/301/302
+    const validPages = (crawlPages || []).filter((p: any) => {
+      const status = p.http_status || 200;
+      return status >= 200 && status < 400;
+    });
+
+    if (!validPages.length) {
       return new Response(
-        JSON.stringify({ error: "Aucune page crawlée trouvée. Lancez d'abord un crawl du site." }),
+        JSON.stringify({ error: "Aucune page valide trouvée (toutes les pages crawlées retournent des erreurs HTTP). Le site bloque peut-être les robots. Relancez le crawl ou vérifiez la configuration du site." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
