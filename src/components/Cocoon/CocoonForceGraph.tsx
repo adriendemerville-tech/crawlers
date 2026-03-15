@@ -428,8 +428,8 @@ export function CocoonForceGraph({
         const sizeMultiplier = node.isHome ? homeSunCoeff : 1;
         const r = node.radius * nodeScale * pulse * sizeMultiplier;
 
-        // X-Ray mode: home becomes blue #5e93e0 (94, 147, 224)
-        const xrayHomeBlue: [number, number, number] = [94, 147, 224];
+        // X-Ray mode: home becomes deep blue #1261d4 (18, 97, 212)
+        const xrayHomeBlue: [number, number, number] = [18, 97, 212];
         const [cr, cg, cb] = node.isHome
           ? (isXRayMode ? xrayHomeBlue : [255, 200, 60])
           : (PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown);
@@ -438,17 +438,17 @@ export function CocoonForceGraph({
         // ─── Home Sun: rotating elliptical corona with tilt ───
         if (node.isHome && !isGhost) {
           if (isXRayMode) {
-            // X-Ray: subtle blue glow + slow idle rotation
+            // X-Ray: subtle violet glow + slow idle rotation
             ctx.save();
             ctx.translate(node.x, node.y);
             const idleAngle = time * 0.15;
             ctx.rotate(idleAngle);
-            const idleR = r * 2;
-            const idleAlpha = 0.12 + Math.sin(time * 0.8) * 0.04;
+            const idleR = r * 2.2;
+            const idleAlpha = 0.08 + Math.sin(time * 0.8) * 0.03;
             const idleGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, idleR);
-            idleGrad.addColorStop(0, `rgba(94, 147, 224, ${idleAlpha})`);
-            idleGrad.addColorStop(0.6, `rgba(94, 147, 224, ${idleAlpha * 0.3})`);
-            idleGrad.addColorStop(1, `rgba(94, 147, 224, 0)`);
+            idleGrad.addColorStop(0, `rgba(120, 80, 200, ${idleAlpha})`);
+            idleGrad.addColorStop(0.5, `rgba(100, 60, 180, ${idleAlpha * 0.3})`);
+            idleGrad.addColorStop(1, `rgba(80, 40, 160, 0)`);
             ctx.beginPath();
             ctx.arc(0, 0, idleR, 0, Math.PI * 2);
             ctx.fillStyle = idleGrad;
@@ -522,10 +522,10 @@ export function CocoonForceGraph({
         if (node.isHome) {
           const coreGrad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r);
           if (isXRayMode) {
-            // X-Ray: blue core
-            coreGrad.addColorStop(0, `rgba(160, 195, 240, ${baseAlpha})`);
-            coreGrad.addColorStop(0.4, `rgba(94, 147, 224, ${baseAlpha * 0.95})`);
-            coreGrad.addColorStop(1, `rgba(60, 110, 200, ${baseAlpha * 0.85})`);
+            // X-Ray: deep blue core #1261d4
+            coreGrad.addColorStop(0, `rgba(80, 150, 230, ${baseAlpha})`);
+            coreGrad.addColorStop(0.4, `rgba(18, 97, 212, ${baseAlpha * 0.95})`);
+            coreGrad.addColorStop(1, `rgba(10, 60, 170, ${baseAlpha * 0.85})`);
           } else {
             // Normal: sun gradient core
             coreGrad.addColorStop(0, `rgba(255, 255, 200, ${baseAlpha})`);
@@ -533,6 +533,28 @@ export function CocoonForceGraph({
             coreGrad.addColorStop(1, `rgba(255, 160, 30, ${baseAlpha * 0.85})`);
           }
           ctx.fillStyle = coreGrad;
+
+          // ─── Metallic reflection sweep (X-Ray only) ───
+          if (isXRayMode) {
+            ctx.fill(); // fill core first
+            const sweepPhase = (time * 0.6) % (Math.PI * 2);
+            const sweepX = Math.cos(sweepPhase) * r * 0.6;
+            const reflectGrad = ctx.createLinearGradient(
+              node.x - r, node.y - r * 0.3,
+              node.x + r, node.y + r * 0.3
+            );
+            const reflectAlpha = 0.25 + Math.sin(sweepPhase) * 0.15;
+            reflectGrad.addColorStop(0, `rgba(255, 255, 255, 0)`);
+            reflectGrad.addColorStop(0.3 + Math.sin(sweepPhase) * 0.15, `rgba(200, 220, 255, 0)`);
+            reflectGrad.addColorStop(0.45 + Math.sin(sweepPhase) * 0.05, `rgba(200, 220, 255, ${reflectAlpha})`);
+            reflectGrad.addColorStop(0.55 + Math.sin(sweepPhase) * 0.05, `rgba(255, 255, 255, ${reflectAlpha * 0.7})`);
+            reflectGrad.addColorStop(0.7 + Math.sin(sweepPhase) * 0.1, `rgba(200, 220, 255, 0)`);
+            reflectGrad.addColorStop(1, `rgba(255, 255, 255, 0)`);
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+            ctx.fillStyle = reflectGrad;
+            ctx.fill();
+          }
         } else {
           ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.9})`;
         }
@@ -552,7 +574,7 @@ export function CocoonForceGraph({
           : isHovered
             ? `rgba(${cr}, ${cg}, ${cb}, 0.8)`
             : node.isHome
-              ? `rgba(255, 200, 60, 0.6)`
+              ? (isXRayMode ? `rgba(18, 97, 212, 0.6)` : `rgba(255, 200, 60, 0.6)`)
               : `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.3})`;
         ctx.lineWidth = (isSelected || node.isHome ? 1.2 : 0.5) * nodeScale;
         ctx.stroke();
@@ -642,11 +664,32 @@ export function CocoonForceGraph({
       if (node) {
         const original = nodes.find((n) => n.id === node.id) || null;
         onNodeSelect(original);
+      } else if (!dragMoved.current) {
+        // Left-click on empty space (no drag): zoom in centered on cursor
+        onNodeSelect(null);
+        const canvas2 = canvasRef.current;
+        if (!canvas2) return;
+        const rect = canvas2.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const factor = 1.35;
+        setTransform((t) => {
+          const newK = Math.max(0.15, Math.min(8, t.k * factor));
+          const ratio = newK / t.k;
+          const cx = dimensions.width / 2;
+          const cy = dimensions.height / 2;
+          return {
+            x: (mouseX - cx) + ratio * (t.x - (mouseX - cx)),
+            y: (mouseY - cy) + ratio * (t.y - (mouseY - cy)),
+            k: newK,
+          };
+        });
       } else {
+        // Was dragging, just deselect
         onNodeSelect(null);
       }
     },
-    [getNodeAtPos, nodes, onNodeSelect],
+    [getNodeAtPos, nodes, onNodeSelect, dimensions],
   );
 
   // Zoom toward mouse cursor position
@@ -700,14 +743,18 @@ export function CocoonForceGraph({
     fitToView();
   }, [fitToView]);
 
-  // Pan
+  // Pan (left-click drag on empty space)
   const isDragging = useRef(false);
+  const dragMoved = useRef(false);
   const lastMouse = useRef({ x: 0, y: 0 });
+  const mouseDownPos = useRef({ x: 0, y: 0 });
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!getNodeAtPos(e.clientX, e.clientY)) {
       isDragging.current = true;
+      dragMoved.current = false;
       lastMouse.current = { x: e.clientX, y: e.clientY };
+      mouseDownPos.current = { x: e.clientX, y: e.clientY };
     }
   }, [getNodeAtPos]);
 
@@ -719,6 +766,12 @@ export function CocoonForceGraph({
     if (!isDragging.current) return;
     const dx = e.clientX - lastMouse.current.x;
     const dy = e.clientY - lastMouse.current.y;
+    // Track if we actually moved (>3px = real drag, not a click)
+    const totalDx = e.clientX - mouseDownPos.current.x;
+    const totalDy = e.clientY - mouseDownPos.current.y;
+    if (Math.abs(totalDx) > 3 || Math.abs(totalDy) > 3) {
+      dragMoved.current = true;
+    }
     lastMouse.current = { x: e.clientX, y: e.clientY };
     setTransform((t) => ({ ...t, x: t.x + dx, y: t.y + dy }));
   }, []);
