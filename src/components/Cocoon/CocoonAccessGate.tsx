@@ -23,6 +23,8 @@ const i18n = {
     loginCta: "Se connecter",
     signupCta: "S'inscrire",
     redirecting: "Redirection…",
+    back: "Accueil",
+    errorGeneric: "Erreur",
   },
   en: {
     heroTitle: "Reserved for Pros",
