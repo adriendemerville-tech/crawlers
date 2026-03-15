@@ -467,6 +467,8 @@ function SceneContent({
   hoveredNodeId,
   isXRayMode,
   particlesEnabled,
+  customNodeColors,
+  customParticleColors,
   onNodeSelect,
   onNodeHover,
   onNodeUnhover,
@@ -479,6 +481,8 @@ function SceneContent({
   hoveredNodeId: string | null;
   isXRayMode: boolean;
   particlesEnabled: boolean;
+  customNodeColors: Record<string, string>;
+  customParticleColors: Record<string, string>;
   onNodeSelect: (node: SemanticNode | null) => void;
   onNodeHover: (id: string) => void;
   onNodeUnhover: () => void;
