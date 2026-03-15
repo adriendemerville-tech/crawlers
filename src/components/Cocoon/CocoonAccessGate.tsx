@@ -70,7 +70,7 @@ export function CocoonAccessGate({ language }: CocoonAccessGateProps) {
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank", "noopener");
     } catch (e: any) {
-      toast({ title: "Erreur", description: e.message, variant: "destructive" });
+      toast({ title: t.errorGeneric, description: e.message, variant: "destructive" });
     } finally {
       setSubscribeLoading(false);
     }
