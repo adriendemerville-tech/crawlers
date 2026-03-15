@@ -187,7 +187,7 @@ function formatDate(dateStr: string | undefined, lang: string): string {
   }
 }
 
-export function CocoonNodePanel({ node, onClose, onRefresh }: CocoonNodePanelProps) {
+export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWaitingAudit }: CocoonNodePanelProps) {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const t = i18n[language] || i18n.fr;
