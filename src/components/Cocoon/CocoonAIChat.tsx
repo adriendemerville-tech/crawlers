@@ -190,17 +190,18 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   }, [selectedSlots]);
 
   const handleNodePicked = useCallback((node: any) => {
-    if (pickingIndex === null) return;
+    const idx = pickingIndexRef.current;
+    if (idx === null) return;
     const slug = getSlug(node.url);
     const newSlot: SelectedNodeSlot = { id: node.id, title: node.title || slug, url: node.url, slug, nodeData: node };
     setSelectedSlots(prev => {
       const updated = [...prev];
-      if (pickingIndex < updated.length) updated[pickingIndex] = newSlot;
+      if (idx < updated.length) updated[idx] = newSlot;
       else updated.push(newSlot);
       return updated;
     });
     setPickingIndex(null);
-  }, [pickingIndex]);
+  }, []);
 
   const startPicking = useCallback((index: number) => {
     setPickingIndex(index);
