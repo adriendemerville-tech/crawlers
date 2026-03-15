@@ -428,8 +428,8 @@ export function CocoonForceGraph({
         const sizeMultiplier = node.isHome ? homeSunCoeff : 1;
         const r = node.radius * nodeScale * pulse * sizeMultiplier;
 
-        // X-Ray mode: home becomes blue #5e93e0 (94, 147, 224)
-        const xrayHomeBlue: [number, number, number] = [94, 147, 224];
+        // X-Ray mode: home becomes deep blue #1261d4 (18, 97, 212)
+        const xrayHomeBlue: [number, number, number] = [18, 97, 212];
         const [cr, cg, cb] = node.isHome
           ? (isXRayMode ? xrayHomeBlue : [255, 200, 60])
           : (PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown);
@@ -438,17 +438,17 @@ export function CocoonForceGraph({
         // ─── Home Sun: rotating elliptical corona with tilt ───
         if (node.isHome && !isGhost) {
           if (isXRayMode) {
-            // X-Ray: subtle blue glow + slow idle rotation
+            // X-Ray: subtle violet glow + slow idle rotation
             ctx.save();
             ctx.translate(node.x, node.y);
             const idleAngle = time * 0.15;
             ctx.rotate(idleAngle);
-            const idleR = r * 2;
-            const idleAlpha = 0.12 + Math.sin(time * 0.8) * 0.04;
+            const idleR = r * 2.2;
+            const idleAlpha = 0.08 + Math.sin(time * 0.8) * 0.03;
             const idleGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, idleR);
-            idleGrad.addColorStop(0, `rgba(94, 147, 224, ${idleAlpha})`);
-            idleGrad.addColorStop(0.6, `rgba(94, 147, 224, ${idleAlpha * 0.3})`);
-            idleGrad.addColorStop(1, `rgba(94, 147, 224, 0)`);
+            idleGrad.addColorStop(0, `rgba(120, 80, 200, ${idleAlpha})`);
+            idleGrad.addColorStop(0.5, `rgba(100, 60, 180, ${idleAlpha * 0.3})`);
+            idleGrad.addColorStop(1, `rgba(80, 40, 160, 0)`);
             ctx.beginPath();
             ctx.arc(0, 0, idleR, 0, Math.PI * 2);
             ctx.fillStyle = idleGrad;
