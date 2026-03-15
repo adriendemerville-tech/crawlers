@@ -612,7 +612,7 @@ export default function Cocoon() {
                 </button>
                 <button
                   onClick={() => setShowClusters(c => !c)}
-                  className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] transition-colors border ml-1 sm:ml-2 ${
+                  className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] transition-colors border ml-0.5 sm:ml-1 ${
                     showClusters
                       ? 'bg-white/5 border-white/10 text-white/40 hover:text-white/60'
                       : 'bg-white/5 border-white/10 text-white/20 hover:text-white/40'
