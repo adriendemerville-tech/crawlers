@@ -374,9 +374,9 @@ export function CocoonForceGraph({
 
       // ─── Deep space background ───
       const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.7);
-      bgGrad.addColorStop(0, "#0d0820");
-      bgGrad.addColorStop(0.5, "#080515");
-      bgGrad.addColorStop(1, "#040210");
+      bgGrad.addColorStop(0, "#0a0a14");
+      bgGrad.addColorStop(0.5, "#06060e");
+      bgGrad.addColorStop(1, "#030308");
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, width, height);
 

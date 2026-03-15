@@ -500,8 +500,8 @@ function SceneContent({
       <pointLight position={[0, 0, 0]} intensity={0.6} color="#ffc83c" distance={200} decay={2} />
 
       {/* Deep space background */}
-      <color attach="background" args={["#080515"]} />
-      <fog attach="fog" args={["#080515", 150, 500]} />
+      <color attach="background" args={["#06060e"]} />
+      <fog attach="fog" args={["#06060e", 150, 500]} />
 
       {/* Links */}
       <Links
