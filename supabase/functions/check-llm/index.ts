@@ -294,7 +294,18 @@ Deno.serve(async (req) => {
       };
     });
 
-    const citations = await Promise.all(citationPromises);
+    // Use Promise.allSettled to prevent one failed provider from crashing all
+    const settled = await Promise.allSettled(citationPromises);
+    const citations = settled.map((result, index) => {
+      if (result.status === 'fulfilled') return result.value;
+      console.warn(`[check-llm] Provider ${LLM_PROVIDERS[index].name} rejected:`, result.reason);
+      return {
+        provider: { id: LLM_PROVIDERS[index].id, name: LLM_PROVIDERS[index].name, company: LLM_PROVIDERS[index].company },
+        cited: false, iterationDepth: 0, sentiment: 'neutral' as SentimentType,
+        recommends: false, coreValueMatch: false, summary: `Unable to query ${LLM_PROVIDERS[index].name}`,
+        error: true,
+      };
+    });
 
     // Calculate metrics — error models count as "not cited" to penalize the score
     const totalModels = citations.length || 1;

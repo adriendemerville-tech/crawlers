@@ -1,7 +1,9 @@
 /**
  * Tracks AI token usage by inserting into analytics_events.
- * Uses SERVICE_ROLE_KEY to bypass RLS and avoid silent data loss.
+ * Uses singleton service client for connection reuse under high load.
  */
+import { getServiceClient } from './supabaseClient.ts';
+
 export async function trackTokenUsage(
   functionName: string,
   model: string,
@@ -10,30 +12,18 @@ export async function trackTokenUsage(
 ) {
   if (!usage) return;
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
-  if (!supabaseUrl || !supabaseKey) return;
-
   try {
-    await fetch(`${supabaseUrl}/rest/v1/analytics_events`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supabaseKey}`,
-        'apikey': supabaseKey,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal',
+    const supabase = getServiceClient();
+    await supabase.from('analytics_events').insert({
+      event_type: 'ai_token_usage',
+      url: targetUrl || null,
+      event_data: {
+        function_name: functionName,
+        model,
+        prompt_tokens: usage.prompt_tokens || 0,
+        completion_tokens: usage.completion_tokens || 0,
+        total_tokens: usage.total_tokens || 0,
       },
-      body: JSON.stringify({
-        event_type: 'ai_token_usage',
-        url: targetUrl || null,
-        event_data: {
-          function_name: functionName,
-          model,
-          prompt_tokens: usage.prompt_tokens || 0,
-          completion_tokens: usage.completion_tokens || 0,
-          total_tokens: usage.total_tokens || 0,
-        },
-      }),
     });
   } catch (e) {
     console.error('[tokenTracker] Failed:', e);
@@ -42,7 +32,6 @@ export async function trackTokenUsage(
 
 /**
  * Tracks a paid API call (DataForSEO, Google APIs, etc.)
- * Uses SERVICE_ROLE_KEY to bypass RLS and avoid silent data loss.
  */
 export async function trackPaidApiCall(
   functionName: string,
@@ -50,28 +39,16 @@ export async function trackPaidApiCall(
   endpoint: string,
   targetUrl?: string,
 ) {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
-  if (!supabaseUrl || !supabaseKey) return;
-
   try {
-    await fetch(`${supabaseUrl}/rest/v1/analytics_events`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supabaseKey}`,
-        'apikey': supabaseKey,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal',
+    const supabase = getServiceClient();
+    await supabase.from('analytics_events').insert({
+      event_type: 'paid_api_call',
+      url: targetUrl || null,
+      event_data: {
+        function_name: functionName,
+        api_service: apiService,
+        endpoint,
       },
-      body: JSON.stringify({
-        event_type: 'paid_api_call',
-        url: targetUrl || null,
-        event_data: {
-          function_name: functionName,
-          api_service: apiService,
-          endpoint,
-        },
-      }),
     });
   } catch (e) {
     console.error('[tokenTracker] Failed:', e);
@@ -93,32 +70,20 @@ export async function trackEdgeFunctionError(
     details?: string;
   },
 ) {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
-  if (!supabaseUrl || !supabaseKey) return;
-
   try {
-    await fetch(`${supabaseUrl}/rest/v1/analytics_events`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supabaseKey}`,
-        'apikey': supabaseKey,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal',
+    const supabase = getServiceClient();
+    await supabase.from('analytics_events').insert({
+      event_type: 'edge_function_error',
+      user_id: context?.user_id || null,
+      url: context?.url || null,
+      event_data: {
+        function_name: functionName,
+        error_message: errorMessage,
+        domain: context?.domain || null,
+        status_code: context?.status_code || 500,
+        details: context?.details || null,
+        timestamp: new Date().toISOString(),
       },
-      body: JSON.stringify({
-        event_type: 'edge_function_error',
-        user_id: context?.user_id || null,
-        url: context?.url || null,
-        event_data: {
-          function_name: functionName,
-          error_message: errorMessage,
-          domain: context?.domain || null,
-          status_code: context?.status_code || 500,
-          details: context?.details || null,
-          timestamp: new Date().toISOString(),
-        },
-      }),
     });
   } catch (e) {
     console.error('[trackEdgeFunctionError] Failed:', e);

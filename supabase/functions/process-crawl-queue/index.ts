@@ -707,8 +707,16 @@ Deno.serve(async (req) => {
         scrapePage(pageUrl, job.domain, firecrawlKey, useBrowserless, renderingKey, customSelectors, computeDepth(pageUrl, job.url))
       );
 
-      const results = await Promise.all(scrapePromises);
-      const validResults = results.filter(Boolean) as PageAnalysis[];
+      // Use Promise.allSettled to prevent one failed page from crashing the batch
+      const settled = await Promise.allSettled(scrapePromises);
+      const validResults = settled
+        .filter((r): r is PromiseFulfilledResult<PageAnalysis | null> => r.status === 'fulfilled')
+        .map(r => r.value)
+        .filter(Boolean) as PageAnalysis[];
+      
+      const failedCount = settled.filter(r => r.status === 'rejected').length;
+      if (failedCount > 0) console.warn(`[Worker] ${failedCount} pages failed in batch (allSettled)`);
+
 
       if (firstPageResult) {
         validResults.unshift(firstPageResult);
