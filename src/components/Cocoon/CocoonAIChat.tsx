@@ -602,7 +602,7 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
           {selectedSlots.length < MAX_SLOTS && pickingIndex === null && (
             <button
               onClick={() => startPicking(selectedSlots.length)}
-              className="absolute right-3 bottom-[58px] w-[18px] h-[18px] rounded-[3px] border border-white/25 bg-transparent text-white/50 hover:text-white/80 hover:border-white/40 transition-all flex items-center justify-center z-10"
+              className="absolute right-3 bottom-[72px] w-[18px] h-[18px] rounded-[3px] border border-white/25 bg-transparent text-white/50 hover:text-white/80 hover:border-white/40 transition-all flex items-center justify-center z-10"
               title={t.selectNode}
             >
               <Plus className="w-2.5 h-2.5" strokeWidth={2} />
