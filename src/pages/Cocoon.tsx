@@ -556,7 +556,7 @@ export default function Cocoon() {
                         const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
                         const domain = selectedSite?.domain || '';
                         setShowPrereqModal(false);
-                        navigate(`/site-crawl${domain ? `?url=${encodeURIComponent(domain)}` : ''}`);
+                        navigate(`/site-crawl${domain ? `?url=${encodeURIComponent(domain)}&from=cocoon` : '?from=cocoon'}`);
                       }}
                     >
                       {t.prereqCrawlCta}
