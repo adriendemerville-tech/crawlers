@@ -110,6 +110,19 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     pickingIndexRef.current = pickingIndex;
   }, [pickingIndex]);
 
+  // Stop auto-picking when mouse leaves the viewport
+  useEffect(() => {
+    const handleMouseLeave = () => {
+      if (autoPicking) {
+        setAutoPicking(false);
+        setPickingIndex(null);
+        onCancelPick?.();
+      }
+    };
+    document.documentElement.addEventListener('mouseleave', handleMouseLeave);
+    return () => document.documentElement.removeEventListener('mouseleave', handleMouseLeave);
+  }, [autoPicking, onCancelPick]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
