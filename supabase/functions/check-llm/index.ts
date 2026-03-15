@@ -133,7 +133,12 @@ async function queryLLM(
   const prompt = llmPrompts[lang](domain) + correctionContext;
 
   try {
+    // Individual 8s timeout per LLM to prevent one slow provider from blocking all
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      signal: controller.signal,
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
