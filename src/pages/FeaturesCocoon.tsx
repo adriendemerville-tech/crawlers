@@ -45,6 +45,8 @@ const geoAdvantages = [
 ];
 
 export default function FeaturesCocoon() {
+  useCanonicalHreflang('/features/cocoon');
+
   return (
     <>
       <Helmet>
@@ -53,7 +55,6 @@ export default function FeaturesCocoon() {
           name="description"
           content="Transformez l'architecture de votre site en organisme vivant. Visualisation sémantique 3D, ROI prédictif par page et optimisation GEO pour les moteurs IA."
         />
-        <link rel="canonical" href="https://crawlers.fr/features/cocoon" />
       </Helmet>
 
       <Header />

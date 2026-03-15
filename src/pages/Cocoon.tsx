@@ -170,7 +170,6 @@ export default function Cocoon() {
       <Helmet>
         <title>Cocoon — Architecture Sémantique | Crawlers.fr</title>
         <meta name="description" content="Visualisez l'architecture sémantique de votre site comme un organisme vivant. Analyse GEO, ROI prédictif et maillage intelligent." />
-        <link rel="canonical" href="https://crawlers.fr/cocoon" />
       </Helmet>
 
       <div className="min-h-screen bg-[#0f0a1e] flex flex-col">
