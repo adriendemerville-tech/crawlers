@@ -148,7 +148,9 @@ export default function Cocoon() {
   const [prereqStatus, setPrereqStatus] = useState<{ hasCrawl: boolean; hasAudit: boolean }>({ hasCrawl: true, hasAudit: true });
   const [truncationInfo, setTruncationInfo] = useState<{ truncated: boolean; total: number; used: number } | null>(null);
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
+  const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
   const autoLaunchTriggered = useRef(false);
+  const externalClickTimestamp = useRef<number | null>(null);
 
   // Check access: Pro Agency or Admin
   useEffect(() => {
@@ -225,6 +227,55 @@ export default function Cocoon() {
     }, 2000);
     return () => clearTimeout(timer);
   }, [autoLaunchDomain, selectedSiteId, trackedSites]);
+
+  // Auto-refresh: detect return from external audit/crawl tabs
+  useEffect(() => {
+    if (!user || !selectedSiteId) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible') return;
+      const clickTs = externalClickTimestamp.current;
+      if (!clickTs) return;
+
+      // Must have been away at least 15s (realistic time to start an audit/crawl)
+      const elapsed = Date.now() - clickTs;
+      if (elapsed < 15_000) return;
+
+      const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
+      if (!selectedSite) return;
+
+      // Wait 3s for DB to settle after tab focus
+      await new Promise(r => setTimeout(r, 3000));
+
+      // Check for new crawls or audits since click
+      const since = new Date(clickTs).toISOString();
+      const [crawlRes, auditRes] = await Promise.all([
+        supabase
+          .from("site_crawls" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("domain", selectedSite.domain)
+          .eq("user_id", user.id)
+          .gte("created_at", since),
+        supabase
+          .from("audits")
+          .select("id", { count: "exact", head: true })
+          .eq("domain", selectedSite.domain)
+          .eq("user_id", user.id)
+          .gte("created_at", since),
+      ]);
+
+      const hasNewData = (crawlRes.count || 0) > 0 || (auditRes.count || 0) > 0;
+      if (hasNewData) {
+        externalClickTimestamp.current = null;
+        setIsAutoRefreshing(true);
+        await handleCompute();
+        setIsAutoRefreshing(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [user, selectedSiteId, trackedSites]);
 
   // Load existing nodes for selected site
   useEffect(() => {
@@ -368,8 +419,8 @@ export default function Cocoon() {
                 disabled={isComputing || !selectedSiteId}
                 className="h-8 text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1.5"
               >
-                {isComputing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
-                Actualiser data
+                {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
+                {(isComputing || isAutoRefreshing) ? 'Analyses data...' : 'Actualiser data'}
               </Button>
               <Button
                 variant="outline"
@@ -498,6 +549,7 @@ export default function Cocoon() {
             href="/audit-expert"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => { externalClickTimestamp.current = Date.now(); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors text-xs backdrop-blur-md"
           >
             <FileText className="w-3 h-3" />
@@ -508,6 +560,7 @@ export default function Cocoon() {
             href="/crawl-multipages"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => { externalClickTimestamp.current = Date.now(); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors text-xs backdrop-blur-md"
           >
             <Search className="w-3 h-3" />
