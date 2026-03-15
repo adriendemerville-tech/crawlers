@@ -48,6 +48,9 @@ interface GraphNode extends SimulationNodeDatum {
   depth: number;
   pageType: string;
   isHome: boolean;
+  pageAuthority: number;
+  linksIn: number;
+  linksOut: number;
 }
 
 interface GraphLink extends SimulationLinkDatum<GraphNode> {
