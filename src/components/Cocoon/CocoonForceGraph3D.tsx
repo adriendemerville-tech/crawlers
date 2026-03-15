@@ -106,14 +106,16 @@ function simulate3D(
   const alphaDecay = 0.97;
   const chargeStrength = -120;
   const linkDistance = 80;
-  const centerStrength = 0.02;
   const velocityDecay = 0.6;
+
+  // Authority-weighted center: nodes with higher page_authority are pulled more strongly toward center
+  const maxAuth = Math.max(1, ...nodes.map((n) => n.pageAuthority));
 
   for (let iter = 0; iter < iterations; iter++) {
     const alpha = alpha0 * Math.pow(alphaDecay, iter);
     if (alpha < 0.001) break;
 
-    // Charge repulsion (Barnes-Hut simplified: O(n²) for small n)
+    // Charge repulsion
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const a = nodes[i];
@@ -157,11 +159,17 @@ function simulate3D(
       target.vz -= fz;
     }
 
-    // Center force
+    // Authority-weighted center force: higher authority = stronger pull to center
+    // Home gets max pull (isHome → centerStrength * 5), others proportional to page_authority
     for (const n of nodes) {
-      n.vx -= n.x * centerStrength * alpha;
-      n.vy -= n.y * centerStrength * alpha;
-      n.vz -= n.z * centerStrength * alpha;
+      const authRatio = n.pageAuthority / maxAuth;
+      // Base center strength + authority bonus (home always gets max)
+      const centerPull = n.isHome
+        ? 0.1
+        : 0.01 + authRatio * 0.06;
+      n.vx -= n.x * centerPull * alpha;
+      n.vy -= n.y * centerPull * alpha;
+      n.vz -= n.z * centerPull * alpha;
     }
 
     // Apply velocity
