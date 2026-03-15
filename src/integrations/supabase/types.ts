@@ -806,6 +806,96 @@ export type Database = {
         }
         Relationships: []
       }
+      cocoon_sessions: {
+        Row: {
+          avg_cannibalization_risk: number | null
+          avg_citability_score: number | null
+          avg_content_gap: number | null
+          avg_eeat_score: number | null
+          avg_geo_score: number | null
+          avg_roi_predictive: number | null
+          chat_messages: Json
+          chat_turns: number
+          cluster_summary: Json
+          clusters_count: number
+          created_at: string
+          domain: string
+          edges_snapshot: Json
+          generation_duration_ms: number | null
+          id: string
+          intent_distribution: Json
+          internal_links_density: number | null
+          model_version: string | null
+          nodes_count: number
+          nodes_snapshot: Json
+          outcome_measured_at: string | null
+          outcome_position_delta: number | null
+          outcome_traffic_delta: number | null
+          total_traffic_estimate: number | null
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_cannibalization_risk?: number | null
+          avg_citability_score?: number | null
+          avg_content_gap?: number | null
+          avg_eeat_score?: number | null
+          avg_geo_score?: number | null
+          avg_roi_predictive?: number | null
+          chat_messages?: Json
+          chat_turns?: number
+          cluster_summary?: Json
+          clusters_count?: number
+          created_at?: string
+          domain: string
+          edges_snapshot?: Json
+          generation_duration_ms?: number | null
+          id?: string
+          intent_distribution?: Json
+          internal_links_density?: number | null
+          model_version?: string | null
+          nodes_count?: number
+          nodes_snapshot?: Json
+          outcome_measured_at?: string | null
+          outcome_position_delta?: number | null
+          outcome_traffic_delta?: number | null
+          total_traffic_estimate?: number | null
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_cannibalization_risk?: number | null
+          avg_citability_score?: number | null
+          avg_content_gap?: number | null
+          avg_eeat_score?: number | null
+          avg_geo_score?: number | null
+          avg_roi_predictive?: number | null
+          chat_messages?: Json
+          chat_turns?: number
+          cluster_summary?: Json
+          clusters_count?: number
+          created_at?: string
+          domain?: string
+          edges_snapshot?: Json
+          generation_duration_ms?: number | null
+          id?: string
+          intent_distribution?: Json
+          internal_links_density?: number | null
+          model_version?: string | null
+          nodes_count?: number
+          nodes_snapshot?: Json
+          outcome_measured_at?: string | null
+          outcome_position_delta?: number | null
+          outcome_traffic_delta?: number | null
+          total_traffic_estimate?: number | null
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       crawl_jobs: {
         Row: {
           completed_at: string | null
