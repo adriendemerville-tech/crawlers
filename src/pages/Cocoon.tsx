@@ -93,6 +93,11 @@ const i18n = {
     prereqCrawlCta: 'Start a crawl',
     prereqAuditCta: 'Start a strategic audit',
     prereqClose: 'Got it',
+    refreshData: 'Refresh data',
+    analyzingData: 'Analyzing data...',
+    auditExpert: 'Expert Audit',
+    crawlMulti: 'Multi-page Crawl',
+    console: 'Console',
   },
   es: {
     title: "Cocoon — Arquitectura Semántica | Crawlers.fr",
