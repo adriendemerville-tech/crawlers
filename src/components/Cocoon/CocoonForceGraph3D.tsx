@@ -212,7 +212,7 @@ function NodeSphere({
   isHovered,
   isXRayMode,
   customNodeColors,
-  nodeScale,
+  spreadScale,
   onPointerOver,
   onPointerOut,
   onClick,
@@ -222,7 +222,7 @@ function NodeSphere({
   isHovered: boolean;
   isXRayMode: boolean;
   customNodeColors: Record<string, string>;
-  nodeScale: number;
+  spreadScale: number;
   onPointerOver: () => void;
   onPointerOut: () => void;
   onClick: () => void;
@@ -235,9 +235,8 @@ function NodeSphere({
     : activeColors[node.pageType] || activeColors.unknown;
 
   const emissiveIntensity = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.8 : 0.3;
-  const scale = (isSelected ? 1.3 : isHovered ? 1.15 : 1) * nodeScale;
+  const scale = isSelected ? 1.3 : isHovered ? 1.15 : 1;
   const isGhost = isXRayMode && node.traffic < 10;
-  const scaledRadius = node.radius * nodeScale;
 
   useFrame(({ clock }) => {
     if (!meshRef.current) return;
@@ -258,10 +257,10 @@ function NodeSphere({
   });
 
   return (
-    <group position={[node.x, node.y, node.z]}>
+    <group position={[node.x * spreadScale, node.y * spreadScale, node.z * spreadScale]}>
       {/* Opaque border ring (slightly larger sphere behind) */}
       <mesh>
-        <sphereGeometry args={[scaledRadius * 1.12, 24, 24]} />
+        <sphereGeometry args={[node.radius * 1.12, 24, 24]} />
         <meshBasicMaterial
           color={color}
           transparent
@@ -276,7 +275,7 @@ function NodeSphere({
         onPointerOut={(e) => { e.stopPropagation(); onPointerOut(); }}
         onClick={(e) => { e.stopPropagation(); onClick(); }}
       >
-        <sphereGeometry args={[scaledRadius, 24, 24]} />
+        <sphereGeometry args={[node.radius, 24, 24]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
@@ -290,7 +289,7 @@ function NodeSphere({
 
       {/* Label — always for home, hover/select only for others */}
       {(node.isHome || isSelected || isHovered) && (
-        <Billboard position={[0, -scaledRadius - 1.5, 0]}>
+        <Billboard position={[0, -node.radius - 1.5, 0]}>
           <Text
             fontSize={node.isHome ? 1.2 : 0.63}
             color={isSelected || node.isHome ? "#ffdc64" : "#ffffffb3"}
@@ -316,12 +315,14 @@ function Links({
   selectedNodeId,
   particlesEnabled,
   customParticleColors,
+  spreadScale,
 }: {
   links: GraphLink3D[];
   nodeMap: Map<string, GraphNode3D>;
   selectedNodeId: string | null;
   particlesEnabled: boolean;
   customParticleColors: Record<string, string>;
+  spreadScale: number;
 }) {
   const linesRef = useRef<THREE.Group>(null);
   const particleGroupRef = useRef<THREE.Group>(null);
@@ -367,9 +368,9 @@ function Links({
       if (!src || !tgt || !children[i]) continue;
       const t = p.progress;
       children[i].position.set(
-        src.x + (tgt.x - src.x) * t,
-        src.y + (tgt.y - src.y) * t,
-        src.z + (tgt.z - src.z) * t
+        (src.x + (tgt.x - src.x) * t) * spreadScale,
+        (src.y + (tgt.y - src.y) * t) * spreadScale,
+        (src.z + (tgt.z - src.z) * t) * spreadScale
       );
       const fadeEdge = Math.sin(t * Math.PI);
       const mat = children[i].material as THREE.MeshBasicMaterial;
@@ -384,13 +385,13 @@ function Links({
       if (!src || !tgt) return null;
       return {
         points: [
-          [src.x, src.y, src.z] as [number, number, number],
-          [tgt.x, tgt.y, tgt.z] as [number, number, number],
+          [src.x * spreadScale, src.y * spreadScale, src.z * spreadScale] as [number, number, number],
+          [tgt.x * spreadScale, tgt.y * spreadScale, tgt.z * spreadScale] as [number, number, number],
         ],
         link,
       };
     }).filter(Boolean) as { points: [number, number, number][]; link: GraphLink3D }[];
-  }, [links, nodeMap]);
+  }, [links, nodeMap, spreadScale]);
 
   return (
     <>
@@ -449,7 +450,7 @@ function HudTooltip({ node }: { node: GraphNode3D }) {
 
   return (
     <Html
-      position={[node.x, node.y + node.radius + 3, node.z]}
+      position={[0, node.radius + 3, 0]}
       center
       style={{ pointerEvents: "none" }}
     >
@@ -476,7 +477,7 @@ function SceneContent({
   particlesEnabled,
   customNodeColors,
   customParticleColors,
-  nodeScale,
+  spreadScale,
   onNodeSelect,
   onNodeHover,
   onNodeUnhover,
@@ -491,7 +492,7 @@ function SceneContent({
   particlesEnabled: boolean;
   customNodeColors: Record<string, string>;
   customParticleColors: Record<string, string>;
-  nodeScale: number;
+  spreadScale: number;
   onNodeSelect: (node: SemanticNode | null) => void;
   onNodeHover: (id: string) => void;
   onNodeUnhover: () => void;
@@ -517,6 +518,7 @@ function SceneContent({
         selectedNodeId={selectedNodeId}
         particlesEnabled={particlesEnabled}
         customParticleColors={customParticleColors}
+        spreadScale={spreadScale}
       />
 
       {/* Nodes */}
@@ -528,7 +530,7 @@ function SceneContent({
           isHovered={node.id === hoveredNodeId}
           isXRayMode={isXRayMode}
           customNodeColors={customNodeColors}
-          nodeScale={nodeScale}
+          spreadScale={spreadScale}
           onPointerOver={() => onNodeHover(node.id)}
           onPointerOut={onNodeUnhover}
           onClick={() => {
@@ -539,7 +541,11 @@ function SceneContent({
       ))}
 
       {/* Tooltip */}
-      {hoveredNode && <HudTooltip node={hoveredNode} />}
+      {hoveredNode && (
+        <group position={[hoveredNode.x * spreadScale, hoveredNode.y * spreadScale, hoveredNode.z * spreadScale]}>
+          <HudTooltip node={hoveredNode} />
+        </group>
+      )}
 
       {/* Orbit controls */}
       <OrbitControls
@@ -568,7 +574,7 @@ export function CocoonForceGraph3D({
   particleColors = {},
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
-  const [nodeScale, setNodeScale] = useState(1);
+  const [spreadScale, setSpreadScale] = useState(1);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const { graphNodes, graphLinks, nodeMap } = useMemo(() => {
@@ -708,7 +714,7 @@ export function CocoonForceGraph3D({
           particlesEnabled={particlesEnabled}
           customNodeColors={nodeColors}
           customParticleColors={particleColors}
-          nodeScale={nodeScale}
+          spreadScale={spreadScale}
           onNodeSelect={onNodeSelect}
           onNodeHover={setHoveredNodeId}
           onNodeUnhover={() => setHoveredNodeId(null)}
@@ -759,16 +765,16 @@ export function CocoonForceGraph3D({
       </div>
 
       {/* Scale slider */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 opacity-30 hover:opacity-70 transition-opacity duration-500">
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2.5 opacity-30 hover:opacity-70 transition-opacity duration-500">
         <Slider
           min={0.3}
           max={3}
-          step={0.1}
-          value={[nodeScale]}
-          onValueChange={([v]) => setNodeScale(v)}
-          className="w-20 [&_[role=slider]]:h-2 [&_[role=slider]]:w-2 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/40 [&_[data-orientation=horizontal]]:h-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/20"
+          step={0.05}
+          value={[spreadScale]}
+          onValueChange={([v]) => setSpreadScale(v)}
+          className="w-40 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/50 [&_[data-orientation=horizontal]]:h-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/20"
         />
-        <span className="text-[8px] text-white/30 font-mono select-none">{nodeScale.toFixed(1)}×</span>
+        <span className="text-[9px] text-white/30 font-mono select-none">{spreadScale.toFixed(1)}×</span>
       </div>
 
       {/* Stats overlay */}
