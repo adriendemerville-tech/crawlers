@@ -765,16 +765,16 @@ export function CocoonForceGraph3D({
       </div>
 
       {/* Scale slider */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 opacity-30 hover:opacity-70 transition-opacity duration-500">
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2.5 opacity-30 hover:opacity-70 transition-opacity duration-500">
         <Slider
           min={0.3}
           max={3}
-          step={0.1}
-          value={[nodeScale]}
-          onValueChange={([v]) => setNodeScale(v)}
-          className="w-20 [&_[role=slider]]:h-2 [&_[role=slider]]:w-2 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/40 [&_[data-orientation=horizontal]]:h-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/20"
+          step={0.05}
+          value={[spreadScale]}
+          onValueChange={([v]) => setSpreadScale(v)}
+          className="w-40 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/50 [&_[data-orientation=horizontal]]:h-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/20"
         />
-        <span className="text-[8px] text-white/30 font-mono select-none">{nodeScale.toFixed(1)}×</span>
+        <span className="text-[9px] text-white/30 font-mono select-none">{spreadScale.toFixed(1)}×</span>
       </div>
 
       {/* Stats overlay */}
