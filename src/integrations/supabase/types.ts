@@ -2283,6 +2283,151 @@ export type Database = {
         }
         Relationships: []
       }
+      semantic_nodes: {
+        Row: {
+          audit_report_id: string | null
+          cannibalization_risk: number
+          citability_score: number
+          cluster_id: string | null
+          content_gap_score: number
+          conversion_potential: number
+          cpc_value: number
+          crawl_page_id: string | null
+          created_at: string
+          depth: number
+          eeat_score: number
+          embedding: Json | null
+          error_message: string | null
+          freshness_score: number
+          geo_score: number
+          h1: string | null
+          iab_score: number
+          id: string
+          intent: string
+          internal_links_in: number
+          internal_links_out: number
+          keyword_difficulty: number
+          keywords: Json
+          page_authority: number
+          parent_node_id: string | null
+          roi_predictive: number
+          search_volume: number
+          serp_competitors: Json
+          serp_position: number | null
+          similarity_edges: Json
+          status: string
+          title: string
+          tracked_site_id: string
+          traffic_estimate: number
+          updated_at: string
+          url: string
+          user_id: string
+          word_count: number
+        }
+        Insert: {
+          audit_report_id?: string | null
+          cannibalization_risk?: number
+          citability_score?: number
+          cluster_id?: string | null
+          content_gap_score?: number
+          conversion_potential?: number
+          cpc_value?: number
+          crawl_page_id?: string | null
+          created_at?: string
+          depth?: number
+          eeat_score?: number
+          embedding?: Json | null
+          error_message?: string | null
+          freshness_score?: number
+          geo_score?: number
+          h1?: string | null
+          iab_score?: number
+          id?: string
+          intent?: string
+          internal_links_in?: number
+          internal_links_out?: number
+          keyword_difficulty?: number
+          keywords?: Json
+          page_authority?: number
+          parent_node_id?: string | null
+          roi_predictive?: number
+          search_volume?: number
+          serp_competitors?: Json
+          serp_position?: number | null
+          similarity_edges?: Json
+          status?: string
+          title?: string
+          tracked_site_id: string
+          traffic_estimate?: number
+          updated_at?: string
+          url: string
+          user_id: string
+          word_count?: number
+        }
+        Update: {
+          audit_report_id?: string | null
+          cannibalization_risk?: number
+          citability_score?: number
+          cluster_id?: string | null
+          content_gap_score?: number
+          conversion_potential?: number
+          cpc_value?: number
+          crawl_page_id?: string | null
+          created_at?: string
+          depth?: number
+          eeat_score?: number
+          embedding?: Json | null
+          error_message?: string | null
+          freshness_score?: number
+          geo_score?: number
+          h1?: string | null
+          iab_score?: number
+          id?: string
+          intent?: string
+          internal_links_in?: number
+          internal_links_out?: number
+          keyword_difficulty?: number
+          keywords?: Json
+          page_authority?: number
+          parent_node_id?: string | null
+          roi_predictive?: number
+          search_volume?: number
+          serp_competitors?: Json
+          serp_position?: number | null
+          similarity_edges?: Json
+          status?: string
+          title?: string
+          tracked_site_id?: string
+          traffic_estimate?: number
+          updated_at?: string
+          url?: string
+          user_id?: string
+          word_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "semantic_nodes_crawl_page_id_fkey"
+            columns: ["crawl_page_id"]
+            isOneToOne: false
+            referencedRelation: "crawl_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "semantic_nodes_parent_node_id_fkey"
+            columns: ["parent_node_id"]
+            isOneToOne: false
+            referencedRelation: "semantic_nodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "semantic_nodes_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seo_agent_logs: {
         Row: {
           action_type: string
