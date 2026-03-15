@@ -307,10 +307,10 @@ export function UserManagement() {
                           {adminUserIds.has(user.user_id) && (
                             <Badge variant="outline" className="text-xs border-primary text-primary">Créateur</Badge>
                           )}
-                          {viewerUserIds.has(user.user_id) && (
+                          {!adminUserIds.has(user.user_id) && viewerUserIds.has(user.user_id) && (
                             <Badge variant="outline" className="text-xs border-emerald-500 text-emerald-600 dark:text-emerald-400">Viewer</Badge>
                           )}
-                          {viewer2UserIds.has(user.user_id) && (
+                          {!adminUserIds.has(user.user_id) && !viewerUserIds.has(user.user_id) && viewer2UserIds.has(user.user_id) && (
                             <Badge variant="outline" className="text-xs border-sky-500 text-sky-600 dark:text-sky-400">Viewer L2</Badge>
                           )}
                           {user.affiliate_code_used && (
