@@ -3285,6 +3285,15 @@ export type Database = {
         Args: { p_amount: number; p_user_id: string }
         Returns: Json
       }
+      check_fair_use_v2: {
+        Args: {
+          p_action: string
+          p_daily_limit: number
+          p_hourly_limit: number
+          p_user_id: string
+        }
+        Returns: Json
+      }
       check_rate_limit: {
         Args: {
           p_action: string
