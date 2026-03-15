@@ -105,21 +105,22 @@ export function CocoonForceGraph({
   const graphNodesRef = useRef<GraphNode[]>([]);
   const graphLinksRef = useRef<GraphLink[]>([]);
   const particlesRef = useRef<Particle[]>([]);
+  const lastClickPos = useRef<{ x: number; y: number } | null>(null);
 
   // Depth → radius: ultra-compact Jarvis-style dots
   const depthToRadius = (depth: number): number => {
-    if (depth === 0) return 6; // base size, will be multiplied by home coefficient
+    if (depth === 0) return 3; // base size for home (halved from 6), multiplied by sun coefficient
     if (depth === 1) return 3.5;
     if (depth === 2) return 2.5;
     return 2;
   };
 
-  // Home node sun coefficient: 15x at default zoom, scales down to 5x as user zooms in
+  // Home node sun coefficient: dynamically reaches 3x at max dezoom, 1x at max zoom-in
   const getHomeSunCoefficient = (zoomK: number): number => {
-    const minCoeff = 5;
-    const maxCoeff = 15;
-    // Normalize: at k<=0.5 → maxCoeff, at k>=2.5 → minCoeff
-    const t = Math.min(1, Math.max(0, (zoomK - 0.5) / 2));
+    const minCoeff = 1;
+    const maxCoeff = 3;
+    // Normalize: at k<=0.3 → maxCoeff (dezoomed), at k>=3 → minCoeff (zoomed in)
+    const t = Math.min(1, Math.max(0, (zoomK - 0.3) / 2.7));
     return maxCoeff - (maxCoeff - minCoeff) * t * t; // quadratic easing
   };
 
@@ -332,23 +333,7 @@ export function CocoonForceGraph({
       }
       ctx.restore();
 
-      // ─── Radial scanning line ───
-      ctx.save();
-      const scanAngle = time * 0.3;
-      const scanGrad = ctx.createLinearGradient(
-        width / 2, height / 2,
-        width / 2 + Math.cos(scanAngle) * width, height / 2 + Math.sin(scanAngle) * height
-      );
-      scanGrad.addColorStop(0, "rgba(108, 92, 231, 0.08)");
-      scanGrad.addColorStop(0.3, "rgba(108, 92, 231, 0.02)");
-      scanGrad.addColorStop(1, "rgba(108, 92, 231, 0)");
-      ctx.beginPath();
-      ctx.moveTo(width / 2, height / 2);
-      ctx.arc(width / 2, height / 2, Math.max(width, height), scanAngle - 0.15, scanAngle + 0.15);
-      ctx.closePath();
-      ctx.fillStyle = scanGrad;
-      ctx.fill();
-      ctx.restore();
+      // (radar animation removed)
 
       // ─── Transform into graph space ───
       ctx.save();
@@ -479,11 +464,11 @@ export function CocoonForceGraph({
 
         // ─── Outer glow rings (Jarvis energy rings) ───
         if ((isSelected || isHovered || node.isHome) && !isGhost) {
-          const ringCount = node.isHome ? 4 : 2;
+          const ringCount = node.isHome ? 1 : 2;
           for (let i = 0; i < ringCount; i++) {
             const ringR = r * (1.5 + i * 0.8) + Math.sin(time * 2 + i) * r * 0.15;
             const ringAlpha = node.isHome
-              ? (0.2 - i * 0.04) * (0.8 + Math.sin(time * 1.2 + i * 0.8) * 0.2)
+              ? 0.18 * (0.8 + Math.sin(time * 1.2) * 0.2)
               : (0.12 - i * 0.03) * (isSelected ? 1.5 : 1);
             ctx.beginPath();
             ctx.arc(node.x, node.y, ringR, 0, Math.PI * 2);
@@ -617,6 +602,11 @@ export function CocoonForceGraph({
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        lastClickPos.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      }
       const node = getNodeAtPos(e.clientX, e.clientY);
       if (node) {
         const original = nodes.find((n) => n.id === node.id) || null;
@@ -628,22 +618,53 @@ export function CocoonForceGraph({
     [getNodeAtPos, nodes, onNodeSelect],
   );
 
+  // Zoom toward mouse cursor position
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
     const factor = e.deltaY > 0 ? 0.92 : 1.08;
-    setTransform((t) => ({
-      ...t,
-      k: Math.max(0.15, Math.min(8, t.k * factor)),
-    }));
-  }, []);
+    setTransform((t) => {
+      const newK = Math.max(0.15, Math.min(8, t.k * factor));
+      const ratio = newK / t.k;
+      // Adjust pan so the point under cursor stays fixed
+      const cx = dimensions.width / 2;
+      const cy = dimensions.height / 2;
+      return {
+        x: (mouseX - cx) + ratio * (t.x - (mouseX - cx)),
+        y: (mouseY - cy) + ratio * (t.y - (mouseY - cy)),
+        k: newK,
+      };
+    });
+  }, [dimensions]);
 
-  const zoomIn = useCallback(() => {
-    setTransform((t) => ({ ...t, k: Math.min(8, t.k * 1.25) }));
-  }, []);
-  const zoomOut = useCallback(() => {
-    setTransform((t) => ({ ...t, k: Math.max(0.15, t.k * 0.8) }));
-  }, []);
+  // Zoom buttons center on last clicked point or canvas center
+
+  const zoomAtPoint = useCallback((factor: number) => {
+    setTransform((t) => {
+      const newK = Math.max(0.15, Math.min(8, t.k * factor));
+      if (lastClickPos.current) {
+        const ratio = newK / t.k;
+        const cx = dimensions.width / 2;
+        const cy = dimensions.height / 2;
+        const px = lastClickPos.current.x;
+        const py = lastClickPos.current.y;
+        return {
+          x: (px - cx) + ratio * (t.x - (px - cx)),
+          y: (py - cy) + ratio * (t.y - (py - cy)),
+          k: newK,
+        };
+      }
+      return { ...t, k: newK };
+    });
+  }, [dimensions]);
+
+  const zoomIn = useCallback(() => zoomAtPoint(1.25), [zoomAtPoint]);
+  const zoomOut = useCallback(() => zoomAtPoint(0.8), [zoomAtPoint]);
   const zoomReset = useCallback(() => {
     fitToView();
   }, [fitToView]);
