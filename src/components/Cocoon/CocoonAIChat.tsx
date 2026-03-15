@@ -115,16 +115,16 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
     try {
       const sessionHash = getSessionHash();
       if (chatHistoryId.current) {
-        await supabase.from('cocoon_chat_histories').update({
-          messages: msgs as any,
+        await (supabase.from as any)('cocoon_chat_histories').update({
+          messages: msgs,
           message_count: msgs.length,
         }).eq('id', chatHistoryId.current);
       } else {
-        const { data } = await supabase.from('cocoon_chat_histories').insert({
+        const { data } = await (supabase.from as any)('cocoon_chat_histories').insert({
           session_hash: sessionHash,
           tracked_site_id: trackedSiteId,
           domain,
-          messages: msgs as any,
+          messages: msgs,
           message_count: msgs.length,
         }).select('id').single();
         if (data) chatHistoryId.current = data.id;
