@@ -59,6 +59,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const IndiceAlignementStrategique = lazy(() => import("./pages/IndiceAlignementStrategique"));
 const ArchitecteGeneratif = lazy(() => import("./pages/ArchitecteGeneratif"));
 const Cocoon = lazy(() => import("./pages/Cocoon"));
+const FeaturesCocoon = lazy(() => import("./pages/FeaturesCocoon"));
 
 // Loading fallback
 const PageLoader = () => (
