@@ -179,6 +179,13 @@ export function ScriptKillSwitches() {
   }
 
   return (
+    <div className="space-y-4">
+      {/* Mode Démo + GA4 OAuth */}
+      <div className="flex flex-wrap items-center gap-2">
+        <DemoModeToggle />
+        <GA4OAuthToggle />
+      </div>
+
     <Card className="border-destructive/30">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
