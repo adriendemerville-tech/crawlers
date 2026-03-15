@@ -207,10 +207,41 @@ export default function Cocoon() {
 
   // Trigger computation
   const handleCompute = async () => {
-    if (!selectedSiteId) return;
+    if (!selectedSiteId || !user) return;
+
+    // Find the domain for the selected site
+    const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
+    if (!selectedSite) return;
+
     setIsComputing(true);
 
     try {
+      // Check prerequisites: crawl + expert audit
+      const [crawlRes, auditRes] = await Promise.all([
+        supabase
+          .from("site_crawls" as any)
+          .select("id")
+          .eq("domain", selectedSite.domain)
+          .eq("user_id", user.id)
+          .limit(1),
+        supabase
+          .from("audits")
+          .select("id")
+          .eq("domain", selectedSite.domain)
+          .eq("user_id", user.id)
+          .limit(1),
+      ]);
+
+      const hasCrawl = (crawlRes.data?.length || 0) > 0;
+      const hasAudit = (auditRes.data?.length || 0) > 0;
+
+      if (!hasCrawl || !hasAudit) {
+        setPrereqStatus({ hasCrawl, hasAudit });
+        setShowPrereqModal(true);
+        setIsComputing(false);
+        return;
+      }
+
       const resp = await supabase.functions.invoke("calculate-cocoon-logic", {
         body: { tracked_site_id: selectedSiteId },
       });
