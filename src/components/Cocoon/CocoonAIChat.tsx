@@ -587,21 +587,26 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
             </div>
           )}
 
-          {/* Add node + analyze */}
-          <div className="px-4 py-2 flex items-center gap-2 border-t border-white/5">
-            {selectedSlots.length < MAX_SLOTS && pickingIndex === null && (
-              <button onClick={() => startPicking(selectedSlots.length)}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-white/15 hover:border-[#fbbf24]/40 hover:bg-[#fbbf24]/5 transition-colors text-[10px] text-white/40 hover:text-[#fbbf24]/70">
-                <Plus className="w-2.5 h-2.5" />{t.selectNode}
-              </button>
-            )}
-            {selectedSlots.length >= 2 && !isLoading && (
+          {/* Analyze button inline when slots >= 2 */}
+          {selectedSlots.length >= 2 && !isLoading && (
+            <div className="px-4 py-1.5 border-t border-white/5 flex justify-end">
               <button onClick={handleAnalyze}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-[#0f0a1e] font-semibold text-[11px] hover:shadow-lg hover:shadow-[#fbbf24]/20 transition-all ml-auto">
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] text-[#0f0a1e] font-semibold text-[11px] hover:shadow-lg hover:shadow-[#fbbf24]/20 transition-all">
                 <Sparkles className="w-3 h-3" />{t.analyze}
               </button>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Floating + button to add node */}
+          {selectedSlots.length < MAX_SLOTS && pickingIndex === null && (
+            <button
+              onClick={() => startPicking(selectedSlots.length)}
+              className="absolute right-3 bottom-[58px] w-8 h-8 rounded-full bg-gradient-to-br from-[#fbbf24] to-[#f59e0b] text-[#0f0a1e] shadow-lg shadow-[#fbbf24]/25 hover:shadow-[#fbbf24]/40 hover:scale-110 transition-all flex items-center justify-center z-10"
+              title={t.selectNode}
+            >
+              <Plus className="w-4 h-4" strokeWidth={3} />
+            </button>
+          )}
 
           {/* Input */}
           <div className="px-3 pb-3 pt-1 border-t border-white/5">
