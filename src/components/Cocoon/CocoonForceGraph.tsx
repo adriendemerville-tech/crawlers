@@ -578,7 +578,7 @@ export function CocoonForceGraph({
 
         // ─── Radial glow ───
         if (!isGhost) {
-          const glowR = r * (node.isHome ? 3 : isSelected ? 5 : isHovered ? 4 : 2.5);
+          const glowR = r * (node.isHome ? 2.2 : isSelected ? 5 : isHovered ? 4 : 2.5);
           const baseGlowAlpha = node.isHome ? 0.35 : isSelected ? 0.15 : isHovered ? 0.12 : 0.06;
           const glowAlpha = node.isHome ? baseGlowAlpha * homeGlowPulse : baseGlowAlpha;
           const glow = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowR);
