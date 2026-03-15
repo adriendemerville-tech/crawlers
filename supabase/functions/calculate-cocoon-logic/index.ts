@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { checkIpRate, getClientIp, rateLimitResponse } from "../_shared/ipRateLimiter.ts";
 import { withCircuitBreaker } from "../_shared/circuitBreaker.ts";
+import { trackEdgeFunctionError } from "../_shared/tokenTracker.ts";
 
 /**
  * Edge Function: calculate-cocoon-logic
