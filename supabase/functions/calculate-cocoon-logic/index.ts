@@ -299,7 +299,7 @@ Deno.serve(async (req) => {
 
     const { data: crawlPages } = await supabase
       .from("crawl_pages")
-      .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description, crawl_depth, created_at, http_status")
+      .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description, crawl_depth, created_at, http_status, anchor_texts")
       .eq("crawl_id", latestCrawlId)
       .order("crawl_depth", { ascending: true })
       .limit(MAX_COCOON_PAGES);
