@@ -1,9 +1,10 @@
-import { useState, useRef, lazy, Suspense } from 'react';
-import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles } from 'lucide-react';
+import { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import { Bot, Sun, Moon, Book, User, LogOut, FileText, LogIn, ArrowLeft, Settings, ClipboardList, Code2, Wallet, Scale, Radar, LayoutDashboard, Puzzle, Crown, Globe, Sparkles, ShieldOff } from 'lucide-react';
 import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useTheme } from 'next-themes';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -94,11 +95,16 @@ export function Header() {
   const { language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
   const { user, profile, signOut, loading } = useAuth();
+  const { isAdmin } = useAdmin();
   const { balance: creditsBalance, isAgencyPro } = useCredits();
   const navigate = useNavigate();
   const location = useLocation();
   const t = translations[language];
   
+  // Kill viewers state
+  const [isKilling, setIsKilling] = useState(false);
+  const [showKillConfirm, setShowKillConfirm] = useState(false);
+
   // Hover state for profile dropdown
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -110,6 +116,27 @@ export function Header() {
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleKillViewers = async () => {
+    if (!showKillConfirm) {
+      setShowKillConfirm(true);
+      return;
+    }
+    setIsKilling(true);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.functions.invoke('kill-all-viewers');
+      if (error) throw error;
+      const count = data?.removed_count || 0;
+      alert(`${count} accès viewer(s) révoqué(s).`);
+    } catch (err: any) {
+      alert('Erreur: ' + (err.message || err));
+    } finally {
+      setIsKilling(false);
+      setShowKillConfirm(false);
+      setIsProfileOpen(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -459,6 +486,19 @@ export function Header() {
                         {t.correctiveCodes}
                       </Link>
                     </DropdownMenuItem>
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={handleKillViewers}
+                          className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                          disabled={isKilling}
+                        >
+                          <ShieldOff className="h-4 w-4" />
+                          {isKilling ? 'Révocation...' : showKillConfirm ? '⚠️ Confirmer Kill All Viewers' : 'Kill All Viewers'}
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
                       <LogOut className="h-4 w-4" />
