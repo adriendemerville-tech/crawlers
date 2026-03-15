@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2, Crown, Linkedin, Handshake, Infinity, FileText, Code, Users, Copy, Gift, Share2, Globe, Zap } from 'lucide-react';
+import { Check, Loader2, Crown, Linkedin, Handshake, Infinity, FileText, Code, Users, Copy, Gift, Share2, Globe, Zap, Network } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -341,6 +341,7 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Zap className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '30 URL suivis inclus' : language === 'es' ? '30 URL seguidos' : '30 tracked URLs'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-foreground"><Users className="h-3.5 w-3.5 text-violet-500" />{language === 'fr' ? '3 comptes inclus' : language === 'es' ? '3 cuentas' : '3 accounts'}</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400"><Zap className="h-3.5 w-3.5 text-amber-400" />{language === 'fr' ? 'Indice IAS' : language === 'es' ? 'Índice IAS' : 'SAI Index'}</span>
+                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-400"><Network className="h-3.5 w-3.5 text-amber-400" />{language === 'fr' ? 'Architecte de Cocon & GEO' : language === 'es' ? 'Arquitecto Cocon & GEO' : 'Cocoon Architect & GEO'}</span>
               </div>
             </div>
             <div className="flex flex-col items-center gap-2 shrink-0">

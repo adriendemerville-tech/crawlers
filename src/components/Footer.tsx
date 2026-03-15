@@ -161,6 +161,12 @@ function FooterComponent() {
       description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'),
       gold: true
     },
+    {
+      label: 'Cocoon',
+      href: '/cocoon',
+      description: t3(language, 'Architecture sémantique en organisme vivant', 'Living organism semantic architecture', 'Arquitectura semántica como organismo vivo'),
+      gold: true
+    },
   ];
 
   const legalLinks = [
@@ -347,7 +353,7 @@ function FooterComponent() {
                       {link.href.startsWith('/') ? (
                         <SmartLink
                           to={link.href}
-                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                          className={`flex items-center gap-2 text-sm transition-colors ${(link as any).gold ? 'text-amber-400 hover:text-amber-300 font-medium' : 'text-muted-foreground hover:text-primary'}`}
                           title={link.description}
                         >
                           <FileText className="h-4 w-4 flex-shrink-0" />
