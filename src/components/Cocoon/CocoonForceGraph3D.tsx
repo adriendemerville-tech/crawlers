@@ -231,46 +231,83 @@ function NodeSphere({
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
+  const haloRef = useRef<THREE.Mesh>(null);
   const activeColors = { ...PAGE_TYPE_COLORS, ...customNodeColors };
   const color = node.isHome
     ? isXRayMode ? "#1261d4" : (customNodeColors.homepage || "#ffc83c")
     : activeColors[node.pageType] || activeColors.unknown;
 
-  const emissiveIntensity = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.8 : 0.3;
+  const emissiveIntensity = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.4 : 0.3;
   const scale = isSelected ? 1.3 : isHovered ? 1.15 : 1;
   const isGhost = isXRayMode && node.traffic < 10;
 
   useFrame(({ clock }) => {
     if (!meshRef.current) return;
     const t = clock.getElapsedTime();
-    // Breathing pulse for home
     if (node.isHome) {
-      const pulse = 1 + Math.sin(t * 1.2) * 0.08;
-      meshRef.current.scale.setScalar(scale * pulse);
+      // Slow organic heartbeat: 3.5s cycle
+      const heartbeat = 1 + Math.sin(t * 1.8) * 0.05 + Math.sin(t * 0.7) * 0.03;
+      meshRef.current.scale.setScalar(scale * heartbeat);
+      // Halo breathing — slower, wider amplitude
+      if (haloRef.current) {
+        const haloBreath = 1 + Math.sin(t * 0.9) * 0.15 + Math.sin(t * 2.1) * 0.05;
+        haloRef.current.scale.setScalar(haloBreath);
+        const mat = haloRef.current.material as THREE.MeshBasicMaterial;
+        // Opacity oscillates between 0.06 and 0.16
+        mat.opacity = 0.06 + (Math.sin(t * 0.9) * 0.5 + 0.5) * 0.10;
+      }
+      // Border ring pulse
+      if (glowRef.current) {
+        const borderPulse = 1 + Math.sin(t * 1.8) * 0.04;
+        glowRef.current.scale.setScalar(borderPulse);
+      }
     } else {
       const pulse = 1 + Math.sin(t * 0.8 * 3 + node.x) * 0.04;
       meshRef.current.scale.setScalar(scale * pulse);
-    }
-    // Glow pulse
-    if (glowRef.current && node.isHome) {
-      const glowPulse = 1 + Math.sin(t * 1.2) * 0.3;
-      glowRef.current.scale.setScalar(glowPulse);
     }
   });
 
   return (
     <group position={[node.x * spreadScale, node.y * spreadScale, node.z * spreadScale]}>
+      {/* ── Home: Pulsating bio halo (outermost layer, blurred) ── */}
+      {node.isHome && (
+        <mesh ref={haloRef}>
+          <sphereGeometry args={[node.radius * 3.5, 32, 32]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={0.10}
+            depthWrite={false}
+            side={THREE.BackSide}
+          />
+        </mesh>
+      )}
+
+      {/* ── Home: Secondary soft glow ring ── */}
+      {node.isHome && (
+        <mesh>
+          <sphereGeometry args={[node.radius * 2.2, 28, 28]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={0.07}
+            depthWrite={false}
+            side={THREE.BackSide}
+          />
+        </mesh>
+      )}
+
       {/* Opaque border ring (slightly larger sphere behind) */}
-      <mesh>
-        <sphereGeometry args={[node.radius * 1.12, 24, 24]} />
+      <mesh ref={node.isHome ? glowRef : undefined}>
+        <sphereGeometry args={[node.radius * (node.isHome ? 1.18 : 1.12), 24, 24]} />
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={isGhost ? 0.3 : 0.9}
+          opacity={isGhost ? 0.3 : node.isHome ? 0.65 : 0.9}
         />
       </mesh>
 
-      {/* Core sphere — 25% opacity fill */}
+      {/* Core sphere — Home: 12% opacity (discrete), others: 25% */}
       <mesh
         ref={meshRef}
         onPointerOver={(e) => { e.stopPropagation(); onPointerOver(); }}
@@ -283,7 +320,7 @@ function NodeSphere({
           emissive={color}
           emissiveIntensity={emissiveIntensity}
           transparent
-          opacity={isGhost ? 0.08 : 0.25}
+          opacity={isGhost ? 0.08 : node.isHome ? 0.12 : 0.25}
           roughness={0.3}
           metalness={0.6}
         />
