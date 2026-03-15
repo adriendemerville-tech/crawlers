@@ -268,7 +268,7 @@ export function CocoonNodePanel({ node, onClose, onRefresh }: CocoonNodePanelPro
       </div>
 
       <div className="p-4 space-y-5">
-        {/* ROI & Traffic */}
+        {/* ROI & Traffic — hidden for now
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 rounded-lg bg-gradient-to-br from-[#4c1d95]/30 to-[#4c1d95]/10 border border-[#4c1d95]/20">
             <TrendingUp className="w-4 h-4 text-[#fbbf24] mb-1" />
@@ -281,6 +281,7 @@ export function CocoonNodePanel({ node, onClose, onRefresh }: CocoonNodePanelPro
             <div className="text-[10px] text-white/40">{t.trafficLabel}</div>
           </div>
         </div>
+        */}
 
         {/* Scores */}
         <div className="space-y-3">
