@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Lock, LogIn, UserPlus, Star, CheckCircle2 } from "lucide-react";
+import { Crown, Lock, LogIn, UserPlus, Star, CheckCircle2, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface CocoonAccessGateProps {
