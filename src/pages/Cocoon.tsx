@@ -65,7 +65,7 @@ const i18n = {
     selectSite: "Select a site",
     xray: "X-Ray",
     computing: "Computing...",
-    generate: "Generate Cocoon",
+    generate: "Generate",
     loading: "Loading semantic graph…",
     noGraph: "No cocoon generated",
     noGraphDesc: "Select a tracked site then click \"Generate Cocoon\" to build the semantic architecture from your crawl data.",
