@@ -407,6 +407,9 @@ export function CocoonForceGraph({
         ctx.fill();
       }
 
+      // ─── Home sun coefficient (zoom-aware) ───
+      const homeSunCoeff = getHomeSunCoefficient(transform.k);
+
       // ─── Draw nodes — Jarvis holographic dots ───
       for (const node of gNodes) {
         if (!node.x || !node.y) continue;
@@ -415,35 +418,75 @@ export function CocoonForceGraph({
         const isHovered = node.id === hoveredNode?.id;
         const isGhost = isXRayMode && node.traffic < 10;
 
-        // Pulse
-        const pulseFreq = node.isHome ? 1.2 : 0.8;
-        const pulse = 1 + Math.sin(time * pulseFreq * 3 + node.pulsePhase) * (node.isHome ? 0.15 : 0.08);
-        const r = node.radius * nodeScale * pulse;
+        // Pulse — home has stronger, slower pulsation
+        const pulseFreq = node.isHome ? 0.6 : 0.8;
+        const pulseAmp = node.isHome ? 0.12 : 0.08;
+        const pulse = 1 + Math.sin(time * pulseFreq * 3 + node.pulsePhase) * pulseAmp;
 
-        const [cr, cg, cb] = PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown;
+        // Home node: apply sun coefficient
+        const sizeMultiplier = node.isHome ? homeSunCoeff : 1;
+        const r = node.radius * nodeScale * pulse * sizeMultiplier;
+
+        // Home node always golden yellow
+        const [cr, cg, cb] = node.isHome ? [255, 200, 60] : (PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown);
         const baseAlpha = isGhost ? 0.15 : 1;
+
+        // ─── Home Sun: rotating elliptical corona with tilt ───
+        if (node.isHome && !isGhost) {
+          ctx.save();
+          ctx.translate(node.x, node.y);
+          // 10% tilt rotation
+          ctx.rotate(0.1 * Math.PI);
+          // Horizontal elliptical rotation animation
+          const rotAngle = time * 0.4;
+
+          // Outer corona layers (flowing effect)
+          for (let layer = 0; layer < 4; layer++) {
+            const coronaR = r * (1.3 + layer * 0.5);
+            const layerAngle = rotAngle + layer * 0.5;
+            const squish = 0.55 + Math.sin(time * 0.3 + layer) * 0.1;
+            const coronaAlpha = (0.15 - layer * 0.03) * (0.8 + Math.sin(time * 1.5 + layer * 1.2) * 0.2);
+
+            ctx.save();
+            ctx.rotate(layerAngle);
+            ctx.scale(1, squish);
+            ctx.beginPath();
+            ctx.arc(0, 0, coronaR, 0, Math.PI * 2);
+            const coronaGrad = ctx.createRadialGradient(0, 0, coronaR * 0.3, 0, 0, coronaR);
+            coronaGrad.addColorStop(0, `rgba(255, 220, 80, ${coronaAlpha})`);
+            coronaGrad.addColorStop(0.5, `rgba(255, 180, 40, ${coronaAlpha * 0.4})`);
+            coronaGrad.addColorStop(1, `rgba(255, 140, 20, 0)`);
+            ctx.fillStyle = coronaGrad;
+            ctx.fill();
+            ctx.restore();
+          }
+
+          ctx.restore();
+        }
 
         // ─── Outer glow rings (Jarvis energy rings) ───
         if ((isSelected || isHovered || node.isHome) && !isGhost) {
-          const ringCount = node.isHome ? 3 : 2;
+          const ringCount = node.isHome ? 4 : 2;
           for (let i = 0; i < ringCount; i++) {
-            const ringR = r * (2.5 + i * 1.8) + Math.sin(time * 2 + i) * r * 0.3;
-            const ringAlpha = (0.12 - i * 0.03) * (isSelected ? 1.5 : 1);
+            const ringR = r * (1.5 + i * 0.8) + Math.sin(time * 2 + i) * r * 0.15;
+            const ringAlpha = node.isHome
+              ? (0.2 - i * 0.04) * (0.8 + Math.sin(time * 1.2 + i * 0.8) * 0.2)
+              : (0.12 - i * 0.03) * (isSelected ? 1.5 : 1);
             ctx.beginPath();
             ctx.arc(node.x, node.y, ringR, 0, Math.PI * 2);
             ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, ${ringAlpha})`;
-            ctx.lineWidth = 0.5 * nodeScale;
+            ctx.lineWidth = (node.isHome ? 1 : 0.5) * nodeScale;
             ctx.stroke();
           }
         }
 
         // ─── Radial glow ───
         if (!isGhost) {
-          const glowR = r * (node.isHome ? 6 : isSelected ? 5 : isHovered ? 4 : 2.5);
-          const glowAlpha = node.isHome ? 0.2 : isSelected ? 0.15 : isHovered ? 0.12 : 0.06;
+          const glowR = r * (node.isHome ? 3 : isSelected ? 5 : isHovered ? 4 : 2.5);
+          const glowAlpha = node.isHome ? 0.35 : isSelected ? 0.15 : isHovered ? 0.12 : 0.06;
           const glow = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowR);
           glow.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, ${glowAlpha})`);
-          glow.addColorStop(0.5, `rgba(${cr}, ${cg}, ${cb}, ${glowAlpha * 0.3})`);
+          glow.addColorStop(0.4, `rgba(${cr}, ${cg}, ${cb}, ${glowAlpha * 0.4})`);
           glow.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, 0)`);
           ctx.beginPath();
           ctx.arc(node.x, node.y, glowR, 0, Math.PI * 2);
@@ -454,13 +497,22 @@ export function CocoonForceGraph({
         // ─── Core dot ───
         ctx.beginPath();
         ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.9})`;
+        if (node.isHome) {
+          // Sun gradient core
+          const coreGrad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r);
+          coreGrad.addColorStop(0, `rgba(255, 255, 200, ${baseAlpha})`);
+          coreGrad.addColorStop(0.4, `rgba(255, 210, 80, ${baseAlpha * 0.95})`);
+          coreGrad.addColorStop(1, `rgba(255, 160, 30, ${baseAlpha * 0.85})`);
+          ctx.fillStyle = coreGrad;
+        } else {
+          ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.9})`;
+        }
         ctx.fill();
 
         // Inner bright core (highlight)
         ctx.beginPath();
-        ctx.arc(node.x, node.y, r * 0.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 255, 255, ${baseAlpha * 0.5})`;
+        ctx.arc(node.x, node.y, r * (node.isHome ? 0.35 : 0.5), 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${baseAlpha * (node.isHome ? 0.7 : 0.5)})`;
         ctx.fill();
 
         // Thin rim
@@ -470,8 +522,10 @@ export function CocoonForceGraph({
           ? `rgba(255, 200, 60, 0.9)`
           : isHovered
             ? `rgba(${cr}, ${cg}, ${cb}, 0.8)`
-            : `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.3})`;
-        ctx.lineWidth = (isSelected ? 1.2 : 0.5) * nodeScale;
+            : node.isHome
+              ? `rgba(255, 200, 60, 0.6)`
+              : `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.3})`;
+        ctx.lineWidth = (isSelected || node.isHome ? 1.2 : 0.5) * nodeScale;
         ctx.stroke();
 
         // ─── Label ───
