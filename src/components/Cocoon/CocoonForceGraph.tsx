@@ -612,15 +612,29 @@ export function CocoonForceGraph({
     [getNodeAtPos, nodes, onNodeSelect],
   );
 
+  // Zoom toward mouse cursor position
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
     const factor = e.deltaY > 0 ? 0.92 : 1.08;
-    setTransform((t) => ({
-      ...t,
-      k: Math.max(0.15, Math.min(8, t.k * factor)),
-    }));
-  }, []);
+    setTransform((t) => {
+      const newK = Math.max(0.15, Math.min(8, t.k * factor));
+      const ratio = newK / t.k;
+      // Adjust pan so the point under cursor stays fixed
+      const cx = dimensions.width / 2;
+      const cy = dimensions.height / 2;
+      return {
+        x: (mouseX - cx) + ratio * (t.x - (mouseX - cx)),
+        y: (mouseY - cy) + ratio * (t.y - (mouseY - cy)),
+        k: newK,
+      };
+    });
+  }, [dimensions]);
 
   const zoomIn = useCallback(() => {
     setTransform((t) => ({ ...t, k: Math.min(8, t.k * 1.25) }));
