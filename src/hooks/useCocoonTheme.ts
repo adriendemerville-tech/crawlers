@@ -30,9 +30,18 @@ const DEFAULT_PARTICLE_COLORS: Record<string, string> = {
   hierarchy: "#b464ff",
 };
 
+const DEFAULT_HALO_COLORS: string[] = [
+  "#1e3a5f", // Sapphire blue
+  "#0d4f4f", // Deep cyan
+  "#5f3a1e", // Amber
+  "#3a1e5f", // Violet
+  "#1e5f3a", // Emerald
+];
+
 export const DEFAULT_THEME: CocoonTheme = {
   nodeColors: DEFAULT_NODE_COLORS,
   particleColors: DEFAULT_PARTICLE_COLORS,
+  haloColors: DEFAULT_HALO_COLORS,
 };
 
 export function useCocoonTheme() {
