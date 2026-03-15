@@ -9,11 +9,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, context } = await req.json();
+    const { messages, context, analysisMode } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Tu es un expert en SEO sémantique et architecture de contenu, spécialisé dans l'analyse de cocons sémantiques (cocoon / topic clusters).
+    const basePrompt = `Tu es un expert en SEO sémantique et architecture de contenu, spécialisé dans l'analyse de cocons sémantiques (cocoon / topic clusters).
 
 Tu as accès aux données suivantes sur le cocon sémantique de l'utilisateur :
 ${context || "Aucune donnée de cocon fournie."}
@@ -27,6 +27,20 @@ Ton rôle :
 - Donner des conseils pour améliorer la visibilité LLM (GEO)
 
 Réponds de façon concise, structurée et actionnable. Utilise des bullets points et du markdown. Adapte ta langue à celle de l'utilisateur.`;
+
+    const analysisPrompt = analysisMode ? `
+
+IMPORTANT: L'utilisateur a sélectionné plusieurs pages pour une analyse comparative. Tu dois:
+1. Décrire la relation contextuelle et sémantique entre ces pages
+2. Analyser la hiérarchie et le flux de "juice" (link equity) entre elles
+3. Utiliser ce format de couleurs dans ta réponse:
+   - 🟢 **Forces** : ce qui fonctionne bien (liens forts, complémentarité sémantique)
+   - 🔵 **Faiblesses** : points à améliorer (orphelines, faible autorité)
+   - 🔴 **Gaps** : liens manquants, opportunités ratées
+   - ✨ **Quick Wins** : actions rapides à fort impact
+4. Conclure avec des recommandations concrètes de maillage interne` : '';
+
+    const systemPrompt = basePrompt + analysisPrompt;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
