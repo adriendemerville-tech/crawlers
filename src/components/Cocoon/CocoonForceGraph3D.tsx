@@ -268,10 +268,10 @@ function NodeSphere({
 
   return (
     <group position={[node.x * spreadScale, node.y * spreadScale, node.z * spreadScale]}>
-      {/* ── Home: Outer halo with orange-yellow gradient feel (blurred edge) ── */}
+      {/* ── Home: Outer halo (halved radius, soft blur edge) ── */}
       {node.isHome && (
         <mesh ref={haloRef}>
-          <sphereGeometry args={[node.radius * 2.8, 32, 32]} />
+          <sphereGeometry args={[node.radius * 1.4, 32, 32]} />
           <meshBasicMaterial
             color="#ff8c20"
             transparent
@@ -282,16 +282,43 @@ function NodeSphere({
         </mesh>
       )}
 
-      {/* ── Home: Inner warm glow ring (yellow core bleed) ── */}
+      {/* ── Home: Blur fringe (slightly larger, very faint) ── */}
       {node.isHome && (
         <mesh>
-          <sphereGeometry args={[node.radius * 1.8, 28, 28]} />
+          <sphereGeometry args={[node.radius * 1.55, 28, 28]} />
+          <meshBasicMaterial
+            color="#ff8c20"
+            transparent
+            opacity={0.025}
+            depthWrite={false}
+            side={THREE.BackSide}
+          />
+        </mesh>
+      )}
+
+      {/* ── Home: Inner warm glow (halved) ── */}
+      {node.isHome && (
+        <mesh>
+          <sphereGeometry args={[node.radius * 1.2, 28, 28]} />
           <meshBasicMaterial
             color="#ffc83c"
             transparent
             opacity={0.05}
             depthWrite={false}
             side={THREE.BackSide}
+          />
+        </mesh>
+      )}
+
+      {/* ── Home: Bottom shadow ── */}
+      {node.isHome && (
+        <mesh position={[0, -node.radius * 0.4, 0]}>
+          <sphereGeometry args={[node.radius * 1.1, 20, 20]} />
+          <meshBasicMaterial
+            color="#000000"
+            transparent
+            opacity={0.15}
+            depthWrite={false}
           />
         </mesh>
       )}
