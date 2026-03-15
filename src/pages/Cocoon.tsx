@@ -427,8 +427,16 @@ export default function Cocoon() {
               <CocoonForceGraph
                 nodes={nodes}
                 selectedNodeId={selectedNode?.id || null}
-                onNodeSelect={setSelectedNode}
+                onNodeSelect={(node) => {
+                  if (nodePickerCallback && node) {
+                    nodePickerCallback(node);
+                    setNodePickerCallback(null);
+                  } else {
+                    setSelectedNode(node);
+                  }
+                }}
                 isXRayMode={isXRayMode}
+                isPickingMode={!!nodePickerCallback}
               />
             )}
 
