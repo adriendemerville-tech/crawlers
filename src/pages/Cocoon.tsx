@@ -80,10 +80,10 @@ const i18n = {
     upsellRedirecting: 'Redirecting…',
     prereqTitle: 'Required actions',
     prereqCrawl: 'Multi-page crawl',
-    prereqAudit: 'Full expert audit',
+    prereqAudit: 'Strategic audit',
     prereqDesc: 'To generate the semantic Cocoon, these steps must be completed on the selected site.',
     prereqCrawlCta: 'Start a crawl',
-    prereqAuditCta: 'Start an audit',
+    prereqAuditCta: 'Start a strategic audit',
     prereqClose: 'Got it',
   },
   es: {
