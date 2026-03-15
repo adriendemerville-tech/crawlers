@@ -1,6 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse } from '../_shared/fairUse.ts';
 
@@ -298,6 +298,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Erreur crawl-site:', error);
+    await trackEdgeFunctionError('crawl-site', error instanceof Error ? error.message : 'Erreur interne').catch(() => {});
     return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : 'Erreur interne',

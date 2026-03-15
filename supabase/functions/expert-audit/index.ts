@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { trackTokenUsage, trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { fetchAndRenderPage } from '../_shared/renderPage.ts'
 import { cacheKey, getCached, setCache, checkRateLimit } from '../_shared/auditCache.ts'
@@ -2321,6 +2321,7 @@ Réponds avec ce JSON exact:
     
   } catch (error) {
     console.error('Expert Audit error:', error);
+    await trackEdgeFunctionError('expert-audit', error instanceof Error ? error.message : 'Audit failed').catch(() => {});
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Audit failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -1,5 +1,5 @@
 import { getLLMTranslations, parseLanguage, type Language } from '../_shared/translations.ts';
-import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { trackTokenUsage, trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
@@ -390,6 +390,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Error analyzing LLM visibility:', error);
+    await trackEdgeFunctionError('check-llm', error instanceof Error ? error.message : 'Analysis failed').catch(() => {});
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : 'Analysis failed' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -1,4 +1,5 @@
 import { assertSafeUrl } from '../_shared/ssrf.ts';
+import { trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { fetchAndRenderPage } from '../_shared/renderPage.ts';
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { corsHeaders } from '../_shared/cors.ts';
@@ -274,6 +275,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to check URL';
+    await trackEdgeFunctionError('check-crawlers', errorMessage).catch(() => {});
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

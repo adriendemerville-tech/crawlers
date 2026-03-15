@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { fetchGA4Engagement, type GA4Engagement } from '../_shared/fetchGA4.ts'
-import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 
 /**
  * auto-measure-predictions (CRON — weekly)
@@ -328,6 +328,7 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : 'Unknown error'
     console.error('[auto-measure-predictions] error:', msg)
+    await trackEdgeFunctionError('auto-measure-predictions', msg).catch(() => {})
     return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

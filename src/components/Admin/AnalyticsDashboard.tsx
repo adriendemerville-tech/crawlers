@@ -267,7 +267,7 @@ export function AnalyticsDashboard() {
         expertAuditStep1: events.filter(e => e.event_type === 'expert_audit_step_1').length,
         expertAuditStep2: events.filter(e => e.event_type === 'expert_audit_step_2').length,
         expertAuditStep3: events.filter(e => e.event_type === 'expert_audit_step_3').length,
-        errorCount: events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final').length,
+        errorCount: events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final' || e.event_type === 'edge_function_error').length,
         auditCompareLaunched: events.filter(e => e.event_type === 'audit_compare_launched').length,
         multiPageCrawls: 0, // will be set from site_crawls table below
       };
@@ -496,7 +496,7 @@ export function AnalyticsDashboard() {
       setAnalyzedUrls(filteredUrls.slice(0, 100));
 
       // Fetch error events with user emails
-      const errorEventsRaw = events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final');
+      const errorEventsRaw = events.filter(e => e.event_type === 'error' || e.event_type === 'scan_error' || e.event_type === 'scan_error_final' || e.event_type === 'edge_function_error');
       
       // Get unique user_ids from error events
       const errorUserIds = [...new Set(errorEventsRaw
@@ -523,15 +523,18 @@ export function AnalyticsDashboard() {
       const enrichedErrors: ErrorEvent[] = errorEventsRaw.map(e => {
         const eventData = e.event_data as Record<string, unknown> | null;
         const isScanError = e.event_type === 'scan_error' || e.event_type === 'scan_error_final';
+        const isEdgeFnError = e.event_type === 'edge_function_error';
         return {
           id: crypto.randomUUID(),
           created_at: e.created_at,
           url: e.url,
           user_id: e.user_id,
           user_email: e.user_id ? userEmailMap[e.user_id] || null : null,
-          function_name: isScanError
-            ? `scan:${(eventData?.tab as string) || 'unknown'}`
-            : (eventData?.function_name as string) || (eventData?.source as string) || null,
+          function_name: isEdgeFnError
+            ? `⚡ ${(eventData?.function_name as string) || 'unknown'}`
+            : isScanError
+              ? `scan:${(eventData?.tab as string) || 'unknown'}`
+              : (eventData?.function_name as string) || (eventData?.source as string) || null,
           error_message: (eventData?.message as string) || (eventData?.error_message as string) || null,
           error_response: (eventData?.error_response as string) || (eventData?.response as string) || (eventData?.details as string) || null,
         };
@@ -1228,7 +1231,14 @@ export function AnalyticsDashboard() {
                 <AlertTriangle className="h-4 w-4 text-destructive" />
                 Registre des erreurs ({errorEvents.length})
               </CardTitle>
-              <CardDescription>Erreurs générées par les utilisateurs (30 derniers jours)</CardDescription>
+              <CardDescription>
+                Erreurs utilisateurs + Edge Functions (30 derniers jours)
+                {errorEvents.filter(e => e.function_name?.startsWith('⚡')).length > 0 && (
+                  <span className="ml-2 text-amber-500 font-medium">
+                    dont {errorEvents.filter(e => e.function_name?.startsWith('⚡')).length} backend
+                  </span>
+                )}
+              </CardDescription>
             </div>
             {errorEvents.length > 10 && (
               <Button

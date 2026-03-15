@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { checkIpRate, getClientIp, rateLimitResponse } from "../_shared/ipRateLimiter.ts";
 import { withCircuitBreaker } from "../_shared/circuitBreaker.ts";
+import { trackEdgeFunctionError } from "../_shared/tokenTracker.ts";
 
 /**
  * Edge Function: calculate-cocoon-logic
@@ -423,6 +424,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("[Cocoon] Error:", error);
+    await trackEdgeFunctionError('calculate-cocoon-logic', error instanceof Error ? error.message : String(error)).catch(() => {});
     return new Response(JSON.stringify({ error: "Erreur interne du module Cocoon" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

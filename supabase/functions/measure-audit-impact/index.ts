@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-import { trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
 import { fetchGA4Engagement, type GA4Engagement } from '../_shared/fetchGA4.ts'
 
@@ -381,6 +381,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('[measure] Fatal error:', error)
+    await trackEdgeFunctionError('measure-audit-impact', error instanceof Error ? error.message : 'Unknown error').catch(() => {})
     return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
