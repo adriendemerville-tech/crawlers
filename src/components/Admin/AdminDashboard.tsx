@@ -199,6 +199,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'intelligence': return <IntelligenceHub />;
       case 'silent-errors': return <SilentErrorsRegistry />;
       case 'ci-tests': return <CiTestsDashboard />;
+      case 'scanned-urls': return <ScannedUrlsRegistry />;
       case 'users': return wrap(<UserManagement />);
       case 'blog': return wrap(<BlogManagement />);
       case 'support': return wrap(<SupportManagement />);
