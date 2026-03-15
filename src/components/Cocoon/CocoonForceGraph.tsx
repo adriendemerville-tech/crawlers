@@ -463,11 +463,11 @@ export function CocoonForceGraph({
 
         // ─── Outer glow rings (Jarvis energy rings) ───
         if ((isSelected || isHovered || node.isHome) && !isGhost) {
-          const ringCount = node.isHome ? 4 : 2;
+          const ringCount = node.isHome ? 1 : 2;
           for (let i = 0; i < ringCount; i++) {
             const ringR = r * (1.5 + i * 0.8) + Math.sin(time * 2 + i) * r * 0.15;
             const ringAlpha = node.isHome
-              ? (0.2 - i * 0.04) * (0.8 + Math.sin(time * 1.2 + i * 0.8) * 0.2)
+              ? 0.18 * (0.8 + Math.sin(time * 1.2) * 0.2)
               : (0.12 - i * 0.03) * (isSelected ? 1.5 : 1);
             ctx.beginPath();
             ctx.arc(node.x, node.y, ringR, 0, Math.PI * 2);
