@@ -116,6 +116,8 @@ export default function Cocoon() {
   const [isLoading, setIsLoading] = useState(false);
   const [isComputing, setIsComputing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [showUpsell, setShowUpsell] = useState(false);
+  const [subscribeLoading, setSubscribeLoading] = useState(false);
 
   // Check access: Pro Agency or Admin
   useEffect(() => {
@@ -135,6 +137,13 @@ export default function Cocoon() {
     checkAccess();
   }, [user]);
 
+  // Delayed upsell reveal for non-pro users
+  useEffect(() => {
+    if (hasAccess) return;
+    const timer = setTimeout(() => setShowUpsell(true), 5000);
+    return () => clearTimeout(timer);
+  }, [hasAccess]);
+
   // Load tracked sites
   useEffect(() => {
     if (!user || !hasAccess) return;
@@ -150,105 +159,6 @@ export default function Cocoon() {
     };
     loadSites();
   }, [user, hasAccess]);
-
-  // Load existing nodes for selected site
-  useEffect(() => {
-    if (!selectedSiteId) return;
-
-    const loadNodes = async () => {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from("semantic_nodes" as any)
-        .select("*")
-        .eq("tracked_site_id", selectedSiteId)
-        .order("traffic_estimate", { ascending: false })
-        .limit(500);
-
-      if (!error && data) {
-        setNodes(data);
-      }
-      setIsLoading(false);
-    };
-    loadNodes();
-  }, [selectedSiteId]);
-
-  // Trigger computation
-  const handleCompute = async () => {
-    if (!selectedSiteId) return;
-    setIsComputing(true);
-
-    try {
-      const resp = await supabase.functions.invoke("calculate-cocoon-logic", {
-        body: { tracked_site_id: selectedSiteId },
-      });
-
-      if (resp.error) {
-        toast({
-          title: t.errorTitle,
-          description: resp.error.message || t.errorCompute,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: t.successTitle,
-          description: t.successDesc(resp.data?.stats?.nodes_count || 0, resp.data?.stats?.clusters_count || 0),
-        });
-        // Reload nodes
-        const { data } = await supabase
-          .from("semantic_nodes" as any)
-          .select("*")
-          .eq("tracked_site_id", selectedSiteId)
-          .order("traffic_estimate", { ascending: false })
-          .limit(500);
-        if (data) setNodes(data);
-      }
-    } catch (e) {
-      toast({
-        title: t.errorTitle,
-        description: t.errorGeneric,
-        variant: "destructive",
-      });
-    }
-
-    setIsComputing(false);
-  };
-
-  // Access gate
-  if (hasAccess === false) {
-    return (
-      <>
-        <Helmet>
-          <title>{t.title}</title>
-          <meta name="description" content={t.metaDesc} />
-        </Helmet>
-        <div className="min-h-screen bg-[#0f0a1e] flex items-center justify-center p-6">
-          <div className="text-center max-w-md space-y-6">
-            <div className="w-16 h-16 rounded-2xl bg-[#4c1d95]/30 flex items-center justify-center mx-auto border border-[#4c1d95]/20">
-              <Lock className="w-8 h-8 text-[#fbbf24]" />
-            </div>
-            <h1 className="text-2xl font-bold text-white font-display">{t.accessTitle}</h1>
-            <p className="text-white/50 text-sm leading-relaxed">{t.accessDesc}</p>
-            <div className="flex gap-3 justify-center">
-              {!user && (
-                <Button
-                  onClick={() => navigate("/auth")}
-                  className="bg-[#4c1d95] hover:bg-[#5b21b6] text-white"
-                >
-                  {t.login}
-                </Button>
-              )}
-              <Button
-                onClick={() => navigate("/pro-agency")}
-                className="bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] font-semibold"
-              >
-                {t.discoverPro}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
 
   return (
     <>
