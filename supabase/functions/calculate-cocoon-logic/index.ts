@@ -338,7 +338,7 @@ Deno.serve(async (req) => {
     const nodeData: any[] = [];
     const tokenizedDocs: string[][] = [];
 
-    for (const page of crawlPages) {
+    for (const page of validPages) {
       const keywords = extractKeywords(page.title || "", page.h1 || "", page.meta_description || "");
       const intent = classifyIntent(page.title || "", page.h1 || "", keywords);
       const pageType = classifyPageType(page.url, page.title || "", page.h1 || "");
