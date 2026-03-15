@@ -45,10 +45,10 @@ const i18n = {
     upsellRedirecting: 'Redirection…',
     prereqTitle: 'Actions requises',
     prereqCrawl: 'Crawl multi-pages',
-    prereqAudit: 'Audit expert complet',
+    prereqAudit: 'Audit stratégique',
     prereqDesc: 'Pour générer le Cocoon sémantique, ces étapes doivent être complétées sur le site sélectionné.',
     prereqCrawlCta: 'Lancer un crawl',
-    prereqAuditCta: 'Lancer un audit',
+    prereqAuditCta: 'Lancer un audit stratégique',
     prereqClose: 'Compris',
   },
   en: {
@@ -80,10 +80,10 @@ const i18n = {
     upsellRedirecting: 'Redirecting…',
     prereqTitle: 'Required actions',
     prereqCrawl: 'Multi-page crawl',
-    prereqAudit: 'Full expert audit',
+    prereqAudit: 'Strategic audit',
     prereqDesc: 'To generate the semantic Cocoon, these steps must be completed on the selected site.',
     prereqCrawlCta: 'Start a crawl',
-    prereqAuditCta: 'Start an audit',
+    prereqAuditCta: 'Start a strategic audit',
     prereqClose: 'Got it',
   },
   es: {
@@ -115,10 +115,10 @@ const i18n = {
     upsellRedirecting: 'Redirigiendo…',
     prereqTitle: 'Acciones requeridas',
     prereqCrawl: 'Crawl multi-página',
-    prereqAudit: 'Auditoría experta completa',
+    prereqAudit: 'Auditoría estratégica',
     prereqDesc: 'Para generar el Cocoon semántico, estos pasos deben completarse en el sitio seleccionado.',
     prereqCrawlCta: 'Iniciar un crawl',
-    prereqAuditCta: 'Iniciar una auditoría',
+    prereqAuditCta: 'Iniciar una auditoría estratégica',
     prereqClose: 'Entendido',
   },
 };
@@ -515,7 +515,12 @@ export default function Cocoon() {
                       size="sm"
                       variant="outline"
                       className="h-8 text-xs border-red-500/30 text-red-300 hover:bg-red-500/10 hover:text-red-200"
-                      onClick={() => { setShowPrereqModal(false); navigate('/site-crawl'); }}
+                      onClick={() => {
+                        const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
+                        const domain = selectedSite?.domain || '';
+                        setShowPrereqModal(false);
+                        navigate(`/site-crawl${domain ? `?url=${encodeURIComponent(domain)}` : ''}`);
+                      }}
                     >
                       {t.prereqCrawlCta}
                     </Button>
@@ -541,7 +546,12 @@ export default function Cocoon() {
                       size="sm"
                       variant="outline"
                       className="h-8 text-xs border-red-500/30 text-red-300 hover:bg-red-500/10 hover:text-red-200"
-                      onClick={() => { setShowPrereqModal(false); navigate('/audit-expert'); }}
+                      onClick={() => {
+                        const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
+                        const domain = selectedSite?.domain || '';
+                        setShowPrereqModal(false);
+                        navigate(`/?url=${encodeURIComponent(domain)}`);
+                      }}
                     >
                       {t.prereqAuditCta}
                     </Button>

@@ -7,7 +7,7 @@ import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { UrlValidationBanner } from '@/components/UrlValidationBanner';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 // Lazy load framer-motion - only needed after hydration for animations
 const MotionSpan = lazy(() => 
@@ -27,7 +27,8 @@ interface HeroSectionProps {
 const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 
 function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, currentUrl }: HeroSectionProps) {
-  const [url, setUrl] = useState('');
+  const [searchParams] = useSearchParams();
+  const [url, setUrl] = useState(() => searchParams.get('url') || '');
   const { t, language } = useLanguage();
   const validation = useUrlValidation(language);
   const [wordIndex, setWordIndex] = useState(0);
