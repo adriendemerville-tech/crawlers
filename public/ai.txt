@@ -123,6 +123,16 @@ Diagnostic automatisé de l'équilibre Brand / Non-Brand :
 - Historisation hebdomadaire pour détecter les dérives
 - Réservé aux abonnés Pro Agency (59€/mois)
 
+## 8. COCOON — ARCHITECTURE SÉMANTIQUE VIVANTE — NOUVEAU (Pro Agency)
+Visualisation organique du maillage sémantique de votre site :
+- Rendu D3.js interactif : chaque page est un nœud, chaque lien une connexion neuronale
+- Algorithme Iab (Anti-Wiki) : score de difficulté face aux sites d'autorité (Wikipedia, .gov)
+- ROI Prédictif annualisé par page (CPC × Volume × Conversion × 12)
+- Score GEO & Citabilité LLM : probabilité de citation par ChatGPT, Gemini, Perplexity
+- Mode X-Ray pour révéler les nœuds fantômes et clusters sous-exploités
+- Clustering automatique par similarité cosinus vectorielle
+- Réservé aux abonnés Pro Agency (59€/mois)
+
 # PAGES PRINCIPALES
 Homepage (outils gratuits): https://crawlers.fr/
 Audit Expert (Check-up technique & stratégique): https://crawlers.fr/audit-expert
@@ -130,6 +140,7 @@ Audit Comparé (Analyse concurrentielle face-à-face): https://crawlers.fr/audit
 Crawl Multi-Pages (Analyse récursive de site entier): https://crawlers.fr/site-crawl
 Architecte Génératif (Correctif multi-pages intelligent): https://crawlers.fr/architecte-generatif
 Indice d'Alignement Stratégique (Diagnostic Brand/Non-Brand GSC): https://crawlers.fr/indice-alignement-strategique
+Cocoon - Architecture Sémantique Vivante (Anti-Wiki, ROI prédictif, Citabilité LLM): https://crawlers.fr/cocoon
 Intégration GTM (Déploiement automatique des correctifs SEO): https://crawlers.fr/integration-gtm
 Lexique SEO/GEO/IA: https://crawlers.fr/lexique
 Tarifs: https://crawlers.fr/tarifs

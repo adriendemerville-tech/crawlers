@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCanonicalHreflang } from "@/hooks/useCanonicalHreflang";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
@@ -13,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 export default function Cocoon() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  useCanonicalHreflang('/cocoon');
 
   const [trackedSites, setTrackedSites] = useState<any[]>([]);
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
@@ -168,7 +170,6 @@ export default function Cocoon() {
       <Helmet>
         <title>Cocoon — Architecture Sémantique | Crawlers.fr</title>
         <meta name="description" content="Visualisez l'architecture sémantique de votre site comme un organisme vivant. Analyse GEO, ROI prédictif et maillage intelligent." />
-        <link rel="canonical" href="https://crawlers.fr/cocoon" />
       </Helmet>
 
       <div className="min-h-screen bg-[#0f0a1e] flex flex-col">

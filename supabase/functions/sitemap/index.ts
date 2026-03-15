@@ -98,6 +98,8 @@ Deno.serve(async (req) => {
     pages.push({ loc: `${SITE_URL}/integration-gtm`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/architecte-generatif`, lastmod: today });
     pages.push({ loc: `${SITE_URL}/indice-alignement-strategique`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/cocoon`, lastmod: today });
+    pages.push({ loc: `${SITE_URL}/features/cocoon`, lastmod: today });
 
     // ========================================
     // BLOG INDEX
