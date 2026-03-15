@@ -94,6 +94,7 @@ interface Particle {
   linkIdx: number;
   size: number;
   opacity: number;
+  juiceType: JuiceType;
 }
 
 interface CocoonForceGraphProps {
@@ -102,6 +103,7 @@ interface CocoonForceGraphProps {
   onNodeSelect: (node: SemanticNode | null) => void;
   isXRayMode: boolean;
   isPickingMode?: boolean;
+  particlesEnabled?: boolean;
 }
 
 export function CocoonForceGraph({
