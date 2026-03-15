@@ -322,8 +322,17 @@ export default function Cocoon() {
       <div className="min-h-screen bg-[#0f0a1e] flex flex-col relative">
         {/* Pro Agency upsell overlay for non-subscribers */}
         {!hasAccess && (
-          <div className={`fixed inset-0 z-30 flex items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div className={`fixed inset-0 z-30 flex flex-col items-center justify-center transition-all duration-700 ease-out ${showUpsell ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <div className="absolute inset-0 bg-[#0f0a1e]/60 backdrop-blur-[2px]" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="relative z-10 mb-4 gap-2 text-muted-foreground hover:text-foreground"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour à l'accueil
+            </Button>
             <Card className="relative z-10 w-full max-w-lg mx-4 border-2 border-violet-500 ring-2 ring-violet-500/30 bg-gradient-to-br from-violet-500/5 via-background to-yellow-500/5 shadow-xl shadow-violet-500/10">
               <div className="absolute top-0 left-0">
                 <Badge className="rounded-none rounded-br-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-black border-0 px-3 py-1 text-xs font-bold gap-1.5 shadow-lg">
