@@ -58,6 +58,8 @@ interface AnalyticsStats {
   errorCount: number;
   auditCompareLaunched: number;
   multiPageCrawls: number;
+  cocoonGenerated: number;
+  cocoonChatSessions: number;
 }
 
 interface TokenUsageStats {
