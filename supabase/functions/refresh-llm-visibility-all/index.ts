@@ -114,6 +114,7 @@ Deno.serve(async (req) => {
     })
   } catch (error) {
     console.error('[refresh-llm-visibility-all] Fatal:', error)
+    await trackEdgeFunctionError('refresh-llm-visibility-all', error instanceof Error ? error.message : 'Fatal').catch(() => {})
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

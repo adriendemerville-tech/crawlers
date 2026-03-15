@@ -424,6 +424,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("[Cocoon] Error:", error);
+    await trackEdgeFunctionError('calculate-cocoon-logic', error instanceof Error ? error.message : String(error)).catch(() => {});
     return new Response(JSON.stringify({ error: "Erreur interne du module Cocoon" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
