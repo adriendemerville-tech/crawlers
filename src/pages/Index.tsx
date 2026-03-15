@@ -622,16 +622,6 @@ const Index = () => {
         {/* Mobile-only Lexique button */}
         <MobileLexiqueButton />
         
-        <Suspense fallback={<SectionSkeleton />}>
-          <SolutionSection />
-        </Suspense>
-
-        <Suspense fallback={<SectionSkeleton />}>
-          <WhyVital2026Section />
-        </Suspense>
-        <Suspense fallback={<SectionSkeleton />}>
-          <GEOComparisonTable />
-        </Suspense>
 
         {/* CTA Observatoire */}
         <section className="border-y border-border bg-gradient-to-r from-violet-50/50 via-muted/30 to-amber-50/50 dark:from-violet-950/10 dark:via-muted/10 dark:to-amber-950/10 py-14 md:py-20">
