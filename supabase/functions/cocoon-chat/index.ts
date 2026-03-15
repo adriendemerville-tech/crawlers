@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
+import { logSilentError } from "../_shared/silentErrorLogger.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -70,6 +70,7 @@ Réponds de façon concise, structurée et actionnable. Utilise des bullets poin
     });
   } catch (e) {
     console.error("cocoon-chat error:", e);
+    await logSilentError("cocoon-chat", "chat-completion", e, { severity: "high", impact: "none" });
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

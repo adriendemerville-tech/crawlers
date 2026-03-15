@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { checkIpRate, getClientIp, rateLimitResponse } from "../_shared/ipRateLimiter.ts";
+import { logSilentError } from "../_shared/silentErrorLogger.ts";
 
 /**
  * Edge Function: persist-cocoon-session
@@ -218,6 +219,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("[PersistCocoonSession] Error:", error);
+    await logSilentError("persist-cocoon-session", "persist-session", error, { severity: "high", impact: "data_loss" });
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Erreur interne" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
