@@ -272,6 +272,12 @@ Deno.serve(async (req) => {
     // Cap at 100 pages for optimal TF-IDF precision (covers 100% of ~70% FR sites)
     const MAX_COCOON_PAGES = 100;
 
+    // First count total pages to inform user of truncation
+    const { count: totalCrawlPages } = await supabase
+      .from("crawl_pages")
+      .select("id", { count: "exact", head: true })
+      .eq("crawl_id", latestCrawlId);
+
     const { data: crawlPages } = await supabase
       .from("crawl_pages")
       .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description")
