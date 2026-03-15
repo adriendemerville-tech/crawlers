@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export interface CocoonTheme {
   nodeColors: Record<string, string>;
   particleColors: Record<string, string>;
+  haloColors: string[];
 }
 
 const DEFAULT_NODE_COLORS: Record<string, string> = {
