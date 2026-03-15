@@ -119,13 +119,13 @@ export function CocoonForceGraph({
   const perfTier = useMemo(() => detectPerformanceTier(), []);
   const perf = PERF_SETTINGS[perfTier];
 
-  // Depth → radius mapping: Home is biggest, deeper = smaller
+  // Depth → radius mapping: Home is biggest, deeper = smaller (compact sizing)
   const depthToRadius = (depth: number, traffic: number): number => {
-    if (depth === 0) return 32; // Home — immediately identifiable
-    if (depth === 1) return 18;
-    if (depth === 2) return 12;
-    if (depth === 3) return 9;
-    return 7;
+    if (depth === 0) return 18; // Home — identifiable but not oversized
+    if (depth === 1) return 10;
+    if (depth === 2) return 7;
+    if (depth === 3) return 5;
+    return 4;
   };
 
   // Build graph data
