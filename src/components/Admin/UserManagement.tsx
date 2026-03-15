@@ -69,10 +69,10 @@ export function UserManagement() {
     const labels: Record<string, string> = { admin: 'Créateur', viewer: 'Viewer', viewer_level2: 'Viewer L2' };
     try {
       if (hasRole) {
-        await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', role);
+        await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', role as any);
         toast.success(`Rôle ${labels[role]} retiré`);
       } else {
-        await supabase.from('user_roles').insert({ user_id: userId, role });
+        await supabase.from('user_roles').insert({ user_id: userId, role: role as any });
         toast.success(`Rôle ${labels[role]} attribué`);
       }
       fetchAllRoles();
