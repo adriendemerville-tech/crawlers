@@ -498,8 +498,24 @@ export default function Cocoon() {
                   <p className="text-white/40 text-sm">{t.noGraphDesc}</p>
                 </div>
               </div>
-            ) : (
+            ) : is3DMode ? (
               <CocoonForceGraph3D
+                nodes={nodes}
+                selectedNodeId={selectedNode?.id || null}
+                onNodeSelect={(node) => {
+                  if (nodePickerCallback && node) {
+                    nodePickerCallback(node);
+                    setNodePickerCallback(null);
+                  } else {
+                    setSelectedNode(node);
+                  }
+                }}
+                isXRayMode={isXRayMode}
+                isPickingMode={!!nodePickerCallback}
+                particlesEnabled={particlesEnabled}
+              />
+            ) : (
+              <CocoonForceGraph
                 nodes={nodes}
                 selectedNodeId={selectedNode?.id || null}
                 onNodeSelect={(node) => {
