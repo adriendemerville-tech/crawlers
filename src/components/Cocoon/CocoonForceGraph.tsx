@@ -520,11 +520,18 @@ export function CocoonForceGraph({
         ctx.beginPath();
         ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
         if (node.isHome) {
-          // Sun gradient core
           const coreGrad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r);
-          coreGrad.addColorStop(0, `rgba(255, 255, 200, ${baseAlpha})`);
-          coreGrad.addColorStop(0.4, `rgba(255, 210, 80, ${baseAlpha * 0.95})`);
-          coreGrad.addColorStop(1, `rgba(255, 160, 30, ${baseAlpha * 0.85})`);
+          if (isXRayMode) {
+            // X-Ray: blue core
+            coreGrad.addColorStop(0, `rgba(160, 195, 240, ${baseAlpha})`);
+            coreGrad.addColorStop(0.4, `rgba(94, 147, 224, ${baseAlpha * 0.95})`);
+            coreGrad.addColorStop(1, `rgba(60, 110, 200, ${baseAlpha * 0.85})`);
+          } else {
+            // Normal: sun gradient core
+            coreGrad.addColorStop(0, `rgba(255, 255, 200, ${baseAlpha})`);
+            coreGrad.addColorStop(0.4, `rgba(255, 210, 80, ${baseAlpha * 0.95})`);
+            coreGrad.addColorStop(1, `rgba(255, 160, 30, ${baseAlpha * 0.85})`);
+          }
           ctx.fillStyle = coreGrad;
         } else {
           ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.9})`;
