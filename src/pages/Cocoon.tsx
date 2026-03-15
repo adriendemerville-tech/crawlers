@@ -517,6 +517,11 @@ export default function Cocoon() {
           )}
         </main>
 
+        {/* AI Chat for interpreting results */}
+        {hasAccess && nodes.length > 0 && (
+          <CocoonAIChat nodes={nodes} selectedNodeId={selectedNode?.id} />
+        )}
+
         {/* Prerequisites Modal */}
         <Dialog open={showPrereqModal} onOpenChange={setShowPrereqModal}>
           <DialogContent className="bg-[#1a1035] border-[hsl(263,70%,20%)] text-white max-w-md p-0 overflow-hidden">
