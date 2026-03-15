@@ -16,6 +16,7 @@ import { IntelligenceHub } from './IntelligenceHub';
 import { ScriptKillSwitches } from './ScriptKillSwitches';
 import { SilentErrorsRegistry } from './SilentErrorsRegistry';
 import { AlgoTrainingDashboard } from './AlgoTrainingDashboard';
+import { FunctionsManagement } from './FunctionsManagement';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
