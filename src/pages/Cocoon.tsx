@@ -30,7 +30,7 @@ const i18n = {
     selectSite: "Sélectionner un site",
     xray: "X-Ray",
     computing: "Calcul...",
-    generate: "Générer le Cocon",
+    generate: "Générer",
     loading: "Chargement du graphe sémantique…",
     noGraph: "Aucun cocon généré",
     noGraphDesc: "Sélectionnez un site tracké puis cliquez sur \"Générer le Cocon\" pour construire l'architecture sémantique à partir de vos données de crawl.",
