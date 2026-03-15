@@ -692,74 +692,127 @@ Les données sont lues depuis la dernière entrée \`user_stats_history\` du sit
 
 Le module Cocoon transforme les données de crawl d'un site en une **visualisation organique** du maillage sémantique. Chaque page est un nœud pulsant, chaque lien une connexion neuronale. Réservé aux abonnés **Pro Agency** et aux admins.
 
-## Table \`semantic_nodes\`
+**Internationalisation** : Module intégralement traduit en **FR / EN / ES** (page, panneaux, légende dynamique, prompts IA, gate d'accès).
+
+## Table \\\`semantic_nodes\\\`
 
 | Colonne | Type | Description |
 |---------|------|-------------|
-| \`id\` | uuid | Identifiant unique du nœud |
-| \`tracked_site_id\` | uuid (FK) | Référence vers \`tracked_sites\` |
-| \`user_id\` | uuid | Propriétaire du nœud |
-| \`url\` | text | URL de la page |
-| \`title\` | text | Titre SEO de la page |
-| \`cluster_id\` | text | Identifiant du cluster sémantique |
-| \`cluster_label\` | text | Label lisible du cluster |
-| \`depth\` | int | Profondeur dans l'arborescence du site |
-| \`internal_links_in\` | int | Nombre de liens entrants internes |
-| \`internal_links_out\` | int | Nombre de liens sortants internes |
-| \`word_count\` | int | Nombre de mots de la page |
-| \`traffic_estimate\` | float | Estimation du trafic mensuel |
-| \`cpc_estimate\` | float | CPC moyen estimé |
-| \`keyword_volume\` | int | Volume de recherche du mot-clé principal |
-| \`iab_score\` | float | Score Anti-Wiki (0-100) — difficulté SERP |
-| \`geo_score\` | float | Score GEO (0-100) — optimisation IA |
-| \`roi_predictive\` | float | ROI annualisé prédictif (€) |
-| \`citability_score\` | float | Score de citabilité LLM (0-1) |
-| \`embedding_vector\` | jsonb | Vecteur d'embedding 64 dimensions |
-| \`similarity_edges\` | jsonb | Top 10 nœuds les plus proches |
-| \`x\` / \`y\` | float | Coordonnées de positionnement du graphe |
+| \\\`id\\\` | uuid | Identifiant unique du nœud |
+| \\\`tracked_site_id\\\` | uuid (FK) | Référence vers \\\`tracked_sites\\\` |
+| \\\`user_id\\\` | uuid | Propriétaire du nœud |
+| \\\`url\\\` | text | URL de la page |
+| \\\`title\\\` | text | Titre SEO de la page |
+| \\\`h1\\\` | text | Contenu du H1 |
+| \\\`keywords\\\` | jsonb | Mots-clés extraits (top 10 TF) |
+| \\\`cluster_id\\\` | text | Identifiant du cluster (composantes connexes) |
+| \\\`depth\\\` | int | Profondeur : 0 = seed cluster, 1 = membre |
+| \\\`page_type\\\` | text | Type détecté : homepage, blog, produit, catégorie, faq, guide, contact, tarifs, légal, à propos, page |
+| \\\`intent\\\` | text | Intent classifié : transactional, commercial, informational, navigational |
+| \\\`internal_links_in\\\` | int | Nombre de liens entrants internes |
+| \\\`internal_links_out\\\` | int | Nombre de liens sortants internes |
+| \\\`word_count\\\` | int | Nombre de mots de la page |
+| \\\`crawl_depth\\\` | int | Profondeur de crawl (0 = homepage) |
+| \\\`traffic_estimate\\\` | float | Estimation du trafic mensuel |
+| \\\`cpc_value\\\` | float | CPC moyen (enrichi depuis audit) |
+| \\\`search_volume\\\` | int | Volume de recherche (enrichi depuis audit) |
+| \\\`keyword_difficulty\\\` | float | Difficulté du mot-clé (enrichi depuis audit) |
+| \\\`iab_score\\\` | float | Score Anti-Wiki (0-100) — difficulté SERP |
+| \\\`eeat_score\\\` | float | Score E-E-A-T (repris du seo_score crawl) |
+| \\\`roi_predictive\\\` | float | ROI annualisé prédictif (€) |
+| \\\`similarity_edges\\\` | jsonb | Top 10 nœuds les plus proches (cosinus TF-IDF) |
+| \\\`status\\\` | text | \\\`pending\\\` → \\\`computed\\\` |
 
-## Edge Function : \`calculate-cocoon-logic\`
+## Edge Function : \\\`calculate-cocoon-logic\\\`
 
-### Flux de calcul
+### Algorithme (100% déterministe, aucun LLM)
 
 1. **Authentification** : Vérifie JWT + plan agency_pro/agency_premium ou admin
-2. **Récupération des données** : Charge les pages du dernier crawl (\`crawl_pages\`) et les données SERP (\`user_stats_history\`)
-3. **Génération d'embeddings** : Via Lovable AI (Gemini Flash), batch de 5
-4. **Calcul de similarité** : Cosinus entre tous les paires de vecteurs
-5. **Clustering** : Algorithme greedy par seuils de similarité (fort > 0.75, moyen > 0.55)
-6. **Score Iab** : Classification des concurrents SERP (Wiki, Gov, Social, News) → score de difficulté
-7. **ROI prédictif** : \`traffic_estimate × cpc_estimate × conversion_rate × 12\`
-8. **Upsert** : Les nœuds sont insérés/mis à jour dans \`semantic_nodes\`
+2. **Vérification propriété** : Le site tracké doit appartenir à l'utilisateur
+3. **Récupération des données** : Charge les pages du dernier crawl (\\\`crawl_pages\\\`), limité à **100 pages max** triées par profondeur
+4. **Filtrage** : Exclut les pages HTTP ≥ 400 (403, 500, etc.)
+5. **Enrichissement** : Croise avec les données d'audit existantes (\\\`audits\\\`) pour CPC, volume, KD, compétiteurs SERP
+6. **Extraction de mots-clés** : TF-based (top 10 termes par fréquence, hors stopwords FR/EN)
+7. **Classification intent** : Basée sur des listes de mots-clés transactionnels, navigationnels, commerciaux
+8. **Classification type de page** : Basée sur le path URL + titre/H1
 
-### Algorithme Anti-Wiki (Iab)
+### Vectorisation TF-IDF
+
+\\\`\\\`\\\`
+Pour chaque page :
+  texte = titre + h1 + meta_description + keywords
+  tokens = tokenize(texte)  // ≥3 chars, sans stopwords FR/EN
+  TF = log(1 + count)
+  IDF = log(N / df)
+  vecteur = TF × IDF (sparse map)
+\\\`\\\`\\\`
+
+### Similarité cosinus (sparse)
+
+Calcul O(n²) entre toutes les paires de vecteurs TF-IDF :
+
+| Seuil | Type | Usage |
+|-------|------|-------|
+| ≥ 0.4 | **strong** | Lien sémantique fort |
+| ≥ 0.2 | **medium** | Lien modéré — utilisé pour le clustering |
+| ≥ 0.1 | **weak** | Lien faible — affiché mais pas dans les clusters |
+
+Chaque nœud conserve ses **10 meilleurs edges** triés par score.
+
+### Clustering (Composantes connexes)
+
+Les nœuds sont groupés via BFS sur les edges **medium+** (≥ 0.2). Chaque composante connexe = un cluster (\\\`cluster_0\\\`, \\\`cluster_1\\\`, etc.). Les nœuds isolés reçoivent un \\\`cluster_singleton_N\\\`.
+
+### Score Anti-Wiki (Iab)
 
 Le score Iab (0-100) mesure la difficulté de ranking face aux sites d'autorité :
-- **Wikipedia / .gov / .edu** : +30 points de difficulté
-- **Réseaux sociaux** (youtube, twitter, linkedin) : +15 points
-- **Sites d'actualité** : +10 points
-- Score final = \`100 - difficulté_totale\` (clampé 0-100)
+- **Wiki / Encyclopédies** (wikipedia, larousse, britannica…) : augmente la difficulté
+- **Gouvernement / .edu** (.gouv.fr, .gov, .edu) : augmente la difficulté
+- **Réseaux sociaux** (youtube, reddit, quora, linkedin…) : difficulté modérée
+- Formule : \\\`baseScore = (1 - authorityRatio) × 70 + (1 - socialRatio) × 30\\\`
 
-### Circuit Breaker
+### ROI Prédictif
 
-Les appels d'embedding utilisent un circuit breaker (5 échecs max) avec retry exponentiel pour éviter les cascades de timeout.
+\\\`\\\`\\\`
+estimatedCTR = max(0.01, (100 - KD) / 100 × 0.15)
+traffic = volume × CTR
+convRate = convPotential / 100 × 0.03
+ROI = traffic × CPC × convRate × 12  // annualisé
+\\\`\\\`\\\`
+
+### Estimation trafic
+
+- Si position SERP connue (1-10) : lookup table CTR (pos 1 = 28%, pos 10 = 2%)
+- Sinon : \\\`volume × max(0.01, (100 - KD) / 100 × 0.10)\\\`
+
+### Rate limiting & sécurité
+
+- IP rate limit : 5 appels / 60s
+- Erreurs loguées via \\\`silentErrorLogger\\\` + \\\`tokenTracker\\\`
+- Insert par batch de 50 nœuds
 
 ## Frontend
 
-### Route : \`/cocoon\`
+### Route : \\\`/cocoon\\\`
 
-- **Rendu Canvas D3.js** via \`CocoonForceGraph.tsx\` — supporte 500+ nœuds interactifs
-- **CocoonNodePanel.tsx** : Panneau latéral détaillé avec métriques Iab, GEO, ROI et liens de proximité
+- **Rendu Canvas D3.js** via \\\`CocoonForceGraph.tsx\\\` — supporte 500+ nœuds interactifs
+- **CocoonNodePanel.tsx** : Panneau latéral détaillé avec métriques Iab, GEO, ROI, maillage, mots-clés et liens de proximité sémantique — **entièrement i18n FR/EN/ES**
 - **Mode X-Ray** : Toggle pour révéler les nœuds fantômes (faible trafic)
-- **Gate d'accès** : Vérification \`agency_pro\` / \`agency_premium\` / admin
+- **Légende dynamique** : N'affiche que les types de pages réellement présents dans le cocon, avec animation fade-in retardée (1.2s)
+- **Gate d'accès** : Vérification \\\`agency_pro\\\` / \\\`agency_premium\\\` / admin — i18n FR/EN/ES
+- **Assistant IA** (\\\`CocoonAIChat\\\`) : Chat Gemini Flash avec sélection multi-nœuds (max 5), analyse comparative automatique, streaming SSE — i18n FR/EN/ES
+- **Bannière de troncature** : Affichée si le site dépasse 100 pages (dorée)
+- **Auto-refresh** : Détecte le retour de l'utilisateur après un audit/crawl dans un nouvel onglet et régénère automatiquement le cocon (via \\\`visibilitychange\\\` + vérification DB des nouveaux rapports)
+- **Navigation rapide** : Boutons vers Audit Expert, Crawl Multi-pages (nouveaux onglets) et Console (retour)
 
-### Route : \`/features/cocoon\`
+### Route : \\\`/features/cocoon\\\`
 
 Landing page marketing avec comparaison GEO vs SEO et grille de fonctionnalités.
 
 ## RLS Policies
 
-- \`SELECT\` : \`user_id = auth.uid() OR has_role(auth.uid(), 'admin')\`
-- \`INSERT / UPDATE / DELETE\` : \`user_id = auth.uid()\`
+- \\\`SELECT\\\` : \\\`user_id = auth.uid() OR has_role(auth.uid(), 'admin')\\\`
+- \\\`INSERT / UPDATE / DELETE\\\` : \\\`user_id = auth.uid()\\\`
 `,
   },
 ];
