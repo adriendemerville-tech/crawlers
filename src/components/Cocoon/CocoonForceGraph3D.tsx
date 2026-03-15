@@ -518,6 +518,7 @@ function SceneContent({
         selectedNodeId={selectedNodeId}
         particlesEnabled={particlesEnabled}
         customParticleColors={customParticleColors}
+        spreadScale={spreadScale}
       />
 
       {/* Nodes */}
