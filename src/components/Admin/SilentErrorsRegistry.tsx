@@ -123,6 +123,10 @@ export function SilentErrorsRegistry() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
+        <Button variant="outline" size="sm" onClick={fetchErrors} disabled={loading} className="gap-1.5">
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+          Actualiser
+        </Button>
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <Select value={filterSeverity} onValueChange={setFilterSeverity}>
