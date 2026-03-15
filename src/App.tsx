@@ -129,6 +129,7 @@ const App = () => (
                           <Route path="/integration-gtm" element={<IntegrationGTM />} />
                           <Route path="/indice-alignement-strategique" element={<IndiceAlignementStrategique />} />
                           <Route path="/architecte-generatif" element={<ArchitecteGeneratif />} />
+                          <Route path="/cocoon" element={<Cocoon />} />
                           <Route path="/reset-password" element={<ResetPassword />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
