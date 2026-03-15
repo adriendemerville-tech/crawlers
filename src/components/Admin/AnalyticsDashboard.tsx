@@ -1231,7 +1231,14 @@ export function AnalyticsDashboard() {
                 <AlertTriangle className="h-4 w-4 text-destructive" />
                 Registre des erreurs ({errorEvents.length})
               </CardTitle>
-              <CardDescription>Erreurs générées par les utilisateurs (30 derniers jours)</CardDescription>
+              <CardDescription>
+                Erreurs utilisateurs + Edge Functions (30 derniers jours)
+                {errorEvents.filter(e => e.function_name?.startsWith('⚡')).length > 0 && (
+                  <span className="ml-2 text-amber-500 font-medium">
+                    dont {errorEvents.filter(e => e.function_name?.startsWith('⚡')).length} backend
+                  </span>
+                )}
+              </CardDescription>
             </div>
             {errorEvents.length > 10 && (
               <Button

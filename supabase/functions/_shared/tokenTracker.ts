@@ -77,3 +77,50 @@ export async function trackPaidApiCall(
     console.error('[tokenTracker] Failed:', e);
   }
 }
+
+/**
+ * Tracks an edge function error for admin dashboard visibility.
+ * Fire-and-forget — never throws.
+ */
+export async function trackEdgeFunctionError(
+  functionName: string,
+  errorMessage: string,
+  context?: {
+    url?: string;
+    user_id?: string;
+    domain?: string;
+    status_code?: number;
+    details?: string;
+  },
+) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY');
+  if (!supabaseUrl || !supabaseKey) return;
+
+  try {
+    await fetch(`${supabaseUrl}/rest/v1/analytics_events`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'apikey': supabaseKey,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        event_type: 'edge_function_error',
+        user_id: context?.user_id || null,
+        url: context?.url || null,
+        event_data: {
+          function_name: functionName,
+          error_message: errorMessage,
+          domain: context?.domain || null,
+          status_code: context?.status_code || 500,
+          details: context?.details || null,
+          timestamp: new Date().toISOString(),
+        },
+      }),
+    });
+  } catch (e) {
+    console.error('[trackEdgeFunctionError] Failed:', e);
+  }
+}
