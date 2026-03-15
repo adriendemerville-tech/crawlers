@@ -114,6 +114,16 @@ export function ScannedUrlsRegistry() {
         crawl: crawlsRes.count || 0,
         cocoon: cocoonRes.count || 0,
       });
+
+      // Build last audit type map per URL
+      const auditMap: Record<string, LastAuditType> = {};
+      for (const evt of (lastEventsRes.data || [])) {
+        const url = evt.target_url;
+        if (!url || auditMap[url]) continue; // already have newest
+        if (evt.event_type.startsWith('free_analysis_')) auditMap[url] = 'magnet';
+        else if (evt.event_type.startsWith('expert_audit_')) auditMap[url] = 'audit';
+      }
+      setLastAuditMap(auditMap);
     } catch (err) {
       console.error('Error fetching scanned URLs:', err);
     } finally {
