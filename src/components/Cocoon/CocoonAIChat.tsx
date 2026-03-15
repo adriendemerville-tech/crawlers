@@ -99,9 +99,15 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const [isOpen, setIsOpen] = useState(false);
   const [selectedSlots, setSelectedSlots] = useState<SelectedNodeSlot[]>([]);
   const [pickingIndex, setPickingIndex] = useState<number | null>(null);
+  const pickingIndexRef = useRef<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const chatHistoryId = useRef<string | null>(null);
   const MAX_SLOTS = 5;
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    pickingIndexRef.current = pickingIndex;
+  }, [pickingIndex]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -184,17 +190,18 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   }, [selectedSlots]);
 
   const handleNodePicked = useCallback((node: any) => {
-    if (pickingIndex === null) return;
+    const idx = pickingIndexRef.current;
+    if (idx === null) return;
     const slug = getSlug(node.url);
     const newSlot: SelectedNodeSlot = { id: node.id, title: node.title || slug, url: node.url, slug, nodeData: node };
     setSelectedSlots(prev => {
       const updated = [...prev];
-      if (pickingIndex < updated.length) updated[pickingIndex] = newSlot;
+      if (idx < updated.length) updated[idx] = newSlot;
       else updated.push(newSlot);
       return updated;
     });
     setPickingIndex(null);
-  }, [pickingIndex]);
+  }, []);
 
   const startPicking = useCallback((index: number) => {
     setPickingIndex(index);
