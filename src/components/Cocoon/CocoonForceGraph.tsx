@@ -656,16 +656,20 @@ export function CocoonForceGraph({
 
         // ─── Label ───
         if (isSelected || isHovered || node.isHome || (r > 3 && transform.k > 1.2)) {
-          const fontSize = Math.max(8, Math.min(11, 9 * nodeScale));
+          // Labels stay constant in screen-space: scale inversely with zoom
+          const labelScale = 1 / transform.k;
+          const fontSize = Math.max(7, Math.min(13, 11 * labelScale));
           ctx.font = `${isSelected || node.isHome ? "600 " : "400 "}${fontSize}px "Inter", system-ui, sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "top";
           const maxLen = 28;
           const label = node.label.length > maxLen ? node.label.slice(0, maxLen - 2) + "…" : node.label;
 
+          const labelOffset = r + 4 * labelScale;
+
           // Text shadow
           ctx.fillStyle = `rgba(0, 0, 0, 0.7)`;
-          ctx.fillText(label, node.x + 0.5, node.y + r + 4 * nodeScale + 0.5);
+          ctx.fillText(label, node.x + 0.5, node.y + labelOffset + 0.5);
 
           // Text
           ctx.fillStyle = isGhost
@@ -673,7 +677,7 @@ export function CocoonForceGraph({
             : isSelected || node.isHome
               ? `rgba(255, 220, 100, 0.95)`
               : `rgba(255, 255, 255, 0.7)`;
-          ctx.fillText(label, node.x, node.y + r + 4 * nodeScale);
+          ctx.fillText(label, node.x, node.y + labelOffset);
         }
       }
 
