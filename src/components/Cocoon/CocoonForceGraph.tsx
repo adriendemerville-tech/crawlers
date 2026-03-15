@@ -159,7 +159,7 @@ export function CocoonForceGraph({
       const isHome = n.id === homeId;
       return {
         id: n.id,
-        label: n.title || n.url.split("/").pop() || n.url,
+        label: isHome ? 'Home' : (n.title || n.url.split("/").pop() || n.url),
         intent: n.intent,
         cluster: n.cluster_id || "unclustered",
         iab: n.iab_score,
