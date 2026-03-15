@@ -254,27 +254,18 @@ export default function Cocoon() {
     setIsComputing(true);
 
     try {
-      // Check prerequisites: crawl + expert audit
-      const [crawlRes, auditRes] = await Promise.all([
-        supabase
-          .from("site_crawls" as any)
-          .select("id")
-          .eq("domain", selectedSite.domain)
-          .eq("user_id", user.id)
-          .limit(1),
-        supabase
-          .from("audits")
-          .select("id")
-          .eq("domain", selectedSite.domain)
-          .eq("user_id", user.id)
-          .limit(1),
-      ]);
+      // Check prerequisite: crawl is required, audit is optional (used for enrichment only)
+      const crawlRes = await supabase
+        .from("site_crawls" as any)
+        .select("id")
+        .eq("domain", selectedSite.domain)
+        .eq("user_id", user.id)
+        .limit(1);
 
       const hasCrawl = (crawlRes.data?.length || 0) > 0;
-      const hasAudit = (auditRes.data?.length || 0) > 0;
 
-      if (!hasCrawl || !hasAudit) {
-        setPrereqStatus({ hasCrawl, hasAudit });
+      if (!hasCrawl) {
+        setPrereqStatus({ hasCrawl, hasAudit: true });
         setShowPrereqModal(true);
         setIsComputing(false);
         return;
