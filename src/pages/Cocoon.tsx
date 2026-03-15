@@ -139,7 +139,7 @@ export default function Cocoon() {
 
   // Delayed upsell reveal for non-pro users
   useEffect(() => {
-    if (hasAccess) return;
+    if (hasAccess !== false) return;
     const timer = setTimeout(() => setShowUpsell(true), 5000);
     return () => clearTimeout(timer);
   }, [hasAccess]);
