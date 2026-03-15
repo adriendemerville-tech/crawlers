@@ -88,6 +88,13 @@ export function CocoonAccessGate({ language }: CocoonAccessGateProps) {
   return (
     <div className="min-h-screen bg-[#0f0a1e] flex items-center justify-center p-4">
       <div className="w-full max-w-lg space-y-4">
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-1 text-xs text-white/40 hover:text-white/70 transition-colors mb-2"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Accueil
+        </button>
         {/* Hero 1: Subscribe */}
         <Card className="border-2 border-violet-500 ring-2 ring-violet-500/30 bg-gradient-to-br from-violet-500/5 via-[#0f0a1e] to-yellow-500/5 shadow-xl shadow-violet-500/10">
           <div className="absolute top-0 left-0">
