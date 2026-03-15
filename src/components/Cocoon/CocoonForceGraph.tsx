@@ -664,8 +664,8 @@ export function CocoonForceGraph({
       if (node) {
         const original = nodes.find((n) => n.id === node.id) || null;
         onNodeSelect(original);
-      } else {
-        // Left-click on empty space: zoom in centered on cursor
+      } else if (!dragMoved.current) {
+        // Left-click on empty space (no drag): zoom in centered on cursor
         onNodeSelect(null);
         const canvas2 = canvasRef.current;
         if (!canvas2) return;
@@ -684,6 +684,9 @@ export function CocoonForceGraph({
             k: newK,
           };
         });
+      } else {
+        // Was dragging, just deselect
+        onNodeSelect(null);
       }
     },
     [getNodeAtPos, nodes, onNodeSelect, dimensions],
