@@ -342,7 +342,14 @@ Deno.serve(async (req) => {
       const keywords = extractKeywords(page.title || "", page.h1 || "", page.meta_description || "");
       const intent = classifyIntent(page.title || "", page.h1 || "", keywords);
       const pageType = classifyPageType(page.url, page.title || "", page.h1 || "");
-      const fullText = `${page.title || ""} ${page.h1 || ""} ${page.meta_description || ""} ${keywords.join(" ")}`;
+      
+      // Enrich tokenization: title + h1 + meta + keywords + URL path segments + anchor texts
+      const pathSegments = new URL(page.url).pathname.split(/[\/\-_]/).filter(s => s.length >= 3).join(" ");
+      const anchorTexts = (page.anchor_texts || [])
+        .filter((a: any) => a.type === "internal")
+        .map((a: any) => a.text || "")
+        .join(" ");
+      const fullText = `${page.title || ""} ${page.h1 || ""} ${page.meta_description || ""} ${keywords.join(" ")} ${pathSegments} ${anchorTexts}`;
       tokenizedDocs.push(tokenize(fullText));
 
       // Try to enrich from audit data
