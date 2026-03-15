@@ -35,6 +35,8 @@ interface CocoonNodePanelProps {
   node: SemanticNode;
   onClose: () => void;
   onRefresh?: () => void;
+  onAuditLaunch?: () => void;
+  isWaitingAudit?: boolean;
 }
 
 const i18n = {
