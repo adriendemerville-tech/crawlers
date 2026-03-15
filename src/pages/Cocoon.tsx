@@ -570,12 +570,14 @@ export default function Cocoon() {
 
           {/* AI Chat — shifted right */}
           {hasAccess && nodes.length > 0 && (
-            <div className="w-full max-w-[400px]">
+            <div className="relative">
               <CocoonAIChat
                 nodes={nodes}
                 selectedNodeId={selectedNode?.id}
                 onRequestNodePick={(cb) => setNodePickerCallback(() => cb)}
                 onCancelPick={() => setNodePickerCallback(null)}
+                trackedSiteId={selectedSiteId}
+                domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
               />
             </div>
           )}
