@@ -294,6 +294,7 @@ export function MyWallet() {
               <TabsList className="flex flex-col h-fit w-48 bg-muted/50 border-2 border-violet-500/40 rounded-lg p-1.5 gap-1 sticky top-20">
                 {[
                   { value: 'branding', icon: Palette, label: 'Branding' },
+                  { value: 'cocoon', icon: Network, label: 'Cocoon' },
                   { value: 'clients', icon: Activity, label: 'Clients' },
                   { value: 'invoices', icon: Receipt, label: language === 'fr' ? 'Factures' : language === 'es' ? 'Facturas' : 'Invoices' },
                   { value: 'payment', icon: CreditCard, label: language === 'fr' ? 'Paiement' : language === 'es' ? 'Pago' : 'Payment' },
