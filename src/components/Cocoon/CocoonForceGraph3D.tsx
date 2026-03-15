@@ -693,6 +693,8 @@ function SceneContent({
       {/* Ambient + directional light */}
       <ambientLight intensity={0.15} color="#6c5ce7" />
       <directionalLight position={[10, 10, 10]} intensity={0.4} color="#ffffff" />
+      {/* Top-down light for biomimetic gradient (lit top → dark bottom) */}
+      <directionalLight position={[0, 30, 5]} intensity={0.5} color="#c8d0e0" />
       <pointLight position={[0, 0, 0]} intensity={0.6} color="#ffc83c" distance={200} decay={2} />
 
       {/* Deep space background */}
