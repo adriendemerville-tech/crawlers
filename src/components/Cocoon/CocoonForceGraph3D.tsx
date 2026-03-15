@@ -250,11 +250,11 @@ function NodeSphere({
       meshRef.current.scale.setScalar(scale * heartbeat);
       // Halo breathing — slower, wider amplitude
       if (haloRef.current) {
-        const haloBreath = 1 + Math.sin(t * 0.9) * 0.15 + Math.sin(t * 2.1) * 0.05;
+        const haloBreath = 1 + Math.sin(t * 0.9) * 0.12 + Math.sin(t * 2.1) * 0.04;
         haloRef.current.scale.setScalar(haloBreath);
         const mat = haloRef.current.material as THREE.MeshBasicMaterial;
-        // Opacity oscillates between 0.06 and 0.16
-        mat.opacity = 0.06 + (Math.sin(t * 0.9) * 0.5 + 0.5) * 0.10;
+        // Opacity oscillates between 0.03 and 0.09 (subtle)
+        mat.opacity = 0.03 + (Math.sin(t * 0.9) * 0.5 + 0.5) * 0.06;
       }
       // Border ring pulse
       if (glowRef.current) {
@@ -269,28 +269,28 @@ function NodeSphere({
 
   return (
     <group position={[node.x * spreadScale, node.y * spreadScale, node.z * spreadScale]}>
-      {/* ── Home: Pulsating bio halo (outermost layer, blurred) ── */}
+      {/* ── Home: Outer halo with orange-yellow gradient feel (blurred edge) ── */}
       {node.isHome && (
         <mesh ref={haloRef}>
-          <sphereGeometry args={[node.radius * 3.5, 32, 32]} />
+          <sphereGeometry args={[node.radius * 2.8, 32, 32]} />
           <meshBasicMaterial
-            color={color}
+            color="#ff8c20"
             transparent
-            opacity={0.10}
+            opacity={0.06}
             depthWrite={false}
             side={THREE.BackSide}
           />
         </mesh>
       )}
 
-      {/* ── Home: Secondary soft glow ring ── */}
+      {/* ── Home: Inner warm glow ring (yellow core bleed) ── */}
       {node.isHome && (
         <mesh>
-          <sphereGeometry args={[node.radius * 2.2, 28, 28]} />
+          <sphereGeometry args={[node.radius * 1.8, 28, 28]} />
           <meshBasicMaterial
-            color={color}
+            color="#ffc83c"
             transparent
-            opacity={0.07}
+            opacity={0.05}
             depthWrite={false}
             side={THREE.BackSide}
           />
@@ -326,8 +326,8 @@ function NodeSphere({
         />
       </mesh>
 
-      {/* Label — always for home, hover/select only for others */}
-      {(node.isHome || isSelected || isHovered) && (
+      {/* Label — hover/select only (including home) */}
+      {(isSelected || isHovered) && (
         <Billboard position={[0, -node.radius - 1.5, 0]}>
           <Text
             fontSize={node.isHome ? 1.2 : 0.63}
@@ -955,7 +955,7 @@ export function CocoonForceGraph3D({
       </div>
 
       {/* Stats overlay */}
-      <div className="absolute top-4 right-4 text-[10px] text-white/30 font-mono space-y-0.5 text-right pointer-events-none">
+      <div className="absolute top-4 right-14 text-[10px] text-white/30 font-mono space-y-0.5 text-right pointer-events-none">
         <div>{nodes.length} nœuds · {graphLinks.length} liens</div>
       </div>
 
