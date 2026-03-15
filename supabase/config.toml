@@ -93,3 +93,7 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.cocoon-chat]
     verify_jwt = false
+  [functions.calculate-internal-pagerank]
+    verify_jwt = false
+  [functions.persist-cocoon-session]
+    verify_jwt = false
