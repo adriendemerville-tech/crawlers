@@ -170,7 +170,7 @@ export default function Profile() {
                 <Button variant="outline" asChild className="gap-2 border-amber-500/30 hover:bg-amber-500/10">
                   <Link to="/cocoon">
                     <Network className="h-4 w-4 text-amber-500" />
-                    <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">BÊTA</span>
+                    <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">BETA</span>
                     <span className="text-amber-500 font-semibold">Cocoon</span>
                   </Link>
                 </Button>
