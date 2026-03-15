@@ -739,6 +739,18 @@ export function AnalyticsDashboard() {
           icon={ScanSearch}
           description="Sites entiers analysés"
         />
+        <StatCard 
+          title="Cocoons générés" 
+          value={stats.cocoonGenerated} 
+          icon={Globe}
+          description="Graphes sémantiques"
+        />
+        <StatCard 
+          title="Discussions Assistant" 
+          value={stats.cocoonChatSessions} 
+          icon={Brain}
+          description="Conversations IA Cocoon"
+        />
       </div>
 
       {/* Business Metrics */}
