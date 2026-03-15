@@ -129,10 +129,10 @@ export function CocoonForceGraph({
 
   // Depth → radius: ultra-compact Jarvis-style dots
   const depthToRadius = (depth: number): number => {
-    if (depth === 0) return 4.5; // home base radius (bigger sun)
-    if (depth === 1) return 3.5;
-    if (depth === 2) return 2.5;
-    return 2;
+    if (depth === 0) return 11; // home base radius (bigger sun)
+    if (depth === 1) return 7;
+    if (depth === 2) return 4.5;
+    return 3.5;
   };
 
   // Home node sun coefficient: dynamically reaches 3x at max dezoom, 1x at max zoom-in
@@ -305,7 +305,7 @@ export function CocoonForceGraph({
     if (!isFinite(minX)) return;
     const graphW = maxX - minX;
     const graphH = maxY - minY;
-    const padding = 80;
+    const padding = 160;
     const scaleX = (dimensions.width - padding * 2) / graphW;
     const scaleY = (dimensions.height - padding * 2) / graphH;
     const k = Math.min(scaleX, scaleY, 3) * 0.9;
@@ -578,7 +578,7 @@ export function CocoonForceGraph({
 
         // ─── Radial glow ───
         if (!isGhost) {
-          const glowR = r * (node.isHome ? 3 : isSelected ? 5 : isHovered ? 4 : 2.5);
+          const glowR = r * (node.isHome ? 2.2 : isSelected ? 5 : isHovered ? 4 : 2.5);
           const baseGlowAlpha = node.isHome ? 0.35 : isSelected ? 0.15 : isHovered ? 0.12 : 0.06;
           const glowAlpha = node.isHome ? baseGlowAlpha * homeGlowPulse : baseGlowAlpha;
           const glow = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowR);
