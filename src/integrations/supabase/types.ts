@@ -2382,6 +2382,7 @@ export type Database = {
           content_gap_score: number
           conversion_potential: number
           cpc_value: number
+          crawl_depth: number | null
           crawl_page_id: string | null
           created_at: string
           depth: number
@@ -2399,6 +2400,8 @@ export type Database = {
           keyword_difficulty: number
           keywords: Json
           page_authority: number
+          page_type: string | null
+          page_updated_at: string | null
           parent_node_id: string | null
           roi_predictive: number
           search_volume: number
@@ -2422,6 +2425,7 @@ export type Database = {
           content_gap_score?: number
           conversion_potential?: number
           cpc_value?: number
+          crawl_depth?: number | null
           crawl_page_id?: string | null
           created_at?: string
           depth?: number
@@ -2439,6 +2443,8 @@ export type Database = {
           keyword_difficulty?: number
           keywords?: Json
           page_authority?: number
+          page_type?: string | null
+          page_updated_at?: string | null
           parent_node_id?: string | null
           roi_predictive?: number
           search_volume?: number
@@ -2462,6 +2468,7 @@ export type Database = {
           content_gap_score?: number
           conversion_potential?: number
           cpc_value?: number
+          crawl_depth?: number | null
           crawl_page_id?: string | null
           created_at?: string
           depth?: number
@@ -2479,6 +2486,8 @@ export type Database = {
           keyword_difficulty?: number
           keywords?: Json
           page_authority?: number
+          page_type?: string | null
+          page_updated_at?: string | null
           parent_node_id?: string | null
           roi_predictive?: number
           search_volume?: number

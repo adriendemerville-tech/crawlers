@@ -439,16 +439,6 @@ export function CocoonForceGraph({
         </Button>
       </div>
 
-      {/* Legend */}
-      <div className="absolute bottom-4 left-16 flex gap-3 text-xs">
-        {Object.entries(INTENT_COLORS).map(([intent, color]) => (
-          <div key={intent} className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-            <span className="text-white/60 capitalize">{intent}</span>
-          </div>
-        ))}
-      </div>
-
       {/* Stats overlay */}
       <div className="absolute top-4 right-4 text-xs text-white/50 font-mono">
         {nodes.length} nœuds · {graphLinks.length} liens

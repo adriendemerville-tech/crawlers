@@ -150,6 +150,25 @@ function classifyIntent(title: string, h1: string, keywords: string[]): string {
   return "informational";
 }
 
+// ─── Page Type Classification ───
+function classifyPageType(url: string, title: string, h1: string): string {
+  const path = url.toLowerCase();
+  const text = `${title} ${h1}`.toLowerCase();
+
+  if (path === "/" || path.endsWith(".com") || path.endsWith(".fr") || path.match(/^https?:\/\/[^/]+\/?$/)) return "homepage";
+  if (path.match(/\/blog|\/article|\/actualit|\/news|\/post/)) return "blog";
+  if (path.match(/\/produit|\/product|\/shop|\/boutique|\/item/)) return "produit";
+  if (path.match(/\/categor|\/collection|\/rayon/)) return "catégorie";
+  if (path.match(/\/faq|\/aide|\/help|\/support/)) return "faq";
+  if (path.match(/\/contact|\/nous-contacter/)) return "contact";
+  if (path.match(/\/tarif|\/pricing|\/prix|\/plan/)) return "tarifs";
+  if (path.match(/\/mention|\/legal|\/cgu|\/cgv|\/politique|\/privacy/)) return "légal";
+  if (path.match(/\/a-propos|\/about|\/qui-sommes/)) return "à propos";
+  if (text.match(/guide|tutoriel|tutorial|comment|how to/)) return "guide";
+
+  return "page";
+}
+
 // ─── Connected Components Clustering ───
 function clusterByComponents(
   adjacency: Map<number, number[]>,
@@ -280,7 +299,7 @@ Deno.serve(async (req) => {
 
     const { data: crawlPages } = await supabase
       .from("crawl_pages")
-      .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description")
+      .select("id, url, title, h1, word_count, internal_links, external_links, seo_score, meta_description, crawl_depth, created_at")
       .eq("crawl_id", latestCrawlId)
       .order("crawl_depth", { ascending: true })
       .limit(MAX_COCOON_PAGES);
@@ -316,6 +335,7 @@ Deno.serve(async (req) => {
     for (const page of crawlPages) {
       const keywords = extractKeywords(page.title || "", page.h1 || "", page.meta_description || "");
       const intent = classifyIntent(page.title || "", page.h1 || "", keywords);
+      const pageType = classifyPageType(page.url, page.title || "", page.h1 || "");
       const fullText = `${page.title || ""} ${page.h1 || ""} ${page.meta_description || ""} ${keywords.join(" ")}`;
       tokenizedDocs.push(tokenize(fullText));
 
@@ -341,6 +361,9 @@ Deno.serve(async (req) => {
         internal_links_in: 0,
         internal_links_out: page.internal_links || 0,
         eeat_score: page.seo_score || 0,
+        crawl_depth: page.crawl_depth || 0,
+        page_type: pageType,
+        page_updated_at: page.created_at || null,
         // Enriched from audit
         cpc_value: cpc,
         search_volume: volume,
