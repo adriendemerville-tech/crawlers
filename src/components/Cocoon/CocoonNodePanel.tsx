@@ -34,6 +34,7 @@ interface SemanticNode {
 interface CocoonNodePanelProps {
   node: SemanticNode;
   onClose: () => void;
+  onRefresh?: () => void;
 }
 
 const i18n = {
