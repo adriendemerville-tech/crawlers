@@ -414,7 +414,8 @@ function Links({
         <group ref={particleGroupRef}>
           {particleData.current.map((p, i) => {
             const link = links[p.linkIdx];
-            const color = link ? JUICE_COLORS[link.juiceType] : "#508cff";
+            const activeJuice2 = { ...JUICE_COLORS, ...customParticleColors };
+            const color = link ? activeJuice2[link.juiceType] : "#508cff";
             return (
               <mesh key={i} position={[0, 0, 0]}>
                 <sphereGeometry args={[0.25, 6, 6]} />
