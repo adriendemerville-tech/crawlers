@@ -97,6 +97,7 @@ interface CocoonForceGraph3DProps {
   nodeColors?: Record<string, string>;
   particleColors?: Record<string, string>;
   haloColors?: string[];
+  showClusters?: boolean;
 }
 
 // ─── 3D Force Simulation (manual spring-charge model) ───
