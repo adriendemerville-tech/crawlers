@@ -9,11 +9,19 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, context, analysisMode } = await req.json();
+    const { messages, context, analysisMode, language } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const langInstruction = language === 'en'
+      ? 'You MUST reply entirely in English.'
+      : language === 'es'
+        ? 'Debes responder SIEMPRE en español.'
+        : 'Tu DOIS répondre entièrement en français.';
+
     const basePrompt = `Tu es un expert en SEO sémantique et architecture de contenu, spécialisé dans l'analyse de cocons sémantiques (cocoon / topic clusters).
+
+${langInstruction}
 
 Tu as accès aux données suivantes sur le cocon sémantique de l'utilisateur :
 ${context || "Aucune donnée de cocon fournie."}
@@ -26,7 +34,7 @@ Ton rôle :
 - Expliquer les relations sémantiques entre les nœuds
 - Donner des conseils pour améliorer la visibilité LLM (GEO)
 
-Réponds de façon concise, structurée et actionnable. Utilise des bullets points et du markdown. Adapte ta langue à celle de l'utilisateur.`;
+Réponds de façon concise, structurée et actionnable. Utilise des bullets points et du markdown.`;
 
     const analysisPrompt = analysisMode ? `
 

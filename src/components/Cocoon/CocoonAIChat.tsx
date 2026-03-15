@@ -352,6 +352,7 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
           messages: newMessages,
           context: overrideContext ? buildMultiNodeContext() + '\n\n' + buildContext() : buildContext(),
           analysisMode: !!overrideContext,
+          language,
         }),
       });
 
