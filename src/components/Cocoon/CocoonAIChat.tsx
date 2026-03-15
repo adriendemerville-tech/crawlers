@@ -185,6 +185,9 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const chatHistoryId = useRef<string | null>(null);
   const MAX_SLOTS = 3;
   const [autoPicking, setAutoPicking] = useState(false);
+  const [fontSize, setFontSize] = useState(12); // px base for messages
+  const FONT_MIN = 10;
+  const FONT_MAX = 18;
 
   // Keep ref in sync with state
   useEffect(() => {
