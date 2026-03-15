@@ -29,10 +29,10 @@ type LastAuditType = 'magnet' | 'audit' | 'crawl' | 'cocoon' | null;
 
 function getLastAuditIcon(type: LastAuditType) {
   switch (type) {
-    case 'magnet': return <Magnet className="h-3.5 w-3.5 text-blue-500" title="Lead Magnet" />;
-    case 'audit': return <FileSearch className="h-3.5 w-3.5 text-violet-500" title="Audit Stratégique" />;
-    case 'crawl': return <ScanSearch className="h-3.5 w-3.5 text-amber-500" title="Crawl" />;
-    case 'cocoon': return <Network className="h-3.5 w-3.5 text-emerald-500" title="Cocoon" />;
+    case 'magnet': return <span title="Lead Magnet"><Magnet className="h-3.5 w-3.5 text-blue-500" /></span>;
+    case 'audit': return <span title="Audit Stratégique"><FileSearch className="h-3.5 w-3.5 text-violet-500" /></span>;
+    case 'crawl': return <span title="Crawl"><ScanSearch className="h-3.5 w-3.5 text-amber-500" /></span>;
+    case 'cocoon': return <span title="Cocoon"><Network className="h-3.5 w-3.5 text-emerald-500" /></span>;
     default: return null;
   }
 }
