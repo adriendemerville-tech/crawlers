@@ -109,7 +109,7 @@ export function CocoonForceGraph({
 
   // Depth → radius: ultra-compact Jarvis-style dots
   const depthToRadius = (depth: number): number => {
-    if (depth === 0) return 3; // base size for home (halved from 6), multiplied by sun coefficient
+    if (depth === 0) return 4.5; // home base radius (bigger sun)
     if (depth === 1) return 3.5;
     if (depth === 2) return 2.5;
     return 2;
