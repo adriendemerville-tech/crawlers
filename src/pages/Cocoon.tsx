@@ -434,7 +434,7 @@ export default function Cocoon() {
                 disabled={isComputing || !selectedSiteId}
                 className="h-8 text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1.5"
               >
-                {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
+                {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                 {(isComputing || isAutoRefreshing) ? t.analyzingData : t.refreshData}
               </Button>
               <Button
