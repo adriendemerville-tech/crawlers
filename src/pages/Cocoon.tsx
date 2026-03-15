@@ -609,14 +609,14 @@ export default function Cocoon() {
         </main>
 
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
-        <div className="shrink-0 px-4 md:px-6 py-3 flex items-end gap-4 flex-wrap">
+        <div className="shrink-0 px-3 sm:px-4 md:px-6 py-9 flex items-end gap-2 sm:gap-4 flex-wrap">
           {/* Console button — bottom left */}
           <button
             onClick={() => navigate('/console')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors text-xs font-medium backdrop-blur-md shrink-0 ml-4"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md shrink-0 ml-2 sm:ml-4"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            {t.console}
+            <ArrowLeft className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+            <span className="hidden xs:inline">{t.console}</span>
           </button>
 
           {/* AI Chat — shifted right */}
@@ -636,8 +636,8 @@ export default function Cocoon() {
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Navigation buttons — bottom right, same line */}
-          <div className="flex items-center gap-2 shrink-0 mr-4">
+          {/* Navigation buttons — bottom right */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 mr-2 sm:mr-4">
             <a
               href={(() => {
                 const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
@@ -646,10 +646,10 @@ export default function Cocoon() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => { externalClickTimestamp.current = Date.now(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3b82f6]/10 border border-[#3b82f6]/25 text-[#60a5fa] hover:bg-[#3b82f6]/20 hover:text-[#93bbfd] transition-colors text-xs font-medium backdrop-blur-md"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-[#3b82f6]/10 border border-[#3b82f6]/25 text-[#60a5fa] hover:bg-[#3b82f6]/20 hover:text-[#93bbfd] transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md"
             >
               <Search className="w-3 h-3" />
-              {t.crawlMulti}
+              <span className="hidden sm:inline">{t.crawlMulti}</span>
               <ExternalLink className="w-2.5 h-2.5" />
             </a>
             <a
@@ -662,10 +662,10 @@ export default function Cocoon() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => { externalClickTimestamp.current = Date.now(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/25 text-[#c084fc] hover:bg-[#a855f7]/20 hover:text-[#d8b4fe] transition-colors text-xs font-medium backdrop-blur-md"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/25 text-[#c084fc] hover:bg-[#a855f7]/20 hover:text-[#d8b4fe] transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md"
             >
               <FileText className="w-3 h-3" />
-              {t.auditExpert}
+              <span className="hidden sm:inline">{t.auditExpert}</span>
               <ExternalLink className="w-2.5 h-2.5" />
             </a>
           </div>
