@@ -481,7 +481,12 @@ export default function Cocoon() {
         {hasAccess && nodes.length > 0 && (
           <div className="px-4 md:px-6 pb-4 md:pb-6">
             <div className="w-full max-w-[400px]">
-              <CocoonAIChat nodes={nodes} selectedNodeId={selectedNode?.id} />
+              <CocoonAIChat
+                nodes={nodes}
+                selectedNodeId={selectedNode?.id}
+                onRequestNodePick={(cb) => setNodePickerCallback(() => cb)}
+                onCancelPick={() => setNodePickerCallback(null)}
+              />
             </div>
           </div>
         )}
