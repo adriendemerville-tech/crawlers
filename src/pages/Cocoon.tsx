@@ -43,6 +43,13 @@ const i18n = {
     upsellPer: 'mois',
     upsellCta: "S'abonner",
     upsellRedirecting: 'Redirection…',
+    prereqTitle: 'Actions requises',
+    prereqCrawl: 'Crawl multi-pages',
+    prereqAudit: 'Audit expert complet',
+    prereqDesc: 'Pour générer le Cocoon sémantique, ces étapes doivent être complétées sur le site sélectionné.',
+    prereqCrawlCta: 'Lancer un crawl',
+    prereqAuditCta: 'Lancer un audit',
+    prereqClose: 'Compris',
   },
   en: {
     title: "Cocoon — Semantic Architecture | Crawlers.fr",
