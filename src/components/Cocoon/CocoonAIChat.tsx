@@ -488,6 +488,14 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
               <p className="text-[10px] text-white/40">{t.subtitle}</p>
             </div>
             <div className="flex items-center gap-1">
+              <button onClick={() => setFontSize(s => Math.max(FONT_MIN, s - 1))} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title="Réduire le texte">
+                <ZoomOut className="w-3 h-3 text-white/30 hover:text-white/60" />
+              </button>
+              <span className="text-[9px] text-white/25 font-mono min-w-[20px] text-center">{fontSize}</span>
+              <button onClick={() => setFontSize(s => Math.min(FONT_MAX, s + 1))} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title="Agrandir le texte">
+                <ZoomIn className="w-3 h-3 text-white/30 hover:text-white/60" />
+              </button>
+              <div className="w-px h-3 bg-white/10 mx-0.5" />
               {messages.length > 0 && (
                 <button onClick={clearChat} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title={t.clear}>
                   <Trash2 className="w-3 h-3 text-white/30 hover:text-white/60" />
