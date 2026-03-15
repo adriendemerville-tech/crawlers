@@ -58,7 +58,7 @@ export function ScannedUrlsRegistry() {
         (trackedSites || []).map(s => s.domain?.toLowerCase()).filter(Boolean)
       );
 
-      const [urlsRes, eventsRes, crawlsRes, cocoonRes] = await Promise.all([
+      const [urlsRes, eventsRes, crawlsRes, cocoonRes, lastEventsRes] = await Promise.all([
         supabase
           .from('analyzed_urls')
           .select('*')
@@ -80,6 +80,17 @@ export function ScannedUrlsRegistry() {
         supabase
           .from('cocoon_sessions')
           .select('id', { count: 'exact', head: true }),
+        // Fetch last event per URL for icon display
+        supabase
+          .from('analytics_events')
+          .select('event_type, target_url, created_at')
+          .in('event_type', [
+            'free_analysis_crawlers', 'free_analysis_geo', 'free_analysis_llm', 'free_analysis_pagespeed',
+            'expert_audit_launched', 'expert_audit_step_1', 'expert_audit_step_2', 'expert_audit_step_3',
+          ])
+          .not('target_url', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1000),
       ]);
 
       const filtered = (urlsRes.data || []).filter(
