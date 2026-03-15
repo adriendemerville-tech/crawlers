@@ -108,10 +108,27 @@ export function CocoonForceGraph({
 
   // Depth → radius: ultra-compact Jarvis-style dots
   const depthToRadius = (depth: number): number => {
-    if (depth === 0) return 6;
+    if (depth === 0) return 6; // base size, will be multiplied by home coefficient
     if (depth === 1) return 3.5;
     if (depth === 2) return 2.5;
     return 2;
+  };
+
+  // Home node sun coefficient: 30x at default zoom, scales down to 5x as user zooms in
+  const getHomeSunCoefficient = (zoomK: number): number => {
+    // At auto-fit zoom (~0.85), coefficient = 30
+    // As zoom increases, coefficient decreases rapidly toward 5
+    const minCoeff = 5;
+    const maxCoeff = 30;
+    // Normalize: at k<=1 → maxCoeff, at k>=3 → minCoeff
+    const t = Math.min(1, Math.max(0, (zoomK - 0.5) / 2.5));
+    return maxCoeff - (maxCoeff - minCoeff) * t * t; // quadratic easing
+  };
+
+  // Link distance bonus for home children: 12% at default zoom, decreasing to 0 with zoom
+  const getHomeLinkBonus = (zoomK: number): number => {
+    const t = Math.min(1, Math.max(0, (zoomK - 0.5) / 2.5));
+    return 1.12 - 0.12 * t * t;
   };
 
   // Build graph data
