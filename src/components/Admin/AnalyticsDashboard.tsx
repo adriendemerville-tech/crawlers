@@ -1188,39 +1188,6 @@ export function AnalyticsDashboard() {
         </CardContent>
       </Card>
 
-      {/* Score de fiabilité du moteur de prédiction */}
-      {reliabilityScore && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              Fiabilité du moteur de prédiction
-            </CardTitle>
-            <CardDescription>Score basé sur l'écart entre prédictions et résultats réels</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-3 rounded-lg bg-muted/50 text-center">
-                <p className="text-xs text-muted-foreground">Score de fiabilité</p>
-                <p className={`text-2xl font-bold ${reliabilityScore.score >= 70 ? 'text-emerald-500' : reliabilityScore.score >= 40 ? 'text-amber-500' : 'text-destructive'}`}>
-                  {reliabilityScore.score.toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  {reliabilityScore.score >= 70 ? '✅ Visible clients' : '🔒 Shadow mode'}
-                </p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50 text-center">
-                <p className="text-xs text-muted-foreground">Audits traités</p>
-                <p className="text-2xl font-bold">{reliabilityScore.audits}</p>
-              </div>
-              <div className="p-3 rounded-lg bg-muted/50 text-center">
-                <p className="text-xs text-muted-foreground">Prédictions générées</p>
-                <p className="text-2xl font-bold">{reliabilityScore.predictions}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
 
       <Card>
