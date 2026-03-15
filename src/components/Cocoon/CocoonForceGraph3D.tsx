@@ -260,7 +260,7 @@ function NodeSphere({
     <group position={[node.x * spreadScale, node.y * spreadScale, node.z * spreadScale]}>
       {/* Opaque border ring (slightly larger sphere behind) */}
       <mesh>
-        <sphereGeometry args={[scaledRadius * 1.12, 24, 24]} />
+        <sphereGeometry args={[node.radius * 1.12, 24, 24]} />
         <meshBasicMaterial
           color={color}
           transparent
