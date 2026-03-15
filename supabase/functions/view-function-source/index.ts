@@ -5,9 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Static registry of function source paths - we read from Deno filesystem
-const FUNCTIONS_BASE = './';
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -30,7 +27,6 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Check admin or viewer role
     const serviceClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const { data: roles } = await serviceClient
       .from('user_roles')
@@ -45,12 +41,12 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // For viewers, check if they have approved access
     const { function_name } = await req.json();
-    if (!function_name || typeof function_name !== 'string' || function_name.includes('..') || function_name.includes('/')) {
+    if (!function_name || typeof function_name !== 'string' || /[^a-z0-9\-]/.test(function_name)) {
       return new Response(JSON.stringify({ error: 'Invalid function name' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // For viewers, check approved access
     if (isViewer && !isAdmin) {
       const { data: accessData } = await serviceClient
         .from('function_access_requests')
@@ -72,15 +68,23 @@ Deno.serve(async (req) => {
       function_name,
     });
 
-    // Try to read the function file
-    // Edge functions are deployed, so we can't read source from filesystem at runtime
-    // Instead we return a placeholder indicating the function exists
-    // The actual code viewing would require a build-time solution
-    return new Response(JSON.stringify({
-      function_name,
-      message: `Function ${function_name} is deployed and active.`,
-      path: `supabase/functions/${function_name}/index.ts`,
-    }), {
+    // Try to read the function source from the deployed functions directory
+    let code = '';
+    try {
+      // In Deno Deploy, sibling functions are at ../function_name/index.ts
+      const filePath = new URL(`../${function_name}/index.ts`, import.meta.url);
+      code = await Deno.readTextFile(filePath);
+    } catch {
+      try {
+        // Alternative path
+        const altPath = `/home/deno/functions/${function_name}/index.ts`;
+        code = await Deno.readTextFile(altPath);
+      } catch {
+        code = `// Source code for ${function_name} is deployed but not readable from this context.\n// Path: supabase/functions/${function_name}/index.ts`;
+      }
+    }
+
+    return new Response(JSON.stringify({ function_name, code }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
