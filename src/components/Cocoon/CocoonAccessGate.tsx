@@ -82,7 +82,7 @@ export function CocoonAccessGate({ language }: CocoonAccessGateProps) {
       const { error } = await signInWithGoogle(`${window.location.origin}/cocoon`);
       if (error) throw error;
     } catch (e: any) {
-      toast({ title: "Erreur", description: e.message, variant: "destructive" });
+      toast({ title: t.errorGeneric, description: e.message, variant: "destructive" });
       setLoginLoading(false);
     }
   };
