@@ -65,14 +65,20 @@ const adminTranslations = {
   },
 };
 
-export function AdminDashboard() {
+interface AdminDashboardProps {
+  readOnly?: boolean;
+}
+
+export function AdminDashboard({ readOnly = false }: AdminDashboardProps) {
   const { language } = useLanguage();
   const t = adminTranslations[language] || adminTranslations.fr;
 
   return (
+    <AdminProvider value={{ readOnly }}>
     <div className="space-y-6">
-      <DemoModeToggle />
-      <GA4OAuthToggle />
+      {readOnly && <ReadOnlyBanner />}
+      {!readOnly && <DemoModeToggle />}
+      {!readOnly && <GA4OAuthToggle />}
       <BrowserlessAlert />
       <ApiGatewayFallbackAlert />
 
