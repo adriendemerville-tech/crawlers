@@ -266,7 +266,7 @@ export function LoadingSteps({ siteName, variant = 'technical', onStopMusicRef }
           />
         </div>
         <p className="text-xs text-muted-foreground text-center mt-2 opacity-60">
-          Volume recommandé : 50%
+          Connectez votre Spotify en paramètres
         </p>
       </div>
 
