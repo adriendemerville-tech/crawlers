@@ -170,30 +170,24 @@ export function FunctionsManagement() {
       }
     }
 
-    // Load function code
+    // Load function code via edge function
     setSelectedFunction(fnName);
     setLoadingCode(true);
     setDialogOpen(true);
 
     try {
-      const resp = await fetch(`/supabase/functions/${fnName}/index.ts`);
-      if (resp.ok) {
-        setFunctionCode(await resp.text());
+      const { data, error } = await supabase.functions.invoke('view-function-source', {
+        body: { function_name: fnName },
+      });
+      if (error) {
+        setFunctionCode(`// Erreur de chargement: ${error.message}\n// Fichier: supabase/functions/${fnName}/index.ts`);
+      } else if (data?.code) {
+        setFunctionCode(data.code);
       } else {
-        // Try reading from known path
-        setFunctionCode(`// Code de la fonction ${fnName}\n// Fichier: supabase/functions/${fnName}/index.ts\n\n// Le code source est accessible dans le repository.`);
+        setFunctionCode(`// Fonction: ${fnName}\n// Chemin: supabase/functions/${fnName}/index.ts\n// ${data?.message || 'Fonction déployée et active.'}`);
       }
     } catch {
-      setFunctionCode(`// Code de la fonction ${fnName}\n// Fichier: supabase/functions/${fnName}/index.ts`);
-    }
-
-    // Log consultation
-    if (user && profile) {
-      await supabase.from('function_consultation_log' as any).insert({
-        user_id: user.id,
-        user_email: profile.email,
-        function_name: fnName,
-      } as any);
+      setFunctionCode(`// Erreur de chargement\n// Fichier: supabase/functions/${fnName}/index.ts`);
     }
 
     setLoadingCode(false);
