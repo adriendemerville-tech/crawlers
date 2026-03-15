@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
+import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
 import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
