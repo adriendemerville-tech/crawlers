@@ -303,6 +303,7 @@ export default function Cocoon() {
         setIsAutoRefreshing(true);
         await handleCompute();
         setIsAutoRefreshing(false);
+        setWaitingAuditUrl(null);
       }
     };
 
