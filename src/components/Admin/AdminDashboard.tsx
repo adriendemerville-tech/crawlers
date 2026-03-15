@@ -202,6 +202,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'scripts': return wrap(<ScriptKillSwitches />);
       case 'algos': return showAlgos ? wrap(<AlgoTrainingDashboard />) : null;
       case 'docs': return showDocs ? <BackendDocumentation /> : null;
+      case 'functions': return <FunctionsManagement />;
       default: return <AnalyticsDashboard />;
     }
   };
