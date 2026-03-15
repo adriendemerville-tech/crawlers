@@ -164,6 +164,8 @@
     <!-- Google Tag Manager - Deferred for better FCP/LCP -->
     <script>
     window.addEventListener('load', function() {
+      var h = window.location.hostname;
+      if (h.includes('lovableproject.com') || h.includes('lovable.app') || h === 'localhost') return;
       setTimeout(function() {
         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
         new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
