@@ -148,6 +148,8 @@ export function AnalyticsDashboard() {
     errorCount: 0,
     auditCompareLaunched: 0,
     multiPageCrawls: 0,
+    cocoonGenerated: 0,
+    cocoonChatSessions: 0,
   });
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [topPages, setTopPages] = useState<PageVisit[]>([]);
