@@ -554,6 +554,8 @@ export function CocoonForceGraph3D({
   isXRayMode,
   isPickingMode = false,
   particlesEnabled = true,
+  nodeColors = {},
+  particleColors = {},
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
