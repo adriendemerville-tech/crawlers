@@ -102,12 +102,26 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const pickingIndexRef = useRef<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const chatHistoryId = useRef<string | null>(null);
-  const MAX_SLOTS = 5;
+  const MAX_SLOTS = 3;
+  const [autoPicking, setAutoPicking] = useState(false);
 
   // Keep ref in sync with state
   useEffect(() => {
     pickingIndexRef.current = pickingIndex;
   }, [pickingIndex]);
+
+  // Stop auto-picking when mouse leaves the viewport
+  useEffect(() => {
+    const handleMouseLeave = () => {
+      if (autoPicking) {
+        setAutoPicking(false);
+        setPickingIndex(null);
+        onCancelPick?.();
+      }
+    };
+    document.documentElement.addEventListener('mouseleave', handleMouseLeave);
+    return () => document.documentElement.removeEventListener('mouseleave', handleMouseLeave);
+  }, [autoPicking, onCancelPick]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -198,10 +212,20 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       const updated = [...prev];
       if (idx < updated.length) updated[idx] = newSlot;
       else updated.push(newSlot);
+      // Auto-continue picking if under MAX_SLOTS
+      if (updated.length < MAX_SLOTS) {
+        setAutoPicking(true);
+        setTimeout(() => {
+          setPickingIndex(updated.length);
+          onRequestNodePick?.(handleNodePicked);
+        }, 50);
+      } else {
+        setPickingIndex(null);
+        setAutoPicking(false);
+      }
       return updated;
     });
-    setPickingIndex(null);
-  }, []);
+  }, [onRequestNodePick]);
 
   const startPicking = useCallback((index: number) => {
     setPickingIndex(index);
@@ -371,27 +395,22 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
       {/* Floating chat window — opens upward */}
       {isOpen && (
         <div className="absolute bottom-full mb-2 left-0 w-[475px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50"
-          style={{ maxHeight: 'min(500px, 60vh)' }}
+          style={{ maxHeight: 'min(600px, 72vh)' }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-[#fbbf24]/10 border border-[#fbbf24]/20">
-                <Bot className="w-4 h-4 text-[#fbbf24]" />
-              </div>
-              <div>
-                <span className="text-sm font-semibold text-white">{t.title}</span>
-                <p className="text-[10px] text-white/40 leading-tight">{t.subtitle}</p>
-              </div>
+          {/* Header — compact */}
+          <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
+            <div className="flex items-center gap-2">
+              <Bot className="w-3.5 h-3.5 text-[#fbbf24]" />
+              <p className="text-[10px] text-white/40">{t.subtitle}</p>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               {messages.length > 0 && (
-                <button onClick={clearChat} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" title={t.clear}>
-                  <Trash2 className="w-3.5 h-3.5 text-white/30 hover:text-white/60" />
+                <button onClick={clearChat} className="p-1 rounded-lg hover:bg-white/10 transition-colors" title={t.clear}>
+                  <Trash2 className="w-3 h-3 text-white/30 hover:text-white/60" />
                 </button>
               )}
-              <button onClick={() => setIsOpen(false)} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
-                <X className="w-4 h-4 text-white/50 hover:text-white/80" />
+              <button onClick={() => setIsOpen(false)} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
+                <X className="w-3.5 h-3.5 text-white/50 hover:text-white/80" />
               </button>
             </div>
           </div>
@@ -473,7 +492,13 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
             <div className="flex gap-2">
               <Textarea
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  if (e.target.value.length > 0 && autoPicking) {
+                    setAutoPicking(false);
+                    cancelPicking();
+                  }
+                }}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                 placeholder={t.placeholder}
                 rows={1}
