@@ -1,4 +1,5 @@
-import { X, TrendingUp, Target, Globe, Zap, Link2, ExternalLink, Layers, FileText, Clock } from "lucide-react";
+import { X, TrendingUp, Target, Globe, Zap, Link2, ExternalLink, Layers, FileText, Clock, Search, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SemanticNode {
