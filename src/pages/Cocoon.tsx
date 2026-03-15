@@ -170,8 +170,20 @@ export default function Cocoon() {
   const [truncationInfo, setTruncationInfo] = useState<{ truncated: boolean; total: number; used: number } | null>(null);
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
+  const [waitingAuditUrl, setWaitingAuditUrl] = useState<string | null>(null);
   const autoLaunchTriggered = useRef(false);
   const externalClickTimestamp = useRef<number | null>(null);
+  const waitingAuditNodeUrl = useRef<string | null>(null);
+
+  // Sync selectedNode with latest nodes data after recompute
+  useEffect(() => {
+    if (selectedNode && nodes.length > 0) {
+      const updated = nodes.find((n: any) => n.url === selectedNode.url);
+      if (updated && JSON.stringify(updated) !== JSON.stringify(selectedNode)) {
+        setSelectedNode(updated);
+      }
+    }
+  }, [nodes]);
 
   // Check access: Pro Agency or Admin
   useEffect(() => {
@@ -291,6 +303,7 @@ export default function Cocoon() {
         setIsAutoRefreshing(true);
         await handleCompute();
         setIsAutoRefreshing(false);
+        setWaitingAuditUrl(null);
       }
     };
 
@@ -553,7 +566,15 @@ export default function Cocoon() {
 
             {/* Side Panel */}
             {selectedNode && (
-              <CocoonNodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />
+              <CocoonNodePanel
+                node={selectedNode}
+                onClose={() => { setSelectedNode(null); setWaitingAuditUrl(null); }}
+                onAuditLaunch={() => {
+                  externalClickTimestamp.current = Date.now();
+                  setWaitingAuditUrl(selectedNode.url);
+                }}
+                isWaitingAudit={waitingAuditUrl === selectedNode.url}
+              />
             )}
           </div>
 

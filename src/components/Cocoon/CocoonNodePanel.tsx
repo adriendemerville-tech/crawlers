@@ -35,6 +35,8 @@ interface CocoonNodePanelProps {
   node: SemanticNode;
   onClose: () => void;
   onRefresh?: () => void;
+  onAuditLaunch?: () => void;
+  isWaitingAudit?: boolean;
 }
 
 const i18n = {
@@ -185,7 +187,7 @@ function formatDate(dateStr: string | undefined, lang: string): string {
   }
 }
 
-export function CocoonNodePanel({ node, onClose, onRefresh }: CocoonNodePanelProps) {
+export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWaitingAudit }: CocoonNodePanelProps) {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const t = i18n[language] || i18n.fr;
@@ -215,11 +217,18 @@ export function CocoonNodePanel({ node, onClose, onRefresh }: CocoonNodePanelPro
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <button
-              onClick={() => navigate(`/audit-expert?url=${encodeURIComponent(node.url)}`)}
+              onClick={() => {
+                window.open(`/audit-expert?url=${encodeURIComponent(node.url)}`, '_blank');
+                onAuditLaunch?.();
+              }}
               title={language === 'en' ? 'Expert Audit' : language === 'es' ? 'Auditoría experta' : 'Audit Expert'}
               className="p-1.5 rounded-md border border-[#3b82f6]/30 hover:bg-[#3b82f6]/10 text-white/40 hover:text-[#60a5fa] transition-colors"
             >
-              <Search className="w-4 h-4" />
+              {isWaitingAudit ? (
+                <RefreshCw className="w-4 h-4 animate-spin text-[#60a5fa]" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
             </button>
             <button
               onClick={onRefresh}
@@ -257,6 +266,14 @@ export function CocoonNodePanel({ node, onClose, onRefresh }: CocoonNodePanelPro
             </span>
           )}
         </div>
+
+        {/* Waiting for audit */}
+        {isWaitingAudit && (
+          <div className="flex items-center gap-1.5 mt-2 text-[10px] text-[#60a5fa] animate-pulse">
+            <RefreshCw className="w-3 h-3 animate-spin" />
+            {language === 'en' ? 'Waiting for audit results…' : language === 'es' ? 'Esperando resultados…' : 'En attente des résultats…'}
+          </div>
+        )}
 
         {/* Last updated */}
         {node.page_updated_at && (
