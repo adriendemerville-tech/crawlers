@@ -955,7 +955,7 @@ export function CocoonForceGraph3D({
       </div>
 
       {/* Stats overlay */}
-      <div className="absolute top-4 right-4 text-[10px] text-white/30 font-mono space-y-0.5 text-right pointer-events-none">
+      <div className="absolute top-4 right-14 text-[10px] text-white/30 font-mono space-y-0.5 text-right pointer-events-none">
         <div>{nodes.length} nœuds · {graphLinks.length} liens</div>
       </div>
 
