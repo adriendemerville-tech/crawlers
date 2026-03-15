@@ -536,8 +536,8 @@ export function CocoonForceGraph({
     setTransform((t) => ({ ...t, k: Math.max(0.15, t.k * 0.8) }));
   }, []);
   const zoomReset = useCallback(() => {
-    setTransform({ x: 0, y: 0, k: 1 });
-  }, []);
+    fitToView();
+  }, [fitToView]);
 
   // Pan
   const isDragging = useRef(false);
