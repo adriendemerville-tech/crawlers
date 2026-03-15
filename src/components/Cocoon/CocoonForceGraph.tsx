@@ -99,6 +99,7 @@ interface CocoonForceGraphProps {
   selectedNodeId: string | null;
   onNodeSelect: (node: SemanticNode | null) => void;
   isXRayMode: boolean;
+  isPickingMode?: boolean;
 }
 
 export function CocoonForceGraph({
