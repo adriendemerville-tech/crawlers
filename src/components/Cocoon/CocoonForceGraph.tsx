@@ -665,10 +665,28 @@ export function CocoonForceGraph({
         const original = nodes.find((n) => n.id === node.id) || null;
         onNodeSelect(original);
       } else {
+        // Left-click on empty space: zoom in centered on cursor
         onNodeSelect(null);
+        const canvas2 = canvasRef.current;
+        if (!canvas2) return;
+        const rect = canvas2.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const factor = 1.35;
+        setTransform((t) => {
+          const newK = Math.max(0.15, Math.min(8, t.k * factor));
+          const ratio = newK / t.k;
+          const cx = dimensions.width / 2;
+          const cy = dimensions.height / 2;
+          return {
+            x: (mouseX - cx) + ratio * (t.x - (mouseX - cx)),
+            y: (mouseY - cy) + ratio * (t.y - (mouseY - cy)),
+            k: newK,
+          };
+        });
       }
     },
-    [getNodeAtPos, nodes, onNodeSelect],
+    [getNodeAtPos, nodes, onNodeSelect, dimensions],
   );
 
   // Zoom toward mouse cursor position
