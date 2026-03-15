@@ -445,28 +445,39 @@ export function CocoonForceGraph({
         }
       }
 
-      // ─── Particles flowing along links ───
-      const particles = particlesRef.current;
-      for (const p of particles) {
-        p.progress += p.speed;
-        if (p.progress > 1) {
-          p.progress = 0;
-          p.linkIdx = Math.floor(Math.random() * gLinks.length);
+      // ─── Juice particles flowing along links ───
+      if (particlesEnabled) {
+        const particles = particlesRef.current;
+        for (const p of particles) {
+          p.progress += p.speed;
+          if (p.progress > 1) {
+            p.progress = 0;
+            const newIdx = Math.floor(Math.random() * gLinks.length);
+            p.linkIdx = newIdx;
+            const newLink = gLinks[newIdx];
+            if (newLink) {
+              p.juiceType = newLink.juiceType;
+              p.size = 0.4 + newLink.juiceIntensity * 1.2 + Math.random() * 0.4;
+              p.speed = 0.001 + Math.random() * 0.003 + newLink.juiceIntensity * 0.002;
+            }
+          }
+          const link = gLinks[p.linkIdx];
+          if (!link) continue;
+          const source = link.source as GraphNode;
+          const target = link.target as GraphNode;
+          if (!source.x || !source.y || !target.x || !target.y) continue;
+
+          const px = source.x + (target.x - source.x) * p.progress;
+          const py = source.y + (target.y - source.y) * p.progress;
+          const fadeEdge = Math.sin(p.progress * Math.PI);
+
+          const [jr, jg, jb] = JUICE_COLORS[p.juiceType];
+          const particleSize = p.size * nodeScale * (0.8 + link.juiceIntensity * 0.6);
+          ctx.beginPath();
+          ctx.arc(px, py, particleSize, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${jr}, ${jg}, ${jb}, ${p.opacity * fadeEdge * 0.7})`;
+          ctx.fill();
         }
-        const link = gLinks[p.linkIdx];
-        if (!link) continue;
-        const source = link.source as GraphNode;
-        const target = link.target as GraphNode;
-        if (!source.x || !source.y || !target.x || !target.y) continue;
-
-        const px = source.x + (target.x - source.x) * p.progress;
-        const py = source.y + (target.y - source.y) * p.progress;
-        const fadeEdge = Math.sin(p.progress * Math.PI); // fade at start/end
-
-        ctx.beginPath();
-        ctx.arc(px, py, p.size * nodeScale, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(160, 140, 255, ${p.opacity * fadeEdge * 0.6})`;
-        ctx.fill();
       }
 
       // ─── Home sun coefficient (zoom-aware) ───
