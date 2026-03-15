@@ -435,6 +435,7 @@ export default function Cocoon() {
             </Select>
 
             <div className="flex items-center gap-2 ml-auto">
+              <CocoonHelpModal />
               <Button
                 variant="outline"
                 size="sm"
