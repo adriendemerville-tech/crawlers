@@ -93,6 +93,8 @@ interface CocoonForceGraph3DProps {
   isXRayMode: boolean;
   isPickingMode?: boolean;
   particlesEnabled?: boolean;
+  nodeColors?: Record<string, string>;
+  particleColors?: Record<string, string>;
 }
 
 // ─── 3D Force Simulation (manual spring-charge model) ───
