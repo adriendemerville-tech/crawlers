@@ -406,9 +406,12 @@ export default function Cocoon() {
           <div className="max-w-[1600px] mx-auto flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[#fbbf24] animate-pulse" />
-              <h1 className="text-sm font-bold text-white font-display tracking-tight">
-                Cocoon <span className="text-[#fbbf24]">·</span> {t.organism}
-              </h1>
+              <div>
+                <h1 className="text-sm font-bold text-white font-display tracking-tight leading-none">
+                  Cocoon <span className="text-[#fbbf24]">·</span> {t.organism}
+                </h1>
+                <span className="text-[10px] text-white/30 font-medium tracking-wider uppercase leading-none">beta</span>
+              </div>
             </div>
 
             {/* Site selector */}
