@@ -125,8 +125,9 @@ export function CocoonTab() {
         .maybeSingle();
 
       if (data) {
-        setNodeColors({ ...DEFAULT_THEME.nodeColors, ...(data.node_colors as Record<string, string>) });
-        setParticleColors({ ...DEFAULT_THEME.particleColors, ...(data.particle_colors as Record<string, string>) });
+        const d = data as any;
+        setNodeColors({ ...DEFAULT_THEME.nodeColors, ...(d.node_colors as Record<string, string>) });
+        setParticleColors({ ...DEFAULT_THEME.particleColors, ...(d.particle_colors as Record<string, string>) });
       }
       setLoading(false);
     };

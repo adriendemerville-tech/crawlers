@@ -75,9 +75,10 @@ export function useCocoonTheme() {
       }
 
       if (data) {
+        const d = data as any;
         setTheme({
-          nodeColors: { ...DEFAULT_NODE_COLORS, ...(data.node_colors as Record<string, string>) },
-          particleColors: { ...DEFAULT_PARTICLE_COLORS, ...(data.particle_colors as Record<string, string>) },
+          nodeColors: { ...DEFAULT_NODE_COLORS, ...(d.node_colors as Record<string, string>) },
+          particleColors: { ...DEFAULT_PARTICLE_COLORS, ...(d.particle_colors as Record<string, string>) },
         });
       } else {
         setTheme(DEFAULT_THEME);
