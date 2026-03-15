@@ -102,7 +102,8 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
   const pickingIndexRef = useRef<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const chatHistoryId = useRef<string | null>(null);
-  const MAX_SLOTS = 5;
+  const MAX_SLOTS = 3;
+  const [autoPicking, setAutoPicking] = useState(false);
 
   // Keep ref in sync with state
   useEffect(() => {
