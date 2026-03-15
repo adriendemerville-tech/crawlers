@@ -219,6 +219,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error("[PersistCocoonSession] Error:", error);
+    await logSilentError("persist-cocoon-session", "persist-session", error, { severity: "high", impact: "data_loss" });
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Erreur interne" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

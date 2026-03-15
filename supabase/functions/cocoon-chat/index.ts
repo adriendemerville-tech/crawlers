@@ -70,6 +70,7 @@ Réponds de façon concise, structurée et actionnable. Utilise des bullets poin
     });
   } catch (e) {
     console.error("cocoon-chat error:", e);
+    await logSilentError("cocoon-chat", "chat-completion", e, { severity: "high", impact: "none" });
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
