@@ -479,7 +479,7 @@ export default function Cocoon() {
         )}
 
         {/* Main Graph */}
-        <main className="flex-1 relative px-4 md:px-6 pb-3 min-h-0">
+        <main className="flex-1 relative px-4 md:px-6 pb-9 min-h-0">
           <div className="h-full rounded-xl overflow-hidden border border-[hsl(263,70%,20%)] relative">
             {/* 2D / 3D toggle */}
             {nodes.length > 0 && (
@@ -612,7 +612,7 @@ export default function Cocoon() {
           {/* Console button — bottom left */}
           <button
             onClick={() => navigate('/console')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors text-xs font-medium backdrop-blur-md shrink-0"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 border border-white/15 text-white hover:bg-white/15 transition-colors text-xs font-medium backdrop-blur-md shrink-0 ml-4"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             {t.console}
@@ -636,7 +636,7 @@ export default function Cocoon() {
           <div className="flex-1" />
 
           {/* Navigation buttons — bottom right, same line */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 mr-4">
             <a
               href={(() => {
                 const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
