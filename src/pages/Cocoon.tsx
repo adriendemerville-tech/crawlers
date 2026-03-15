@@ -100,7 +100,7 @@ const i18n = {
     selectSite: "Seleccionar un sitio",
     xray: "X-Ray",
     computing: "Calculando...",
-    generate: "Generar Cocoon",
+    generate: "Generar",
     loading: "Cargando grafo semántico…",
     noGraph: "Ningún cocoon generado",
     noGraphDesc: "Seleccione un sitio rastreado y haga clic en \"Generar Cocoon\" para construir la arquitectura semántica a partir de sus datos de rastreo.",
