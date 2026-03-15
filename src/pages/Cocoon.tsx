@@ -154,6 +154,7 @@ export default function Cocoon() {
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [nodePickerCallback, setNodePickerCallback] = useState<((node: any) => void) | null>(null);
   const [isXRayMode, setIsXRayMode] = useState(false);
+  const [particlesEnabled, setParticlesEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isComputing, setIsComputing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
