@@ -183,5 +183,6 @@ export function AdminDashboard({ readOnly = false }: AdminDashboardProps) {
         </TabsContent>
       </Tabs>
     </div>
+    </AdminProvider>
   );
 }
