@@ -95,11 +95,16 @@ export function Header() {
   const { language, setLanguage } = useLanguage();
   const { theme, setTheme } = useTheme();
   const { user, profile, signOut, loading } = useAuth();
+  const { isAdmin } = useAdmin();
   const { balance: creditsBalance, isAgencyPro } = useCredits();
   const navigate = useNavigate();
   const location = useLocation();
   const t = translations[language];
   
+  // Kill viewers state
+  const [isKilling, setIsKilling] = useState(false);
+  const [showKillConfirm, setShowKillConfirm] = useState(false);
+
   // Hover state for profile dropdown
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
