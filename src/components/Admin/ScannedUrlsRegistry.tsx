@@ -25,6 +25,18 @@ interface TypeCounts {
   cocoon: number;
 }
 
+type LastAuditType = 'magnet' | 'audit' | 'crawl' | 'cocoon' | null;
+
+function getLastAuditIcon(type: LastAuditType) {
+  switch (type) {
+    case 'magnet': return <span title="Lead Magnet"><Magnet className="h-3.5 w-3.5 text-blue-500" /></span>;
+    case 'audit': return <span title="Audit Stratégique"><FileSearch className="h-3.5 w-3.5 text-violet-500" /></span>;
+    case 'crawl': return <span title="Crawl"><ScanSearch className="h-3.5 w-3.5 text-amber-500" /></span>;
+    case 'cocoon': return <span title="Cocoon"><Network className="h-3.5 w-3.5 text-emerald-500" /></span>;
+    default: return null;
+  }
+}
+
 export function ScannedUrlsRegistry() {
   const [urls, setUrls] = useState<AnalyzedUrl[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -33,6 +45,7 @@ export function ScannedUrlsRegistry() {
   const [search, setSearch] = useState('');
   const [sortByScans, setSortByScans] = useState(false);
   const [typeCounts, setTypeCounts] = useState<TypeCounts>({ magnet: 0, audit: 0, crawl: 0, cocoon: 0 });
+  const [lastAuditMap, setLastAuditMap] = useState<Record<string, LastAuditType>>({});
 
   const fetchUrls = useCallback(async () => {
     setIsLoading(true);
@@ -45,7 +58,7 @@ export function ScannedUrlsRegistry() {
         (trackedSites || []).map(s => s.domain?.toLowerCase()).filter(Boolean)
       );
 
-      const [urlsRes, eventsRes, crawlsRes, cocoonRes] = await Promise.all([
+      const [urlsRes, eventsRes, crawlsRes, cocoonRes, lastEventsRes] = await Promise.all([
         supabase
           .from('analyzed_urls')
           .select('*')
@@ -67,6 +80,17 @@ export function ScannedUrlsRegistry() {
         supabase
           .from('cocoon_sessions')
           .select('id', { count: 'exact', head: true }),
+        // Fetch last event per URL for icon display
+        supabase
+          .from('analytics_events')
+          .select('event_type, target_url, created_at')
+          .in('event_type', [
+            'free_analysis_crawlers', 'free_analysis_geo', 'free_analysis_llm', 'free_analysis_pagespeed',
+            'expert_audit_launched', 'expert_audit_step_1', 'expert_audit_step_2', 'expert_audit_step_3',
+          ])
+          .not('target_url', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1000),
       ]);
 
       const filtered = (urlsRes.data || []).filter(
@@ -90,6 +114,16 @@ export function ScannedUrlsRegistry() {
         crawl: crawlsRes.count || 0,
         cocoon: cocoonRes.count || 0,
       });
+
+      // Build last audit type map per URL
+      const auditMap: Record<string, LastAuditType> = {};
+      for (const evt of (lastEventsRes.data || [])) {
+        const url = evt.target_url;
+        if (!url || auditMap[url]) continue; // already have newest
+        if (evt.event_type.startsWith('free_analysis_')) auditMap[url] = 'magnet';
+        else if (evt.event_type.startsWith('expert_audit_')) auditMap[url] = 'audit';
+      }
+      setLastAuditMap(auditMap);
     } catch (err) {
       console.error('Error fetching scanned URLs:', err);
     } finally {
@@ -242,6 +276,9 @@ export function ScannedUrlsRegistry() {
                       className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {lastAuditMap[item.url] && (
+                          <div className="shrink-0">{getLastAuditIcon(lastAuditMap[item.url])}</div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <a
                             href={item.url}

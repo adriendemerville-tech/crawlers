@@ -10,6 +10,8 @@ import { ShieldAlert, Globe, Power, Loader2, Plus, X, RefreshCw } from 'lucide-r
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { DemoModeToggle } from './DemoModeToggle';
+import { GA4OAuthToggle } from './GA4OAuthToggle';
 
 const translations = {
   fr: {
@@ -177,6 +179,13 @@ export function ScriptKillSwitches() {
   }
 
   return (
+    <div className="space-y-4">
+      {/* Mode Démo + GA4 OAuth */}
+      <div className="flex flex-wrap items-center gap-2">
+        <DemoModeToggle />
+        <GA4OAuthToggle />
+      </div>
+
     <Card className="border-destructive/30">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
@@ -275,5 +284,6 @@ export function ScriptKillSwitches() {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }
