@@ -184,9 +184,6 @@ const ExpertAudit = () => {
         <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
           <NewsCarousel />
         </Suspense>
-        <Suspense fallback={<div className="h-96 animate-pulse bg-muted/30" />}>
-          <SEOComparisonTable />
-        </Suspense>
         <ExpertAuditContent />
         <ExpertAuditFAQ />
       </main>
