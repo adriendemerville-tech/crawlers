@@ -382,7 +382,7 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
       {/* Floating chat window — opens upward */}
       {isOpen && (
         <div className="absolute bottom-full mb-2 left-0 w-[475px] max-w-[90vw] rounded-2xl border border-[hsl(263,70%,20%)] bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden z-50"
-          style={{ maxHeight: 'min(500px, 60vh)' }}
+          style={{ maxHeight: 'min(600px, 72vh)' }}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-gradient-to-r from-[#1a1035] to-[#0f0a1e]">
