@@ -188,10 +188,10 @@ function simulate3D(
 
 // ─── Depth to radius ───
 function depthToRadius(depth: number): number {
-  if (depth === 0) return 3.5;
-  if (depth === 1) return 2.0;
-  if (depth === 2) return 1.4;
-  return 1.0;
+  if (depth === 0) return 1.75;
+  if (depth === 1) return 1.0;
+  if (depth === 2) return 0.7;
+  return 0.5;
 }
 
 function getSlug(url: string): string {
