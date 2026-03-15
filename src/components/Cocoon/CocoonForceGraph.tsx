@@ -29,6 +29,9 @@ interface SemanticNode {
   depth: number;
   crawl_depth?: number;
   page_type?: string;
+  page_authority?: number;
+  internal_links_in?: number;
+  internal_links_out?: number;
 }
 
 interface GraphNode extends SimulationNodeDatum {
