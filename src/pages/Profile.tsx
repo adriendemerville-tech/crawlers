@@ -164,8 +164,7 @@ export default function Profile() {
           >
 
             {/* Header with Cocoon button */}
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold">{t.title}</h1>
+            <div className="flex items-center justify-end mb-4">
               {isProUser && (
                 <Button variant="outline" asChild className="gap-2 border-amber-500/30 hover:bg-amber-500/10">
                   <Link to="/cocoon">
