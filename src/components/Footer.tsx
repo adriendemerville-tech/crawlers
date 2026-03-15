@@ -169,12 +169,6 @@ function FooterComponent() {
       description: t3(language, 'Correctif multi-pages intelligent', 'Intelligent multi-page corrective code', 'Código correctivo multi-página inteligente'),
       gold: true
     },
-    {
-      label: 'Cocoon',
-      href: '/cocoon',
-      description: t3(language, 'Architecture sémantique en organisme vivant', 'Living organism semantic architecture', 'Arquitectura semántica como organismo vivo'),
-      gold: true
-    },
   ];
 
   const legalLinks = [
