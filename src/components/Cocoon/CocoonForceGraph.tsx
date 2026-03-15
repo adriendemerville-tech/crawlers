@@ -264,7 +264,9 @@ export function CocoonForceGraph({
         forceLink<GraphNode, GraphLink>(graphLinks)
           .id((d) => d.id)
           .distance((d) => {
-            const base = 100 / (d.strength + 0.1);
+            // Dynamic distance: scale inversely with node count for better spacing
+            const countFactor = Math.max(0.4, Math.min(1, nodes.length / 20));
+            const base = (100 * countFactor) / (d.strength + 0.1);
             // If link connects to home node (depth 0), add 12% bonus at initial zoom
             if (d.sourceDepth === 0 || d.targetDepth === 0) return base * 1.12;
             return base;
