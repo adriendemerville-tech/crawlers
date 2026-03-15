@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
+import { trackTokenUsage, trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { fetchAndRenderPage } from '../_shared/renderPage.ts'
 import { cacheKey, getCached, setCache, checkRateLimit } from '../_shared/auditCache.ts'
