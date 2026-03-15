@@ -497,7 +497,7 @@ export default function Cocoon() {
                 </div>
               </div>
             ) : (
-              <CocoonForceGraph
+              <CocoonForceGraph3D
                 nodes={nodes}
                 selectedNodeId={selectedNode?.id || null}
                 onNodeSelect={(node) => {
