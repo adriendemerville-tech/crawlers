@@ -7,12 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
-import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2 } from "lucide-react";
+import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const i18n = {
   fr: {
@@ -42,6 +43,13 @@ const i18n = {
     upsellPer: 'mois',
     upsellCta: "S'abonner",
     upsellRedirecting: 'Redirection…',
+    prereqTitle: 'Actions requises',
+    prereqCrawl: 'Crawl multi-pages',
+    prereqAudit: 'Audit expert complet',
+    prereqDesc: 'Pour générer le Cocoon sémantique, ces étapes doivent être complétées sur le site sélectionné.',
+    prereqCrawlCta: 'Lancer un crawl',
+    prereqAuditCta: 'Lancer un audit',
+    prereqClose: 'Compris',
   },
   en: {
     title: "Cocoon — Semantic Architecture | Crawlers.fr",
@@ -70,6 +78,13 @@ const i18n = {
     upsellPer: 'month',
     upsellCta: 'Subscribe',
     upsellRedirecting: 'Redirecting…',
+    prereqTitle: 'Required actions',
+    prereqCrawl: 'Multi-page crawl',
+    prereqAudit: 'Full expert audit',
+    prereqDesc: 'To generate the semantic Cocoon, these steps must be completed on the selected site.',
+    prereqCrawlCta: 'Start a crawl',
+    prereqAuditCta: 'Start an audit',
+    prereqClose: 'Got it',
   },
   es: {
     title: "Cocoon — Arquitectura Semántica | Crawlers.fr",
@@ -98,6 +113,13 @@ const i18n = {
     upsellPer: 'mes',
     upsellCta: 'Suscribirse',
     upsellRedirecting: 'Redirigiendo…',
+    prereqTitle: 'Acciones requeridas',
+    prereqCrawl: 'Crawl multi-página',
+    prereqAudit: 'Auditoría experta completa',
+    prereqDesc: 'Para generar el Cocoon semántico, estos pasos deben completarse en el sitio seleccionado.',
+    prereqCrawlCta: 'Iniciar un crawl',
+    prereqAuditCta: 'Iniciar una auditoría',
+    prereqClose: 'Entendido',
   },
 };
 
@@ -118,6 +140,8 @@ export default function Cocoon() {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [showUpsell, setShowUpsell] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [showPrereqModal, setShowPrereqModal] = useState(false);
+  const [prereqStatus, setPrereqStatus] = useState<{ hasCrawl: boolean; hasAudit: boolean }>({ hasCrawl: true, hasAudit: true });
 
   // Check access: Pro Agency or Admin
   useEffect(() => {
@@ -183,10 +207,41 @@ export default function Cocoon() {
 
   // Trigger computation
   const handleCompute = async () => {
-    if (!selectedSiteId) return;
+    if (!selectedSiteId || !user) return;
+
+    // Find the domain for the selected site
+    const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
+    if (!selectedSite) return;
+
     setIsComputing(true);
 
     try {
+      // Check prerequisites: crawl + expert audit
+      const [crawlRes, auditRes] = await Promise.all([
+        supabase
+          .from("site_crawls" as any)
+          .select("id")
+          .eq("domain", selectedSite.domain)
+          .eq("user_id", user.id)
+          .limit(1),
+        supabase
+          .from("audits")
+          .select("id")
+          .eq("domain", selectedSite.domain)
+          .eq("user_id", user.id)
+          .limit(1),
+      ]);
+
+      const hasCrawl = (crawlRes.data?.length || 0) > 0;
+      const hasAudit = (auditRes.data?.length || 0) > 0;
+
+      if (!hasCrawl || !hasAudit) {
+        setPrereqStatus({ hasCrawl, hasAudit });
+        setShowPrereqModal(true);
+        setIsComputing(false);
+        return;
+      }
+
       const resp = await supabase.functions.invoke("calculate-cocoon-logic", {
         body: { tracked_site_id: selectedSiteId },
       });
@@ -398,6 +453,89 @@ export default function Cocoon() {
             <CocoonNodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />
           )}
         </main>
+
+        {/* Prerequisites Modal */}
+        <Dialog open={showPrereqModal} onOpenChange={setShowPrereqModal}>
+          <DialogContent className="bg-[#1a1035] border-[hsl(263,70%,20%)] text-white max-w-md p-0 overflow-hidden">
+            <div className="p-8 space-y-6">
+              <DialogHeader className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-[#fbbf24]/10 border border-[#fbbf24]/20">
+                    <AlertTriangle className="h-5 w-5 text-[#fbbf24]" />
+                  </div>
+                  <DialogTitle className="text-xl font-bold text-white tracking-tight">
+                    {t.prereqTitle}
+                  </DialogTitle>
+                </div>
+                <DialogDescription className="text-white/50 text-sm leading-relaxed pt-1">
+                  {t.prereqDesc}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3">
+                {/* Crawl status */}
+                <div className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+                  prereqStatus.hasCrawl
+                    ? 'bg-emerald-500/5 border-emerald-500/20'
+                    : 'bg-red-500/5 border-red-500/20'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${prereqStatus.hasCrawl ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+                      <Search className={`h-4 w-4 ${prereqStatus.hasCrawl ? 'text-emerald-400' : 'text-red-400'}`} />
+                    </div>
+                    <span className="font-medium text-[15px] tracking-tight">{t.prereqCrawl}</span>
+                  </div>
+                  {prereqStatus.hasCrawl ? (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs border-red-500/30 text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                      onClick={() => { setShowPrereqModal(false); navigate('/site-crawl'); }}
+                    >
+                      {t.prereqCrawlCta}
+                    </Button>
+                  )}
+                </div>
+
+                {/* Audit status */}
+                <div className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+                  prereqStatus.hasAudit
+                    ? 'bg-emerald-500/5 border-emerald-500/20'
+                    : 'bg-red-500/5 border-red-500/20'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${prereqStatus.hasAudit ? 'bg-emerald-500/10' : 'bg-red-500/10'}`}>
+                      <FileText className={`h-4 w-4 ${prereqStatus.hasAudit ? 'text-emerald-400' : 'text-red-400'}`} />
+                    </div>
+                    <span className="font-medium text-[15px] tracking-tight">{t.prereqAudit}</span>
+                  </div>
+                  {prereqStatus.hasAudit ? (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs border-red-500/30 text-red-300 hover:bg-red-500/10 hover:text-red-200"
+                      onClick={() => { setShowPrereqModal(false); navigate('/audit-expert'); }}
+                    >
+                      {t.prereqAuditCta}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <Button
+                className="w-full bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
+                variant="outline"
+                onClick={() => setShowPrereqModal(false)}
+              >
+                {t.prereqClose}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );
