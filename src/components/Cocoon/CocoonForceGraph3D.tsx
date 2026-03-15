@@ -758,6 +758,20 @@ export function CocoonForceGraph3D({
         </Button>
       </div>
 
+      {/* Scale slider */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-black/50 backdrop-blur-md border border-white/10 rounded-lg px-3 py-1.5">
+        <CircleDot className="w-3 h-3 text-white/40 shrink-0" />
+        <Slider
+          min={0.3}
+          max={3}
+          step={0.1}
+          value={[nodeScale]}
+          onValueChange={([v]) => setNodeScale(v)}
+          className="w-28"
+        />
+        <span className="text-[9px] text-white/40 font-mono w-8 text-right">{nodeScale.toFixed(1)}×</span>
+      </div>
+
       {/* Stats overlay */}
       <div className="absolute top-4 right-4 text-[10px] text-white/30 font-mono space-y-0.5 text-right pointer-events-none">
         <div>{nodes.length} nœuds · {graphLinks.length} liens</div>
