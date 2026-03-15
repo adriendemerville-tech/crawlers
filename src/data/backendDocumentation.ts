@@ -754,10 +754,10 @@ Landing page marketing avec comparaison GEO vs SEO et grille de fonctionnalités
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '1.3.0',
+  version: '1.4.0',
   lastUpdated: '2026-03-15',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon',
   totalEdgeFunctions: 82,
-  totalTables: '36+',
-  totalLinesOfCode: '120 000+',
+  totalTables: '38+',
+  totalLinesOfCode: '125 000+',
 };
