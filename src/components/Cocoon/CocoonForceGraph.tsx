@@ -8,7 +8,7 @@ import {
   type SimulationNodeDatum,
   type SimulationLinkDatum,
 } from "d3-force";
-import { Plus, Minus, Maximize2 } from "lucide-react";
+import { Plus, Minus, Maximize2, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // ─── Types ───
@@ -29,6 +29,9 @@ interface SemanticNode {
   depth: number;
   crawl_depth?: number;
   page_type?: string;
+  page_authority?: number;
+  internal_links_in?: number;
+  internal_links_out?: number;
 }
 
 interface GraphNode extends SimulationNodeDatum {
@@ -45,6 +48,9 @@ interface GraphNode extends SimulationNodeDatum {
   depth: number;
   pageType: string;
   isHome: boolean;
+  pageAuthority: number;
+  linksIn: number;
+  linksOut: number;
 }
 
 interface GraphLink extends SimulationLinkDatum<GraphNode> {
@@ -52,7 +58,18 @@ interface GraphLink extends SimulationLinkDatum<GraphNode> {
   type: string;
   sourceDepth: number;
   targetDepth: number;
+  juiceType: JuiceType;
+  juiceIntensity: number;
 }
+
+type JuiceType = 'authority' | 'semantic' | 'traffic' | 'hierarchy';
+
+const JUICE_COLORS: Record<JuiceType, [number, number, number]> = {
+  authority:  [255, 200, 60],
+  semantic:   [80, 140, 255],
+  traffic:    [60, 220, 140],
+  hierarchy:  [180, 100, 255],
+};
 
 // ─── Jarvis-style Color Palette ───
 const PAGE_TYPE_COLORS: Record<string, [number, number, number]> = {
@@ -77,6 +94,7 @@ interface Particle {
   linkIdx: number;
   size: number;
   opacity: number;
+  juiceType: JuiceType;
 }
 
 interface CocoonForceGraphProps {
@@ -85,6 +103,7 @@ interface CocoonForceGraphProps {
   onNodeSelect: (node: SemanticNode | null) => void;
   isXRayMode: boolean;
   isPickingMode?: boolean;
+  particlesEnabled?: boolean;
 }
 
 export function CocoonForceGraph({
@@ -93,6 +112,7 @@ export function CocoonForceGraph({
   onNodeSelect,
   isXRayMode,
   isPickingMode = false,
+  particlesEnabled = true,
 }: CocoonForceGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -171,6 +191,9 @@ export function CocoonForceGraph({
         depth: crawlDepth,
         pageType,
         isHome,
+        pageAuthority: n.page_authority ?? 0,
+        linksIn: n.internal_links_in ?? 0,
+        linksOut: n.internal_links_out ?? 0,
         x: Math.cos((i / nodes.length) * Math.PI * 2) * 300 + Math.random() * 40,
         y: Math.sin((i / nodes.length) * Math.PI * 2) * 300 + Math.random() * 40,
       };
@@ -179,12 +202,44 @@ export function CocoonForceGraph({
     const gLinks: GraphLink[] = [];
     const idSet = new Set(gNodes.map((n) => n.id));
 
+    // Build node lookup for juice classification
+    const nodeById = new Map(nodes.map(n => [n.id, n]));
+    // Find max authority for normalization
+    const maxAuth = Math.max(1, ...nodes.map(n => n.page_authority ?? 0));
+    const maxTraffic = Math.max(1, ...nodes.map(n => n.traffic_estimate ?? 0));
+
     for (const node of nodes) {
       for (const edge of node.similarity_edges || []) {
         const targetId = urlToId.get(edge.target_url);
         if (targetId && idSet.has(targetId) && node.id < targetId) {
           const isHomeSrc = node.id === homeId;
           const isHomeTgt = targetId === homeId;
+          const targetNode = nodeById.get(targetId);
+          const srcDepth = node.crawl_depth ?? node.depth ?? 0;
+          const tgtDepth = targetNode?.crawl_depth ?? targetNode?.depth ?? 0;
+          const depthDelta = Math.abs(srcDepth - tgtDepth);
+
+          // Classify juice type based on dominant signal
+          let juiceType: JuiceType = 'semantic';
+          const srcAuth = node.page_authority ?? 0;
+          const tgtAuth = targetNode?.page_authority ?? 0;
+          const avgAuth = (srcAuth + tgtAuth) / 2;
+          const srcTraffic = node.traffic_estimate ?? 0;
+          const tgtTraffic = targetNode?.traffic_estimate ?? 0;
+          const avgTraffic = (srcTraffic + tgtTraffic) / 2;
+
+          if (depthDelta >= 1 && (isHomeSrc || isHomeTgt)) {
+            juiceType = 'hierarchy'; // parent-child flow
+          } else if (avgAuth / maxAuth > 0.5) {
+            juiceType = 'authority'; // high authority transfer
+          } else if (avgTraffic / maxTraffic > 0.4) {
+            juiceType = 'traffic'; // traffic-driven link
+          }
+          // else remains 'semantic' (similarity-based)
+
+          // Intensity = normalized authority flow
+          const juiceIntensity = Math.min(1, avgAuth / maxAuth + edge.score * 0.3);
+
           gLinks.push({
             source: node.id,
             target: targetId,
@@ -192,6 +247,8 @@ export function CocoonForceGraph({
             type: edge.type,
             sourceDepth: isHomeSrc ? 0 : 1,
             targetDepth: isHomeTgt ? 0 : 1,
+            juiceType,
+            juiceIntensity,
           });
         }
       }
@@ -200,17 +257,22 @@ export function CocoonForceGraph({
     return { graphNodes: gNodes, graphLinks: gLinks };
   }, [nodes]);
 
-  // Initialize particles
+  // Initialize particles with juice-type awareness
   useEffect(() => {
     const particles: Particle[] = [];
-    const count = Math.min(graphLinks.length * 2, 200);
+    const count = Math.min(graphLinks.length * 3, 300);
     for (let i = 0; i < count; i++) {
+      const linkIdx = Math.floor(Math.random() * graphLinks.length);
+      const link = graphLinks[linkIdx];
+      // Size modulated by juice intensity (bigger packets for stronger links)
+      const baseSize = 0.4 + (link?.juiceIntensity ?? 0.5) * 1.2;
       particles.push({
         progress: Math.random(),
-        speed: 0.002 + Math.random() * 0.004,
-        linkIdx: Math.floor(Math.random() * graphLinks.length),
-        size: 0.5 + Math.random() * 1,
+        speed: 0.001 + Math.random() * 0.003 + (link?.juiceIntensity ?? 0) * 0.002,
+        linkIdx,
+        size: baseSize + Math.random() * 0.4,
         opacity: 0.3 + Math.random() * 0.5,
+        juiceType: link?.juiceType ?? 'semantic',
       });
     }
     particlesRef.current = particles;
@@ -383,28 +445,39 @@ export function CocoonForceGraph({
         }
       }
 
-      // ─── Particles flowing along links ───
-      const particles = particlesRef.current;
-      for (const p of particles) {
-        p.progress += p.speed;
-        if (p.progress > 1) {
-          p.progress = 0;
-          p.linkIdx = Math.floor(Math.random() * gLinks.length);
+      // ─── Juice particles flowing along links ───
+      if (particlesEnabled) {
+        const particles = particlesRef.current;
+        for (const p of particles) {
+          p.progress += p.speed;
+          if (p.progress > 1) {
+            p.progress = 0;
+            const newIdx = Math.floor(Math.random() * gLinks.length);
+            p.linkIdx = newIdx;
+            const newLink = gLinks[newIdx];
+            if (newLink) {
+              p.juiceType = newLink.juiceType;
+              p.size = 0.4 + newLink.juiceIntensity * 1.2 + Math.random() * 0.4;
+              p.speed = 0.001 + Math.random() * 0.003 + newLink.juiceIntensity * 0.002;
+            }
+          }
+          const link = gLinks[p.linkIdx];
+          if (!link) continue;
+          const source = link.source as GraphNode;
+          const target = link.target as GraphNode;
+          if (!source.x || !source.y || !target.x || !target.y) continue;
+
+          const px = source.x + (target.x - source.x) * p.progress;
+          const py = source.y + (target.y - source.y) * p.progress;
+          const fadeEdge = Math.sin(p.progress * Math.PI);
+
+          const [jr, jg, jb] = JUICE_COLORS[p.juiceType];
+          const particleSize = p.size * nodeScale * (0.8 + link.juiceIntensity * 0.6);
+          ctx.beginPath();
+          ctx.arc(px, py, particleSize, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${jr}, ${jg}, ${jb}, ${p.opacity * fadeEdge * 0.7})`;
+          ctx.fill();
         }
-        const link = gLinks[p.linkIdx];
-        if (!link) continue;
-        const source = link.source as GraphNode;
-        const target = link.target as GraphNode;
-        if (!source.x || !source.y || !target.x || !target.y) continue;
-
-        const px = source.x + (target.x - source.x) * p.progress;
-        const py = source.y + (target.y - source.y) * p.progress;
-        const fadeEdge = Math.sin(p.progress * Math.PI); // fade at start/end
-
-        ctx.beginPath();
-        ctx.arc(px, py, p.size * nodeScale, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(160, 140, 255, ${p.opacity * fadeEdge * 0.6})`;
-        ctx.fill();
       }
 
       // ─── Home sun coefficient (zoom-aware) ───

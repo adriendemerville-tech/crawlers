@@ -10,7 +10,7 @@ import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
-import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink } from "lucide-react";
+import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
@@ -154,6 +154,7 @@ export default function Cocoon() {
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [nodePickerCallback, setNodePickerCallback] = useState<((node: any) => void) | null>(null);
   const [isXRayMode, setIsXRayMode] = useState(false);
+  const [particlesEnabled, setParticlesEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isComputing, setIsComputing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
@@ -509,6 +510,7 @@ export default function Cocoon() {
                 }}
                 isXRayMode={isXRayMode}
                 isPickingMode={!!nodePickerCallback}
+                particlesEnabled={particlesEnabled}
               />
             )}
 
@@ -557,6 +559,20 @@ export default function Cocoon() {
                   <span className="text-white/40 text-[10px]">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
                 </div>
                 <span className="text-white/30 text-xs ml-auto">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
+                <button
+                  onClick={() => setParticlesEnabled(p => !p)}
+                  className={`ml-2 flex items-center gap-1 px-2 py-0.5 rounded text-[10px] transition-colors border ${
+                    particlesEnabled
+                      ? 'bg-white/5 border-white/10 text-white/40 hover:text-white/60'
+                      : 'bg-white/5 border-white/10 text-white/20 hover:text-white/40'
+                  }`}
+                >
+                  <Sparkles className="w-2.5 h-2.5" />
+                  {particlesEnabled
+                    ? (language === 'en' ? 'Particles' : language === 'es' ? 'Partículas' : 'Particules')
+                    : (language === 'en' ? 'Particles off' : language === 'es' ? 'Sin partículas' : 'Particules off')
+                  }
+                </button>
               </div>
             );
           })()}
