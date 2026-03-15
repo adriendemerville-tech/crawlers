@@ -35,6 +35,13 @@ const i18n = {
     errorGeneric: "Impossible de calculer le cocon sémantique",
     successTitle: "Cocon généré",
     successDesc: (nodes: number, clusters: number) => `${nodes} nœuds · ${clusters} clusters`,
+    upsellTitle: "Cocoon · Organisme Vivant",
+    upsellDesc: "Visualisez l'architecture sémantique de votre site, optimisez votre maillage et prédisez le ROI de chaque page avec le module Cocoon.",
+    upsellFeatures: ['Audit expert illimité', 'Code correctif illimité', 'Cocoon sémantique illimité', 'Marque Blanche (White Label)'],
+    upsellPrice: '59€',
+    upsellPer: 'mois',
+    upsellCta: "S'abonner",
+    upsellRedirecting: 'Redirection…',
   },
   en: {
     title: "Cocoon — Semantic Architecture | Crawlers.fr",
