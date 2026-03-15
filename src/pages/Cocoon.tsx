@@ -454,7 +454,16 @@ export default function Cocoon() {
                   <span className="text-white/50 text-xs">{label}</span>
                 </div>
               ))}
-              <span className="text-white/30 text-xs ml-auto">Chaque point = 1 page crawlée</span>
+              <span className="text-white/20 mx-1">|</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
+                <span className="text-white/40 text-[10px]">↓ descendant</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
+                <span className="text-white/40 text-[10px]">↑ ascendant</span>
+              </div>
+              <span className="text-white/30 text-xs ml-auto">⌂ = Home · Taille ∝ profondeur</span>
             </div>
           )}
         </main>
