@@ -109,7 +109,7 @@ export function CocoonForceGraph({
 
   // Depth → radius: ultra-compact Jarvis-style dots
   const depthToRadius = (depth: number): number => {
-    if (depth === 0) return 3; // base size for home (halved from 6), multiplied by sun coefficient
+    if (depth === 0) return 4.5; // home base radius (bigger sun)
     if (depth === 1) return 3.5;
     if (depth === 2) return 2.5;
     return 2;
@@ -159,7 +159,7 @@ export function CocoonForceGraph({
       const isHome = n.id === homeId;
       return {
         id: n.id,
-        label: n.title || n.url.split("/").pop() || n.url,
+        label: isHome ? 'Home' : (n.title || n.url.split("/").pop() || n.url),
         intent: n.intent,
         cluster: n.cluster_id || "unclustered",
         iab: n.iab_score,
@@ -264,14 +264,16 @@ export function CocoonForceGraph({
         forceLink<GraphNode, GraphLink>(graphLinks)
           .id((d) => d.id)
           .distance((d) => {
-            const base = 100 / (d.strength + 0.1);
+            // Dynamic distance: scale inversely with node count for better spacing
+            const countFactor = Math.max(0.4, Math.min(1, nodes.length / 20));
+            const base = (100 * countFactor) / (d.strength + 0.1);
             // If link connects to home node (depth 0), add 12% bonus at initial zoom
             if (d.sourceDepth === 0 || d.targetDepth === 0) return base * 1.12;
             return base;
           })
           .strength((d) => d.strength * 0.25),
       )
-      .force("charge", forceManyBody().strength(-180))
+      .force("charge", forceManyBody().strength(-180 * Math.max(0.5, Math.min(1, nodes.length / 15))))
       .force("center", forceCenter(0, 0))
       .force("collide", forceCollide<GraphNode>().radius((d) => d.radius + 8))
       .alphaDecay(0.02)

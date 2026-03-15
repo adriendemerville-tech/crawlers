@@ -403,7 +403,7 @@ export default function Cocoon() {
 
         {/* Top Bar */}
         <header className="shrink-0 border-b border-[hsl(263,70%,20%)] bg-[#0f0a1e]/80 backdrop-blur-xl px-4 py-3">
-          <div className="max-w-[1600px] mx-auto flex items-center gap-4 flex-wrap">
+          <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 relative">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-[#fbbf24] animate-pulse" />
               <div>
@@ -414,21 +414,23 @@ export default function Cocoon() {
               </div>
             </div>
 
-            {/* Site selector */}
-            <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
-              <SelectTrigger className="w-[240px] bg-white/5 border-[hsl(263,70%,20%)] text-white text-xs h-8">
-                <SelectValue placeholder={t.selectSite} />
-              </SelectTrigger>
-              <SelectContent className="bg-[#1a1035] border-[hsl(263,70%,20%)]">
-                {trackedSites.map((site) => (
-                  <SelectItem key={site.id} value={site.id} className="text-white text-xs">
-                    {site.site_name || site.domain}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Site selector — centered */}
+            <div className="absolute left-1/2 -translate-x-1/2">
+              <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
+                <SelectTrigger className="w-[240px] bg-white/5 border-[hsl(263,70%,20%)] text-white text-xs h-8">
+                  <SelectValue placeholder={t.selectSite} />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1035] border-[hsl(263,70%,20%)]">
+                  {trackedSites.map((site) => (
+                    <SelectItem key={site.id} value={site.id} className="text-white text-xs">
+                      {site.site_name || site.domain}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-2">
               <CocoonHelpModal />
               <Button
                 variant="outline"
