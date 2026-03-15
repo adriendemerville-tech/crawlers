@@ -416,50 +416,73 @@ export function CocoonForceGraph({
         const isHovered = node.id === hoveredNode?.id;
         const isGhost = isXRayMode && node.traffic < 10;
 
-        // Pulse — home has stronger, slower pulsation
-        const pulseFreq = node.isHome ? 0.6 : 0.8;
-        const pulseAmp = node.isHome ? 0.12 : 0.08;
+        // Pulse — home: no size pulse (glow pulses instead); others: subtle size pulse
+        const pulseFreq = 0.8;
+        const pulseAmp = node.isHome ? 0 : 0.08;
         const pulse = 1 + Math.sin(time * pulseFreq * 3 + node.pulsePhase) * pulseAmp;
+
+        // Home glow pulse factor (sun breathing effect)
+        const homeGlowPulse = node.isHome ? (0.8 + Math.sin(time * 1.2) * 0.35) : 1;
 
         // Home node: apply sun coefficient
         const sizeMultiplier = node.isHome ? homeSunCoeff : 1;
         const r = node.radius * nodeScale * pulse * sizeMultiplier;
 
-        // Home node always golden yellow
-        const [cr, cg, cb] = node.isHome ? [255, 200, 60] : (PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown);
+        // X-Ray mode: home becomes blue #5e93e0 (94, 147, 224)
+        const xrayHomeBlue: [number, number, number] = [94, 147, 224];
+        const [cr, cg, cb] = node.isHome
+          ? (isXRayMode ? xrayHomeBlue : [255, 200, 60])
+          : (PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown);
         const baseAlpha = isGhost ? 0.15 : 1;
 
         // ─── Home Sun: rotating elliptical corona with tilt ───
         if (node.isHome && !isGhost) {
-          ctx.save();
-          ctx.translate(node.x, node.y);
-          // 10% tilt rotation
-          ctx.rotate(0.1 * Math.PI);
-          // Horizontal elliptical rotation animation
-          const rotAngle = time * 0.4;
-
-          // Outer corona layers (flowing effect)
-          for (let layer = 0; layer < 4; layer++) {
-            const coronaR = r * (1.3 + layer * 0.5);
-            const layerAngle = rotAngle + layer * 0.5;
-            const squish = 0.55 + Math.sin(time * 0.3 + layer) * 0.1;
-            const coronaAlpha = (0.15 - layer * 0.03) * (0.8 + Math.sin(time * 1.5 + layer * 1.2) * 0.2);
-
+          if (isXRayMode) {
+            // X-Ray: subtle blue glow + slow idle rotation
             ctx.save();
-            ctx.rotate(layerAngle);
-            ctx.scale(1, squish);
+            ctx.translate(node.x, node.y);
+            const idleAngle = time * 0.15;
+            ctx.rotate(idleAngle);
+            const idleR = r * 2;
+            const idleAlpha = 0.12 + Math.sin(time * 0.8) * 0.04;
+            const idleGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, idleR);
+            idleGrad.addColorStop(0, `rgba(94, 147, 224, ${idleAlpha})`);
+            idleGrad.addColorStop(0.6, `rgba(94, 147, 224, ${idleAlpha * 0.3})`);
+            idleGrad.addColorStop(1, `rgba(94, 147, 224, 0)`);
             ctx.beginPath();
-            ctx.arc(0, 0, coronaR, 0, Math.PI * 2);
-            const coronaGrad = ctx.createRadialGradient(0, 0, coronaR * 0.3, 0, 0, coronaR);
-            coronaGrad.addColorStop(0, `rgba(255, 220, 80, ${coronaAlpha})`);
-            coronaGrad.addColorStop(0.5, `rgba(255, 180, 40, ${coronaAlpha * 0.4})`);
-            coronaGrad.addColorStop(1, `rgba(255, 140, 20, 0)`);
-            ctx.fillStyle = coronaGrad;
+            ctx.arc(0, 0, idleR, 0, Math.PI * 2);
+            ctx.fillStyle = idleGrad;
             ctx.fill();
             ctx.restore();
-          }
+          } else {
+            // Normal mode: rotating elliptical corona (no change) but glow pulses
+            ctx.save();
+            ctx.translate(node.x, node.y);
+            ctx.rotate(0.1 * Math.PI);
+            const rotAngle = time * 0.4;
 
-          ctx.restore();
+            for (let layer = 0; layer < 4; layer++) {
+              const coronaR = r * (1.3 + layer * 0.5);
+              const layerAngle = rotAngle + layer * 0.5;
+              const squish = 0.55 + Math.sin(time * 0.3 + layer) * 0.1;
+              const coronaAlpha = (0.15 - layer * 0.03) * (0.8 + Math.sin(time * 1.5 + layer * 1.2) * 0.2);
+
+              ctx.save();
+              ctx.rotate(layerAngle);
+              ctx.scale(1, squish);
+              ctx.beginPath();
+              ctx.arc(0, 0, coronaR, 0, Math.PI * 2);
+              const coronaGrad = ctx.createRadialGradient(0, 0, coronaR * 0.3, 0, 0, coronaR);
+              coronaGrad.addColorStop(0, `rgba(255, 220, 80, ${coronaAlpha})`);
+              coronaGrad.addColorStop(0.5, `rgba(255, 180, 40, ${coronaAlpha * 0.4})`);
+              coronaGrad.addColorStop(1, `rgba(255, 140, 20, 0)`);
+              ctx.fillStyle = coronaGrad;
+              ctx.fill();
+              ctx.restore();
+            }
+
+            ctx.restore();
+          }
         }
 
         // ─── Outer glow rings (Jarvis energy rings) ───
@@ -481,7 +504,8 @@ export function CocoonForceGraph({
         // ─── Radial glow ───
         if (!isGhost) {
           const glowR = r * (node.isHome ? 3 : isSelected ? 5 : isHovered ? 4 : 2.5);
-          const glowAlpha = node.isHome ? 0.35 : isSelected ? 0.15 : isHovered ? 0.12 : 0.06;
+          const baseGlowAlpha = node.isHome ? 0.35 : isSelected ? 0.15 : isHovered ? 0.12 : 0.06;
+          const glowAlpha = node.isHome ? baseGlowAlpha * homeGlowPulse : baseGlowAlpha;
           const glow = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowR);
           glow.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, ${glowAlpha})`);
           glow.addColorStop(0.4, `rgba(${cr}, ${cg}, ${cb}, ${glowAlpha * 0.4})`);
@@ -496,11 +520,18 @@ export function CocoonForceGraph({
         ctx.beginPath();
         ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
         if (node.isHome) {
-          // Sun gradient core
           const coreGrad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r);
-          coreGrad.addColorStop(0, `rgba(255, 255, 200, ${baseAlpha})`);
-          coreGrad.addColorStop(0.4, `rgba(255, 210, 80, ${baseAlpha * 0.95})`);
-          coreGrad.addColorStop(1, `rgba(255, 160, 30, ${baseAlpha * 0.85})`);
+          if (isXRayMode) {
+            // X-Ray: blue core
+            coreGrad.addColorStop(0, `rgba(160, 195, 240, ${baseAlpha})`);
+            coreGrad.addColorStop(0.4, `rgba(94, 147, 224, ${baseAlpha * 0.95})`);
+            coreGrad.addColorStop(1, `rgba(60, 110, 200, ${baseAlpha * 0.85})`);
+          } else {
+            // Normal: sun gradient core
+            coreGrad.addColorStop(0, `rgba(255, 255, 200, ${baseAlpha})`);
+            coreGrad.addColorStop(0.4, `rgba(255, 210, 80, ${baseAlpha * 0.95})`);
+            coreGrad.addColorStop(1, `rgba(255, 160, 30, ${baseAlpha * 0.85})`);
+          }
           ctx.fillStyle = coreGrad;
         } else {
           ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.9})`;
