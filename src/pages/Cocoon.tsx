@@ -531,6 +531,7 @@ export default function Cocoon() {
                 nodeColors={cocoonTheme.nodeColors}
                 particleColors={cocoonTheme.particleColors}
                 haloColors={cocoonTheme.haloColors}
+                showClusters={showClusters}
               />
             ) : (
               <CocoonForceGraph
