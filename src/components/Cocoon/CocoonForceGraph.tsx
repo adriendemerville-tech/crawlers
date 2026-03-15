@@ -416,17 +416,23 @@ export function CocoonForceGraph({
         const isHovered = node.id === hoveredNode?.id;
         const isGhost = isXRayMode && node.traffic < 10;
 
-        // Pulse — home has stronger, slower pulsation
-        const pulseFreq = node.isHome ? 0.6 : 0.8;
-        const pulseAmp = node.isHome ? 0.12 : 0.08;
+        // Pulse — home: no size pulse (glow pulses instead); others: subtle size pulse
+        const pulseFreq = 0.8;
+        const pulseAmp = node.isHome ? 0 : 0.08;
         const pulse = 1 + Math.sin(time * pulseFreq * 3 + node.pulsePhase) * pulseAmp;
+
+        // Home glow pulse factor (sun breathing effect)
+        const homeGlowPulse = node.isHome ? (0.8 + Math.sin(time * 1.2) * 0.35) : 1;
 
         // Home node: apply sun coefficient
         const sizeMultiplier = node.isHome ? homeSunCoeff : 1;
         const r = node.radius * nodeScale * pulse * sizeMultiplier;
 
-        // Home node always golden yellow
-        const [cr, cg, cb] = node.isHome ? [255, 200, 60] : (PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown);
+        // X-Ray mode: home becomes blue #5e93e0 (94, 147, 224)
+        const xrayHomeBlue: [number, number, number] = [94, 147, 224];
+        const [cr, cg, cb] = node.isHome
+          ? (isXRayMode ? xrayHomeBlue : [255, 200, 60])
+          : (PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown);
         const baseAlpha = isGhost ? 0.15 : 1;
 
         // ─── Home Sun: rotating elliptical corona with tilt ───
