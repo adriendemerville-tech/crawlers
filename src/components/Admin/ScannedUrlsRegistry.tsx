@@ -45,6 +45,7 @@ export function ScannedUrlsRegistry() {
   const [search, setSearch] = useState('');
   const [sortByScans, setSortByScans] = useState(false);
   const [typeCounts, setTypeCounts] = useState<TypeCounts>({ magnet: 0, audit: 0, crawl: 0, cocoon: 0 });
+  const [lastAuditMap, setLastAuditMap] = useState<Record<string, LastAuditType>>({});
 
   const fetchUrls = useCallback(async () => {
     setIsLoading(true);
