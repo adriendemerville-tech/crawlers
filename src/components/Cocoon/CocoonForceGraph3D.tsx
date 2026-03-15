@@ -370,24 +370,25 @@ function Links({
     }
   });
 
-  const lineGeometries = useMemo(() => {
+  const lineData = useMemo(() => {
     return links.map((link) => {
       const src = nodeMap.get(link.sourceId);
       const tgt = nodeMap.get(link.targetId);
       if (!src || !tgt) return null;
-      const points = [
-        new THREE.Vector3(src.x, src.y, src.z),
-        new THREE.Vector3(tgt.x, tgt.y, tgt.z),
-      ];
-      const geo = new THREE.BufferGeometry().setFromPoints(points);
-      return { geo, link };
-    }).filter(Boolean) as { geo: THREE.BufferGeometry; link: GraphLink3D }[];
+      return {
+        points: [
+          [src.x, src.y, src.z] as [number, number, number],
+          [tgt.x, tgt.y, tgt.z] as [number, number, number],
+        ],
+        link,
+      };
+    }).filter(Boolean) as { points: [number, number, number][]; link: GraphLink3D }[];
   }, [links, nodeMap]);
 
   return (
     <>
       <group ref={linesRef}>
-        {lineGeometries.map(({ geo, link }, i) => {
+        {lineData.map(({ points, link }, i) => {
           const isSelectedLink =
             selectedNodeId && (link.sourceId === selectedNodeId || link.targetId === selectedNodeId);
           const color = isSelectedLink
@@ -395,15 +396,14 @@ function Links({
             : JUICE_COLORS[link.juiceType] || "#7864dc";
           const opacity = isSelectedLink ? 0.6 : Math.min(link.strength * 0.35, 0.2);
           return (
-            <line key={i} geometry={geo}>
-              <lineBasicMaterial
-                color={color}
-                transparent
-                opacity={opacity}
-                depthWrite={false}
-                linewidth={1}
-              />
-            </line>
+            <Line
+              key={i}
+              points={points}
+              color={color}
+              transparent
+              opacity={opacity}
+              lineWidth={isSelectedLink ? 1.5 : 0.5}
+            />
           );
         })}
       </group>
