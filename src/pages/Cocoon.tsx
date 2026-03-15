@@ -402,7 +402,7 @@ export default function Cocoon() {
         </div>
       )}
 
-      <div className="min-h-screen bg-[#0f0a1e] flex flex-col relative pt-4">
+      <div className="h-screen bg-[#0f0a1e] flex flex-col relative pt-4 overflow-hidden">
 
         {/* Top Bar */}
         <header className="shrink-0 bg-[#0f0a1e]/80 backdrop-blur-xl px-4 py-2">
@@ -479,7 +479,7 @@ export default function Cocoon() {
         )}
 
         {/* Main Graph */}
-        <main className={`flex-1 relative px-4 md:px-6 pb-6`}>
+        <main className="flex-1 relative px-4 md:px-6 pb-3 min-h-0">
           <div className="h-full rounded-xl overflow-hidden border border-[hsl(263,70%,20%)] relative">
             {/* 2D / 3D toggle */}
             {nodes.length > 0 && (
@@ -608,7 +608,7 @@ export default function Cocoon() {
         </main>
 
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
-        <div className="px-4 md:px-6 pb-8 md:pb-10 mb-4 flex items-end gap-4 flex-wrap">
+        <div className="shrink-0 px-4 md:px-6 py-3 flex items-end gap-4 flex-wrap">
           {/* Console button — bottom left */}
           <button
             onClick={() => navigate('/console')}

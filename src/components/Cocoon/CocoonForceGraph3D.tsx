@@ -701,7 +701,7 @@ export function CocoonForceGraph3D({
       </Canvas>
 
       {/* Zoom controls */}
-      <div className="absolute bottom-4 right-4 flex flex-col gap-1.5 z-10">
+      <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 z-10">
         <Button
           variant="ghost"
           size="icon"
