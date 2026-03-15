@@ -636,12 +636,30 @@ export function CocoonForceGraph({
     });
   }, [dimensions]);
 
-  const zoomIn = useCallback(() => {
-    setTransform((t) => ({ ...t, k: Math.min(8, t.k * 1.25) }));
-  }, []);
-  const zoomOut = useCallback(() => {
-    setTransform((t) => ({ ...t, k: Math.max(0.15, t.k * 0.8) }));
-  }, []);
+  // Zoom buttons center on last clicked point or canvas center
+  const lastClickPos = useRef<{ x: number; y: number } | null>(null);
+
+  const zoomAtPoint = useCallback((factor: number) => {
+    setTransform((t) => {
+      const newK = Math.max(0.15, Math.min(8, t.k * factor));
+      if (lastClickPos.current) {
+        const ratio = newK / t.k;
+        const cx = dimensions.width / 2;
+        const cy = dimensions.height / 2;
+        const px = lastClickPos.current.x;
+        const py = lastClickPos.current.y;
+        return {
+          x: (px - cx) + ratio * (t.x - (px - cx)),
+          y: (py - cy) + ratio * (t.y - (py - cy)),
+          k: newK,
+        };
+      }
+      return { ...t, k: newK };
+    });
+  }, [dimensions]);
+
+  const zoomIn = useCallback(() => zoomAtPoint(1.25), [zoomAtPoint]);
+  const zoomOut = useCallback(() => zoomAtPoint(0.8), [zoomAtPoint]);
   const zoomReset = useCallback(() => {
     fitToView();
   }, [fitToView]);
