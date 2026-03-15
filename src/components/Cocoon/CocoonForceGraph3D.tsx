@@ -634,6 +634,14 @@ function SceneContent({
       <color attach="background" args={["#06060e"]} />
       <fog attach="fog" args={["#06060e", 150, 500]} />
 
+      {/* Cluster Halos — behind everything */}
+      <ClusterHalos
+        graphNodes={graphNodes}
+        spreadScale={spreadScale}
+        haloOpacity={haloOpacity}
+        haloColors={haloColors}
+      />
+
       {/* Links */}
       <Links
         links={graphLinks}
