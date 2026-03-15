@@ -257,17 +257,22 @@ export function CocoonForceGraph({
     return { graphNodes: gNodes, graphLinks: gLinks };
   }, [nodes]);
 
-  // Initialize particles
+  // Initialize particles with juice-type awareness
   useEffect(() => {
     const particles: Particle[] = [];
-    const count = Math.min(graphLinks.length * 2, 200);
+    const count = Math.min(graphLinks.length * 3, 300);
     for (let i = 0; i < count; i++) {
+      const linkIdx = Math.floor(Math.random() * graphLinks.length);
+      const link = graphLinks[linkIdx];
+      // Size modulated by juice intensity (bigger packets for stronger links)
+      const baseSize = 0.4 + (link?.juiceIntensity ?? 0.5) * 1.2;
       particles.push({
         progress: Math.random(),
-        speed: 0.002 + Math.random() * 0.004,
-        linkIdx: Math.floor(Math.random() * graphLinks.length),
-        size: 0.5 + Math.random() * 1,
+        speed: 0.001 + Math.random() * 0.003 + (link?.juiceIntensity ?? 0) * 0.002,
+        linkIdx,
+        size: baseSize + Math.random() * 0.4,
         opacity: 0.3 + Math.random() * 0.5,
+        juiceType: link?.juiceType ?? 'semantic',
       });
     }
     particlesRef.current = particles;
