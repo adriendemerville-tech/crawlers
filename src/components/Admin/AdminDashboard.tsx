@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
@@ -20,65 +19,80 @@ import { AlgoTrainingDashboard } from './AlgoTrainingDashboard';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const adminTranslations = {
   fr: {
-    // Groupe 1: Monitoring
+    monitoring: 'Monitoring',
     analytics: 'Statistiques',
     intelligence: 'Intelligence',
     silentErrors: 'Erreurs',
     ciTests: 'CI Tests',
-    // Groupe 2: Contenu & Users
+    contentUsers: 'Contenu & Users',
     users: 'Utilisateurs',
     blog: 'Blog',
     support: 'SAV',
     affiliates: 'Affiliation',
-    // Groupe 3: Technique
+    technical: 'Technique',
     crawls: 'Crawls',
     scripts: 'Scripts',
     algos: 'Algos ML',
-    // Groupe 4: Documentation
+    documentation: 'Documentation',
     docs: 'Docs',
     hideDocsForViewers: 'Masquer docs aux viewers',
     showDocsForViewers: 'Docs visibles aux viewers',
   },
   en: {
+    monitoring: 'Monitoring',
     analytics: 'Analytics',
     intelligence: 'Intelligence',
     silentErrors: 'Errors',
     ciTests: 'CI Tests',
+    contentUsers: 'Content & Users',
     users: 'Users',
     blog: 'Blog',
     support: 'Support',
     affiliates: 'Affiliates',
+    technical: 'Technical',
     crawls: 'Crawls',
     scripts: 'Scripts',
     algos: 'ML Algos',
+    documentation: 'Documentation',
     docs: 'Docs',
     hideDocsForViewers: 'Hide docs from viewers',
     showDocsForViewers: 'Docs visible to viewers',
   },
   es: {
+    monitoring: 'Monitoreo',
     analytics: 'Estadísticas',
     intelligence: 'Inteligencia',
     silentErrors: 'Errores',
     ciTests: 'CI Tests',
+    contentUsers: 'Contenido & Usuarios',
     users: 'Usuarios',
     blog: 'Blog',
     support: 'Soporte',
     affiliates: 'Afiliación',
+    technical: 'Técnico',
     crawls: 'Crawls',
     scripts: 'Scripts',
     algos: 'Algos ML',
+    documentation: 'Documentación',
     docs: 'Docs',
     hideDocsForViewers: 'Ocultar docs de viewers',
     showDocsForViewers: 'Docs visibles para viewers',
   },
 };
+
+interface NavItem {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  group: string;
+}
 
 interface AdminDashboardProps {
   readOnly?: boolean;
@@ -89,9 +103,9 @@ interface AdminDashboardProps {
 export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true }: AdminDashboardProps) {
   const { language } = useLanguage();
   const t = adminTranslations[language] || adminTranslations.fr;
+  const [activeTab, setActiveTab] = useState('analytics');
   const [docsHiddenForViewers, setDocsHiddenForViewers] = useState(false);
 
-  // Load doc visibility setting from admin_dashboard_config
   useEffect(() => {
     const loadDocVisibility = async () => {
       const { data } = await supabase
@@ -110,15 +124,13 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   const toggleDocsVisibility = async () => {
     const newValue = !docsHiddenForViewers;
     setDocsHiddenForViewers(newValue);
-    // Upsert into admin_dashboard_config
     const { data: existing } = await supabase
       .from('admin_dashboard_config')
       .select('id, card_order')
       .limit(1)
       .maybeSingle();
-    
     if (existing) {
-      const currentConfig = (typeof existing.card_order === 'object' && !Array.isArray(existing.card_order)) 
+      const currentConfig = (typeof existing.card_order === 'object' && !Array.isArray(existing.card_order))
         ? existing.card_order as Record<string, unknown>
         : {};
       await supabase
@@ -128,196 +140,137 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
     }
   };
 
-  // Effective doc/algo visibility considering viewer restrictions AND creator toggle
   const showDocs = canSeeDocs && !(readOnly && docsHiddenForViewers);
   const showAlgos = canSeeAlgos;
 
+  // Build nav items grouped
+  const navGroups: { label: string; items: NavItem[] }[] = [
+    {
+      label: t.monitoring,
+      items: [
+        { id: 'analytics', label: t.analytics, icon: BarChart3, group: 'monitoring' },
+        { id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring' },
+        { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring' },
+        { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
+      ],
+    },
+    {
+      label: t.contentUsers,
+      items: [
+        { id: 'users', label: t.users, icon: Users, group: 'content' },
+        { id: 'blog', label: t.blog, icon: FileText, group: 'content' },
+        { id: 'support', label: t.support, icon: MessageCircle, group: 'content' },
+        { id: 'affiliates', label: t.affiliates, icon: Link2, group: 'content' },
+      ],
+    },
+    {
+      label: t.technical,
+      items: [
+        { id: 'crawls', label: t.crawls, icon: Globe, group: 'technical' },
+        { id: 'scripts', label: t.scripts, icon: ShieldAlert, group: 'technical' },
+        ...(showAlgos ? [{ id: 'algos', label: t.algos, icon: Brain, group: 'technical' }] : []),
+      ],
+    },
+    ...(showDocs
+      ? [{
+          label: t.documentation,
+          items: [{ id: 'docs', label: t.docs, icon: BookOpen, group: 'docs' }],
+        }]
+      : []),
+  ];
+
+  const renderContent = () => {
+    const wrap = (children: React.ReactNode) => (
+      <div className={readOnly ? 'admin-readonly' : ''}>{children}</div>
+    );
+
+    switch (activeTab) {
+      case 'analytics': return <AnalyticsDashboard />;
+      case 'intelligence': return <IntelligenceHub />;
+      case 'silent-errors': return <SilentErrorsRegistry />;
+      case 'ci-tests': return <CiTestsDashboard />;
+      case 'users': return wrap(<UserManagement />);
+      case 'blog': return wrap(<BlogManagement />);
+      case 'support': return wrap(<SupportManagement />);
+      case 'affiliates': return wrap(<AffiliateManagement />);
+      case 'crawls': return wrap(<CrawlManagement />);
+      case 'scripts': return wrap(<ScriptKillSwitches />);
+      case 'algos': return showAlgos ? wrap(<AlgoTrainingDashboard />) : null;
+      case 'docs': return showDocs ? <BackendDocumentation /> : null;
+      default: return <AnalyticsDashboard />;
+    }
+  };
+
   return (
     <AdminProvider value={{ readOnly, canSeeDocs: showDocs, canSeeAlgos: showAlgos, docsHiddenForViewers }}>
-    <div className="space-y-4">
-      {readOnly && <ReadOnlyBanner />}
-      {!readOnly && (
-        <div className="flex flex-wrap items-center gap-2">
-          <DemoModeToggle />
-          <GA4OAuthToggle />
-        </div>
-      )}
-      <BrowserlessAlert />
-      <ApiGatewayFallbackAlert />
-
-      <Tabs defaultValue="analytics" className="space-y-4">
-        {/* ── Tab bar reorganized by groups ── */}
-        <TabsList className="w-full flex flex-wrap h-auto gap-1 p-1">
-          {/* Group 1: Monitoring & Analytics */}
-          <TabsTrigger value="analytics" className="flex-1 gap-1.5 min-w-0">
-            <BarChart3 className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline truncate">{t.analytics}</span>
-          </TabsTrigger>
-          <TabsTrigger value="intelligence" className="flex-1 gap-1.5 min-w-0">
-            <Cpu className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline truncate">{t.intelligence}</span>
-          </TabsTrigger>
-          <TabsTrigger value="silent-errors" className="flex-1 gap-1.5 min-w-0">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline truncate">{t.silentErrors}</span>
-          </TabsTrigger>
-          <TabsTrigger value="ci-tests" className="flex-1 gap-1.5 min-w-0">
-            <FlaskConical className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline truncate">{t.ciTests}</span>
-          </TabsTrigger>
-
-          {/* Separator */}
-          <div className="w-px h-6 bg-border mx-0.5 hidden sm:block" />
-
-          {/* Group 2: Content & Users */}
-          <TabsTrigger value="users" className="flex-1 gap-1.5 min-w-0">
-            <Users className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline truncate">{t.users}</span>
-          </TabsTrigger>
-          <TabsTrigger value="blog" className="flex-1 gap-1.5 min-w-0">
-            <FileText className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline truncate">{t.blog}</span>
-          </TabsTrigger>
-          <TabsTrigger value="support" className="flex-1 gap-1.5 min-w-0">
-            <MessageCircle className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline truncate">{t.support}</span>
-          </TabsTrigger>
-          <TabsTrigger value="affiliates" className="flex-1 gap-1.5 min-w-0">
-            <Link2 className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline truncate">{t.affiliates}</span>
-          </TabsTrigger>
-
-          {/* Separator */}
-          <div className="w-px h-6 bg-border mx-0.5 hidden sm:block" />
-
-          {/* Group 3: Technical */}
-          <TabsTrigger value="crawls" className="flex-1 gap-1.5 min-w-0">
-            <Globe className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline truncate">{t.crawls}</span>
-          </TabsTrigger>
-          <TabsTrigger value="scripts" className="flex-1 gap-1.5 min-w-0">
-            <ShieldAlert className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline truncate">{t.scripts}</span>
-          </TabsTrigger>
-          {showAlgos && (
-            <TabsTrigger value="algos" className="flex-1 gap-1.5 min-w-0">
-              <Brain className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline truncate">{t.algos}</span>
-            </TabsTrigger>
-          )}
-
-          {/* Separator */}
-          {showDocs && <div className="w-px h-6 bg-border mx-0.5 hidden sm:block" />}
-
-          {/* Group 4: Documentation */}
-          {showDocs && (
-            <TabsTrigger value="docs" className="flex-1 gap-1.5 min-w-0">
-              <BookOpen className="h-4 w-4 shrink-0" />
-              <span className="hidden sm:inline truncate">{t.docs}</span>
-            </TabsTrigger>
-          )}
-        </TabsList>
-
-        {/* ── Creator-only: toggle doc visibility for viewers ── */}
+      <div className="space-y-3">
+        {readOnly && <ReadOnlyBanner />}
         {!readOnly && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleDocsVisibility}
-              className="gap-2 text-xs text-muted-foreground"
-            >
-              {docsHiddenForViewers ? (
-                <>
-                  <EyeOff className="h-3.5 w-3.5" />
-                  {t.hideDocsForViewers}
-                </>
-              ) : (
-                <>
-                  <Eye className="h-3.5 w-3.5" />
-                  {t.showDocsForViewers}
-                </>
-              )}
-            </Button>
-            {docsHiddenForViewers && (
-              <Badge variant="secondary" className="text-xs">
-                Docs masquées
-              </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <DemoModeToggle />
+            <GA4OAuthToggle />
+          </div>
+        )}
+        <BrowserlessAlert />
+        <ApiGatewayFallbackAlert />
+
+        <div className="flex gap-4 min-h-[600px]">
+          {/* ─── Sidebar navigation ─── */}
+          <nav className="w-48 shrink-0 space-y-4">
+            {navGroups.map((group) => (
+              <div key={group.label}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 px-2 mb-1">
+                  {group.label}
+                </p>
+                <div className="space-y-0.5">
+                  {group.items.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => setActiveTab(item.id)}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-colors text-left",
+                          isActive
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Creator-only: doc visibility toggle */}
+            {!readOnly && (
+              <div className="pt-2 border-t border-border/40">
+                <button
+                  onClick={toggleDocsVisibility}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                >
+                  {docsHiddenForViewers ? <EyeOff className="h-3 w-3 shrink-0" /> : <Eye className="h-3 w-3 shrink-0" />}
+                  <span className="truncate">{docsHiddenForViewers ? t.hideDocsForViewers : t.showDocsForViewers}</span>
+                </button>
+                {docsHiddenForViewers && (
+                  <Badge variant="secondary" className="text-[9px] mt-1 ml-2">
+                    Masqué
+                  </Badge>
+                )}
+              </div>
             )}
+          </nav>
+
+          {/* ─── Main content ─── */}
+          <div className="flex-1 min-w-0">
+            {renderContent()}
           </div>
-        )}
-
-        {/* ── Monitoring group ── */}
-        <TabsContent value="analytics" forceMount className="data-[state=inactive]:hidden">
-          <AnalyticsDashboard />
-        </TabsContent>
-
-        <TabsContent value="intelligence" forceMount className="data-[state=inactive]:hidden">
-          <IntelligenceHub />
-        </TabsContent>
-
-        <TabsContent value="silent-errors" forceMount className="data-[state=inactive]:hidden">
-          <SilentErrorsRegistry />
-        </TabsContent>
-
-        <TabsContent value="ci-tests" forceMount className="data-[state=inactive]:hidden">
-          <CiTestsDashboard />
-        </TabsContent>
-
-        {/* ── Content & Users group ── */}
-        <TabsContent value="users" forceMount className="data-[state=inactive]:hidden">
-          <div className={readOnly ? 'admin-readonly' : ''}>
-            <UserManagement />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="blog" forceMount className="data-[state=inactive]:hidden">
-          <div className={readOnly ? 'admin-readonly' : ''}>
-            <BlogManagement />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="support" forceMount className="data-[state=inactive]:hidden">
-          <div className={readOnly ? 'admin-readonly' : ''}>
-            <SupportManagement />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="affiliates" forceMount className="data-[state=inactive]:hidden">
-          <div className={readOnly ? 'admin-readonly' : ''}>
-            <AffiliateManagement />
-          </div>
-        </TabsContent>
-
-        {/* ── Technical group ── */}
-        <TabsContent value="crawls" forceMount className="data-[state=inactive]:hidden">
-          <div className={readOnly ? 'admin-readonly' : ''}>
-            <CrawlManagement />
-          </div>
-        </TabsContent>
-
-        <TabsContent value="scripts" forceMount className="data-[state=inactive]:hidden">
-          <div className={readOnly ? 'admin-readonly' : ''}>
-            <ScriptKillSwitches />
-          </div>
-        </TabsContent>
-
-        {showAlgos && (
-          <TabsContent value="algos" forceMount className="data-[state=inactive]:hidden">
-            <div className={readOnly ? 'admin-readonly' : ''}>
-              <AlgoTrainingDashboard />
-            </div>
-          </TabsContent>
-        )}
-
-        {/* ── Documentation ── */}
-        {showDocs && (
-          <TabsContent value="docs" forceMount className="data-[state=inactive]:hidden">
-            <BackendDocumentation />
-          </TabsContent>
-        )}
-      </Tabs>
-    </div>
+        </div>
+      </div>
     </AdminProvider>
   );
 }
