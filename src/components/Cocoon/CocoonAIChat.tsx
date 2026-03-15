@@ -5,6 +5,87 @@ import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import ReactMarkdown from 'react-markdown';
+import type { Components } from 'react-markdown';
+
+// SEO lexicon terms mapping for auto-linking
+const LEXICON_TERMS: Record<string, string> = {
+  'juice': 'link-juice',
+  'link juice': 'link-juice',
+  'maillage interne': 'maillage-interne',
+  'maillage': 'maillage-interne',
+  'cocon sémantique': 'cocon-semantique',
+  'cocon': 'cocon-semantique',
+  'e-e-a-t': 'eeat',
+  'eeat': 'eeat',
+  'crawl': 'crawl',
+  'backlink': 'backlink',
+  'backlinks': 'backlink',
+  'canonical': 'balise-canonical',
+  'canonique': 'balise-canonical',
+  'serp': 'serp',
+  'schema.org': 'schema-org',
+  'json-ld': 'json-ld',
+  'sitemap': 'sitemap',
+  'robots.txt': 'robots-txt',
+  'title': 'balise-title',
+  'balise title': 'balise-title',
+  'meta description': 'meta-description',
+  'h1': 'balise-h1',
+  'pagerank': 'pagerank',
+  'ancre': 'texte-ancre',
+  'anchor text': 'texte-ancre',
+  'thin content': 'thin-content',
+  'contenu dupliqué': 'contenu-duplique',
+  'duplicate content': 'contenu-duplique',
+  'geo': 'geo',
+  'llm': 'llm',
+  'tf-idf': 'tf-idf',
+  'citabilité': 'citabilite',
+  'roi': 'roi-seo',
+  'cannibalization': 'cannibalisation',
+  'cannibalisation': 'cannibalisation',
+  'intent': 'intention-recherche',
+  'intention de recherche': 'intention-recherche',
+  'profondeur': 'profondeur-crawl',
+  'crawl depth': 'profondeur-crawl',
+};
+
+// Build regex from terms (longest first to avoid partial matches)
+const lexiconRegex = new RegExp(
+  `\\b(${Object.keys(LEXICON_TERMS).sort((a, b) => b.length - a.length).map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`,
+  'gi'
+);
+
+function injectLexiconLinks(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  const regex = new RegExp(lexiconRegex.source, lexiconRegex.flags);
+  
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    const term = match[0];
+    const anchor = LEXICON_TERMS[term.toLowerCase()];
+    parts.push(
+      <a
+        key={`${match.index}-${term}`}
+        href={`/lexique#${anchor}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-violet-400 hover:text-violet-300 underline decoration-violet-400/40 hover:decoration-violet-300/60 transition-colors cursor-pointer"
+      >
+        {term}
+      </a>
+    );
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  return parts.length > 0 ? parts : [text];
+}
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
