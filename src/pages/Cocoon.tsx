@@ -228,6 +228,55 @@ export default function Cocoon() {
     return () => clearTimeout(timer);
   }, [autoLaunchDomain, selectedSiteId, trackedSites]);
 
+  // Auto-refresh: detect return from external audit/crawl tabs
+  useEffect(() => {
+    if (!user || !selectedSiteId) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible') return;
+      const clickTs = externalClickTimestamp.current;
+      if (!clickTs) return;
+
+      // Must have been away at least 15s (realistic time to start an audit/crawl)
+      const elapsed = Date.now() - clickTs;
+      if (elapsed < 15_000) return;
+
+      const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
+      if (!selectedSite) return;
+
+      // Wait 3s for DB to settle after tab focus
+      await new Promise(r => setTimeout(r, 3000));
+
+      // Check for new crawls or audits since click
+      const since = new Date(clickTs).toISOString();
+      const [crawlRes, auditRes] = await Promise.all([
+        supabase
+          .from("site_crawls" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("domain", selectedSite.domain)
+          .eq("user_id", user.id)
+          .gte("created_at", since),
+        supabase
+          .from("audits")
+          .select("id", { count: "exact", head: true })
+          .eq("domain", selectedSite.domain)
+          .eq("user_id", user.id)
+          .gte("created_at", since),
+      ]);
+
+      const hasNewData = (crawlRes.count || 0) > 0 || (auditRes.count || 0) > 0;
+      if (hasNewData) {
+        externalClickTimestamp.current = null;
+        setIsAutoRefreshing(true);
+        await handleCompute();
+        setIsAutoRefreshing(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [user, selectedSiteId, trackedSites]);
+
   // Load existing nodes for selected site
   useEffect(() => {
     if (!selectedSiteId) return;
