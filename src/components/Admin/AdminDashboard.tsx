@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2 } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -16,6 +16,7 @@ import { IntelligenceHub } from './IntelligenceHub';
 import { ScriptKillSwitches } from './ScriptKillSwitches';
 import { SilentErrorsRegistry } from './SilentErrorsRegistry';
 import { AlgoTrainingDashboard } from './AlgoTrainingDashboard';
+import { FunctionsManagement } from './FunctionsManagement';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ const adminTranslations = {
     algos: 'Algos ML',
     documentation: 'Documentation',
     docs: 'Docs',
+    functions: 'Functions',
     hideDocsForViewers: 'Masquer docs aux viewers',
     showDocsForViewers: 'Docs visibles aux viewers',
   },
@@ -62,6 +64,7 @@ const adminTranslations = {
     algos: 'ML Algos',
     documentation: 'Documentation',
     docs: 'Docs',
+    functions: 'Functions',
     hideDocsForViewers: 'Hide docs from viewers',
     showDocsForViewers: 'Docs visible to viewers',
   },
@@ -82,6 +85,7 @@ const adminTranslations = {
     algos: 'Algos ML',
     documentation: 'Documentación',
     docs: 'Docs',
+    functions: 'Functions',
     hideDocsForViewers: 'Ocultar docs de viewers',
     showDocsForViewers: 'Docs visibles para viewers',
   },
@@ -169,6 +173,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         { id: 'crawls', label: t.crawls, icon: Globe, group: 'technical' },
         { id: 'scripts', label: t.scripts, icon: ShieldAlert, group: 'technical' },
         ...(showAlgos ? [{ id: 'algos', label: t.algos, icon: Brain, group: 'technical' }] : []),
+        { id: 'functions', label: t.functions, icon: Code2, group: 'technical' },
       ],
     },
     ...(showDocs
@@ -197,6 +202,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'scripts': return wrap(<ScriptKillSwitches />);
       case 'algos': return showAlgos ? wrap(<AlgoTrainingDashboard />) : null;
       case 'docs': return showDocs ? <BackendDocumentation /> : null;
+      case 'functions': return <FunctionsManagement />;
       default: return <AnalyticsDashboard />;
     }
   };
