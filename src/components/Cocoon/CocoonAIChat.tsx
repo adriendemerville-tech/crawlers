@@ -513,17 +513,25 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
             {messages.length === 0 && (
               <p className="text-xs text-white/30 text-center py-8">{t.empty}</p>
             )}
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {messages.map((msg, i) => {
+              const isUser = msg.role === 'user';
+              const isAssistant = msg.role === 'assistant';
+              // Hide full prompt, show short label instead
+              const displayContent = isUser && isAnalysisPrompt(msg.content)
+                ? getAnalysisLabel(msg.content, language)
+                : msg.content;
+
+              return (
+              <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed ${
-                    msg.role === 'user'
+                  className={`relative max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed group ${
+                    isUser
                       ? 'bg-[#fbbf24]/15 text-white border border-[#fbbf24]/20 rounded-br-md'
                       : 'bg-white/5 text-white/80 border border-white/10 rounded-bl-md'
                   }`}
                   style={{ fontSize: `${fontSize}px` }}
                 >
-                  {msg.role === 'assistant' ? (
+                  {isAssistant ? (
                     <div className="prose prose-invert max-w-none
                       [&_p]:mb-3 [&_p]:mt-1 [&_p:last-child]:mb-0
                       [&_ul]:mb-3 [&_ul]:mt-1 [&_ul]:pl-4
@@ -548,10 +556,15 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
                         {msg.content}
                       </ReactMarkdown>
                     </div>
-                  ) : msg.content}
+                  ) : displayContent}
+                  {/* Copy button for assistant messages */}
+                  {isAssistant && !isLoading && (
+                    <CopyButton text={msg.content} />
+                  )}
                 </div>
               </div>
-            ))}
+              );
+            })}
             {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
               <div className="flex justify-start">
                 <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white/5 border border-white/10">
