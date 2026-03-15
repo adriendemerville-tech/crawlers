@@ -335,6 +335,7 @@ Deno.serve(async (req) => {
     for (const page of crawlPages) {
       const keywords = extractKeywords(page.title || "", page.h1 || "", page.meta_description || "");
       const intent = classifyIntent(page.title || "", page.h1 || "", keywords);
+      const pageType = classifyPageType(page.url, page.title || "", page.h1 || "");
       const fullText = `${page.title || ""} ${page.h1 || ""} ${page.meta_description || ""} ${keywords.join(" ")}`;
       tokenizedDocs.push(tokenize(fullText));
 
@@ -360,6 +361,9 @@ Deno.serve(async (req) => {
         internal_links_in: 0,
         internal_links_out: page.internal_links || 0,
         eeat_score: page.seo_score || 0,
+        crawl_depth: page.crawl_depth || 0,
+        page_type: pageType,
+        page_updated_at: page.created_at || null,
         // Enriched from audit
         cpc_value: cpc,
         search_volume: volume,
