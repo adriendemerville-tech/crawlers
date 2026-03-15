@@ -4,6 +4,7 @@ import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useTheme } from 'next-themes';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
