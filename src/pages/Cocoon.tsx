@@ -137,6 +137,7 @@ export default function Cocoon() {
   const [selectedSiteId, setSelectedSiteId] = useState<string>("");
   const [nodes, setNodes] = useState<any[]>([]);
   const [selectedNode, setSelectedNode] = useState<any>(null);
+  const [nodePickerCallback, setNodePickerCallback] = useState<((node: any) => void) | null>(null);
   const [isXRayMode, setIsXRayMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isComputing, setIsComputing] = useState(false);
@@ -426,8 +427,16 @@ export default function Cocoon() {
               <CocoonForceGraph
                 nodes={nodes}
                 selectedNodeId={selectedNode?.id || null}
-                onNodeSelect={setSelectedNode}
+                onNodeSelect={(node) => {
+                  if (nodePickerCallback && node) {
+                    nodePickerCallback(node);
+                    setNodePickerCallback(null);
+                  } else {
+                    setSelectedNode(node);
+                  }
+                }}
                 isXRayMode={isXRayMode}
+                isPickingMode={!!nodePickerCallback}
               />
             )}
 
@@ -472,7 +481,12 @@ export default function Cocoon() {
         {hasAccess && nodes.length > 0 && (
           <div className="px-4 md:px-6 pb-4 md:pb-6">
             <div className="w-full max-w-[400px]">
-              <CocoonAIChat nodes={nodes} selectedNodeId={selectedNode?.id} />
+              <CocoonAIChat
+                nodes={nodes}
+                selectedNodeId={selectedNode?.id}
+                onRequestNodePick={(cb) => setNodePickerCallback(() => cb)}
+                onCancelPick={() => setNodePickerCallback(null)}
+              />
             </div>
           </div>
         )}

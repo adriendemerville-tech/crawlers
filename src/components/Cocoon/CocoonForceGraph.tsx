@@ -99,6 +99,7 @@ interface CocoonForceGraphProps {
   selectedNodeId: string | null;
   onNodeSelect: (node: SemanticNode | null) => void;
   isXRayMode: boolean;
+  isPickingMode?: boolean;
 }
 
 export function CocoonForceGraph({
@@ -106,6 +107,7 @@ export function CocoonForceGraph({
   selectedNodeId,
   onNodeSelect,
   isXRayMode,
+  isPickingMode = false,
 }: CocoonForceGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -113,19 +115,20 @@ export function CocoonForceGraph({
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 });
+  const [hasAutoFitted, setHasAutoFitted] = useState(false);
   const animFrameRef = useRef<number>(0);
   const graphNodesRef = useRef<GraphNode[]>([]);
   const graphLinksRef = useRef<GraphLink[]>([]);
   const perfTier = useMemo(() => detectPerformanceTier(), []);
   const perf = PERF_SETTINGS[perfTier];
 
-  // Depth → radius mapping: Home is biggest, deeper = smaller
+  // Depth → radius mapping: Home is biggest, deeper = smaller (compact sizing)
   const depthToRadius = (depth: number, traffic: number): number => {
-    if (depth === 0) return 32; // Home — immediately identifiable
-    if (depth === 1) return 18;
-    if (depth === 2) return 12;
-    if (depth === 3) return 9;
-    return 7;
+    if (depth === 0) return 18; // Home — identifiable but not oversized
+    if (depth === 1) return 10;
+    if (depth === 2) return 7;
+    if (depth === 3) return 5;
+    return 4;
   };
 
   // Build graph data
@@ -195,8 +198,39 @@ export function CocoonForceGraph({
     return () => ro.disconnect();
   }, []);
 
+  // Fit-to-view: compute bounding box and set transform
+  const fitToView = useCallback(() => {
+    const gNodes = graphNodesRef.current;
+    if (gNodes.length === 0) return;
+    
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const n of gNodes) {
+      if (n.x == null || n.y == null) continue;
+      const r = n.radius;
+      minX = Math.min(minX, n.x - r);
+      maxX = Math.max(maxX, n.x + r);
+      minY = Math.min(minY, n.y - r);
+      maxY = Math.max(maxY, n.y + r);
+    }
+    
+    if (!isFinite(minX)) return;
+    
+    const graphW = maxX - minX;
+    const graphH = maxY - minY;
+    const padding = 60;
+    const scaleX = (dimensions.width - padding * 2) / graphW;
+    const scaleY = (dimensions.height - padding * 2) / graphH;
+    const k = Math.min(scaleX, scaleY, 2) * 0.85; // 85% to leave breathing room
+    
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    
+    setTransform({ x: -cx * k, y: -cy * k, k });
+  }, [dimensions]);
+
   // D3 Force simulation
   useEffect(() => {
+    setHasAutoFitted(false);
     graphNodesRef.current = graphNodes;
     graphLinksRef.current = graphLinks;
 
@@ -217,6 +251,16 @@ export function CocoonForceGraph({
     simulationRef.current = sim;
     return () => { sim.stop(); };
   }, [graphNodes, graphLinks]);
+
+  // Auto-fit after simulation settles
+  useEffect(() => {
+    if (hasAutoFitted || graphNodes.length === 0) return;
+    const timer = setTimeout(() => {
+      fitToView();
+      setHasAutoFitted(true);
+    }, 1500); // Wait for simulation to settle
+    return () => clearTimeout(timer);
+  }, [graphNodes, hasAutoFitted, fitToView]);
 
   // Canvas rendering loop
   useEffect(() => {
@@ -494,8 +538,8 @@ export function CocoonForceGraph({
     setTransform((t) => ({ ...t, k: Math.max(0.15, t.k * 0.8) }));
   }, []);
   const zoomReset = useCallback(() => {
-    setTransform({ x: 0, y: 0, k: 1 });
-  }, []);
+    fitToView();
+  }, [fitToView]);
 
   // Pan
   const isDragging = useRef(false);
@@ -523,7 +567,7 @@ export function CocoonForceGraph({
   const zoomPercent = Math.round(transform.k * 100);
 
   return (
-    <div ref={containerRef} className="relative w-full h-full min-h-[500px] rounded-xl overflow-hidden border border-violet-900/50 shadow-2xl shadow-violet-950/30">
+    <div ref={containerRef} className={`relative w-full h-full min-h-[500px] rounded-xl overflow-hidden border shadow-2xl shadow-violet-950/30 transition-all ${isPickingMode ? 'border-[#fbbf24] ring-2 ring-[#fbbf24]/30' : 'border-violet-900/50'}`}>
       <canvas
         ref={canvasRef}
         className="w-full h-full"
