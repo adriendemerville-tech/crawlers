@@ -336,7 +336,11 @@ export function MyWallet() {
                 <BrandingTab />
               </TabsContent>
 
-              {/* Clients Tab */}
+              {/* Cocoon Tab */}
+              <TabsContent value="cocoon" className="mt-0">
+                <CocoonTab />
+              </TabsContent>
+
               <TabsContent value="clients" className="mt-0">
                 <ClientsTab />
               </TabsContent>
