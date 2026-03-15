@@ -62,7 +62,7 @@ function ScoreBadge({ value, max = 100, label }: { value: number; max?: number; 
 
 export function CocoonNodePanel({ node, onClose }: CocoonNodePanelProps) {
   return (
-    <div className="absolute top-0 right-0 h-full w-[360px] bg-[#0f0a1e]/95 backdrop-blur-xl border-l border-[hsl(263,70%,20%)] overflow-y-auto z-20 animate-slide-in">
+    <div className="absolute top-4 right-4 bottom-4 w-[360px] rounded-xl bg-[#0f0a1e]/95 backdrop-blur-xl border border-[hsl(263,70%,20%)] overflow-y-auto z-20 animate-slide-in shadow-2xl shadow-black/40">
       {/* Header */}
       <div className="sticky top-0 bg-[#0f0a1e]/90 backdrop-blur p-4 border-b border-[hsl(263,70%,20%)]">
         <div className="flex items-start justify-between gap-3">
