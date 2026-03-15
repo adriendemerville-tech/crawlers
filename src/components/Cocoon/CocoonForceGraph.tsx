@@ -54,45 +54,30 @@ interface GraphLink extends SimulationLinkDatum<GraphNode> {
   targetDepth: number;
 }
 
-// ─── Page Type Colors ───
-const PAGE_TYPE_COLORS: Record<string, string> = {
-  homepage: "#fbbf24",    // Gold
-  blog: "#a78bfa",        // Violet
-  produit: "#34d399",     // Emerald
-  "catégorie": "#60a5fa", // Blue
-  faq: "#fb923c",         // Orange
-  contact: "#f472b6",     // Pink
-  tarifs: "#fbbf24",      // Gold
-  guide: "#c084fc",       // Purple
-  "légal": "#9ca3af",     // Gray
-  "à propos": "#22d3ee",  // Cyan
-  page: "#8b5cf6",        // Default violet
-  unknown: "#8b5cf6",
+// ─── Jarvis-style Color Palette ───
+const PAGE_TYPE_COLORS: Record<string, [number, number, number]> = {
+  homepage:    [255, 200, 60],
+  blog:        [140, 120, 255],
+  produit:     [60, 220, 160],
+  "catégorie": [80, 170, 255],
+  faq:         [255, 150, 80],
+  contact:     [240, 120, 180],
+  tarifs:      [255, 200, 60],
+  guide:       [180, 140, 255],
+  "légal":     [160, 170, 180],
+  "à propos":  [80, 220, 230],
+  page:        [140, 100, 250],
+  unknown:     [140, 100, 250],
 };
 
-const EDGE_COLORS: Record<string, string> = {
-  strong: "rgba(251, 191, 36, 0.6)",
-  medium: "rgba(167, 139, 250, 0.3)",
-  weak: "rgba(124, 58, 237, 0.12)",
-};
-
-// ─── Performance tier detection ───
-function detectPerformanceTier(): "high" | "mid" | "low" {
-  const cores = navigator.hardwareConcurrency || 2;
-  const mem = (navigator as any).deviceMemory || 4;
-  // Check if device is mobile
-  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
-
-  if (isMobile || cores <= 2 || mem <= 2) return "low";
-  if (cores <= 4 || mem <= 4) return "mid";
-  return "high";
+// ─── Particle system for links ───
+interface Particle {
+  progress: number;
+  speed: number;
+  linkIdx: number;
+  size: number;
+  opacity: number;
 }
-
-const PERF_SETTINGS = {
-  high: { glow: true, pulse: true, flowAnim: true, shadows: true, maxFps: 60, labelThreshold: 6 },
-  mid:  { glow: true, pulse: true, flowAnim: true, shadows: false, maxFps: 45, labelThreshold: 10 },
-  low:  { glow: false, pulse: false, flowAnim: false, shadows: false, maxFps: 30, labelThreshold: 14 },
-};
 
 interface CocoonForceGraphProps {
   nodes: SemanticNode[];
@@ -119,16 +104,14 @@ export function CocoonForceGraph({
   const animFrameRef = useRef<number>(0);
   const graphNodesRef = useRef<GraphNode[]>([]);
   const graphLinksRef = useRef<GraphLink[]>([]);
-  const perfTier = useMemo(() => detectPerformanceTier(), []);
-  const perf = PERF_SETTINGS[perfTier];
+  const particlesRef = useRef<Particle[]>([]);
 
-  // Depth → radius mapping: Home is biggest, deeper = smaller (compact sizing)
-  const depthToRadius = (depth: number, traffic: number): number => {
-    if (depth === 0) return 18; // Home — identifiable but not oversized
-    if (depth === 1) return 10;
-    if (depth === 2) return 7;
-    if (depth === 3) return 5;
-    return 4;
+  // Depth → radius: ultra-compact Jarvis-style dots
+  const depthToRadius = (depth: number): number => {
+    if (depth === 0) return 6;
+    if (depth === 1) return 3.5;
+    if (depth === 2) return 2.5;
+    return 2;
   };
 
   // Build graph data
@@ -152,13 +135,13 @@ export function CocoonForceGraph({
         geo: n.geo_score,
         roi: n.roi_predictive,
         traffic: n.traffic_estimate,
-        radius: depthToRadius(depth, n.traffic_estimate),
+        radius: depthToRadius(depth),
         pulsePhase: Math.random() * Math.PI * 2,
         depth,
         pageType,
         isHome: depth === 0,
-        x: Math.cos((i / nodes.length) * Math.PI * 2) * 200 + Math.random() * 50,
-        y: Math.sin((i / nodes.length) * Math.PI * 2) * 200 + Math.random() * 50,
+        x: Math.cos((i / nodes.length) * Math.PI * 2) * 300 + Math.random() * 40,
+        y: Math.sin((i / nodes.length) * Math.PI * 2) * 300 + Math.random() * 40,
       };
     });
 
@@ -186,6 +169,22 @@ export function CocoonForceGraph({
     return { graphNodes: gNodes, graphLinks: gLinks };
   }, [nodes]);
 
+  // Initialize particles
+  useEffect(() => {
+    const particles: Particle[] = [];
+    const count = Math.min(graphLinks.length * 2, 200);
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        progress: Math.random(),
+        speed: 0.002 + Math.random() * 0.004,
+        linkIdx: Math.floor(Math.random() * graphLinks.length),
+        size: 0.5 + Math.random() * 1,
+        opacity: 0.3 + Math.random() * 0.5,
+      });
+    }
+    particlesRef.current = particles;
+  }, [graphLinks]);
+
   // Resize observer
   useEffect(() => {
     const container = containerRef.current;
@@ -198,33 +197,27 @@ export function CocoonForceGraph({
     return () => ro.disconnect();
   }, []);
 
-  // Fit-to-view: compute bounding box and set transform
+  // Fit-to-view
   const fitToView = useCallback(() => {
     const gNodes = graphNodesRef.current;
     if (gNodes.length === 0) return;
-    
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (const n of gNodes) {
       if (n.x == null || n.y == null) continue;
-      const r = n.radius;
-      minX = Math.min(minX, n.x - r);
-      maxX = Math.max(maxX, n.x + r);
-      minY = Math.min(minY, n.y - r);
-      maxY = Math.max(maxY, n.y + r);
+      minX = Math.min(minX, n.x - 20);
+      maxX = Math.max(maxX, n.x + 20);
+      minY = Math.min(minY, n.y - 20);
+      maxY = Math.max(maxY, n.y + 20);
     }
-    
     if (!isFinite(minX)) return;
-    
     const graphW = maxX - minX;
     const graphH = maxY - minY;
-    const padding = 60;
+    const padding = 80;
     const scaleX = (dimensions.width - padding * 2) / graphW;
     const scaleY = (dimensions.height - padding * 2) / graphH;
-    const k = Math.min(scaleX, scaleY, 2) * 0.85; // 85% to leave breathing room
-    
+    const k = Math.min(scaleX, scaleY, 3) * 0.9;
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
-    
     setTransform({ x: -cx * k, y: -cy * k, k });
   }, [dimensions]);
 
@@ -239,12 +232,12 @@ export function CocoonForceGraph({
         "link",
         forceLink<GraphNode, GraphLink>(graphLinks)
           .id((d) => d.id)
-          .distance((d) => 80 / (d.strength + 0.1))
-          .strength((d) => d.strength * 0.3),
+          .distance((d) => 100 / (d.strength + 0.1))
+          .strength((d) => d.strength * 0.25),
       )
-      .force("charge", forceManyBody().strength(-120))
+      .force("charge", forceManyBody().strength(-180))
       .force("center", forceCenter(0, 0))
-      .force("collide", forceCollide<GraphNode>().radius((d) => d.radius + 4))
+      .force("collide", forceCollide<GraphNode>().radius((d) => d.radius + 8))
       .alphaDecay(0.02)
       .velocityDecay(0.4);
 
@@ -252,17 +245,17 @@ export function CocoonForceGraph({
     return () => { sim.stop(); };
   }, [graphNodes, graphLinks]);
 
-  // Auto-fit after simulation settles
+  // Auto-fit after simulation
   useEffect(() => {
     if (hasAutoFitted || graphNodes.length === 0) return;
     const timer = setTimeout(() => {
       fitToView();
       setHasAutoFitted(true);
-    }, 1500); // Wait for simulation to settle
+    }, 1500);
     return () => clearTimeout(timer);
   }, [graphNodes, hasAutoFitted, fitToView]);
 
-  // Canvas rendering loop
+  // ─── Canvas rendering loop ───
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -270,29 +263,59 @@ export function CocoonForceGraph({
     if (!ctx) return;
 
     let frame = 0;
-    let lastTime = 0;
-    const minInterval = 1000 / perf.maxFps;
 
     const render = (timestamp: number) => {
-      // FPS limiter for low-end devices
-      if (timestamp - lastTime < minInterval) {
-        animFrameRef.current = requestAnimationFrame(render);
-        return;
-      }
-      lastTime = timestamp;
       frame++;
-
       const { width, height } = dimensions;
       const dpr = window.devicePixelRatio || 1;
       canvas.width = width * dpr;
       canvas.height = height * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, width, height);
 
-      // Background
-      ctx.fillStyle = "#0f0a1e";
+      // ─── Deep space background ───
+      const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.7);
+      bgGrad.addColorStop(0, "#0d0820");
+      bgGrad.addColorStop(0.5, "#080515");
+      bgGrad.addColorStop(1, "#040210");
+      ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, width, height);
 
+      // ─── Subtle hex grid (Jarvis backdrop) ───
+      const time = frame * 0.008;
+      ctx.save();
+      ctx.globalAlpha = 0.03 + Math.sin(time * 0.5) * 0.01;
+      ctx.strokeStyle = "#6c5ce7";
+      ctx.lineWidth = 0.5;
+      const gridSize = 60;
+      for (let gx = -gridSize; gx < width + gridSize; gx += gridSize) {
+        for (let gy = -gridSize; gy < height + gridSize; gy += gridSize * 0.866) {
+          const offset = (Math.floor(gy / (gridSize * 0.866)) % 2) * (gridSize / 2);
+          ctx.beginPath();
+          ctx.arc(gx + offset, gy, 1, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+
+      // ─── Radial scanning line ───
+      ctx.save();
+      const scanAngle = time * 0.3;
+      const scanGrad = ctx.createLinearGradient(
+        width / 2, height / 2,
+        width / 2 + Math.cos(scanAngle) * width, height / 2 + Math.sin(scanAngle) * height
+      );
+      scanGrad.addColorStop(0, "rgba(108, 92, 231, 0.08)");
+      scanGrad.addColorStop(0.3, "rgba(108, 92, 231, 0.02)");
+      scanGrad.addColorStop(1, "rgba(108, 92, 231, 0)");
+      ctx.beginPath();
+      ctx.moveTo(width / 2, height / 2);
+      ctx.arc(width / 2, height / 2, Math.max(width, height), scanAngle - 0.15, scanAngle + 0.15);
+      ctx.closePath();
+      ctx.fillStyle = scanGrad;
+      ctx.fill();
+      ctx.restore();
+
+      // ─── Transform into graph space ───
       ctx.save();
       ctx.translate(width / 2 + transform.x, height / 2 + transform.y);
       ctx.scale(transform.k, transform.k);
@@ -300,74 +323,69 @@ export function CocoonForceGraph({
       const gNodes = graphNodesRef.current;
       const gLinks = graphLinksRef.current;
       const invK = 1 / transform.k;
-      const nodeScale = Math.max(0.5, Math.min(2, invK * 0.6 + 0.4));
-      const time = frame * 0.02;
+      const nodeScale = Math.max(0.6, Math.min(1.8, invK * 0.5 + 0.5));
 
-      // ─── Draw edges ───
+      // ─── Draw edges — thin holographic lines ───
       for (const link of gLinks) {
         const source = link.source as GraphNode;
         const target = link.target as GraphNode;
         if (!source.x || !source.y || !target.x || !target.y) continue;
 
-        const isSelectedLink =
-          selectedNodeId && (source.id === selectedNodeId || target.id === selectedNodeId);
+        const isSelectedLink = selectedNodeId && (source.id === selectedNodeId || target.id === selectedNodeId);
+        const baseAlpha = link.strength * 0.4;
+        const lineW = Math.max(0.3, link.strength * 0.8) * nodeScale;
 
-        // Link thickness = juice proxy (strength * depth weighting)
-        const juiceWeight = link.strength * (1 + 0.3 / (Math.min(link.sourceDepth, link.targetDepth) + 1));
-        const baseWidth = Math.max(0.5, juiceWeight * 3) * nodeScale;
-
-        if (isSelectedLink && perf.flowAnim) {
-          // Animated flow: ascending (child→parent) = blue-cyan, descending (parent→child) = gold-amber
-          const selectedNode = gNodes.find(n => n.id === selectedNodeId);
-          if (selectedNode) {
-            const otherNode = source.id === selectedNodeId ? target : source;
-            const isDescending = selectedNode.depth < otherNode.depth; // parent→child
-            
-            // Draw animated dashes
-            const gradStart = isDescending ? "#fbbf24" : "#60a5fa";
-            const gradEnd = isDescending ? "#f59e0b" : "#22d3ee";
-            
-            // Flowing glow effect
-            const flowOffset = (time * 30) % 40;
-            ctx.setLineDash([8, 12]);
-            ctx.lineDashOffset = isDescending ? -flowOffset : flowOffset;
-            
-            // Glow layer
-            if (perf.glow) {
-              ctx.beginPath();
-              ctx.moveTo(source.x, source.y);
-              ctx.lineTo(target.x, target.y);
-              ctx.strokeStyle = isDescending ? "rgba(251, 191, 36, 0.25)" : "rgba(96, 165, 250, 0.25)";
-              ctx.lineWidth = baseWidth * 4;
-              ctx.stroke();
-            }
-
-            // Main line
-            const grad = ctx.createLinearGradient(source.x, source.y, target.x, target.y);
-            grad.addColorStop(0, gradStart);
-            grad.addColorStop(1, gradEnd);
-            ctx.beginPath();
-            ctx.moveTo(source.x, source.y);
-            ctx.lineTo(target.x, target.y);
-            ctx.strokeStyle = grad;
-            ctx.lineWidth = baseWidth * 1.8;
-            ctx.stroke();
-            ctx.setLineDash([]);
-          }
-        } else {
-          // Normal edge
+        if (isSelectedLink) {
+          // Selected link: bright golden glow
           ctx.beginPath();
           ctx.moveTo(source.x, source.y);
           ctx.lineTo(target.x, target.y);
-          ctx.strokeStyle = isSelectedLink
-            ? "rgba(251, 191, 36, 0.8)"
-            : EDGE_COLORS[link.type] || EDGE_COLORS.weak;
-          ctx.lineWidth = isSelectedLink ? baseWidth * 1.5 : baseWidth;
+          ctx.strokeStyle = `rgba(255, 200, 60, 0.15)`;
+          ctx.lineWidth = lineW * 6;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(source.x, source.y);
+          ctx.lineTo(target.x, target.y);
+          ctx.strokeStyle = `rgba(255, 200, 60, 0.7)`;
+          ctx.lineWidth = lineW * 1.5;
+          ctx.stroke();
+        } else {
+          // Default: ultra-thin, ethereal
+          ctx.beginPath();
+          ctx.moveTo(source.x, source.y);
+          ctx.lineTo(target.x, target.y);
+          ctx.strokeStyle = `rgba(120, 100, 220, ${Math.min(baseAlpha, 0.18)})`;
+          ctx.lineWidth = lineW;
           ctx.stroke();
         }
       }
 
-      // ─── Draw nodes ───
+      // ─── Particles flowing along links ───
+      const particles = particlesRef.current;
+      for (const p of particles) {
+        p.progress += p.speed;
+        if (p.progress > 1) {
+          p.progress = 0;
+          p.linkIdx = Math.floor(Math.random() * gLinks.length);
+        }
+        const link = gLinks[p.linkIdx];
+        if (!link) continue;
+        const source = link.source as GraphNode;
+        const target = link.target as GraphNode;
+        if (!source.x || !source.y || !target.x || !target.y) continue;
+
+        const px = source.x + (target.x - source.x) * p.progress;
+        const py = source.y + (target.y - source.y) * p.progress;
+        const fadeEdge = Math.sin(p.progress * Math.PI); // fade at start/end
+
+        ctx.beginPath();
+        ctx.arc(px, py, p.size * nodeScale, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(160, 140, 255, ${p.opacity * fadeEdge * 0.6})`;
+        ctx.fill();
+      }
+
+      // ─── Draw nodes — Jarvis holographic dots ───
       for (const node of gNodes) {
         if (!node.x || !node.y) continue;
 
@@ -375,96 +393,95 @@ export function CocoonForceGraph({
         const isHovered = node.id === hoveredNode?.id;
         const isGhost = isXRayMode && node.traffic < 10;
 
-        // Pulse animation (only on high/mid)
-        let pulse = 1;
-        if (perf.pulse) {
-          const pulseFreq = node.isHome ? 1.5 : Math.max(0.5, Math.min(3, node.traffic / 100));
-          pulse = 1 + Math.sin(time * pulseFreq + node.pulsePhase) * (node.isHome ? 0.06 : 0.04);
-        }
-        const r = node.radius * pulse * nodeScale;
+        // Pulse
+        const pulseFreq = node.isHome ? 1.2 : 0.8;
+        const pulse = 1 + Math.sin(time * pulseFreq * 3 + node.pulsePhase) * (node.isHome ? 0.15 : 0.08);
+        const r = node.radius * nodeScale * pulse;
 
-        // Drop shadow (high only)
-        if (perf.shadows) {
-          ctx.beginPath();
-          ctx.arc(node.x + 2 * nodeScale, node.y + 2 * nodeScale, r * 1.05, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-          ctx.fill();
+        const [cr, cg, cb] = PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown;
+        const baseAlpha = isGhost ? 0.15 : 1;
+
+        // ─── Outer glow rings (Jarvis energy rings) ───
+        if ((isSelected || isHovered || node.isHome) && !isGhost) {
+          const ringCount = node.isHome ? 3 : 2;
+          for (let i = 0; i < ringCount; i++) {
+            const ringR = r * (2.5 + i * 1.8) + Math.sin(time * 2 + i) * r * 0.3;
+            const ringAlpha = (0.12 - i * 0.03) * (isSelected ? 1.5 : 1);
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, ringR, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, ${ringAlpha})`;
+            ctx.lineWidth = 0.5 * nodeScale;
+            ctx.stroke();
+          }
         }
 
-        // Node glow (selected/hovered + home always)
-        if (perf.glow && (isSelected || isHovered || node.isHome)) {
-          const glowColor = node.isHome ? "rgba(251, 191, 36, 0.35)" : "rgba(251, 191, 36, 0.25)";
-          const glowRadius = node.isHome ? r * 4 : r * 3;
-          const glow = ctx.createRadialGradient(node.x, node.y, r, node.x, node.y, glowRadius);
-          glow.addColorStop(0, glowColor);
-          glow.addColorStop(1, "rgba(251, 191, 36, 0)");
+        // ─── Radial glow ───
+        if (!isGhost) {
+          const glowR = r * (node.isHome ? 6 : isSelected ? 5 : isHovered ? 4 : 2.5);
+          const glowAlpha = node.isHome ? 0.2 : isSelected ? 0.15 : isHovered ? 0.12 : 0.06;
+          const glow = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowR);
+          glow.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, ${glowAlpha})`);
+          glow.addColorStop(0.5, `rgba(${cr}, ${cg}, ${cb}, ${glowAlpha * 0.3})`);
+          glow.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, 0)`);
           ctx.beginPath();
-          ctx.arc(node.x, node.y, glowRadius, 0, Math.PI * 2);
+          ctx.arc(node.x, node.y, glowR, 0, Math.PI * 2);
           ctx.fillStyle = glow;
           ctx.fill();
         }
 
-        // Node circle — color by page type
+        // ─── Core dot ───
         ctx.beginPath();
         ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
-        const nodeColor = isGhost
-          ? "rgba(124, 58, 237, 0.15)"
-          : PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown;
-        ctx.fillStyle = nodeColor;
-        ctx.globalAlpha = isGhost ? 0.3 : isSelected ? 1 : 0.85;
+        ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.9})`;
         ctx.fill();
-        ctx.globalAlpha = 1;
 
-        // Home node: special double ring
-        if (node.isHome) {
-          ctx.strokeStyle = "#fbbf24";
-          ctx.lineWidth = 3 * nodeScale;
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, r + 4 * nodeScale, 0, Math.PI * 2);
-          ctx.strokeStyle = "rgba(251, 191, 36, 0.4)";
-          ctx.lineWidth = 1.5 * nodeScale;
-          ctx.stroke();
-        } else {
-          // Standard border
-          ctx.strokeStyle = isSelected
-            ? "#fbbf24"
-            : isHovered
-              ? "#a78bfa"
-              : "rgba(255,255,255,0.15)";
-          ctx.lineWidth = (isSelected ? 2.5 : 1) * nodeScale;
-          ctx.stroke();
-        }
+        // Inner bright core (highlight)
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, r * 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${baseAlpha * 0.5})`;
+        ctx.fill();
 
-        // Home icon (star-like)
-        if (node.isHome && r > 8) {
-          ctx.fillStyle = "#0f0a1e";
-          ctx.font = `bold ${Math.round(r * 0.7)}px Inter, sans-serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText("⌂", node.x, node.y + 1);
-        }
+        // Thin rim
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+        ctx.strokeStyle = isSelected
+          ? `rgba(255, 200, 60, 0.9)`
+          : isHovered
+            ? `rgba(${cr}, ${cg}, ${cb}, 0.8)`
+            : `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.3})`;
+        ctx.lineWidth = (isSelected ? 1.2 : 0.5) * nodeScale;
+        ctx.stroke();
 
-        // Label
-        if (r > perf.labelThreshold || isSelected || isHovered || node.isHome) {
-          ctx.fillStyle = isGhost ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.9)";
-          const fontSize = Math.max(9, node.radius * 0.65) * nodeScale;
-          ctx.font = `${(isSelected || node.isHome) ? "bold " : ""}${fontSize}px Inter, sans-serif`;
+        // ─── Label ───
+        if (isSelected || isHovered || node.isHome || (r > 3 && transform.k > 1.2)) {
+          const fontSize = Math.max(8, Math.min(11, 9 * nodeScale));
+          ctx.font = `${isSelected || node.isHome ? "600 " : "400 "}${fontSize}px "Inter", system-ui, sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "top";
-          const maxLen = node.isHome ? 30 : 22;
-          const label = node.label.length > maxLen ? node.label.slice(0, maxLen - 3) + "…" : node.label;
+          const maxLen = 28;
+          const label = node.label.length > maxLen ? node.label.slice(0, maxLen - 2) + "…" : node.label;
+
+          // Text shadow
+          ctx.fillStyle = `rgba(0, 0, 0, 0.7)`;
+          ctx.fillText(label, node.x + 0.5, node.y + r + 4 * nodeScale + 0.5);
+
+          // Text
+          ctx.fillStyle = isGhost
+            ? `rgba(255, 255, 255, 0.25)`
+            : isSelected || node.isHome
+              ? `rgba(255, 220, 100, 0.95)`
+              : `rgba(255, 255, 255, 0.7)`;
           ctx.fillText(label, node.x, node.y + r + 4 * nodeScale);
         }
       }
 
       ctx.restore();
 
-      // Tooltip
+      // ─── HUD Tooltip ───
       if (hoveredNode && hoveredNode.x != null && hoveredNode.y != null) {
         const tx = hoveredNode.x * transform.k + width / 2 + transform.x;
-        const ty = hoveredNode.y * transform.k + height / 2 + transform.y - 60;
-        drawTooltip(ctx, hoveredNode, tx, ty, width);
+        const ty = hoveredNode.y * transform.k + height / 2 + transform.y - 70;
+        drawHudTooltip(ctx, hoveredNode, tx, ty, width);
       }
 
       animFrameRef.current = requestAnimationFrame(render);
@@ -472,9 +489,9 @@ export function CocoonForceGraph({
 
     animFrameRef.current = requestAnimationFrame(render);
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [dimensions, transform, selectedNodeId, hoveredNode, isXRayMode, perf]);
+  }, [dimensions, transform, selectedNodeId, hoveredNode, isXRayMode]);
 
-  // Mouse interactions
+  // ─── Mouse interactions ───
   const getNodeAtPos = useCallback(
     (clientX: number, clientY: number): GraphNode | null => {
       const canvas = canvasRef.current;
@@ -483,14 +500,15 @@ export function CocoonForceGraph({
       const mx = (clientX - rect.left - dimensions.width / 2 - transform.x) / transform.k;
       const my = (clientY - rect.top - dimensions.height / 2 - transform.y) / transform.k;
       const invK = 1 / transform.k;
-      const nodeScale = Math.max(0.5, Math.min(2, invK * 0.6 + 0.4));
+      const nodeScale = Math.max(0.6, Math.min(1.8, invK * 0.5 + 0.5));
 
+      // Generous hit area for small dots
       for (const node of graphNodesRef.current) {
         if (!node.x || !node.y) continue;
         const dx = node.x - mx;
         const dy = node.y - my;
-        const hitRadius = node.radius * nodeScale;
-        if (dx * dx + dy * dy < hitRadius * hitRadius * 1.5) return node;
+        const hitRadius = Math.max(node.radius * nodeScale * 2, 8);
+        if (dx * dx + dy * dy < hitRadius * hitRadius) return node;
       }
       return null;
     },
@@ -567,7 +585,14 @@ export function CocoonForceGraph({
   const zoomPercent = Math.round(transform.k * 100);
 
   return (
-    <div ref={containerRef} className={`relative w-full h-full min-h-[500px] rounded-xl overflow-hidden border shadow-2xl shadow-violet-950/30 transition-all ${isPickingMode ? 'border-[#fbbf24] ring-2 ring-[#fbbf24]/30' : 'border-violet-900/50'}`}>
+    <div
+      ref={containerRef}
+      className={`relative w-full h-full min-h-[500px] rounded-xl overflow-hidden shadow-2xl shadow-violet-950/40 transition-all ${
+        isPickingMode
+          ? "border border-[#fbbf24] ring-2 ring-[#fbbf24]/30"
+          : "border border-violet-900/30"
+      }`}
+    >
       <canvas
         ref={canvasRef}
         className="w-full h-full"
@@ -580,63 +605,104 @@ export function CocoonForceGraph({
         onMouseLeave={handleMouseUp}
       />
 
-      {/* Zoom controls */}
+      {/* Zoom controls — minimal HUD style */}
       <div className="absolute bottom-14 left-4 flex flex-col gap-1.5 z-10">
-        <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm border-violet-800/50 hover:bg-violet-900/40 text-foreground" onClick={zoomIn} title="Zoom +">
-          <Plus className="h-4 w-4" />
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-7 w-7 bg-black/40 backdrop-blur-md border-white/10 hover:bg-white/10 text-white/70 hover:text-white"
+          onClick={zoomIn}
+        >
+          <Plus className="h-3.5 w-3.5" />
         </Button>
-        <div className="text-[10px] text-center text-muted-foreground font-mono tabular-nums">{zoomPercent}%</div>
-        <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm border-violet-800/50 hover:bg-violet-900/40 text-foreground" onClick={zoomOut} title="Zoom −">
-          <Minus className="h-4 w-4" />
+        <div className="text-[9px] text-center text-white/30 font-mono tabular-nums">
+          {zoomPercent}%
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-7 w-7 bg-black/40 backdrop-blur-md border-white/10 hover:bg-white/10 text-white/70 hover:text-white"
+          onClick={zoomOut}
+        >
+          <Minus className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="outline" size="icon" className="h-8 w-8 bg-background/80 backdrop-blur-sm border-violet-800/50 hover:bg-violet-900/40 text-foreground mt-1" onClick={zoomReset} title="Reset">
-          <Maximize2 className="h-3.5 w-3.5" />
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-7 w-7 bg-black/40 backdrop-blur-md border-white/10 hover:bg-white/10 text-white/70 hover:text-white mt-1"
+          onClick={zoomReset}
+        >
+          <Maximize2 className="h-3 w-3" />
         </Button>
       </div>
 
-      {/* Stats + perf tier */}
-      <div className="absolute top-4 right-4 text-xs text-white/50 font-mono space-y-0.5 text-right">
+      {/* Stats — HUD overlay */}
+      <div className="absolute top-4 right-4 text-[10px] text-white/30 font-mono space-y-0.5 text-right">
         <div>{nodes.length} nœuds · {graphLinks.length} liens</div>
-        <div className="text-[9px] text-white/25">GPU: {perfTier}</div>
       </div>
     </div>
   );
 }
 
-// ─── Tooltip ───
-function drawTooltip(ctx: CanvasRenderingContext2D, node: GraphNode, x: number, y: number, canvasWidth: number) {
+// ─── HUD Tooltip — Jarvis-style floating card ───
+function drawHudTooltip(ctx: CanvasRenderingContext2D, node: GraphNode, x: number, y: number, canvasWidth: number) {
   const depthLabel = node.depth === 0 ? "Mère" : node.depth === 1 ? "Fille" : `Fille${"²³⁴⁵⁶"[node.depth - 2] || "^" + node.depth}`;
+  const [cr, cg, cb] = PAGE_TYPE_COLORS[node.pageType] || PAGE_TYPE_COLORS.unknown;
+
   const lines = [
-    node.label.slice(0, 35),
+    node.label.slice(0, 40),
     `${depthLabel} · ${node.pageType}`,
-    `Iab: ${node.iab} · GEO: ${node.geo}`,
+    `IAB: ${node.iab} · GEO: ${node.geo}`,
     `ROI: ${node.roi.toFixed(0)}€ · Trafic: ${node.traffic}`,
   ];
 
-  const padding = 10;
+  const padding = 12;
   const lineHeight = 16;
-  const w = 220;
+  const w = 230;
   const h = lines.length * lineHeight + padding * 2;
 
   let tx = x - w / 2;
   let ty = y - h;
   if (tx < 8) tx = 8;
   if (tx + w > canvasWidth - 8) tx = canvasWidth - w - 8;
-  if (ty < 8) ty = y + 20;
+  if (ty < 8) ty = y + 30;
 
-  ctx.fillStyle = "rgba(15, 10, 30, 0.95)";
-  ctx.strokeStyle = "rgba(251, 191, 36, 0.4)";
-  ctx.lineWidth = 1;
-  roundRect(ctx, tx, ty, w, h, 6);
+  // Backdrop
+  ctx.save();
+  ctx.globalAlpha = 0.92;
+  ctx.fillStyle = "#0a0618";
+  roundRect(ctx, tx, ty, w, h, 8);
   ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Border with accent color
+  ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.5)`;
+  ctx.lineWidth = 1;
+  roundRect(ctx, tx, ty, w, h, 8);
   ctx.stroke();
 
-  ctx.font = "11px Inter, sans-serif";
+  // Top accent line
+  ctx.beginPath();
+  ctx.moveTo(tx + 8, ty);
+  ctx.lineTo(tx + w - 8, ty);
+  ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.6)`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Text
+  ctx.font = "11px 'Inter', system-ui, sans-serif";
   ctx.textAlign = "left";
   lines.forEach((line, i) => {
-    ctx.fillStyle = i === 0 ? "#fbbf24" : "rgba(255,255,255,0.7)";
-    ctx.fillText(line, tx + padding, ty + padding + i * lineHeight + 12);
+    if (i === 0) {
+      ctx.font = "bold 11px 'Inter', system-ui, sans-serif";
+      ctx.fillStyle = `rgb(${cr}, ${cg}, ${cb})`;
+    } else {
+      ctx.font = "10px 'Inter', system-ui, sans-serif";
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+    }
+    ctx.fillText(line, tx + padding, ty + padding + i * lineHeight + 11);
   });
+  ctx.restore();
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
