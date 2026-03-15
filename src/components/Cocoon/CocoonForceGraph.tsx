@@ -58,7 +58,18 @@ interface GraphLink extends SimulationLinkDatum<GraphNode> {
   type: string;
   sourceDepth: number;
   targetDepth: number;
+  juiceType: JuiceType;
+  juiceIntensity: number;
 }
+
+type JuiceType = 'authority' | 'semantic' | 'traffic' | 'hierarchy';
+
+const JUICE_COLORS: Record<JuiceType, [number, number, number]> = {
+  authority:  [255, 200, 60],
+  semantic:   [80, 140, 255],
+  traffic:    [60, 220, 140],
+  hierarchy:  [180, 100, 255],
+};
 
 // ─── Jarvis-style Color Palette ───
 const PAGE_TYPE_COLORS: Record<string, [number, number, number]> = {
