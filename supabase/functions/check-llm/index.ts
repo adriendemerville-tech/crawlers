@@ -1,5 +1,5 @@
 import { getLLMTranslations, parseLanguage, type Language } from '../_shared/translations.ts';
-import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { trackTokenUsage, trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { trackAnalyzedUrl } from '../_shared/trackUrl.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts';
