@@ -63,15 +63,26 @@ export function UserManagement() {
     }
   };
 
+  const getUserCurrentRole = (userId: string): string | null => {
+    if (adminUserIds.has(userId)) return 'admin';
+    if (viewerUserIds.has(userId)) return 'viewer';
+    if (viewer2UserIds.has(userId)) return 'viewer_level2';
+    return null;
+  };
+
   const toggleRole = async (userId: string, role: string) => {
-    const currentSet = role === 'admin' ? adminUserIds : role === 'viewer' ? viewerUserIds : viewer2UserIds;
-    const hasRole = currentSet.has(userId);
+    const currentRole = getUserCurrentRole(userId);
     const labels: Record<string, string> = { admin: 'Créateur', viewer: 'Viewer', viewer_level2: 'Viewer L2' };
     try {
-      if (hasRole) {
+      if (currentRole === role) {
+        // Same role clicked → remove it
         await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', role as any);
         toast.success(`Rôle ${labels[role]} retiré`);
       } else {
+        // Different role → remove existing then insert new (exclusive)
+        if (currentRole) {
+          await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', currentRole as any);
+        }
         await supabase.from('user_roles').insert({ user_id: userId, role: role as any });
         toast.success(`Rôle ${labels[role]} attribué`);
       }
