@@ -456,8 +456,9 @@ const Index = () => {
     // Afficher le dashboard de l'onglet actif en premier
     if (activeTab === 'pagespeed' && quotaExceeded) {
       dashboards.push(
-        <div key="pagespeed-quota" className="border-b border-border/50 pb-8">
-          <QuotaExceeded onRetry={handleRetry} />
+        <div key="pagespeed-quota" className="border-b border-border/50 pb-8 p-8 text-center">
+          <p className="text-destructive font-semibold">Quota PageSpeed dépassé</p>
+          <button onClick={handleRetry} className="mt-2 text-sm text-primary underline">Réessayer</button>
         </div>
       );
     } else if (activeTab === 'crawlers') {
