@@ -608,7 +608,7 @@ export default function Cocoon() {
         </main>
 
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
-        <div className="px-4 md:px-6 pb-8 md:pb-10 mb-4 flex items-end gap-4 flex-wrap">
+        <div className="shrink-0 px-4 md:px-6 py-3 flex items-end gap-4 flex-wrap">
           {/* Console button — bottom left */}
           <button
             onClick={() => navigate('/console')}
