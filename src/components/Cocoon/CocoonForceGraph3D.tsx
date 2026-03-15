@@ -477,7 +477,7 @@ function SceneContent({
   particlesEnabled,
   customNodeColors,
   customParticleColors,
-  nodeScale,
+  spreadScale,
   onNodeSelect,
   onNodeHover,
   onNodeUnhover,
@@ -492,7 +492,7 @@ function SceneContent({
   particlesEnabled: boolean;
   customNodeColors: Record<string, string>;
   customParticleColors: Record<string, string>;
-  nodeScale: number;
+  spreadScale: number;
   onNodeSelect: (node: SemanticNode | null) => void;
   onNodeHover: (id: string) => void;
   onNodeUnhover: () => void;
