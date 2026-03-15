@@ -199,12 +199,44 @@ export function CocoonForceGraph({
     const gLinks: GraphLink[] = [];
     const idSet = new Set(gNodes.map((n) => n.id));
 
+    // Build node lookup for juice classification
+    const nodeById = new Map(nodes.map(n => [n.id, n]));
+    // Find max authority for normalization
+    const maxAuth = Math.max(1, ...nodes.map(n => n.page_authority ?? 0));
+    const maxTraffic = Math.max(1, ...nodes.map(n => n.traffic_estimate ?? 0));
+
     for (const node of nodes) {
       for (const edge of node.similarity_edges || []) {
         const targetId = urlToId.get(edge.target_url);
         if (targetId && idSet.has(targetId) && node.id < targetId) {
           const isHomeSrc = node.id === homeId;
           const isHomeTgt = targetId === homeId;
+          const targetNode = nodeById.get(targetId);
+          const srcDepth = node.crawl_depth ?? node.depth ?? 0;
+          const tgtDepth = targetNode?.crawl_depth ?? targetNode?.depth ?? 0;
+          const depthDelta = Math.abs(srcDepth - tgtDepth);
+
+          // Classify juice type based on dominant signal
+          let juiceType: JuiceType = 'semantic';
+          const srcAuth = node.page_authority ?? 0;
+          const tgtAuth = targetNode?.page_authority ?? 0;
+          const avgAuth = (srcAuth + tgtAuth) / 2;
+          const srcTraffic = node.traffic_estimate ?? 0;
+          const tgtTraffic = targetNode?.traffic_estimate ?? 0;
+          const avgTraffic = (srcTraffic + tgtTraffic) / 2;
+
+          if (depthDelta >= 1 && (isHomeSrc || isHomeTgt)) {
+            juiceType = 'hierarchy'; // parent-child flow
+          } else if (avgAuth / maxAuth > 0.5) {
+            juiceType = 'authority'; // high authority transfer
+          } else if (avgTraffic / maxTraffic > 0.4) {
+            juiceType = 'traffic'; // traffic-driven link
+          }
+          // else remains 'semantic' (similarity-based)
+
+          // Intensity = normalized authority flow
+          const juiceIntensity = Math.min(1, avgAuth / maxAuth + edge.score * 0.3);
+
           gLinks.push({
             source: node.id,
             target: targetId,
@@ -212,6 +244,8 @@ export function CocoonForceGraph({
             type: edge.type,
             sourceDepth: isHomeSrc ? 0 : 1,
             targetDepth: isHomeTgt ? 0 : 1,
+            juiceType,
+            juiceIntensity,
           });
         }
       }
