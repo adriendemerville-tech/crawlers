@@ -142,6 +142,7 @@ export default function Cocoon() {
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [showPrereqModal, setShowPrereqModal] = useState(false);
   const [prereqStatus, setPrereqStatus] = useState<{ hasCrawl: boolean; hasAudit: boolean }>({ hasCrawl: true, hasAudit: true });
+  const [truncationInfo, setTruncationInfo] = useState<{ truncated: boolean; total: number; used: number } | null>(null);
 
   // Check access: Pro Agency or Admin
   useEffect(() => {
