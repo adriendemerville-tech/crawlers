@@ -402,25 +402,26 @@ export default function Cocoon() {
         </div>
       )}
 
-      <div className="h-screen bg-[#0f0a1e] flex flex-col relative pt-4 overflow-hidden">
+      <div className="h-screen bg-[#0f0a1e] flex flex-col relative pt-2 sm:pt-4 overflow-hidden">
 
         {/* Top Bar */}
-        <header className="shrink-0 bg-[#0f0a1e]/80 backdrop-blur-xl px-4 py-2">
-          <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 relative">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#fbbf24] animate-pulse" />
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-bold text-white font-display tracking-tight leading-none">
-                  Cocoon <span className="text-[#fbbf24]">·</span> {t.organism}
+        <header className="shrink-0 bg-[#0f0a1e]/80 backdrop-blur-xl px-3 sm:px-4 py-2">
+          <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 gap-x-2">
+            {/* Title */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-2 h-2 rounded-full bg-[#fbbf24] animate-pulse hidden sm:block" />
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="text-xs sm:text-sm font-bold text-white font-display tracking-tight leading-none">
+                  Cocoon <span className="text-[#fbbf24]">·</span> <span className="hidden xs:inline">{t.organism}</span>
                 </h1>
-                <span className="text-[10px] text-white/30 font-medium tracking-wider uppercase leading-none px-1.5 py-0.5 rounded bg-white/5 border border-white/10">beta</span>
+                <span className="text-[9px] sm:text-[10px] text-white/30 font-medium tracking-wider uppercase leading-none px-1 sm:px-1.5 py-0.5 rounded bg-white/5 border border-white/10">beta</span>
               </div>
             </div>
 
-            {/* Site selector — centered */}
-            <div className="absolute left-1/2 -translate-x-1/2">
+            {/* Site selector — centered on desktop, full row on mobile */}
+            <div className="order-last sm:order-none w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2">
               <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
-                <SelectTrigger className="w-[240px] bg-white/5 border-[hsl(263,70%,20%)] text-white text-xs h-8">
+                <SelectTrigger className="w-full sm:w-[240px] bg-white/5 border-[hsl(263,70%,20%)] text-white text-xs h-8">
                   <SelectValue placeholder={t.selectSite} />
                 </SelectTrigger>
                 <SelectContent className="bg-[#1a1035] border-[hsl(263,70%,20%)]">
@@ -433,32 +434,32 @@ export default function Cocoon() {
               </Select>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Controls */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <CocoonHelpModal />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleCompute}
                 disabled={isComputing || !selectedSiteId}
-                className="h-8 text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1.5"
+                className="h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1 sm:gap-1.5 px-2 sm:px-3"
               >
-                {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                {(isComputing || isAutoRefreshing) ? t.analyzingData : t.refreshData}
+                {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3 sm:w-3.5 h-3 sm:h-3.5 animate-spin" /> : <RefreshCw className="w-3 sm:w-3.5 h-3 sm:h-3.5" />}
+                <span className="hidden sm:inline">{(isComputing || isAutoRefreshing) ? t.analyzingData : t.refreshData}</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsXRayMode(!isXRayMode)}
-                className={`h-8 text-xs border-[hsl(263,70%,20%)] ${
+                className={`h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] px-2 sm:px-3 ${
                   isXRayMode
                     ? "bg-[#4c1d95]/50 text-[#fbbf24]"
                     : "bg-transparent text-white/60 hover:text-white"
                 }`}
               >
-                {isXRayMode ? <EyeOff className="w-3.5 h-3.5 mr-1.5" /> : <Eye className="w-3.5 h-3.5 mr-1.5" />}
+                {isXRayMode ? <EyeOff className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" /> : <Eye className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" />}
                 {t.xray}
               </Button>
-
             </div>
           </div>
         </header>
