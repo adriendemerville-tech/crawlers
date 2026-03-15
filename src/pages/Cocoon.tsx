@@ -419,8 +419,8 @@ export default function Cocoon() {
                 disabled={isComputing || !selectedSiteId}
                 className="h-8 text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1.5"
               >
-                {isComputing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
-                Actualiser data
+                {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
+                {(isComputing || isAutoRefreshing) ? 'Analyses data...' : 'Actualiser data'}
               </Button>
               <Button
                 variant="outline"
