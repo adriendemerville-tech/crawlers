@@ -140,6 +140,8 @@ export default function Cocoon() {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [showUpsell, setShowUpsell] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [showPrereqModal, setShowPrereqModal] = useState(false);
+  const [prereqStatus, setPrereqStatus] = useState<{ hasCrawl: boolean; hasAudit: boolean }>({ hasCrawl: true, hasAudit: true });
 
   // Check access: Pro Agency or Admin
   useEffect(() => {
