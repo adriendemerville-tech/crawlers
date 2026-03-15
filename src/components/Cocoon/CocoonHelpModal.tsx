@@ -169,7 +169,7 @@ export function CocoonHelpModal() {
       setFile(null);
       setOpen(false);
     } catch {
-      toast({ title: 'Erreur', variant: 'destructive' });
+      toast({ title: language === 'en' ? 'Error' : language === 'es' ? 'Error' : 'Erreur', variant: 'destructive' });
     } finally {
       setSending(false);
     }
