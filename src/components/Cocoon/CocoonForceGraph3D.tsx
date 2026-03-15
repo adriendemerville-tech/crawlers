@@ -709,11 +709,11 @@ export function CocoonForceGraph3D({
         className="absolute inset-0 pointer-events-none z-[1]"
         style={{
           background: `
-            radial-gradient(ellipse 70% 65% at 50% 50%, transparent 55%, #06060e 100%),
-            linear-gradient(to top, #06060e 0%, transparent 12%),
-            linear-gradient(to bottom, #06060e 0%, transparent 12%),
-            linear-gradient(to left, #06060e 0%, transparent 10%),
-            linear-gradient(to right, #06060e 0%, transparent 10%)
+            radial-gradient(ellipse 90% 88% at 50% 50%, transparent 82%, #06060e 100%),
+            linear-gradient(to top, #06060e 0%, transparent 4%),
+            linear-gradient(to bottom, #06060e 0%, transparent 4%),
+            linear-gradient(to left, #06060e 0%, transparent 3.3%),
+            linear-gradient(to right, #06060e 0%, transparent 3.3%)
           `,
         }}
       />
