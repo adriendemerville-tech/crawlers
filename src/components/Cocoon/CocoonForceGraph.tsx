@@ -138,9 +138,24 @@ export function CocoonForceGraph({
       urlToDepth.set(n.url, n.crawl_depth ?? n.depth ?? 0);
     });
 
+    // Identify the single home node: page_type === 'homepage', or the one with crawl_depth === 0
+    // Only ONE node should be the sun
+    let homeId: string | null = null;
+    const homepageNode = nodes.find(n => n.page_type === 'homepage');
+    if (homepageNode) {
+      homeId = homepageNode.id;
+    } else {
+      // Fallback: the node with the lowest crawl_depth (should be 0 for root)
+      const sorted = [...nodes].sort((a, b) => (a.crawl_depth ?? a.depth ?? 99) - (b.crawl_depth ?? b.depth ?? 99));
+      if (sorted.length > 0 && (sorted[0].crawl_depth ?? sorted[0].depth ?? 99) === 0) {
+        homeId = sorted[0].id;
+      }
+    }
+
     const gNodes: GraphNode[] = nodes.map((n, i) => {
-      const depth = n.crawl_depth ?? n.depth ?? 0;
+      const crawlDepth = n.crawl_depth ?? n.depth ?? 0;
       const pageType = n.page_type || "unknown";
+      const isHome = n.id === homeId;
       return {
         id: n.id,
         label: n.title || n.url.split("/").pop() || n.url,
@@ -150,11 +165,11 @@ export function CocoonForceGraph({
         geo: n.geo_score,
         roi: n.roi_predictive,
         traffic: n.traffic_estimate,
-        radius: depthToRadius(depth),
+        radius: depthToRadius(isHome ? 0 : Math.max(crawlDepth, 1)),
         pulsePhase: Math.random() * Math.PI * 2,
-        depth,
+        depth: crawlDepth,
         pageType,
-        isHome: depth === 0,
+        isHome,
         x: Math.cos((i / nodes.length) * Math.PI * 2) * 300 + Math.random() * 40,
         y: Math.sin((i / nodes.length) * Math.PI * 2) * 300 + Math.random() * 40,
       };
