@@ -249,7 +249,12 @@ export function CocoonForceGraph({
         "link",
         forceLink<GraphNode, GraphLink>(graphLinks)
           .id((d) => d.id)
-          .distance((d) => 100 / (d.strength + 0.1))
+          .distance((d) => {
+            const base = 100 / (d.strength + 0.1);
+            // If link connects to home node (depth 0), add 12% bonus at initial zoom
+            if (d.sourceDepth === 0 || d.targetDepth === 0) return base * 1.12;
+            return base;
+          })
           .strength((d) => d.strength * 0.25),
       )
       .force("charge", forceManyBody().strength(-180))
