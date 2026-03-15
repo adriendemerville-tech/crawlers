@@ -212,7 +212,7 @@ function NodeSphere({
   isHovered,
   isXRayMode,
   customNodeColors,
-  nodeScale,
+  spreadScale,
   onPointerOver,
   onPointerOut,
   onClick,
@@ -222,7 +222,7 @@ function NodeSphere({
   isHovered: boolean;
   isXRayMode: boolean;
   customNodeColors: Record<string, string>;
-  nodeScale: number;
+  spreadScale: number;
   onPointerOver: () => void;
   onPointerOut: () => void;
   onClick: () => void;
@@ -235,9 +235,8 @@ function NodeSphere({
     : activeColors[node.pageType] || activeColors.unknown;
 
   const emissiveIntensity = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.8 : 0.3;
-  const scale = (isSelected ? 1.3 : isHovered ? 1.15 : 1) * nodeScale;
+  const scale = isSelected ? 1.3 : isHovered ? 1.15 : 1;
   const isGhost = isXRayMode && node.traffic < 10;
-  const scaledRadius = node.radius * nodeScale;
 
   useFrame(({ clock }) => {
     if (!meshRef.current) return;
