@@ -84,6 +84,9 @@ Deno.serve(async (req) => {
         await new Promise(r => setTimeout(r, DELAY_BETWEEN_SITES_MS))
       } catch (err) {
         console.error(`[refresh-llm-visibility-all] Error for ${site.domain}:`, err)
+        await trackEdgeFunctionError('refresh-llm-visibility-all', err instanceof Error ? err.message : String(err), {
+          domain: site.domain, user_id: site.user_id,
+        }).catch(() => {})
         errors++
       }
     }
