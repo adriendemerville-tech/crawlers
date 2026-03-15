@@ -114,14 +114,12 @@ export function CocoonForceGraph({
     return 2;
   };
 
-  // Home node sun coefficient: 30x at default zoom, scales down to 5x as user zooms in
+  // Home node sun coefficient: 15x at default zoom, scales down to 5x as user zooms in
   const getHomeSunCoefficient = (zoomK: number): number => {
-    // At auto-fit zoom (~0.85), coefficient = 30
-    // As zoom increases, coefficient decreases rapidly toward 5
     const minCoeff = 5;
-    const maxCoeff = 30;
-    // Normalize: at k<=1 → maxCoeff, at k>=3 → minCoeff
-    const t = Math.min(1, Math.max(0, (zoomK - 0.5) / 2.5));
+    const maxCoeff = 15;
+    // Normalize: at k<=0.5 → maxCoeff, at k>=2.5 → minCoeff
+    const t = Math.min(1, Math.max(0, (zoomK - 0.5) / 2));
     return maxCoeff - (maxCoeff - minCoeff) * t * t; // quadratic easing
   };
 
