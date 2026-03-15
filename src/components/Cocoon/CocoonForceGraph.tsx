@@ -740,14 +740,18 @@ export function CocoonForceGraph({
     fitToView();
   }, [fitToView]);
 
-  // Pan
+  // Pan (left-click drag on empty space)
   const isDragging = useRef(false);
+  const dragMoved = useRef(false);
   const lastMouse = useRef({ x: 0, y: 0 });
+  const mouseDownPos = useRef({ x: 0, y: 0 });
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!getNodeAtPos(e.clientX, e.clientY)) {
       isDragging.current = true;
+      dragMoved.current = false;
       lastMouse.current = { x: e.clientX, y: e.clientY };
+      mouseDownPos.current = { x: e.clientX, y: e.clientY };
     }
   }, [getNodeAtPos]);
 
@@ -759,6 +763,12 @@ export function CocoonForceGraph({
     if (!isDragging.current) return;
     const dx = e.clientX - lastMouse.current.x;
     const dy = e.clientY - lastMouse.current.y;
+    // Track if we actually moved (>3px = real drag, not a click)
+    const totalDx = e.clientX - mouseDownPos.current.x;
+    const totalDy = e.clientY - mouseDownPos.current.y;
+    if (Math.abs(totalDx) > 3 || Math.abs(totalDy) > 3) {
+      dragMoved.current = true;
+    }
     lastMouse.current = { x: e.clientX, y: e.clientY };
     setTransform((t) => ({ ...t, x: t.x + dx, y: t.y + dy }));
   }, []);
