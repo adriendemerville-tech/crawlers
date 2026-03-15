@@ -549,6 +549,7 @@ export default function Cocoon() {
             href="/audit-expert"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => { externalClickTimestamp.current = Date.now(); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors text-xs backdrop-blur-md"
           >
             <FileText className="w-3 h-3" />
@@ -559,6 +560,7 @@ export default function Cocoon() {
             href="/crawl-multipages"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => { externalClickTimestamp.current = Date.now(); }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors text-xs backdrop-blur-md"
           >
             <Search className="w-3 h-3" />
