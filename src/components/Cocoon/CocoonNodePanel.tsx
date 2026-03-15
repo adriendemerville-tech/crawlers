@@ -185,8 +185,9 @@ function formatDate(dateStr: string | undefined, lang: string): string {
   }
 }
 
-export function CocoonNodePanel({ node, onClose }: CocoonNodePanelProps) {
+export function CocoonNodePanel({ node, onClose, onRefresh }: CocoonNodePanelProps) {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const t = i18n[language] || i18n.fr;
 
   const depthLabel = (t.depths as Record<number, string>)[node.crawl_depth ?? 0] ||
