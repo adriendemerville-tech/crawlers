@@ -255,7 +255,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ─── 1. Fetch crawl pages (latest crawl) ───
+    // ─── 1. Check prerequisites: crawl + strategic audit ───
     const { data: crawls } = await supabase
       .from("site_crawls" as any).select("id")
       .eq("domain", site.domain).eq("user_id", userId)
