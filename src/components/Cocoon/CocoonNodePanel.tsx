@@ -217,11 +217,18 @@ export function CocoonNodePanel({ node, onClose, onRefresh, onAuditLaunch, isWai
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <button
-              onClick={() => navigate(`/audit-expert?url=${encodeURIComponent(node.url)}`)}
+              onClick={() => {
+                window.open(`/audit-expert?url=${encodeURIComponent(node.url)}`, '_blank');
+                onAuditLaunch?.();
+              }}
               title={language === 'en' ? 'Expert Audit' : language === 'es' ? 'Auditoría experta' : 'Audit Expert'}
               className="p-1.5 rounded-md border border-[#3b82f6]/30 hover:bg-[#3b82f6]/10 text-white/40 hover:text-[#60a5fa] transition-colors"
             >
-              <Search className="w-4 h-4" />
+              {isWaitingAudit ? (
+                <RefreshCw className="w-4 h-4 animate-spin text-[#60a5fa]" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
             </button>
             <button
               onClick={onRefresh}

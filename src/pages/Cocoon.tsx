@@ -553,7 +553,12 @@ export default function Cocoon() {
 
             {/* Side Panel */}
             {selectedNode && (
-              <CocoonNodePanel node={selectedNode} onClose={() => setSelectedNode(null)} />
+              <CocoonNodePanel
+                node={selectedNode}
+                onClose={() => setSelectedNode(null)}
+                onAuditLaunch={() => { externalClickTimestamp.current = Date.now(); }}
+                isWaitingAudit={isAutoRefreshing || (externalClickTimestamp.current !== null && !!selectedNode)}
+              />
             )}
           </div>
 
