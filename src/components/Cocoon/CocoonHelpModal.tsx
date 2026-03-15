@@ -103,7 +103,7 @@ export function CocoonHelpModal() {
     if (f && /\.(jpe?g)$/i.test(f.name)) {
       setFile(f);
     } else if (f) {
-      toast({ title: 'Format invalide', description: 'JPG / JPEG uniquement', variant: 'destructive' });
+      toast({ title: language === 'en' ? 'Invalid format' : language === 'es' ? 'Formato inválido' : 'Format invalide', description: 'JPG / JPEG', variant: 'destructive' });
     }
   };
 
@@ -169,7 +169,7 @@ export function CocoonHelpModal() {
       setFile(null);
       setOpen(false);
     } catch {
-      toast({ title: 'Erreur', variant: 'destructive' });
+      toast({ title: language === 'en' ? 'Error' : language === 'es' ? 'Error' : 'Erreur', variant: 'destructive' });
     } finally {
       setSending(false);
     }

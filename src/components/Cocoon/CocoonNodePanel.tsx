@@ -1,4 +1,5 @@
 import { X, TrendingUp, Target, Globe, Zap, Link2, ExternalLink, Layers, FileText, Clock } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SemanticNode {
   id: string;
@@ -34,33 +35,115 @@ interface CocoonNodePanelProps {
   onClose: () => void;
 }
 
-const INTENT_LABELS: Record<string, string> = {
-  transactional: "Transactionnel",
-  commercial: "Commercial",
-  informational: "Informationnel",
-  navigational: "Navigationnel",
+const i18n = {
+  fr: {
+    intents: { transactional: "Transactionnel", commercial: "Commercial", informational: "Informationnel", navigational: "Navigationnel" },
+    depths: { 0: "Mère", 1: "Fille", 2: "Fille²", 3: "Fille³" },
+    pageTypes: {
+      homepage: "Accueil", blog: "Blog", produit: "Produit", "catégorie": "Catégorie",
+      faq: "FAQ", contact: "Contact", tarifs: "Tarifs", "légal": "Légal",
+      "à propos": "À propos", guide: "Guide", page: "Page", unknown: "Page",
+    },
+    roiLabel: "ROI Prédictif / an",
+    trafficLabel: "Trafic estimé / mois",
+    scoresTitle: "Scores STD",
+    iab: "Iab (Anti-Wiki)",
+    geo: "GEO Score",
+    citability: "Citabilité LLM",
+    eeat: "E-E-A-T",
+    freshness: "Fraîcheur",
+    contentGap: "Content Gap",
+    cannibalization: "Risque Cannibalisation",
+    seoMetrics: "Métriques SEO",
+    volume: "Volume",
+    kd: "KD",
+    cpc: "CPC",
+    words: "Mots",
+    linkingTitle: "Maillage",
+    linksIn: "Liens entrants",
+    linksOut: "Liens sortants",
+    keywordsTitle: "Mots-clés",
+    similarityTitle: "Proximité sémantique",
+    lastUpdated: "Dernière MàJ",
+    depth: "depth",
+  },
+  en: {
+    intents: { transactional: "Transactional", commercial: "Commercial", informational: "Informational", navigational: "Navigational" },
+    depths: { 0: "Parent", 1: "Child", 2: "Child²", 3: "Child³" },
+    pageTypes: {
+      homepage: "Home", blog: "Blog", produit: "Product", "catégorie": "Category",
+      faq: "FAQ", contact: "Contact", tarifs: "Pricing", "légal": "Legal",
+      "à propos": "About", guide: "Guide", page: "Page", unknown: "Page",
+    },
+    roiLabel: "Predictive ROI / year",
+    trafficLabel: "Estimated traffic / month",
+    scoresTitle: "STD Scores",
+    iab: "Iab (Anti-Wiki)",
+    geo: "GEO Score",
+    citability: "LLM Citability",
+    eeat: "E-E-A-T",
+    freshness: "Freshness",
+    contentGap: "Content Gap",
+    cannibalization: "Cannibalization Risk",
+    seoMetrics: "SEO Metrics",
+    volume: "Volume",
+    kd: "KD",
+    cpc: "CPC",
+    words: "Words",
+    linkingTitle: "Internal Linking",
+    linksIn: "Inbound links",
+    linksOut: "Outbound links",
+    keywordsTitle: "Keywords",
+    similarityTitle: "Semantic proximity",
+    lastUpdated: "Last updated",
+    depth: "depth",
+  },
+  es: {
+    intents: { transactional: "Transaccional", commercial: "Comercial", informational: "Informacional", navigational: "Navegacional" },
+    depths: { 0: "Madre", 1: "Hija", 2: "Hija²", 3: "Hija³" },
+    pageTypes: {
+      homepage: "Inicio", blog: "Blog", produit: "Producto", "catégorie": "Categoría",
+      faq: "FAQ", contact: "Contacto", tarifs: "Precios", "légal": "Legal",
+      "à propos": "Acerca de", guide: "Guía", page: "Página", unknown: "Página",
+    },
+    roiLabel: "ROI Predictivo / año",
+    trafficLabel: "Tráfico estimado / mes",
+    scoresTitle: "Scores STD",
+    iab: "Iab (Anti-Wiki)",
+    geo: "GEO Score",
+    citability: "Citabilidad LLM",
+    eeat: "E-E-A-T",
+    freshness: "Frescura",
+    contentGap: "Content Gap",
+    cannibalization: "Riesgo Canibalización",
+    seoMetrics: "Métricas SEO",
+    volume: "Volumen",
+    kd: "KD",
+    cpc: "CPC",
+    words: "Palabras",
+    linkingTitle: "Enlazado interno",
+    linksIn: "Enlaces entrantes",
+    linksOut: "Enlaces salientes",
+    keywordsTitle: "Palabras clave",
+    similarityTitle: "Proximidad semántica",
+    lastUpdated: "Última actualización",
+    depth: "profundidad",
+  },
 };
 
-const DEPTH_LABELS: Record<number, string> = {
-  0: "Mère",
-  1: "Fille",
-  2: "Fille²",
-  3: "Fille³",
-};
-
-const PAGE_TYPE_ICONS: Record<string, { label: string; color: string }> = {
-  homepage: { label: "Accueil", color: "text-[#fbbf24] bg-[#fbbf24]/10 border-[#fbbf24]/20" },
-  blog: { label: "Blog", color: "text-[#a78bfa] bg-[#a78bfa]/10 border-[#a78bfa]/20" },
-  produit: { label: "Produit", color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" },
-  "catégorie": { label: "Catégorie", color: "text-blue-400 bg-blue-400/10 border-blue-400/20" },
-  faq: { label: "FAQ", color: "text-orange-400 bg-orange-400/10 border-orange-400/20" },
-  contact: { label: "Contact", color: "text-pink-400 bg-pink-400/10 border-pink-400/20" },
-  tarifs: { label: "Tarifs", color: "text-[#fbbf24] bg-[#fbbf24]/10 border-[#fbbf24]/20" },
-  "légal": { label: "Légal", color: "text-gray-400 bg-gray-400/10 border-gray-400/20" },
-  "à propos": { label: "À propos", color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20" },
-  guide: { label: "Guide", color: "text-[#a78bfa] bg-[#a78bfa]/10 border-[#a78bfa]/20" },
-  page: { label: "Page", color: "text-white/50 bg-white/5 border-white/10" },
-  unknown: { label: "Page", color: "text-white/50 bg-white/5 border-white/10" },
+const PAGE_TYPE_COLORS: Record<string, string> = {
+  homepage: "text-[#fbbf24] bg-[#fbbf24]/10 border-[#fbbf24]/20",
+  blog: "text-[#a78bfa] bg-[#a78bfa]/10 border-[#a78bfa]/20",
+  produit: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+  "catégorie": "text-blue-400 bg-blue-400/10 border-blue-400/20",
+  faq: "text-orange-400 bg-orange-400/10 border-orange-400/20",
+  contact: "text-pink-400 bg-pink-400/10 border-pink-400/20",
+  tarifs: "text-[#fbbf24] bg-[#fbbf24]/10 border-[#fbbf24]/20",
+  "légal": "text-gray-400 bg-gray-400/10 border-gray-400/20",
+  "à propos": "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",
+  guide: "text-[#a78bfa] bg-[#a78bfa]/10 border-[#a78bfa]/20",
+  page: "text-white/50 bg-white/5 border-white/10",
+  unknown: "text-white/50 bg-white/5 border-white/10",
 };
 
 function ScoreBadge({ value, max = 100, label }: { value: number; max?: number; label: string }) {
@@ -86,10 +169,11 @@ function ScoreBadge({ value, max = 100, label }: { value: number; max?: number; 
   );
 }
 
-function formatDate(dateStr: string | undefined): string {
+function formatDate(dateStr: string | undefined, lang: string): string {
   if (!dateStr) return "—";
   try {
-    return new Date(dateStr).toLocaleDateString("fr-FR", {
+    const locale = lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'fr-FR';
+    return new Date(dateStr).toLocaleDateString(locale, {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -100,8 +184,14 @@ function formatDate(dateStr: string | undefined): string {
 }
 
 export function CocoonNodePanel({ node, onClose }: CocoonNodePanelProps) {
-  const depthLabel = DEPTH_LABELS[node.crawl_depth ?? 0] || `Fille${"⁴⁵⁶⁷⁸⁹"[(node.crawl_depth ?? 4) - 4] || `^${node.crawl_depth}`}`;
-  const pageTypeInfo = PAGE_TYPE_ICONS[node.page_type || "unknown"] || PAGE_TYPE_ICONS.unknown;
+  const { language } = useLanguage();
+  const t = i18n[language] || i18n.fr;
+
+  const depthLabel = (t.depths as Record<number, string>)[node.crawl_depth ?? 0] ||
+    `${t.depths[1]}${"⁴⁵⁶⁷⁸⁹"[(node.crawl_depth ?? 4) - 4] || `^${node.crawl_depth}`}`;
+  const pageTypeLabel = (t.pageTypes as Record<string, string>)[node.page_type || "unknown"] || t.pageTypes.unknown;
+  const pageTypeColor = PAGE_TYPE_COLORS[node.page_type || "unknown"] || PAGE_TYPE_COLORS.unknown;
+  const intentLabel = (t.intents as Record<string, string>)[node.intent] || node.intent;
 
   return (
     <div className="absolute top-4 right-4 bottom-4 w-[360px] rounded-xl bg-[#0f0a1e]/95 backdrop-blur-xl border border-[hsl(263,70%,20%)] overflow-y-auto z-20 animate-slide-in shadow-2xl shadow-black/40">
@@ -131,16 +221,16 @@ export function CocoonNodePanel({ node, onClose }: CocoonNodePanelProps) {
         {/* Tags row */}
         <div className="flex gap-2 mt-3 flex-wrap">
           <span className="px-2 py-0.5 text-[10px] rounded-full bg-[#4c1d95]/50 text-[#a78bfa] border border-[#4c1d95]/30">
-            {INTENT_LABELS[node.intent] || node.intent}
+            {intentLabel}
           </span>
-          <span className={`px-2 py-0.5 text-[10px] rounded-full border ${pageTypeInfo.color}`}>
+          <span className={`px-2 py-0.5 text-[10px] rounded-full border ${pageTypeColor}`}>
             <FileText className="w-2.5 h-2.5 inline mr-0.5 -mt-px" />
-            {pageTypeInfo.label}
+            {pageTypeLabel}
           </span>
           <span className="px-2 py-0.5 text-[10px] rounded-full bg-white/5 text-white/60 border border-white/10">
             <Layers className="w-2.5 h-2.5 inline mr-0.5 -mt-px" />
             {depthLabel}
-            <span className="text-white/30 ml-1">(depth {node.crawl_depth ?? 0})</span>
+            <span className="text-white/30 ml-1">({t.depth} {node.crawl_depth ?? 0})</span>
           </span>
           {node.cluster_id && (
             <span className="px-2 py-0.5 text-[10px] rounded-full bg-white/5 text-white/50 border border-white/10">
@@ -153,7 +243,7 @@ export function CocoonNodePanel({ node, onClose }: CocoonNodePanelProps) {
         {node.page_updated_at && (
           <div className="flex items-center gap-1.5 mt-2 text-[10px] text-white/40">
             <Clock className="w-3 h-3" />
-            Dernière MàJ : {formatDate(node.page_updated_at)}
+            {t.lastUpdated} : {formatDate(node.page_updated_at, language)}
           </div>
         )}
       </div>
@@ -164,45 +254,45 @@ export function CocoonNodePanel({ node, onClose }: CocoonNodePanelProps) {
           <div className="p-3 rounded-lg bg-gradient-to-br from-[#4c1d95]/30 to-[#4c1d95]/10 border border-[#4c1d95]/20">
             <TrendingUp className="w-4 h-4 text-[#fbbf24] mb-1" />
             <div className="text-lg font-bold text-white">{node.roi_predictive.toFixed(0)}€</div>
-            <div className="text-[10px] text-white/40">ROI Prédictif / an</div>
+            <div className="text-[10px] text-white/40">{t.roiLabel}</div>
           </div>
           <div className="p-3 rounded-lg bg-gradient-to-br from-[#4c1d95]/30 to-[#4c1d95]/10 border border-[#4c1d95]/20">
             <Zap className="w-4 h-4 text-[#fbbf24] mb-1" />
             <div className="text-lg font-bold text-white">{node.traffic_estimate}</div>
-            <div className="text-[10px] text-white/40">Trafic estimé / mois</div>
+            <div className="text-[10px] text-white/40">{t.trafficLabel}</div>
           </div>
         </div>
 
         {/* Scores */}
         <div className="space-y-3">
-          <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider">Scores STD</h4>
-          <ScoreBadge value={node.iab_score} label="Iab (Anti-Wiki)" />
-          <ScoreBadge value={node.geo_score} label="GEO Score" />
-          <ScoreBadge value={node.citability_score} label="Citabilité LLM" />
-          <ScoreBadge value={node.eeat_score} label="E-E-A-T" />
-          <ScoreBadge value={node.freshness_score} label="Fraîcheur" />
-          <ScoreBadge value={node.content_gap_score} label="Content Gap" />
-          <ScoreBadge value={node.cannibalization_risk} label="Risque Cannibalisation" />
+          <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider">{t.scoresTitle}</h4>
+          <ScoreBadge value={node.iab_score} label={t.iab} />
+          <ScoreBadge value={node.geo_score} label={t.geo} />
+          <ScoreBadge value={node.citability_score} label={t.citability} />
+          <ScoreBadge value={node.eeat_score} label={t.eeat} />
+          <ScoreBadge value={node.freshness_score} label={t.freshness} />
+          <ScoreBadge value={node.content_gap_score} label={t.contentGap} />
+          <ScoreBadge value={node.cannibalization_risk} label={t.cannibalization} />
         </div>
 
         {/* SEO Metrics */}
         <div className="space-y-2">
-          <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider">Métriques SEO</h4>
+          <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider">{t.seoMetrics}</h4>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex justify-between p-2 rounded bg-white/5">
-              <span className="text-white/50">Volume</span>
+              <span className="text-white/50">{t.volume}</span>
               <span className="text-white font-mono">{node.search_volume}</span>
             </div>
             <div className="flex justify-between p-2 rounded bg-white/5">
-              <span className="text-white/50">KD</span>
+              <span className="text-white/50">{t.kd}</span>
               <span className="text-white font-mono">{Math.round(node.keyword_difficulty)}</span>
             </div>
             <div className="flex justify-between p-2 rounded bg-white/5">
-              <span className="text-white/50">CPC</span>
+              <span className="text-white/50">{t.cpc}</span>
               <span className="text-white font-mono">{node.cpc_value.toFixed(2)}€</span>
             </div>
             <div className="flex justify-between p-2 rounded bg-white/5">
-              <span className="text-white/50">Mots</span>
+              <span className="text-white/50">{t.words}</span>
               <span className="text-white font-mono">{node.word_count || 0}</span>
             </div>
           </div>
@@ -211,15 +301,15 @@ export function CocoonNodePanel({ node, onClose }: CocoonNodePanelProps) {
         {/* Internal Links */}
         <div className="space-y-2">
           <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider flex items-center gap-1.5">
-            <Link2 className="w-3.5 h-3.5" /> Maillage
+            <Link2 className="w-3.5 h-3.5" /> {t.linkingTitle}
           </h4>
           <div className="flex gap-4 text-xs">
             <div>
-              <span className="text-white/50">Liens entrants : </span>
+              <span className="text-white/50">{t.linksIn} : </span>
               <span className="text-[#fbbf24] font-mono">{node.internal_links_in}</span>
             </div>
             <div>
-              <span className="text-white/50">Liens sortants : </span>
+              <span className="text-white/50">{t.linksOut} : </span>
               <span className="text-[#a78bfa] font-mono">{node.internal_links_out}</span>
             </div>
           </div>
@@ -228,7 +318,7 @@ export function CocoonNodePanel({ node, onClose }: CocoonNodePanelProps) {
         {/* Keywords */}
         {node.keywords?.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider">Mots-clés</h4>
+            <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider">{t.keywordsTitle}</h4>
             <div className="flex flex-wrap gap-1.5">
               {(node.keywords as string[]).map((kw, i) => (
                 <span
@@ -246,7 +336,7 @@ export function CocoonNodePanel({ node, onClose }: CocoonNodePanelProps) {
         {node.similarity_edges?.length > 0 && (
           <div className="space-y-2">
             <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5" /> Proximité sémantique
+              <Globe className="w-3.5 h-3.5" /> {t.similarityTitle}
             </h4>
             <div className="space-y-1">
               {node.similarity_edges.slice(0, 5).map((edge, i) => (

@@ -23,6 +23,8 @@ const i18n = {
     loginCta: "Se connecter",
     signupCta: "S'inscrire",
     redirecting: "Redirection…",
+    back: "Accueil",
+    errorGeneric: "Erreur",
   },
   en: {
     heroTitle: "Reserved for Pros",
@@ -34,6 +36,8 @@ const i18n = {
     loginCta: "Sign in",
     signupCta: "Sign up",
     redirecting: "Redirecting…",
+    back: "Home",
+    errorGeneric: "Error",
   },
   es: {
     heroTitle: "Reservado para Pros",
@@ -45,6 +49,8 @@ const i18n = {
     loginCta: "Iniciar sesión",
     signupCta: "Registrarse",
     redirecting: "Redirigiendo…",
+    back: "Inicio",
+    errorGeneric: "Error",
   },
 };
 
@@ -64,7 +70,7 @@ export function CocoonAccessGate({ language }: CocoonAccessGateProps) {
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank", "noopener");
     } catch (e: any) {
-      toast({ title: "Erreur", description: e.message, variant: "destructive" });
+      toast({ title: t.errorGeneric, description: e.message, variant: "destructive" });
     } finally {
       setSubscribeLoading(false);
     }
@@ -76,7 +82,7 @@ export function CocoonAccessGate({ language }: CocoonAccessGateProps) {
       const { error } = await signInWithGoogle(`${window.location.origin}/cocoon`);
       if (error) throw error;
     } catch (e: any) {
-      toast({ title: "Erreur", description: e.message, variant: "destructive" });
+      toast({ title: t.errorGeneric, description: e.message, variant: "destructive" });
       setLoginLoading(false);
     }
   };
@@ -93,7 +99,7 @@ export function CocoonAccessGate({ language }: CocoonAccessGateProps) {
           className="flex items-center gap-1 text-xs text-white/40 hover:text-white/70 transition-colors mb-2"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Accueil
+          {t.back}
         </button>
         {/* Hero 1: Subscribe */}
         <Card className="border-2 border-violet-500 ring-2 ring-violet-500/30 bg-gradient-to-br from-violet-500/5 via-[#0f0a1e] to-yellow-500/5 shadow-xl shadow-violet-500/10">

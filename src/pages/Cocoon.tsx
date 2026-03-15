@@ -53,6 +53,11 @@ const i18n = {
     prereqCrawlCta: 'Lancer un crawl',
     prereqAuditCta: 'Lancer un audit stratégique',
     prereqClose: 'Compris',
+    refreshData: 'Actualiser data',
+    analyzingData: 'Analyses data...',
+    auditExpert: 'Audit Expert',
+    crawlMulti: 'Crawl Multi-pages',
+    console: 'Console',
   },
   en: {
     title: "Cocoon — Semantic Architecture | Crawlers.fr",
@@ -88,6 +93,11 @@ const i18n = {
     prereqCrawlCta: 'Start a crawl',
     prereqAuditCta: 'Start a strategic audit',
     prereqClose: 'Got it',
+    refreshData: 'Refresh data',
+    analyzingData: 'Analyzing data...',
+    auditExpert: 'Expert Audit',
+    crawlMulti: 'Multi-page Crawl',
+    console: 'Console',
   },
   es: {
     title: "Cocoon — Arquitectura Semántica | Crawlers.fr",
@@ -123,6 +133,11 @@ const i18n = {
     prereqCrawlCta: 'Iniciar un crawl',
     prereqAuditCta: 'Iniciar una auditoría estratégica',
     prereqClose: 'Entendido',
+    refreshData: 'Actualizar datos',
+    analyzingData: 'Analizando datos...',
+    auditExpert: 'Auditoría Experta',
+    crawlMulti: 'Crawl Multi-página',
+    console: 'Consola',
   },
 };
 
@@ -420,7 +435,7 @@ export default function Cocoon() {
                 className="h-8 text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white gap-1.5"
               >
                 {(isComputing || isAutoRefreshing) ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
-                {(isComputing || isAutoRefreshing) ? 'Analyses data...' : 'Actualiser data'}
+                {(isComputing || isAutoRefreshing) ? t.analyzingData : t.refreshData}
               </Button>
               <Button
                 variant="outline"
@@ -566,7 +581,7 @@ export default function Cocoon() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors text-xs backdrop-blur-md"
           >
             <FileText className="w-3 h-3" />
-            Audit Expert
+            {t.auditExpert}
             <ExternalLink className="w-2.5 h-2.5" />
           </a>
           <a
@@ -577,7 +592,7 @@ export default function Cocoon() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors text-xs backdrop-blur-md"
           >
             <Search className="w-3 h-3" />
-            Crawl Multi-pages
+            {t.crawlMulti}
             <ExternalLink className="w-2.5 h-2.5" />
           </a>
           <button
@@ -585,7 +600,7 @@ export default function Cocoon() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#fbbf24]/10 border border-[#fbbf24]/20 text-[#fbbf24] hover:bg-[#fbbf24]/20 transition-colors text-xs font-medium backdrop-blur-md"
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
-            Console
+            {t.console}
           </button>
         </div>
 

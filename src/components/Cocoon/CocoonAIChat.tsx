@@ -289,14 +289,30 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
 
   const handleAnalyze = () => {
     const slugList = selectedSlots.map(s => s.slug).join(', ');
-    const prompt = `Analyse comparative et contextuelle des pages suivantes: ${slugList}. 
+    const prompts: Record<string, string> = {
+      fr: `Analyse comparative et contextuelle des pages suivantes: ${slugList}. 
 Décris la relation sémantique, hiérarchique et le flux de juice entre ces pages.
 Utilise un format structuré avec:
 - 🟢 Forces (en vert)
 - 🔵 Faiblesses (en bleu) 
 - 🔴 Gaps (en rouge)
-- ✨ Quick Wins possibles`;
-    sendMessage(prompt);
+- ✨ Quick Wins possibles`,
+      en: `Comparative and contextual analysis of the following pages: ${slugList}. 
+Describe the semantic relationship, hierarchy and juice flow between these pages.
+Use a structured format with:
+- 🟢 Strengths
+- 🔵 Weaknesses
+- 🔴 Gaps
+- ✨ Possible Quick Wins`,
+      es: `Análisis comparativo y contextual de las siguientes páginas: ${slugList}. 
+Describe la relación semántica, jerárquica y el flujo de juice entre estas páginas.
+Usa un formato estructurado con:
+- 🟢 Fortalezas
+- 🔵 Debilidades
+- 🔴 Brechas
+- ✨ Quick Wins posibles`,
+    };
+    sendMessage(prompts[language] || prompts.fr);
     setSelectedSlots([]);
   };
 
@@ -353,7 +369,7 @@ Utilise un format structuré avec:
               <div className="flex justify-start">
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
                   <Loader2 className="w-3 h-3 animate-spin text-[#fbbf24]" />
-                  <span className="text-[10px] text-white/40">Analyse…</span>
+                  <span className="text-[10px] text-white/40">{language === 'en' ? 'Analyzing…' : language === 'es' ? 'Analizando…' : 'Analyse…'}</span>
                 </div>
               </div>
             )}
