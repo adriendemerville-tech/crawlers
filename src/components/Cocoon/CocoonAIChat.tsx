@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut } from 'lucide-react';
+import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -85,6 +85,40 @@ function injectLexiconLinks(text: string): React.ReactNode[] {
     parts.push(text.slice(lastIndex));
   }
   return parts.length > 0 ? parts : [text];
+}
+
+// ─── Analysis prompt helpers ───
+const ANALYSIS_PREFIXES = ['Analyse les pages suivantes:', 'Analyze the following pages:', 'Analiza las siguientes páginas:'];
+
+function isAnalysisPrompt(content: string): boolean {
+  return ANALYSIS_PREFIXES.some(p => content.startsWith(p));
+}
+
+function getAnalysisLabel(content: string, lang: string): string {
+  const match = content.match(/pages suivantes:\s*(.+?)\.\s*Réponds|following pages:\s*(.+?)\.\s*Respond|siguientes páginas:\s*(.+?)\.\s*Responde/);
+  const pages = match?.[1] || match?.[2] || match?.[3] || '';
+  if (lang === 'en') return `📊 Multi-page analysis: ${pages}`;
+  if (lang === 'es') return `📊 Análisis multi-página: ${pages}`;
+  return `📊 Analyse multi-pages : ${pages}`;
+}
+
+// ─── Copy button ───
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="absolute bottom-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-white/10"
+      title="Copier"
+    >
+      {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-white/40" />}
+    </button>
+  );
 }
 
 type Msg = { role: 'user' | 'assistant'; content: string };
@@ -513,17 +547,25 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
             {messages.length === 0 && (
               <p className="text-xs text-white/30 text-center py-8">{t.empty}</p>
             )}
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {messages.map((msg, i) => {
+              const isUser = msg.role === 'user';
+              const isAssistant = msg.role === 'assistant';
+              // Hide full prompt, show short label instead
+              const displayContent = isUser && isAnalysisPrompt(msg.content)
+                ? getAnalysisLabel(msg.content, language)
+                : msg.content;
+
+              return (
+              <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed ${
-                    msg.role === 'user'
+                  className={`relative max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed group ${
+                    isUser
                       ? 'bg-[#fbbf24]/15 text-white border border-[#fbbf24]/20 rounded-br-md'
                       : 'bg-white/5 text-white/80 border border-white/10 rounded-bl-md'
                   }`}
                   style={{ fontSize: `${fontSize}px` }}
                 >
-                  {msg.role === 'assistant' ? (
+                  {isAssistant ? (
                     <div className="prose prose-invert max-w-none
                       [&_p]:mb-3 [&_p]:mt-1 [&_p:last-child]:mb-0
                       [&_ul]:mb-3 [&_ul]:mt-1 [&_ul]:pl-4
@@ -548,10 +590,15 @@ Lista exactamente 3 acciones concretas y rápidas para mejorar el enlazado inter
                         {msg.content}
                       </ReactMarkdown>
                     </div>
-                  ) : msg.content}
+                  ) : displayContent}
+                  {/* Copy button for assistant messages */}
+                  {isAssistant && !isLoading && (
+                    <CopyButton text={msg.content} />
+                  )}
                 </div>
               </div>
-            ))}
+              );
+            })}
             {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
               <div className="flex justify-start">
                 <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white/5 border border-white/10">
