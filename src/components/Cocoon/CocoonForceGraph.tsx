@@ -305,7 +305,7 @@ export function CocoonForceGraph({
     if (!isFinite(minX)) return;
     const graphW = maxX - minX;
     const graphH = maxY - minY;
-    const padding = 80;
+    const padding = 160;
     const scaleX = (dimensions.width - padding * 2) / graphW;
     const scaleY = (dimensions.height - padding * 2) / graphH;
     const k = Math.min(scaleX, scaleY, 3) * 0.9;
