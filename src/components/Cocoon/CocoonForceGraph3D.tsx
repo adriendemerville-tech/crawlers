@@ -389,11 +389,12 @@ function Links({
     <>
       <group ref={linesRef}>
         {lineData.map(({ points, link }, i) => {
+          const activeJuice = { ...JUICE_COLORS, ...customParticleColors };
           const isSelectedLink =
             selectedNodeId && (link.sourceId === selectedNodeId || link.targetId === selectedNodeId);
           const color = isSelectedLink
             ? "#ffc83c"
-            : JUICE_COLORS[link.juiceType] || "#7864dc";
+            : activeJuice[link.juiceType] || "#7864dc";
           const opacity = isSelectedLink ? 0.6 : Math.min(link.strength * 0.35, 0.2);
           return (
             <Line
