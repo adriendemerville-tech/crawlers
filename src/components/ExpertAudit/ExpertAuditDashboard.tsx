@@ -1241,6 +1241,25 @@ export function ExpertAuditDashboard() {
               : 'Unable to complete the audit. Contact support.'}
         </motion.div>
       )}
+      {/* Return to Cocoon banner — when coming from /cocoon prerequisite flow */}
+      {fromCocoon && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4"
+        >
+          <Button
+            onClick={() => {
+              const domain = cocoonDomain || (technicalResult?.domain) || '';
+              navigate(`/cocoon${domain ? `?autolaunch=${encodeURIComponent(domain)}` : ''}`);
+            }}
+            className="gap-2 font-semibold bg-[#fbbf24] hover:bg-[#f59e0b] text-[#0f0a1e] shadow-lg shadow-[#fbbf24]/20"
+          >
+            <RotateCw className="h-4 w-4" />
+            {language === 'es' ? 'Reanudar Cocoon' : language === 'en' ? 'Resume Cocoon' : 'Reprendre Cocoon'}
+          </Button>
+        </motion.div>
+      )}
       {/* New Audit Button - show when there are results */}
       {(technicalResult || strategicResult) && (
         <motion.div
