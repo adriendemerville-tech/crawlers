@@ -38,29 +38,44 @@ export function UserManagement() {
   const [kpiUser, setKpiUser] = useState<UserProfile | null>(null);
   const [kpiModalOpen, setKpiModalOpen] = useState(false);
   const [adminUserIds, setAdminUserIds] = useState<Set<string>>(new Set());
+  const [viewerUserIds, setViewerUserIds] = useState<Set<string>>(new Set());
+  const [viewer2UserIds, setViewer2UserIds] = useState<Set<string>>(new Set());
   const [stripDialogOpen, setStripDialogOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
   const [affiliateUser, setAffiliateUser] = useState<UserProfile | null>(null);
 
-  const fetchAdminRoles = async () => {
+  const fetchAllRoles = async () => {
     const { data } = await supabase
       .from('user_roles')
-      .select('user_id')
-      .eq('role', 'admin');
-    if (data) setAdminUserIds(new Set(data.map(r => r.user_id)));
+      .select('user_id, role');
+    if (data) {
+      const admins = new Set<string>();
+      const viewers = new Set<string>();
+      const viewers2 = new Set<string>();
+      data.forEach((r: any) => {
+        if (r.role === 'admin') admins.add(r.user_id);
+        if (r.role === 'viewer') viewers.add(r.user_id);
+        if (r.role === 'viewer_level2') viewers2.add(r.user_id);
+      });
+      setAdminUserIds(admins);
+      setViewerUserIds(viewers);
+      setViewer2UserIds(viewers2);
+    }
   };
 
-  const toggleAdmin = async (userId: string) => {
-    const isAdmin = adminUserIds.has(userId);
+  const toggleRole = async (userId: string, role: string) => {
+    const currentSet = role === 'admin' ? adminUserIds : role === 'viewer' ? viewerUserIds : viewer2UserIds;
+    const hasRole = currentSet.has(userId);
+    const labels: Record<string, string> = { admin: 'Créateur', viewer: 'Viewer', viewer_level2: 'Viewer L2' };
     try {
-      if (isAdmin) {
-        await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', 'admin');
-        toast.success('Rôle admin retiré');
+      if (hasRole) {
+        await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', role);
+        toast.success(`Rôle ${labels[role]} retiré`);
       } else {
-        await supabase.from('user_roles').insert({ user_id: userId, role: 'admin' });
-        toast.success('Rôle admin attribué');
+        await supabase.from('user_roles').insert({ user_id: userId, role });
+        toast.success(`Rôle ${labels[role]} attribué`);
       }
-      fetchAdminRoles();
+      fetchAllRoles();
     } catch {
       toast.error('Erreur lors de la modification du rôle');
     }
