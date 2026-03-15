@@ -522,10 +522,10 @@ export function CocoonForceGraph({
         if (node.isHome) {
           const coreGrad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r);
           if (isXRayMode) {
-            // X-Ray: blue core
-            coreGrad.addColorStop(0, `rgba(160, 195, 240, ${baseAlpha})`);
-            coreGrad.addColorStop(0.4, `rgba(94, 147, 224, ${baseAlpha * 0.95})`);
-            coreGrad.addColorStop(1, `rgba(60, 110, 200, ${baseAlpha * 0.85})`);
+            // X-Ray: deep blue core #1261d4
+            coreGrad.addColorStop(0, `rgba(80, 150, 230, ${baseAlpha})`);
+            coreGrad.addColorStop(0.4, `rgba(18, 97, 212, ${baseAlpha * 0.95})`);
+            coreGrad.addColorStop(1, `rgba(10, 60, 170, ${baseAlpha * 0.85})`);
           } else {
             // Normal: sun gradient core
             coreGrad.addColorStop(0, `rgba(255, 255, 200, ${baseAlpha})`);
@@ -533,6 +533,28 @@ export function CocoonForceGraph({
             coreGrad.addColorStop(1, `rgba(255, 160, 30, ${baseAlpha * 0.85})`);
           }
           ctx.fillStyle = coreGrad;
+
+          // ─── Metallic reflection sweep (X-Ray only) ───
+          if (isXRayMode) {
+            ctx.fill(); // fill core first
+            const sweepPhase = (time * 0.6) % (Math.PI * 2);
+            const sweepX = Math.cos(sweepPhase) * r * 0.6;
+            const reflectGrad = ctx.createLinearGradient(
+              node.x - r, node.y - r * 0.3,
+              node.x + r, node.y + r * 0.3
+            );
+            const reflectAlpha = 0.25 + Math.sin(sweepPhase) * 0.15;
+            reflectGrad.addColorStop(0, `rgba(255, 255, 255, 0)`);
+            reflectGrad.addColorStop(0.3 + Math.sin(sweepPhase) * 0.15, `rgba(200, 220, 255, 0)`);
+            reflectGrad.addColorStop(0.45 + Math.sin(sweepPhase) * 0.05, `rgba(200, 220, 255, ${reflectAlpha})`);
+            reflectGrad.addColorStop(0.55 + Math.sin(sweepPhase) * 0.05, `rgba(255, 255, 255, ${reflectAlpha * 0.7})`);
+            reflectGrad.addColorStop(0.7 + Math.sin(sweepPhase) * 0.1, `rgba(200, 220, 255, 0)`);
+            reflectGrad.addColorStop(1, `rgba(255, 255, 255, 0)`);
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+            ctx.fillStyle = reflectGrad;
+            ctx.fill();
+          }
         } else {
           ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${baseAlpha * 0.9})`;
         }
