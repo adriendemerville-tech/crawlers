@@ -294,7 +294,13 @@ export function UserManagement() {
                         <div className="flex items-center gap-2 flex-wrap">
                           {user.first_name} {user.last_name}
                           {adminUserIds.has(user.user_id) && (
-                            <Badge variant="outline" className="text-xs border-primary text-primary">Admin</Badge>
+                            <Badge variant="outline" className="text-xs border-primary text-primary">Créateur</Badge>
+                          )}
+                          {viewerUserIds.has(user.user_id) && (
+                            <Badge variant="outline" className="text-xs border-emerald-500 text-emerald-600 dark:text-emerald-400">Viewer</Badge>
+                          )}
+                          {viewer2UserIds.has(user.user_id) && (
+                            <Badge variant="outline" className="text-xs border-sky-500 text-sky-600 dark:text-sky-400">Viewer L2</Badge>
                           )}
                           {user.affiliate_code_used && (
                             <Badge variant="outline" className="text-xs border-violet-500 text-violet-600 dark:text-violet-400 gap-1">
@@ -315,15 +321,35 @@ export function UserManagement() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant={adminUserIds.has(user.user_id) ? 'default' : 'outline'}
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => toggleAdmin(user.user_id)}
-                            title={adminUserIds.has(user.user_id) ? 'Retirer admin' : 'Rendre admin'}
-                          >
-                            <ShieldCheck className="h-4 w-4" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant={(adminUserIds.has(user.user_id) || viewerUserIds.has(user.user_id) || viewer2UserIds.has(user.user_id)) ? 'default' : 'outline'}
+                                size="sm"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity gap-1"
+                              >
+                                <ShieldCheck className="h-4 w-4" />
+                                <ChevronDown className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel className="text-xs text-muted-foreground">Rôles</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => toggleRole(user.user_id, 'admin')}>
+                                <ShieldCheck className="h-4 w-4 mr-2" />
+                                {adminUserIds.has(user.user_id) ? '✓ Créateur' : 'Créateur'}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => toggleRole(user.user_id, 'viewer')}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                {viewerUserIds.has(user.user_id) ? '✓ Viewer' : 'Viewer'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => toggleRole(user.user_id, 'viewer_level2')}>
+                                <EyeOff className="h-4 w-4 mr-2" />
+                                {viewer2UserIds.has(user.user_id) ? '✓ Viewer L2' : 'Viewer L2'}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                           {user.plan_type === 'agency_pro' && (
                             <Dialog open={stripDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
                               setStripDialogOpen(open);
