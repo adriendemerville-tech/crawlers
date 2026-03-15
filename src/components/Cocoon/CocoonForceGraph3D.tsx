@@ -853,7 +853,7 @@ export function CocoonForceGraph3D({
           customNodeColors={nodeColors}
           customParticleColors={particleColors}
           spreadScale={spreadScale}
-          haloOpacity={haloOpacity}
+          haloOpacity={showClusters ? haloOpacity : 0}
           haloColors={haloColors}
           onNodeSelect={onNodeSelect}
           onNodeHover={setHoveredNodeId}
