@@ -250,20 +250,17 @@ function NodeSphere({
 
   return (
     <group position={[node.x, node.y, node.z]}>
-      {/* Outer glow sphere — all non-ghost nodes get one */}
-      {!isGhost && (
-        <mesh ref={glowRef}>
-          <sphereGeometry args={[node.radius * (node.isHome ? 2.5 : 1.8), 16, 16]} />
-          <meshBasicMaterial
-            color={node.isHome ? color : '#c0c8d8'}
-            transparent
-            opacity={node.isHome ? 0.12 : isSelected ? 0.08 : isHovered ? 0.06 : 0.4}
-            depthWrite={false}
-          />
-        </mesh>
-      )}
+      {/* Opaque border ring (slightly larger sphere behind) */}
+      <mesh>
+        <sphereGeometry args={[node.radius * 1.12, 24, 24]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={isGhost ? 0.3 : 0.9}
+        />
+      </mesh>
 
-      {/* Core sphere */}
+      {/* Core sphere — 25% opacity fill */}
       <mesh
         ref={meshRef}
         onPointerOver={(e) => { e.stopPropagation(); onPointerOver(); }}
@@ -276,23 +273,11 @@ function NodeSphere({
           emissive={color}
           emissiveIntensity={emissiveIntensity}
           transparent
-          opacity={isGhost ? 0.15 : 0.7}
+          opacity={isGhost ? 0.08 : 0.25}
           roughness={0.3}
           metalness={0.6}
         />
       </mesh>
-
-      {/* Inner bright core */}
-      {!isGhost && (
-        <mesh>
-          <sphereGeometry args={[node.radius * (node.isHome ? 0.35 : 0.45), 12, 12]} />
-          <meshBasicMaterial
-            color="white"
-            transparent
-            opacity={node.isHome ? 0.9 : 0.6}
-          />
-        </mesh>
-      )}
 
       {/* Label — always for home, hover/select only for others */}
       {(node.isHome || isSelected || isHovered) && (
