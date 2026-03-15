@@ -695,6 +695,8 @@ export function CocoonForceGraph3D({
           hoveredNodeId={hoveredNodeId}
           isXRayMode={isXRayMode}
           particlesEnabled={particlesEnabled}
+          customNodeColors={nodeColors}
+          customParticleColors={particleColors}
           onNodeSelect={onNodeSelect}
           onNodeHover={setHoveredNodeId}
           onNodeUnhover={() => setHoveredNodeId(null)}
