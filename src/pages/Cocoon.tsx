@@ -758,7 +758,7 @@ export default function Cocoon() {
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
                   <span className={`text-[10px] ${isDayMode ? 'text-black/50' : 'text-white/40'}`}>↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
                 </div>
-                <span className="text-white/30 text-[9px] sm:text-xs ml-auto hidden sm:inline">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
+                <span className={`text-[9px] sm:text-xs ml-auto hidden sm:inline ${isDayMode ? 'text-black/30' : 'text-white/30'}`}>⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
                 <a
                   href={(() => {
                     const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
