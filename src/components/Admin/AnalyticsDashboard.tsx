@@ -197,11 +197,14 @@ export function AnalyticsDashboard() {
       }) || [];
 
       // Fetch real signup count from profiles (30 days, excluding admins)
-      const { count: realSignupCount } = await supabase
+      let signupQuery = supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .gte('created_at', thirtyDaysAgo)
-        .not('user_id', 'in', `(${adminUserIds.join(',')})`);
+        .gte('created_at', thirtyDaysAgo);
+      if (adminUserIds.length > 0) {
+        signupQuery = signupQuery.not('user_id', 'in', `(${adminUserIds.join(',')})`);
+      }
+      const { count: realSignupCount } = await signupQuery;
 
       // Calculate stats
       const newStats: AnalyticsStats = {
@@ -251,12 +254,15 @@ export function AnalyticsDashboard() {
       });
 
       // Fetch real signups from profiles table (reliable source vs analytics events)
-      const { data: profileSignups } = await supabase
+      let profileSignupsQuery = supabase
         .from('profiles')
         .select('created_at')
         .gte('created_at', thirtyDaysAgo)
-        .not('user_id', 'in', `(${adminUserIds.join(',')})`)
         .order('created_at', { ascending: false });
+      if (adminUserIds.length > 0) {
+        profileSignupsQuery = profileSignupsQuery.not('user_id', 'in', `(${adminUserIds.join(',')})`);
+      }
+      const { data: profileSignups } = await profileSignupsQuery;
 
       const signupsByDay: Record<string, number> = {};
       (profileSignups || []).forEach(p => {
