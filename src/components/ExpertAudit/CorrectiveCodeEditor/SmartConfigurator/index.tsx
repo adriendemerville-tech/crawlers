@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
+import { useFreemiumMode } from '@/contexts/FreemiumContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { CodeBlock } from '../CodeBlock';
@@ -170,6 +171,7 @@ export function SmartConfigurator({
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
   const { isAdmin } = useAdmin();
+  const { openMode } = useFreemiumMode();
   const canGenerateCode = isAgencyPro || isAdmin;
 
   // Extract domain from siteUrl for payment check
@@ -979,8 +981,8 @@ export function SmartConfigurator({
         setCodeSource(data.source || 'new_generation');
         setLibraryHits(data.libraryHits || 0);
         setIsArchived(false);
-        // Subscribers get instant access, others see lock after delay
-        if (isAgencyPro) {
+        // Subscribers & freemium open mode get instant access, others see lock after delay
+        if (isAgencyPro || openMode) {
           setHasPaid(true);
           setShowLockOverlay(false);
           handleArchiveSolution();

@@ -42,6 +42,25 @@ function FreemiumAwareGate({ isLoggedIn }: { isLoggedIn: boolean }) {
   );
 }
 
+function FreemiumAwareContent({ isLoggedIn, children }: { isLoggedIn: boolean; children: React.ReactNode }) {
+  const { openMode } = useFreemiumMode();
+  const isUnlocked = isLoggedIn || openMode;
+  return (
+    <motion.div
+      initial={false}
+      animate={{
+        filter: isUnlocked ? 'blur(0px)' : 'blur(8px)',
+        opacity: isUnlocked ? 1 : 0.5,
+        scale: isUnlocked ? 1 : 0.98,
+      }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className={cn("space-y-6", !isUnlocked && "pointer-events-none select-none")}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export function StrategicResultsSection({
   result, url, t, isLoggedIn, isStrategicLoading,
   hallucinationDiagnosis, storedCorrections, strategicProgressiveReveal,
@@ -102,16 +121,7 @@ export function StrategicResultsSection({
 
         {/* Protected Content Zone */}
         <div className="relative min-h-[400px] mt-6">
-          <motion.div
-            initial={false}
-            animate={{
-              filter: isLoggedIn ? 'blur(0px)' : 'blur(8px)',
-              opacity: isLoggedIn ? 1 : 0.5,
-              scale: isLoggedIn ? 1 : 0.98,
-            }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className={cn("space-y-6", !isLoggedIn && "pointer-events-none select-none")}
-          >
+          <FreemiumAwareContent isLoggedIn={isLoggedIn}>
             {/* Strategic Insights */}
             {result.strategicAnalysis && (
               <StrategicInsights
@@ -161,7 +171,7 @@ export function StrategicResultsSection({
             {result.strategicAnalysis && (
               <AEOScoreCard result={result} />
             )}
-          </motion.div>
+          </FreemiumAwareContent>
 
           {/* Registration Gate — hidden in freemium open mode */}
           <FreemiumAwareGate isLoggedIn={isLoggedIn} />
