@@ -427,7 +427,7 @@ export function MyTracking() {
       const [geoRes, llmRes, psiRes, crawlersRes, serpRes] = await Promise.allSettled([
         supabase.functions.invoke('check-geo', { body: { url, lang: language } }),
         supabase.functions.invoke('check-llm', { body: { url, lang: language } }),
-        supabase.functions.invoke('check-pagespeed', { body: { url, lang: language } }),
+        supabase.functions.invoke('check-pagespeed', { body: { url, lang: language, dual: true } }),
         supabase.functions.invoke('check-crawlers', { body: { url } }),
         supabase.functions.invoke('fetch-serp-kpis', { body: { domain: site.domain, url } }),
       ]);
