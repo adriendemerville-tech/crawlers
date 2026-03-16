@@ -355,6 +355,25 @@ const CGVU = () => {
               </ul>
             </section>
 
+            {/* Article 12 bis */}
+            <section id="responsabilite">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">12 bis. Limitation de Responsabilité</h2>
+              <p>
+                La Plateforme est fournie « <strong>en l'état</strong> » (<em>as is</em>). L'Éditeur ne garantit ni l'exactitude, ni l'exhaustivité, ni la pertinence des résultats d'analyse, scores, recommandations et codes correctifs générés par la Plateforme. Ces éléments sont fournis à titre <strong>indicatif et informatif</strong> uniquement.
+              </p>
+              <p className="font-semibold mt-4">En aucun cas l'Éditeur ne pourra être tenu responsable :</p>
+              <ul>
+                <li>Des décisions commerciales, techniques ou stratégiques prises par l'utilisateur sur la base des résultats fournis ;</li>
+                <li>D'une perte de positionnement, de trafic, de chiffre d'affaires ou de toute autre perte économique consécutive à l'utilisation de la Plateforme ;</li>
+                <li>Des dommages causés aux sites tiers analysés dans le cadre de la veille concurrentielle ;</li>
+                <li>Des effets de l'injection de code correctif sur le site de l'utilisateur ou sur l'expérience de ses visiteurs ;</li>
+                <li>Des dysfonctionnements résultant de l'incompatibilité entre les scripts générés et l'environnement technique de l'utilisateur.</li>
+              </ul>
+              <p className="mt-4">
+                <strong>Plafond de responsabilité :</strong> En tout état de cause, la responsabilité totale de l'Éditeur, toutes causes confondues, est limitée au montant total effectivement payé par l'utilisateur au cours des <strong>douze (12) derniers mois</strong> précédant le fait générateur de responsabilité.
+              </p>
+            </section>
+
             {/* Article 13 */}
             <section id="modification">
               <h2 className="text-xl font-bold text-foreground mt-10 mb-3">13. Modification des CGVU</h2>
