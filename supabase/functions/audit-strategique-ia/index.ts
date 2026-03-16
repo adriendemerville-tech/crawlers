@@ -842,7 +842,7 @@ function isNonCompetitorDomain(domain: string): boolean {
 }
 
 async function findLocalCompetitor(
-  domain: string, sector: string, locationCode: number, pageContentContext: string
+  domain: string, sector: string, locationCode: number, pageContentContext: string, languageCode: string = 'fr', seDomain: string = 'google.fr'
 ): Promise<{ name: string; url: string; rank: number } | null> {
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
 
