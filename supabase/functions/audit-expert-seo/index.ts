@@ -3,6 +3,7 @@ import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
+import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
@@ -1690,30 +1691,52 @@ Deno.serve(async (req) => {
     console.log(`[AUDIT-EXPERT-SEO] ✅ Audit terminé. Score: ${totalScore}/200 (Fiabilité: ${Math.round(meta.reliabilityScore * 100)}%)`);
     console.log('='.repeat(60));
     
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          url: normalizedUrl,
-          domain,
-          meta,
-          totalScore,
-          maxScore: 200,
-          scores,
-          insights: enrichedInsights,
-          recommendations,
-          introduction,
-          rawData: {
-            psi: { categories, audits: Object.keys(audits).slice(0, 10) },
-            safeBrowsing,
-            htmlAnalysis: {
-              ...htmlAnalysis,
-              insights: undefined // Already in insights field
-            },
-            robotsAnalysis
-          }
+    const responseData = {
+      success: true,
+      data: {
+        url: normalizedUrl,
+        domain,
+        meta,
+        totalScore,
+        maxScore: 200,
+        scores,
+        insights: enrichedInsights,
+        recommendations,
+        introduction,
+        rawData: {
+          psi: { categories, audits: Object.keys(audits).slice(0, 10) },
+          safeBrowsing,
+          htmlAnalysis: {
+            ...htmlAnalysis,
+            insights: undefined // Already in insights field
+          },
+          robotsAnalysis
         }
-      }),
+      }
+    };
+
+    // Save raw audit data (fire-and-forget)
+    try {
+      const authHeader = req.headers.get('Authorization') || '';
+      if (authHeader) {
+        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+        const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+          global: { headers: { Authorization: authHeader } }
+        });
+        const { data: { user } } = await sb.auth.getUser();
+        if (user) {
+          saveRawAuditData({
+            userId: user.id, url: normalizedUrl, domain,
+            auditType: 'technical',
+            rawPayload: responseData.data,
+            sourceFunctions: ['audit-expert-seo'],
+          }).catch(() => {});
+        }
+      }
+    } catch {}
+
+    return new Response(
+      JSON.stringify(responseData),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
     
