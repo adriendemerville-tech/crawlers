@@ -236,6 +236,24 @@ export function ScriptKillSwitches() {
 
         <Separator />
 
+        {/* Freemium Open Mode */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <Label className="text-sm font-medium">Mode Freemium Ouvert</Label>
+            <p className="text-xs text-muted-foreground">
+              Audit Expert + Code correctif accessibles sans inscription. Code limité à 3 fixes mineurs. Limite : 3 audits/jour par IP.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={freemiumOpen ? 'default' : 'secondary'} className="text-[10px]">
+              {freemiumOpen ? 'Ouvert' : 'Standard'}
+            </Badge>
+            <Switch checked={freemiumOpen} onCheckedChange={handleToggleFreemium} disabled={saving} />
+          </div>
+        </div>
+
+        <Separator />
+
         {/* Level 3: Blocked Domains */}
         <div>
           <Label className="text-sm font-medium">{t.level3}</Label>
