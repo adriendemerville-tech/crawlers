@@ -2371,7 +2371,7 @@ Deno.serve(async (req) => {
         // Google My Business detection — skip in content mode
         !isContentMode && context.locationCode
           ? withDeadline(
-              detectGoogleMyBusiness(domain, context.brandName, context.locationCode),
+              detectGoogleMyBusiness(domain, context.brandName, context.locationCode, context.languageCode),
               12_000, 'gmb'
             )
           : Promise.resolve(null),
