@@ -1697,12 +1697,12 @@ function KPICard({ label, value, icon: Icon, valueClassName, onRefresh }: { labe
   };
 
   return (
-    <div className="relative group rounded-lg border bg-card p-3 space-y-1">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Icon className="h-3 w-3" />
-        {label}
+    <div className="relative group rounded-lg border bg-card px-2.5 py-2 space-y-0.5">
+      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <Icon className="h-3 w-3 shrink-0" />
+        <span className="truncate">{label}</span>
       </div>
-      <p className={`text-lg font-semibold ${valueClassName || ''}`}>{value}</p>
+      <p className={`text-sm font-semibold ${valueClassName || ''}`}>{value}</p>
       {onRefresh && (
         <button
           onClick={handleRefresh}
