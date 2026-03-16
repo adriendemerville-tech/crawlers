@@ -1447,7 +1447,54 @@ async function searchFounderProfile(domain: string, targetLocation: string = 'fr
   }
 }
 
-// ==================== LLM PROMPT (compact) ====================
+// ==================== FACEBOOK PAGE DISCOVERY VIA SERP ====================
+
+interface FacebookPageInfo {
+  pageUrl: string | null;
+  pageName: string | null;
+  found: boolean;
+}
+
+async function searchFacebookPage(brandName: string, sector: string, locationCode: number, languageCode: string): Promise<FacebookPageInfo> {
+  const result: FacebookPageInfo = { pageUrl: null, pageName: null, found: false };
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD || !brandName) return result;
+
+  try {
+    const query = `"${brandName}" "page facebook" "${sector}"`;
+    console.log(`📘 Facebook search: ${query}`);
+
+    const resp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
+      method: 'POST',
+      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify([{ keyword: query, location_code: locationCode, language_code: languageCode, depth: 10 }]),
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!resp.ok) { await resp.text(); return result; }
+    const data = await resp.json();
+    const items = data.tasks?.[0]?.result?.[0]?.items || [];
+
+    // Find a facebook.com organic result
+    const fbResult = items.find((i: any) =>
+      i.type === 'organic' && i.url && /facebook\.com\/(?!.*(?:login|help|about|policies|groups\/|events\/|marketplace))/i.test(i.url)
+    );
+
+    if (fbResult) {
+      result.pageUrl = fbResult.url.replace(/\/$/, '');
+      result.pageName = fbResult.title?.split(/\s*[-–|]\s*/)?.[0]?.trim() || brandName;
+      result.found = true;
+      console.log(`📘 Facebook page found: ${result.pageName} → ${result.pageUrl}`);
+    } else {
+      console.log('📘 No Facebook page found via SERP');
+    }
+
+    return result;
+  } catch (error) {
+    console.error('📘 Facebook search error:', error);
+    return result;
+  }
+}
+
 
 const SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé Brand Authority & GEO. Rapport premium niveau cabinet de conseil.
 
@@ -1637,7 +1684,7 @@ function formatToolsDataToMarkdown(toolsData: ToolsData): string {
   return lines.join('\n');
 }
 
-function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo, rankingOverview?: RankingOverview | null, contentMode: boolean = false): string {
+function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo, rankingOverview?: RankingOverview | null, contentMode: boolean = false, facebookPageInfo?: FacebookPageInfo): string {
   let marketSection = '';
   
   if (marketData) {
@@ -1676,6 +1723,12 @@ Top positionnés: ${rankingOverview.top_keywords.slice(0, 5).map(k => `"${k.keyw
       const companyLI = eeatSignals.linkedInUrls.filter(u => /linkedin\.com\/company\//i.test(u));
       if (personalLI.length > 0) lines.push(`LinkedIn perso: ${personalLI.join(', ')}`);
       if (companyLI.length > 0) lines.push(`LinkedIn entreprise: ${companyLI.join(', ')}`);
+    }
+    // Facebook page info from SERP
+    if (facebookPageInfo?.found && facebookPageInfo.pageUrl) {
+      lines.push(`📘 Facebook Page SERP: ${facebookPageInfo.pageName || 'trouvée'} → ${facebookPageInfo.pageUrl}`);
+    } else {
+      lines.push(`📘 Facebook Page SERP: NON TROUVÉE`);
     }
     eeatSection = lines.join('\n');
   }
@@ -1740,7 +1793,7 @@ ${toolsMarkdown}
 GÉNÈRE un JSON:
 {"introduction":{"presentation":"4-5ph","strengths":"4-5ph","improvement":"4-5ph","competitors":["Leader","Concurrent","Challenger"]},
 "brand_authority":{"dna_analysis":"...","thought_leadership_score":0-100,"entity_strength":"dominant|established|emerging|unknown"},
-"social_signals":{"proof_sources":[{"platform":"reddit|x|linkedin|youtube|instagram","presence_level":"strong|moderate|weak|absent","analysis":"max 450 car","profile_url":"URL exacte des E-E-A-T ou null","profile_name":"ou null"}],"thought_leadership":{"founder_authority":"high|moderate|low|unknown","entity_recognition":"...","eeat_score":0-10,"analysis":"Distingue signaux vérifiés vs inférés"},"sentiment":{"overall_polarity":"positive|mostly_positive|neutral|mixed|negative","hallucination_risk":"low|medium|high","reputation_vibration":"..."}},
+"social_signals":{"proof_sources":[{"platform":"reddit|x|linkedin|youtube|instagram|facebook","presence_level":"strong|moderate|weak|absent","analysis":"max 450 car","profile_url":"URL exacte des E-E-A-T ou null","profile_name":"ou null"}],"thought_leadership":{"founder_authority":"high|moderate|low|unknown","entity_recognition":"...","eeat_score":0-10,"analysis":"Distingue signaux vérifiés vs inférés"},"sentiment":{"overall_polarity":"positive|mostly_positive|neutral|mixed|negative","hallucination_risk":"low|medium|high","reputation_vibration":"..."}},
 "market_intelligence":{"sophistication":{"level":1-5,"description":"...","emotional_levers":["1","2","3"]},"semantic_gap":{"current_position":0-100,"leader_position":0-100,"gap_analysis":"...","priority_themes":["t1","t2","t3","t4"],"closing_strategy":"..."}},
 "competitive_landscape":{"leader":{"name":"...","url":"...","authority_factor":"...","analysis":"3-4ph"},"direct_competitor":{"name":"...","url":"URL VALIDE","authority_factor":"...","analysis":"3-4ph"},"challenger":{...},"inspiration_source":{...}},
 "geo_citability":{"score":0-100,"readiness_level":"pioneer|ready|developing|basic|absent","analysis":"...","strengths":[],"weaknesses":[],"recommendations":[]},
@@ -2276,6 +2329,7 @@ Deno.serve(async (req) => {
     let founderInfo: FounderInfo;
     let localCompetitorData: { name: string; url: string; rank: number } | null = null;
     let gmbData: GMBData | null = null;
+    let facebookPageInfo: FacebookPageInfo = { pageUrl: null, pageName: null, found: false };
 
     if (useCache) {
       // ═══ FAST PATH: Reuse cached context (corrections/re-runs) ═══
@@ -2294,6 +2348,7 @@ Deno.serve(async (req) => {
       founderInfo = cachedContext.founderInfo || { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
       localCompetitorData = null;
       gmbData = cachedContext.gmbData || null;
+      facebookPageInfo = cachedContext.facebookPageInfo || { pageUrl: null, pageName: null, found: false };
       if (cachedContext.llmData) effectiveToolsData.llm = cachedContext.llmData;
     } else {
       // ═══ FULL PATH: Collect all data with maximum parallelism ═══
@@ -2332,7 +2387,7 @@ Deno.serve(async (req) => {
       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
 
-      const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult] = await Promise.allSettled([
+      const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult] = await Promise.allSettled([
         // Market data (DataForSEO keywords) — reduced deadline to preserve LLM budget
         withDeadline(
           fetchMarketData(domain, context, pageContentContext, url),
@@ -2376,6 +2431,13 @@ Deno.serve(async (req) => {
               12_000, 'gmb'
             )
           : Promise.resolve(null),
+        // Facebook page discovery — skip in content mode
+        !isContentMode && context.locationCode
+          ? withDeadline(
+              searchFacebookPage(context.brandName, context.sector, context.locationCode, context.languageCode),
+              10_000, 'facebook_page'
+            )
+          : Promise.resolve(null),
       ]);
 
       marketData = mktDataResult.status === 'fulfilled' ? mktDataResult.value : null;
@@ -2397,6 +2459,10 @@ Deno.serve(async (req) => {
         gmbData = gmbResult.value;
       }
 
+      if (fbResult.status === 'fulfilled' && fbResult.value) {
+        facebookPageInfo = fbResult.value;
+      }
+
       console.log(`⏱️ Data collection done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
 
@@ -2412,6 +2478,7 @@ Deno.serve(async (req) => {
       marketData, rankingOverview, founderInfo,
       llmData: effectiveToolsData.llm,
       gmbData,
+      facebookPageInfo,
     };
 
     // ═══ CHECK DEADLINE before expensive LLM call — need at least 90s ═══
@@ -2427,7 +2494,7 @@ Deno.serve(async (req) => {
     // ═══ ÉTAPE 2: LLM ANALYSIS ═══
     console.log(`\n🤖 ÉTAPE 2: Analyse LLM (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
 
-    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode);
+    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode, facebookPageInfo);
 
     // Inject language instruction
     userPrompt = `🌐 LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes, analyses, recommandations et descriptions en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
@@ -2636,6 +2703,7 @@ Deno.serve(async (req) => {
         (eeatSignals.detectedSocialUrls || []).map((u: string) => u.toLowerCase().replace(/\/$/, ''))
       );
       if (founderInfo?.profileUrl) detectedUrlsSet.add(founderInfo.profileUrl.toLowerCase().replace(/\/$/, ''));
+      if (facebookPageInfo?.pageUrl) detectedUrlsSet.add(facebookPageInfo.pageUrl.toLowerCase().replace(/\/$/, ''));
       console.log(`🔗 Validating social URLs against ${detectedUrlsSet.size} detected URLs:`, [...detectedUrlsSet]);
 
       for (const source of parsedAnalysis.social_signals.proof_sources) {
