@@ -314,7 +314,7 @@ export function UserManagement() {
               Gestion des Utilisateurs
             </CardTitle>
             <CardDescription>
-              {users.length} utilisateurs inscrits
+              {filteredUsers.length}/{users.length} utilisateurs{actionFilter ? ` • filtre : ${actionFilter}` : ''}
             </CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading}>
@@ -324,8 +324,8 @@ export function UserManagement() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-4">
-          <div className="relative">
+        <div className="mb-4 flex gap-2 items-center">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Rechercher par nom ou email..."
@@ -334,6 +334,38 @@ export function UserManagement() {
               className="pl-10"
             />
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant={actionFilter ? 'default' : 'outline'} size="sm" className="gap-1.5 shrink-0" disabled={actionFilterLoading}>
+                {actionFilterLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Filter className="h-3.5 w-3.5" />}
+                {actionFilter || 'Actions'}
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrer par action</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {ACTION_FILTERS.map((f) => (
+                <DropdownMenuItem
+                  key={f.label}
+                  onClick={() => fetchActionFilter(actionFilter === f.label ? null : f.label)}
+                  className="gap-2"
+                >
+                  <span className={`h-2 w-2 rounded-full ${f.color.replace('text-', 'bg-')}`} />
+                  {actionFilter === f.label ? `✓ ${f.label}` : f.label}
+                </DropdownMenuItem>
+              ))}
+              {actionFilter && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => fetchActionFilter(null)} className="gap-2 text-muted-foreground">
+                    <X className="h-3.5 w-3.5" />
+                    Réinitialiser
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {loading ? (
