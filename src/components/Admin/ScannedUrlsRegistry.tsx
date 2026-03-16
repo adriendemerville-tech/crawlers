@@ -153,6 +153,9 @@ export function ScannedUrlsRegistry() {
 
   return (
     <div className="space-y-4">
+      {/* Crawl pages stats */}
+      <CrawlPagesStatsCard />
+
       {/* KPI cards */}
       <div className="grid grid-cols-3 gap-4">
         <Card>
