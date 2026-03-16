@@ -117,10 +117,13 @@ export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTask
                   ? 'border-emerald-500/15 bg-emerald-500/[0.03]' 
                   : 'border-white/5 bg-white/[0.03]'
               }`}>
-                <div className="flex items-center gap-2 px-3 py-2.5">
+                <div
+                  className="flex items-center gap-2 px-3 py-2.5 cursor-pointer"
+                  onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                >
                   {/* Applied checkbox */}
                   <button
-                    onClick={() => toggleApplied(item.id, item.is_applied)}
+                    onClick={(e) => { e.stopPropagation(); toggleApplied(item.id, item.is_applied); }}
                     className="shrink-0 transition-colors"
                     title={item.is_applied ? t.applied : t.notApplied}
                   >
@@ -131,15 +134,12 @@ export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTask
                     )}
                   </button>
                   
-                  <button
-                    onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
-                    className="flex-1 min-w-0 text-left"
-                  >
+                  <div className="flex-1 min-w-0 text-left">
                     <p className={`text-xs truncate font-medium ${item.is_applied ? 'text-white/40 line-through' : 'text-white/70'}`}>
                       {item.summary}
                     </p>
                     <p className="text-[10px] text-white/30 mt-0.5">{formatDate(item.created_at)}</p>
-                  </button>
+                  </div>
 
                   {/* Hover action buttons */}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
