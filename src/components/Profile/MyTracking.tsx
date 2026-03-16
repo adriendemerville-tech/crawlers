@@ -1053,10 +1053,11 @@ export function MyTracking() {
 
                   {/* KPI Cards — Sortable, wrapped in a bordered Card */}
                   {(() => {
-                    const defaultKpiOrder = ['performance', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
+                    const defaultKpiOrder = ['performanceMobile', 'performanceDesktop', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
                     
                     const kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string }> = {
-                      performance: { label: t.performance, value: latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—', icon: Gauge },
+                      performanceMobile: { label: t.performanceMobile, value: latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—', icon: Gauge },
+                      performanceDesktop: { label: t.performanceDesktop, value: latestPerformanceDesktop !== null ? `${Math.round(latestPerformanceDesktop)}/100` : '—', icon: Gauge },
                       seoScore: { label: t.seoScore, value: latestStats?.seo_score != null ? `${latestStats.seo_score}%` : '—', icon: Search },
                       geoScore: { label: t.geoScore, value: latestStats?.geo_score ? `${latestStats.geo_score}%` : '—', icon: Globe },
                       aiVisibility: { label: t.aiVisibility, value: latestAiVisibility != null ? `${Math.round(latestAiVisibility)}/100` : '—', icon: Eye },
@@ -1066,15 +1067,19 @@ export function MyTracking() {
                       voiceShare: { label: t.voiceShare, value: latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—', icon: BarChart3 },
                     };
 
-                    // Per-KPI refresh handler map
+                    // Per-KPI refresh handler map — shared for both mobile/desktop
+                    const psiDualRefresh = async () => {
+                      if (!currentSite) return;
+                      const res = await supabase.functions.invoke('check-pagespeed', { body: { url: `https://${currentSite.domain}`, lang: language, dual: true } });
+                      const mobile = res.data?.data?.mobile?.scores?.performance ?? res.data?.data?.scores?.performance ?? null;
+                      const desktop = res.data?.data?.desktop?.scores?.performance ?? null;
+                      if (mobile !== null) toast.success(`${t.performanceMobile}: ${Math.round(mobile)}/100`);
+                      if (desktop !== null) toast.success(`${t.performanceDesktop}: ${Math.round(desktop)}/100`);
+                      if (currentSite) await runStreamingAudit(currentSite);
+                    };
                     const kpiRefreshMap: Record<string, () => Promise<void>> = {
-                      performance: async () => {
-                        if (!currentSite) return;
-                        const res = await supabase.functions.invoke('check-pagespeed', { body: { url: `https://${currentSite.domain}`, lang: language } });
-                        const score = res.data?.data?.scores?.performance ?? res.data?.data?.performance ?? null;
-                        if (score !== null) toast.success(`${t.performance}: ${Math.round(score)}/100`);
-                        if (currentSite) await runStreamingAudit(currentSite);
-                      },
+                      performanceMobile: psiDualRefresh,
+                      performanceDesktop: psiDualRefresh,
                       seoScore: async () => {
                         if (!currentSite) return;
                         const res = await supabase.functions.invoke('check-crawlers', { body: { url: `https://${currentSite.domain}` } });
