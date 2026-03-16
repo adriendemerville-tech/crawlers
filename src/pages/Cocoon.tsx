@@ -526,7 +526,7 @@ export default function Cocoon() {
             <div className="flex items-center gap-2 shrink-0">
               <div className="w-2 h-2 rounded-full bg-[#fbbf24] animate-pulse hidden sm:block" />
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <h1 className={`text-xs sm:text-sm font-bold font-display tracking-tight leading-none ${isDayMode ? 'text-black' : 'text-white'}`}>
+                <h1 className="text-xs sm:text-sm font-bold font-display tracking-tight leading-none text-white">
                   Cocoon <span className="text-[#fbbf24]">·</span> <span className="hidden xs:inline">{t.organism}</span>
                 </h1>
                 <span className={`text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none px-1 sm:px-1.5 py-0.5 rounded border ${isDayMode ? 'text-black/30 bg-black/5 border-black/10' : 'text-white/30 bg-white/5 border-white/10'}`}>beta</span>
