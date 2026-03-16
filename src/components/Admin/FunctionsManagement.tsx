@@ -99,16 +99,30 @@ export function FunctionsManagement() {
   const [showPromptMatrix, setShowPromptMatrix] = useState(false);
   const [matrixSiteId, setMatrixSiteId] = useState('');
   const [matrixDomain, setMatrixDomain] = useState('');
+  const [trackedSites, setTrackedSites] = useState<Array<{ id: string; domain: string }>>([]);
 
-  // Load consultation logs and access requests for creator
+  // Load consultation logs, access requests, and tracked sites
   useEffect(() => {
     if (!isViewer) {
       loadConsultationLogs();
       loadAccessRequests();
+      loadTrackedSites();
     } else {
       loadMyRequests();
     }
   }, [isViewer]);
+
+  const loadTrackedSites = async () => {
+    const { data } = await supabase
+      .from('tracked_sites')
+      .select('id, domain')
+      .order('domain');
+    if (data && data.length > 0) {
+      setTrackedSites(data);
+      setMatrixSiteId(data[0].id);
+      setMatrixDomain(data[0].domain);
+    }
+  };
 
   const loadConsultationLogs = async () => {
     const { data } = await supabase
