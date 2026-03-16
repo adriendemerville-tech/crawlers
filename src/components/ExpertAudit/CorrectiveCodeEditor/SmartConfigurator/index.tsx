@@ -981,8 +981,8 @@ export function SmartConfigurator({
         setCodeSource(data.source || 'new_generation');
         setLibraryHits(data.libraryHits || 0);
         setIsArchived(false);
-        // Subscribers get instant access, others see lock after delay
-        if (isAgencyPro) {
+        // Subscribers & freemium open mode get instant access, others see lock after delay
+        if (isAgencyPro || openMode) {
           setHasPaid(true);
           setShowLockOverlay(false);
           handleArchiveSolution();
