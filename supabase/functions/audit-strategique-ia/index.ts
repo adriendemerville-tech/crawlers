@@ -2381,7 +2381,7 @@ Deno.serve(async (req) => {
       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
       const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
 
-      const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult] = await Promise.allSettled([
+      const [mktDataResult, llmCheckResult, localCompResult, founderResult, gmbResult, fbResult] = await Promise.allSettled([
         // Market data (DataForSEO keywords) — reduced deadline to preserve LLM budget
         withDeadline(
           fetchMarketData(domain, context, pageContentContext, url),
@@ -2423,6 +2423,13 @@ Deno.serve(async (req) => {
           ? withDeadline(
               detectGoogleMyBusiness(domain, context.brandName, context.locationCode, context.languageCode),
               12_000, 'gmb'
+            )
+          : Promise.resolve(null),
+        // Facebook page discovery — skip in content mode
+        !isContentMode && context.locationCode
+          ? withDeadline(
+              searchFacebookPage(context.brandName, context.sector, context.locationCode, context.languageCode),
+              10_000, 'facebook_page'
             )
           : Promise.resolve(null),
       ]);
