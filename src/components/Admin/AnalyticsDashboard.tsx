@@ -15,16 +15,8 @@ import {
   Globe,
   ExternalLink,
   RefreshCw,
-  Cpu,
-  Zap,
   Brain,
-  Flame,
-  Swords,
   ScanSearch,
-  Coins,
-  CreditCard,
-  Users,
-  HardDrive
 } from 'lucide-react';
 import { 
   LineChart, 
