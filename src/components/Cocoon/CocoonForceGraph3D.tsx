@@ -802,6 +802,7 @@ export function CocoonForceGraph3D({
   particleColors = {},
   haloColors = DEFAULT_HALO_COLORS,
   showClusters = true,
+  visibleJuiceTypes,
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [spreadScale, setSpreadScale] = useState(1);
