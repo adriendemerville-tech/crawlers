@@ -100,6 +100,7 @@ interface CocoonForceGraph3DProps {
   showClusters?: boolean;
   visibleJuiceTypes?: Set<string>;
   isDayMode?: boolean;
+  colorIntensity?: number;
 }
 
 // ─── 3D Force Simulation (manual spring-charge model) ───
