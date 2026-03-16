@@ -15,10 +15,12 @@ const sections = [
   { id: 'credits', title: '6. Système de Crédits' },
   { id: 'abonnement', title: '7. Abonnement Pro Agency' },
   { id: 'whitelabel', title: '8. Offre Marque Blanche (White Label)' },
+  { id: 'veille', title: '8 bis. Analyse Concurrentielle & Veille Stratégique' },
   { id: 'pi', title: '9. Propriété Intellectuelle' },
   { id: 'donnees', title: '10. Données de Crawl & Analyse' },
   { id: 'rgpd', title: '11. RGPD & Données Personnelles' },
   { id: 'disponibilite', title: '12. Disponibilité du Service' },
+  { id: 'responsabilite', title: '12 bis. Limitation de Responsabilité' },
   { id: 'modification', title: '13. Modification des CGVU' },
   { id: 'litiges', title: '14. Droit Applicable & Litiges' },
 ];
