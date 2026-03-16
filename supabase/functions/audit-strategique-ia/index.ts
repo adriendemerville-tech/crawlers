@@ -1447,7 +1447,54 @@ async function searchFounderProfile(domain: string, targetLocation: string = 'fr
   }
 }
 
-// ==================== LLM PROMPT (compact) ====================
+// ==================== FACEBOOK PAGE DISCOVERY VIA SERP ====================
+
+interface FacebookPageInfo {
+  pageUrl: string | null;
+  pageName: string | null;
+  found: boolean;
+}
+
+async function searchFacebookPage(brandName: string, sector: string, locationCode: number, languageCode: string): Promise<FacebookPageInfo> {
+  const result: FacebookPageInfo = { pageUrl: null, pageName: null, found: false };
+  if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD || !brandName) return result;
+
+  try {
+    const query = `"${brandName}" "page facebook" "${sector}"`;
+    console.log(`📘 Facebook search: ${query}`);
+
+    const resp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
+      method: 'POST',
+      headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify([{ keyword: query, location_code: locationCode, language_code: languageCode, depth: 10 }]),
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!resp.ok) { await resp.text(); return result; }
+    const data = await resp.json();
+    const items = data.tasks?.[0]?.result?.[0]?.items || [];
+
+    // Find a facebook.com organic result
+    const fbResult = items.find((i: any) =>
+      i.type === 'organic' && i.url && /facebook\.com\/(?!.*(?:login|help|about|policies|groups\/|events\/|marketplace))/i.test(i.url)
+    );
+
+    if (fbResult) {
+      result.pageUrl = fbResult.url.replace(/\/$/, '');
+      result.pageName = fbResult.title?.split(/\s*[-–|]\s*/)?.[0]?.trim() || brandName;
+      result.found = true;
+      console.log(`📘 Facebook page found: ${result.pageName} → ${result.pageUrl}`);
+    } else {
+      console.log('📘 No Facebook page found via SERP');
+    }
+
+    return result;
+  } catch (error) {
+    console.error('📘 Facebook search error:', error);
+    return result;
+  }
+}
+
 
 const SYSTEM_PROMPT = `RÔLE: Senior Digital Strategist spécialisé Brand Authority & GEO. Rapport premium niveau cabinet de conseil.
 
