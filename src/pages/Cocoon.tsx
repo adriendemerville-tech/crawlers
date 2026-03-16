@@ -605,7 +605,7 @@ export default function Cocoon() {
             </div>
           </div>
         </header>
-
+        )}
         {/* Truncation banner */}
         {truncationInfo?.truncated && (
           <div className="shrink-0 px-4 py-2 bg-[#4c1d95]/30 border-b border-[hsl(263,70%,20%)] flex items-center gap-2 text-xs text-[#fbbf24]">
