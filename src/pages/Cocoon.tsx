@@ -589,7 +589,6 @@ export default function Cocoon() {
                   const params = new URLSearchParams();
                   if (selectedSiteId) params.set('site', selectedSiteId);
                   params.set('fullscreen', '1');
-                  if (isDayMode) params.set('daymode', '1');
                   window.open(`/cocoon?${params.toString()}`, '_blank');
                 }}
                 className="h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white px-2 sm:px-3"
