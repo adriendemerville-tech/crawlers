@@ -44,12 +44,15 @@ interface UserKpiModalProps {
 
 export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
   const [kpis, setKpis] = useState<UserKpis | null>(null);
+  const [scannedUrls, setScannedUrls] = useState<ScannedUrl[]>([]);
   const [loading, setLoading] = useState(false);
+  const [urlsLoading, setUrlsLoading] = useState(false);
 
   useEffect(() => {
     if (!open || !user) return;
     setLoading(true);
     fetchKpis(user.user_id);
+    fetchScannedUrls(user.user_id);
   }, [open, user]);
 
   const fetchKpis = async (userId: string) => {
