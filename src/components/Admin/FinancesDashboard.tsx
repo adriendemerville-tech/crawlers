@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminAnalytics } from '@/contexts/AdminAnalyticsContext';
 import {
   Users,
   Coins,
@@ -19,11 +20,7 @@ import {
   Gauge,
   Server,
 } from 'lucide-react';
-import { subDays } from 'date-fns';
-
-// IPs et user_ids à exclure des statistiques
-const EXCLUDED_IPS = ['5.49.156.158'];
-const ADMIN_EMAIL = 'adriendemerville@gmail.com';
+import { } from 'date-fns';
 
 // Coûts estimés par million de tokens (input/output) en USD
 const MODEL_PRICING: Record<string, { input: number; output: number; label: string }> = {
@@ -71,6 +68,7 @@ interface TokenUsageStats {
 }
 
 export function FinancesDashboard() {
+  const { allEvents: sharedAllEvents, filteredEvents: sharedFilteredEvents, adminUserIds: sharedAdminUserIds, isLoading: sharedLoading, fetchEvents } = useAdminAnalytics();
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [businessMetrics, setBusinessMetrics] = useState({ payingSubscribers: 0, creditsPurchased: 0, mrr: 0 });
@@ -86,40 +84,19 @@ export function FinancesDashboard() {
     flyPlaywrightCalls: 0, flyEstimatedCost: 0, byApiService: {},
   });
 
-  const fetchData = useCallback(async (silent = false) => {
-    if (silent) setIsRefreshing(true); else setIsLoading(true);
+  // Trigger shared fetch on mount
+  useEffect(() => { fetchEvents(); }, []);
+
+  // Process when shared data arrives
+  useEffect(() => {
+    if (sharedAllEvents.length === 0 && sharedLoading) return;
+    processData(sharedAllEvents, sharedFilteredEvents);
+  }, [sharedAllEvents, sharedLoading]);
+
+  const processData = useCallback(async (allEvents: typeof sharedAllEvents, events: typeof sharedFilteredEvents) => {
+    setIsLoading(true);
 
     try {
-      const { data: adminProfiles } = await supabase
-        .from('profiles').select('user_id').eq('email', ADMIN_EMAIL);
-      const adminUserIds = adminProfiles?.map(p => p.user_id) || [];
-
-      const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-
-      // Paginated events fetch
-      let allEvents: Array<{ event_type: string; url: string | null; created_at: string; user_id: string | null; event_data: Record<string, unknown> | null }> = [];
-      const PAGE_SIZE = 1000;
-      let currentPage = 0;
-      while (true) {
-        const { data: rawPage, error: pageError } = await supabase
-          .from('analytics_events')
-          .select('event_type, url, created_at, user_id, event_data')
-          .gte('created_at', thirtyDaysAgo)
-          .order('created_at', { ascending: false })
-          .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
-        if (pageError) throw pageError;
-        if (!rawPage || rawPage.length === 0) break;
-        allEvents = allEvents.concat(rawPage as typeof allEvents);
-        if (rawPage.length < PAGE_SIZE) break;
-        currentPage++;
-      }
-
-      const events = allEvents.filter(e => {
-        if (e.user_id && adminUserIds.includes(e.user_id)) return false;
-        const eventData = e.event_data as Record<string, unknown> | null;
-        if (eventData?.ip && EXCLUDED_IPS.includes(eventData.ip as string)) return false;
-        return true;
-      });
 
       // Token usage
       const tokenEvents = allEvents.filter(e => e.event_type === 'ai_token_usage');
@@ -239,7 +216,7 @@ export function FinancesDashboard() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  // removed old fetchData effect — now driven by shared context
 
   if (isLoading) {
     return (
@@ -272,7 +249,7 @@ export function FinancesDashboard() {
           <h2 className="text-lg font-semibold">Finances & Coûts</h2>
           <p className="text-xs text-muted-foreground">Indicateurs financiers et consommation API (30 derniers jours)</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => fetchData(true)} disabled={isRefreshing} className="gap-1.5">
+        <Button variant="outline" size="sm" onClick={() => fetchEvents(true)} disabled={isRefreshing} className="gap-1.5">
           <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           Actualiser
         </Button>

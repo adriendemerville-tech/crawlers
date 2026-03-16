@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
 import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
@@ -225,14 +226,13 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
 
   return (
     <AdminProvider value={{ readOnly, canSeeDocs: showDocs, canSeeAlgos: showAlgos, docsHiddenForViewers, isAuditor }}>
+      <AdminAnalyticsProvider>
       <div className="space-y-3">
         {readOnly && <ReadOnlyBanner />}
-        {/* toggles moved to Scripts tab */}
         <BrowserlessAlert />
         <ApiGatewayFallbackAlert />
 
         <div className="flex gap-4 min-h-[600px]">
-          {/* ─── Sidebar navigation ─── */}
           <nav className="w-48 shrink-0 space-y-4">
             {navGroups.map((group) => (
               <div key={group.label}>
@@ -263,7 +263,6 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
               </div>
             ))}
 
-            {/* Creator-only: doc visibility toggle */}
             {!readOnly && (
               <div className="pt-2 border-t border-border/40">
                 <button
@@ -282,12 +281,12 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
             )}
           </nav>
 
-          {/* ─── Main content ─── */}
           <div className="flex-1 min-w-0">
             {renderContent()}
           </div>
         </div>
       </div>
+      </AdminAnalyticsProvider>
     </AdminProvider>
   );
 }
