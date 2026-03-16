@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     }
 
     // #1: Check audit_cache first (24h TTL for SERP data)
-    const ck = cacheKey('fetch-serp-kpis', { domain })
+    const ck = cacheKey('fetch-serp-kpis', { domain, location_code: effectiveLocationCode })
     const cached = await getCached(ck)
     if (cached) {
       console.log(`[fetch-serp-kpis] Cache hit for ${domain}`)
