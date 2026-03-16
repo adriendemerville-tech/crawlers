@@ -13,6 +13,7 @@ import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
 import { CocoonRecommendationHistory } from "@/components/Cocoon/CocoonRecommendationHistory";
 import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
+import { CocoonArchitectModal } from "@/components/Cocoon/CocoonArchitectModal";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
 import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Sparkles, Layers, ClipboardList } from "lucide-react";
@@ -170,6 +171,8 @@ export default function Cocoon() {
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [showPrereqModal, setShowPrereqModal] = useState(false);
   const [showTaskPlan, setShowTaskPlan] = useState(false);
+  const [showArchitect, setShowArchitect] = useState(false);
+  const [architectRecoText, setArchitectRecoText] = useState<string | undefined>();
   const [prereqStatus, setPrereqStatus] = useState<{ hasCrawl: boolean; hasAudit: boolean }>({ hasCrawl: true, hasAudit: true });
   const [truncationInfo, setTruncationInfo] = useState<{ truncated: boolean; total: number; used: number } | null>(null);
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
@@ -761,9 +764,8 @@ export default function Cocoon() {
                   setShowTaskPlan(true);
                 }}
                 onGenerateFix={(recoText) => {
-                  const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
-                  const domain = selectedSite?.domain || '';
-                  navigate(`/audit-expert?url=${encodeURIComponent(domain)}&from=cocoon`);
+                  setArchitectRecoText(recoText);
+                  setShowArchitect(true);
                 }}
               />
             </div>
@@ -776,6 +778,16 @@ export default function Cocoon() {
             onOpenChange={setShowTaskPlan}
             trackedSiteId={selectedSiteId}
             domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+          />
+        )}
+
+        {hasAccess && selectedSiteId && (
+          <CocoonArchitectModal
+            open={showArchitect}
+            onOpenChange={setShowArchitect}
+            domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+            trackedSiteId={selectedSiteId}
+            recommendationText={architectRecoText}
           />
         )}
 
