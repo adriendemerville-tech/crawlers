@@ -340,17 +340,17 @@ function getAuthHeader(): string {
 }
 
 // Well-known location codes to avoid downloading the full list
-const KNOWN_LOCATIONS: Record<string, { code: number; name: string }> = {
-  'france': { code: 2250, name: 'France' },
-  'belgium': { code: 2056, name: 'Belgium' },
-  'switzerland': { code: 2756, name: 'Switzerland' },
-  'canada': { code: 2124, name: 'Canada' },
-  'luxembourg': { code: 2442, name: 'Luxembourg' },
-  'germany': { code: 2276, name: 'Germany' },
-  'spain': { code: 2724, name: 'Spain' },
-  'italy': { code: 2380, name: 'Italy' },
-  'united kingdom': { code: 2826, name: 'United Kingdom' },
-  'united states': { code: 2840, name: 'United States' },
+const KNOWN_LOCATIONS: Record<string, { code: number; name: string; lang: string; seDomain: string }> = {
+  'france': { code: 2250, name: 'France', lang: 'fr', seDomain: 'google.fr' },
+  'belgium': { code: 2056, name: 'Belgium', lang: 'fr', seDomain: 'google.be' },
+  'switzerland': { code: 2756, name: 'Switzerland', lang: 'fr', seDomain: 'google.ch' },
+  'canada': { code: 2124, name: 'Canada', lang: 'fr', seDomain: 'google.ca' },
+  'luxembourg': { code: 2442, name: 'Luxembourg', lang: 'fr', seDomain: 'google.lu' },
+  'germany': { code: 2276, name: 'Germany', lang: 'de', seDomain: 'google.de' },
+  'spain': { code: 2724, name: 'Spain', lang: 'es', seDomain: 'google.es' },
+  'italy': { code: 2380, name: 'Italy', lang: 'it', seDomain: 'google.it' },
+  'united kingdom': { code: 2826, name: 'United Kingdom', lang: 'en', seDomain: 'google.co.uk' },
+  'united states': { code: 2840, name: 'United States', lang: 'en', seDomain: 'google.com' },
 };
 
 /**
