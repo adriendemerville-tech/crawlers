@@ -594,7 +594,7 @@ export default function Cocoon() {
               />
             ) : (
               <CocoonForceGraph
-                nodes={nodes}
+                nodes={filteredNodes}
                 selectedNodeId={selectedNode?.id || null}
                 onNodeSelect={(node) => {
                   if (nodePickerCallback && node) {
