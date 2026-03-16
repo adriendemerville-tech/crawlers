@@ -713,6 +713,7 @@ function SceneContent({
   onNodeHover: (id: string) => void;
   onNodeUnhover: () => void;
   rawNodes: SemanticNode[];
+  isDayMode: boolean;
 }) {
   const hoveredNode = hoveredNodeId ? nodeMap.get(hoveredNodeId) : null;
 
