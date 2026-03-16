@@ -447,6 +447,21 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       // Save after each exchange
       setMessages(prev => {
         saveHistory(prev);
+        // Save recommendation to database
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg?.role === 'assistant' && lastMsg.content.length > 20 && trackedSiteId && domain && user) {
+          const summary = lastMsg.content.replace(/[#*_`]/g, '').slice(0, 100);
+          supabase.from('cocoon_recommendations').insert({
+            tracked_site_id: trackedSiteId,
+            user_id: user.id,
+            domain,
+            recommendation_text: lastMsg.content,
+            summary,
+            source_context: { language, nodes_count: nodes.length },
+          }).then(({ error }) => {
+            if (error) console.error('[CocoonAIChat] Failed to save recommendation:', error);
+          });
+        }
         return prev;
       });
     }
