@@ -104,6 +104,7 @@ interface CocoonForceGraphProps {
   isXRayMode: boolean;
   isPickingMode?: boolean;
   particlesEnabled?: boolean;
+  isDayMode?: boolean;
 }
 
 export function CocoonForceGraph({
