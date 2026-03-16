@@ -16,6 +16,7 @@ import {
   ExternalLink,
   RefreshCw,
   Brain,
+  Swords,
   ScanSearch,
 } from 'lucide-react';
 import { 
