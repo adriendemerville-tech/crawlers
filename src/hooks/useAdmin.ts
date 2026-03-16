@@ -66,6 +66,8 @@ export function useAdmin() {
     isReadOnly, 
     canSeeDocs, 
     canSeeAlgos, 
+    canSeeFinances,
+    canSeeUsers,
     loading 
   };
 }
