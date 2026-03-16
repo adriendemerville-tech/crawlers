@@ -1684,7 +1684,7 @@ function formatToolsDataToMarkdown(toolsData: ToolsData): string {
   return lines.join('\n');
 }
 
-function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo, rankingOverview?: RankingOverview | null, contentMode: boolean = false): string {
+function buildUserPrompt(url: string, domain: string, toolsData: ToolsData, marketData: MarketData | null, pageContentContext: string = '', eeatSignals?: EEATSignals, founderInfo?: FounderInfo, rankingOverview?: RankingOverview | null, contentMode: boolean = false, facebookPageInfo?: FacebookPageInfo): string {
   let marketSection = '';
   
   if (marketData) {
