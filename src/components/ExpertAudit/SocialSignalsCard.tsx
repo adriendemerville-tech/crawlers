@@ -157,19 +157,6 @@ export function SocialSignalsCard({ signals }: SocialSignalsCardProps) {
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Autorité Fondateur</span>
-                    <Badge variant="outline" className={
-                      signals.thought_leadership.founder_authority === 'high' ? 'text-success border-success/30' :
-                      signals.thought_leadership.founder_authority === 'moderate' ? 'text-warning border-warning/30' :
-                      'text-muted-foreground'
-                    }>
-                      {signals.thought_leadership.founder_authority === 'high' && '🟢 Haute'}
-                      {signals.thought_leadership.founder_authority === 'moderate' && '🟡 Modérée'}
-                      {signals.thought_leadership.founder_authority === 'low' && '🔴 Faible'}
-                      {signals.thought_leadership.founder_authority === 'unknown' && '❓ Inconnue'}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Score E-E-A-T</span>
                     <span className="text-lg font-bold text-foreground">
                       {signals.thought_leadership.eeat_score}<span className="text-sm text-muted-foreground">/10</span>
