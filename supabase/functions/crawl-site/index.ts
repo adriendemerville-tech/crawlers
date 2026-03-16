@@ -140,8 +140,7 @@ Deno.serve(async (req) => {
 
     // Credit cost: only for pages beyond fair use (or all pages for free users)
     const creditCost = isUnlimited ? 0 : (
-      paidPages <= 0 ? 0 :
-      paidPages <= 50 ? 5 : paidPages <= 100 ? 10 : paidPages <= 200 ? 15 : 30
+      paidPages <= 0 ? 0 : 1
     );
 
     if (!isUnlimited && creditCost > 0) {
