@@ -638,11 +638,12 @@ export function MyTracking() {
         rawAccumulator.crawlersData = crawlersData?.data || crawlersData;
       }).catch(console.error),
 
-      // 2. PageSpeed → Performance
-      supabase.functions.invoke('check-pagespeed', { body: { url, lang: language } }).then((res) => {
+      // 2. PageSpeed → Performance (mobile + desktop)
+      supabase.functions.invoke('check-pagespeed', { body: { url, lang: language, dual: true } }).then((res) => {
         const psiData = res.data;
-        currentPerformance = psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
+        currentPerformance = psiData?.data?.mobile?.scores?.performance ?? psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
         rawAccumulator.psiData = psiData?.data;
+        rawAccumulator.performanceDesktop = psiData?.data?.desktop?.scores?.performance ?? null;
       }).catch(console.error),
 
       // 3. GEO → GEO score
