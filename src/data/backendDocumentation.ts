@@ -270,7 +270,14 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`create-customer-portal\` | ✅ | Portail client Stripe |
 | \`stripe-webhook\` | ❌ | Webhook Stripe (signature vérifié) |
 | \`apply-referral\` | ✅ | Applique un code de parrainage |
+| \`apply-affiliate\` | ✅ | Applique un code affilié |
+| \`apply-retention-offer\` | ✅ | Applique une offre de rétention |
 | \`manage-team\` | ✅ | Gestion équipe agence |
+| \`check-email-exists\` | ✅ | Vérifie l'existence d'un email |
+| \`send-password-reset\` | ✅ | Envoie un lien de réinitialisation |
+| \`send-verification-code\` | ✅ | Envoie un code de vérification email |
+| \`verify-email-code\` | ✅ | Vérifie un code email |
+| \`admin-update-plan\` | ✅ | MAJ plan utilisateur (admin) |
 
 ## Partage & Export
 
