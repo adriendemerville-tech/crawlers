@@ -303,7 +303,54 @@ export function FunctionsManagement() {
         ))}
       </div>
 
-      {/* Code viewer dialog */}
+      {/* ─── Prompt Matrix BETA ─── */}
+      {!isViewer && (
+        <div className="border border-border/40 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setShowPromptMatrix(!showPromptMatrix)}
+            className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              {showPromptMatrix ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+              <FileSpreadsheet className="h-3.5 w-3.5 text-primary" />
+              <span>Matrice de Prompts</span>
+              <Badge variant="secondary" className="text-[9px] px-1.5 py-0">BETA</Badge>
+            </div>
+          </button>
+          {showPromptMatrix && (
+            <div className="border-t border-border/30 p-4 space-y-3">
+              {trackedSites.length > 1 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Site :</span>
+                  <select
+                    value={matrixSiteId}
+                    onChange={(e) => {
+                      const site = trackedSites.find(s => s.id === e.target.value);
+                      if (site) { setMatrixSiteId(site.id); setMatrixDomain(site.domain); }
+                    }}
+                    className="text-xs border border-border rounded px-2 py-1 bg-background text-foreground"
+                  >
+                    {trackedSites.map(s => (
+                      <option key={s.id} value={s.id}>{s.domain}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {matrixSiteId && user && (
+                <PromptMatrixCard
+                  trackedSiteId={matrixSiteId}
+                  userId={user.id}
+                  domain={matrixDomain}
+                />
+              )}
+              {!matrixSiteId && (
+                <p className="text-xs text-muted-foreground">Aucun site suivi trouvé.</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
