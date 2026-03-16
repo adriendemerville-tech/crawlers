@@ -552,13 +552,15 @@ export default function Cocoon() {
 
             {/* Controls */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <CocoonFilterSelector
-                nodes={nodes}
-                filters={cocoonFilters}
-                onFiltersChange={setCocoonFilters}
-                language={language}
-                theme={cocoonTheme}
-              />
+              {new Set(nodes.map((n: any) => n.page_type || 'unknown')).size > 1 && (
+                <CocoonFilterSelector
+                  nodes={nodes}
+                  filters={cocoonFilters}
+                  onFiltersChange={setCocoonFilters}
+                  language={language}
+                  theme={cocoonTheme}
+                />
+              )}
               <Button
                 variant="outline"
                 size="sm"
