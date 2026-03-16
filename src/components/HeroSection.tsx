@@ -368,7 +368,8 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
           {language === 'es' ? 'Audit Expert: 168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? 'Expert Audit: 168 SEO/GEO criteria verified, cross-referenced and contextualized.' : 'Audit Expert : 168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
 
-        {/* Expert Audit + Compared Audit Buttons */}
+        {/* Expert Audit + Compared Audit Buttons — hidden in leadmagnet mode */}
+        {!hideLeadmagnet && (
         <div className="mt-4 flex justify-center gap-3" data-tour="audit-expert">
           <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}` : '/audit-expert'}>
             <Button
@@ -383,6 +384,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
             </Button>
           </Link>
         </div>
+        )}
       </div>
     </section>
   );
