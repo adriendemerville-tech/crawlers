@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { MyScriptRulesHistory } from './MyScriptRulesHistory';
+import { ScriptDebugTool } from './ScriptDebugTool';
 
 interface CorrectiveCodeFix {
   id: string;
