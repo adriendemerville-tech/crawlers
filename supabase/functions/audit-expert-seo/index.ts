@@ -1606,15 +1606,21 @@ Deno.serve(async (req) => {
     const htmlAnalysis = analyzeHtmlWithDOM(smartFetchResult.html, normalizedUrl);
     
     // Gestion gracieuse si PageSpeed a échoué (psiData peut être null)
+    const psiAvailable = psiData?.lighthouseResult?.categories?.performance != null;
     const categories = psiData?.lighthouseResult?.categories || {};
     const audits = psiData?.lighthouseResult?.audits || {};
     
     // Calculate scores
-    const psiPerformance = categories.performance?.score || 0;
-    const psiSeo = categories.seo?.score || 0;
+    // When PSI is unavailable, give a neutral score (50% of max) instead of 0 to avoid unfair penalization
+    const psiPerformance = psiAvailable ? (categories.performance?.score || 0) : null;
+    const psiSeo = psiAvailable ? (categories.seo?.score || 0) : null;
     
-    const performanceScore = Math.round(psiPerformance * 40);
-    const technicalScore = Math.round(psiSeo * 30) + 20;
+    const performanceScore = psiPerformance !== null ? Math.round(psiPerformance * 40) : 20; // 50% fallback
+    const technicalScore = (psiSeo !== null ? Math.round(psiSeo * 30) : 15) + 20; // 50% of PSI SEO part as fallback
+    
+    if (!psiAvailable) {
+      console.warn('[Audit-Expert-SEO] ⚠️ PSI indisponible — scores Performance et Technique estimés (fallback 50%)');
+    }
     
     let semanticScore = 0;
     if (htmlAnalysis.hasTitle && htmlAnalysis.titleLength <= 70) semanticScore += 10;
@@ -1654,16 +1660,18 @@ Deno.serve(async (req) => {
       performance: {
         score: performanceScore,
         maxScore: 40,
-        psiPerformance: Math.round(psiPerformance * 100),
-        lcp: audits['largest-contentful-paint']?.numericValue || 0,
-        fcp: audits['first-contentful-paint']?.numericValue || 0,
-        cls: audits['cumulative-layout-shift']?.numericValue || 0,
-        tbt: audits['total-blocking-time']?.numericValue || 0,
+        psiPerformance: psiPerformance !== null ? Math.round(psiPerformance * 100) : null,
+        psiUnavailable: !psiAvailable,
+        lcp: audits['largest-contentful-paint']?.numericValue || null,
+        fcp: audits['first-contentful-paint']?.numericValue || null,
+        cls: audits['cumulative-layout-shift']?.numericValue || null,
+        tbt: audits['total-blocking-time']?.numericValue || null,
       },
       technical: {
         score: technicalScore + brokenLinksBonus,
         maxScore: 50,
-        psiSeo: Math.round(psiSeo * 100),
+        psiSeo: psiSeo !== null ? Math.round(psiSeo * 100) : null,
+        psiUnavailable: !psiAvailable,
         httpStatus: 200,
         isHttps: htmlAnalysis.isHttps,
         brokenLinksCount: brokenLinksAnalysis.broken.length,
