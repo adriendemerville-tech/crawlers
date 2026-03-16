@@ -231,9 +231,10 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`expert-audit\` | ✅ | 1 | Audit expert complet (score /200) |
 | \`audit-expert-seo\` | ✅ | 2 | Audit SEO technique approfondi |
 | \`audit-strategique-ia\` | ✅ | 3 | Audit stratégique IA (Gemini) |
-| \`audit-compare\` | ✅ | 2 | Comparaison avant/après |
+| \`audit-compare\` | ✅ | 4 | Analyse concurrentielle face-à-face |
 | \`audit-local-seo\` | ✅ | 1 | Audit SEO local |
 | \`diagnose-hallucination\` | ✅ | 1 | Diagnostic d'hallucination LLM |
+| \`check-llm-depth\` | ✅ | 0 | Profondeur de visibilité LLM multi-itération |
 
 ## Crawl Engine
 
