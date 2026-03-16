@@ -79,18 +79,24 @@ export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
       {/* Category Cards Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <CategoryCard icon={<Zap className="h-5 w-5" />} title="Performance" score={result.scores.performance.score} maxScore={result.scores.performance.maxScore} variant="performance">
-          <MetricRow label="Score PSI" value={`${result.scores.performance.psiPerformance}%`} status={result.scores.performance.psiPerformance >= 90 ? 'good' : result.scores.performance.psiPerformance >= 50 ? 'warning' : 'bad'} />
-          <MetricRow label="LCP" value={formatMs(result.scores.performance.lcp)} status={result.scores.performance.lcp <= 2500 ? 'good' : 'warning'} />
-          <MetricRow label="CLS" value={result.scores.performance.cls.toFixed(2)} status={result.scores.performance.cls <= 0.1 ? 'good' : 'warning'} />
-          <MetricRow label="TBT" value={formatMs(result.scores.performance.tbt)} status={result.scores.performance.tbt <= 200 ? 'good' : 'warning'} />
+          <MetricRow label="Score PSI" value={result.scores.performance.psiPerformance != null ? `${result.scores.performance.psiPerformance}%` : '~estimé'} status={result.scores.performance.psiPerformance == null ? 'warning' : result.scores.performance.psiPerformance >= 90 ? 'good' : result.scores.performance.psiPerformance >= 50 ? 'warning' : 'bad'} />
+          <MetricRow label="LCP" value={result.scores.performance.lcp != null ? formatMs(result.scores.performance.lcp) : '—'} status={result.scores.performance.lcp == null ? 'warning' : result.scores.performance.lcp <= 2500 ? 'good' : 'warning'} />
+          <MetricRow label="CLS" value={result.scores.performance.cls != null ? result.scores.performance.cls.toFixed(2) : '—'} status={result.scores.performance.cls == null ? 'warning' : result.scores.performance.cls <= 0.1 ? 'good' : 'warning'} />
+          <MetricRow label="TBT" value={result.scores.performance.tbt != null ? formatMs(result.scores.performance.tbt) : '—'} status={result.scores.performance.tbt == null ? 'warning' : result.scores.performance.tbt <= 200 ? 'good' : 'warning'} />
+          {result.scores.performance.psiUnavailable && (
+            <p className="text-[10px] text-muted-foreground mt-1 italic">⚠️ PageSpeed indisponible — score estimé</p>
+          )}
         </CategoryCard>
 
         <CategoryCard icon={<Settings2 className="h-5 w-5" />} title="Socle Technique" score={result.scores.technical.score} maxScore={result.scores.technical.maxScore} variant="technical">
-          <MetricRow label="Score SEO PSI" value={`${result.scores.technical.psiSeo}%`} status={result.scores.technical.psiSeo >= 90 ? 'good' : result.scores.technical.psiSeo >= 70 ? 'warning' : 'bad'} />
+          <MetricRow label="Score SEO PSI" value={result.scores.technical.psiSeo != null ? `${result.scores.technical.psiSeo}%` : '~estimé'} status={result.scores.technical.psiSeo == null ? 'warning' : result.scores.technical.psiSeo >= 90 ? 'good' : result.scores.technical.psiSeo >= 70 ? 'warning' : 'bad'} />
           <MetricRow label="Status HTTP" value={result.scores.technical.httpStatus} status="good" />
           <MetricRow label="HTTPS" value={result.scores.technical.isHttps} />
           {result.scores.technical.brokenLinksCount !== undefined && (
             <MetricRow label="Liens cassés" value={`${result.scores.technical.brokenLinksCount}/${result.scores.technical.brokenLinksChecked || 0}`} status={result.scores.technical.brokenLinksCount === 0 ? 'good' : result.scores.technical.brokenLinksCount <= 2 ? 'warning' : 'bad'} />
+          )}
+          {result.scores.technical.psiUnavailable && (
+            <p className="text-[10px] text-muted-foreground mt-1 italic">⚠️ PageSpeed indisponible — score estimé</p>
           )}
         </CategoryCard>
 
