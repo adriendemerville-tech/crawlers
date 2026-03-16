@@ -764,9 +764,8 @@ export default function Cocoon() {
                   setShowTaskPlan(true);
                 }}
                 onGenerateFix={(recoText) => {
-                  const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
-                  const domain = selectedSite?.domain || '';
-                  navigate(`/audit-expert?url=${encodeURIComponent(domain)}&from=cocoon`);
+                  setArchitectRecoText(recoText);
+                  setShowArchitect(true);
                 }}
               />
             </div>
