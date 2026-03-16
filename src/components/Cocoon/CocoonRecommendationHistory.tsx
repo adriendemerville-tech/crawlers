@@ -26,7 +26,7 @@ interface Props {
   onGenerateFix?: (recoText: string) => void;
 }
 
-export function CocoonRecommendationHistory({ trackedSiteId, domain }: Props) {
+export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTaskPlan, onGenerateFix }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [items, setItems] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
