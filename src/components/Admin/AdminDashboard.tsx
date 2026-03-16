@@ -161,6 +161,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       label: t.monitoring,
       items: [
         { id: 'analytics', label: t.analytics, icon: BarChart3, group: 'monitoring' },
+        { id: 'finances', label: t.finances, icon: Wallet, group: 'monitoring' },
         { id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring' },
         { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring' },
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
