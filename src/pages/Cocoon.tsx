@@ -516,7 +516,7 @@ export default function Cocoon() {
         </div>
       )}
 
-      <div className={`h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden ${isDayMode ? 'bg-[#f5f5f0]' : 'bg-[#0f0a1e]'}`}>
+      <div className={`h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden bg-[#0f0a1e]`}>
 
         {/* Top Bar */}
         {!isFullscreen && (
