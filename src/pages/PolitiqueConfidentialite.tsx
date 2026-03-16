@@ -169,69 +169,73 @@ const PolitiqueConfidentialite = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '5. Conservation des données', '5. Data Retention', '5. Conservación de los datos')}
+                {t3(language, '6. Conservation des données', '6. Data Retention', '6. Conservación de los datos')}
               </h2>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                <li><strong>{t3(language, 'Cache d\'audit :', 'Audit cache:', 'Caché de auditoría:')}</strong> {t3(language, '24 heures (suppression automatique)', '24 hours (automatic deletion)', '24 horas (eliminación automática)')}</li>
                 <li><strong>{t3(language, 'Données de compte :', 'Account data:', 'Datos de cuenta:')}</strong> {t3(language, 'conservées pendant la durée du compte, puis 3 ans après suppression pour obligations légales', 'retained for the duration of the account, then 3 years after deletion for legal obligations', 'conservados durante la vigencia de la cuenta, luego 3 años después de la eliminación por obligaciones legales')}</li>
-                <li><strong>{t3(language, 'Données de paiement :', 'Payment data:', 'Datos de pago:')}</strong> {t3(language, 'conservées 10 ans conformément aux obligations comptables', 'retained 10 years in accordance with accounting obligations', 'conservados 10 años de acuerdo con las obligaciones contables')}</li>
-                <li><strong>{t3(language, 'Rapports générés :', 'Generated reports:', 'Informes generados:')}</strong> {t3(language, 'conservés tant que le compte est actif', 'retained as long as the account is active', 'conservados mientras la cuenta esté activa')}</li>
-                <li><strong>{t3(language, 'Données analytiques :', 'Analytical data:', 'Datos analíticos:')}</strong> {t3(language, 'anonymisées et conservées maximum 13 mois', 'anonymized and retained maximum 13 months', 'anonimizados y conservados un máximo de 13 meses')}</li>
+                <li><strong>{t3(language, 'Données de paiement :', 'Payment data:', 'Datos de pago:')}</strong> {t3(language, 'conservées 10 ans conformément aux obligations comptables (art. L123-22 du Code de commerce)', 'retained 10 years in accordance with accounting obligations (art. L123-22 French Commercial Code)', 'conservados 10 años de acuerdo con las obligaciones contables (art. L123-22 del Código de Comercio)')}</li>
+                <li><strong>{t3(language, 'Rapports et graphes sémantiques :', 'Reports and semantic graphs:', 'Informes y grafos semánticos:')}</strong> {t3(language, 'conservés tant que le compte est actif', 'retained as long as the account is active', 'conservados mientras la cuenta esté activa')}</li>
+                <li><strong>{t3(language, 'Données analytiques :', 'Analytical data:', 'Datos analíticos:')}</strong> {t3(language, 'anonymisées et conservées maximum 13 mois (recommandation CNIL)', 'anonymized and retained maximum 13 months (CNIL recommendation)', 'anonimizados y conservados un máximo de 13 meses (recomendación CNIL)')}</li>
+                <li><strong>{t3(language, 'Conversations LLM depth :', 'LLM depth conversations:', 'Conversaciones LLM depth:')}</strong> {t3(language, 'expiration automatique après 24 heures', 'automatic expiration after 24 hours', 'expiración automática después de 24 horas')}</li>
               </ul>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '6. Partage des données', '6. Data Sharing', '6. Compartición de datos')}
+                {t3(language, '7. Partage des données', '7. Data Sharing', '7. Compartición de datos')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'Nous ne vendons, n\'échangeons ni ne louons vos données personnelles à des tiers. Les données sont partagées uniquement avec nos sous-traitants techniques listés ci-dessus, et sur réquisition judiciaire le cas échéant.',
-                  'We do not sell, trade or rent your personal data to third parties. Data is shared only with our technical subcontractors listed above, and upon judicial request if applicable.',
-                  'No vendemos, intercambiamos ni alquilamos sus datos personales a terceros. Los datos se comparten únicamente con nuestros subcontratistas técnicos listados anteriormente, y por requisición judicial en su caso.'
+                  'Nous ne vendons, n\'échangeons ni ne louons vos données personnelles à des tiers. Les données sont partagées uniquement avec nos sous-traitants techniques listés ci-dessus, dans le strict cadre de l\'exécution du service, et sur réquisition judiciaire le cas échéant.',
+                  'We do not sell, trade or rent your personal data to third parties. Data is shared only with our technical subcontractors listed above, strictly within the framework of service execution, and upon judicial request if applicable.',
+                  'No vendemos, intercambiamos ni alquilamos sus datos personales a terceros. Los datos se comparten únicamente con nuestros subcontratistas técnicos listados anteriormente, en el estricto marco de la ejecución del servicio, y por requisición judicial en su caso.'
                 )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '7. Sécurité', '7. Security', '7. Seguridad')}
+                {t3(language, '8. Sécurité', '8. Security', '8. Seguridad')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles appropriées : chiffrement HTTPS, authentification sécurisée, accès restreint aux données. Les paiements sont sécurisés par Stripe, certifié PCI-DSS niveau 1.',
-                  'We implement appropriate technical and organizational security measures: HTTPS encryption, secure authentication, restricted data access. Payments are secured by Stripe, PCI-DSS Level 1 certified.',
-                  'Implementamos medidas de seguridad técnicas y organizativas apropiadas: cifrado HTTPS, autenticación segura, acceso restringido a los datos. Los pagos están asegurados por Stripe, certificado PCI-DSS nivel 1.'
+                  'Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles appropriées : chiffrement HTTPS, authentification sécurisée, Row-Level Security (RLS) sur toutes les tables de données, verrous SQL anti-tamper sur les champs sensibles (crédits, plan, abonnement), sandboxing sémantique des scripts injectés. Les paiements sont sécurisés par Stripe, certifié PCI-DSS niveau 1.',
+                  'We implement appropriate technical and organizational security measures: HTTPS encryption, secure authentication, Row-Level Security (RLS) on all data tables, SQL anti-tamper locks on sensitive fields (credits, plan, subscription), semantic sandboxing of injected scripts. Payments are secured by Stripe, PCI-DSS Level 1 certified.',
+                  'Implementamos medidas de seguridad técnicas y organizativas apropiadas: cifrado HTTPS, autenticación segura, Row-Level Security (RLS) en todas las tablas de datos, bloqueos SQL anti-manipulación en campos sensibles (créditos, plan, suscripción), sandboxing semántico de los scripts inyectados. Los pagos están asegurados por Stripe, certificado PCI-DSS nivel 1.'
                 )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '8. Vos droits', '8. Your Rights', '8. Sus derechos')}
+                {t3(language, '9. Vos droits', '9. Your Rights', '9. Sus derechos')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                {t3(language, 'Conformément au RGPD, vous disposez des droits suivants :', 'In accordance with the GDPR, you have the following rights:', 'De conformidad con el RGPD, usted dispone de los siguientes derechos:')}
+                {t3(language, 'Conformément au RGPD (Règlement UE 2016/679), vous disposez des droits suivants :', 'In accordance with the GDPR (EU Regulation 2016/679), you have the following rights:', 'De conformidad con el RGPD (Reglamento UE 2016/679), usted dispone de los siguientes derechos:')}
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                <li>{t3(language, 'Droit d\'accès à vos données personnelles', 'Right of access to your personal data', 'Derecho de acceso a sus datos personales')}</li>
-                <li>{t3(language, 'Droit de rectification', 'Right to rectification', 'Derecho de rectificación')}</li>
-                <li>{t3(language, 'Droit à l\'effacement ("droit à l\'oubli")', 'Right to erasure ("right to be forgotten")', 'Derecho de supresión ("derecho al olvido")')}</li>
-                <li>{t3(language, 'Droit à la portabilité des données', 'Right to data portability', 'Derecho a la portabilidad de los datos')}</li>
-                <li>{t3(language, 'Droit d\'opposition', 'Right to object', 'Derecho de oposición')}</li>
-                <li>{t3(language, 'Droit de retirer votre consentement', 'Right to withdraw consent', 'Derecho a retirar su consentimiento')}</li>
+                <li>{t3(language, 'Droit d\'accès à vos données personnelles (art. 15)', 'Right of access to your personal data (art. 15)', 'Derecho de acceso a sus datos personales (art. 15)')}</li>
+                <li>{t3(language, 'Droit de rectification (art. 16)', 'Right to rectification (art. 16)', 'Derecho de rectificación (art. 16)')}</li>
+                <li>{t3(language, 'Droit à l\'effacement — "droit à l\'oubli" (art. 17)', 'Right to erasure — "right to be forgotten" (art. 17)', 'Derecho de supresión — "derecho al olvido" (art. 17)')}</li>
+                <li>{t3(language, 'Droit à la limitation du traitement (art. 18)', 'Right to restriction of processing (art. 18)', 'Derecho a la limitación del tratamiento (art. 18)')}</li>
+                <li>{t3(language, 'Droit à la portabilité des données (art. 20)', 'Right to data portability (art. 20)', 'Derecho a la portabilidad de los datos (art. 20)')}</li>
+                <li>{t3(language, 'Droit d\'opposition (art. 21)', 'Right to object (art. 21)', 'Derecho de oposición (art. 21)')}</li>
+                <li>{t3(language, 'Droit de retirer votre consentement à tout moment', 'Right to withdraw consent at any time', 'Derecho a retirar su consentimiento en cualquier momento')}</li>
+                <li>{t3(language, 'Droit d\'introduire une réclamation auprès de la CNIL (cnil.fr)', 'Right to lodge a complaint with the CNIL (cnil.fr)', 'Derecho a presentar una reclamación ante la CNIL (cnil.fr)')}</li>
               </ul>
               <p className="text-muted-foreground leading-relaxed mt-4">
                 {t3(language,
-                  'Pour exercer ces droits, contactez-nous à : contact@crawlers.fr. Nous répondrons sous 30 jours.',
-                  'To exercise these rights, contact us at: contact@crawlers.fr. We will respond within 30 days.',
-                  'Para ejercer estos derechos, contáctenos en: contact@crawlers.fr. Responderemos en un plazo de 30 días.'
+                  'Pour exercer ces droits, contactez-nous à : contact@crawlers.fr. Nous répondrons sous 30 jours conformément au RGPD.',
+                  'To exercise these rights, contact us at: contact@crawlers.fr. We will respond within 30 days in accordance with the GDPR.',
+                  'Para ejercer estos derechos, contáctenos en: contact@crawlers.fr. Responderemos en un plazo de 30 días conforme al RGPD.'
                 )}
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '9. Contact', '9. Contact', '9. Contacto')}
+                {t3(language, '10. Contact & Responsable du traitement', '10. Contact & Data Controller', '10. Contacto & Responsable del tratamiento')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
@@ -240,16 +244,23 @@ const PolitiqueConfidentialite = () => {
                   'Para cualquier pregunta relativa a esta política de privacidad o a sus datos personales:'
                 )}
               </p>
-              <div className="bg-muted/50 rounded-lg p-6 mt-4">
+              <div className="bg-muted/50 rounded-lg p-6 mt-4 space-y-2">
+                <p className="text-muted-foreground">
+                  <strong className="text-foreground">{t3(language, 'Responsable du traitement :', 'Data Controller:', 'Responsable del tratamiento:')}</strong> Adrien de Volontat
+                </p>
                 <p className="text-muted-foreground">
                   <strong className="text-foreground">Email :</strong>{' '}
                   <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a>
+                </p>
+                <p className="text-muted-foreground">
+                  <strong className="text-foreground">{t3(language, 'Autorité de contrôle :', 'Supervisory authority:', 'Autoridad de control:')}</strong>{' '}
+                  <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">CNIL — cnil.fr</a>
                 </p>
               </div>
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {t3(language, 'Dernière mise à jour : 31 janvier 2026', 'Last updated: January 31, 2026', 'Última actualización: 31 de enero de 2026')}
+              {t3(language, 'Dernière mise à jour : 16 mars 2026', 'Last updated: March 16, 2026', 'Última actualización: 16 de marzo de 2026')}
             </p>
           </article>
         </div>
