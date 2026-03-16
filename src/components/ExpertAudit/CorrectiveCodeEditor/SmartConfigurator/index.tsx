@@ -1370,7 +1370,7 @@ export function SmartConfigurator({
                     </span>
                   )}
                 </TabsTrigger>
-                {isAgencyPro && (
+                {canGenerateCode && (
                   <TabsTrigger 
                     value="multipage" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-cyan-500 data-[state=active]:bg-transparent py-3 px-3"
