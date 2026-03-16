@@ -52,9 +52,11 @@ export function useAdmin() {
   // Hierarchy: admin (créateur) > viewer > viewer_level2
   const hasAdminAccess = isAdmin || isViewer || isViewerLevel2;
   const isReadOnly = (isViewer || isViewerLevel2) && !isAdmin;
-  // viewer_level2 can't see docs or ML algos
+  // viewer_level2 can't see docs, ML algos, finances, or users
   const canSeeDocs = isAdmin || isViewer;
   const canSeeAlgos = isAdmin || isViewer;
+  const canSeeFinances = isAdmin || isViewer;
+  const canSeeUsers = isAdmin || isViewer;
 
   return { 
     isAdmin, 
