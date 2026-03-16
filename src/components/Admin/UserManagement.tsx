@@ -76,26 +76,33 @@ export function UserManagement() {
   };
 
   const toggleRole = async (userId: string, role: string) => {
-    const currentRole = getUserCurrentRole(userId);
     const labels: Record<string, string> = { admin: 'Créateur', viewer: 'Viewer', viewer_level2: 'Viewer L2', auditor: 'Auditeur' };
+    const hasRole = (role === 'admin' && adminUserIds.has(userId))
+      || (role === 'viewer' && viewerUserIds.has(userId))
+      || (role === 'viewer_level2' && viewer2UserIds.has(userId))
+      || (role === 'auditor' && auditorUserIds.has(userId));
+
     try {
-      if (currentRole === role) {
-        // Same role clicked → remove it
+      if (hasRole) {
+        // Already has this role → remove it
         await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', role as any);
         toast.success(`Rôle ${labels[role]} retiré`);
-      } else {
-        // Different role → remove existing then insert new (exclusive)
-        if (currentRole) {
-          await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', currentRole as any);
-        }
-        const insertData: any = { user_id: userId, role: role as any };
-        // Auditor role expires in 2 hours
-        if (role === 'auditor') {
-          insertData.expires_at = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
-        }
+      } else if (role === 'auditor') {
+        // Auditor is cumulative — just add it with 2h expiry
+        const insertData: any = { user_id: userId, role: role as any, expires_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString() };
         await supabase.from('user_roles').insert(insertData);
-        const expiryNote = role === 'auditor' ? ' (expire dans 2h)' : '';
-        toast.success(`Rôle ${labels[role]} attribué${expiryNote}`);
+        toast.success(`Rôle Auditeur attribué (expire dans 2h)`);
+      } else {
+        // Non-auditor roles remain exclusive among themselves (admin/viewer/viewer_level2)
+        const currentBase = adminUserIds.has(userId) ? 'admin'
+          : viewerUserIds.has(userId) ? 'viewer'
+          : viewer2UserIds.has(userId) ? 'viewer_level2'
+          : null;
+        if (currentBase) {
+          await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', currentBase as any);
+        }
+        await supabase.from('user_roles').insert({ user_id: userId, role: role as any });
+        toast.success(`Rôle ${labels[role]} attribué`);
       }
       fetchAllRoles();
     } catch {
