@@ -1102,7 +1102,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
 
 // ==================== RANKED KEYWORDS (existing domain analysis) ====================
 
-async function fetchRankedKeywords(domain: string, locationCode: number): Promise<RankingOverview | null> {
+async function fetchRankedKeywords(domain: string, locationCode: number, languageCode: string = 'fr'): Promise<RankingOverview | null> {
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
   
   const cleanDomain = domain.replace(/^www\./, '');
