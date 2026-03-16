@@ -153,8 +153,9 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
           </p>
           <div className="space-y-1.5">
             {presentPageTypes.map(type => {
-              const meta = PAGE_TYPE_META[type] || PAGE_TYPE_META.unknown;
-              const label = meta.label[language] || meta.label.fr;
+              const labels = PAGE_TYPE_LABELS[type] || PAGE_TYPE_LABELS.unknown;
+              const label = labels[language] || labels.fr;
+              const color = nodeColors[type] || nodeColors.unknown || '#8c64fa';
               const checked = filters.visiblePageTypes.has(type);
               const count = nodes.filter((n: any) => (n.page_type || 'unknown') === type).length;
               return (
@@ -168,7 +169,7 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
                     className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
                     tabIndex={-1}
                   />
-                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: meta.color }} />
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
                   <span className="text-xs text-white/70 group-hover:text-white transition-colors flex-1">{label}</span>
                   <span className="text-[10px] text-white/30">{count}</span>
                 </label>
