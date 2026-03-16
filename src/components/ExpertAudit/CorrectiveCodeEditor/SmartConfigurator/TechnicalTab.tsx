@@ -1,12 +1,18 @@
 import { motion } from 'framer-motion';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Zap, FileText, Eye, Tag, BrainCircuit, AlertCircle, AlertTriangle, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Zap, FileText, Eye, Tag, BrainCircuit, AlertCircle, AlertTriangle, Info, Lock } from 'lucide-react';
 import { FixConfig } from './types';
+import { useAuth } from '@/contexts/AuthContext';
+import { useFreemiumMode } from '@/contexts/FreemiumContext';
+
+const FREEMIUM_MAX_FIXES = 3;
 
 interface TechnicalTabProps {
   fixes: FixConfig[];
   onToggle: (fixId: string) => void;
+  onRequestAuth?: () => void;
 }
 
 const categoryIcons = {
