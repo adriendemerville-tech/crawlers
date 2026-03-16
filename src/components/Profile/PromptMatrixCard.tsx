@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Upload, FileSpreadsheet, Eye, GitCompare, Blend, Trash2, Download, Filter, ArrowUpDown, ChevronDown, ChevronUp, X, Check } from 'lucide-react';
+import { Upload, FileSpreadsheet, Eye, GitCompare, Blend, Trash2, Download, Filter, ArrowUpDown, ChevronDown, ChevronUp, X, Check, FlaskConical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
