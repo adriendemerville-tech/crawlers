@@ -304,7 +304,7 @@ export function FunctionsManagement() {
       </div>
 
       {/* ─── Prompt Matrix BETA ─── */}
-      {!isViewer && (
+      {!(isViewer && docsHiddenForViewers) && (
         <div className="border border-border/40 rounded-lg overflow-hidden">
           <button
             onClick={() => setShowPromptMatrix(!showPromptMatrix)}
