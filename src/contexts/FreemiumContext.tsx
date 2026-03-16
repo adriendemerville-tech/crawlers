@@ -14,16 +14,21 @@ export function FreemiumProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from('system_config')
-      .select('value')
-      .eq('key', 'freemium_open_mode')
-      .maybeSingle()
-      .then(({ data }) => {
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('system_config')
+          .select('value')
+          .eq('key', 'freemium_open_mode')
+          .maybeSingle();
         setOpenMode(data?.value === true || (data?.value as any)?.enabled === true);
+      } catch {
+        // fail-safe: keep closed
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+    load();
   }, []);
 
   return (
