@@ -188,6 +188,43 @@ export default function Cocoon() {
     }
   }, [nodes]);
 
+  // Initialize filters when nodes change
+  useEffect(() => {
+    if (nodes.length > 0 && !filtersInitialized) {
+      const pageTypes = new Set(nodes.map((n: any) => n.page_type || 'unknown'));
+      const juiceTypes = new Set<string>();
+      const maxAuth = Math.max(1, ...nodes.map((n: any) => n.page_authority ?? 0));
+      const maxTraffic = Math.max(1, ...nodes.map((n: any) => n.traffic_estimate ?? 0));
+      const homeNode = nodes.find((n: any) => n.page_type === 'homepage') || [...nodes].sort((a: any, b: any) => ((a as any).crawl_depth ?? 99) - ((b as any).crawl_depth ?? 99))[0];
+      const homeId = homeNode?.id;
+      for (const node of nodes) {
+        for (const edge of ((node as any).similarity_edges || [])) {
+          const targetNode = nodes.find((n: any) => n.url === edge.target_url);
+          if (!targetNode) continue;
+          const depthDelta = Math.abs(((node as any).crawl_depth ?? 0) - ((targetNode as any).crawl_depth ?? 0));
+          const isHomeSrc = (node as any).id === homeId;
+          const isHomeTgt = (targetNode as any).id === homeId;
+          const avgAuth = (((node as any).page_authority ?? 0) + ((targetNode as any).page_authority ?? 0)) / 2;
+          const avgTraffic = (((node as any).traffic_estimate ?? 0) + ((targetNode as any).traffic_estimate ?? 0)) / 2;
+          let jt = 'semantic';
+          if (depthDelta >= 1 && (isHomeSrc || isHomeTgt)) jt = 'hierarchy';
+          else if (avgAuth / maxAuth > 0.5) jt = 'authority';
+          else if (avgTraffic / maxTraffic > 0.4) jt = 'traffic';
+          juiceTypes.add(jt);
+        }
+      }
+      setCocoonFilters({ visiblePageTypes: pageTypes, visibleJuiceTypes: juiceTypes, showAllClusters: true });
+      setFiltersInitialized(true);
+    }
+    if (nodes.length === 0) setFiltersInitialized(false);
+  }, [nodes, filtersInitialized]);
+
+  // Filtered nodes based on selected page types
+  const filteredNodes = useMemo(() => {
+    if (!filtersInitialized || cocoonFilters.visiblePageTypes.size === 0) return nodes;
+    return nodes.filter((n: any) => cocoonFilters.visiblePageTypes.has(n.page_type || 'unknown'));
+  }, [nodes, cocoonFilters.visiblePageTypes, filtersInitialized]);
+
   // Check access: Pro Agency or Admin
   useEffect(() => {
     if (!user) {
