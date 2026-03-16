@@ -852,6 +852,7 @@ export default function Cocoon() {
             </div>
           )}
         </div>
+        )}
 
         {hasAccess && selectedSiteId && (
           <CocoonTaskPlanModal
