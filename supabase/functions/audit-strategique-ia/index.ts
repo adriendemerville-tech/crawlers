@@ -201,6 +201,8 @@ interface BusinessContext {
   location: string;
   brandName: string;
   locationCode: number | null;
+  languageCode: string;
+  seDomain: string;
 }
 
 // ==================== PROBABILISTIC BRAND NAME DETECTION ====================
