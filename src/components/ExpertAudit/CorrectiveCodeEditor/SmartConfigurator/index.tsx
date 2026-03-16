@@ -1389,7 +1389,7 @@ export function SmartConfigurator({
 
               <ScrollArea className="flex-1 min-h-0">
                 <TabsContent forceMount value="technical" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
-                  <TechnicalTab fixes={fixConfigs} onToggle={toggleFix} />
+                  <TechnicalTab fixes={fixConfigs} onToggle={toggleFix} onRequestAuth={() => { setShowConnectSiteModal(true); }} />
                 </TabsContent>
 
                 <TabsContent forceMount value="strategic" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">

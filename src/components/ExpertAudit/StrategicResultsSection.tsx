@@ -8,6 +8,7 @@ import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { RegistrationGate } from './RegistrationGate';
 import { StrategicErrorBoundary } from './StrategicErrorBoundary';
 import { StrategicInsights } from './StrategicInsights';
+import { useFreemiumMode } from '@/contexts/FreemiumContext';
 import { ActionPlan } from './ActionPlan';
 import { AEOScoreCard } from './AEOScoreCard';
 import { ExpertAuditResult, Recommendation } from '@/types/expertAudit';
@@ -29,6 +30,16 @@ interface Props {
   onNewAudit: () => void;
   onStrategicAudit: (hal?: any, comp?: any) => void;
   onForceRefresh: () => void;
+}
+
+function FreemiumAwareGate({ isLoggedIn }: { isLoggedIn: boolean }) {
+  const { openMode } = useFreemiumMode();
+  if (openMode || isLoggedIn) return null;
+  return (
+    <AnimatePresence>
+      <RegistrationGate />
+    </AnimatePresence>
+  );
 }
 
 export function StrategicResultsSection({
@@ -152,10 +163,8 @@ export function StrategicResultsSection({
             )}
           </motion.div>
 
-          {/* Registration Gate */}
-          <AnimatePresence>
-            {!isLoggedIn && <RegistrationGate />}
-          </AnimatePresence>
+          {/* Registration Gate — hidden in freemium open mode */}
+          <FreemiumAwareGate isLoggedIn={isLoggedIn} />
         </div>
       </motion.div>
     </StrategicErrorBoundary>

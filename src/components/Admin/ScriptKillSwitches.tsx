@@ -80,6 +80,7 @@ export function ScriptKillSwitches() {
 
   const [multipageEnabled, setMultipageEnabled] = useState(true);
   const [sdkEnabled, setSdkEnabled] = useState(true);
+  const [freemiumOpen, setFreemiumOpen] = useState(false);
   const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState('');
   const [loading, setLoading] = useState(true);
@@ -92,11 +93,12 @@ export function ScriptKillSwitches() {
       const { data: configs } = await supabase
         .from('system_config')
         .select('key, value')
-        .in('key', ['enable_multipage_router', 'sdk_enabled', 'sdk_blocked_domains']);
+        .in('key', ['enable_multipage_router', 'sdk_enabled', 'sdk_blocked_domains', 'freemium_open_mode']);
 
       for (const cfg of (configs || [])) {
         if (cfg.key === 'enable_multipage_router') setMultipageEnabled(cfg.value !== false);
         if (cfg.key === 'sdk_enabled') setSdkEnabled(cfg.value !== false);
+        if (cfg.key === 'freemium_open_mode') setFreemiumOpen(cfg.value === true);
         if (cfg.key === 'sdk_blocked_domains') setBlockedDomains(Array.isArray(cfg.value) ? (cfg.value as string[]) : []);
       }
     } catch (err) {
@@ -131,6 +133,13 @@ export function ScriptKillSwitches() {
   const handleToggleSdk = async (checked: boolean) => {
     setSdkEnabled(checked);
     await saveConfig('sdk_enabled', checked);
+  };
+
+  const handleToggleFreemium = async (checked: boolean) => {
+    setFreemiumOpen(checked);
+    await saveConfig('freemium_open_mode', checked);
+    // Force page reload for all clients after a short delay
+    toast({ title: checked ? 'Mode freemium ouvert activé' : 'Mode freemium standard restauré' });
   };
 
   const handleAddDomain = async () => {
@@ -222,6 +231,24 @@ export function ScriptKillSwitches() {
               {sdkEnabled ? t.active : t.disabled}
             </Badge>
             <Switch checked={sdkEnabled} onCheckedChange={handleToggleSdk} disabled={saving} />
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Freemium Open Mode */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <Label className="text-sm font-medium">Mode Freemium Ouvert</Label>
+            <p className="text-xs text-muted-foreground">
+              Audit Expert + Code correctif accessibles sans inscription. Code limité à 3 fixes mineurs. Limite : 3 audits/jour par IP.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={freemiumOpen ? 'default' : 'secondary'} className="text-[10px]">
+              {freemiumOpen ? 'Ouvert' : 'Standard'}
+            </Badge>
+            <Switch checked={freemiumOpen} onCheckedChange={handleToggleFreemium} disabled={saving} />
           </div>
         </div>
 

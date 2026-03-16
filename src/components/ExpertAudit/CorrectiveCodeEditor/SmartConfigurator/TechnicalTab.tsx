@@ -1,12 +1,18 @@
 import { motion } from 'framer-motion';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Zap, FileText, Eye, Tag, BrainCircuit, AlertCircle, AlertTriangle, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Zap, FileText, Eye, Tag, BrainCircuit, AlertCircle, AlertTriangle, Info, Lock } from 'lucide-react';
 import { FixConfig } from './types';
+import { useAuth } from '@/contexts/AuthContext';
+import { useFreemiumMode } from '@/contexts/FreemiumContext';
+
+const FREEMIUM_MAX_FIXES = 3;
 
 interface TechnicalTabProps {
   fixes: FixConfig[];
   onToggle: (fixId: string) => void;
+  onRequestAuth?: () => void;
 }
 
 const categoryIcons = {
@@ -58,9 +64,21 @@ const priorityConfig = {
   },
 };
 
-export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
+export function TechnicalTab({ fixes, onToggle, onRequestAuth }: TechnicalTabProps) {
+  const { user } = useAuth();
+  const { openMode } = useFreemiumMode();
+  const isAnonymousFreemium = openMode && !user;
+
   // Filter only technical fixes (non-strategic, non-generative)
   const technicalFixes = fixes.filter(f => f.category !== 'strategic' && f.category !== 'generative');
+
+  // In freemium mode, only the first N minor (non-critical) fixes are allowed
+  const minorFixIds = new Set(
+    technicalFixes
+      .filter(f => f.priority !== 'critical')
+      .slice(0, FREEMIUM_MAX_FIXES)
+      .map(f => f.id)
+  );
   
   // Group by category
   const groupedFixes = technicalFixes.reduce((acc, fix) => {
@@ -92,7 +110,7 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                 const pConfig = priorityConfig[fix.priority as keyof typeof priorityConfig] || priorityConfig.optional;
                 const PriorityIcon = pConfig.icon;
                 const isLocked = !!fix.locked;
-                
+                const isFreemiumLocked = isAnonymousFreemium && !minorFixIds.has(fix.id);
                 return (
                   <motion.div
                     key={fix.id}
@@ -100,7 +118,7 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.03 }}
                     className={`rounded-md border transition-all ${
-                      isLocked
+                      isLocked || isFreemiumLocked
                         ? 'p-1.5 px-2 border-border opacity-50 cursor-not-allowed'
                         : fix.enabled 
                           ? 'p-2 border-primary/30 bg-primary/5' 
@@ -145,12 +163,24 @@ export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
                           </div>
                         </div>
                       </div>
-                      <Switch
-                        checked={fix.enabled}
-                        onCheckedChange={() => onToggle(fix.id)}
-                        disabled={isLocked}
-                        className="data-[state=checked]:bg-violet-600 scale-75"
-                      />
+                      {isFreemiumLocked ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 text-[10px] gap-1 px-2"
+                          onClick={() => onRequestAuth?.()}
+                        >
+                          <Lock className="w-2.5 h-2.5" />
+                          S'inscrire
+                        </Button>
+                      ) : (
+                        <Switch
+                          checked={fix.enabled}
+                          onCheckedChange={() => onToggle(fix.id)}
+                          disabled={isLocked}
+                          className="data-[state=checked]:bg-violet-600 scale-75"
+                        />
+                      )}
                     </div>
                   </motion.div>
                 );
