@@ -220,7 +220,7 @@ export function FinancesDashboard() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  // removed old fetchData effect — now driven by shared context
 
   if (isLoading) {
     return (
