@@ -171,6 +171,8 @@ export default function Cocoon() {
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [showPrereqModal, setShowPrereqModal] = useState(false);
   const [showTaskPlan, setShowTaskPlan] = useState(false);
+  const [showArchitect, setShowArchitect] = useState(false);
+  const [architectRecoText, setArchitectRecoText] = useState<string | undefined>();
   const [prereqStatus, setPrereqStatus] = useState<{ hasCrawl: boolean; hasAudit: boolean }>({ hasCrawl: true, hasAudit: true });
   const [truncationInfo, setTruncationInfo] = useState<{ truncated: boolean; total: number; used: number } | null>(null);
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
