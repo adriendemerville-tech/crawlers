@@ -29,12 +29,14 @@ const animatedWords = ['ChatGPT', 'Gemini', 'Mistral', 'Google', 'Safari'];
 
 function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, currentUrl }: HeroSectionProps) {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [url, setUrl] = useState(() => searchParams.get('url') || '');
   const { t, language } = useLanguage();
   const validation = useUrlValidation(language);
   const [wordIndex, setWordIndex] = useState(0);
   const [isHydrated, setIsHydrated] = useState(false);
   const [glowActive, setGlowActive] = useState(false);
+  const [hideLeadmagnet, setHideLeadmagnet] = useState(false);
   const prevTabRef = useRef(activeTab);
 
   // Trigger glow on tab change
