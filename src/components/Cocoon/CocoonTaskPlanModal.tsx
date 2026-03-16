@@ -3,7 +3,8 @@ import { X, Plus, Loader2, CheckCircle2, Circle, Trash2, GripVertical } from 'lu
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { DialogPortal } from '@/components/ui/dialog';
 
 interface Task {
   id: string;
@@ -138,8 +139,12 @@ export function CocoonTaskPlanModal({ open, onOpenChange, trackedSiteId, domain 
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0f0a1e]/98 backdrop-blur-2xl border-white/10 text-white max-w-lg p-0 overflow-hidden gap-0">
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPortal>
+        {/* No overlay — transparent background */}
+        <DialogPrimitive.Content
+          className="fixed left-[50%] top-[50%] z-50 w-full max-w-lg translate-x-[-50%] translate-y-[-50%] rounded-2xl border border-[#a78bfa]/20 bg-[#0f0a1e] text-white shadow-2xl shadow-black/50 p-0 overflow-hidden gap-0 duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+        >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
           <div className="flex items-center gap-3">
@@ -151,20 +156,24 @@ export function CocoonTaskPlanModal({ open, onOpenChange, trackedSiteId, domain 
               <p className="text-[10px] text-white/40 font-mono">{domain}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          {/* Centered progress bar */}
+          <div className="flex-1 flex justify-center">
             {tasks.length > 0 && (
               <div className="flex items-center gap-2">
-                <div className="w-20 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div className="w-24 h-1.5 rounded-full bg-white/10 overflow-hidden">
                   <div className="h-full rounded-full bg-emerald-400 transition-all duration-500" style={{ width: `${progress}%` }} />
                 </div>
                 <span className="text-[10px] text-white/40 font-mono">{progress}%</span>
               </div>
             )}
           </div>
+          <button onClick={() => onOpenChange(false)} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+            <X className="w-4 h-4 text-white/50 hover:text-white/80" />
+          </button>
         </div>
 
-        {/* Content */}
-        <div className="max-h-[400px] overflow-y-auto px-6 py-4 space-y-1">
+        {/* Content — doubled height */}
+        <div className="max-h-[700px] overflow-y-auto px-6 py-4 space-y-1">
           {loading && (
             <div className="flex items-center justify-center py-12 gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-[#a78bfa]" />
@@ -241,7 +250,8 @@ export function CocoonTaskPlanModal({ open, onOpenChange, trackedSiteId, domain 
             </button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    </DialogPrimitive.Root>
   );
 }
