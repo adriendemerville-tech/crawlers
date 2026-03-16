@@ -250,7 +250,8 @@ export function CocoonTaskPlanModal({ open, onOpenChange, trackedSiteId, domain 
             </button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    </DialogPrimitive.Root>
   );
 }
