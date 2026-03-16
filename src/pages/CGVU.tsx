@@ -227,7 +227,8 @@ const CGVU = () => {
               <h3 className="text-lg font-semibold mt-4 mb-2">7.2. Avantages inclus</h3>
               <ul>
                 <li>Accès illimité à l'ensemble des outils d'analyse et d'audit ;</li>
-                <li><strong>Crawl multi-pages illimité</strong> : analyse récursive complète de sites (10 à 200 pages par crawl) ;</li>
+                <li><strong>Crawl multi-pages</strong> : analyse récursive complète de sites (jusqu'à 500 pages par crawl, Fair Use Policy de 5 000 pages/mois) ;</li>
+                <li><strong>Module Cocoon</strong> : graphe sémantique illimité ;</li>
                 <li>Dashboard agence dédié avec gestion multi-clients ;</li>
                 <li>Export de rapports personnalisés au format PDF ;</li>
                 <li>Fonctionnalité Marque Blanche (White Label) — voir Article 8 ;</li>
