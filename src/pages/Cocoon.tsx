@@ -785,6 +785,7 @@ export default function Cocoon() {
         </main>
 
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
+        {!isFullscreen && (
         <div className="shrink-0 px-3 sm:px-4 md:px-6 py-9 flex items-end gap-2 sm:gap-4 flex-wrap">
           {/* Console button — bottom left */}
           <button
