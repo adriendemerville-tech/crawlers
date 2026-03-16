@@ -717,18 +717,17 @@ function SceneContent({
 }) {
   const hoveredNode = hoveredNodeId ? nodeMap.get(hoveredNodeId) : null;
 
-  return (
+   return (
     <>
       {/* Ambient + directional light */}
-      <ambientLight intensity={0.15} color="#6c5ce7" />
-      <directionalLight position={[10, 10, 10]} intensity={0.4} color="#ffffff" />
-      {/* Top-down light for biomimetic gradient (lit top → dark bottom) */}
-      <directionalLight position={[0, 30, 5]} intensity={0.5} color="#c8d0e0" />
-      <pointLight position={[0, 0, 0]} intensity={0.6} color="#ffc83c" distance={200} decay={2} />
+      <ambientLight intensity={isDayMode ? 0.7 : 0.15} color={isDayMode ? "#ffffff" : "#6c5ce7"} />
+      <directionalLight position={[10, 10, 10]} intensity={isDayMode ? 0.8 : 0.4} color="#ffffff" />
+      <directionalLight position={[0, 30, 5]} intensity={isDayMode ? 0.6 : 0.5} color={isDayMode ? "#ffffff" : "#c8d0e0"} />
+      <pointLight position={[0, 0, 0]} intensity={isDayMode ? 0.3 : 0.6} color="#ffc83c" distance={200} decay={2} />
 
-      {/* Deep space background */}
-      <color attach="background" args={["#06060e"]} />
-      <fog attach="fog" args={["#06060e", 150, 500]} />
+      {/* Background */}
+      <color attach="background" args={[isDayMode ? "#f5f5f0" : "#06060e"]} />
+      <fog attach="fog" args={[isDayMode ? "#f5f5f0" : "#06060e", 150, 500]} />
 
       {/* Cluster Halos — behind everything */}
       <ClusterHalos
