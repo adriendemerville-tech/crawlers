@@ -1563,7 +1563,7 @@ export function SmartConfigurator({
                     <RotateCcw className="w-3 h-3" />
                     Modifier
                   </Button>
-                ) : canGenerateCode ? (
+                ) : (
                   <Button
                     onClick={handleGenerate}
                     disabled={enabledCount === 0 || isGenerating}
@@ -1585,14 +1585,6 @@ export function SmartConfigurator({
                         Générer ({enabledCount})
                       </>
                     )}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => window.open('/pricing', '_blank')}
-                    className="gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 text-xs h-8 px-3"
-                  >
-                    <Crown className="w-3 h-3" />
-                    Pro Agency requis
                   </Button>
                 )}
               </div>
