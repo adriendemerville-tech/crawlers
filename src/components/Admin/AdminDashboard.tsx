@@ -112,9 +112,11 @@ interface AdminDashboardProps {
   canSeeAlgos?: boolean;
   canSeeFinances?: boolean;
   canSeeUsers?: boolean;
+  canSeeIntelligence?: boolean;
+  isAuditor?: boolean;
 }
 
-export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true }: AdminDashboardProps) {
+export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true, canSeeIntelligence = true, isAuditor = false }: AdminDashboardProps) {
   const { language } = useLanguage();
   const t = adminTranslations[language] || adminTranslations.fr;
   const [activeTab, setActiveTab] = useState('analytics');
@@ -164,7 +166,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       items: [
         { id: 'analytics', label: t.analytics, icon: BarChart3, group: 'monitoring' },
         ...(canSeeFinances ? [{ id: 'finances', label: t.finances, icon: Wallet, group: 'monitoring' }] : []),
-        { id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring' },
+        ...(canSeeIntelligence ? [{ id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring' }] : []),
         { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring' },
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
         { id: 'scanned-urls', label: t.scannedUrls, icon: ScanSearch, group: 'monitoring' },
@@ -222,7 +224,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   };
 
   return (
-    <AdminProvider value={{ readOnly, canSeeDocs: showDocs, canSeeAlgos: showAlgos, docsHiddenForViewers }}>
+    <AdminProvider value={{ readOnly, canSeeDocs: showDocs, canSeeAlgos: showAlgos, docsHiddenForViewers, isAuditor }}>
       <div className="space-y-3">
         {readOnly && <ReadOnlyBanner />}
         {/* toggles moved to Scripts tab */}

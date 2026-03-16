@@ -7,6 +7,7 @@ export function useAdmin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isViewer, setIsViewer] = useState(false);
   const [isViewerLevel2, setIsViewerLevel2] = useState(false);
+  const [isAuditor, setIsAuditor] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,6 +16,7 @@ export function useAdmin() {
         setIsAdmin(false);
         setIsViewer(false);
         setIsViewerLevel2(false);
+        setIsAuditor(false);
         setLoading(false);
         return;
       }
@@ -30,17 +32,20 @@ export function useAdmin() {
           setIsAdmin(false);
           setIsViewer(false);
           setIsViewerLevel2(false);
+          setIsAuditor(false);
         } else {
           const roles = (data || []).map((r: any) => r.role);
           setIsAdmin(roles.includes('admin'));
           setIsViewer(roles.includes('viewer'));
           setIsViewerLevel2(roles.includes('viewer_level2'));
+          setIsAuditor(roles.includes('auditor'));
         }
       } catch (err) {
         console.error('Error checking roles:', err);
         setIsAdmin(false);
         setIsViewer(false);
         setIsViewerLevel2(false);
+        setIsAuditor(false);
       } finally {
         setLoading(false);
       }
@@ -49,25 +54,28 @@ export function useAdmin() {
     checkRoles();
   }, [user]);
 
-  // Hierarchy: admin (créateur) > viewer > viewer_level2
-  const hasAdminAccess = isAdmin || isViewer || isViewerLevel2;
-  const isReadOnly = (isViewer || isViewerLevel2) && !isAdmin;
-  // viewer_level2 can't see docs, ML algos, finances, or users
+  // Hierarchy: admin (créateur) > viewer > auditor > viewer_level2
+  const hasAdminAccess = isAdmin || isViewer || isViewerLevel2 || isAuditor;
+  const isReadOnly = (isViewer || isViewerLevel2 || isAuditor) && !isAdmin;
+  // viewer_level2 & auditor can't see docs; auditor can't see intelligence, finances, users
   const canSeeDocs = isAdmin || isViewer;
   const canSeeAlgos = isAdmin || isViewer;
   const canSeeFinances = isAdmin || isViewer;
   const canSeeUsers = isAdmin || isViewer;
+  const canSeeIntelligence = isAdmin || isViewer || isViewerLevel2; // auditor excluded
 
   return { 
     isAdmin, 
     isViewer, 
     isViewerLevel2, 
+    isAuditor,
     hasAdminAccess, 
     isReadOnly, 
     canSeeDocs, 
     canSeeAlgos, 
     canSeeFinances,
     canSeeUsers,
+    canSeeIntelligence,
     loading 
   };
 }

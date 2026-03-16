@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Code2, Lock, Clock, User, FileSpreadsheet } from 'lucide-react';
+import { ChevronDown, ChevronRight, Code2, Lock, Clock, User, FileSpreadsheet, Eye, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,6 +10,7 @@ import { useAdminContext } from '@/contexts/AdminContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { PromptMatrixCard } from '@/components/Profile/PromptMatrixCard';
+import { TRANSPARENCY_DATA, hasTransparencyData, type TransparencyBlock } from '@/data/auditorTransparencyData';
 
 // ─── Edge functions registry grouped by category ───
 const FUNCTION_CATEGORIES: Record<string, string[]> = {
@@ -80,18 +81,70 @@ interface AccessRequest {
   created_at: string;
 }
 
+// ─── Transparency Panel for auditors ───
+function TransparencyPanel({ data }: { data: TransparencyBlock }) {
+  const typeStyles: Record<string, { bg: string; border: string; icon: string }> = {
+    'prompt-excerpt': { bg: 'bg-violet-500/5', border: 'border-violet-500/20', icon: '💬' },
+    'coefficients': { bg: 'bg-amber-500/5', border: 'border-amber-500/20', icon: '⚖️' },
+    'request-pattern': { bg: 'bg-blue-500/5', border: 'border-blue-500/20', icon: '🔗' },
+    'flow': { bg: 'bg-emerald-500/5', border: 'border-emerald-500/20', icon: '🔄' },
+    'note': { bg: 'bg-muted/30', border: 'border-border/40', icon: '📝' },
+  };
+
+  const typeLabels: Record<string, string> = {
+    'prompt-excerpt': 'Extrait de prompt',
+    'coefficients': 'Coefficients',
+    'request-pattern': 'Requêtes API',
+    'flow': 'Flux d\'exécution',
+    'note': 'Note méthodologique',
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Eye className="h-4 w-4 text-primary" />
+        <h3 className="text-sm font-semibold text-foreground">{data.title}</h3>
+      </div>
+      <div className="flex items-start gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20 mb-4">
+        <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Vue transparence — Les extraits et coefficients sont partiellement masqués pour protéger la propriété intellectuelle. 
+          Les formules exactes, les instructions internes et les seuils fins sont omis.
+        </p>
+      </div>
+      {data.sections.map((section, i) => {
+        const style = typeStyles[section.type] || typeStyles.note;
+        return (
+          <div key={i} className={cn("rounded-lg border p-3", style.bg, style.border)}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm">{style.icon}</span>
+              <span className="text-xs font-semibold text-foreground">{section.label}</span>
+              <Badge variant="outline" className="text-[9px] h-4 ml-auto">{typeLabels[section.type]}</Badge>
+            </div>
+            <pre className="text-[11px] leading-relaxed font-mono text-foreground/80 whitespace-pre-wrap select-none" style={{ userSelect: 'none' }}>
+              {section.content}
+            </pre>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function FunctionsManagement() {
-  const { readOnly, docsHiddenForViewers } = useAdminContext();
+  const { readOnly, docsHiddenForViewers, isAuditor } = useAdminContext();
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const { language } = useLanguage();
 
-  const isViewer = readOnly;
+  const isViewer = readOnly && !isAuditor;
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [selectedFunction, setSelectedFunction] = useState<string | null>(null);
   const [functionCode, setFunctionCode] = useState<string>('');
   const [loadingCode, setLoadingCode] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [transparencyDialogOpen, setTransparencyDialogOpen] = useState(false);
+  const [selectedTransparency, setSelectedTransparency] = useState<TransparencyBlock | null>(null);
   const [consultationLogs, setConsultationLogs] = useState<ConsultationLog[]>([]);
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [viewerApproved, setViewerApproved] = useState<Set<string>>(new Set());
@@ -103,14 +156,14 @@ export function FunctionsManagement() {
 
   // Load consultation logs, access requests, and tracked sites
   useEffect(() => {
-    if (!isViewer) {
+    if (!isViewer && !isAuditor) {
       loadConsultationLogs();
       loadAccessRequests();
       loadTrackedSites();
-    } else {
+    } else if (isViewer) {
       loadMyRequests();
     }
-  }, [isViewer]);
+  }, [isViewer, isAuditor]);
 
   const loadTrackedSites = async () => {
     const { data } = await supabase
@@ -168,6 +221,18 @@ export function FunctionsManagement() {
   };
 
   const handleFunctionClick = async (fnName: string) => {
+    // Auditor: show transparency panel for supported functions
+    if (isAuditor) {
+      if (hasTransparencyData(fnName)) {
+        setSelectedTransparency(TRANSPARENCY_DATA[fnName]);
+        setSelectedFunction(fnName);
+        setTransparencyDialogOpen(true);
+      } else {
+        toast({ title: 'Accès limité', description: 'La vue transparence n\'est pas disponible pour cette fonction.' });
+      }
+      return;
+    }
+
     if (isViewer) {
       // Check if already approved
       if (!viewerApproved.has(fnName)) {
@@ -237,10 +302,28 @@ export function FunctionsManagement() {
         <Badge variant="secondary" className="text-xs">
           {Object.values(FUNCTION_CATEGORIES).flat().length} fonctions
         </Badge>
+        {isAuditor && (
+          <Badge variant="outline" className="text-[10px] border-primary/40 text-primary ml-auto">
+            <Eye className="h-3 w-3 mr-1" />
+            Mode Auditeur — Vue transparence
+          </Badge>
+        )}
       </div>
 
+      {/* Auditor info banner */}
+      {isAuditor && (
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 mb-4">
+          <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+          <div className="text-xs text-muted-foreground leading-relaxed">
+            <span className="font-medium text-foreground">Mode Auditeur :</span> Cliquez sur les fonctions marquées d'un 
+            <Eye className="h-3 w-3 inline mx-1 text-primary" /> pour voir les extraits de prompts, coefficients de pondération 
+            et flux d'exécution. Les fonctions sans icône ne disposent pas encore de vue transparence.
+          </div>
+        </div>
+      )}
+
       {/* Access requests for creator */}
-      {!isViewer && accessRequests.filter(r => r.status === 'pending').length > 0 && (
+      {!isViewer && !isAuditor && accessRequests.filter(r => r.status === 'pending').length > 0 && (
         <div className="bg-warning/10 border border-warning/30 rounded-lg p-3 space-y-2 mb-4">
           <p className="text-sm font-medium text-warning-foreground flex items-center gap-2">
             <Lock className="h-4 w-4" />
@@ -270,7 +353,14 @@ export function FunctionsManagement() {
                 {expandedCategories.has(category) ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                 <span>{category}</span>
               </div>
-              <Badge variant="outline" className="text-[10px]">{functions.length}</Badge>
+              <div className="flex items-center gap-2">
+                {isAuditor && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {functions.filter(f => hasTransparencyData(f)).length} transparentes
+                  </span>
+                )}
+                <Badge variant="outline" className="text-[10px]">{functions.length}</Badge>
+              </div>
             </button>
 
             {expandedCategories.has(category) && (
@@ -278,22 +368,35 @@ export function FunctionsManagement() {
                 {functions.map(fn => {
                   const isPending = isViewer && pendingRequests.has(fn);
                   const isApproved = !isViewer || viewerApproved.has(fn);
+                  const hasTransparency = hasTransparencyData(fn);
                   return (
                     <button
                       key={fn}
                       onClick={() => handleFunctionClick(fn)}
                       className={cn(
                         "w-full flex items-center justify-between px-4 py-1.5 text-xs font-mono hover:bg-muted/60 transition-colors text-left",
-                        isPending && "opacity-60"
+                        isPending && "opacity-60",
+                        isAuditor && hasTransparency && "hover:bg-primary/5"
                       )}
                     >
-                      <span className="text-foreground/80">{fn}</span>
-                      {isViewer && !isApproved && !isPending && (
-                        <Lock className="h-3 w-3 text-muted-foreground/50" />
-                      )}
-                      {isPending && (
-                        <Badge variant="outline" className="text-[9px] h-4">En attente</Badge>
-                      )}
+                      <span className={cn(
+                        "text-foreground/80",
+                        isAuditor && hasTransparency && "text-primary"
+                      )}>{fn}</span>
+                      <div className="flex items-center gap-1.5">
+                        {isAuditor && hasTransparency && (
+                          <Eye className="h-3 w-3 text-primary/60" />
+                        )}
+                        {isAuditor && !hasTransparency && (
+                          <Lock className="h-3 w-3 text-muted-foreground/30" />
+                        )}
+                        {isViewer && !isApproved && !isPending && (
+                          <Lock className="h-3 w-3 text-muted-foreground/50" />
+                        )}
+                        {isPending && (
+                          <Badge variant="outline" className="text-[9px] h-4">En attente</Badge>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
@@ -304,7 +407,7 @@ export function FunctionsManagement() {
       </div>
 
       {/* ─── Prompt Matrix BETA ─── */}
-      {!(isViewer && docsHiddenForViewers) && (
+      {!(isViewer && docsHiddenForViewers) && !isAuditor && (
         <div className="border border-border/40 rounded-lg overflow-hidden">
           <button
             onClick={() => setShowPromptMatrix(!showPromptMatrix)}
@@ -351,6 +454,7 @@ export function FunctionsManagement() {
         </div>
       )}
 
+      {/* Source code dialog (admin/viewer) */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
@@ -376,8 +480,29 @@ export function FunctionsManagement() {
         </DialogContent>
       </Dialog>
 
+      {/* Transparency dialog (auditor) */}
+      <Dialog open={transparencyDialogOpen} onOpenChange={setTransparencyDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-sm flex items-center gap-2">
+              <Eye className="h-4 w-4 text-primary" />
+              <span className="font-mono">{selectedFunction}</span>
+              <Badge variant="outline" className="text-[9px] ml-2">Boîte grise</Badge>
+            </DialogTitle>
+          </DialogHeader>
+          <div
+            className="flex-1 overflow-auto p-1"
+            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+            onCopy={e => e.preventDefault()}
+            onCut={e => e.preventDefault()}
+          >
+            {selectedTransparency && <TransparencyPanel data={selectedTransparency} />}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Consultation registry — creator only, at bottom */}
-      {!isViewer && (
+      {!isViewer && !isAuditor && (
         <div className="mt-6 border-t border-border/40 pt-4">
           <div className="flex items-center gap-2 mb-3">
             <Clock className="h-4 w-4 text-muted-foreground" />

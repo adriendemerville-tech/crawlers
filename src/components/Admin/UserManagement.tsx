@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown, FileSearch } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
 
@@ -40,6 +40,7 @@ export function UserManagement() {
   const [adminUserIds, setAdminUserIds] = useState<Set<string>>(new Set());
   const [viewerUserIds, setViewerUserIds] = useState<Set<string>>(new Set());
   const [viewer2UserIds, setViewer2UserIds] = useState<Set<string>>(new Set());
+  const [auditorUserIds, setAuditorUserIds] = useState<Set<string>>(new Set());
   const [stripDialogOpen, setStripDialogOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
   const [affiliateUser, setAffiliateUser] = useState<UserProfile | null>(null);
@@ -52,14 +53,17 @@ export function UserManagement() {
       const admins = new Set<string>();
       const viewers = new Set<string>();
       const viewers2 = new Set<string>();
+      const auditors = new Set<string>();
       data.forEach((r: any) => {
         if (r.role === 'admin') admins.add(r.user_id);
         if (r.role === 'viewer') viewers.add(r.user_id);
         if (r.role === 'viewer_level2') viewers2.add(r.user_id);
+        if (r.role === 'auditor') auditors.add(r.user_id);
       });
       setAdminUserIds(admins);
       setViewerUserIds(viewers);
       setViewer2UserIds(viewers2);
+      setAuditorUserIds(auditors);
     }
   };
 
@@ -67,12 +71,13 @@ export function UserManagement() {
     if (adminUserIds.has(userId)) return 'admin';
     if (viewerUserIds.has(userId)) return 'viewer';
     if (viewer2UserIds.has(userId)) return 'viewer_level2';
+    if (auditorUserIds.has(userId)) return 'auditor';
     return null;
   };
 
   const toggleRole = async (userId: string, role: string) => {
     const currentRole = getUserCurrentRole(userId);
-    const labels: Record<string, string> = { admin: 'Créateur', viewer: 'Viewer', viewer_level2: 'Viewer L2' };
+    const labels: Record<string, string> = { admin: 'Créateur', viewer: 'Viewer', viewer_level2: 'Viewer L2', auditor: 'Auditeur' };
     try {
       if (currentRole === role) {
         // Same role clicked → remove it
@@ -358,6 +363,10 @@ export function UserManagement() {
                               <DropdownMenuItem onClick={() => toggleRole(user.user_id, 'viewer_level2')}>
                                 <EyeOff className="h-4 w-4 mr-2" />
                                 {viewer2UserIds.has(user.user_id) ? '✓ Viewer L2' : 'Viewer L2'}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => toggleRole(user.user_id, 'auditor')}>
+                                <FileSearch className="h-4 w-4 mr-2" />
+                                {auditorUserIds.has(user.user_id) ? '✓ Auditeur' : 'Auditeur'}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
