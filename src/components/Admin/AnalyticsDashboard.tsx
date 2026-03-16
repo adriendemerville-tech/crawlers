@@ -254,12 +254,15 @@ export function AnalyticsDashboard() {
       });
 
       // Fetch real signups from profiles table (reliable source vs analytics events)
-      const { data: profileSignups } = await supabase
+      let profileSignupsQuery = supabase
         .from('profiles')
         .select('created_at')
         .gte('created_at', thirtyDaysAgo)
-        .not('user_id', 'in', `(${adminUserIds.join(',')})`)
         .order('created_at', { ascending: false });
+      if (adminUserIds.length > 0) {
+        profileSignupsQuery = profileSignupsQuery.not('user_id', 'in', `(${adminUserIds.join(',')})`);
+      }
+      const { data: profileSignups } = await profileSignupsQuery;
 
       const signupsByDay: Record<string, number> = {};
       (profileSignups || []).forEach(p => {
