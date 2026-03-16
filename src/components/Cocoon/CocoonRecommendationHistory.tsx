@@ -59,7 +59,11 @@ export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTask
   const toggleApplied = async (id: string, current: boolean) => {
     const newVal = !current;
     setItems(prev => prev.map(r => r.id === id ? { ...r, is_applied: newVal } : r));
-    await supabase.from('cocoon_recommendations').update({ is_applied: newVal }).eq('id', id);
+    const { error } = await supabase.from('cocoon_recommendations').update({ is_applied: newVal }).eq('id', id);
+    if (error) {
+      // Rollback on failure
+      setItems(prev => prev.map(r => r.id === id ? { ...r, is_applied: current } : r));
+    }
   };
 
   const formatDate = (iso: string) => {
