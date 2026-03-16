@@ -110,7 +110,7 @@ export function TechnicalTab({ fixes, onToggle, onRequestAuth }: TechnicalTabPro
                 const pConfig = priorityConfig[fix.priority as keyof typeof priorityConfig] || priorityConfig.optional;
                 const PriorityIcon = pConfig.icon;
                 const isLocked = !!fix.locked;
-                
+                const isFreemiumLocked = isAnonymousFreemium && !minorFixIds.has(fix.id);
                 return (
                   <motion.div
                     key={fix.id}
