@@ -224,7 +224,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
   };
 
   return (
-    <AdminProvider value={{ readOnly, canSeeDocs: showDocs, canSeeAlgos: showAlgos, docsHiddenForViewers }}>
+    <AdminProvider value={{ readOnly, canSeeDocs: showDocs, canSeeAlgos: showAlgos, docsHiddenForViewers, isAuditor }}>
       <div className="space-y-3">
         {readOnly && <ReadOnlyBanner />}
         {/* toggles moved to Scripts tab */}
