@@ -839,6 +839,47 @@ export type Database = {
         }
         Relationships: []
       }
+      cocoon_recommendations: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          recommendation_text: string
+          source_context: Json | null
+          summary: string
+          tracked_site_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          recommendation_text: string
+          source_context?: Json | null
+          summary: string
+          tracked_site_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          recommendation_text?: string
+          source_context?: Json | null
+          summary?: string
+          tracked_site_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cocoon_recommendations_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cocoon_sessions: {
         Row: {
           avg_cannibalization_risk: number | null

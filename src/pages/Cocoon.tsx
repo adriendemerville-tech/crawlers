@@ -11,6 +11,7 @@ import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
+import { CocoonRecommendationHistory } from "@/components/Cocoon/CocoonRecommendationHistory";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
 import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Sparkles, Layers } from "lucide-react";
@@ -665,34 +666,34 @@ export default function Cocoon() {
                   <span className="text-white/40 text-[10px]">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
                 </div>
                 <span className="text-white/30 text-[9px] sm:text-xs ml-auto hidden sm:inline">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
-                <button
-                  onClick={() => setParticlesEnabled(p => !p)}
-                  className={`ml-auto sm:ml-2 flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] transition-colors border ${
-                    particlesEnabled
-                      ? 'bg-white/5 border-white/10 text-white/40 hover:text-white/60'
-                      : 'bg-white/5 border-white/10 text-white/20 hover:text-white/40'
-                  }`}
+                <a
+                  href={(() => {
+                    const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
+                    return domain ? `https://crawlers.fr/site-crawl?url=${encodeURIComponent(domain)}` : 'https://crawlers.fr/site-crawl';
+                  })()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-auto sm:ml-2 flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] transition-colors border bg-[#a855f7]/10 border-[#a855f7]/25 text-[#c084fc] hover:bg-[#a855f7]/20"
                 >
-                  <Sparkles className="w-2.5 h-2.5" />
-                  {particlesEnabled
-                    ? (language === 'en' ? 'Particles' : language === 'es' ? 'Partículas' : 'Particules')
-                    : (language === 'en' ? 'Particles off' : language === 'es' ? 'Sin partículas' : 'Particules off')
-                  }
-                </button>
-                <button
-                  onClick={() => setCocoonFilters(f => ({ ...f, showAllClusters: !f.showAllClusters }))}
-                  className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] transition-colors border ml-0.5 sm:ml-1 ${
-                    cocoonFilters.showAllClusters
-                      ? 'bg-white/5 border-white/10 text-white/40 hover:text-white/60'
-                      : 'bg-white/5 border-white/10 text-white/20 hover:text-white/40'
-                  }`}
+                  <FileText className="w-2.5 h-2.5" />
+                  <span className="hidden sm:inline">{t.crawlMulti}</span>
+                  <ExternalLink className="w-2 h-2" />
+                </a>
+                <a
+                  href={(() => {
+                    const nodeUrl = selectedNode?.url;
+                    const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
+                    const urlParam = nodeUrl || domain;
+                    return urlParam ? `/audit-expert?url=${encodeURIComponent(urlParam)}` : '/audit-expert';
+                  })()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] transition-colors border ml-0.5 sm:ml-1 bg-[#3b82f6]/10 border-[#3b82f6]/25 text-[#60a5fa] hover:bg-[#3b82f6]/20"
                 >
-                  <Layers className="w-2.5 h-2.5" />
-                  {cocoonFilters.showAllClusters
-                    ? (language === 'en' ? 'Clusters' : language === 'es' ? 'Clústeres' : 'Clusters')
-                    : (language === 'en' ? 'Clusters off' : language === 'es' ? 'Sin clústeres' : 'Clusters off')
-                  }
-                </button>
+                  <Search className="w-2.5 h-2.5" />
+                  <span className="hidden sm:inline">{t.auditExpert}</span>
+                  <ExternalLink className="w-2 h-2" />
+                </a>
               </div>
             );
           })()}
@@ -726,39 +727,15 @@ export default function Cocoon() {
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Navigation buttons — bottom right */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 mr-2 sm:mr-4">
-            <a
-              href={(() => {
-                const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
-                return domain ? `https://crawlers.fr/site-crawl?url=${encodeURIComponent(domain)}` : 'https://crawlers.fr/site-crawl';
-              })()}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => { externalClickTimestamp.current = Date.now(); }}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/25 text-[#c084fc] hover:bg-[#a855f7]/20 hover:text-[#d8b4fe] transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md"
-            >
-              <FileText className="w-3 h-3" />
-              <span className="hidden sm:inline">{t.crawlMulti}</span>
-              <ExternalLink className="w-2.5 h-2.5" />
-            </a>
-            <a
-              href={(() => {
-                const nodeUrl = selectedNode?.url;
-                const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
-                const urlParam = nodeUrl || domain;
-                return urlParam ? `/audit-expert?url=${encodeURIComponent(urlParam)}` : '/audit-expert';
-              })()}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => { externalClickTimestamp.current = Date.now(); }}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-[#3b82f6]/10 border border-[#3b82f6]/25 text-[#60a5fa] hover:bg-[#3b82f6]/20 hover:text-[#93bbfd] transition-colors text-[10px] sm:text-xs font-medium backdrop-blur-md"
-            >
-              <Search className="w-3 h-3" />
-              <span className="hidden sm:inline">{t.auditExpert}</span>
-              <ExternalLink className="w-2.5 h-2.5" />
-            </a>
-          </div>
+          {/* Recommendation History — bottom right */}
+          {hasAccess && selectedSiteId && (
+            <div className="relative shrink-0 mr-2 sm:mr-4">
+              <CocoonRecommendationHistory
+                trackedSiteId={selectedSiteId}
+                domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+              />
+            </div>
+          )}
         </div>
 
         <Dialog open={showPrereqModal} onOpenChange={setShowPrereqModal}>

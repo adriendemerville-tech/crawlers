@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Bot, Send, Loader2, Trash2, Plus, X, Sparkles, Search, MessageSquare, ZoomIn, ZoomOut, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -207,6 +208,7 @@ function getSessionHash(): string {
 
 export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCancelPick, trackedSiteId, domain }: CocoonAIChatProps) {
   const { language } = useLanguage();
+  const { user } = useAuth();
   const t = labels[language] || labels.fr;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
@@ -446,6 +448,21 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       // Save after each exchange
       setMessages(prev => {
         saveHistory(prev);
+        // Save recommendation to database
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg?.role === 'assistant' && lastMsg.content.length > 20 && trackedSiteId && domain && user) {
+          const summary = lastMsg.content.replace(/[#*_`]/g, '').slice(0, 100);
+          supabase.from('cocoon_recommendations').insert({
+            tracked_site_id: trackedSiteId,
+            user_id: user.id,
+            domain,
+            recommendation_text: lastMsg.content,
+            summary,
+            source_context: { language, nodes_count: nodes.length },
+          }).then(({ error }) => {
+            if (error) console.error('[CocoonAIChat] Failed to save recommendation:', error);
+          });
+        }
         return prev;
       });
     }
