@@ -10,7 +10,7 @@ import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2, RotateCcw,
-  Download, Link2, AlertCircle, Plug, Cable
+  Download, Link2, AlertCircle, Plug, Cable, Crown
 } from 'lucide-react';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { CodeBlock } from '../CodeBlock';
@@ -168,6 +169,8 @@ export function SmartConfigurator({
   const { toast } = useToast();
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
+  const { isAdmin } = useAdmin();
+  const canGenerateCode = isAgencyPro || isAdmin;
 
   // Extract domain from siteUrl for payment check
   const siteDomain = useMemo(() => {
@@ -1560,7 +1563,7 @@ export function SmartConfigurator({
                     <RotateCcw className="w-3 h-3" />
                     Modifier
                   </Button>
-                ) : (
+                ) : canGenerateCode ? (
                   <Button
                     onClick={handleGenerate}
                     disabled={enabledCount === 0 || isGenerating}
@@ -1582,6 +1585,14 @@ export function SmartConfigurator({
                         Générer ({enabledCount})
                       </>
                     )}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => window.open('/pricing', '_blank')}
+                    className="gap-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-0 text-xs h-8 px-3"
+                  >
+                    <Crown className="w-3 h-3" />
+                    Pro Agency requis
                   </Button>
                 )}
               </div>
