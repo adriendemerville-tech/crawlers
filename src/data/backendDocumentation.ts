@@ -296,18 +296,38 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`track-analytics\` | ❌ | Tracking événements analytics |
 | \`fetch-news\` | ❌ | Récupère les actualités SEO |
 | \`fetch-external-site\` | ✅ | Proxy HTML pour analyse |
-| \`agent-cto\` | ✅ | Agent CTO autonome |
+| \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation prompts) |
+| \`agent-seo\` | ✅ | Agent SEO autonome |
 | \`aggregate-observatory\` | ✅ | Agrégation observatoire sectoriel |
 | \`calculate-llm-volumes\` | ✅ | Calcul volumes LLM |
+| \`calculate-llm-visibility\` | ✅ | Calcul score visibilité LLM |
+| \`calculate-ias\` | ✅ | Calcul Indice d'Alignement Stratégique |
+| \`calculate-internal-pagerank\` | ✅ | PageRank interne par page |
 | \`measure-audit-impact\` | ✅ | Mesure d'impact post-audit |
 | \`snapshot-audit-impact\` | ✅ | Snapshot T+30/60/90 |
+| \`auto-measure-predictions\` | ✅ | Mesure automatique des prédictions |
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
+| \`refresh-llm-visibility-all\` | ✅ | CRON rafraîchissement visibilité LLM |
+| \`persist-cocoon-session\` | ✅ | Sauvegarde session Cocoon |
+| \`fetch-ga4-data\` | ✅ | Récupère données Google Analytics 4 |
+| \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
 | \`sdk-status\` | ❌ | Statut du SDK widget |
 | \`sitemap\` | ❌ | Génération sitemap XML |
 | \`rss-feed\` | ❌ | Flux RSS du blog |
 | \`verify-turnstile\` | ❌ | Vérification Cloudflare Turnstile |
 | \`widget-connect\` | ❌ | Connexion du widget externe |
+| \`serve-client-script\` | ❌ | Sert le script client GTM |
 | \`wpsync\` | ✅ | Synchronisation WordPress |
+| \`auth-email-hook\` | ❌ | Hook personnalisé emails auth |
+| \`process-email-queue\` | ✅ | Worker file d'attente emails |
+| \`process-script-queue\` | ✅ | Worker file d'attente scripts |
+| \`dry-run-script\` | ✅ | Test à blanc d'un script correctif |
+| \`archive-solution\` | ✅ | Archive une solution/correctif |
+| \`watchdog-scripts\` | ✅ | Watchdog CRON des scripts déployés |
+| \`kill-all-viewers\` | ✅ | Révoque tous les viewers (admin) |
+| \`view-function-source\` | ✅ | Consultation source d'une edge function |
+| \`run-backend-tests\` | ✅ | Exécute les tests backend |
+| \`update-config\` | ✅ | MAJ configuration système |
 
 ## Exemple de requête
 
