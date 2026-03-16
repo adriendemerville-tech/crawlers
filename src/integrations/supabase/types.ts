@@ -2314,6 +2314,96 @@ export type Database = {
         }
         Relationships: []
       }
+      prompt_deployments: {
+        Row: {
+          api_used: string | null
+          category: string | null
+          client_id: string | null
+          created_at: string
+          deployed_at: string | null
+          estimated_cost_eur: number | null
+          id: string
+          is_deployed: boolean | null
+          llm_model: string | null
+          prompt_label: string | null
+          prompt_text: string
+          roi_context: Json | null
+          roi_measured_at: string | null
+          roi_pertinence_score: number | null
+          source_csv_filename: string | null
+          target_type: string
+          tokens_input: number | null
+          tokens_output: number | null
+          tokens_total: number | null
+          tracked_site_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_used?: string | null
+          category?: string | null
+          client_id?: string | null
+          created_at?: string
+          deployed_at?: string | null
+          estimated_cost_eur?: number | null
+          id?: string
+          is_deployed?: boolean | null
+          llm_model?: string | null
+          prompt_label?: string | null
+          prompt_text: string
+          roi_context?: Json | null
+          roi_measured_at?: string | null
+          roi_pertinence_score?: number | null
+          source_csv_filename?: string | null
+          target_type?: string
+          tokens_input?: number | null
+          tokens_output?: number | null
+          tokens_total?: number | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_used?: string | null
+          category?: string | null
+          client_id?: string | null
+          created_at?: string
+          deployed_at?: string | null
+          estimated_cost_eur?: number | null
+          id?: string
+          is_deployed?: boolean | null
+          llm_model?: string | null
+          prompt_label?: string | null
+          prompt_text?: string
+          roi_context?: Json | null
+          roi_measured_at?: string | null
+          roi_pertinence_score?: number | null
+          source_csv_filename?: string | null
+          target_type?: string
+          tokens_input?: number | null
+          tokens_output?: number | null
+          tokens_total?: number | null
+          tracked_site_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_deployments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "agency_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prompt_deployments_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prompt_matrix_imports: {
         Row: {
           column_mapping: Json
