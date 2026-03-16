@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { History, X, Loader2, Trash2, ChevronDown, CheckCircle2, Circle } from 'lucide-react';
+import { History, X, Loader2, Trash2, ChevronDown, CheckCircle2, Circle, ClipboardList, Code2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
