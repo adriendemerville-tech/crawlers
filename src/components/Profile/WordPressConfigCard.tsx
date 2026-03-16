@@ -146,17 +146,9 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
   };
 
   const handleDownloadPlugin = () => {
-    const phpCode = generatePluginPhp(siteApiKey, siteDomain);
-    const blob = new Blob([phpCode], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'crawlers-geo.php';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success(t3(language, 'Plugin téléchargé !', 'Plugin downloaded!', '¡Plugin descargado!'));
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || 'tutlimtasnjabdfhpewu';
+    window.open(`https://${projectId}.supabase.co/functions/v1/download-plugin`, '_blank');
+    toast.success(t3(language, 'Téléchargement du plugin .zip lancé !', 'Plugin .zip download started!', '¡Descarga del plugin .zip iniciada!'));
   };
 
   const handleMagicLink = async () => {

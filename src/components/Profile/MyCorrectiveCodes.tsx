@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, History } from 'lucide-react';
+import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, History, Bug } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { MyScriptRulesHistory } from './MyScriptRulesHistory';
+import { ScriptDebugTool } from './ScriptDebugTool';
 
 interface CorrectiveCodeFix {
   id: string;
@@ -47,6 +48,7 @@ const translations = {
     validateError: 'Erreur lors de la validation',
     tabScripts: 'Scripts',
     tabHistory: 'Historique',
+    tabDebug: 'Diagnostic',
   },
   en: {
     title: 'My Corrective Codes',
@@ -63,6 +65,7 @@ const translations = {
     validateError: 'Error validating',
     tabScripts: 'Scripts',
     tabHistory: 'History',
+    tabDebug: 'Diagnostic',
   },
   es: {
     title: 'Mis Códigos Correctivos',
@@ -79,6 +82,7 @@ const translations = {
     validateError: 'Error al validar',
     tabScripts: 'Scripts',
     tabHistory: 'Historial',
+    tabDebug: 'Diagnóstico',
   },
 };
 
@@ -246,6 +250,10 @@ export function MyCorrectiveCodes() {
               <History className="w-3 h-3" />
               {t.tabHistory}
             </TabsTrigger>
+            <TabsTrigger value="debug" className="text-xs gap-1.5 h-7">
+              <Bug className="w-3 h-3" />
+              {t.tabDebug}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="scripts">
@@ -347,6 +355,10 @@ export function MyCorrectiveCodes() {
 
           <TabsContent value="history">
             <MyScriptRulesHistory />
+          </TabsContent>
+
+          <TabsContent value="debug">
+            <ScriptDebugTool />
           </TabsContent>
         </Tabs>
       </CardContent>
