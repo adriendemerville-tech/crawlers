@@ -764,7 +764,8 @@ function SceneContent({
           isHovered={node.id === hoveredNodeId}
           isXRayMode={isXRayMode}
           customNodeColors={customNodeColors}
-          spreadScale={spreadScale}
+           spreadScale={spreadScale}
+           colorIntensity={colorIntensity}
           onPointerOver={() => onNodeHover(node.id)}
           onPointerOut={onNodeUnhover}
           onClick={() => {
