@@ -2342,6 +2342,7 @@ Deno.serve(async (req) => {
       founderInfo = cachedContext.founderInfo || { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
       localCompetitorData = null;
       gmbData = cachedContext.gmbData || null;
+      facebookPageInfo = cachedContext.facebookPageInfo || { pageUrl: null, pageName: null, found: false };
       if (cachedContext.llmData) effectiveToolsData.llm = cachedContext.llmData;
     } else {
       // ═══ FULL PATH: Collect all data with maximum parallelism ═══
