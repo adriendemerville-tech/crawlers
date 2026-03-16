@@ -437,7 +437,7 @@ export default function SiteCrawl() {
       return localStorage.getItem('crawl_last_url') || '';
     } catch { return ''; }
   });
-  const [maxPages, setMaxPages] = useState(50);
+  const [maxPages, setMaxPages] = useState(20);
   const [isLoading, setIsLoading] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
   const [pages, setPages] = useState<CrawlPage[]>([]);
@@ -586,8 +586,8 @@ export default function SiteCrawl() {
           const count = data.data.indexed_pages as number;
           setIndexedPagesCount(count);
           // Auto-cap slider if current value exceeds indexed pages
-          if (count > 0 && maxPages > Math.min(500, count)) {
-            setMaxPages(Math.min(500, count));
+          if (count > 0 && maxPages > Math.min(20, count)) {
+            setMaxPages(Math.min(20, count));
           }
         }
       } catch {
@@ -945,7 +945,7 @@ export default function SiteCrawl() {
                       value={[maxPages]}
                       onValueChange={v => setMaxPages(v[0])}
                       min={10}
-                      max={indexedPagesCount != null && indexedPagesCount > 0 ? Math.min(500, Math.max(10, indexedPagesCount)) : 500}
+                      max={indexedPagesCount != null && indexedPagesCount > 0 ? Math.min(20, Math.max(10, indexedPagesCount)) : 20}
                       step={10}
                       disabled={isLoading}
                       className="[&_[role=slider]]:bg-violet-500 [&_[role=slider]]:border-violet-500 [&_.relative>div]:bg-violet-500"
@@ -953,10 +953,10 @@ export default function SiteCrawl() {
                     {indexedPagesCount != null && indexedPagesCount > 0 && indexedPagesCount < 500 && (
                       <p className="text-[10px] text-muted-foreground">
                         {language === 'fr' 
-                          ? `Maximum limité à ${Math.min(500, indexedPagesCount)} pages (pages indexées détectées par Google)` 
+                          ? `Maximum limité à ${Math.min(20, indexedPagesCount)} pages (pages indexées détectées par Google)` 
                           : language === 'es' 
-                          ? `Máximo limitado a ${Math.min(500, indexedPagesCount)} páginas (páginas indexadas detectadas por Google)` 
-                          : `Max limited to ${Math.min(500, indexedPagesCount)} pages (Google indexed pages detected)`}
+                          ? `Máximo limitado a ${Math.min(20, indexedPagesCount)} páginas (páginas indexadas detectadas por Google)` 
+                          : `Max limited to ${Math.min(20, indexedPagesCount)} pages (Google indexed pages detected)`}
                       </p>
                     )}
                   </div>

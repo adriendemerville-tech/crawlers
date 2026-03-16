@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     let normalizedUrl = url.trim();
     if (!normalizedUrl.startsWith('http')) normalizedUrl = `https://${normalizedUrl}`;
     const domain = new URL(normalizedUrl).hostname;
-    let pageLimit = Math.min(maxPages, 500);
+    let pageLimit = Math.min(maxPages, 20);
 
     // ── Pre-scan: cap to indexed pages count (DataForSEO) ──
     try {
@@ -140,8 +140,7 @@ Deno.serve(async (req) => {
 
     // Credit cost: only for pages beyond fair use (or all pages for free users)
     const creditCost = isUnlimited ? 0 : (
-      paidPages <= 0 ? 0 :
-      paidPages <= 50 ? 5 : paidPages <= 100 ? 10 : paidPages <= 200 ? 15 : 30
+      paidPages <= 0 ? 0 : 1
     );
 
     if (!isUnlimited && creditCost > 0) {

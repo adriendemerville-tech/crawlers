@@ -457,41 +457,43 @@ async function scrapePage(
       html = result.html;
       responseTime = result.responseTime;
     } else {
-      const fetchStart = Date.now();
-      const res = await fetch(`${FIRECRAWL_API}/scrape`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: pageUrl, formats: ['rawHtml'], onlyMainContent: false, waitFor: 3000 }),
-      });
-      responseTime = Date.now() - fetchStart;
-      const data = await res.json();
-      html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
-      statusCode = data?.data?.metadata?.statusCode || 200;
+      // ── StealthFetch FIRST (free) ──
+      try {
+        const { stealthFetch } = await import('../_shared/stealthFetch.ts');
+        const fetchStart = Date.now();
+        const { response: stealthResp } = await stealthFetch(pageUrl, { timeout: 10000, maxRetries: 2 });
+        const stealthHtml = await stealthResp.text();
+        responseTime = Date.now() - fetchStart;
+        statusCode = stealthResp.status;
 
-      const sourceUrl = data?.data?.metadata?.sourceURL;
-      if (sourceUrl && sourceUrl !== pageUrl) {
-        redirectUrl = sourceUrl;
+        if (stealthResp.ok && stealthHtml.length > 500) {
+          html = stealthHtml;
+          console.log(`[Worker] stealthFetch OK for ${pageUrl} (${stealthHtml.length} chars)`);
+        }
+      } catch (stealthErr) {
+        console.warn(`[Worker] stealthFetch failed for ${pageUrl}:`, stealthErr);
       }
 
-      await trackPaidApiCall('process-crawl-queue', 'firecrawl', '/scrape', pageUrl).catch(() => {});
-      
-      // Fallback to stealthFetch on 403/503 (Cloudflare/WAF blocks)
-      if ((statusCode === 403 || statusCode === 503 || !html) && !useBrowserless) {
-        try {
-          const { stealthFetch } = await import('../_shared/stealthFetch.ts');
-          console.log(`[Worker] Firecrawl got ${statusCode} for ${pageUrl}, trying stealthFetch fallback...`);
-          const fallbackStart = Date.now();
-          const { response: fallbackResp } = await stealthFetch(pageUrl, { timeout: 10000, maxRetries: 2 });
-          const fallbackHtml = await fallbackResp.text();
-          if (fallbackResp.ok && fallbackHtml.length > 500) {
-            html = fallbackHtml;
-            statusCode = fallbackResp.status;
-            responseTime = Date.now() - fallbackStart;
-            console.log(`[Worker] stealthFetch fallback succeeded for ${pageUrl} (${fallbackHtml.length} chars)`);
-          }
-        } catch (fallbackErr) {
-          console.warn(`[Worker] stealthFetch fallback failed for ${pageUrl}:`, fallbackErr);
+      // ── Firecrawl FALLBACK (only if stealthFetch failed) ──
+      if (!html || html.length < 500) {
+        console.log(`[Worker] stealthFetch insufficient for ${pageUrl}, falling back to Firecrawl...`);
+        const fetchStart = Date.now();
+        const res = await fetch(`${FIRECRAWL_API}/scrape`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${firecrawlKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: pageUrl, formats: ['rawHtml'], onlyMainContent: false, waitFor: 3000 }),
+        });
+        responseTime = Date.now() - fetchStart;
+        const data = await res.json();
+        html = data?.data?.rawHtml || data?.rawHtml || data?.data?.html || data?.html || '';
+        statusCode = data?.data?.metadata?.statusCode || 200;
+
+        const sourceUrl = data?.data?.metadata?.sourceURL;
+        if (sourceUrl && sourceUrl !== pageUrl) {
+          redirectUrl = sourceUrl;
         }
+
+        await trackPaidApiCall('process-crawl-queue', 'firecrawl', '/scrape', pageUrl).catch(() => {});
       }
       
       if (!html) return null;
