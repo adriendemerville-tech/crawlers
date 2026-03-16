@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,20 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown, FileSearch } from 'lucide-react';
+import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown, FileSearch, Filter, X } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
+
+/** Actionable event types to expose in the filter (label → event_type(s)) */
+const ACTION_FILTERS: { label: string; types: string[]; color: string }[] = [
+  { label: 'Audit Expert', types: ['expert_audit_launched'], color: 'text-amber-500' },
+  { label: 'Audit Comparé', types: ['audit_compare_launched'], color: 'text-violet-500' },
+  { label: 'Analyse Magnet', types: ['free_analysis_crawlers'], color: 'text-blue-500' },
+  { label: 'Crawl Multi-page', types: ['multi_page_crawl'], color: 'text-emerald-500' },
+  { label: 'Cocoon', types: ['cocoon_generated'], color: 'text-teal-500' },
+  { label: 'Code Correctif', types: ['corrective_code_generated', 'corrective_code_downloaded'], color: 'text-orange-500' },
+  { label: 'Inscription', types: ['signup_completed', 'signup_click'], color: 'text-sky-500' },
+];
 
 interface UserProfile {
   id: string;
@@ -44,6 +55,9 @@ export function UserManagement() {
   const [stripDialogOpen, setStripDialogOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
   const [affiliateUser, setAffiliateUser] = useState<UserProfile | null>(null);
+  const [actionFilter, setActionFilter] = useState<string | null>(null);
+  const [userIdsByAction, setUserIdsByAction] = useState<Set<string>>(new Set());
+  const [actionFilterLoading, setActionFilterLoading] = useState(false);
 
   const fetchAllRoles = async () => {
     const { data } = await supabase
@@ -129,16 +143,45 @@ export function UserManagement() {
     }
   };
 
+  // Fetch user IDs matching the selected action filter
+  const fetchActionFilter = useCallback(async (filterLabel: string | null) => {
+    setActionFilter(filterLabel);
+    if (!filterLabel) {
+      setUserIdsByAction(new Set());
+      return;
+    }
+    setActionFilterLoading(true);
+    try {
+      const filter = ACTION_FILTERS.find(f => f.label === filterLabel);
+      if (!filter) return;
+
+      const { data } = await supabase
+        .from('analytics_events')
+        .select('user_id')
+        .in('event_type', filter.types)
+        .not('user_id', 'is', null);
+
+      const ids = new Set<string>((data || []).map((e: any) => e.user_id).filter(Boolean));
+      setUserIdsByAction(ids);
+    } catch (err) {
+      console.error('Action filter error:', err);
+    } finally {
+      setActionFilterLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUsers();
     fetchAllRoles();
   }, []);
 
-  const filteredUsers = users.filter(user => 
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.last_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.last_name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesAction = !actionFilter || userIdsByAction.has(user.user_id);
+    return matchesSearch && matchesAction;
+  });
 
   const handleAddCredits = async (amount: number) => {
     if (!selectedUser) return;
@@ -271,7 +314,7 @@ export function UserManagement() {
               Gestion des Utilisateurs
             </CardTitle>
             <CardDescription>
-              {users.length} utilisateurs inscrits
+              {filteredUsers.length}/{users.length} utilisateurs{actionFilter ? ` • filtre : ${actionFilter}` : ''}
             </CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading}>
@@ -281,8 +324,8 @@ export function UserManagement() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-4">
-          <div className="relative">
+        <div className="mb-4 flex gap-2 items-center">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Rechercher par nom ou email..."
@@ -291,6 +334,38 @@ export function UserManagement() {
               className="pl-10"
             />
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant={actionFilter ? 'default' : 'outline'} size="sm" className="gap-1.5 shrink-0" disabled={actionFilterLoading}>
+                {actionFilterLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Filter className="h-3.5 w-3.5" />}
+                {actionFilter || 'Actions'}
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Filtrer par action</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {ACTION_FILTERS.map((f) => (
+                <DropdownMenuItem
+                  key={f.label}
+                  onClick={() => fetchActionFilter(actionFilter === f.label ? null : f.label)}
+                  className="gap-2"
+                >
+                  <span className={`h-2 w-2 rounded-full ${f.color.replace('text-', 'bg-')}`} />
+                  {actionFilter === f.label ? `✓ ${f.label}` : f.label}
+                </DropdownMenuItem>
+              ))}
+              {actionFilter && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => fetchActionFilter(null)} className="gap-2 text-muted-foreground">
+                    <X className="h-3.5 w-3.5" />
+                    Réinitialiser
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {loading ? (
