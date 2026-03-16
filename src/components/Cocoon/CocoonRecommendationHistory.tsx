@@ -155,10 +155,10 @@ export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTask
                     {onGenerateFix && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onGenerateFix(item.recommendation_text); }}
-                        className="p-1 rounded-md hover:bg-emerald-400/15 transition-colors"
+                        className="p-1 rounded-md hover:bg-blue-400/15 transition-colors"
                         title={language === 'en' ? 'Generate fix' : language === 'es' ? 'Generar corrección' : 'Générer le fix'}
                       >
-                        <Code2 className="w-3 h-3 text-emerald-400/60 hover:text-emerald-400" />
+                        <Code2 className="w-3 h-3 text-blue-400/60 hover:text-blue-400" />
                       </button>
                     )}
                   </div>
