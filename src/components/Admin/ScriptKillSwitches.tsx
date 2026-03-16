@@ -81,6 +81,7 @@ export function ScriptKillSwitches() {
   const [multipageEnabled, setMultipageEnabled] = useState(true);
   const [sdkEnabled, setSdkEnabled] = useState(true);
   const [freemiumOpen, setFreemiumOpen] = useState(false);
+  const [hideHomeLeadmagnet, setHideHomeLeadmagnet] = useState(false);
   const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState('');
   const [loading, setLoading] = useState(true);
