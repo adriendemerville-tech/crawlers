@@ -375,6 +375,7 @@ export function CocoonForceGraph({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       // ─── Background ───
+      const time = frame * 0.008;
       if (isDayMode) {
         ctx.fillStyle = "#f5f5f0";
         ctx.fillRect(0, 0, width, height);
@@ -387,7 +388,6 @@ export function CocoonForceGraph({
         ctx.fillRect(0, 0, width, height);
 
         // ─── Subtle hex grid (Jarvis backdrop) ───
-        const time = frame * 0.008;
         ctx.save();
         ctx.globalAlpha = 0.03 + Math.sin(time * 0.5) * 0.01;
         ctx.strokeStyle = "#6c5ce7";
