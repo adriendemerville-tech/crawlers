@@ -95,7 +95,7 @@ export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
           {result.scores.technical.brokenLinksCount !== undefined && (
             <MetricRow label="Liens cassés" value={`${result.scores.technical.brokenLinksCount}/${result.scores.technical.brokenLinksChecked || 0}`} status={result.scores.technical.brokenLinksCount === 0 ? 'good' : result.scores.technical.brokenLinksCount <= 2 ? 'warning' : 'bad'} />
           )}
-          {result.scores.technical.psiUnavailable && (
+          {(result.scores.technical as any).psiUnavailable && (
             <p className="text-[10px] text-muted-foreground mt-1 italic">⚠️ PageSpeed indisponible — score estimé</p>
           )}
         </CategoryCard>
