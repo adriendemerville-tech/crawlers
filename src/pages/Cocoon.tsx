@@ -293,9 +293,7 @@ export default function Cocoon() {
     if (params.get('fullscreen') === '1') {
       setIsFullscreen(true);
     }
-    if (params.get('daymode') === '1') {
-      setIsDayMode(true);
-    }
+    // daymode param removed
     const siteParam = params.get('site');
     if (siteParam) {
       setSelectedSiteId(siteParam);
