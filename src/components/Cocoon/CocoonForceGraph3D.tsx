@@ -218,6 +218,7 @@ function NodeSphere({
   isXRayMode,
   customNodeColors,
   spreadScale,
+  colorIntensity,
   onPointerOver,
   onPointerOut,
   onClick,
@@ -228,6 +229,7 @@ function NodeSphere({
   isXRayMode: boolean;
   customNodeColors: Record<string, string>;
   spreadScale: number;
+  colorIntensity: number;
   onPointerOver: () => void;
   onPointerOut: () => void;
   onClick: () => void;
