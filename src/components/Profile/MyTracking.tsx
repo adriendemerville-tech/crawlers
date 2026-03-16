@@ -1136,7 +1136,8 @@ export function MyTracking() {
                               <Line type="monotone" dataKey="seo" name={t.seoScore} stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
                               <Line type="monotone" dataKey="geo" name={t.geoScore} stroke="hsl(142, 76%, 36%)" strokeWidth={2} dot={{ r: 3 }} />
                               <Line type="monotone" dataKey="citation" name={t.citationRate} stroke="hsl(262, 83%, 58%)" strokeWidth={2} dot={{ r: 3 }} />
-                              <Line type="monotone" dataKey="performance" name={t.performance} stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={{ r: 3 }} />
+                              <Line type="monotone" dataKey="performanceMobile" name={t.performanceMobile} stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={{ r: 3 }} />
+                              <Line type="monotone" dataKey="performanceDesktop" name={t.performanceDesktop} stroke="hsl(210, 90%, 55%)" strokeWidth={2} dot={{ r: 3 }} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
