@@ -110,9 +110,11 @@ interface AdminDashboardProps {
   readOnly?: boolean;
   canSeeDocs?: boolean;
   canSeeAlgos?: boolean;
+  canSeeFinances?: boolean;
+  canSeeUsers?: boolean;
 }
 
-export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true }: AdminDashboardProps) {
+export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true }: AdminDashboardProps) {
   const { language } = useLanguage();
   const t = adminTranslations[language] || adminTranslations.fr;
   const [activeTab, setActiveTab] = useState('analytics');
@@ -161,7 +163,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       label: t.monitoring,
       items: [
         { id: 'analytics', label: t.analytics, icon: BarChart3, group: 'monitoring' },
-        { id: 'finances', label: t.finances, icon: Wallet, group: 'monitoring' },
+        ...(canSeeFinances ? [{ id: 'finances', label: t.finances, icon: Wallet, group: 'monitoring' }] : []),
         { id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring' },
         { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring' },
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
@@ -171,7 +173,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
     {
       label: t.contentUsers,
       items: [
-        { id: 'users', label: t.users, icon: Users, group: 'content' },
+        ...(canSeeUsers ? [{ id: 'users', label: t.users, icon: Users, group: 'content' }] : []),
         { id: 'blog', label: t.blog, icon: FileText, group: 'content' },
         { id: 'support', label: t.support, icon: MessageCircle, group: 'content' },
         { id: 'affiliates', label: t.affiliates, icon: Link2, group: 'content' },

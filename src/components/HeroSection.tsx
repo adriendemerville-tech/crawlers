@@ -299,7 +299,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               </div>
             </div>
             {hideLeadmagnet ? (
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center sm:items-start">
                 <Button 
                   type="submit" 
                   size="lg" 
@@ -309,7 +309,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
                   <FileSearch className="h-5 w-5 mr-2" />
                   {language === 'fr' ? 'Démarrer Audit Expert' : language === 'es' ? 'Iniciar Auditoría Experta' : 'Start Expert Audit'}
                 </Button>
-                <span className="text-[11px] text-muted-foreground mt-1.5">
+                <span className="text-[11px] text-muted-foreground mt-1.5 text-center w-full">
                   {language === 'fr' ? '9 minutes max' : language === 'es' ? '9 minutos máx' : '9 minutes max'}
                 </span>
               </div>
@@ -368,7 +368,8 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
           {language === 'es' ? 'Audit Expert: 168 criterios SEO/GEO verificados, cruzados y contextualizados.' : language === 'en' ? 'Expert Audit: 168 SEO/GEO criteria verified, cross-referenced and contextualized.' : 'Audit Expert : 168 critères SEO/GEO vérifiés, croisés et contextualisés.'}
         </p>
 
-        {/* Expert Audit + Compared Audit Buttons */}
+        {/* Expert Audit + Compared Audit Buttons — hidden in leadmagnet mode */}
+        {!hideLeadmagnet && (
         <div className="mt-4 flex justify-center gap-3" data-tour="audit-expert">
           <Link to={currentUrl ? `/audit-expert?url=${encodeURIComponent(currentUrl)}` : '/audit-expert'}>
             <Button
@@ -383,6 +384,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
             </Button>
           </Link>
         </div>
+        )}
       </div>
     </section>
   );
