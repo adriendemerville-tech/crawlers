@@ -53,14 +53,17 @@ export function UserManagement() {
       const admins = new Set<string>();
       const viewers = new Set<string>();
       const viewers2 = new Set<string>();
+      const auditors = new Set<string>();
       data.forEach((r: any) => {
         if (r.role === 'admin') admins.add(r.user_id);
         if (r.role === 'viewer') viewers.add(r.user_id);
         if (r.role === 'viewer_level2') viewers2.add(r.user_id);
+        if (r.role === 'auditor') auditors.add(r.user_id);
       });
       setAdminUserIds(admins);
       setViewerUserIds(viewers);
       setViewer2UserIds(viewers2);
+      setAuditorUserIds(auditors);
     }
   };
 
