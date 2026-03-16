@@ -1389,7 +1389,7 @@ async function searchFounderProfile(domain: string, targetLocation: string = 'fr
         const resp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
           method: 'POST',
           headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-          body: JSON.stringify([{ keyword: q, location_code: 2250, language_code: 'fr', depth: 5 }]),
+          body: JSON.stringify([{ keyword: q, location_code: locInfo.code, language_code: locInfo.lang, depth: 5 }]),
           signal: AbortSignal.timeout(8000),
         });
         if (!resp.ok) { await resp.text(); return null; }
