@@ -2838,6 +2838,24 @@ Deno.serve(async (req) => {
     // URL tracking (fire-and-forget)
     trackAnalyzedUrl(url).catch(() => {});
 
+    // Save raw audit data (fire-and-forget)
+    if (authHeader && supabaseUrl2 && supabaseKey2) {
+      try {
+        const sb2 = createClient(supabaseUrl2, supabaseKey2, {
+          global: { headers: { Authorization: authHeader } }
+        });
+        const { data: { user: rawUser } } = await sb2.auth.getUser();
+        if (rawUser) {
+          saveRawAuditData({
+            userId: rawUser.id, url, domain,
+            auditType: 'strategic',
+            rawPayload: result.data,
+            sourceFunctions: ['audit-strategique-ia'],
+          }).catch(() => {});
+        }
+      } catch {}
+    }
+
     // ═══ ASYNC JOB: Save result if running as background job ═══
     if (jobSb && jobId) {
       await jobSb.from('async_jobs').update({
