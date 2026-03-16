@@ -221,7 +221,7 @@ const CGVU = () => {
               <h2 className="text-xl font-bold text-foreground mt-10 mb-3">7. Abonnement Pro Agency</h2>
               <h3 className="text-lg font-semibold mt-4 mb-2">7.1. Modalités</h3>
               <p>
-                L'abonnement Pro Agency est proposé au tarif de <strong>50 € HT par mois</strong>. Il est souscrit pour une durée indéterminée avec <strong>reconduction tacite mensuelle</strong>. Le paiement est prélevé automatiquement chaque mois via Stripe.
+                L'abonnement Pro Agency est proposé au tarif de <strong>59 € TTC par mois</strong>, sans engagement. Il est souscrit pour une durée indéterminée avec <strong>reconduction tacite mensuelle</strong>. Le paiement est prélevé automatiquement chaque mois via Stripe.
               </p>
 
               <h3 className="text-lg font-semibold mt-4 mb-2">7.2. Avantages inclus</h3>
