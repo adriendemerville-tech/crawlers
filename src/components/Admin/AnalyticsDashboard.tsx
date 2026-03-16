@@ -63,42 +63,8 @@ interface AnalyticsStats {
   cocoonChatSessions: number;
 }
 
-interface TokenUsageStats {
-  totalTokens: number;
-  promptTokens: number;
-  completionTokens: number;
-  callCount: number;
-  byFunction: Record<string, { tokens: number; calls: number; model?: string }>;
-  byModel: Record<string, { promptTokens: number; completionTokens: number; totalTokens: number; calls: number; estimatedCost: number }>;
-  paidApiCalls: number;
-  totalEstimatedCost: number;
-  dataforseoCalls: number;
-  openrouterCalls: number;
-  browserlessCalls: number;
-  firecrawlCalls: number;
-  flyPlaywrightCalls: number;
-  flyEstimatedCost: number;
-  byApiService: Record<string, { calls: number; byEndpoint: Record<string, number> }>;
-}
 
-// Coûts estimés par million de tokens (input/output) en USD
-const MODEL_PRICING: Record<string, { input: number; output: number; label: string }> = {
-  'google/gemini-2.5-pro': { input: 1.25, output: 10.0, label: 'Gemini 2.5 Pro' },
-  'google/gemini-3-pro-preview': { input: 1.25, output: 10.0, label: 'Gemini 3 Pro' },
-  'google/gemini-3-flash-preview': { input: 0.15, output: 0.60, label: 'Gemini 3 Flash' },
-  'google/gemini-2.5-flash': { input: 0.15, output: 0.60, label: 'Gemini 2.5 Flash' },
-  'google/gemini-2.5-flash-lite': { input: 0.075, output: 0.30, label: 'Gemini 2.5 Flash Lite' },
-  'openai/gpt-5': { input: 10.0, output: 30.0, label: 'GPT-5' },
-  'openai/gpt-5-mini': { input: 1.10, output: 4.40, label: 'GPT-5 Mini' },
-  'openai/gpt-5-nano': { input: 0.10, output: 0.40, label: 'GPT-5 Nano' },
-  'openai/gpt-5.2': { input: 10.0, output: 30.0, label: 'GPT-5.2' },
-};
 
-function estimateCost(model: string, promptTokens: number, completionTokens: number): number {
-  const pricing = MODEL_PRICING[model] || { input: 0.50, output: 1.50 }; // fallback
-  const usd = (promptTokens * pricing.input + completionTokens * pricing.output) / 1_000_000;
-  return usd * 0.92; // USD → EUR approximate
-}
 
 interface DailyData {
   date: string;
