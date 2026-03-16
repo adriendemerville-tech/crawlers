@@ -356,6 +356,10 @@ export function MyCorrectiveCodes() {
           <TabsContent value="history">
             <MyScriptRulesHistory />
           </TabsContent>
+
+          <TabsContent value="debug">
+            <ScriptDebugTool />
+          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
