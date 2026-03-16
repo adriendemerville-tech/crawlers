@@ -12,9 +12,10 @@ import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
 import { CocoonRecommendationHistory } from "@/components/Cocoon/CocoonRecommendationHistory";
+import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
-import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Sparkles, Layers } from "lucide-react";
+import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Sparkles, Layers, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
@@ -168,6 +169,7 @@ export default function Cocoon() {
   const [showUpsell, setShowUpsell] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
   const [showPrereqModal, setShowPrereqModal] = useState(false);
+  const [showTaskPlan, setShowTaskPlan] = useState(false);
   const [prereqStatus, setPrereqStatus] = useState<{ hasCrawl: boolean; hasAudit: boolean }>({ hasCrawl: true, hasAudit: true });
   const [truncationInfo, setTruncationInfo] = useState<{ truncated: boolean; total: number; used: number } | null>(null);
   const [autoLaunchDomain, setAutoLaunchDomain] = useState<string | null>(null);
@@ -727,16 +729,55 @@ export default function Cocoon() {
           {/* Spacer */}
           <div className="flex-1" />
 
+          {/* Task Plan button — bottom right */}
+          {hasAccess && selectedSiteId && (
+            <button
+              onClick={() => setShowTaskPlan(true)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 backdrop-blur-md transition-all shrink-0"
+            >
+              <ClipboardList className="w-4 h-4" />
+              <span className="text-xs font-medium hidden sm:inline">{language === 'en' ? 'Tasks' : language === 'es' ? 'Tareas' : 'Tâches'}</span>
+            </button>
+          )}
+
           {/* Recommendation History — bottom right */}
           {hasAccess && selectedSiteId && (
             <div className="relative shrink-0 mr-2 sm:mr-4">
               <CocoonRecommendationHistory
                 trackedSiteId={selectedSiteId}
                 domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+                onAddToTaskPlan={async (title, recoId) => {
+                  if (!user) return;
+                  const { supabase: sb } = await import('@/integrations/supabase/client');
+                  await sb.from('cocoon_tasks').insert({
+                    tracked_site_id: selectedSiteId,
+                    user_id: user.id,
+                    title,
+                    status: 'todo',
+                    priority: 'medium',
+                    source_recommendation_id: recoId,
+                  });
+                  toast({ title: language === 'en' ? 'Task added' : language === 'es' ? 'Tarea añadida' : 'Tâche ajoutée' });
+                  setShowTaskPlan(true);
+                }}
+                onGenerateFix={(recoText) => {
+                  const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
+                  const domain = selectedSite?.domain || '';
+                  navigate(`/audit-expert?url=${encodeURIComponent(domain)}&from=cocoon`);
+                }}
               />
             </div>
           )}
         </div>
+
+        {hasAccess && selectedSiteId && (
+          <CocoonTaskPlanModal
+            open={showTaskPlan}
+            onOpenChange={setShowTaskPlan}
+            trackedSiteId={selectedSiteId}
+            domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+          />
+        )}
 
         <Dialog open={showPrereqModal} onOpenChange={setShowPrereqModal}>
           <DialogContent className="bg-[#1a1035] border-[hsl(263,70%,20%)] text-white max-w-md p-0 overflow-hidden">

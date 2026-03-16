@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { History, X, Loader2, Trash2, ChevronDown, CheckCircle2, Circle } from 'lucide-react';
+import { History, X, Loader2, Trash2, ChevronDown, CheckCircle2, Circle, ClipboardList, Code2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,9 +22,11 @@ const i18n = {
 interface Props {
   trackedSiteId: string | null;
   domain: string;
+  onAddToTaskPlan?: (title: string, recoId: string) => void;
+  onGenerateFix?: (recoText: string) => void;
 }
 
-export function CocoonRecommendationHistory({ trackedSiteId, domain }: Props) {
+export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTaskPlan, onGenerateFix }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [items, setItems] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -134,6 +136,29 @@ export function CocoonRecommendationHistory({ trackedSiteId, domain }: Props) {
                     </p>
                     <p className="text-[10px] text-white/30 mt-0.5">{formatDate(item.created_at)}</p>
                   </button>
+
+                  {/* Hover action buttons */}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    {onAddToTaskPlan && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onAddToTaskPlan(item.summary, item.id); }}
+                        className="p-1 rounded-md hover:bg-[#a78bfa]/15 transition-colors"
+                        title={language === 'en' ? 'Add to task plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan'}
+                      >
+                        <ClipboardList className="w-3 h-3 text-[#a78bfa]/60 hover:text-[#a78bfa]" />
+                      </button>
+                    )}
+                    {onGenerateFix && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onGenerateFix(item.recommendation_text); }}
+                        className="p-1 rounded-md hover:bg-emerald-400/15 transition-colors"
+                        title={language === 'en' ? 'Generate fix' : language === 'es' ? 'Generar corrección' : 'Générer le fix'}
+                      >
+                        <Code2 className="w-3 h-3 text-emerald-400/60 hover:text-emerald-400" />
+                      </button>
+                    )}
+                  </div>
+
                   <ChevronDown className={`w-3 h-3 text-white/30 transition-transform shrink-0 ${expandedId === item.id ? 'rotate-180' : ''}`} />
                 </div>
                 {expandedId === item.id && (
