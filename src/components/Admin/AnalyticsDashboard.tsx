@@ -166,6 +166,8 @@ export function AnalyticsDashboard() {
   const [reliabilityScore, setReliabilityScore] = useState<{ score: number; audits: number; predictions: number } | null>(null);
   const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
   const [businessMetrics, setBusinessMetrics] = useState<{ payingSubscribers: number; creditsPurchased: number; mrr: number }>({ payingSubscribers: 0, creditsPurchased: 0, mrr: 0 });
+  const [totalPlatformCost, setTotalPlatformCost] = useState(0);
+  const [activeUsersCount, setActiveUsersCount] = useState(0);
   const [dbSize, setDbSize] = useState<{ total_mb: number; total_gb: number } | null>(null);
   const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
     totalTokens: 0,
