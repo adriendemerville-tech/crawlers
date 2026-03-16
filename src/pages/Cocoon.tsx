@@ -686,6 +686,25 @@ export default function Cocoon() {
               />
             )}
 
+            {/* Contrast Slider — right side */}
+            {nodes.length > 0 && (
+              <div className="absolute top-3 right-3 z-20 flex flex-col items-center gap-2 backdrop-blur-md bg-black/50 border border-white/10 rounded-lg px-2 py-3">
+                <SlidersHorizontal className="w-3 h-3 text-white/40" />
+                <div className="h-24">
+                  <Slider
+                    orientation="vertical"
+                    min={50}
+                    max={200}
+                    step={5}
+                    value={[graphContrast]}
+                    onValueChange={([v]) => setGraphContrast(v)}
+                    className="h-full [&_[data-orientation=vertical]]:w-1.5"
+                  />
+                </div>
+                <span className="text-[9px] text-white/30 font-mono">{graphContrast}%</span>
+              </div>
+            )}
+
             {/* Side Panel */}
             {selectedNode && (
               <CocoonNodePanel
