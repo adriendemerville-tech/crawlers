@@ -711,7 +711,7 @@ async function fetchKeywordData(
 
 async function checkRankings(
   keywords: { keyword: string; volume: number; difficulty: number }[],
-  domain: string, locationCode: number
+  domain: string, locationCode: number, languageCode: string = 'fr', seDomain: string = 'google.fr'
 ): Promise<KeywordData[]> {
   console.log(`📈 Vérification positionnement pour ${domain}`);
   const results: KeywordData[] = [];
