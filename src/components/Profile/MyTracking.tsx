@@ -79,6 +79,8 @@ const translations = {
     citationRate: 'LLM Citation Rate',
     sentiment: 'AI Sentiment',
     performance: 'Performance',
+    performanceMobile: 'Perf. Mobile',
+    performanceDesktop: 'Perf. Desktop',
     semanticAuth: 'Semantic Authority',
     voiceShare: 'Voice Share',
     evolution: 'Evolution',
