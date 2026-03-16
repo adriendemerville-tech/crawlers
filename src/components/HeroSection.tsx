@@ -299,7 +299,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               </div>
             </div>
             {hideLeadmagnet ? (
-              <div className="flex flex-col items-start shrink-0 self-end">
+              <div className="relative shrink-0 self-end">
                 <Button 
                   type="submit" 
                   size="lg" 
@@ -309,7 +309,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
                   <FileSearch className="h-5 w-5 mr-2" />
                   {language === 'fr' ? 'Démarrer Audit Expert' : language === 'es' ? 'Iniciar Auditoría Experta' : 'Start Expert Audit'}
                 </Button>
-                <span className="text-[11px] text-muted-foreground mt-1.5 text-center w-full">
+                <span className="absolute left-0 right-0 text-[11px] text-muted-foreground mt-1.5 text-center">
                   {language === 'fr' ? '9 minutes max' : language === 'es' ? '9 minutos máx' : '9 minutes max'}
                 </span>
               </div>
