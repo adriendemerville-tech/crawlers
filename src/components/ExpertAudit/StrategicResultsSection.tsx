@@ -152,7 +152,7 @@ export function StrategicResultsSection({
             {result.strategicAnalysis && (
               <AEOScoreCard result={result} />
             )}
-          </motion.div>
+          </FreemiumAwareContent>
 
           {/* Registration Gate — hidden in freemium open mode */}
           <FreemiumAwareGate isLoggedIn={isLoggedIn} />
