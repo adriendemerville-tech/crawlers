@@ -118,7 +118,7 @@ const translations = {
 export default function Profile() {
   const { user, profile, signOut, loading } = useAuth();
   const { language } = useLanguage();
-  const { isAdmin, hasAdminAccess, isReadOnly, canSeeDocs, canSeeAlgos, loading: adminLoading } = useAdmin();
+  const { isAdmin, hasAdminAccess, isReadOnly, canSeeDocs, canSeeAlgos, canSeeFinances, canSeeUsers, loading: adminLoading } = useAdmin();
   const { isAgencyPro, balance } = useCredits();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
