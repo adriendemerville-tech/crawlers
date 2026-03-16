@@ -283,11 +283,18 @@ const ConditionsUtilisation = () => {
               <h2 className="text-xl font-semibold text-foreground mb-4">
                 {t3(language, '11. Limitation de responsabilité', '11. Limitation of Liability', '11. Limitación de responsabilidad')}
               </h2>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language,
                   'Crawlers AI est fourni "en l\'état" sans garantie d\'aucune sorte. Nous ne garantissons pas la disponibilité continue du service ni l\'exactitude des résultats. En aucun cas, Crawlers AI ne pourra être tenu responsable de dommages directs ou indirects résultant de l\'utilisation du site, dans la limite permise par la loi.',
                   'Crawlers AI is provided "as is" without warranty of any kind. We do not guarantee continuous availability of the service or accuracy of results. Under no circumstances shall Crawlers AI be liable for direct or indirect damages resulting from the use of the site, to the extent permitted by law.',
                   'Crawlers AI se proporciona "tal cual" sin garantía de ningún tipo. No garantizamos la disponibilidad continua del servicio ni la exactitud de los resultados. En ningún caso Crawlers AI podrá ser considerado responsable de daños directos o indirectos resultantes del uso del sitio, en la medida permitida por la ley.'
+                )}
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                {t3(language,
+                  'En tout état de cause, la responsabilité totale de Crawlers AI est limitée au montant total effectivement payé par l\'utilisateur au cours des douze (12) derniers mois précédant le fait générateur de responsabilité.',
+                  'In any event, the total liability of Crawlers AI is limited to the total amount actually paid by the user during the twelve (12) months preceding the event giving rise to liability.',
+                  'En cualquier caso, la responsabilidad total de Crawlers AI se limita al monto total efectivamente pagado por el usuario durante los doce (12) meses anteriores al hecho generador de responsabilidad.'
                 )}
               </p>
             </section>
