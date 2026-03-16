@@ -112,9 +112,11 @@ interface AdminDashboardProps {
   canSeeAlgos?: boolean;
   canSeeFinances?: boolean;
   canSeeUsers?: boolean;
+  canSeeIntelligence?: boolean;
+  isAuditor?: boolean;
 }
 
-export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true }: AdminDashboardProps) {
+export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgos = true, canSeeFinances = true, canSeeUsers = true, canSeeIntelligence = true, isAuditor = false }: AdminDashboardProps) {
   const { language } = useLanguage();
   const t = adminTranslations[language] || adminTranslations.fr;
   const [activeTab, setActiveTab] = useState('analytics');
