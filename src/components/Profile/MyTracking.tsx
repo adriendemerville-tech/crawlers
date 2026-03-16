@@ -452,8 +452,9 @@ export function MyTracking() {
         ? Math.round((botResults.filter((b: any) => b.status === 'allowed').length / botResults.length) * 100)
         : null;
 
-      // Extract PageSpeed performance score (0-100)
-      const performanceScore = psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
+      // Extract PageSpeed performance scores (mobile + desktop)
+      const performanceScore = psiData?.data?.mobile?.scores?.performance ?? psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
+      const performanceDesktop = psiData?.data?.desktop?.scores?.performance ?? null;
 
       // Insert stats entry
       await supabase.from('user_stats_history').insert({
@@ -471,6 +472,7 @@ export function MyTracking() {
           psiData: psiData?.data,
           crawlersData: crawlersData?.data || crawlersData,
           performanceScore,
+          performanceDesktop,
           llmOverallScore,
           serpData,
         },
