@@ -153,10 +153,8 @@ export function StrategicResultsSection({
             )}
           </motion.div>
 
-          {/* Registration Gate */}
-          <AnimatePresence>
-            {!isLoggedIn && <RegistrationGate />}
-          </AnimatePresence>
+          {/* Registration Gate — hidden in freemium open mode */}
+          <FreemiumAwareGate isLoggedIn={isLoggedIn} />
         </div>
       </motion.div>
     </StrategicErrorBoundary>
