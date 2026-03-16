@@ -118,6 +118,7 @@ interface WordPressConfigCardProps {
 export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig }: WordPressConfigCardProps) {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const { isAdmin } = useAdmin();
 
   const [wpUrl, setWpUrl] = useState(`https://${siteDomain}`);
   const [generatingLink, setGeneratingLink] = useState(false);
@@ -126,6 +127,49 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
   const [apiKeyCopied, setApiKeyCopied] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [gtmSnippetCopied, setGtmSnippetCopied] = useState(false);
+
+  // GA4 admin-only state
+  const [ga4Enabled, setGa4Enabled] = useState(false);
+  const [ga4Loading, setGa4Loading] = useState(false);
+
+  // Load GA4 config on mount (admin only)
+  useEffect(() => {
+    if (!isAdmin) return;
+    (async () => {
+      const { data } = await supabase
+        .from('system_config')
+        .select('value')
+        .eq('key', 'ga4_oauth_enabled')
+        .maybeSingle();
+      if (data?.value && typeof data.value === 'object' && (data.value as any).active === true) {
+        setGa4Enabled(true);
+      }
+    })();
+  }, [isAdmin]);
+
+  const handleGa4Toggle = async (checked: boolean) => {
+    setGa4Loading(true);
+    try {
+      const { error } = await supabase
+        .from('system_config')
+        .upsert({
+          key: 'ga4_oauth_enabled',
+          value: { active: checked },
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'key' });
+
+      if (error) throw error;
+      setGa4Enabled(checked);
+      toast.success(checked
+        ? t3(language, 'Google Analytics activé — reconnectez Google pour appliquer le scope GA4.', 'Google Analytics enabled — reconnect Google to apply the GA4 scope.', 'Google Analytics activado — reconecte Google para aplicar el alcance GA4.')
+        : t3(language, 'Google Analytics désactivé.', 'Google Analytics disabled.', 'Google Analytics desactivado.')
+      );
+    } catch {
+      toast.error(t3(language, 'Erreur de sauvegarde', 'Save error', 'Error al guardar'));
+    } finally {
+      setGa4Loading(false);
+    }
+  };
 
   const isValidWpUrl = (() => {
     try {
