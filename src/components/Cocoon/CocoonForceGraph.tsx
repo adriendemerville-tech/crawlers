@@ -677,15 +677,17 @@ export function CocoonForceGraph({
           const labelOffset = r + 4 * labelScale;
 
           // Text shadow
-          ctx.fillStyle = `rgba(0, 0, 0, 0.7)`;
+          ctx.fillStyle = isDayMode ? `rgba(255, 255, 255, 0.8)` : `rgba(0, 0, 0, 0.7)`;
           ctx.fillText(label, node.x + 0.5, node.y + labelOffset + 0.5);
 
           // Text
-          ctx.fillStyle = isGhost
-            ? `rgba(255, 255, 255, 0.25)`
-            : isSelected || node.isHome
-              ? `rgba(255, 220, 100, 0.95)`
-              : `rgba(255, 255, 255, 0.7)`;
+          ctx.fillStyle = isDayMode
+            ? (isGhost ? `rgba(0, 0, 0, 0.3)` : `rgba(0, 0, 0, 0.9)`)
+            : isGhost
+              ? `rgba(255, 255, 255, 0.25)`
+              : isSelected || node.isHome
+                ? `rgba(255, 220, 100, 0.95)`
+                : `rgba(255, 255, 255, 0.7)`;
           ctx.fillText(label, node.x, node.y + labelOffset);
         }
       }
