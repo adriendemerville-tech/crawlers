@@ -2093,19 +2093,24 @@ Deno.serve(async (req) => {
       checkSpecializedSitemaps(normalizedUrl),
     ]);
     
-    const categories = psiData.lighthouseResult?.categories || {};
-    const audits = psiData.lighthouseResult?.audits || {};
+    const psiAvailable = psiData?.lighthouseResult?.categories?.performance != null;
+    const categories = psiData?.lighthouseResult?.categories || {};
+    const audits = psiData?.lighthouseResult?.audits || {};
     
-    // Calculate scores
-    const psiPerformance = categories.performance?.score || 0;
-    const psiSeo = categories.seo?.score || 0;
+    // Calculate scores — when PSI unavailable, use neutral 50% fallback instead of 0
+    const psiPerformance = psiAvailable ? (categories.performance?.score || 0) : null;
+    const psiSeo = psiAvailable ? (categories.seo?.score || 0) : null;
     
     // A. Performance (40 pts)
-    const performanceScore = Math.round(psiPerformance * 40);
+    const performanceScore = psiPerformance !== null ? Math.round(psiPerformance * 40) : 20;
     
     // B. Technical (50 pts) = PSI SEO * 30 + HTTP 200 = 20
-    const httpStatusOk = true; // We got the page, so status is OK
-    const technicalScore = Math.round(psiSeo * 30) + (httpStatusOk ? 20 : 0);
+    const httpStatusOk = true;
+    const technicalScore = (psiSeo !== null ? Math.round(psiSeo * 30) : 15) + (httpStatusOk ? 20 : 0);
+    
+    if (!psiAvailable) {
+      console.warn('[Expert-Audit] ⚠️ PSI indisponible — scores Performance et Technique estimés (fallback 50%)');
+    }
     
     // C. Semantic (60 pts)
     let semanticScore = 0;
@@ -2118,7 +2123,6 @@ Deno.serve(async (req) => {
     let aiReadyScore = 0;
     if (htmlAnalysis.hasSchemaOrg) {
       aiReadyScore += 15;
-      // Penalize if schema is JS-generated (crawlers can't read it)
       if (htmlAnalysis.isSchemaJsGenerated) {
         aiReadyScore -= 3;
         console.log('[Expert-Audit] ⚠️ Schema is JS-generated — AI Ready score penalized (-3)');
@@ -2138,16 +2142,18 @@ Deno.serve(async (req) => {
       performance: {
         score: performanceScore,
         maxScore: 40,
-        psiPerformance: Math.round(psiPerformance * 100),
-        lcp: audits['largest-contentful-paint']?.numericValue || 0,
-        fcp: audits['first-contentful-paint']?.numericValue || 0,
-        cls: audits['cumulative-layout-shift']?.numericValue || 0,
-        tbt: audits['total-blocking-time']?.numericValue || 0,
+        psiPerformance: psiPerformance !== null ? Math.round(psiPerformance * 100) : null,
+        psiUnavailable: !psiAvailable,
+        lcp: audits['largest-contentful-paint']?.numericValue || null,
+        fcp: audits['first-contentful-paint']?.numericValue || null,
+        cls: audits['cumulative-layout-shift']?.numericValue || null,
+        tbt: audits['total-blocking-time']?.numericValue || null,
       },
       technical: {
         score: technicalScore,
         maxScore: 50,
-        psiSeo: Math.round(psiSeo * 100),
+        psiSeo: psiSeo !== null ? Math.round(psiSeo * 100) : null,
+        psiUnavailable: !psiAvailable,
         httpStatus: 200,
         isHttps: htmlAnalysis.isHttps,
       },
