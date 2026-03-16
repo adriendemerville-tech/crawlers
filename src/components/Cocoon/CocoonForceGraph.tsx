@@ -655,7 +655,7 @@ export function CocoonForceGraph({
         ctx.stroke();
 
         // ─── Label ───
-        if (isSelected || isHovered || node.isHome || (r > 3 && transform.k > 1.2)) {
+        if (isSelected || isHovered || node.isHome) {
           // Labels stay constant in screen-space: scale inversely with zoom
           const labelScale = 1 / transform.k;
           const fontSize = Math.max(7, Math.min(13, 11 * labelScale));

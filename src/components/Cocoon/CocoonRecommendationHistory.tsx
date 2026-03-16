@@ -80,7 +80,7 @@ export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTask
       {/* Panel sliding up */}
       {isOpen && (
         <div
-          className="absolute bottom-full right-0 mb-2 w-[380px] sm:w-[420px] max-h-[500px] flex flex-col rounded-2xl border border-white/10 bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden"
+          className="absolute bottom-full right-0 mb-2 w-[380px] sm:w-[420px] max-h-[500px] flex flex-col rounded-2xl border border-white/10 bg-[#0f0a1e] shadow-2xl shadow-black/50 overflow-hidden"
           style={{ animation: 'slideUp 0.2s ease-out' }}
         >
           {/* Header */}
@@ -146,19 +146,19 @@ export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTask
                     {onAddToTaskPlan && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onAddToTaskPlan(item.summary, item.id); }}
-                        className="p-1 rounded-md hover:bg-[#a78bfa]/15 transition-colors"
+                        className="p-1 rounded-md hover:bg-emerald-400/15 transition-colors"
                         title={language === 'en' ? 'Add to task plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan'}
                       >
-                        <ClipboardList className="w-3 h-3 text-[#a78bfa]/60 hover:text-[#a78bfa]" />
+                        <ClipboardList className="w-3 h-3 text-emerald-400/60 hover:text-emerald-400" />
                       </button>
                     )}
                     {onGenerateFix && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onGenerateFix(item.recommendation_text); }}
-                        className="p-1 rounded-md hover:bg-emerald-400/15 transition-colors"
+                        className="p-1 rounded-md hover:bg-blue-400/15 transition-colors"
                         title={language === 'en' ? 'Generate fix' : language === 'es' ? 'Generar corrección' : 'Générer le fix'}
                       >
-                        <Code2 className="w-3 h-3 text-emerald-400/60 hover:text-emerald-400" />
+                        <Code2 className="w-3 h-3 text-blue-400/60 hover:text-blue-400" />
                       </button>
                     )}
                   </div>
