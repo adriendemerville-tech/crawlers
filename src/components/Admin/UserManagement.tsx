@@ -40,6 +40,7 @@ export function UserManagement() {
   const [adminUserIds, setAdminUserIds] = useState<Set<string>>(new Set());
   const [viewerUserIds, setViewerUserIds] = useState<Set<string>>(new Set());
   const [viewer2UserIds, setViewer2UserIds] = useState<Set<string>>(new Set());
+  const [auditorUserIds, setAuditorUserIds] = useState<Set<string>>(new Set());
   const [stripDialogOpen, setStripDialogOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
   const [affiliateUser, setAffiliateUser] = useState<UserProfile | null>(null);
