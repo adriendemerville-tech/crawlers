@@ -463,19 +463,6 @@ export function Header() {
                         {t.correctiveCodes}
                       </Link>
                     </DropdownMenuItem>
-                    {isAdmin && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={handleKillViewers}
-                          className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-                          disabled={isKilling}
-                        >
-                          <ShieldOff className="h-4 w-4" />
-                          {isKilling ? 'Révocation...' : showKillConfirm ? '⚠️ Confirmer Kill All Viewers' : 'Kill All Viewers'}
-                        </DropdownMenuItem>
-                      </>
-                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
                       <LogOut className="h-4 w-4" />
