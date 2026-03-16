@@ -11,6 +11,7 @@ import { CocoonForceGraph } from "@/components/Cocoon/CocoonForceGraph";
 import { CocoonNodePanel } from "@/components/Cocoon/CocoonNodePanel";
 import { CocoonHelpModal } from "@/components/Cocoon/CocoonHelpModal";
 import { CocoonAIChat } from "@/components/Cocoon/CocoonAIChat";
+import { CocoonRecommendationHistory } from "@/components/Cocoon/CocoonRecommendationHistory";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
 import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Sparkles, Layers } from "lucide-react";
