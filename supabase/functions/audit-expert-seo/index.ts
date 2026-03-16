@@ -1,4 +1,5 @@
 import { DOMParser, Element, HTMLDocument } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts"
+import { stealthFetch } from '../_shared/stealthFetch.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
@@ -948,47 +949,38 @@ async function checkBrokenLinks(doc: HTMLDocument, baseUrl: string): Promise<Bro
   const brokenLinks: BrokenLink[] = [];
   let corsBlocked = 0;
   
-  // Check links in parallel with timeout
+  // Check links in parallel with stealth headers and retry logic
   const checkPromises = linksToCheck.map(async (link) => {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const response = await fetch(link.url, {
-        method: 'HEAD',
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; CrawlersFR/2.0; +https://crawlers.fr)'
-        },
-        redirect: 'follow'
-      });
-      
-      clearTimeout(timeoutId);
-      
-      // 4xx and 5xx are broken
-      if (response.status >= 400) {
-        return {
-          url: link.url,
-          status: response.status,
-          anchor: link.anchor,
-          type: link.type
-        };
-      }
-      return null;
-    } catch (error) {
-      // Network errors, timeouts, CORS - mark as potentially blocked for external
-      if (link.type === 'external') {
+    // Try HEAD first, then GET as fallback (many WAFs block HEAD)
+    for (const method of ['HEAD', 'GET'] as const) {
+      try {
+        const { response } = await stealthFetch(link.url, {
+          method,
+          timeout: 10_000,
+          maxRetries: method === 'HEAD' ? 0 : 1,
+        });
+        
+        // 4xx and 5xx are broken (but not 403 which is often WAF blocking bots)
+        if (response.status >= 400 && response.status !== 403) {
+          return {
+            url: link.url,
+            status: response.status,
+            anchor: link.anchor,
+            type: link.type
+          };
+        }
+        // Success or 403 (WAF) — not broken
+        return null;
+      } catch (error) {
+        // If HEAD failed, try GET
+        if (method === 'HEAD') continue;
+        
+        // Both methods failed — treat as unverifiable, not broken
         corsBlocked++;
         return null;
       }
-      // Internal link that fails is considered broken
-      return {
-        url: link.url,
-        status: 0,
-        anchor: link.anchor,
-        type: link.type
-      };
     }
+    return null;
   });
   
   const results = await Promise.all(checkPromises);
