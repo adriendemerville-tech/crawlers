@@ -364,6 +364,10 @@ export function UserManagement() {
                                 <EyeOff className="h-4 w-4 mr-2" />
                                 {viewer2UserIds.has(user.user_id) ? '✓ Viewer L2' : 'Viewer L2'}
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => toggleRole(user.user_id, 'auditor')}>
+                                <FileSearch className="h-4 w-4 mr-2" />
+                                {auditorUserIds.has(user.user_id) ? '✓ Auditeur' : 'Auditeur'}
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                           {user.plan_type === 'agency_pro' && (
