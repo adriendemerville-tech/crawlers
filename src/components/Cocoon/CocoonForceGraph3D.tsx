@@ -986,7 +986,7 @@ export function CocoonForceGraph3D({
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 bg-black/40 backdrop-blur-md border border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60"
+          className={`w-7 h-7 backdrop-blur-md border ${isDayMode ? 'bg-white/60 border-black/10 text-black/50 hover:text-black/80 hover:bg-white/80' : 'bg-black/40 border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60'}`}
           onClick={() => handleZoom("in")}
         >
           <Plus className="w-3.5 h-3.5" />
@@ -994,7 +994,7 @@ export function CocoonForceGraph3D({
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 bg-black/40 backdrop-blur-md border border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60"
+          className={`w-7 h-7 backdrop-blur-md border ${isDayMode ? 'bg-white/60 border-black/10 text-black/50 hover:text-black/80 hover:bg-white/80' : 'bg-black/40 border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60'}`}
           onClick={() => handleZoom("out")}
         >
           <Minus className="w-3.5 h-3.5" />
@@ -1002,7 +1002,7 @@ export function CocoonForceGraph3D({
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 bg-black/40 backdrop-blur-md border border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60"
+          className={`w-7 h-7 backdrop-blur-md border ${isDayMode ? 'bg-white/60 border-black/10 text-black/50 hover:text-black/80 hover:bg-white/80' : 'bg-black/40 border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60'}`}
           onClick={handleReset}
         >
           <Maximize2 className="w-3.5 h-3.5" />
