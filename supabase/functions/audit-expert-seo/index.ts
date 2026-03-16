@@ -1,4 +1,5 @@
 import { DOMParser, Element, HTMLDocument } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts"
+import { stealthFetch } from '../_shared/stealthFetch.ts'
 import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
