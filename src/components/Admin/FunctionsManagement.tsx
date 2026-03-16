@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Code2, Lock, Clock, User } from 'lucide-react';
+import { ChevronDown, ChevronRight, Code2, Lock, Clock, User, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdminContext } from '@/contexts/AdminContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { PromptMatrixCard } from '@/components/Profile/PromptMatrixCard';
 
 // ─── Edge functions registry grouped by category ───
 const FUNCTION_CATEGORIES: Record<string, string[]> = {
