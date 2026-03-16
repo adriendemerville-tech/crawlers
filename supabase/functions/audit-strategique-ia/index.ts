@@ -1207,7 +1207,7 @@ interface GMBData {
   quick_wins?: string[];
 }
 
-async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number): Promise<GMBData | null> {
+async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number, languageCode: string = 'fr'): Promise<GMBData | null> {
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
 
   const cleanDomain = domain.replace(/^www\./, '');
