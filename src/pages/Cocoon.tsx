@@ -631,7 +631,7 @@ export default function Cocoon() {
 
         {/* Main Graph */}
         <main className="flex-1 relative px-2 sm:px-4 md:px-6 pb-9 min-h-0">
-          <div className="h-full rounded-xl overflow-hidden border border-[hsl(263,70%,20%)] relative">
+          <div className={`h-full rounded-xl overflow-hidden border relative ${isDayMode ? 'border-black/10' : 'border-[hsl(263,70%,20%)]'}`}>
             {/* 2D / 3D toggle */}
             {nodes.length > 0 && (
               <button
