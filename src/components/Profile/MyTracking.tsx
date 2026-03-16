@@ -813,10 +813,14 @@ export function MyTracking() {
   const currentStats = selectedSite ? (statsMap[selectedSite] || []) : [];
   const latestStats = currentStats.length > 0 ? currentStats[currentStats.length - 1] : null;
   
-  // Extract performance score from raw_data
+  // Extract performance scores from raw_data
   const getPerformanceScore = (entry: StatsEntry) => {
     const raw = entry as any;
     return raw?.raw_data?.performanceScore ?? null;
+  };
+  const getPerformanceDesktop = (entry: StatsEntry) => {
+    const raw = entry as any;
+    return raw?.raw_data?.performanceDesktop ?? null;
   };
   const getAiVisibility = (entry: StatsEntry): number | null => {
     const raw = entry as any;
@@ -827,6 +831,7 @@ export function MyTracking() {
     return raw?.raw_data?.serpData ?? null;
   };
   const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
+  const latestPerformanceDesktop = latestStats ? getPerformanceDesktop(latestStats) : null;
   const latestAiVisibility = latestStats ? getAiVisibility(latestStats) : null;
   const latestSerpData = latestStats ? getSerpData(latestStats) : null;
   const previousSerpData = currentStats.length >= 2 ? getSerpData(currentStats[currentStats.length - 2]) : null;
