@@ -32,11 +32,13 @@ export function useAdmin() {
           setIsAdmin(false);
           setIsViewer(false);
           setIsViewerLevel2(false);
+          setIsAuditor(false);
         } else {
           const roles = (data || []).map((r: any) => r.role);
           setIsAdmin(roles.includes('admin'));
           setIsViewer(roles.includes('viewer'));
           setIsViewerLevel2(roles.includes('viewer_level2'));
+          setIsAuditor(roles.includes('auditor'));
         }
       } catch (err) {
         console.error('Error checking roles:', err);
