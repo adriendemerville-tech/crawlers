@@ -299,11 +299,11 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
               </div>
             </div>
             {hideLeadmagnet ? (
-              <div className="flex flex-col items-center sm:items-start">
+              <div className="flex flex-col items-start shrink-0 self-end">
                 <Button 
                   type="submit" 
                   size="lg" 
-                  className="h-14 min-w-[200px] bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-bold text-base shadow-lg shadow-amber-500/25 border-0"
+                  className="h-14 min-w-[200px] bg-transparent border-2 border-amber-500 text-amber-500 hover:bg-amber-500/10 font-bold text-base shadow-lg shadow-amber-500/25"
                   style={{ paddingLeft: 24, paddingRight: 24 }}
                 >
                   <FileSearch className="h-5 w-5 mr-2" />
