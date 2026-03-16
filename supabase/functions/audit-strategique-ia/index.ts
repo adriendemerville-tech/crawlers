@@ -1115,7 +1115,7 @@ async function fetchRankedKeywords(domain: string, locationCode: number, languag
       body: JSON.stringify([{
         target: cleanDomain,
         location_code: locationCode,
-        language_code: 'fr',
+        language_code: languageCode,
         limit: 100,
         order_by: ['keyword_data.keyword_info.search_volume,desc'],
         filters: ['keyword_data.keyword_info.search_volume', '>', '0'],
