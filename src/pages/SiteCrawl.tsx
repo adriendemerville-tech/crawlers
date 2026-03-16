@@ -945,7 +945,7 @@ export default function SiteCrawl() {
                       value={[maxPages]}
                       onValueChange={v => setMaxPages(v[0])}
                       min={10}
-                      max={indexedPagesCount != null && indexedPagesCount > 0 ? Math.min(500, Math.max(10, indexedPagesCount)) : 500}
+                      max={indexedPagesCount != null && indexedPagesCount > 0 ? Math.min(20, Math.max(10, indexedPagesCount)) : 20}
                       step={10}
                       disabled={isLoading}
                       className="[&_[role=slider]]:bg-violet-500 [&_[role=slider]]:border-violet-500 [&_.relative>div]:bg-violet-500"
