@@ -77,7 +77,7 @@ export function UserManagement() {
 
   const toggleRole = async (userId: string, role: string) => {
     const currentRole = getUserCurrentRole(userId);
-    const labels: Record<string, string> = { admin: 'Créateur', viewer: 'Viewer', viewer_level2: 'Viewer L2' };
+    const labels: Record<string, string> = { admin: 'Créateur', viewer: 'Viewer', viewer_level2: 'Viewer L2', auditor: 'Auditeur' };
     try {
       if (currentRole === role) {
         // Same role clicked → remove it
