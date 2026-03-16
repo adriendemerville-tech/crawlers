@@ -791,7 +791,7 @@ export default function Cocoon() {
           />
         )}
 
-
+        <Dialog open={showPrereqModal} onOpenChange={setShowPrereqModal}>
           <DialogContent className="bg-[#1a1035] border-[hsl(263,70%,20%)] text-white max-w-md p-0 overflow-hidden">
             <div className="p-8 space-y-6">
               <DialogHeader className="space-y-3">
