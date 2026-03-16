@@ -733,7 +733,7 @@ export default function Cocoon() {
                 <span className="mx-0.5 sm:mx-1 hidden sm:inline text-white/20">|</span>
                 <div className="hidden sm:flex items-center gap-1.5">
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
-                  <span className={`text-[10px] ${isDayMode ? 'text-black/50' : 'text-white/40'}`}>↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
+                  <span className="text-[10px] text-white/40">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
                 </div>
                 <div className="hidden sm:flex items-center gap-1.5">
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
