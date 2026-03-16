@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,20 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown, FileSearch } from 'lucide-react';
+import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown, FileSearch, Filter, X } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
+
+/** Actionable event types to expose in the filter (label → event_type(s)) */
+const ACTION_FILTERS: { label: string; types: string[]; color: string }[] = [
+  { label: 'Audit Expert', types: ['expert_audit_launched'], color: 'text-amber-500' },
+  { label: 'Audit Comparé', types: ['audit_compare_launched'], color: 'text-violet-500' },
+  { label: 'Analyse Magnet', types: ['free_analysis_crawlers'], color: 'text-blue-500' },
+  { label: 'Crawl Multi-page', types: ['multi_page_crawl'], color: 'text-emerald-500' },
+  { label: 'Cocoon', types: ['cocoon_generated'], color: 'text-teal-500' },
+  { label: 'Code Correctif', types: ['corrective_code_generated', 'corrective_code_downloaded'], color: 'text-orange-500' },
+  { label: 'Inscription', types: ['signup_completed', 'signup_click'], color: 'text-sky-500' },
+];
 
 interface UserProfile {
   id: string;
