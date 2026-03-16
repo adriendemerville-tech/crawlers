@@ -537,6 +537,39 @@ export type Database = {
           },
         ]
       }
+      audit_raw_data: {
+        Row: {
+          audit_type: string
+          created_at: string
+          domain: string
+          id: string
+          raw_payload: Json
+          source_functions: string[]
+          url: string
+          user_id: string
+        }
+        Insert: {
+          audit_type: string
+          created_at?: string
+          domain: string
+          id?: string
+          raw_payload?: Json
+          source_functions?: string[]
+          url: string
+          user_id: string
+        }
+        Update: {
+          audit_type?: string
+          created_at?: string
+          domain?: string
+          id?: string
+          raw_payload?: Json
+          source_functions?: string[]
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audit_recommendations_registry: {
         Row: {
           audit_type: string
