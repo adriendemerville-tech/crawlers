@@ -135,6 +135,13 @@ export function ScriptKillSwitches() {
     await saveConfig('sdk_enabled', checked);
   };
 
+  const handleToggleFreemium = async (checked: boolean) => {
+    setFreemiumOpen(checked);
+    await saveConfig('freemium_open_mode', checked);
+    // Force page reload for all clients after a short delay
+    toast({ title: checked ? 'Mode freemium ouvert activé' : 'Mode freemium standard restauré' });
+  };
+
   const handleAddDomain = async () => {
     if (!newDomain.trim()) return;
     const clean = newDomain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '');
