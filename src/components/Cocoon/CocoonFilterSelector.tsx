@@ -39,6 +39,7 @@ interface CocoonFilterSelectorProps {
   filters: CocoonFilters;
   onFiltersChange: (filters: CocoonFilters) => void;
   language: string;
+  theme?: CocoonTheme;
 }
 
 const i18n: Record<string, Record<string, string>> = {
