@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     let normalizedUrl = url.trim();
     if (!normalizedUrl.startsWith('http')) normalizedUrl = `https://${normalizedUrl}`;
     const domain = new URL(normalizedUrl).hostname;
-    let pageLimit = Math.min(maxPages, 500);
+    let pageLimit = Math.min(maxPages, 20);
 
     // ── Pre-scan: cap to indexed pages count (DataForSEO) ──
     try {
