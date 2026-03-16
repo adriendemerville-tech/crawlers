@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { Search, Trash2, Plus, Minus, RefreshCw, Loader2, Users, CreditCard, AlertTriangle, ShieldCheck, Crown, Link2, Eye, EyeOff, ChevronDown, FileSearch } from 'lucide-react';
 import { UserKpiModal } from './UserKpiModal';
 import { CreateAffiliateModal } from './CreateAffiliateModal';
 
