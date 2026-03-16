@@ -188,6 +188,7 @@ export default function Cocoon() {
   const [showClusters, setShowClusters] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [is3DMode, setIs3DMode] = useState(true);
+  const [isDayMode, setIsDayMode] = useState(false);
   const [isComputing, setIsComputing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [showUpsell, setShowUpsell] = useState(false);
