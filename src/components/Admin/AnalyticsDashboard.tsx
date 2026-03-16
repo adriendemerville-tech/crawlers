@@ -130,28 +130,8 @@ export function AnalyticsDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [reliabilityScore, setReliabilityScore] = useState<{ score: number; audits: number; predictions: number } | null>(null);
-  const [avgCostPerSubscriber, setAvgCostPerSubscriber] = useState<{ avg: number; count: number } | null>(null);
-  const [businessMetrics, setBusinessMetrics] = useState<{ payingSubscribers: number; creditsPurchased: number; mrr: number }>({ payingSubscribers: 0, creditsPurchased: 0, mrr: 0 });
-  const [totalPlatformCost, setTotalPlatformCost] = useState(0);
-  const [activeUsersCount, setActiveUsersCount] = useState(0);
-  const [dbSize, setDbSize] = useState<{ total_mb: number; total_gb: number } | null>(null);
-  const [tokenUsage, setTokenUsage] = useState<TokenUsageStats>({
-    totalTokens: 0,
-    promptTokens: 0,
-    completionTokens: 0,
-    callCount: 0,
-    byFunction: {},
-    byModel: {},
-    paidApiCalls: 0,
-    totalEstimatedCost: 0,
-    dataforseoCalls: 0,
-    openrouterCalls: 0,
-    browserlessCalls: 0,
-    firecrawlCalls: 0,
-    flyPlaywrightCalls: 0,
-    flyEstimatedCost: 0,
-    byApiService: {},
-  });
+
+
 
   // Initial load
   useEffect(() => {
