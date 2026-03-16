@@ -47,7 +47,9 @@ const MentionsLegales = () => {
                 <p><strong className="text-foreground">{t3(language, 'Raison sociale :', 'Company name:', 'Razón social:')}</strong> Adrien de Volontat (Entrepreneur individuel)</p>
                 <p><strong className="text-foreground">{t3(language, 'Nom commercial :', 'Trade name:', 'Nombre comercial:')}</strong> Crawlers</p>
                 <p><strong className="text-foreground">SIRET :</strong> 992 399 667 00011</p>
+                <p><strong className="text-foreground">{t3(language, 'Code APE :', 'APE Code:', 'Código APE:')}</strong> 6201Z — Programmation informatique</p>
                 <p><strong className="text-foreground">{t3(language, 'Directeur de la publication :', 'Publication Director:', 'Director de la publicación:')}</strong> Adrien de Volontat</p>
+                <p><strong className="text-foreground">{t3(language, 'Responsable du traitement des données :', 'Data Controller:', 'Responsable del tratamiento de datos:')}</strong> Adrien de Volontat — <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
                 <p><strong className="text-foreground">{t3(language, 'URL du site :', 'Website URL:', 'URL del sitio:')}</strong> <a href="https://crawlers.fr" className="text-primary hover:underline">https://crawlers.fr</a></p>
                 <p><strong className="text-foreground">Email :</strong> <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
               </div>
