@@ -661,6 +661,7 @@ export default function Cocoon() {
                 haloColors={cocoonTheme.haloColors}
                 showClusters={cocoonFilters.showAllClusters}
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
+                isDayMode={isDayMode}
               />
             ) : (
               <CocoonForceGraph
