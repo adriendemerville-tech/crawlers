@@ -492,7 +492,12 @@ export default function Cocoon() {
 
             {/* Controls */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <CocoonHelpModal />
+              <CocoonFilterSelector
+                nodes={nodes}
+                filters={cocoonFilters}
+                onFiltersChange={setCocoonFilters}
+                language={language}
+              />
               <Button
                 variant="outline"
                 size="sm"
