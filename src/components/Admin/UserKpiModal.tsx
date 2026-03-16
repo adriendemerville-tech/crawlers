@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Loader2, Activity, Clock, FileText, Globe, CreditCard, Calendar, BarChart3, MousePointer, TrendingUp, User, ExternalLink, Search } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -28,6 +30,12 @@ interface UserKpis {
   planType: string;
 }
 
+interface ScannedUrl {
+  url: string;
+  event_type: string;
+  created_at: string;
+}
+
 interface UserKpiModalProps {
   user: UserProfile | null;
   open: boolean;
@@ -36,12 +44,15 @@ interface UserKpiModalProps {
 
 export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
   const [kpis, setKpis] = useState<UserKpis | null>(null);
+  const [scannedUrls, setScannedUrls] = useState<ScannedUrl[]>([]);
   const [loading, setLoading] = useState(false);
+  const [urlsLoading, setUrlsLoading] = useState(false);
 
   useEffect(() => {
     if (!open || !user) return;
     setLoading(true);
     fetchKpis(user.user_id);
+    fetchScannedUrls(user.user_id);
   }, [open, user]);
 
   const fetchKpis = async (userId: string) => {
@@ -143,11 +154,51 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
     }
   };
 
+  const fetchScannedUrls = async (userId: string) => {
+    setUrlsLoading(true);
+    try {
+      const { data } = await supabase
+        .from('analytics_events')
+        .select('target_url, event_type, created_at')
+        .eq('user_id', userId)
+        .not('target_url', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      const urls: ScannedUrl[] = (data || []).map(e => ({
+        url: e.target_url!,
+        event_type: e.event_type,
+        created_at: e.created_at,
+      }));
+      setScannedUrls(urls);
+    } catch {
+      setScannedUrls([]);
+    } finally {
+      setUrlsLoading(false);
+    }
+  };
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString('fr-FR', {
       day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
+  };
+
+  const eventLabel = (type: string) => {
+    if (type.includes('crawl')) return 'Crawl';
+    if (type.includes('audit') || type.includes('strategic')) return 'Audit';
+    if (type.includes('magnet') || type.includes('check-crawlers')) return 'Magnet';
+    if (type.includes('cocoon')) return 'Cocoon';
+    return type;
+  };
+
+  const eventColor = (type: string) => {
+    if (type.includes('crawl')) return 'bg-amber-500/10 text-amber-600';
+    if (type.includes('audit') || type.includes('strategic')) return 'bg-purple-500/10 text-purple-600';
+    if (type.includes('magnet') || type.includes('check-crawlers')) return 'bg-blue-500/10 text-blue-600';
+    if (type.includes('cocoon')) return 'bg-emerald-500/10 text-emerald-600';
+    return 'bg-muted text-muted-foreground';
   };
 
   const kpiItems = kpis ? [
@@ -165,7 +216,7 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
@@ -177,25 +228,88 @@ export function UserKpiModal({ user, open, onOpenChange }: UserKpiModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : kpis ? (
-          <div className="grid grid-cols-2 gap-3 py-2">
-            {kpiItems.map((item, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-lg border p-3 bg-muted/30">
-                <item.icon className={`h-5 w-5 shrink-0 ${item.color}`} />
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground truncate">{item.label}</p>
-                  <p className="text-sm font-semibold truncate">{item.value}</p>
-                </div>
+        <Tabs defaultValue="kpis" className="flex-1 overflow-hidden flex flex-col">
+          <TabsList className="w-full">
+            <TabsTrigger value="kpis" className="gap-1.5 flex-1">
+              <BarChart3 className="h-3.5 w-3.5" />
+              KPIs
+            </TabsTrigger>
+            <TabsTrigger value="urls" className="gap-1.5 flex-1">
+              <Search className="h-3.5 w-3.5" />
+              URLs scannées
+              {scannedUrls.length > 0 && (
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{scannedUrls.length}</Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="kpis" className="overflow-y-auto">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground py-8">Aucune donnée disponible</p>
-        )}
+            ) : kpis ? (
+              <div className="grid grid-cols-2 gap-3 py-2">
+                {kpiItems.map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-lg border p-3 bg-muted/30">
+                    <item.icon className={`h-5 w-5 shrink-0 ${item.color}`} />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground truncate">{item.label}</p>
+                      <p className="text-sm font-semibold truncate">{item.value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">Aucune donnée disponible</p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="urls" className="overflow-y-auto max-h-[50vh]">
+            {urlsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : scannedUrls.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">Aucune URL scannée</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">URL</TableHead>
+                    <TableHead className="text-xs w-24">Type</TableHead>
+                    <TableHead className="text-xs w-36">Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {scannedUrls.map((item, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="text-xs font-mono max-w-[300px] truncate">
+                        <a
+                          href={item.url.startsWith('http') ? item.url : `https://${item.url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 hover:text-primary transition-colors"
+                        >
+                          {item.url}
+                          <ExternalLink className="h-3 w-3 shrink-0 opacity-50" />
+                        </a>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`text-[10px] ${eventColor(item.event_type)}`}>
+                          {eventLabel(item.event_type)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {formatDate(item.created_at)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
