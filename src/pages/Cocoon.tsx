@@ -746,17 +746,17 @@ export default function Cocoon() {
                 {legendItems.map(([type, { color, label }]) => (
                   <div key={type} className="flex items-center gap-1 sm:gap-1.5">
                     <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color }} />
-                    <span className="text-white/50 text-[10px] sm:text-xs">{label[language] || label.fr}</span>
+                    <span className={`text-[10px] sm:text-xs ${isDayMode ? 'text-black/60' : 'text-white/50'}`}>{label[language] || label.fr}</span>
                   </div>
                 ))}
-                <span className="text-white/20 mx-0.5 sm:mx-1 hidden sm:inline">|</span>
+                <span className={`mx-0.5 sm:mx-1 hidden sm:inline ${isDayMode ? 'text-black/20' : 'text-white/20'}`}>|</span>
                 <div className="hidden sm:flex items-center gap-1.5">
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
-                  <span className="text-white/40 text-[10px]">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
+                  <span className={`text-[10px] ${isDayMode ? 'text-black/50' : 'text-white/40'}`}>↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
                 </div>
                 <div className="hidden sm:flex items-center gap-1.5">
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
-                  <span className="text-white/40 text-[10px]">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
+                  <span className={`text-[10px] ${isDayMode ? 'text-black/50' : 'text-white/40'}`}>↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
                 </div>
                 <span className="text-white/30 text-[9px] sm:text-xs ml-auto hidden sm:inline">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
                 <a
