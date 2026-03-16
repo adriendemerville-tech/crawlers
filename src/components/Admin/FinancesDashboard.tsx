@@ -72,6 +72,7 @@ interface TokenUsageStats {
 }
 
 export function FinancesDashboard() {
+  const { allEvents: sharedAllEvents, filteredEvents: sharedFilteredEvents, adminUserIds: sharedAdminUserIds, isLoading: sharedLoading, fetchEvents } = useAdminAnalytics();
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [businessMetrics, setBusinessMetrics] = useState({ payingSubscribers: 0, creditsPurchased: 0, mrr: 0 });
@@ -87,40 +88,19 @@ export function FinancesDashboard() {
     flyPlaywrightCalls: 0, flyEstimatedCost: 0, byApiService: {},
   });
 
-  const fetchData = useCallback(async (silent = false) => {
-    if (silent) setIsRefreshing(true); else setIsLoading(true);
+  // Trigger shared fetch on mount
+  useEffect(() => { fetchEvents(); }, []);
+
+  // Process when shared data arrives
+  useEffect(() => {
+    if (sharedAllEvents.length === 0 && sharedLoading) return;
+    processData(sharedAllEvents, sharedFilteredEvents);
+  }, [sharedAllEvents, sharedLoading]);
+
+  const processData = useCallback(async (allEvents: typeof sharedAllEvents, events: typeof sharedFilteredEvents) => {
+    setIsLoading(true);
 
     try {
-      const { data: adminProfiles } = await supabase
-        .from('profiles').select('user_id').eq('email', ADMIN_EMAIL);
-      const adminUserIds = adminProfiles?.map(p => p.user_id) || [];
-
-      const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-
-      // Paginated events fetch
-      let allEvents: Array<{ event_type: string; url: string | null; created_at: string; user_id: string | null; event_data: Record<string, unknown> | null }> = [];
-      const PAGE_SIZE = 1000;
-      let currentPage = 0;
-      while (true) {
-        const { data: rawPage, error: pageError } = await supabase
-          .from('analytics_events')
-          .select('event_type, url, created_at, user_id, event_data')
-          .gte('created_at', thirtyDaysAgo)
-          .order('created_at', { ascending: false })
-          .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
-        if (pageError) throw pageError;
-        if (!rawPage || rawPage.length === 0) break;
-        allEvents = allEvents.concat(rawPage as typeof allEvents);
-        if (rawPage.length < PAGE_SIZE) break;
-        currentPage++;
-      }
-
-      const events = allEvents.filter(e => {
-        if (e.user_id && adminUserIds.includes(e.user_id)) return false;
-        const eventData = e.event_data as Record<string, unknown> | null;
-        if (eventData?.ip && EXCLUDED_IPS.includes(eventData.ip as string)) return false;
-        return true;
-      });
 
       // Token usage
       const tokenEvents = allEvents.filter(e => e.event_type === 'ai_token_usage');
