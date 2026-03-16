@@ -1402,7 +1402,7 @@ export function SmartConfigurator({
                   />
                 </TabsContent>
 
-                {isAgencyPro && (
+                {canGenerateCode && (
                   <TabsContent forceMount value="multipage" className="m-0 p-4 pb-6 data-[state=inactive]:hidden">
                     <MultiPageRouter domain={siteDomain} siteId={activeSiteId} />
                   </TabsContent>
