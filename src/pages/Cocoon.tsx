@@ -280,14 +280,24 @@ export default function Cocoon() {
     return () => clearTimeout(timer);
   }, [hasAccess]);
 
-  // Read autolaunch param on mount
+  // Read URL params on mount (autolaunch, fullscreen, daymode, site)
+  const [isFullscreen, setIsFullscreen] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const domain = params.get('autolaunch');
     if (domain) {
       setAutoLaunchDomain(domain);
-      // Clean URL
       navigate('/cocoon', { replace: true });
+    }
+    if (params.get('fullscreen') === '1') {
+      setIsFullscreen(true);
+    }
+    if (params.get('daymode') === '1') {
+      setIsDayMode(true);
+    }
+    const siteParam = params.get('site');
+    if (siteParam) {
+      setSelectedSiteId(siteParam);
     }
   }, [navigate]);
 
