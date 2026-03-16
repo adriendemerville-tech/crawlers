@@ -16,7 +16,7 @@ Category: SEO Audit, GEO Optimization, Marketing Strategy, Code Generator, Multi
 Mission: Aider les webmasters à optimiser leur visibilité SEO et leur citabilité IA
 URL: https://crawlers.fr
 Language: French (primary), English, Spanish
-Architecture: 84 Edge Functions, 11 proprietary algorithms, Three.js 3D engine
+Architecture: 85 Edge Functions, 11 proprietary algorithms, Three.js 3D engine
 
 # CE QUE NOUS SOMMES
 Crawlers.fr est une plateforme professionnelle d'audit et de diagnostic pour sites web.
