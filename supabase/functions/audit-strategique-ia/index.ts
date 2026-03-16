@@ -1058,7 +1058,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
     }
     
     // ═══ PHASE 4: Ranking Check ═══
-    const rankedKeywords = await checkRankings(keywordData, domain, context.locationCode);
+    const rankedKeywords = await checkRankings(keywordData, domain, context.locationCode, context.languageCode, context.seDomain);
     
     // STRATEGIC SORT: first keyword = most relevant for core business + target
     const strategicKeywords = sortByStrategicRelevance(rankedKeywords, seedKeywords, pageContentContext);
