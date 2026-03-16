@@ -2635,39 +2635,16 @@ Deno.serve(async (req) => {
   if (!acquireConcurrency('generate-corrective-code', 20)) return concurrencyResponse(corsHeaders);
 
   try {
-    // ── Auth + Plan Gate: Pro Agency / Admin only ──
-    const userCtx = await getUserContext(req);
-    if (!userCtx) {
-      releaseConcurrency('generate-corrective-code');
-      return new Response(JSON.stringify({ success: false, error: 'Authentification requise.' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Check admin role
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
-    const { data: isAdmin } = await adminClient.rpc('has_role', { _user_id: userCtx.userId, _role: 'admin' });
-
-    if (userCtx.planType !== 'agency_pro' && !isAdmin) {
-      releaseConcurrency('generate-corrective-code');
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Cette fonctionnalité est réservée aux abonnés Pro Agency.',
-        code: 'PRO_REQUIRED',
-      }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
     // ── Fair Use ──
-    const fairUse = await checkFairUse(userCtx.userId, 'corrective_code', userCtx.planType);
-    if (!fairUse.allowed) {
-      releaseConcurrency('generate-corrective-code');
-      return new Response(JSON.stringify({ success: false, error: fairUse.reason }), {
-        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const userCtx = await getUserContext(req);
+    if (userCtx) {
+      const fairUse = await checkFairUse(userCtx.userId, 'corrective_code', userCtx.planType);
+      if (!fairUse.allowed) {
+        releaseConcurrency('generate-corrective-code');
+        return new Response(JSON.stringify({ success: false, error: fairUse.reason }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
     const { 
       fixes, 
