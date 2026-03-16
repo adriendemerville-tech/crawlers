@@ -48,11 +48,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Delete all viewer and viewer_level2 roles
+    // Delete all viewer, viewer_level2, and auditor roles
     const { data: deletedViewers, error: deleteError } = await serviceClient
       .from('user_roles')
       .delete()
-      .in('role', ['viewer', 'viewer_level2'])
+      .in('role', ['viewer', 'viewer_level2', 'auditor'])
       .select('user_id, role');
 
     if (deleteError) {
