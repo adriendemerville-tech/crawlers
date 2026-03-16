@@ -446,8 +446,10 @@ export function CocoonForceGraph({
           ctx.beginPath();
           ctx.moveTo(source.x, source.y);
           ctx.lineTo(target.x, target.y);
-          ctx.strokeStyle = `rgba(120, 100, 220, ${Math.min(baseAlpha, 0.18)})`;
-          ctx.lineWidth = lineW;
+          ctx.strokeStyle = isDayMode
+            ? `rgba(0, 0, 0, ${Math.min(baseAlpha + 0.15, 0.35)})`
+            : `rgba(120, 100, 220, ${Math.min(baseAlpha, 0.18)})`;
+          ctx.lineWidth = isDayMode ? lineW * 1.2 : lineW;
           ctx.stroke();
         }
       }
