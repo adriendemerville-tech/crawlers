@@ -965,19 +965,21 @@ export function CocoonForceGraph3D({
         />
       </Canvas>
 
-      {/* Progressive vignette fade — eccentric radial blur so nodes don't pop at edges */}
-      <div
-        className="absolute inset-0 pointer-events-none z-[1]"
-        style={{
-          background: `
-            radial-gradient(ellipse 90% 88% at 50% 50%, transparent 82%, #06060e 100%),
-            linear-gradient(to top, #06060e 0%, transparent 4%),
-            linear-gradient(to bottom, #06060e 0%, transparent 4%),
-            linear-gradient(to left, #06060e 0%, transparent 3.3%),
-            linear-gradient(to right, #06060e 0%, transparent 3.3%)
-          `,
-        }}
-      />
+      {/* Progressive vignette fade */}
+      {!isDayMode && (
+        <div
+          className="absolute inset-0 pointer-events-none z-[1]"
+          style={{
+            background: `
+              radial-gradient(ellipse 90% 88% at 50% 50%, transparent 82%, #06060e 100%),
+              linear-gradient(to top, #06060e 0%, transparent 4%),
+              linear-gradient(to bottom, #06060e 0%, transparent 4%),
+              linear-gradient(to left, #06060e 0%, transparent 3.3%),
+              linear-gradient(to right, #06060e 0%, transparent 3.3%)
+            `,
+          }}
+        />
+      )}
 
       {/* Zoom controls */}
       <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 z-10">
