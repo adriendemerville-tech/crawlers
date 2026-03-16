@@ -940,7 +940,7 @@ export function CocoonForceGraph3D({
       <Canvas
         camera={{ position: [0, 0, 150], fov: 50, near: 0.1, far: 1000 }}
         gl={{ antialias: true, alpha: false }}
-        style={{ background: "#080515", width: "100%", height: "100%" }}
+        style={{ background: isDayMode ? "#f5f5f0" : "#080515", width: "100%", height: "100%" }}
         onPointerMissed={() => onNodeSelect(null)}
       >
         <SceneContent
