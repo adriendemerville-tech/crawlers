@@ -192,17 +192,7 @@ export function SerpKpiBanner({ data, previousIndexedPages, onRefresh, isRefresh
       </CardHeader>
       <CardContent className="space-y-4">
         {/* KPI row */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <div className="rounded-lg border bg-card p-3 space-y-1">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3" />
-              {t.avgPosition}
-            </div>
-            <p className={`text-lg font-semibold ${positionColor(data.avg_position)}`}>
-              {data.avg_position !== null ? data.avg_position.toFixed(1) : '—'}
-            </p>
-          </div>
-
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="rounded-lg border bg-card p-3 space-y-1">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Home className="h-3 w-3" />
