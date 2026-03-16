@@ -170,6 +170,7 @@ export function SmartConfigurator({
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
   const { isAdmin } = useAdmin();
+  const { openMode } = useFreemiumMode();
   const canGenerateCode = isAgencyPro || isAdmin;
 
   // Extract domain from siteUrl for payment check
