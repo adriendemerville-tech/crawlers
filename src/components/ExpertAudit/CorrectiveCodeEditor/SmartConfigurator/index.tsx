@@ -170,6 +170,8 @@ export function SmartConfigurator({
   const { toast } = useToast();
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
+  const { isAdmin } = useAdmin();
+  const canGenerateCode = isAgencyPro || isAdmin;
 
   // Extract domain from siteUrl for payment check
   const siteDomain = useMemo(() => {
