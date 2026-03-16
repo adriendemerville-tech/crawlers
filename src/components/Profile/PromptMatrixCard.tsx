@@ -159,7 +159,9 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
     setImports([]);
     setSelectedImportId(null);
     setCrawlersData(null);
-    fetchData();
+    setLoading(true);
+    // re-fetch real data after exiting demo
+    setTimeout(() => fetchDataRef.current?.(), 0);
   }, []);
 
   const fetchData = useCallback(async () => {
