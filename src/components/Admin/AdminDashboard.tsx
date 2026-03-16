@@ -31,6 +31,7 @@ const adminTranslations = {
   fr: {
     monitoring: 'Monitoring',
     analytics: 'Statistiques',
+    finances: 'Finances',
     intelligence: 'Intelligence',
     silentErrors: 'Erreurs',
     scannedUrls: 'URLs scannées',
@@ -53,6 +54,7 @@ const adminTranslations = {
   en: {
     monitoring: 'Monitoring',
     analytics: 'Analytics',
+    finances: 'Finances',
     intelligence: 'Intelligence',
     silentErrors: 'Errors',
     scannedUrls: 'Scanned URLs',
@@ -75,6 +77,7 @@ const adminTranslations = {
   es: {
     monitoring: 'Monitoreo',
     analytics: 'Estadísticas',
+    finances: 'Finanzas',
     intelligence: 'Inteligencia',
     silentErrors: 'Errores',
     scannedUrls: 'URLs escaneadas',
