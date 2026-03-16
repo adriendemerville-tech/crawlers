@@ -953,10 +953,10 @@ export default function SiteCrawl() {
                     {indexedPagesCount != null && indexedPagesCount > 0 && indexedPagesCount < 500 && (
                       <p className="text-[10px] text-muted-foreground">
                         {language === 'fr' 
-                          ? `Maximum limité à ${Math.min(500, indexedPagesCount)} pages (pages indexées détectées par Google)` 
+                          ? `Maximum limité à ${Math.min(20, indexedPagesCount)} pages (pages indexées détectées par Google)` 
                           : language === 'es' 
-                          ? `Máximo limitado a ${Math.min(500, indexedPagesCount)} páginas (páginas indexadas detectadas por Google)` 
-                          : `Max limited to ${Math.min(500, indexedPagesCount)} pages (Google indexed pages detected)`}
+                          ? `Máximo limitado a ${Math.min(20, indexedPagesCount)} páginas (páginas indexadas detectadas por Google)` 
+                          : `Max limited to ${Math.min(20, indexedPagesCount)} pages (Google indexed pages detected)`}
                       </p>
                     )}
                   </div>
