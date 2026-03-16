@@ -7,7 +7,8 @@ import { ToolTab } from './ToolTabs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUrlValidation, normalizeUrl } from '@/hooks/useUrlValidation';
 import { UrlValidationBanner } from '@/components/UrlValidationBanner';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 // Lazy load framer-motion - only needed after hydration for animations
 const MotionSpan = lazy(() => 
