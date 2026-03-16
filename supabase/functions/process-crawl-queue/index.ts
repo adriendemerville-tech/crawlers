@@ -926,6 +926,31 @@ Donne 5-8 recommandations max, classées par impact.`;
     completed_at: new Date().toISOString(),
   }).eq('id', job.crawl_id);
 
+  // Save raw crawl data (fire-and-forget)
+  saveRawAuditData({
+    userId: job.user_id,
+    url: job.url,
+    domain: job.domain,
+    auditType: 'crawl',
+    rawPayload: {
+      pages: pages.map((p: any) => ({
+        url: p.url, path: p.path, title: p.title, h1: p.h1,
+        meta_description: p.meta_description, word_count: p.word_count,
+        seo_score: p.seo_score, http_status: p.http_status,
+        issues: p.issues, internal_links: p.internal_links,
+        external_links: p.external_links, images_total: p.images_total,
+        images_without_alt: p.images_without_alt, schema_org_types: p.schema_org_types,
+        has_canonical: p.has_canonical, has_noindex: p.has_noindex,
+        response_time_ms: p.response_time_ms, html_size_bytes: p.html_size_bytes,
+      })),
+      avgScore,
+      totalPages: pages.length,
+      aiSummary,
+      aiRecommendations,
+    },
+    sourceFunctions: ['process-crawl-queue', 'crawl-site'],
+  }).catch(() => {});
+
   await supabase.from('crawl_jobs').update({
     status: 'completed',
     completed_at: new Date().toISOString(),
