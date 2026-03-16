@@ -71,6 +71,7 @@ export function UserManagement() {
     if (adminUserIds.has(userId)) return 'admin';
     if (viewerUserIds.has(userId)) return 'viewer';
     if (viewer2UserIds.has(userId)) return 'viewer_level2';
+    if (auditorUserIds.has(userId)) return 'auditor';
     return null;
   };
 
