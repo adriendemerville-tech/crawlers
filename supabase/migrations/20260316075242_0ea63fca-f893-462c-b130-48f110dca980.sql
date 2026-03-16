@@ -1,0 +1,1 @@
+ALTER TABLE public.cocoon_recommendations ADD COLUMN is_applied boolean NOT NULL DEFAULT false;
