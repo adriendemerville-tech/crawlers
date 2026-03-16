@@ -15,10 +15,12 @@ const sections = [
   { id: 'credits', title: '6. Système de Crédits' },
   { id: 'abonnement', title: '7. Abonnement Pro Agency' },
   { id: 'whitelabel', title: '8. Offre Marque Blanche (White Label)' },
+  { id: 'veille', title: '8 bis. Analyse Concurrentielle & Veille Stratégique' },
   { id: 'pi', title: '9. Propriété Intellectuelle' },
   { id: 'donnees', title: '10. Données de Crawl & Analyse' },
   { id: 'rgpd', title: '11. RGPD & Données Personnelles' },
   { id: 'disponibilite', title: '12. Disponibilité du Service' },
+  { id: 'responsabilite', title: '12 bis. Limitation de Responsabilité' },
   { id: 'modification', title: '13. Modification des CGVU' },
   { id: 'litiges', title: '14. Droit Applicable & Litiges' },
 ];
@@ -81,7 +83,9 @@ const CGVU = () => {
                 <li>L'audit de performance technique (Core Web Vitals, PageSpeed) sur mobile et desktop ;</li>
                 <li>L'audit stratégique approfondi (EEAT, positionnement concurrentiel, analyse sémantique) ;</li>
                 <li>L'analyse de mots-clés, requêtes cibles et contenu prioritaire ;</li>
-                <li>Le <strong>crawl multi-pages</strong> : analyse récursive de l'ensemble des pages d'un site (structure, SEO par page, score global, synthèse IA) ;</li>
+                <li>Le <strong>crawl multi-pages</strong> : analyse récursive de l'ensemble des pages d'un site (jusqu'à 500 pages, structure, SEO par page, score global, synthèse IA) ;</li>
+                <li>Le <strong>module Cocoon</strong> : graphe sémantique des pages d'un site (clustering TF-IDF, maillage interne, détection de cannibalisation, prédictions ROI) ;</li>
+                <li>L'<strong>audit comparé</strong> : analyse concurrentielle de deux sites sur des critères SEO/GEO communs ;</li>
                 <li>La génération de code correctif personnalisé (JSON-LD, balises meta, robots.txt, llms.txt) ;</li>
                 <li>Le suivi de l'évolution technique via un tableau de bord et l'intégration Google Search Console ;</li>
                 <li>La génération de rapports exportables (PDF) et de plans d'action.</li>
@@ -111,7 +115,8 @@ const CGVU = () => {
                 <li><strong>Pack Essentiel</strong> (5 €) : 10 crédits d'analyse ;</li>
                 <li><strong>Pack Pro</strong> (19 €) : 50 crédits d'analyse ;</li>
                 <li><strong>Pack Premium</strong> (45 €) : 150 crédits d'analyse ;</li>
-                <li><strong>Abonnement Pro Agency</strong> (50 €/mois) : accès illimité, marque blanche, dashboard agence dédié, export de rapports personnalisés.</li>
+                <li><strong>Pack Ultime</strong> (99 €) : 500 crédits d'analyse ;</li>
+                <li><strong>Abonnement Pro Agency</strong> (59 €/mois) : accès illimité, marque blanche, dashboard agence dédié, export de rapports personnalisés, Fair Use Policy de 5 000 pages de crawl/mois incluses.</li>
               </ul>
             </section>
 
@@ -216,13 +221,14 @@ const CGVU = () => {
               <h2 className="text-xl font-bold text-foreground mt-10 mb-3">7. Abonnement Pro Agency</h2>
               <h3 className="text-lg font-semibold mt-4 mb-2">7.1. Modalités</h3>
               <p>
-                L'abonnement Pro Agency est proposé au tarif de <strong>50 € HT par mois</strong>. Il est souscrit pour une durée indéterminée avec <strong>reconduction tacite mensuelle</strong>. Le paiement est prélevé automatiquement chaque mois via Stripe.
+                L'abonnement Pro Agency est proposé au tarif de <strong>59 € TTC par mois</strong>, sans engagement. Il est souscrit pour une durée indéterminée avec <strong>reconduction tacite mensuelle</strong>. Le paiement est prélevé automatiquement chaque mois via Stripe.
               </p>
 
               <h3 className="text-lg font-semibold mt-4 mb-2">7.2. Avantages inclus</h3>
               <ul>
                 <li>Accès illimité à l'ensemble des outils d'analyse et d'audit ;</li>
-                <li><strong>Crawl multi-pages illimité</strong> : analyse récursive complète de sites (10 à 200 pages par crawl) ;</li>
+                <li><strong>Crawl multi-pages</strong> : analyse récursive complète de sites (jusqu'à 500 pages par crawl, Fair Use Policy de 5 000 pages/mois) ;</li>
+                <li><strong>Module Cocoon</strong> : graphe sémantique illimité ;</li>
                 <li>Dashboard agence dédié avec gestion multi-clients ;</li>
                 <li>Export de rapports personnalisés au format PDF ;</li>
                 <li>Fonctionnalité Marque Blanche (White Label) — voir Article 8 ;</li>
@@ -257,6 +263,31 @@ const CGVU = () => {
                 <li>Assumer l'entière responsabilité de la communication, de la facturation et du support envers ses clients finaux ;</li>
                 <li>Ne pas engager la responsabilité de Crawlers.fr vis-à-vis de ses propres clients.</li>
               </ul>
+            </section>
+
+            {/* Article 8 bis */}
+            <section id="veille">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">8 bis. Analyse Concurrentielle & Veille Stratégique</h2>
+              <p>
+                Les fonctionnalités d'analyse concurrentielle de la Plateforme (audit comparé, module Cocoon, analyse de mots-clés) permettent à l'utilisateur d'analyser des sites web tiers dans le cadre d'une <strong>veille stratégique licite</strong>.
+              </p>
+              <p className="font-semibold mt-4">
+                L'utilisateur reconnaît et accepte que :
+              </p>
+              <ul>
+                <li>Les analyses concurrentielles portent exclusivement sur des <strong>données publiquement accessibles</strong> (HTML, balises meta, structure de liens, fichiers robots.txt, données structurées) ;</li>
+                <li>La Plateforme respecte les directives <code>robots.txt</code> des sites analysés. Si un site interdit le crawl, l'analyse sera limitée ou impossible ;</li>
+                <li>L'utilisateur s'engage à n'utiliser les fonctions d'analyse concurrentielle qu'à des <strong>fins de veille stratégique licite</strong>, conformément aux pratiques admises en matière d'intelligence économique ;</li>
+                <li>L'utilisateur s'interdit d'utiliser les données obtenues pour <strong>reproduire, plagier ou copier le contenu</strong> (textes, images, visuels) des sites tiers analysés ;</li>
+                <li>L'utilisateur s'interdit d'utiliser les outils pour <strong>surcharger intentionnellement</strong> les serveurs d'un site concurrent (le crawl est mécaniquement limité à 500 pages maximum par session avec throttling automatique) ;</li>
+                <li>L'utilisateur s'interdit de contourner une authentification ou un accès restreint pour accéder à du contenu non public d'un site tiers.</li>
+              </ul>
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mt-4">
+                <p>
+                  <strong className="text-amber-600 dark:text-amber-400">Exonération de responsabilité :</strong>{' '}
+                  Crawlers AI ne saurait être tenu responsable de l'usage que l'utilisateur fait des données d'analyse concurrentielle obtenues via la Plateforme. L'utilisateur est seul responsable du respect de la législation applicable en matière de concurrence, de propriété intellectuelle et de protection des données dans sa juridiction.
+                </p>
+              </div>
             </section>
 
             {/* Article 9 */}
@@ -324,6 +355,25 @@ const CGVU = () => {
               </ul>
             </section>
 
+            {/* Article 12 bis */}
+            <section id="responsabilite">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">12 bis. Limitation de Responsabilité</h2>
+              <p>
+                La Plateforme est fournie « <strong>en l'état</strong> » (<em>as is</em>). L'Éditeur ne garantit ni l'exactitude, ni l'exhaustivité, ni la pertinence des résultats d'analyse, scores, recommandations et codes correctifs générés par la Plateforme. Ces éléments sont fournis à titre <strong>indicatif et informatif</strong> uniquement.
+              </p>
+              <p className="font-semibold mt-4">En aucun cas l'Éditeur ne pourra être tenu responsable :</p>
+              <ul>
+                <li>Des décisions commerciales, techniques ou stratégiques prises par l'utilisateur sur la base des résultats fournis ;</li>
+                <li>D'une perte de positionnement, de trafic, de chiffre d'affaires ou de toute autre perte économique consécutive à l'utilisation de la Plateforme ;</li>
+                <li>Des dommages causés aux sites tiers analysés dans le cadre de la veille concurrentielle ;</li>
+                <li>Des effets de l'injection de code correctif sur le site de l'utilisateur ou sur l'expérience de ses visiteurs ;</li>
+                <li>Des dysfonctionnements résultant de l'incompatibilité entre les scripts générés et l'environnement technique de l'utilisateur.</li>
+              </ul>
+              <p className="mt-4">
+                <strong>Plafond de responsabilité :</strong> En tout état de cause, la responsabilité totale de l'Éditeur, toutes causes confondues, est limitée au montant total effectivement payé par l'utilisateur au cours des <strong>douze (12) derniers mois</strong> précédant le fait générateur de responsabilité.
+              </p>
+            </section>
+
             {/* Article 13 */}
             <section id="modification">
               <h2 className="text-xl font-bold text-foreground mt-10 mb-3">13. Modification des CGVU</h2>
@@ -346,7 +396,7 @@ const CGVU = () => {
             {/* Dernière mise à jour */}
             <div className="mt-12 pt-6 border-t border-border">
               <p className="text-sm text-muted-foreground italic">
-                Dernière mise à jour : Mars 2026
+                Dernière mise à jour : 16 mars 2026
               </p>
             </div>
           </article>

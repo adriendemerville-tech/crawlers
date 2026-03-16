@@ -244,6 +244,8 @@ const ConditionsUtilisation = () => {
                 <li>{t3(language, 'Respecter les droits de propriété intellectuelle des tiers', 'Respect the intellectual property rights of third parties', 'Respetar los derechos de propiedad intelectual de terceros')}</li>
                 <li>{t3(language, 'Ne pas automatiser massivement les requêtes sans autorisation', 'Not massively automate requests without authorization', 'No automatizar masivamente las solicitudes sin autorización')}</li>
                 <li>{t3(language, 'Ne pas revendre ou redistribuer les codes correctifs générés', 'Not resell or redistribute generated corrective codes', 'No revender ni redistribuir los códigos correctivos generados')}</li>
+                <li>{t3(language, 'N\'utiliser les fonctions d\'analyse concurrentielle qu\'à des fins de veille stratégique licite, sans extraction massive de contenu à des fins de republication', 'Only use competitive analysis features for legitimate strategic intelligence purposes, without mass content extraction for republication', 'Utilizar las funciones de análisis competitivo únicamente con fines de vigilancia estratégica lícita, sin extracción masiva de contenido para su republicación')}</li>
+                <li>{t3(language, 'Ne pas contourner une authentification ou un accès restreint pour accéder au contenu non public d\'un site tiers', 'Not bypass authentication or restricted access to access non-public content on a third-party site', 'No eludir una autenticación ni un acceso restringido para acceder a contenido no público de un sitio de terceros')}</li>
                 <li>{t3(language, 'Accepter les CGVU lors de l\'inscription (case à cocher obligatoire)', 'Accept the Terms upon registration (mandatory checkbox)', 'Aceptar los términos al registrarse (casilla obligatoria)')}</li>
               </ul>
             </section>
@@ -281,11 +283,18 @@ const ConditionsUtilisation = () => {
               <h2 className="text-xl font-semibold text-foreground mb-4">
                 {t3(language, '11. Limitation de responsabilité', '11. Limitation of Liability', '11. Limitación de responsabilidad')}
               </h2>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language,
                   'Crawlers AI est fourni "en l\'état" sans garantie d\'aucune sorte. Nous ne garantissons pas la disponibilité continue du service ni l\'exactitude des résultats. En aucun cas, Crawlers AI ne pourra être tenu responsable de dommages directs ou indirects résultant de l\'utilisation du site, dans la limite permise par la loi.',
                   'Crawlers AI is provided "as is" without warranty of any kind. We do not guarantee continuous availability of the service or accuracy of results. Under no circumstances shall Crawlers AI be liable for direct or indirect damages resulting from the use of the site, to the extent permitted by law.',
                   'Crawlers AI se proporciona "tal cual" sin garantía de ningún tipo. No garantizamos la disponibilidad continua del servicio ni la exactitud de los resultados. En ningún caso Crawlers AI podrá ser considerado responsable de daños directos o indirectos resultantes del uso del sitio, en la medida permitida por la ley.'
+                )}
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                {t3(language,
+                  'En tout état de cause, la responsabilité totale de Crawlers AI est limitée au montant total effectivement payé par l\'utilisateur au cours des douze (12) derniers mois précédant le fait générateur de responsabilité.',
+                  'In any event, the total liability of Crawlers AI is limited to the total amount actually paid by the user during the twelve (12) months preceding the event giving rise to liability.',
+                  'En cualquier caso, la responsabilidad total de Crawlers AI se limita al monto total efectivamente pagado por el usuario durante los doce (12) meses anteriores al hecho generador de responsabilidad.'
                 )}
               </p>
             </section>
@@ -341,7 +350,7 @@ const ConditionsUtilisation = () => {
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {t3(language, 'Dernière mise à jour : 12 mars 2026', 'Last updated: March 12, 2026', 'Última actualización: 12 de marzo de 2026')}
+              {t3(language, 'Dernière mise à jour : 16 mars 2026', 'Last updated: March 16, 2026', 'Última actualización: 16 de marzo de 2026')}
             </p>
           </article>
         </div>

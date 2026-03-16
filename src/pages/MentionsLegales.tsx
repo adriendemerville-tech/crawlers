@@ -47,7 +47,9 @@ const MentionsLegales = () => {
                 <p><strong className="text-foreground">{t3(language, 'Raison sociale :', 'Company name:', 'Razón social:')}</strong> Adrien de Volontat (Entrepreneur individuel)</p>
                 <p><strong className="text-foreground">{t3(language, 'Nom commercial :', 'Trade name:', 'Nombre comercial:')}</strong> Crawlers</p>
                 <p><strong className="text-foreground">SIRET :</strong> 992 399 667 00011</p>
+                <p><strong className="text-foreground">{t3(language, 'Code APE :', 'APE Code:', 'Código APE:')}</strong> 6201Z — Programmation informatique</p>
                 <p><strong className="text-foreground">{t3(language, 'Directeur de la publication :', 'Publication Director:', 'Director de la publicación:')}</strong> Adrien de Volontat</p>
+                <p><strong className="text-foreground">{t3(language, 'Responsable du traitement des données :', 'Data Controller:', 'Responsable del tratamiento de datos:')}</strong> Adrien de Volontat — <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
                 <p><strong className="text-foreground">{t3(language, 'URL du site :', 'Website URL:', 'URL del sitio:')}</strong> <a href="https://crawlers.fr" className="text-primary hover:underline">https://crawlers.fr</a></p>
                 <p><strong className="text-foreground">Email :</strong> <a href="mailto:contact@crawlers.fr" className="text-primary hover:underline">contact@crawlers.fr</a></p>
               </div>
@@ -59,9 +61,9 @@ const MentionsLegales = () => {
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'Crawlers AI est une plateforme proposant des services d\'audit SEO et GEO, ainsi que des outils de génération de code correctif. L\'activité comprend la fourniture de services numériques gratuits et payants via un système de crédits prépayés.',
-                  'Crawlers AI is a platform offering SEO and GEO audit services, as well as corrective code generation tools. The activity includes the provision of free and paid digital services via a prepaid credit system.',
-                  'Crawlers AI es una plataforma que ofrece servicios de auditoría SEO y GEO, así como herramientas de generación de código correctivo. La actividad incluye la prestación de servicios digitales gratuitos y de pago mediante un sistema de créditos prepagados.'
+                  'Crawlers AI est une plateforme proposant des services d\'audit SEO et GEO, de crawl multi-pages, d\'analyse concurrentielle et de génération de code correctif. L\'activité comprend la fourniture de services numériques gratuits et payants via un système de crédits prépayés et un abonnement mensuel Pro Agency (59€ TTC/mois). Les analyses portent exclusivement sur des données publiquement accessibles.',
+                  'Crawlers AI is a platform offering SEO and GEO audit services, multi-page crawling, competitive analysis and corrective code generation. The activity includes the provision of free and paid digital services via a prepaid credit system and a monthly Pro Agency subscription (€59 incl. VAT/month). Analyses exclusively cover publicly accessible data.',
+                  'Crawlers AI es una plataforma que ofrece servicios de auditoría SEO y GEO, crawl multi-páginas, análisis competitivo y generación de código correctivo. La actividad incluye la prestación de servicios digitales gratuitos y de pago mediante un sistema de créditos prepagados y una suscripción mensual Pro Agency (59€ IVA incl./mes). Los análisis se refieren exclusivamente a datos públicamente accesibles.'
                 )}
               </p>
             </section>
@@ -72,8 +74,9 @@ const MentionsLegales = () => {
               </h2>
               <div className="bg-muted/50 rounded-lg p-6 space-y-2 text-muted-foreground">
                 <p><strong className="text-foreground">{t3(language, 'Hébergeur application :', 'Application host:', 'Alojamiento de la aplicación:')}</strong> Lovable Technologies</p>
-                <p><strong className="text-foreground">{t3(language, 'Infrastructure backend :', 'Backend infrastructure:', 'Infraestructura backend:')}</strong> Supabase Inc.</p>
-                <p><strong className="text-foreground">{t3(language, 'Localisation :', 'Location:', 'Ubicación:')}</strong> {t3(language, 'Serveurs européens', 'European servers', 'Servidores europeos')}</p>
+                <p><strong className="text-foreground">{t3(language, 'Infrastructure backend :', 'Backend infrastructure:', 'Infraestructura backend:')}</strong> Supabase Inc. (AWS eu-west-1)</p>
+                <p><strong className="text-foreground">{t3(language, 'Services de rendu :', 'Rendering services:', 'Servicios de renderizado:')}</strong> Fly.io (Frankfurt, DE)</p>
+                <p><strong className="text-foreground">{t3(language, 'Localisation des données :', 'Data location:', 'Ubicación de los datos:')}</strong> {t3(language, 'Union Européenne', 'European Union', 'Unión Europea')}</p>
                 <p><strong className="text-foreground">{t3(language, 'Prestataire de paiement :', 'Payment provider:', 'Proveedor de pagos:')}</strong> Stripe Payments Europe Ltd., 1 Grand Canal Street Lower, Dublin 2, Ireland</p>
               </div>
             </section>
@@ -167,7 +170,7 @@ const MentionsLegales = () => {
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {t3(language, 'Dernière mise à jour : 12 mars 2026', 'Last updated: March 12, 2026', 'Última actualización: 12 de marzo de 2026')}
+              {t3(language, 'Dernière mise à jour : 16 mars 2026', 'Last updated: March 16, 2026', 'Última actualización: 16 de marzo de 2026')}
             </p>
           </article>
         </div>
