@@ -667,6 +667,7 @@ export default function Cocoon() {
                 showClusters={cocoonFilters.showAllClusters}
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
                 isDayMode={false}
+                colorIntensity={colorIntensity}
               />
             ) : (
               <CocoonForceGraph
