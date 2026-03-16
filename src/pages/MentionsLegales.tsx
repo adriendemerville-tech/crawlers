@@ -61,9 +61,9 @@ const MentionsLegales = () => {
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
-                  'Crawlers AI est une plateforme proposant des services d\'audit SEO et GEO, ainsi que des outils de génération de code correctif. L\'activité comprend la fourniture de services numériques gratuits et payants via un système de crédits prépayés.',
-                  'Crawlers AI is a platform offering SEO and GEO audit services, as well as corrective code generation tools. The activity includes the provision of free and paid digital services via a prepaid credit system.',
-                  'Crawlers AI es una plataforma que ofrece servicios de auditoría SEO y GEO, así como herramientas de generación de código correctivo. La actividad incluye la prestación de servicios digitales gratuitos y de pago mediante un sistema de créditos prepagados.'
+                  'Crawlers AI est une plateforme proposant des services d\'audit SEO et GEO, de crawl multi-pages, d\'analyse concurrentielle et de génération de code correctif. L\'activité comprend la fourniture de services numériques gratuits et payants via un système de crédits prépayés et un abonnement mensuel Pro Agency (59€ TTC/mois). Les analyses portent exclusivement sur des données publiquement accessibles.',
+                  'Crawlers AI is a platform offering SEO and GEO audit services, multi-page crawling, competitive analysis and corrective code generation. The activity includes the provision of free and paid digital services via a prepaid credit system and a monthly Pro Agency subscription (€59 incl. VAT/month). Analyses exclusively cover publicly accessible data.',
+                  'Crawlers AI es una plataforma que ofrece servicios de auditoría SEO y GEO, crawl multi-páginas, análisis competitivo y generación de código correctivo. La actividad incluye la prestación de servicios digitales gratuitos y de pago mediante un sistema de créditos prepagados y una suscripción mensual Pro Agency (59€ IVA incl./mes). Los análisis se refieren exclusivamente a datos públicamente accesibles.'
                 )}
               </p>
             </section>
