@@ -20,11 +20,7 @@ import {
   Gauge,
   Server,
 } from 'lucide-react';
-import { subDays } from 'date-fns';
-
-// IPs et user_ids à exclure des statistiques
-const EXCLUDED_IPS = ['5.49.156.158'];
-const ADMIN_EMAIL = 'adriendemerville@gmail.com';
+import { } from 'date-fns';
 
 // Coûts estimés par million de tokens (input/output) en USD
 const MODEL_PRICING: Record<string, { input: number; output: number; label: string }> = {
