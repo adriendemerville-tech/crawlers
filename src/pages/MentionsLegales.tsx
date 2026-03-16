@@ -74,8 +74,9 @@ const MentionsLegales = () => {
               </h2>
               <div className="bg-muted/50 rounded-lg p-6 space-y-2 text-muted-foreground">
                 <p><strong className="text-foreground">{t3(language, 'Hébergeur application :', 'Application host:', 'Alojamiento de la aplicación:')}</strong> Lovable Technologies</p>
-                <p><strong className="text-foreground">{t3(language, 'Infrastructure backend :', 'Backend infrastructure:', 'Infraestructura backend:')}</strong> Supabase Inc.</p>
-                <p><strong className="text-foreground">{t3(language, 'Localisation :', 'Location:', 'Ubicación:')}</strong> {t3(language, 'Serveurs européens', 'European servers', 'Servidores europeos')}</p>
+                <p><strong className="text-foreground">{t3(language, 'Infrastructure backend :', 'Backend infrastructure:', 'Infraestructura backend:')}</strong> Supabase Inc. (AWS eu-west-1)</p>
+                <p><strong className="text-foreground">{t3(language, 'Services de rendu :', 'Rendering services:', 'Servicios de renderizado:')}</strong> Fly.io (Frankfurt, DE)</p>
+                <p><strong className="text-foreground">{t3(language, 'Localisation des données :', 'Data location:', 'Ubicación de los datos:')}</strong> {t3(language, 'Union Européenne', 'European Union', 'Unión Europea')}</p>
                 <p><strong className="text-foreground">{t3(language, 'Prestataire de paiement :', 'Payment provider:', 'Proveedor de pagos:')}</strong> Stripe Payments Europe Ltd., 1 Grand Canal Street Lower, Dublin 2, Ireland</p>
               </div>
             </section>
