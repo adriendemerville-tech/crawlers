@@ -147,6 +147,29 @@ const i18n = {
   },
 };
 
+/** Check if any tracked site has both a crawl and an expert audit */
+async function findReadySite(sites: any[], userId: string) {
+  for (const site of sites) {
+    const [crawlRes, auditRes] = await Promise.all([
+      supabase
+        .from("site_crawls" as any)
+        .select("id")
+        .eq("domain", site.domain)
+        .eq("user_id", userId)
+        .limit(1),
+      supabase
+        .from("audits")
+        .select("id")
+        .eq("domain", site.domain)
+        .limit(1),
+    ]);
+    if ((crawlRes.data?.length || 0) > 0 && (auditRes.data?.length || 0) > 0) {
+      return site;
+    }
+  }
+  return null;
+}
+
 export default function Cocoon() {
   const { user } = useAuth();
   const navigate = useNavigate();
