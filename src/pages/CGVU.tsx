@@ -265,6 +265,31 @@ const CGVU = () => {
               </ul>
             </section>
 
+            {/* Article 8 bis */}
+            <section id="veille">
+              <h2 className="text-xl font-bold text-foreground mt-10 mb-3">8 bis. Analyse Concurrentielle & Veille Stratégique</h2>
+              <p>
+                Les fonctionnalités d'analyse concurrentielle de la Plateforme (audit comparé, module Cocoon, analyse de mots-clés) permettent à l'utilisateur d'analyser des sites web tiers dans le cadre d'une <strong>veille stratégique licite</strong>.
+              </p>
+              <p className="font-semibold mt-4">
+                L'utilisateur reconnaît et accepte que :
+              </p>
+              <ul>
+                <li>Les analyses concurrentielles portent exclusivement sur des <strong>données publiquement accessibles</strong> (HTML, balises meta, structure de liens, fichiers robots.txt, données structurées) ;</li>
+                <li>La Plateforme respecte les directives <code>robots.txt</code> des sites analysés. Si un site interdit le crawl, l'analyse sera limitée ou impossible ;</li>
+                <li>L'utilisateur s'engage à n'utiliser les fonctions d'analyse concurrentielle qu'à des <strong>fins de veille stratégique licite</strong>, conformément aux pratiques admises en matière d'intelligence économique ;</li>
+                <li>L'utilisateur s'interdit d'utiliser les données obtenues pour <strong>reproduire, plagier ou copier le contenu</strong> (textes, images, visuels) des sites tiers analysés ;</li>
+                <li>L'utilisateur s'interdit d'utiliser les outils pour <strong>surcharger intentionnellement</strong> les serveurs d'un site concurrent (le crawl est mécaniquement limité à 500 pages maximum par session avec throttling automatique) ;</li>
+                <li>L'utilisateur s'interdit de contourner une authentification ou un accès restreint pour accéder à du contenu non public d'un site tiers.</li>
+              </ul>
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mt-4">
+                <p>
+                  <strong className="text-amber-600 dark:text-amber-400">Exonération de responsabilité :</strong>{' '}
+                  Crawlers AI ne saurait être tenu responsable de l'usage que l'utilisateur fait des données d'analyse concurrentielle obtenues via la Plateforme. L'utilisateur est seul responsable du respect de la législation applicable en matière de concurrence, de propriété intellectuelle et de protection des données dans sa juridiction.
+                </p>
+              </div>
+            </section>
+
             {/* Article 9 */}
             <section id="pi">
               <h2 className="text-xl font-bold text-foreground mt-10 mb-3">9. Propriété Intellectuelle</h2>
