@@ -832,7 +832,96 @@ export function AnalyticsDashboard() {
         )}
       </div>
 
-      {/* Token Usage Card */}
+      {/* ─── MCR + ACPU Indicators ─── */}
+      {(() => {
+        const mcr = businessMetrics.mrr > 0 ? (totalPlatformCost / businessMetrics.mrr) * 100 : 0;
+        const acpu = activeUsersCount > 0 ? totalPlatformCost / activeUsersCount : 0;
+        const acpuSub = avgCostPerSubscriber?.avg ?? 0;
+
+        // Alert thresholds
+        const mcrColor = mcr > 25 ? 'rose' : mcr > 15 ? 'amber' : 'emerald';
+        const acpuColor = acpu > 0.15 ? 'rose' : acpu > 0.08 ? 'amber' : 'emerald';
+        const acpuSubColor = acpuSub > 0.30 ? 'rose' : acpuSub > 0.15 ? 'amber' : 'emerald';
+
+        const colorClasses = {
+          rose: { border: 'border-rose-500/30', bg: 'bg-rose-500/10', text: 'text-rose-600 dark:text-rose-400', subtext: 'text-rose-600/70 dark:text-rose-400/70' },
+          amber: { border: 'border-amber-500/30', bg: 'bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', subtext: 'text-amber-600/70 dark:text-amber-400/70' },
+          emerald: { border: 'border-emerald-500/30', bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', subtext: 'text-emerald-600/70 dark:text-emerald-400/70' },
+        };
+
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {/* MCR */}
+            <Card className={colorClasses[mcrColor].border}>
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+                <CardTitle className="text-xs font-medium text-muted-foreground">MCR</CardTitle>
+                <TrendingUp className={`h-3.5 w-3.5 ${colorClasses[mcrColor].text}`} />
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <div className={`text-lg font-bold ${colorClasses[mcrColor].text}`}>
+                  {mcr.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Coût / Revenu (30j)
+                </p>
+                {mcr > 25 && <p className={`text-[9px] font-semibold mt-1 ${colorClasses[mcrColor].text}`}>⚠️ Seuil critique dépassé (&gt;25%)</p>}
+                {mcr > 15 && mcr <= 25 && <p className={`text-[9px] font-semibold mt-1 ${colorClasses[mcrColor].text}`}>⚡ Attention (&gt;15%)</p>}
+              </CardContent>
+            </Card>
+
+            {/* ACPU (all users) */}
+            <Card className={colorClasses[acpuColor].border}>
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+                <CardTitle className="text-xs font-medium text-muted-foreground">ACPU</CardTitle>
+                <Users className={`h-3.5 w-3.5 ${colorClasses[acpuColor].text}`} />
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <div className={`text-lg font-bold ${colorClasses[acpuColor].text}`}>
+                  {acpu.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  / user actif ({activeUsersCount})
+                </p>
+                {acpu > 0.15 && <p className={`text-[9px] font-semibold mt-1 ${colorClasses[acpuColor].text}`}>⚠️ Seuil critique (&gt;0,15€)</p>}
+              </CardContent>
+            </Card>
+
+            {/* ACPU (subscribers only) */}
+            <Card className={colorClasses[acpuSubColor].border}>
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+                <CardTitle className="text-xs font-medium text-muted-foreground">ACPU Pro</CardTitle>
+                <CreditCard className={`h-3.5 w-3.5 ${colorClasses[acpuSubColor].text}`} />
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <div className={`text-lg font-bold ${colorClasses[acpuSubColor].text}`}>
+                  {acpuSub.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  / abonné ({avgCostPerSubscriber?.count ?? 0})
+                </p>
+                {acpuSub > 0.30 && <p className={`text-[9px] font-semibold mt-1 ${colorClasses[acpuSubColor].text}`}>⚠️ Seuil critique (&gt;0,30€)</p>}
+              </CardContent>
+            </Card>
+
+            {/* Total platform cost */}
+            <Card className="border-primary/30">
+              <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
+                <CardTitle className="text-xs font-medium text-muted-foreground">Coût plateforme</CardTitle>
+                <Flame className="h-3.5 w-3.5 text-primary" />
+              </CardHeader>
+              <CardContent className="p-3 pt-0">
+                <div className="text-lg font-bold text-primary">
+                  {totalPlatformCost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  LLM + APIs + infra (30j)
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
+
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
