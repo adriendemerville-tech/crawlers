@@ -58,7 +58,63 @@ const MAPPABLE_COLUMNS = [
   { key: 'date', label: 'Date', required: false },
 ];
 
-// ── Main Component ─────────────────────────────────────────────
+// ── Mock data for demo ──
+const MOCK_LLMS = ['ChatGPT', 'Gemini', 'Claude', 'Perplexity', 'Mistral'];
+const MOCK_PROMPTS = [
+  'Meilleur outil SEO pour PME',
+  'Comment améliorer son référencement local',
+  'Audit technique SEO gratuit',
+  'Quel CMS choisir pour le SEO',
+  'Stratégie de netlinking efficace',
+  'Optimiser la vitesse de chargement',
+  'Recherche de mots-clés longue traîne',
+  'Comment analyser ses backlinks',
+];
+
+function generateMockData(): { rows: MatrixRow[]; crawlers: CrawlersData } {
+  const rows: MatrixRow[] = [];
+  MOCK_PROMPTS.forEach(prompt => {
+    const llms = MOCK_LLMS.slice(0, 3 + Math.floor(Math.random() * 3));
+    llms.forEach(llm => {
+      rows.push({
+        prompt,
+        llm_name: llm,
+        score: Math.round(20 + Math.random() * 80),
+        brand_found: Math.random() > 0.4,
+        position: Math.floor(1 + Math.random() * 5),
+        date: '2026-03-' + String(1 + Math.floor(Math.random() * 15)).padStart(2, '0'),
+      });
+    });
+  });
+
+  const crawlers: CrawlersData = {
+    llm_visibility: MOCK_LLMS.map(llm => ({
+      llm_name: llm,
+      score_percentage: Math.round(30 + Math.random() * 60),
+      week_start_date: '2026-03-10',
+    })),
+    llm_depth: MOCK_PROMPTS.slice(0, 4).flatMap(p =>
+      MOCK_LLMS.slice(0, 3).map(llm => ({
+        llm_name: llm,
+        prompt_text: p,
+        response_summary: `Réponse simulée pour "${p}" par ${llm}`,
+        iteration: Math.floor(1 + Math.random() * 4),
+      }))
+    ),
+    llm_test_executions: MOCK_PROMPTS.slice(0, 5).flatMap(p =>
+      MOCK_LLMS.slice(0, 3).map(llm => ({
+        llm_name: llm,
+        prompt_tested: p,
+        brand_found: Math.random() > 0.35,
+        iteration_found: Math.random() > 0.3 ? Math.floor(1 + Math.random() * 3) : null,
+        response_text: null,
+      }))
+    ),
+  };
+  return { rows, crawlers };
+}
+
+
 
 export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrixCardProps) {
   const [imports, setImports] = useState<Array<{ id: string; file_name: string; row_count: number; created_at: string; column_mapping: ColumnMapping; raw_data: MatrixRow[] }>>([]);
