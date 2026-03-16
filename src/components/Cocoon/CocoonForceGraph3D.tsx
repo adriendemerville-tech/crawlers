@@ -702,6 +702,7 @@ function SceneContent({
   onNodeUnhover,
   rawNodes,
   isDayMode,
+  colorIntensity,
 }: {
   graphNodes: GraphNode3D[];
   graphLinks: GraphLink3D[];
@@ -720,6 +721,7 @@ function SceneContent({
   onNodeUnhover: () => void;
   rawNodes: SemanticNode[];
   isDayMode: boolean;
+  colorIntensity: number;
 }) {
   const hoveredNode = hoveredNodeId ? nodeMap.get(hoveredNodeId) : null;
 
