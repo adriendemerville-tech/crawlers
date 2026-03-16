@@ -209,7 +209,15 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
     }
   }, [trackedSiteId, selectedImportId]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { if (!demoMode) fetchData(); }, [fetchData, demoMode]);
+
+  const exitDemoMode = useCallback(() => {
+    setDemoMode(false);
+    setImports([]);
+    setSelectedImportId(null);
+    setCrawlersData(null);
+  }, []);
+
 
   // ── CSV Upload handler ──
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
