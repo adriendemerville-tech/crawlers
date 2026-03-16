@@ -350,7 +350,7 @@ const ConditionsUtilisation = () => {
             </section>
 
             <p className="text-sm text-muted-foreground mt-12">
-              {t3(language, 'Dernière mise à jour : 12 mars 2026', 'Last updated: March 12, 2026', 'Última actualización: 12 de marzo de 2026')}
+              {t3(language, 'Dernière mise à jour : 16 mars 2026', 'Last updated: March 16, 2026', 'Última actualización: 16 de marzo de 2026')}
             </p>
           </article>
         </div>
