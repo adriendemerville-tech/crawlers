@@ -16,7 +16,7 @@ import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
 import { CocoonArchitectModal } from "@/components/Cocoon/CocoonArchitectModal";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
-import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Sparkles, Layers, ClipboardList } from "lucide-react";
+import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Sparkles, Layers, ClipboardList, Sun, Moon, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
@@ -188,6 +188,7 @@ export default function Cocoon() {
   const [showClusters, setShowClusters] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [is3DMode, setIs3DMode] = useState(true);
+  const [isDayMode, setIsDayMode] = useState(false);
   const [isComputing, setIsComputing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [showUpsell, setShowUpsell] = useState(false);
@@ -279,14 +280,24 @@ export default function Cocoon() {
     return () => clearTimeout(timer);
   }, [hasAccess]);
 
-  // Read autolaunch param on mount
+  // Read URL params on mount (autolaunch, fullscreen, daymode, site)
+  const [isFullscreen, setIsFullscreen] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const domain = params.get('autolaunch');
     if (domain) {
       setAutoLaunchDomain(domain);
-      // Clean URL
       navigate('/cocoon', { replace: true });
+    }
+    if (params.get('fullscreen') === '1') {
+      setIsFullscreen(true);
+    }
+    if (params.get('daymode') === '1') {
+      setIsDayMode(true);
+    }
+    const siteParam = params.get('site');
+    if (siteParam) {
+      setSelectedSiteId(siteParam);
     }
   }, [navigate]);
 
@@ -341,6 +352,14 @@ export default function Cocoon() {
     return () => clearTimeout(timer);
   }, [autoLaunchDomain, selectedSiteId, trackedSites]);
 
+  // Auto-compute in fullscreen mode when site is pre-selected
+  const fullscreenTriggered = useRef(false);
+  useEffect(() => {
+    if (!isFullscreen || !selectedSiteId || !user || fullscreenTriggered.current || nodes.length > 0) return;
+    fullscreenTriggered.current = true;
+    const timer = setTimeout(() => handleCompute(), 500);
+    return () => clearTimeout(timer);
+  }, [isFullscreen, selectedSiteId, user, nodes.length]);
   // Auto-refresh: detect return from external audit/crawl tabs
   useEffect(() => {
     if (!user || !selectedSiteId) return;
@@ -498,19 +517,20 @@ export default function Cocoon() {
         </div>
       )}
 
-      <div className="h-screen bg-[#0f0a1e] flex flex-col relative pt-2 sm:pt-4 overflow-hidden">
+      <div className={`h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden ${isDayMode ? 'bg-[#f5f5f0]' : 'bg-[#0f0a1e]'}`}>
 
         {/* Top Bar */}
-        <header className="shrink-0 bg-[#0f0a1e]/80 backdrop-blur-xl px-2 sm:px-4 md:px-6 py-2">
+        {!isFullscreen && (
+        <header className={`shrink-0 backdrop-blur-xl px-2 sm:px-4 md:px-6 py-2 ${isDayMode ? 'bg-white/80' : 'bg-[#0f0a1e]/80'}`}>
           <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 gap-x-2">
             {/* Title */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="w-2 h-2 rounded-full bg-[#fbbf24] animate-pulse hidden sm:block" />
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <h1 className="text-xs sm:text-sm font-bold text-white font-display tracking-tight leading-none">
+                <h1 className={`text-xs sm:text-sm font-bold font-display tracking-tight leading-none ${isDayMode ? 'text-black' : 'text-white'}`}>
                   Cocoon <span className="text-[#fbbf24]">·</span> <span className="hidden xs:inline">{t.organism}</span>
                 </h1>
-                <span className="text-[9px] sm:text-[10px] text-white/30 font-medium tracking-wider uppercase leading-none px-1 sm:px-1.5 py-0.5 rounded bg-white/5 border border-white/10">beta</span>
+                <span className={`text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none px-1 sm:px-1.5 py-0.5 rounded border ${isDayMode ? 'text-black/30 bg-black/5 border-black/10' : 'text-white/30 bg-white/5 border-white/10'}`}>beta</span>
               </div>
             </div>
 
@@ -562,10 +582,38 @@ export default function Cocoon() {
                 {isXRayMode ? <EyeOff className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" /> : <Eye className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" />}
                 {t.xray}
               </Button>
+              {/* Day/Night toggle */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsDayMode(v => !v)}
+                className={`h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] px-2 sm:px-3 ${
+                  isDayMode
+                    ? "bg-[#fbbf24]/20 text-[#fbbf24]"
+                    : "bg-transparent text-white/60 hover:text-white"
+                }`}
+              >
+                {isDayMode ? <Sun className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> : <Moon className="w-3 sm:w-3.5 h-3 sm:h-3.5" />}
+              </Button>
+              {/* Fullscreen in new tab */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (selectedSiteId) params.set('site', selectedSiteId);
+                  params.set('fullscreen', '1');
+                  if (isDayMode) params.set('daymode', '1');
+                  window.open(`/cocoon?${params.toString()}`, '_blank');
+                }}
+                className="h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white px-2 sm:px-3"
+              >
+                <Maximize className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+              </Button>
             </div>
           </div>
         </header>
-
+        )}
         {/* Truncation banner */}
         {truncationInfo?.truncated && (
           <div className="shrink-0 px-4 py-2 bg-[#4c1d95]/30 border-b border-[hsl(263,70%,20%)] flex items-center gap-2 text-xs text-[#fbbf24]">
@@ -583,16 +631,20 @@ export default function Cocoon() {
 
         {/* Main Graph */}
         <main className="flex-1 relative px-2 sm:px-4 md:px-6 pb-9 min-h-0">
-          <div className="h-full rounded-xl overflow-hidden border border-[hsl(263,70%,20%)] relative">
+          <div className={`h-full rounded-xl overflow-hidden border relative ${isDayMode ? 'border-black/10' : 'border-[hsl(263,70%,20%)]'}`}>
             {/* 2D / 3D toggle */}
             {nodes.length > 0 && (
               <button
                 onClick={() => setIs3DMode(v => !v)}
-                className="absolute top-3 left-3 z-20 flex items-center gap-1 px-2 py-1 rounded-md bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-mono text-white/40 hover:text-white/70 hover:border-white/20 transition-colors"
+                className={`absolute top-3 left-3 z-20 flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md border text-[10px] font-mono transition-colors ${
+                  isDayMode
+                    ? 'bg-white/70 border-black/10 text-black/40 hover:text-black/70 hover:border-black/20'
+                    : 'bg-black/50 border-white/10 text-white/40 hover:text-white/70 hover:border-white/20'
+                }`}
               >
-                <span className={is3DMode ? 'text-white/25' : 'text-white/70 font-semibold'}>2D</span>
-                <span className="text-white/15">·</span>
-                <span className={is3DMode ? 'text-white/70 font-semibold' : 'text-white/25'}>3D</span>
+                <span className={is3DMode ? (isDayMode ? 'text-black/25' : 'text-white/25') : (isDayMode ? 'text-black/70 font-semibold' : 'text-white/70 font-semibold')}>2D</span>
+                <span className={isDayMode ? 'text-black/15' : 'text-white/15'}>·</span>
+                <span className={is3DMode ? (isDayMode ? 'text-black/70 font-semibold' : 'text-white/70 font-semibold') : (isDayMode ? 'text-black/25' : 'text-white/25')}>3D</span>
               </button>
             )}
             {isLoading ? (
@@ -632,6 +684,7 @@ export default function Cocoon() {
                 haloColors={cocoonTheme.haloColors}
                 showClusters={cocoonFilters.showAllClusters}
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
+                isDayMode={isDayMode}
               />
             ) : (
               <CocoonForceGraph
@@ -648,6 +701,7 @@ export default function Cocoon() {
                 isXRayMode={isXRayMode}
                 isPickingMode={!!nodePickerCallback}
                 particlesEnabled={particlesEnabled}
+                isDayMode={isDayMode}
               />
             )}
 
@@ -692,19 +746,19 @@ export default function Cocoon() {
                 {legendItems.map(([type, { color, label }]) => (
                   <div key={type} className="flex items-center gap-1 sm:gap-1.5">
                     <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color }} />
-                    <span className="text-white/50 text-[10px] sm:text-xs">{label[language] || label.fr}</span>
+                    <span className={`text-[10px] sm:text-xs ${isDayMode ? 'text-black/60' : 'text-white/50'}`}>{label[language] || label.fr}</span>
                   </div>
                 ))}
-                <span className="text-white/20 mx-0.5 sm:mx-1 hidden sm:inline">|</span>
+                <span className={`mx-0.5 sm:mx-1 hidden sm:inline ${isDayMode ? 'text-black/20' : 'text-white/20'}`}>|</span>
                 <div className="hidden sm:flex items-center gap-1.5">
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#fbbf24] to-[#f59e0b] rounded" />
-                  <span className="text-white/40 text-[10px]">↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
+                  <span className={`text-[10px] ${isDayMode ? 'text-black/50' : 'text-white/40'}`}>↓ {language === 'en' ? 'downstream' : language === 'es' ? 'descendente' : 'descendant'}</span>
                 </div>
                 <div className="hidden sm:flex items-center gap-1.5">
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
-                  <span className="text-white/40 text-[10px]">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
+                  <span className={`text-[10px] ${isDayMode ? 'text-black/50' : 'text-white/40'}`}>↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
                 </div>
-                <span className="text-white/30 text-[9px] sm:text-xs ml-auto hidden sm:inline">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
+                <span className={`text-[9px] sm:text-xs ml-auto hidden sm:inline ${isDayMode ? 'text-black/30' : 'text-white/30'}`}>⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
                 <a
                   href={(() => {
                     const domain = trackedSites.find(s => s.id === selectedSiteId)?.domain;
@@ -739,6 +793,7 @@ export default function Cocoon() {
         </main>
 
         {/* Bottom bar: Console left, AI Chat center-left, nav buttons right */}
+        {!isFullscreen && (
         <div className="shrink-0 px-3 sm:px-4 md:px-6 py-9 flex items-end gap-2 sm:gap-4 flex-wrap">
           {/* Console button — bottom left */}
           <button
@@ -805,6 +860,7 @@ export default function Cocoon() {
             </div>
           )}
         </div>
+        )}
 
         {hasAccess && selectedSiteId && (
           <CocoonTaskPlanModal

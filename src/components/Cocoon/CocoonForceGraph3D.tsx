@@ -99,6 +99,7 @@ interface CocoonForceGraph3DProps {
   haloColors?: string[];
   showClusters?: boolean;
   visibleJuiceTypes?: Set<string>;
+  isDayMode?: boolean;
 }
 
 // ─── 3D Force Simulation (manual spring-charge model) ───
@@ -695,6 +696,7 @@ function SceneContent({
   onNodeHover,
   onNodeUnhover,
   rawNodes,
+  isDayMode,
 }: {
   graphNodes: GraphNode3D[];
   graphLinks: GraphLink3D[];
@@ -712,21 +714,21 @@ function SceneContent({
   onNodeHover: (id: string) => void;
   onNodeUnhover: () => void;
   rawNodes: SemanticNode[];
+  isDayMode: boolean;
 }) {
   const hoveredNode = hoveredNodeId ? nodeMap.get(hoveredNodeId) : null;
 
-  return (
+   return (
     <>
       {/* Ambient + directional light */}
-      <ambientLight intensity={0.15} color="#6c5ce7" />
-      <directionalLight position={[10, 10, 10]} intensity={0.4} color="#ffffff" />
-      {/* Top-down light for biomimetic gradient (lit top → dark bottom) */}
-      <directionalLight position={[0, 30, 5]} intensity={0.5} color="#c8d0e0" />
-      <pointLight position={[0, 0, 0]} intensity={0.6} color="#ffc83c" distance={200} decay={2} />
+      <ambientLight intensity={isDayMode ? 0.7 : 0.15} color={isDayMode ? "#ffffff" : "#6c5ce7"} />
+      <directionalLight position={[10, 10, 10]} intensity={isDayMode ? 0.8 : 0.4} color="#ffffff" />
+      <directionalLight position={[0, 30, 5]} intensity={isDayMode ? 0.6 : 0.5} color={isDayMode ? "#ffffff" : "#c8d0e0"} />
+      <pointLight position={[0, 0, 0]} intensity={isDayMode ? 0.3 : 0.6} color="#ffc83c" distance={200} decay={2} />
 
-      {/* Deep space background */}
-      <color attach="background" args={["#06060e"]} />
-      <fog attach="fog" args={["#06060e", 150, 500]} />
+      {/* Background */}
+      <color attach="background" args={[isDayMode ? "#f5f5f0" : "#06060e"]} />
+      <fog attach="fog" args={[isDayMode ? "#f5f5f0" : "#06060e", 150, 500]} />
 
       {/* Cluster Halos — behind everything */}
       <ClusterHalos
@@ -803,6 +805,7 @@ export function CocoonForceGraph3D({
   haloColors = DEFAULT_HALO_COLORS,
   showClusters = true,
   visibleJuiceTypes,
+  isDayMode = false,
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [spreadScale, setSpreadScale] = useState(1);
@@ -938,7 +941,7 @@ export function CocoonForceGraph3D({
       <Canvas
         camera={{ position: [0, 0, 150], fov: 50, near: 0.1, far: 1000 }}
         gl={{ antialias: true, alpha: false }}
-        style={{ background: "#080515", width: "100%", height: "100%" }}
+        style={{ background: isDayMode ? "#f5f5f0" : "#080515", width: "100%", height: "100%" }}
         onPointerMissed={() => onNodeSelect(null)}
       >
         <SceneContent
@@ -958,29 +961,32 @@ export function CocoonForceGraph3D({
           onNodeHover={setHoveredNodeId}
           onNodeUnhover={() => setHoveredNodeId(null)}
           rawNodes={nodes}
+          isDayMode={isDayMode}
         />
       </Canvas>
 
-      {/* Progressive vignette fade — eccentric radial blur so nodes don't pop at edges */}
-      <div
-        className="absolute inset-0 pointer-events-none z-[1]"
-        style={{
-          background: `
-            radial-gradient(ellipse 90% 88% at 50% 50%, transparent 82%, #06060e 100%),
-            linear-gradient(to top, #06060e 0%, transparent 4%),
-            linear-gradient(to bottom, #06060e 0%, transparent 4%),
-            linear-gradient(to left, #06060e 0%, transparent 3.3%),
-            linear-gradient(to right, #06060e 0%, transparent 3.3%)
-          `,
-        }}
-      />
+      {/* Progressive vignette fade */}
+      {!isDayMode && (
+        <div
+          className="absolute inset-0 pointer-events-none z-[1]"
+          style={{
+            background: `
+              radial-gradient(ellipse 90% 88% at 50% 50%, transparent 82%, #06060e 100%),
+              linear-gradient(to top, #06060e 0%, transparent 4%),
+              linear-gradient(to bottom, #06060e 0%, transparent 4%),
+              linear-gradient(to left, #06060e 0%, transparent 3.3%),
+              linear-gradient(to right, #06060e 0%, transparent 3.3%)
+            `,
+          }}
+        />
+      )}
 
       {/* Zoom controls */}
       <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 z-10">
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 bg-black/40 backdrop-blur-md border border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60"
+          className={`w-7 h-7 backdrop-blur-md border ${isDayMode ? 'bg-white/60 border-black/10 text-black/50 hover:text-black/80 hover:bg-white/80' : 'bg-black/40 border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60'}`}
           onClick={() => handleZoom("in")}
         >
           <Plus className="w-3.5 h-3.5" />
@@ -988,7 +994,7 @@ export function CocoonForceGraph3D({
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 bg-black/40 backdrop-blur-md border border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60"
+          className={`w-7 h-7 backdrop-blur-md border ${isDayMode ? 'bg-white/60 border-black/10 text-black/50 hover:text-black/80 hover:bg-white/80' : 'bg-black/40 border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60'}`}
           onClick={() => handleZoom("out")}
         >
           <Minus className="w-3.5 h-3.5" />
@@ -996,7 +1002,7 @@ export function CocoonForceGraph3D({
         <Button
           variant="ghost"
           size="icon"
-          className="w-7 h-7 bg-black/40 backdrop-blur-md border border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60"
+          className={`w-7 h-7 backdrop-blur-md border ${isDayMode ? 'bg-white/60 border-black/10 text-black/50 hover:text-black/80 hover:bg-white/80' : 'bg-black/40 border-white/10 text-white/50 hover:text-white/80 hover:bg-black/60'}`}
           onClick={handleReset}
         >
           <Maximize2 className="w-3.5 h-3.5" />
@@ -1017,7 +1023,7 @@ export function CocoonForceGraph3D({
       </div>
 
       {/* Stats overlay */}
-      <div className="absolute top-4 right-14 text-[10px] text-white/30 font-mono space-y-0.5 text-right pointer-events-none">
+      <div className={`absolute top-4 right-14 text-[10px] font-mono space-y-0.5 text-right pointer-events-none ${isDayMode ? 'text-black/40' : 'text-white/30'}`}>
         <div>{nodes.length} nœuds · {graphLinks.length} liens</div>
       </div>
 

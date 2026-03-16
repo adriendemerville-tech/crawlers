@@ -104,6 +104,7 @@ interface CocoonForceGraphProps {
   isXRayMode: boolean;
   isPickingMode?: boolean;
   particlesEnabled?: boolean;
+  isDayMode?: boolean;
 }
 
 export function CocoonForceGraph({
@@ -113,6 +114,7 @@ export function CocoonForceGraph({
   isXRayMode,
   isPickingMode = false,
   particlesEnabled = true,
+  isDayMode = false,
 }: CocoonForceGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -372,30 +374,35 @@ export function CocoonForceGraph({
       canvas.height = height * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      // ─── Deep space background ───
-      const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.7);
-      bgGrad.addColorStop(0, "#0a0a14");
-      bgGrad.addColorStop(0.5, "#06060e");
-      bgGrad.addColorStop(1, "#030308");
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, width, height);
-
-      // ─── Subtle hex grid (Jarvis backdrop) ───
+      // ─── Background ───
       const time = frame * 0.008;
-      ctx.save();
-      ctx.globalAlpha = 0.03 + Math.sin(time * 0.5) * 0.01;
-      ctx.strokeStyle = "#6c5ce7";
-      ctx.lineWidth = 0.5;
-      const gridSize = 60;
-      for (let gx = -gridSize; gx < width + gridSize; gx += gridSize) {
-        for (let gy = -gridSize; gy < height + gridSize; gy += gridSize * 0.866) {
-          const offset = (Math.floor(gy / (gridSize * 0.866)) % 2) * (gridSize / 2);
-          ctx.beginPath();
-          ctx.arc(gx + offset, gy, 1, 0, Math.PI * 2);
-          ctx.stroke();
+      if (isDayMode) {
+        ctx.fillStyle = "#f5f5f0";
+        ctx.fillRect(0, 0, width, height);
+      } else {
+        const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.7);
+        bgGrad.addColorStop(0, "#0a0a14");
+        bgGrad.addColorStop(0.5, "#06060e");
+        bgGrad.addColorStop(1, "#030308");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, width, height);
+
+        // ─── Subtle hex grid (Jarvis backdrop) ───
+        ctx.save();
+        ctx.globalAlpha = 0.03 + Math.sin(time * 0.5) * 0.01;
+        ctx.strokeStyle = "#6c5ce7";
+        ctx.lineWidth = 0.5;
+        const gridSize = 60;
+        for (let gx = -gridSize; gx < width + gridSize; gx += gridSize) {
+          for (let gy = -gridSize; gy < height + gridSize; gy += gridSize * 0.866) {
+            const offset = (Math.floor(gy / (gridSize * 0.866)) % 2) * (gridSize / 2);
+            ctx.beginPath();
+            ctx.arc(gx + offset, gy, 1, 0, Math.PI * 2);
+            ctx.stroke();
+          }
         }
+        ctx.restore();
       }
-      ctx.restore();
 
       // (radar animation removed)
 
@@ -439,8 +446,10 @@ export function CocoonForceGraph({
           ctx.beginPath();
           ctx.moveTo(source.x, source.y);
           ctx.lineTo(target.x, target.y);
-          ctx.strokeStyle = `rgba(120, 100, 220, ${Math.min(baseAlpha, 0.18)})`;
-          ctx.lineWidth = lineW;
+          ctx.strokeStyle = isDayMode
+            ? `rgba(0, 0, 0, ${Math.min(baseAlpha + 0.15, 0.35)})`
+            : `rgba(120, 100, 220, ${Math.min(baseAlpha, 0.18)})`;
+          ctx.lineWidth = isDayMode ? lineW * 1.2 : lineW;
           ctx.stroke();
         }
       }
@@ -668,15 +677,17 @@ export function CocoonForceGraph({
           const labelOffset = r + 4 * labelScale;
 
           // Text shadow
-          ctx.fillStyle = `rgba(0, 0, 0, 0.7)`;
+          ctx.fillStyle = isDayMode ? `rgba(255, 255, 255, 0.8)` : `rgba(0, 0, 0, 0.7)`;
           ctx.fillText(label, node.x + 0.5, node.y + labelOffset + 0.5);
 
           // Text
-          ctx.fillStyle = isGhost
-            ? `rgba(255, 255, 255, 0.25)`
-            : isSelected || node.isHome
-              ? `rgba(255, 220, 100, 0.95)`
-              : `rgba(255, 255, 255, 0.7)`;
+          ctx.fillStyle = isDayMode
+            ? (isGhost ? `rgba(0, 0, 0, 0.3)` : `rgba(0, 0, 0, 0.9)`)
+            : isGhost
+              ? `rgba(255, 255, 255, 0.25)`
+              : isSelected || node.isHome
+                ? `rgba(255, 220, 100, 0.95)`
+                : `rgba(255, 255, 255, 0.7)`;
           ctx.fillText(label, node.x, node.y + labelOffset);
         }
       }
