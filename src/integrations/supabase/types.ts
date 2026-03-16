@@ -973,6 +973,60 @@ export type Database = {
         }
         Relationships: []
       }
+      cocoon_tasks: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          priority: string
+          source_recommendation_id: string | null
+          status: string
+          title: string
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          source_recommendation_id?: string | null
+          status?: string
+          title: string
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          source_recommendation_id?: string | null
+          status?: string
+          title?: string
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cocoon_tasks_source_recommendation_id_fkey"
+            columns: ["source_recommendation_id"]
+            isOneToOne: false
+            referencedRelation: "cocoon_recommendations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cocoon_tasks_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cocoon_theme_settings: {
         Row: {
           created_at: string
