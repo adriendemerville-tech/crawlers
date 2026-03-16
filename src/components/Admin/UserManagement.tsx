@@ -88,8 +88,14 @@ export function UserManagement() {
         if (currentRole) {
           await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', currentRole as any);
         }
-        await supabase.from('user_roles').insert({ user_id: userId, role: role as any });
-        toast.success(`Rôle ${labels[role]} attribué`);
+        const insertData: any = { user_id: userId, role: role as any };
+        // Auditor role expires in 2 hours
+        if (role === 'auditor') {
+          insertData.expires_at = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+        }
+        await supabase.from('user_roles').insert(insertData);
+        const expiryNote = role === 'auditor' ? ' (expire dans 2h)' : '';
+        toast.success(`Rôle ${labels[role]} attribué${expiryNote}`);
       }
       fetchAllRoles();
     } catch {
