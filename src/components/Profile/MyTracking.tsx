@@ -49,6 +49,8 @@ const translations = {
     citationRate: 'Taux de citation LLM',
     sentiment: 'Sentiment IA',
     performance: 'Performance',
+    performanceMobile: 'Perf. Mobile',
+    performanceDesktop: 'Perf. Desktop',
     semanticAuth: 'Autorité sémantique',
     voiceShare: 'Part de voix',
     evolution: 'Évolution',
@@ -77,6 +79,8 @@ const translations = {
     citationRate: 'LLM Citation Rate',
     sentiment: 'AI Sentiment',
     performance: 'Performance',
+    performanceMobile: 'Perf. Mobile',
+    performanceDesktop: 'Perf. Desktop',
     semanticAuth: 'Semantic Authority',
     voiceShare: 'Voice Share',
     evolution: 'Evolution',
@@ -105,6 +109,8 @@ const translations = {
     citationRate: 'Tasa de citación LLM',
     sentiment: 'Sentimiento IA',
     performance: 'Rendimiento',
+    performanceMobile: 'Rend. Móvil',
+    performanceDesktop: 'Rend. Escritorio',
     semanticAuth: 'Autoridad semántica',
     voiceShare: 'Cuota de voz',
     evolution: 'Evolución',
@@ -421,7 +427,7 @@ export function MyTracking() {
       const [geoRes, llmRes, psiRes, crawlersRes, serpRes] = await Promise.allSettled([
         supabase.functions.invoke('check-geo', { body: { url, lang: language } }),
         supabase.functions.invoke('check-llm', { body: { url, lang: language } }),
-        supabase.functions.invoke('check-pagespeed', { body: { url, lang: language } }),
+        supabase.functions.invoke('check-pagespeed', { body: { url, lang: language, dual: true } }),
         supabase.functions.invoke('check-crawlers', { body: { url } }),
         supabase.functions.invoke('fetch-serp-kpis', { body: { domain: site.domain, url } }),
       ]);
@@ -446,8 +452,9 @@ export function MyTracking() {
         ? Math.round((botResults.filter((b: any) => b.status === 'allowed').length / botResults.length) * 100)
         : null;
 
-      // Extract PageSpeed performance score (0-100)
-      const performanceScore = psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
+      // Extract PageSpeed performance scores (mobile + desktop)
+      const performanceScore = psiData?.data?.mobile?.scores?.performance ?? psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
+      const performanceDesktop = psiData?.data?.desktop?.scores?.performance ?? null;
 
       // Insert stats entry
       await supabase.from('user_stats_history').insert({
@@ -465,6 +472,7 @@ export function MyTracking() {
           psiData: psiData?.data,
           crawlersData: crawlersData?.data || crawlersData,
           performanceScore,
+          performanceDesktop,
           llmOverallScore,
           serpData,
         },
@@ -630,11 +638,12 @@ export function MyTracking() {
         rawAccumulator.crawlersData = crawlersData?.data || crawlersData;
       }).catch(console.error),
 
-      // 2. PageSpeed → Performance
-      supabase.functions.invoke('check-pagespeed', { body: { url, lang: language } }).then((res) => {
+      // 2. PageSpeed → Performance (mobile + desktop)
+      supabase.functions.invoke('check-pagespeed', { body: { url, lang: language, dual: true } }).then((res) => {
         const psiData = res.data;
-        currentPerformance = psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
+        currentPerformance = psiData?.data?.mobile?.scores?.performance ?? psiData?.data?.scores?.performance ?? psiData?.data?.performance ?? null;
         rawAccumulator.psiData = psiData?.data;
+        rawAccumulator.performanceDesktop = psiData?.data?.desktop?.scores?.performance ?? null;
       }).catch(console.error),
 
       // 3. GEO → GEO score
@@ -804,10 +813,14 @@ export function MyTracking() {
   const currentStats = selectedSite ? (statsMap[selectedSite] || []) : [];
   const latestStats = currentStats.length > 0 ? currentStats[currentStats.length - 1] : null;
   
-  // Extract performance score from raw_data
+  // Extract performance scores from raw_data
   const getPerformanceScore = (entry: StatsEntry) => {
     const raw = entry as any;
     return raw?.raw_data?.performanceScore ?? null;
+  };
+  const getPerformanceDesktop = (entry: StatsEntry) => {
+    const raw = entry as any;
+    return raw?.raw_data?.performanceDesktop ?? null;
   };
   const getAiVisibility = (entry: StatsEntry): number | null => {
     const raw = entry as any;
@@ -818,6 +831,7 @@ export function MyTracking() {
     return raw?.raw_data?.serpData ?? null;
   };
   const latestPerformance = latestStats ? getPerformanceScore(latestStats) : null;
+  const latestPerformanceDesktop = latestStats ? getPerformanceDesktop(latestStats) : null;
   const latestAiVisibility = latestStats ? getAiVisibility(latestStats) : null;
   const latestSerpData = latestStats ? getSerpData(latestStats) : null;
   const previousSerpData = currentStats.length >= 2 ? getSerpData(currentStats[currentStats.length - 2]) : null;
@@ -849,7 +863,8 @@ export function MyTracking() {
         seo: entry.seo_score || 0,
         geo: entry.geo_score || 0,
         citation: entry.llm_citation_rate || 0,
-        performance: getPerformanceScore(entry) || 0,
+        performanceMobile: getPerformanceScore(entry) || 0,
+        performanceDesktop: getPerformanceDesktop(entry) || 0,
       };
     });
   }, [currentStats]);
@@ -1039,10 +1054,11 @@ export function MyTracking() {
 
                   {/* KPI Cards — Sortable, wrapped in a bordered Card */}
                   {(() => {
-                    const defaultKpiOrder = ['performance', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
+                    const defaultKpiOrder = ['performanceMobile', 'performanceDesktop', 'seoScore', 'geoScore', 'aiVisibility', 'citationRate', 'sentiment', 'semanticAuth', 'voiceShare'];
                     
                     const kpiDefinitions: Record<string, { label: string; value: string; icon: ElementType; valueClassName?: string }> = {
-                      performance: { label: t.performance, value: latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—', icon: Gauge },
+                      performanceMobile: { label: t.performanceMobile, value: latestPerformance !== null ? `${Math.round(latestPerformance)}/100` : '—', icon: Gauge },
+                      performanceDesktop: { label: t.performanceDesktop, value: latestPerformanceDesktop !== null ? `${Math.round(latestPerformanceDesktop)}/100` : '—', icon: Gauge },
                       seoScore: { label: t.seoScore, value: latestStats?.seo_score != null ? `${latestStats.seo_score}%` : '—', icon: Search },
                       geoScore: { label: t.geoScore, value: latestStats?.geo_score ? `${latestStats.geo_score}%` : '—', icon: Globe },
                       aiVisibility: { label: t.aiVisibility, value: latestAiVisibility != null ? `${Math.round(latestAiVisibility)}/100` : '—', icon: Eye },
@@ -1052,15 +1068,19 @@ export function MyTracking() {
                       voiceShare: { label: t.voiceShare, value: latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—', icon: BarChart3 },
                     };
 
-                    // Per-KPI refresh handler map
+                    // Per-KPI refresh handler map — shared for both mobile/desktop
+                    const psiDualRefresh = async () => {
+                      if (!currentSite) return;
+                      const res = await supabase.functions.invoke('check-pagespeed', { body: { url: `https://${currentSite.domain}`, lang: language, dual: true } });
+                      const mobile = res.data?.data?.mobile?.scores?.performance ?? res.data?.data?.scores?.performance ?? null;
+                      const desktop = res.data?.data?.desktop?.scores?.performance ?? null;
+                      if (mobile !== null) toast.success(`${t.performanceMobile}: ${Math.round(mobile)}/100`);
+                      if (desktop !== null) toast.success(`${t.performanceDesktop}: ${Math.round(desktop)}/100`);
+                      if (currentSite) await runStreamingAudit(currentSite);
+                    };
                     const kpiRefreshMap: Record<string, () => Promise<void>> = {
-                      performance: async () => {
-                        if (!currentSite) return;
-                        const res = await supabase.functions.invoke('check-pagespeed', { body: { url: `https://${currentSite.domain}`, lang: language } });
-                        const score = res.data?.data?.scores?.performance ?? res.data?.data?.performance ?? null;
-                        if (score !== null) toast.success(`${t.performance}: ${Math.round(score)}/100`);
-                        if (currentSite) await runStreamingAudit(currentSite);
-                      },
+                      performanceMobile: psiDualRefresh,
+                      performanceDesktop: psiDualRefresh,
                       seoScore: async () => {
                         if (!currentSite) return;
                         const res = await supabase.functions.invoke('check-crawlers', { body: { url: `https://${currentSite.domain}` } });
@@ -1116,7 +1136,8 @@ export function MyTracking() {
                               <Line type="monotone" dataKey="seo" name={t.seoScore} stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
                               <Line type="monotone" dataKey="geo" name={t.geoScore} stroke="hsl(142, 76%, 36%)" strokeWidth={2} dot={{ r: 3 }} />
                               <Line type="monotone" dataKey="citation" name={t.citationRate} stroke="hsl(262, 83%, 58%)" strokeWidth={2} dot={{ r: 3 }} />
-                              <Line type="monotone" dataKey="performance" name={t.performance} stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={{ r: 3 }} />
+                              <Line type="monotone" dataKey="performanceMobile" name={t.performanceMobile} stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={{ r: 3 }} />
+                              <Line type="monotone" dataKey="performanceDesktop" name={t.performanceDesktop} stroke="hsl(210, 90%, 55%)" strokeWidth={2} dot={{ r: 3 }} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>

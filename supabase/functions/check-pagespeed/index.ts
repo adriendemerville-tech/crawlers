@@ -65,29 +65,93 @@ function extractCruxData(loadingExperience: any): { metrics: PageSpeedResult; av
 
   const lcp = m.LARGEST_CONTENTFUL_PAINT_MS?.percentile || 0;
   const fcp = m.FIRST_CONTENTFUL_PAINT_MS?.percentile || 0;
-  const cls = (m.CUMULATIVE_LAYOUT_SHIFT?.percentile || 0) / 100; // CrUX returns CLS * 100
+  const cls = (m.CUMULATIVE_LAYOUT_SHIFT?.percentile || 0) / 100;
   const inp = m.INTERACTION_TO_NEXT_PAINT?.percentile || 0;
   const ttfb = m.EXPERIMENTAL_TIME_TO_FIRST_BYTE?.percentile || 0;
 
-  // Derive performance from overall_category
   const performance = overallCategoryToPerformance(loadingExperience.overall_category || 'AVERAGE');
 
   return {
     available: true,
     metrics: {
       performance,
-      // CrUX doesn't have these — we'll fill from Lighthouse
       accessibility: 0,
       bestPractices: 0,
       seo: 0,
       fcp: formatTime(fcp),
       lcp: formatTime(lcp),
       cls: cls.toFixed(3),
-      tbt: formatTime(inp), // INP replaces TBT in field data (closest real-user equivalent)
-      speedIndex: '', // Not available in CrUX
-      tti: formatTime(ttfb), // Use TTFB as closest field equivalent
+      tbt: formatTime(inp),
+      speedIndex: '',
+      tti: formatTime(ttfb),
     }
   };
+}
+
+// Fetch PSI for a single strategy and produce final result
+async function fetchForStrategy(normalizedUrl: string, strategy: string, apiKey: string): Promise<{
+  scores: PageSpeedResult;
+  dataSource: 'field' | 'lab';
+} | null> {
+  const googleApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`;
+
+  const response = await fetch(googleApiUrl);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    console.error(`[PSI:${strategy}] API error ${response.status}:`, errorData?.error?.message);
+    
+    if (response.status === 429 || errorData?.error?.status === 'RESOURCE_EXHAUSTED') {
+      throw new Error('quota_exceeded');
+    }
+    return null;
+  }
+
+  const data = await response.json();
+
+  const categories = data.lighthouseResult?.categories || {};
+  const audits = data.lighthouseResult?.audits || {};
+
+  const lighthouseResult: PageSpeedResult = {
+    performance: Math.round((categories.performance?.score || 0) * 100),
+    accessibility: Math.round((categories.accessibility?.score || 0) * 100),
+    bestPractices: Math.round((categories['best-practices']?.score || 0) * 100),
+    seo: Math.round((categories.seo?.score || 0) * 100),
+    fcp: formatTime(audits['first-contentful-paint']?.numericValue || 0),
+    lcp: formatTime(audits['largest-contentful-paint']?.numericValue || 0),
+    cls: (audits['cumulative-layout-shift']?.numericValue || 0).toFixed(3),
+    tbt: formatTime(audits['total-blocking-time']?.numericValue || 0),
+    speedIndex: formatTime(audits['speed-index']?.numericValue || 0),
+    tti: formatTime(audits['interactive']?.numericValue || 0),
+  };
+
+  const crux = extractCruxData(data.loadingExperience);
+
+  let finalResult: PageSpeedResult;
+  let dataSource: 'field' | 'lab';
+
+  if (crux?.available) {
+    console.log(`[PSI:${strategy}] ✅ CrUX field data available`);
+    dataSource = 'field';
+    finalResult = {
+      performance: lighthouseResult.performance,
+      accessibility: lighthouseResult.accessibility,
+      bestPractices: lighthouseResult.bestPractices,
+      seo: lighthouseResult.seo,
+      fcp: crux.metrics.fcp,
+      lcp: crux.metrics.lcp,
+      cls: crux.metrics.cls,
+      tbt: crux.metrics.tbt,
+      speedIndex: lighthouseResult.speedIndex,
+      tti: crux.metrics.tti,
+    };
+  } else {
+    console.log(`[PSI:${strategy}] ℹ️ No CrUX — using Lighthouse lab data`);
+    dataSource = 'lab';
+    finalResult = lighthouseResult;
+  }
+
+  return { scores: finalResult, dataSource };
 }
 
 Deno.serve(async (req) => {
@@ -115,7 +179,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { url, strategy = 'mobile' } = await req.json();
+    const { url, strategy = 'mobile', dual = false } = await req.json();
 
     if (!url) {
       return new Response(
@@ -125,8 +189,6 @@ Deno.serve(async (req) => {
     }
 
     const normalizedUrl = normalizeUrl(url);
-    console.log('Checking PageSpeed for:', normalizedUrl, 'Strategy:', strategy);
-
     const apiKey = Deno.env.get("GOOGLE_PAGESPEED_API_KEY");
     if (!apiKey) {
       console.error("GOOGLE_PAGESPEED_API_KEY not configured");
@@ -136,102 +198,87 @@ Deno.serve(async (req) => {
       );
     }
 
-    const googleApiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(normalizedUrl)}&strategy=${strategy}&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO&key=${apiKey}`;
+    // ── Dual mode: fetch both mobile + desktop in parallel ──
+    if (dual) {
+      console.log('[PSI] Dual mode — fetching mobile + desktop for:', normalizedUrl);
 
-    console.log('Calling Google PageSpeed API...');
-    const response = await fetch(googleApiUrl);
+      const [mobileResult, desktopResult] = await Promise.allSettled([
+        fetchForStrategy(normalizedUrl, 'mobile', apiKey),
+        fetchForStrategy(normalizedUrl, 'desktop', apiKey),
+      ]);
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('PageSpeed API error:', JSON.stringify(errorData));
-      
-      if (response.status === 429 || errorData?.error?.status === 'RESOURCE_EXHAUSTED') {
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: 'quota_exceeded',
-            message: 'PageSpeed API daily quota exceeded. Please try again tomorrow.'
-          }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      // Check for quota errors
+      for (const r of [mobileResult, desktopResult]) {
+        if (r.status === 'rejected' && r.reason?.message === 'quota_exceeded') {
+          return new Response(
+            JSON.stringify({ success: false, error: 'quota_exceeded', message: 'PageSpeed API daily quota exceeded.' }),
+            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
       }
-      
+
+      const mobile = mobileResult.status === 'fulfilled' ? mobileResult.value : null;
+      const desktop = desktopResult.status === 'fulfilled' ? desktopResult.value : null;
+
+      // Fire-and-forget URL tracking
+      trackAnalyzedUrl(normalizedUrl).catch(() => {});
+
       return new Response(
-        JSON.stringify({ success: false, error: errorData?.error?.message || `PageSpeed API error: ${response.status}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({
+          success: true,
+          dual: true,
+          data: {
+            url: normalizedUrl,
+            mobile: mobile ? { ...mobile, strategy: 'mobile' } : null,
+            desktop: desktop ? { ...desktop, strategy: 'desktop' } : null,
+            // Backward compatible: main "scores" = mobile (or desktop fallback)
+            scores: mobile?.scores || desktop?.scores || null,
+            strategy: 'dual',
+            dataSource: mobile?.dataSource || desktop?.dataSource || 'lab',
+            scannedAt: new Date().toISOString(),
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const data = await response.json();
-    console.log('PageSpeed response received successfully');
+    // ── Single strategy mode (backward compatible) ──
+    console.log('[PSI] Single mode — strategy:', strategy, 'for:', normalizedUrl);
 
-    // ── Extract Lighthouse lab data (always available) ──
-    const categories = data.lighthouseResult?.categories || {};
-    const audits = data.lighthouseResult?.audits || {};
+    try {
+      const result = await fetchForStrategy(normalizedUrl, strategy, apiKey);
 
-    const lighthouseResult: PageSpeedResult = {
-      performance: Math.round((categories.performance?.score || 0) * 100),
-      accessibility: Math.round((categories.accessibility?.score || 0) * 100),
-      bestPractices: Math.round((categories['best-practices']?.score || 0) * 100),
-      seo: Math.round((categories.seo?.score || 0) * 100),
-      fcp: formatTime(audits['first-contentful-paint']?.numericValue || 0),
-      lcp: formatTime(audits['largest-contentful-paint']?.numericValue || 0),
-      cls: (audits['cumulative-layout-shift']?.numericValue || 0).toFixed(3),
-      tbt: formatTime(audits['total-blocking-time']?.numericValue || 0),
-      speedIndex: formatTime(audits['speed-index']?.numericValue || 0),
-      tti: formatTime(audits['interactive']?.numericValue || 0),
-    };
+      if (!result) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Failed to get PageSpeed data' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    // ── Extract CrUX field data (may not exist for low-traffic sites) ──
-    const crux = extractCruxData(data.loadingExperience);
-    
-    let finalResult: PageSpeedResult;
-    let dataSource: 'field' | 'lab';
+      trackAnalyzedUrl(normalizedUrl).catch(() => {});
 
-    if (crux?.available) {
-      console.log('✅ CrUX field data available — prioritizing real-user metrics');
-      dataSource = 'field';
-      finalResult = {
-        // Always use Lighthouse performance score (granular 0-100, varies by strategy)
-        // CrUX overall_category only gives 3 buckets (FAST/AVERAGE/SLOW) — too coarse
-        performance: lighthouseResult.performance,
-        // Category scores only exist in Lighthouse
-        accessibility: lighthouseResult.accessibility,
-        bestPractices: lighthouseResult.bestPractices,
-        seo: lighthouseResult.seo,
-        // Core Web Vitals from CrUX (real users)
-        fcp: crux.metrics.fcp,
-        lcp: crux.metrics.lcp,
-        cls: crux.metrics.cls,
-        // INP from CrUX (replaces TBT for field data)
-        tbt: crux.metrics.tbt,
-        // Speed Index not in CrUX — fall back to Lighthouse
-        speedIndex: lighthouseResult.speedIndex,
-        // TTFB from CrUX
-        tti: crux.metrics.tti,
-      };
-    } else {
-      console.log('ℹ️ No CrUX field data — using Lighthouse lab data');
-      dataSource = 'lab';
-      finalResult = lighthouseResult;
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            url: normalizedUrl,
+            strategy,
+            scores: result.scores,
+            dataSource: result.dataSource,
+            scannedAt: new Date().toISOString(),
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (err: any) {
+      if (err.message === 'quota_exceeded') {
+        return new Response(
+          JSON.stringify({ success: false, error: 'quota_exceeded', message: 'PageSpeed API daily quota exceeded.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      throw err;
     }
-
-    // Fire-and-forget URL tracking
-    trackAnalyzedUrl(normalizedUrl).catch(() => {});
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          url: normalizedUrl,
-          strategy,
-          scores: finalResult,
-          dataSource,
-          scannedAt: new Date().toISOString(),
-        }
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error) {
     console.error('Error:', error);
