@@ -32,6 +32,16 @@ interface Props {
   onForceRefresh: () => void;
 }
 
+function FreemiumAwareGate({ isLoggedIn }: { isLoggedIn: boolean }) {
+  const { openMode } = useFreemiumMode();
+  if (openMode || isLoggedIn) return null;
+  return (
+    <AnimatePresence>
+      <RegistrationGate />
+    </AnimatePresence>
+  );
+}
+
 export function StrategicResultsSection({
   result, url, t, isLoggedIn, isStrategicLoading,
   hallucinationDiagnosis, storedCorrections, strategicProgressiveReveal,
