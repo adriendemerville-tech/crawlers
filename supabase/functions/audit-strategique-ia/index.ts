@@ -2453,6 +2453,10 @@ Deno.serve(async (req) => {
         gmbData = gmbResult.value;
       }
 
+      if (fbResult.status === 'fulfilled' && fbResult.value) {
+        facebookPageInfo = fbResult.value;
+      }
+
       console.log(`⏱️ Data collection done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
     }
 
@@ -2468,6 +2472,7 @@ Deno.serve(async (req) => {
       marketData, rankingOverview, founderInfo,
       llmData: effectiveToolsData.llm,
       gmbData,
+      facebookPageInfo,
     };
 
     // ═══ CHECK DEADLINE before expensive LLM call — need at least 90s ═══
