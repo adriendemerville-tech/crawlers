@@ -352,6 +352,14 @@ export default function Cocoon() {
     return () => clearTimeout(timer);
   }, [autoLaunchDomain, selectedSiteId, trackedSites]);
 
+  // Auto-compute in fullscreen mode when site is pre-selected
+  const fullscreenTriggered = useRef(false);
+  useEffect(() => {
+    if (!isFullscreen || !selectedSiteId || !user || fullscreenTriggered.current || nodes.length > 0) return;
+    fullscreenTriggered.current = true;
+    const timer = setTimeout(() => handleCompute(), 500);
+    return () => clearTimeout(timer);
+  }, [isFullscreen, selectedSiteId, user, nodes.length]);
   // Auto-refresh: detect return from external audit/crawl tabs
   useEffect(() => {
     if (!user || !selectedSiteId) return;
