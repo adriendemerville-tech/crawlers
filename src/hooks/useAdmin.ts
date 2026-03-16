@@ -24,7 +24,7 @@ export function useAdmin() {
       try {
         const { data, error } = await supabase
           .from('user_roles')
-          .select('role')
+          .select('role, expires_at')
           .eq('user_id', user.id);
 
         if (error) {
@@ -34,11 +34,14 @@ export function useAdmin() {
           setIsViewerLevel2(false);
           setIsAuditor(false);
         } else {
-          const roles = (data || []).map((r: any) => r.role);
-          setIsAdmin(roles.includes('admin'));
-          setIsViewer(roles.includes('viewer'));
-          setIsViewerLevel2(roles.includes('viewer_level2'));
-          setIsAuditor(roles.includes('auditor'));
+          const now = new Date();
+          const activeRoles = (data || [])
+            .filter((r: any) => !r.expires_at || new Date(r.expires_at) > now)
+            .map((r: any) => r.role);
+          setIsAdmin(activeRoles.includes('admin'));
+          setIsViewer(activeRoles.includes('viewer'));
+          setIsViewerLevel2(activeRoles.includes('viewer_level2'));
+          setIsAuditor(activeRoles.includes('auditor'));
         }
       } catch (err) {
         console.error('Error checking roles:', err);

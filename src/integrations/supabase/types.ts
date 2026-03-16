@@ -3623,18 +3623,21 @@ export type Database = {
       user_roles: {
         Row: {
           created_at: string
+          expires_at: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
           created_at?: string
+          expires_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -3755,6 +3758,7 @@ export type Database = {
         Returns: Json
       }
       cleanup_expired_depth_conversations: { Args: never; Returns: undefined }
+      cleanup_expired_roles: { Args: never; Returns: undefined }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
