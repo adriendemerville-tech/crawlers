@@ -135,8 +135,33 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
   const [filterQuery, setFilterQuery] = useState('');
   const [sortField, setSortField] = useState<string>('prompt');
   const [sortAsc, setSortAsc] = useState(true);
+  const [demoMode, setDemoMode] = useState(false);
 
-  // ── Fetch existing imports + Crawlers data ──
+  // ── Load demo data ──
+  const loadDemoData = useCallback(() => {
+    const { rows, crawlers } = generateMockData();
+    setImports([{
+      id: 'demo',
+      file_name: 'demo-simulation.csv',
+      row_count: rows.length,
+      created_at: new Date().toISOString(),
+      column_mapping: { prompt: 'prompt', llm_name: 'llm_name', score: 'score', brand_found: 'brand_found', position: 'position', date: 'date' },
+      raw_data: rows,
+    }]);
+    setSelectedImportId('demo');
+    setCrawlersData(crawlers);
+    setDemoMode(true);
+    setLoading(false);
+  }, []);
+
+  const exitDemoMode = useCallback(() => {
+    setDemoMode(false);
+    setImports([]);
+    setSelectedImportId(null);
+    setCrawlersData(null);
+    fetchData();
+  }, []);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
