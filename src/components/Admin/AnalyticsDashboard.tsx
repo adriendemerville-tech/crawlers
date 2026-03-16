@@ -421,7 +421,7 @@ export function AnalyticsDashboard() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => fetchAnalytics(true)}
+          onClick={() => fetchEvents(true)}
           disabled={isRefreshing}
           className="gap-2"
         >
