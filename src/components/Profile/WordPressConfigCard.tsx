@@ -519,6 +519,33 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig 
           )}
         </p>
       </div>
+
+      {/* GA4 OAuth — Admin only */}
+      {isAdmin && (
+        <>
+          <Separator className="mt-2" />
+          <div className="flex items-start gap-3 pt-3 pb-1">
+            <Checkbox
+              id="ga4-oauth"
+              checked={ga4Enabled}
+              disabled={ga4Loading}
+              onCheckedChange={(checked) => handleGa4Toggle(!!checked)}
+            />
+            <div className="space-y-1">
+              <label htmlFor="ga4-oauth" className="text-sm font-medium cursor-pointer leading-none">
+                {t3(language, 'Connecter Google Analytics', 'Connect Google Analytics', 'Conectar Google Analytics')}
+              </label>
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                {t3(language,
+                  'Active le scope OAuth GA4 (analytics.readonly). Au prochain branchement Google, les données Analytics seront collectées automatiquement.',
+                  'Enables the GA4 OAuth scope (analytics.readonly). On next Google connection, Analytics data will be collected automatically.',
+                  'Activa el alcance OAuth GA4 (analytics.readonly). En la próxima conexión de Google, los datos de Analytics se recopilarán automáticamente.'
+                )}
+              </p>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
