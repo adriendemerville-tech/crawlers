@@ -81,6 +81,7 @@ export function ScriptKillSwitches() {
   const [multipageEnabled, setMultipageEnabled] = useState(true);
   const [sdkEnabled, setSdkEnabled] = useState(true);
   const [freemiumOpen, setFreemiumOpen] = useState(false);
+  const [hideHomeLeadmagnet, setHideHomeLeadmagnet] = useState(false);
   const [blockedDomains, setBlockedDomains] = useState<string[]>([]);
   const [newDomain, setNewDomain] = useState('');
   const [loading, setLoading] = useState(true);
@@ -93,12 +94,13 @@ export function ScriptKillSwitches() {
       const { data: configs } = await supabase
         .from('system_config')
         .select('key, value')
-        .in('key', ['enable_multipage_router', 'sdk_enabled', 'sdk_blocked_domains', 'freemium_open_mode']);
+        .in('key', ['enable_multipage_router', 'sdk_enabled', 'sdk_blocked_domains', 'freemium_open_mode', 'hide_home_leadmagnet']);
 
       for (const cfg of (configs || [])) {
         if (cfg.key === 'enable_multipage_router') setMultipageEnabled(cfg.value !== false);
         if (cfg.key === 'sdk_enabled') setSdkEnabled(cfg.value !== false);
         if (cfg.key === 'freemium_open_mode') setFreemiumOpen(cfg.value === true);
+        if (cfg.key === 'hide_home_leadmagnet') setHideHomeLeadmagnet(cfg.value === true);
         if (cfg.key === 'sdk_blocked_domains') setBlockedDomains(Array.isArray(cfg.value) ? (cfg.value as string[]) : []);
       }
     } catch (err) {
@@ -138,8 +140,13 @@ export function ScriptKillSwitches() {
   const handleToggleFreemium = async (checked: boolean) => {
     setFreemiumOpen(checked);
     await saveConfig('freemium_open_mode', checked);
-    // Force page reload for all clients after a short delay
     toast({ title: checked ? 'Mode freemium ouvert activé' : 'Mode freemium standard restauré' });
+  };
+
+  const handleToggleHideLeadmagnet = async (checked: boolean) => {
+    setHideHomeLeadmagnet(checked);
+    await saveConfig('hide_home_leadmagnet', checked);
+    toast({ title: checked ? 'Lead magnets masqués — Mode Audit Expert activé' : 'Lead magnets restaurés sur la Home' });
   };
 
   const handleAddDomain = async () => {
@@ -254,7 +261,23 @@ export function ScriptKillSwitches() {
 
         <Separator />
 
-        {/* Level 3: Blocked Domains */}
+        {/* Hide Home Lead Magnets */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <Label className="text-sm font-medium">Masquer Lead Magnets (Home)</Label>
+            <p className="text-xs text-muted-foreground">
+              Masque les onglets de fonctions sur la Home. Conserve le champ URL et transforme le CTA en « Démarrer Audit Expert ».
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={hideHomeLeadmagnet ? 'default' : 'secondary'} className={`text-[10px] ${hideHomeLeadmagnet ? 'bg-amber-500 hover:bg-amber-600' : ''}`}>
+              {hideHomeLeadmagnet ? 'Masqué' : 'Visible'}
+            </Badge>
+            <Switch checked={hideHomeLeadmagnet} onCheckedChange={handleToggleHideLeadmagnet} disabled={saving} />
+          </div>
+        </div>
+
+        <Separator />
         <div>
           <Label className="text-sm font-medium">{t.level3}</Label>
           <p className="text-xs text-muted-foreground mb-2">{t.level3Desc}</p>
