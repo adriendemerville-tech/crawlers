@@ -15,6 +15,9 @@ import {
   Globe,
   Search,
   RefreshCw,
+  Shield,
+  Gauge,
+  Server,
 } from 'lucide-react';
 import { subDays } from 'date-fns';
 
@@ -384,6 +387,98 @@ export function FinancesDashboard() {
         </Card>
       </div>
 
+      {/* API Quota Gauges */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Gauge className="h-4 w-4 text-primary" />
+            Quotas & Statuts API (30j)
+          </CardTitle>
+          <CardDescription>Consommation par service avec estimation des limites de plan</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Browserless */}
+            <ApiQuotaGauge
+              name="Browserless.io"
+              icon={<Globe className="h-4 w-4" />}
+              calls={tokenUsage.browserlessCalls}
+              quota={1000}
+              costPerCall={0.008}
+              color="teal"
+              status={tokenUsage.browserlessCalls >= 1000 ? 'exhausted' : tokenUsage.browserlessCalls >= 800 ? 'warning' : 'ok'}
+              statusLabel={tokenUsage.browserlessCalls >= 1000 ? '⛔ Quota épuisé → Fly.io actif' : tokenUsage.browserlessCalls >= 800 ? '⚠️ Approche limite' : '✅ OK'}
+            />
+
+            {/* Fly.io Playwright */}
+            <ApiQuotaGauge
+              name="Fly.io Playwright"
+              icon={<Server className="h-4 w-4" />}
+              calls={tokenUsage.flyPlaywrightCalls}
+              quota={null}
+              costPerCall={0.0001}
+              color="emerald"
+              status={tokenUsage.flyPlaywrightCalls > 0 ? 'active' : 'standby'}
+              statusLabel={tokenUsage.flyPlaywrightCalls > 0 ? `🔄 Fallback actif (${tokenUsage.flyPlaywrightCalls} rendus)` : '💤 Standby'}
+              estimatedCost={tokenUsage.flyEstimatedCost}
+            />
+
+            {/* DataForSEO */}
+            <ApiQuotaGauge
+              name="DataForSEO"
+              icon={<Search className="h-4 w-4" />}
+              calls={tokenUsage.dataforseoCalls}
+              quota={null}
+              costPerCall={0.01}
+              color="blue"
+              status="ok"
+              statusLabel="✅ Pay-as-you-go"
+            />
+
+            {/* Firecrawl */}
+            <ApiQuotaGauge
+              name="Firecrawl"
+              icon={<Flame className="h-4 w-4" />}
+              calls={tokenUsage.firecrawlCalls}
+              quota={500}
+              costPerCall={0.005}
+              color="orange"
+              status={tokenUsage.firecrawlCalls >= 500 ? 'exhausted' : tokenUsage.firecrawlCalls >= 400 ? 'warning' : 'ok'}
+              statusLabel={tokenUsage.firecrawlCalls >= 500 ? '⛔ Quota mensuel atteint' : tokenUsage.firecrawlCalls >= 400 ? '⚠️ 80%+ utilisé' : '✅ OK'}
+            />
+
+            {/* OpenRouter */}
+            <ApiQuotaGauge
+              name="OpenRouter"
+              icon={<Brain className="h-4 w-4" />}
+              calls={tokenUsage.openrouterCalls}
+              quota={null}
+              costPerCall={0}
+              color="violet"
+              status="ok"
+              statusLabel="✅ Pay-as-you-go"
+            />
+
+            {/* Google PageSpeed */}
+            {(() => {
+              const pagespeedCalls = tokenUsage.byApiService['google-pagespeed']?.calls || 0;
+              return (
+                <ApiQuotaGauge
+                  name="Google PageSpeed"
+                  icon={<Zap className="h-4 w-4" />}
+                  calls={pagespeedCalls}
+                  quota={25000}
+                  costPerCall={0}
+                  color="sky"
+                  status={pagespeedCalls >= 25000 ? 'exhausted' : pagespeedCalls >= 20000 ? 'warning' : 'ok'}
+                  statusLabel={pagespeedCalls >= 25000 ? '⛔ Limite quotidienne' : '✅ Gratuit (25k/jour)'}
+                />
+              );
+            })()}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Token Usage Card */}
       <Card>
         <CardHeader className="pb-2">
@@ -425,39 +520,6 @@ export function FinancesDashboard() {
                 <Zap className="h-3 w-3" /> Appels API payants
               </p>
               <p className="text-lg font-semibold">{tokenUsage.paidApiCalls.toLocaleString('fr-FR')}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <p className="text-xs text-blue-700 dark:text-blue-400 font-medium flex items-center gap-1">
-                <Search className="h-3 w-3" /> DataForSEO
-              </p>
-              <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{tokenUsage.dataforseoCalls.toLocaleString('fr-FR')}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
-              <p className="text-xs text-violet-700 dark:text-violet-400 font-medium flex items-center gap-1">
-                <Brain className="h-3 w-3" /> OpenRouter
-              </p>
-              <p className="text-lg font-bold text-violet-600 dark:text-violet-400">{tokenUsage.openrouterCalls.toLocaleString('fr-FR')}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-teal-500/10 border border-teal-500/20">
-              <p className="text-xs text-teal-700 dark:text-teal-400 font-medium flex items-center gap-1">
-                <Globe className="h-3 w-3" /> Browserless
-              </p>
-              <p className="text-lg font-bold text-teal-600 dark:text-teal-400">{tokenUsage.browserlessCalls.toLocaleString('fr-FR')}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-              <p className="text-xs text-orange-700 dark:text-orange-400 font-medium flex items-center gap-1">
-                <Flame className="h-3 w-3" /> Firecrawl
-              </p>
-              <p className="text-lg font-bold text-orange-600 dark:text-orange-400">{tokenUsage.firecrawlCalls.toLocaleString('fr-FR')}</p>
-            </div>
-            <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-1">
-                <Cpu className="h-3 w-3" /> Fly.io Playwright
-              </p>
-              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{tokenUsage.flyPlaywrightCalls.toLocaleString('fr-FR')}</p>
-              <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 mt-0.5">
-                ~{tokenUsage.flyEstimatedCost.toLocaleString('fr-FR', { minimumFractionDigits: 6, maximumFractionDigits: 6 })}€
-              </p>
             </div>
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">Coût estimé LLM</p>
@@ -561,6 +623,89 @@ export function FinancesDashboard() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// ── API Quota Gauge Component ──────────────────────────────────────
+
+interface ApiQuotaGaugeProps {
+  name: string;
+  icon: React.ReactNode;
+  calls: number;
+  quota: number | null; // null = pay-as-you-go / unlimited
+  costPerCall: number;
+  color: string;
+  status: 'ok' | 'warning' | 'exhausted' | 'active' | 'standby';
+  statusLabel: string;
+  estimatedCost?: number;
+}
+
+function ApiQuotaGauge({ name, icon, calls, quota, costPerCall, color, status, statusLabel, estimatedCost }: ApiQuotaGaugeProps) {
+  const percent = quota ? Math.min(100, (calls / quota) * 100) : null;
+  const cost = estimatedCost ?? calls * costPerCall;
+
+  const statusColors: Record<string, string> = {
+    ok: 'text-emerald-600 dark:text-emerald-400',
+    warning: 'text-amber-600 dark:text-amber-400',
+    exhausted: 'text-rose-600 dark:text-rose-400',
+    active: 'text-blue-600 dark:text-blue-400',
+    standby: 'text-muted-foreground',
+  };
+
+  const barColors: Record<string, string> = {
+    ok: 'bg-emerald-500',
+    warning: 'bg-amber-500',
+    exhausted: 'bg-rose-500',
+    active: 'bg-blue-500',
+    standby: 'bg-muted-foreground/30',
+  };
+
+  const borderColors: Record<string, string> = {
+    ok: 'border-border',
+    warning: 'border-amber-500/30',
+    exhausted: 'border-rose-500/30',
+    active: 'border-blue-500/30',
+    standby: 'border-border',
+  };
+
+  return (
+    <div className={`p-4 rounded-lg border ${borderColors[status]} bg-card`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">{icon}</span>
+          <span className="text-sm font-semibold">{name}</span>
+        </div>
+        <Shield className={`h-3.5 w-3.5 ${statusColors[status]}`} />
+      </div>
+
+      <div className="text-2xl font-bold mb-1">
+        {calls.toLocaleString('fr-FR')}
+        {quota && (
+          <span className="text-sm font-normal text-muted-foreground"> / {quota.toLocaleString('fr-FR')}</span>
+        )}
+      </div>
+
+      {percent !== null && (
+        <div className="mb-2">
+          <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${barColors[status]}`}
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-0.5 text-right">{percent.toFixed(1)}%</p>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <span className={`text-[11px] font-medium ${statusColors[status]}`}>{statusLabel}</span>
+        {cost > 0 && (
+          <span className="text-[10px] text-muted-foreground">
+            ~{cost.toLocaleString('fr-FR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}€
+          </span>
+        )}
+      </div>
     </div>
   );
 }
