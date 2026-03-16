@@ -3,6 +3,7 @@ import { assertSafeUrl } from '../_shared/ssrf.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { checkIpRate, getClientIp, rateLimitResponse, acquireConcurrency, releaseConcurrency, concurrencyResponse } from '../_shared/ipRateLimiter.ts'
 import { checkFairUse, getUserContext } from '../_shared/fairUse.ts'
+import { saveRawAuditData } from '../_shared/saveRawAuditData.ts'
 
 const GOOGLE_API_KEY = Deno.env.get('GOOGLE_PAGESPEED_API_KEY') || '';
 
