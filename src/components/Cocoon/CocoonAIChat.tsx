@@ -448,20 +448,27 @@ export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCance
       // Save after each exchange
       setMessages(prev => {
         saveHistory(prev);
-        // Save recommendation to database
+        // Save recommendation to database (only if substantive + contains SEO terms)
         const lastMsg = prev[prev.length - 1];
-        if (lastMsg?.role === 'assistant' && lastMsg.content.length > 20 && trackedSiteId && domain && user) {
-          const summary = lastMsg.content.replace(/[#*_`]/g, '').slice(0, 100);
-          supabase.from('cocoon_recommendations').insert({
-            tracked_site_id: trackedSiteId,
-            user_id: user.id,
-            domain,
-            recommendation_text: lastMsg.content,
-            summary,
-            source_context: { language, nodes_count: nodes.length },
-          }).then(({ error }) => {
-            if (error) console.error('[CocoonAIChat] Failed to save recommendation:', error);
-          });
+        if (lastMsg?.role === 'assistant' && lastMsg.content.length > 200 && trackedSiteId && domain && user) {
+          const seoKeywords = /maillage|h1|canonical|backlink|juice|cocon|cluster|intent|crawl|serp|json-ld|schema|sitemap|robots|title|meta|alt|lazy|seo|geo|eeat|citabilit|roi|trafic|traffic|linking|link|quick win|recommand|optimis|améliorer|improve/i;
+          if (seoKeywords.test(lastMsg.content)) {
+            // Smart summary: extract first bold heading or first meaningful sentence
+            const headingMatch = lastMsg.content.match(/\*\*(.{5,80})\*\*/);
+            const firstLine = lastMsg.content.replace(/[#*_`]/g, '').split('\n').find(l => l.trim().length > 10);
+            const summary = (headingMatch?.[1] || firstLine || lastMsg.content.slice(0, 100)).replace(/[#*_`]/g, '').trim().slice(0, 100);
+            
+            supabase.from('cocoon_recommendations').insert({
+              tracked_site_id: trackedSiteId,
+              user_id: user.id,
+              domain,
+              recommendation_text: lastMsg.content,
+              summary,
+              source_context: { language, nodes_count: nodes.length },
+            }).then(({ error }) => {
+              if (error) console.error('[CocoonAIChat] Failed to save recommendation:', error);
+            });
+          }
         }
         return prev;
       });
