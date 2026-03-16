@@ -27,6 +27,7 @@ import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashbo
 import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
+import { PromptMatrixCard } from '@/components/Profile/PromptMatrixCard';
 
 const translations = {
   fr: {
@@ -1513,7 +1514,16 @@ export function MyTracking() {
                         company_size: currentSite.company_size || undefined,
                       }}
                     />
-                  )}
+                   )}
+
+                   {/* Prompt Matrix — CSV Import & Comparison */}
+                   {currentSite && user && (
+                     <PromptMatrixCard
+                       trackedSiteId={currentSite.id}
+                       userId={user.id}
+                       domain={currentSite.domain}
+                     />
+                   )}
                 </div>
               )}
             </div>

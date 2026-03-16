@@ -2314,6 +2314,53 @@ export type Database = {
         }
         Relationships: []
       }
+      prompt_matrix_imports: {
+        Row: {
+          column_mapping: Json
+          created_at: string
+          domain: string
+          file_name: string
+          id: string
+          raw_data: Json
+          row_count: number
+          tracked_site_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          column_mapping?: Json
+          created_at?: string
+          domain: string
+          file_name: string
+          id?: string
+          raw_data?: Json
+          row_count?: number
+          tracked_site_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          column_mapping?: Json
+          created_at?: string
+          domain?: string
+          file_name?: string
+          id?: string
+          raw_data?: Json
+          row_count?: number
+          tracked_site_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_matrix_imports_tracked_site_id_fkey"
+            columns: ["tracked_site_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prompt_registry: {
         Row: {
           created_at: string
