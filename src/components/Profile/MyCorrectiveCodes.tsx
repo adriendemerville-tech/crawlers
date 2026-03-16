@@ -82,6 +82,7 @@ const translations = {
     validateError: 'Error al validar',
     tabScripts: 'Scripts',
     tabHistory: 'Historial',
+    tabDebug: 'Diagnóstico',
   },
 };
 
