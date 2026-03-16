@@ -253,7 +253,7 @@ export function FinancesDashboard() {
           <h2 className="text-lg font-semibold">Finances & Coûts</h2>
           <p className="text-xs text-muted-foreground">Indicateurs financiers et consommation API (30 derniers jours)</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => fetchData(true)} disabled={isRefreshing} className="gap-1.5">
+        <Button variant="outline" size="sm" onClick={() => fetchEvents(true)} disabled={isRefreshing} className="gap-1.5">
           <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
           Actualiser
         </Button>
