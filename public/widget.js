@@ -1,7 +1,8 @@
 /**
- * Crawlers.fr — Widget GTM / WordPress
- * =====================================
- * Script à installer via Google Tag Manager ou en injection directe.
+ * Crawlers.fr — Widget SDK v2.0
+ * ==============================
+ * Script universel à installer via GTM, WordPress ou injection directe.
+ * Charge dynamiquement le routeur correctif depuis serve-client-script.
  *
  * Prérequis : définir window.CRAWLERS_API_KEY avant le chargement du script.
  *
@@ -9,17 +10,14 @@
  *   <script>window.CRAWLERS_API_KEY = "votre-clé-api-uuid";</script>
  *   <script src="https://crawlers.fr/widget.js" defer></script>
  *
- * @version 1.0.0
+ * @version 2.0.0
  */
-;(async function initCrawlersWidget() {
+;(function initCrawlersWidget() {
   'use strict';
 
-  // ── 1. Récupération de l'URL courante ──────────────────────
-  var urlActuelle = window.location.href;
-
-  // ── 1b. Ne pas exécuter sur les domaines de preview/dev ──────
+  // ── 1. Ne pas exécuter sur les domaines de preview/dev ──────
   var host = window.location.hostname;
-  if (host.includes('lovableproject.com') || host.includes('lovable.app') || host === 'localhost') {
+  if (host.indexOf('lovableproject.com') !== -1 || host.indexOf('lovable.app') !== -1 || host === 'localhost') {
     return;
   }
 
@@ -31,49 +29,23 @@
     return;
   }
 
-  // ── 3. Construction du payload ─────────────────────────────
-  var donneesAEnvoyer = {
-    apiKey: cleClient,
-    urlDuClient: urlActuelle
-  };
-
-  // ── 4. Appel à l'Edge Function widget-connect ──────────────
-  // URL de production pointant vers l'Edge Function Supabase
-  var ENDPOINT = 'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/widget-connect';
+  // ── 3. Charger le script dynamique depuis serve-client-script ──
+  // Ce script contient le routeur multi-pages avec toutes les règles
+  // (JSON-LD, HTML injection, correctifs) configurées dans le dashboard.
+  var SCRIPT_URL = 'https://tutlimtasnjabdfhpewu.supabase.co/functions/v1/serve-client-script?key=' + encodeURIComponent(cleClient);
 
   try {
-    var reponse = await fetch(ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(donneesAEnvoyer)
-    });
-
-    // ── 5. Traitement de la réponse ────────────────────────────
-    if (reponse.ok) {
-      var resultat = await reponse.json();
-      console.log('[Crawlers.fr] Connecté avec succès !', resultat);
-
-      // Stocke la config pour utilisation par d'autres scripts
-      window.__CRAWLERS_CONFIG__ = resultat.config || {};
-      window.__CRAWLERS_SITE__ = resultat.site || {};
-
-      // Dispatch un événement custom pour que GTM puisse réagir
-      window.dispatchEvent(new CustomEvent('crawlers:connected', {
-        detail: resultat
-      }));
-
-    } else if (reponse.status === 401) {
-      console.warn('[Crawlers.fr] Clé API invalide. Vérifiez votre configuration.');
-    } else if (reponse.status === 403) {
-      console.warn('[Crawlers.fr] Domaine non autorisé pour cette clé API.');
-    } else {
-      console.warn('[Crawlers.fr] Erreur serveur (' + reponse.status + ').');
-    }
-
-  } catch (erreur) {
+    var script = document.createElement('script');
+    script.src = SCRIPT_URL;
+    script.async = true;
+    script.setAttribute('data-crawlers-sdk', 'v2');
+    script.onerror = function() {
+      console.warn('[Crawlers.fr] Impossible de charger le script correctif (fail-safe).');
+    };
+    // Injecter dans le head pour exécution rapide
+    (document.head || document.documentElement).appendChild(script);
+  } catch (e) {
     // Fail-safe : le widget ne doit jamais casser le site hôte
-    console.error('[Crawlers.fr] Impossible de joindre le serveur.', erreur);
+    console.error('[Crawlers.fr] Erreur d\'initialisation.', e);
   }
 })();
