@@ -16,7 +16,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { domain, url, tracked_site_id, user_id: caller_user_id } = await req.json()
+    const { domain, url, tracked_site_id, user_id: caller_user_id, location_code, language_code } = await req.json()
+    const effectiveLocationCode = location_code || 2250
+    const effectiveLanguageCode = language_code || 'fr'
 
     if (!domain) {
       return new Response(JSON.stringify({ error: 'Missing domain' }), {
@@ -26,7 +28,7 @@ Deno.serve(async (req) => {
     }
 
     // #1: Check audit_cache first (24h TTL for SERP data)
-    const ck = cacheKey('fetch-serp-kpis', { domain })
+    const ck = cacheKey('fetch-serp-kpis', { domain, location_code: effectiveLocationCode })
     const cached = await getCached(ck)
     if (cached) {
       console.log(`[fetch-serp-kpis] Cache hit for ${domain}`)
@@ -58,8 +60,8 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify([{
         target: domain,
-        language_code: 'fr',
-        location_code: 2250, // France
+        language_code: effectiveLanguageCode,
+        location_code: effectiveLocationCode,
         limit: 1000,
         order_by: ['ranked_serp_element.serp_item.rank_absolute,asc'],
       }]),
@@ -163,8 +165,8 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify([{
           keyword: `site:${bareHomepage}`,
-          language_code: 'fr',
-          location_code: 2250,
+          language_code: effectiveLanguageCode,
+          location_code: effectiveLocationCode,
           device: 'desktop',
           depth: 1,
         }]),

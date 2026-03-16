@@ -201,6 +201,8 @@ interface BusinessContext {
   location: string;
   brandName: string;
   locationCode: number | null;
+  languageCode: string;
+  seDomain: string;
 }
 
 // ==================== PROBABILISTIC BRAND NAME DETECTION ====================
@@ -340,17 +342,17 @@ function getAuthHeader(): string {
 }
 
 // Well-known location codes to avoid downloading the full list
-const KNOWN_LOCATIONS: Record<string, { code: number; name: string }> = {
-  'france': { code: 2250, name: 'France' },
-  'belgium': { code: 2056, name: 'Belgium' },
-  'switzerland': { code: 2756, name: 'Switzerland' },
-  'canada': { code: 2124, name: 'Canada' },
-  'luxembourg': { code: 2442, name: 'Luxembourg' },
-  'germany': { code: 2276, name: 'Germany' },
-  'spain': { code: 2724, name: 'Spain' },
-  'italy': { code: 2380, name: 'Italy' },
-  'united kingdom': { code: 2826, name: 'United Kingdom' },
-  'united states': { code: 2840, name: 'United States' },
+const KNOWN_LOCATIONS: Record<string, { code: number; name: string; lang: string; seDomain: string }> = {
+  'france': { code: 2250, name: 'France', lang: 'fr', seDomain: 'google.fr' },
+  'belgium': { code: 2056, name: 'Belgium', lang: 'fr', seDomain: 'google.be' },
+  'switzerland': { code: 2756, name: 'Switzerland', lang: 'fr', seDomain: 'google.ch' },
+  'canada': { code: 2124, name: 'Canada', lang: 'fr', seDomain: 'google.ca' },
+  'luxembourg': { code: 2442, name: 'Luxembourg', lang: 'fr', seDomain: 'google.lu' },
+  'germany': { code: 2276, name: 'Germany', lang: 'de', seDomain: 'google.de' },
+  'spain': { code: 2724, name: 'Spain', lang: 'es', seDomain: 'google.es' },
+  'italy': { code: 2380, name: 'Italy', lang: 'it', seDomain: 'google.it' },
+  'united kingdom': { code: 2826, name: 'United Kingdom', lang: 'en', seDomain: 'google.co.uk' },
+  'united states': { code: 2840, name: 'United States', lang: 'en', seDomain: 'google.com' },
 };
 
 /**
@@ -413,9 +415,9 @@ function detectBusinessContext(domain: string, pageContentContext: string = ''):
   const coreBusiness = extractCoreBusiness(pageContentContext);
   const sector = coreBusiness || rawSlug.replace(/-/g, ' ');
   
-  console.log(`📋 Contexte: marque="${brandName}", secteur="${sector}", location="${locationInfo.name}" (code: ${locationInfo.code})`);
+  console.log(`📋 Contexte: marque="${brandName}", secteur="${sector}", location="${locationInfo.name}" (code: ${locationInfo.code}, lang: ${locationInfo.lang})`);
   
-  return { sector, location: locationInfo.name, brandName, locationCode: locationInfo.code };
+  return { sector, location: locationInfo.name, brandName, locationCode: locationInfo.code, languageCode: locationInfo.lang, seDomain: locationInfo.seDomain };
 }
 
 function extractKeywordsFromMetadata(pageContentContext: string, domain: string = ''): string[] {
@@ -588,9 +590,9 @@ function checkDataQuality(keywords: { keyword: string; volume: number; difficult
 }
 
 async function fetchKeywordData(
-  seedKeywords: string[], locationCode: number
+  seedKeywords: string[], locationCode: number, languageCode: string = 'fr'
 ): Promise<{ keyword: string; volume: number; difficulty: number }[]> {
-  console.log(`📊 Récupération mots-clés pour location: ${locationCode}`);
+  console.log(`📊 Récupération mots-clés pour location: ${locationCode}, lang: ${languageCode}`);
   const allKeywords: { keyword: string; volume: number; difficulty: number }[] = [];
   const seenLower = new Set<string>();
   
@@ -609,7 +611,7 @@ async function fetchKeywordData(
       headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify([{
         keywords: seedKeywords.slice(0, 5),
-        location_code: locationCode, language_code: 'fr',
+        location_code: locationCode, language_code: languageCode,
         sort_by: 'search_volume', include_adult_keywords: false,
       }]),
     });
@@ -640,7 +642,7 @@ async function fetchKeywordData(
         method: 'POST',
         headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify([{
-          keywords: seedKeywords, location_code: locationCode, language_code: 'fr',
+          keywords: seedKeywords, location_code: locationCode, language_code: languageCode,
         }]),
       });
 
@@ -676,7 +678,7 @@ async function fetchKeywordData(
           headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
           body: JSON.stringify([{
             keywords: singleWords,
-            location_code: locationCode, language_code: 'fr',
+            location_code: locationCode, language_code: languageCode,
             sort_by: 'search_volume', include_adult_keywords: false,
           }]),
         });
@@ -709,7 +711,7 @@ async function fetchKeywordData(
 
 async function checkRankings(
   keywords: { keyword: string; volume: number; difficulty: number }[],
-  domain: string, locationCode: number
+  domain: string, locationCode: number, languageCode: string = 'fr', seDomain: string = 'google.fr'
 ): Promise<KeywordData[]> {
   console.log(`📈 Vérification positionnement pour ${domain}`);
   const results: KeywordData[] = [];
@@ -723,8 +725,8 @@ async function checkRankings(
   
   try {
     const tasks = keywordsToCheck.map(kw => ({
-      keyword: kw.keyword, location_code: locationCode, language_code: 'fr',
-      depth: 50, se_domain: 'google.fr',
+      keyword: kw.keyword, location_code: locationCode, language_code: languageCode,
+      depth: 50, se_domain: seDomain,
     }));
     
     const response = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
@@ -840,7 +842,7 @@ function isNonCompetitorDomain(domain: string): boolean {
 }
 
 async function findLocalCompetitor(
-  domain: string, sector: string, locationCode: number, pageContentContext: string
+  domain: string, sector: string, locationCode: number, pageContentContext: string, languageCode: string = 'fr', seDomain: string = 'google.fr'
 ): Promise<{ name: string; url: string; rank: number } | null> {
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
 
@@ -869,8 +871,8 @@ async function findLocalCompetitor(
       method: 'POST',
       headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify([{
-        keyword: localQuery, location_code: locationCode, language_code: 'fr',
-        depth: 20, se_domain: 'google.fr',
+        keyword: localQuery, location_code: locationCode, language_code: languageCode,
+        depth: 20, se_domain: seDomain,
       }]),
     });
 
@@ -1027,7 +1029,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
     console.log('🌱 Seeds finaux:', seedKeywords.slice(0, 8).join(', '));
     
     // ═══ PHASE 2: DataForSEO API Call ═══
-    let keywordData = await fetchKeywordData(seedKeywords, context.locationCode);
+    let keywordData = await fetchKeywordData(seedKeywords, context.locationCode, context.languageCode);
     
     // ═══ PHASE 3: Validation Loop (retry once if poor quality) ═══
     if (!checkDataQuality(keywordData) && aiSeeds.length > 0) {
@@ -1040,7 +1042,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
       const refinedSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial', feedback);
       
       if (refinedSeeds.length >= 5) {
-        const refinedData = await fetchKeywordData(refinedSeeds, context.locationCode);
+        const refinedData = await fetchKeywordData(refinedSeeds, context.locationCode, context.languageCode);
         if (refinedData.length > keywordData.length || 
             (refinedData.length > 0 && refinedData.reduce((s, k) => s + k.volume, 0) > keywordData.reduce((s, k) => s + k.volume, 0))) {
           keywordData = refinedData;
@@ -1056,7 +1058,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
     }
     
     // ═══ PHASE 4: Ranking Check ═══
-    const rankedKeywords = await checkRankings(keywordData, domain, context.locationCode);
+    const rankedKeywords = await checkRankings(keywordData, domain, context.locationCode, context.languageCode, context.seDomain);
     
     // STRATEGIC SORT: first keyword = most relevant for core business + target
     const strategicKeywords = sortByStrategicRelevance(rankedKeywords, seedKeywords, pageContentContext);
@@ -1100,7 +1102,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
 
 // ==================== RANKED KEYWORDS (existing domain analysis) ====================
 
-async function fetchRankedKeywords(domain: string, locationCode: number): Promise<RankingOverview | null> {
+async function fetchRankedKeywords(domain: string, locationCode: number, languageCode: string = 'fr'): Promise<RankingOverview | null> {
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
   
   const cleanDomain = domain.replace(/^www\./, '');
@@ -1113,7 +1115,7 @@ async function fetchRankedKeywords(domain: string, locationCode: number): Promis
       body: JSON.stringify([{
         target: cleanDomain,
         location_code: locationCode,
-        language_code: 'fr',
+        language_code: languageCode,
         limit: 100,
         order_by: ['keyword_data.keyword_info.search_volume,desc'],
         filters: ['keyword_data.keyword_info.search_volume', '>', '0'],
@@ -1205,7 +1207,7 @@ interface GMBData {
   quick_wins?: string[];
 }
 
-async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number): Promise<GMBData | null> {
+async function detectGoogleMyBusiness(domain: string, brandName: string, locationCode: number, languageCode: string = 'fr'): Promise<GMBData | null> {
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return null;
 
   const cleanDomain = domain.replace(/^www\./, '');
@@ -1219,7 +1221,7 @@ async function detectGoogleMyBusiness(domain: string, brandName: string, locatio
       body: JSON.stringify([{
         keyword: brandName,
         location_code: locationCode,
-        language_code: 'fr',
+        language_code: context.languageCode,
         depth: 5,
       }]),
       signal: AbortSignal.timeout(10000),
@@ -1367,6 +1369,7 @@ function verifyFounderGeo(linkedinSnippet: string, targetLocation: string): { mi
 }
 
 async function searchFounderProfile(domain: string, targetLocation: string = 'france'): Promise<FounderInfo> {
+  const locInfo = KNOWN_LOCATIONS[targetLocation.toLowerCase()] || KNOWN_LOCATIONS['france'];
   const result: FounderInfo = { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return result;
   
@@ -1386,7 +1389,7 @@ async function searchFounderProfile(domain: string, targetLocation: string = 'fr
         const resp = await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/regular', {
           method: 'POST',
           headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
-          body: JSON.stringify([{ keyword: q, location_code: 2250, language_code: 'fr', depth: 5 }]),
+          body: JSON.stringify([{ keyword: q, location_code: locInfo.code, language_code: locInfo.lang, depth: 5 }]),
           signal: AbortSignal.timeout(8000),
         });
         if (!resp.ok) { await resp.text(); return null; }
@@ -2304,8 +2307,8 @@ Deno.serve(async (req) => {
           const tld = domain.split('.').pop() || 'com';
           const tldMap: Record<string, string> = { 'fr': 'france', 'be': 'belgium', 'ch': 'switzerland', 'ca': 'canada', 'de': 'germany', 'es': 'spain', 'it': 'italy', 'uk': 'united kingdom', 'com': 'france', 'ai': 'france', 'io': 'france', 'dev': 'france', 'app': 'france' };
           const locKey = tldMap[tld] || 'france';
-          const locCode = KNOWN_LOCATIONS[locKey]?.code || 2250;
-          return fetchRankedKeywords(domain, locCode);
+          const locInfo = KNOWN_LOCATIONS[locKey] || KNOWN_LOCATIONS['france'];
+          return fetchRankedKeywords(domain, locInfo.code, locInfo.lang);
         }),
       ]);
 
@@ -2355,7 +2358,7 @@ Deno.serve(async (req) => {
         // Local competitor — skip in content mode (SERP competitors handled by LLM)
         !isContentMode && context.locationCode
           ? withDeadline(
-              findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext),
+              findLocalCompetitor(domain, context.sector, context.locationCode, pageContentContext, context.languageCode, context.seDomain),
               20_000, 'local_competitor'
             )
           : Promise.resolve(null),
@@ -2369,7 +2372,7 @@ Deno.serve(async (req) => {
         // Google My Business detection — skip in content mode
         !isContentMode && context.locationCode
           ? withDeadline(
-              detectGoogleMyBusiness(domain, context.brandName, context.locationCode),
+              detectGoogleMyBusiness(domain, context.brandName, context.locationCode, context.languageCode),
               12_000, 'gmb'
             )
           : Promise.resolve(null),
