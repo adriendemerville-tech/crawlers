@@ -250,6 +250,10 @@ export function MyCorrectiveCodes() {
               <History className="w-3 h-3" />
               {t.tabHistory}
             </TabsTrigger>
+            <TabsTrigger value="debug" className="text-xs gap-1.5 h-7">
+              <Bug className="w-3 h-3" />
+              {t.tabDebug}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="scripts">
