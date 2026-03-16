@@ -628,11 +628,15 @@ export default function Cocoon() {
             {nodes.length > 0 && (
               <button
                 onClick={() => setIs3DMode(v => !v)}
-                className="absolute top-3 left-3 z-20 flex items-center gap-1 px-2 py-1 rounded-md bg-black/50 backdrop-blur-md border border-white/10 text-[10px] font-mono text-white/40 hover:text-white/70 hover:border-white/20 transition-colors"
+                className={`absolute top-3 left-3 z-20 flex items-center gap-1 px-2 py-1 rounded-md backdrop-blur-md border text-[10px] font-mono transition-colors ${
+                  isDayMode
+                    ? 'bg-white/70 border-black/10 text-black/40 hover:text-black/70 hover:border-black/20'
+                    : 'bg-black/50 border-white/10 text-white/40 hover:text-white/70 hover:border-white/20'
+                }`}
               >
-                <span className={is3DMode ? 'text-white/25' : 'text-white/70 font-semibold'}>2D</span>
-                <span className="text-white/15">·</span>
-                <span className={is3DMode ? 'text-white/70 font-semibold' : 'text-white/25'}>3D</span>
+                <span className={is3DMode ? (isDayMode ? 'text-black/25' : 'text-white/25') : (isDayMode ? 'text-black/70 font-semibold' : 'text-white/70 font-semibold')}>2D</span>
+                <span className={isDayMode ? 'text-black/15' : 'text-white/15'}>·</span>
+                <span className={is3DMode ? (isDayMode ? 'text-black/70 font-semibold' : 'text-white/70 font-semibold') : (isDayMode ? 'text-black/25' : 'text-white/25')}>3D</span>
               </button>
             )}
             {isLoading ? (
