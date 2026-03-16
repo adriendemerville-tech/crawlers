@@ -844,6 +844,7 @@ export type Database = {
           created_at: string
           domain: string
           id: string
+          is_applied: boolean
           recommendation_text: string
           source_context: Json | null
           summary: string
@@ -854,6 +855,7 @@ export type Database = {
           created_at?: string
           domain: string
           id?: string
+          is_applied?: boolean
           recommendation_text: string
           source_context?: Json | null
           summary: string
@@ -864,6 +866,7 @@ export type Database = {
           created_at?: string
           domain?: string
           id?: string
+          is_applied?: boolean
           recommendation_text?: string
           source_context?: Json | null
           summary?: string
