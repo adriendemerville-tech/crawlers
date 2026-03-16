@@ -81,7 +81,7 @@ interface AccessRequest {
 }
 
 export function FunctionsManagement() {
-  const { readOnly } = useAdminContext();
+  const { readOnly, docsHiddenForViewers } = useAdminContext();
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const { language } = useLanguage();
