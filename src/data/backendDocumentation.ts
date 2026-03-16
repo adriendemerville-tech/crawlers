@@ -51,7 +51,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
                          │ HTTPS
 ┌────────────────────────▼────────────────────────────────┐
 │              SUPABASE EDGE FUNCTIONS (Deno)             │
-│  79+ fonctions serverless déployées sur ~30 PoPs         │
+│  85 fonctions serverless déployées sur ~30 PoPs           │
 │  - Audit engines (SEO, GEO, LLM, PageSpeed)             │
 │  - Crawl engine (Firecrawl + processing queue)           │
 │  - AI pipelines (Gemini, GPT via Lovable AI)             │
@@ -72,7 +72,7 @@ Le projet est une plateforme SaaS d'audit SEO / GEO / LLM construite sur une arc
 | Frontend | React 18 + Vite + TypeScript | SPA avec SSR-like SEO (Helmet) |
 | UI | Tailwind CSS + shadcn/ui + Framer Motion | Design system avec tokens sémantiques |
 | State | React Query + Context API | Cache serveur + état global auth/crédits |
-| Backend | Supabase Edge Functions (Deno) | 79 fonctions serverless |
+| Backend | Supabase Edge Functions (Deno) | 85 fonctions serverless |
 | Database | PostgreSQL 15 (Supabase) | RLS, triggers, fonctions SQL |
 | Auth | Supabase Auth | Email/password, magic links |
 | Storage | Supabase Storage | Logos agence, PDFs |
@@ -231,9 +231,10 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`expert-audit\` | ✅ | 1 | Audit expert complet (score /200) |
 | \`audit-expert-seo\` | ✅ | 2 | Audit SEO technique approfondi |
 | \`audit-strategique-ia\` | ✅ | 3 | Audit stratégique IA (Gemini) |
-| \`audit-compare\` | ✅ | 2 | Comparaison avant/après |
+| \`audit-compare\` | ✅ | 4 | Analyse concurrentielle face-à-face |
 | \`audit-local-seo\` | ✅ | 1 | Audit SEO local |
 | \`diagnose-hallucination\` | ✅ | 1 | Diagnostic d'hallucination LLM |
+| \`check-llm-depth\` | ✅ | 0 | Profondeur de visibilité LLM multi-itération |
 
 ## Crawl Engine
 
@@ -255,6 +256,8 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`generate-blog-from-news\` | ✅ | 0 | Génération d'articles de blog |
 | \`generate-prediction\` | ✅ | 0 | Prédiction de trafic |
 | \`summarize-report\` | ✅ | 0 | Résumé IA d'un rapport |
+| \`cocoon-chat\` | ✅ | 0 | Assistant IA conversationnel Cocoon (Gemini, streaming SSE) |
+| \`extract-pdf-data\` | ✅ | 0 | Extraction de données depuis PDF |
 
 ## Utilisateur & Billing
 
@@ -267,7 +270,14 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`create-customer-portal\` | ✅ | Portail client Stripe |
 | \`stripe-webhook\` | ❌ | Webhook Stripe (signature vérifié) |
 | \`apply-referral\` | ✅ | Applique un code de parrainage |
+| \`apply-affiliate\` | ✅ | Applique un code affilié |
+| \`apply-retention-offer\` | ✅ | Applique une offre de rétention |
 | \`manage-team\` | ✅ | Gestion équipe agence |
+| \`check-email-exists\` | ✅ | Vérifie l'existence d'un email |
+| \`send-password-reset\` | ✅ | Envoie un lien de réinitialisation |
+| \`send-verification-code\` | ✅ | Envoie un code de vérification email |
+| \`verify-email-code\` | ✅ | Vérifie un code email |
+| \`admin-update-plan\` | ✅ | MAJ plan utilisateur (admin) |
 
 ## Partage & Export
 
@@ -286,18 +296,38 @@ Toutes les fonctions sont accessibles via \`POST https://<project>.supabase.co/f
 | \`track-analytics\` | ❌ | Tracking événements analytics |
 | \`fetch-news\` | ❌ | Récupère les actualités SEO |
 | \`fetch-external-site\` | ✅ | Proxy HTML pour analyse |
-| \`agent-cto\` | ✅ | Agent CTO autonome |
+| \`agent-cto\` | ✅ | Agent CTO autonome (auto-optimisation prompts) |
+| \`agent-seo\` | ✅ | Agent SEO autonome |
 | \`aggregate-observatory\` | ✅ | Agrégation observatoire sectoriel |
 | \`calculate-llm-volumes\` | ✅ | Calcul volumes LLM |
+| \`calculate-llm-visibility\` | ✅ | Calcul score visibilité LLM |
+| \`calculate-ias\` | ✅ | Calcul Indice d'Alignement Stratégique |
+| \`calculate-internal-pagerank\` | ✅ | PageRank interne par page |
 | \`measure-audit-impact\` | ✅ | Mesure d'impact post-audit |
 | \`snapshot-audit-impact\` | ✅ | Snapshot T+30/60/90 |
+| \`auto-measure-predictions\` | ✅ | Mesure automatique des prédictions |
 | \`update-market-trends\` | ✅ | MAJ tendances marché |
+| \`refresh-llm-visibility-all\` | ✅ | CRON rafraîchissement visibilité LLM |
+| \`persist-cocoon-session\` | ✅ | Sauvegarde session Cocoon |
+| \`fetch-ga4-data\` | ✅ | Récupère données Google Analytics 4 |
+| \`fetch-sitemap-tree\` | ✅ | Arborescence du sitemap XML |
 | \`sdk-status\` | ❌ | Statut du SDK widget |
 | \`sitemap\` | ❌ | Génération sitemap XML |
 | \`rss-feed\` | ❌ | Flux RSS du blog |
 | \`verify-turnstile\` | ❌ | Vérification Cloudflare Turnstile |
 | \`widget-connect\` | ❌ | Connexion du widget externe |
+| \`serve-client-script\` | ❌ | Sert le script client GTM |
 | \`wpsync\` | ✅ | Synchronisation WordPress |
+| \`auth-email-hook\` | ❌ | Hook personnalisé emails auth |
+| \`process-email-queue\` | ✅ | Worker file d'attente emails |
+| \`process-script-queue\` | ✅ | Worker file d'attente scripts |
+| \`dry-run-script\` | ✅ | Test à blanc d'un script correctif |
+| \`archive-solution\` | ✅ | Archive une solution/correctif |
+| \`watchdog-scripts\` | ✅ | Watchdog CRON des scripts déployés |
+| \`kill-all-viewers\` | ✅ | Révoque tous les viewers (admin) |
+| \`view-function-source\` | ✅ | Consultation source d'une edge function |
+| \`run-backend-tests\` | ✅ | Exécute les tests backend |
+| \`update-config\` | ✅ | MAJ configuration système |
 
 ## Exemple de requête
 
@@ -822,10 +852,10 @@ Landing page marketing avec comparaison GEO vs SEO et grille de fonctionnalités
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '1.5.0',
-  lastUpdated: '2026-03-15',
+  version: '1.6.0',
+  lastUpdated: '2026-03-16',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon',
-  totalEdgeFunctions: 79,
+  totalEdgeFunctions: 85,
   totalTables: '40+',
-  totalLinesOfCode: '130 000+',
+  totalLinesOfCode: '135 000+',
 };
