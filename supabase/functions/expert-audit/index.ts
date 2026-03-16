@@ -190,19 +190,50 @@ function extractDomain(url: string): string {
   }
 }
 
-async function fetchPageSpeedData(url: string): Promise<any> {
+async function fetchPageSpeedData(url: string): Promise<any | null> {
   const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=mobile&category=PERFORMANCE&category=SEO&category=BEST_PRACTICES&key=${GOOGLE_API_KEY}`;
   
-  console.log('Fetching PageSpeed data...');
-  const response = await fetch(apiUrl);
-  
-  if (!response.ok) {
-    const error = await response.json();
-    console.error('PSI Error:', error);
-    throw new Error(error?.error?.message || 'PageSpeed API error');
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    console.log(`[PSI] Tentative ${attempt}/2 — Fetching PageSpeed data...`);
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      
+      const response = await fetch(apiUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        console.error(`[PSI] Erreur HTTP ${response.status} (tentative ${attempt}):`, error?.error?.message || response.status);
+        if (response.status === 429 && attempt < 2) {
+          await new Promise(r => setTimeout(r, 3000));
+          continue;
+        }
+        if (attempt < 2) continue;
+        return null;
+      }
+      
+      const data = await response.json();
+      if (!data?.lighthouseResult?.categories?.performance) {
+        console.warn('[PSI] Réponse sans données Lighthouse valides');
+        if (attempt < 2) continue;
+        return null;
+      }
+      
+      console.log('[PSI] ✅ Données PageSpeed récupérées');
+      return data;
+    } catch (error) {
+      const isAbort = error instanceof DOMException && error.name === 'AbortError';
+      console.error(`[PSI] ${isAbort ? 'Timeout' : 'Erreur réseau'} (tentative ${attempt}):`, error);
+      if (attempt < 2) {
+        await new Promise(r => setTimeout(r, 2000));
+        continue;
+      }
+      return null;
+    }
   }
-  
-  return await response.json();
+  return null;
 }
 
 async function checkSafeBrowsing(url: string): Promise<{ safe: boolean; threats: string[] }> {
@@ -2093,19 +2124,24 @@ Deno.serve(async (req) => {
       checkSpecializedSitemaps(normalizedUrl),
     ]);
     
-    const categories = psiData.lighthouseResult?.categories || {};
-    const audits = psiData.lighthouseResult?.audits || {};
+    const psiAvailable = psiData?.lighthouseResult?.categories?.performance != null;
+    const categories = psiData?.lighthouseResult?.categories || {};
+    const audits = psiData?.lighthouseResult?.audits || {};
     
-    // Calculate scores
-    const psiPerformance = categories.performance?.score || 0;
-    const psiSeo = categories.seo?.score || 0;
+    // Calculate scores — when PSI unavailable, use neutral 50% fallback instead of 0
+    const psiPerformance = psiAvailable ? (categories.performance?.score || 0) : null;
+    const psiSeo = psiAvailable ? (categories.seo?.score || 0) : null;
     
     // A. Performance (40 pts)
-    const performanceScore = Math.round(psiPerformance * 40);
+    const performanceScore = psiPerformance !== null ? Math.round(psiPerformance * 40) : 20;
     
     // B. Technical (50 pts) = PSI SEO * 30 + HTTP 200 = 20
-    const httpStatusOk = true; // We got the page, so status is OK
-    const technicalScore = Math.round(psiSeo * 30) + (httpStatusOk ? 20 : 0);
+    const httpStatusOk = true;
+    const technicalScore = (psiSeo !== null ? Math.round(psiSeo * 30) : 15) + (httpStatusOk ? 20 : 0);
+    
+    if (!psiAvailable) {
+      console.warn('[Expert-Audit] ⚠️ PSI indisponible — scores Performance et Technique estimés (fallback 50%)');
+    }
     
     // C. Semantic (60 pts)
     let semanticScore = 0;
@@ -2118,7 +2154,6 @@ Deno.serve(async (req) => {
     let aiReadyScore = 0;
     if (htmlAnalysis.hasSchemaOrg) {
       aiReadyScore += 15;
-      // Penalize if schema is JS-generated (crawlers can't read it)
       if (htmlAnalysis.isSchemaJsGenerated) {
         aiReadyScore -= 3;
         console.log('[Expert-Audit] ⚠️ Schema is JS-generated — AI Ready score penalized (-3)');
@@ -2138,16 +2173,18 @@ Deno.serve(async (req) => {
       performance: {
         score: performanceScore,
         maxScore: 40,
-        psiPerformance: Math.round(psiPerformance * 100),
-        lcp: audits['largest-contentful-paint']?.numericValue || 0,
-        fcp: audits['first-contentful-paint']?.numericValue || 0,
-        cls: audits['cumulative-layout-shift']?.numericValue || 0,
-        tbt: audits['total-blocking-time']?.numericValue || 0,
+        psiPerformance: psiPerformance !== null ? Math.round(psiPerformance * 100) : null,
+        psiUnavailable: !psiAvailable,
+        lcp: audits['largest-contentful-paint']?.numericValue || null,
+        fcp: audits['first-contentful-paint']?.numericValue || null,
+        cls: audits['cumulative-layout-shift']?.numericValue || null,
+        tbt: audits['total-blocking-time']?.numericValue || null,
       },
       technical: {
         score: technicalScore,
         maxScore: 50,
-        psiSeo: Math.round(psiSeo * 100),
+        psiSeo: psiSeo !== null ? Math.round(psiSeo * 100) : null,
+        psiUnavailable: !psiAvailable,
         httpStatus: 200,
         isHttps: htmlAnalysis.isHttps,
       },
