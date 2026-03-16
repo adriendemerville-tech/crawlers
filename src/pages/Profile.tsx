@@ -118,7 +118,7 @@ const translations = {
 export default function Profile() {
   const { user, profile, signOut, loading } = useAuth();
   const { language } = useLanguage();
-  const { isAdmin, hasAdminAccess, isReadOnly, isAuditor, canSeeDocs, canSeeAlgos, canSeeFinances, canSeeUsers, canSeeIntelligence, loading: adminLoading } = useAdmin();
+  const { isAdmin, isViewer, isViewerLevel2, hasAdminAccess, isReadOnly, isAuditor, auditorExpired, canSeeDocs, canSeeAlgos, canSeeFinances, canSeeUsers, canSeeIntelligence, loading: adminLoading } = useAdmin();
   const { isAgencyPro, balance } = useCredits();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -133,6 +133,17 @@ export default function Profile() {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  // When auditor session expires, force-redirect away from admin tab
+  useEffect(() => {
+    if (auditorExpired && !isAdmin && !isViewer && !isViewerLevel2) {
+      // Pure auditor whose session expired — kick out of admin
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'admin') {
+        navigate('/profile?tab=tracking', { replace: true });
+      }
+    }
+  }, [auditorExpired, isAdmin, isViewer, isViewerLevel2, navigate]);
 
   const handleLogout = async () => {
     await signOut();
