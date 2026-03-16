@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Upload, FileSpreadsheet, Eye, GitCompare, Blend, Trash2, Download, Filter, ArrowUpDown, ChevronDown, ChevronUp, X, Check } from 'lucide-react';
+import { Upload, FileSpreadsheet, Eye, GitCompare, Blend, Trash2, Download, Filter, ArrowUpDown, ChevronDown, ChevronUp, X, Check, FlaskConical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
@@ -58,7 +58,63 @@ const MAPPABLE_COLUMNS = [
   { key: 'date', label: 'Date', required: false },
 ];
 
-// ── Main Component ─────────────────────────────────────────────
+// ── Mock data for demo ──
+const MOCK_LLMS = ['ChatGPT', 'Gemini', 'Claude', 'Perplexity', 'Mistral'];
+const MOCK_PROMPTS = [
+  'Meilleur outil SEO pour PME',
+  'Comment améliorer son référencement local',
+  'Audit technique SEO gratuit',
+  'Quel CMS choisir pour le SEO',
+  'Stratégie de netlinking efficace',
+  'Optimiser la vitesse de chargement',
+  'Recherche de mots-clés longue traîne',
+  'Comment analyser ses backlinks',
+];
+
+function generateMockData(): { rows: MatrixRow[]; crawlers: CrawlersData } {
+  const rows: MatrixRow[] = [];
+  MOCK_PROMPTS.forEach(prompt => {
+    const llms = MOCK_LLMS.slice(0, 3 + Math.floor(Math.random() * 3));
+    llms.forEach(llm => {
+      rows.push({
+        prompt,
+        llm_name: llm,
+        score: Math.round(20 + Math.random() * 80),
+        brand_found: Math.random() > 0.4,
+        position: Math.floor(1 + Math.random() * 5),
+        date: '2026-03-' + String(1 + Math.floor(Math.random() * 15)).padStart(2, '0'),
+      });
+    });
+  });
+
+  const crawlers: CrawlersData = {
+    llm_visibility: MOCK_LLMS.map(llm => ({
+      llm_name: llm,
+      score_percentage: Math.round(30 + Math.random() * 60),
+      week_start_date: '2026-03-10',
+    })),
+    llm_depth: MOCK_PROMPTS.slice(0, 4).flatMap(p =>
+      MOCK_LLMS.slice(0, 3).map(llm => ({
+        llm_name: llm,
+        prompt_text: p,
+        response_summary: `Réponse simulée pour "${p}" par ${llm}`,
+        iteration: Math.floor(1 + Math.random() * 4),
+      }))
+    ),
+    llm_test_executions: MOCK_PROMPTS.slice(0, 5).flatMap(p =>
+      MOCK_LLMS.slice(0, 3).map(llm => ({
+        llm_name: llm,
+        prompt_tested: p,
+        brand_found: Math.random() > 0.35,
+        iteration_found: Math.random() > 0.3 ? Math.floor(1 + Math.random() * 3) : null,
+        response_text: null,
+      }))
+    ),
+  };
+  return { rows, crawlers };
+}
+
+
 
 export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrixCardProps) {
   const [imports, setImports] = useState<Array<{ id: string; file_name: string; row_count: number; created_at: string; column_mapping: ColumnMapping; raw_data: MatrixRow[] }>>([]);
@@ -79,6 +135,24 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
   const [filterQuery, setFilterQuery] = useState('');
   const [sortField, setSortField] = useState<string>('prompt');
   const [sortAsc, setSortAsc] = useState(true);
+  const [demoMode, setDemoMode] = useState(false);
+
+  // ── Load demo data ──
+  const loadDemoData = useCallback(() => {
+    const { rows, crawlers } = generateMockData();
+    setImports([{
+      id: 'demo',
+      file_name: 'demo-simulation.csv',
+      row_count: rows.length,
+      created_at: new Date().toISOString(),
+      column_mapping: { prompt: 'prompt', llm_name: 'llm_name', score: 'score', brand_found: 'brand_found', position: 'position', date: 'date' },
+      raw_data: rows,
+    }]);
+    setSelectedImportId('demo');
+    setCrawlersData(crawlers);
+    setDemoMode(true);
+    setLoading(false);
+  }, []);
 
   // ── Fetch existing imports + Crawlers data ──
   const fetchData = useCallback(async () => {
@@ -135,7 +209,15 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
     }
   }, [trackedSiteId, selectedImportId]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { if (!demoMode) fetchData(); }, [fetchData, demoMode]);
+
+  const exitDemoMode = useCallback(() => {
+    setDemoMode(false);
+    setImports([]);
+    setSelectedImportId(null);
+    setCrawlersData(null);
+  }, []);
+
 
   // ── CSV Upload handler ──
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -416,16 +498,18 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                   >
                     {imp.file_name} ({imp.row_count} lignes)
                   </Badge>
-                  <button onClick={() => handleDeleteImport(imp.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-                    <X className="h-3 w-3" />
-                  </button>
+                  {!demoMode && (
+                    <button onClick={() => handleDeleteImport(imp.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           )}
 
-          {/* No data state */}
-          {imports.length === 0 && (
+           {/* No data state */}
+          {imports.length === 0 && !demoMode && (
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center space-y-3">
               <FileSpreadsheet className="h-10 w-10 text-muted-foreground mx-auto" />
               <div>
@@ -435,15 +519,34 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                   <br />Format libre — vous mapperez vos colonnes après l'upload.
                 </p>
               </div>
-              <label className="cursor-pointer inline-block">
-                <Button size="sm" className="gap-1.5" asChild>
-                  <span>
-                    <Upload className="h-3.5 w-3.5" />
-                    Choisir un fichier CSV
-                  </span>
+              <div className="flex items-center justify-center gap-2">
+                <label className="cursor-pointer inline-block">
+                  <Button size="sm" className="gap-1.5" asChild>
+                    <span>
+                      <Upload className="h-3.5 w-3.5" />
+                      Choisir un fichier CSV
+                    </span>
+                  </Button>
+                  <input type="file" accept=".csv,.tsv" className="hidden" onChange={handleFileUpload} />
+                </label>
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={loadDemoData}>
+                  <FlaskConical className="h-3.5 w-3.5" />
+                  Données simulées
                 </Button>
-                <input type="file" accept=".csv,.tsv" className="hidden" onChange={handleFileUpload} />
-              </label>
+              </div>
+            </div>
+          )}
+
+          {/* Demo mode banner */}
+          {demoMode && (
+            <div className="flex items-center justify-between bg-accent/50 border border-accent rounded-lg px-3 py-2">
+              <span className="text-xs font-medium text-accent-foreground flex items-center gap-1.5">
+                <FlaskConical className="h-3.5 w-3.5" />
+                Mode démo — données simulées
+              </span>
+              <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={exitDemoMode}>
+                Quitter la démo
+              </Button>
             </div>
           )}
 
