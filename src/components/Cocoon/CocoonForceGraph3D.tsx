@@ -98,6 +98,7 @@ interface CocoonForceGraph3DProps {
   particleColors?: Record<string, string>;
   haloColors?: string[];
   showClusters?: boolean;
+  visibleJuiceTypes?: Set<string>;
 }
 
 // ─── 3D Force Simulation (manual spring-charge model) ───
@@ -801,6 +802,7 @@ export function CocoonForceGraph3D({
   particleColors = {},
   haloColors = DEFAULT_HALO_COLORS,
   showClusters = true,
+  visibleJuiceTypes,
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [spreadScale, setSpreadScale] = useState(1);
@@ -899,9 +901,14 @@ export function CocoonForceGraph3D({
 
     simulate3D(gNodes, gLinks, 400);
 
+    // Filter links by visible juice types
+    const filteredLinks = visibleJuiceTypes && visibleJuiceTypes.size > 0
+      ? gLinks.filter(l => visibleJuiceTypes.has(l.juiceType))
+      : gLinks;
+
     const nMap = new Map(gNodes.map((n) => [n.id, n]));
-    return { graphNodes: gNodes, graphLinks: gLinks, nodeMap: nMap };
-  }, [nodes]);
+    return { graphNodes: gNodes, graphLinks: filteredLinks, nodeMap: nMap };
+  }, [nodes, visibleJuiceTypes]);
 
   // Zoom handler: dispatches wheel events to the canvas to trigger OrbitControls zoom
   const handleZoom = useCallback((direction: "in" | "out") => {
