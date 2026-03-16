@@ -3,7 +3,8 @@ import { X, Plus, Loader2, CheckCircle2, Circle, Trash2, GripVertical } from 'lu
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { DialogPortal } from '@/components/ui/dialog';
 
 interface Task {
   id: string;
