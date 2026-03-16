@@ -770,6 +770,15 @@ export default function Cocoon() {
           )}
         </div>
 
+        {hasAccess && selectedSiteId && (
+          <CocoonTaskPlanModal
+            open={showTaskPlan}
+            onOpenChange={setShowTaskPlan}
+            trackedSiteId={selectedSiteId}
+            domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+          />
+        )}
+
         <Dialog open={showPrereqModal} onOpenChange={setShowPrereqModal}>
           <DialogContent className="bg-[#1a1035] border-[hsl(263,70%,20%)] text-white max-w-md p-0 overflow-hidden">
             <div className="p-8 space-y-6">
