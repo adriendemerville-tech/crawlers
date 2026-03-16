@@ -509,7 +509,7 @@ export default function Cocoon() {
         </div>
       )}
 
-      <div className="h-screen bg-[#0f0a1e] flex flex-col relative pt-2 sm:pt-4 overflow-hidden">
+      <div className={`h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden ${isDayMode ? 'bg-[#f5f5f0]' : 'bg-[#0f0a1e]'}`}>
 
         {/* Top Bar */}
         <header className="shrink-0 bg-[#0f0a1e]/80 backdrop-blur-xl px-2 sm:px-4 md:px-6 py-2">
