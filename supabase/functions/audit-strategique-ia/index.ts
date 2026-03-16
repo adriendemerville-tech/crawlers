@@ -1029,7 +1029,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
     console.log('🌱 Seeds finaux:', seedKeywords.slice(0, 8).join(', '));
     
     // ═══ PHASE 2: DataForSEO API Call ═══
-    let keywordData = await fetchKeywordData(seedKeywords, context.locationCode);
+    let keywordData = await fetchKeywordData(seedKeywords, context.locationCode, context.languageCode);
     
     // ═══ PHASE 3: Validation Loop (retry once if poor quality) ═══
     if (!checkDataQuality(keywordData) && aiSeeds.length > 0) {
