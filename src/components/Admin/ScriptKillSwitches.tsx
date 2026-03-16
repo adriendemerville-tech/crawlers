@@ -93,7 +93,7 @@ export function ScriptKillSwitches() {
       const { data: configs } = await supabase
         .from('system_config')
         .select('key, value')
-        .in('key', ['enable_multipage_router', 'sdk_enabled', 'sdk_blocked_domains']);
+        .in('key', ['enable_multipage_router', 'sdk_enabled', 'sdk_blocked_domains', 'freemium_open_mode']);
 
       for (const cfg of (configs || [])) {
         if (cfg.key === 'enable_multipage_router') setMultipageEnabled(cfg.value !== false);
