@@ -136,6 +136,29 @@ export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTask
                     </p>
                     <p className="text-[10px] text-white/30 mt-0.5">{formatDate(item.created_at)}</p>
                   </button>
+
+                  {/* Hover action buttons */}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    {onAddToTaskPlan && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onAddToTaskPlan(item.summary, item.id); }}
+                        className="p-1 rounded-md hover:bg-[#a78bfa]/15 transition-colors"
+                        title={language === 'en' ? 'Add to task plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan'}
+                      >
+                        <ClipboardList className="w-3 h-3 text-[#a78bfa]/60 hover:text-[#a78bfa]" />
+                      </button>
+                    )}
+                    {onGenerateFix && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onGenerateFix(item.recommendation_text); }}
+                        className="p-1 rounded-md hover:bg-emerald-400/15 transition-colors"
+                        title={language === 'en' ? 'Generate fix' : language === 'es' ? 'Generar corrección' : 'Générer le fix'}
+                      >
+                        <Code2 className="w-3 h-3 text-emerald-400/60 hover:text-emerald-400" />
+                      </button>
+                    )}
+                  </div>
+
                   <ChevronDown className={`w-3 h-3 text-white/30 transition-transform shrink-0 ${expandedId === item.id ? 'rotate-180' : ''}`} />
                 </div>
                 {expandedId === item.id && (
