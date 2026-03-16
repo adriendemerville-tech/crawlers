@@ -10,7 +10,7 @@ import { CreditCoin } from '@/components/ui/CreditCoin';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Copy, Check, Code, Zap, Wrench, Sparkles, Globe, Save, Rocket, Library, Upload, Loader2, RotateCcw,
-  Download, Link2, AlertCircle, Plug, Cable
+  Download, Link2, AlertCircle, Plug, Cable, Crown
 } from 'lucide-react';
 import { handleWPIntegration, isSiteSynced } from '@/utils/wpIntegration';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ExpertAuditResult } from '@/types/expertAudit';
 import { CodeBlock } from '../CodeBlock';
