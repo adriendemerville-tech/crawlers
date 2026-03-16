@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
+import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 
 const FIRECRAWL_API = 'https://api.firecrawl.dev/v1';
 const MAX_GLOBAL_CONCURRENT = 20;
