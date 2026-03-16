@@ -1042,7 +1042,7 @@ async function fetchMarketData(domain: string, context: BusinessContext, pageCon
       const refinedSeeds = await generateSeedsWithAI(effectiveUrl, pageContentContext, context.brandName, 'initial', feedback);
       
       if (refinedSeeds.length >= 5) {
-        const refinedData = await fetchKeywordData(refinedSeeds, context.locationCode);
+        const refinedData = await fetchKeywordData(refinedSeeds, context.locationCode, context.languageCode);
         if (refinedData.length > keywordData.length || 
             (refinedData.length > 0 && refinedData.reduce((s, k) => s + k.volume, 0) > keywordData.reduce((s, k) => s + k.volume, 0))) {
           keywordData = refinedData;
