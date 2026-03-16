@@ -147,6 +147,29 @@ const i18n = {
   },
 };
 
+/** Check if any tracked site has both a crawl and an expert audit */
+async function findReadySite(sites: any[], userId: string) {
+  for (const site of sites) {
+    const [crawlRes, auditRes] = await Promise.all([
+      supabase
+        .from("site_crawls" as any)
+        .select("id")
+        .eq("domain", site.domain)
+        .eq("user_id", userId)
+        .limit(1),
+      supabase
+        .from("audits")
+        .select("id")
+        .eq("domain", site.domain)
+        .limit(1),
+    ]);
+    if ((crawlRes.data?.length || 0) > 0 && (auditRes.data?.length || 0) > 0) {
+      return site;
+    }
+  }
+  return null;
+}
+
 export default function Cocoon() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -268,6 +291,7 @@ export default function Cocoon() {
   }, [navigate]);
 
   // Load tracked sites
+  const autoReadyTriggered = useRef(false);
   useEffect(() => {
     if (!user || !hasAccess) return;
 
@@ -284,6 +308,16 @@ export default function Cocoon() {
         const match = data.find((s: any) => s.domain === autoLaunchDomain);
         if (match) {
           setSelectedSiteId(match.id);
+        } else if (data[0]) {
+          setSelectedSiteId(data[0].id);
+        }
+      } else if (data?.length && !autoReadyTriggered.current) {
+        // Check which sites have both a crawl AND an expert audit → auto-select & auto-launch
+        const readySite = await findReadySite(data, user.id);
+        if (readySite) {
+          autoReadyTriggered.current = true;
+          setSelectedSiteId(readySite.id);
+          setAutoLaunchDomain(readySite.domain);
         } else if (data[0]) {
           setSelectedSiteId(data[0].id);
         }
