@@ -118,7 +118,7 @@ export function TechnicalTab({ fixes, onToggle, onRequestAuth }: TechnicalTabPro
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.03 }}
                     className={`rounded-md border transition-all ${
-                      isLocked
+                      isLocked || isFreemiumLocked
                         ? 'p-1.5 px-2 border-border opacity-50 cursor-not-allowed'
                         : fix.enabled 
                           ? 'p-2 border-primary/30 bg-primary/5' 
