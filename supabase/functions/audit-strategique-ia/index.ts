@@ -678,7 +678,7 @@ async function fetchKeywordData(
           headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
           body: JSON.stringify([{
             keywords: singleWords,
-            location_code: locationCode, language_code: 'fr',
+            location_code: locationCode, language_code: languageCode,
             sort_by: 'search_volume', include_adult_keywords: false,
           }]),
         });
