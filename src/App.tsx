@@ -83,6 +83,7 @@ const App = () => (
             <Suspense fallback={null}>
               <AuthProvider>
                 <DemoModeProvider>
+                <FreemiumProvider>
                 <CreditsProvider>
                   <TooltipProvider>
                     <Suspense fallback={null}>
