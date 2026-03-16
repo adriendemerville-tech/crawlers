@@ -863,7 +863,8 @@ export function MyTracking() {
         seo: entry.seo_score || 0,
         geo: entry.geo_score || 0,
         citation: entry.llm_citation_rate || 0,
-        performance: getPerformanceScore(entry) || 0,
+        performanceMobile: getPerformanceScore(entry) || 0,
+        performanceDesktop: getPerformanceDesktop(entry) || 0,
       };
     });
   }, [currentStats]);
