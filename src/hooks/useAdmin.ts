@@ -7,6 +7,7 @@ export function useAdmin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isViewer, setIsViewer] = useState(false);
   const [isViewerLevel2, setIsViewerLevel2] = useState(false);
+  const [isAuditor, setIsAuditor] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
