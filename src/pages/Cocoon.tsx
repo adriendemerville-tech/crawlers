@@ -727,7 +727,7 @@ export default function Cocoon() {
                 {legendItems.map(([type, { color, label }]) => (
                   <div key={type} className="flex items-center gap-1 sm:gap-1.5">
                     <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color }} />
-                    <span className={`text-[10px] sm:text-xs ${isDayMode ? 'text-black/60' : 'text-white/50'}`}>{label[language] || label.fr}</span>
+                    <span className="text-[10px] sm:text-xs text-white/50">{label[language] || label.fr}</span>
                   </div>
                 ))}
                 <span className={`mx-0.5 sm:mx-1 hidden sm:inline ${isDayMode ? 'text-black/20' : 'text-white/20'}`}>|</span>
