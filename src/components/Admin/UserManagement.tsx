@@ -55,6 +55,9 @@ export function UserManagement() {
   const [stripDialogOpen, setStripDialogOpen] = useState(false);
   const [affiliateModalOpen, setAffiliateModalOpen] = useState(false);
   const [affiliateUser, setAffiliateUser] = useState<UserProfile | null>(null);
+  const [actionFilter, setActionFilter] = useState<string | null>(null);
+  const [userIdsByAction, setUserIdsByAction] = useState<Set<string>>(new Set());
+  const [actionFilterLoading, setActionFilterLoading] = useState(false);
 
   const fetchAllRoles = async () => {
     const { data } = await supabase
