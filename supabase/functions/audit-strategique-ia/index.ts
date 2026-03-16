@@ -415,9 +415,9 @@ function detectBusinessContext(domain: string, pageContentContext: string = ''):
   const coreBusiness = extractCoreBusiness(pageContentContext);
   const sector = coreBusiness || rawSlug.replace(/-/g, ' ');
   
-  console.log(`📋 Contexte: marque="${brandName}", secteur="${sector}", location="${locationInfo.name}" (code: ${locationInfo.code})`);
+  console.log(`📋 Contexte: marque="${brandName}", secteur="${sector}", location="${locationInfo.name}" (code: ${locationInfo.code}, lang: ${locationInfo.lang})`);
   
-  return { sector, location: locationInfo.name, brandName, locationCode: locationInfo.code };
+  return { sector, location: locationInfo.name, brandName, locationCode: locationInfo.code, languageCode: locationInfo.lang, seDomain: locationInfo.seDomain };
 }
 
 function extractKeywordsFromMetadata(pageContentContext: string, domain: string = ''): string[] {
