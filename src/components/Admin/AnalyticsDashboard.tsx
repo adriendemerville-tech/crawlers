@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAdminAnalytics } from '@/contexts/AdminAnalyticsContext';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   BarChart3, 
