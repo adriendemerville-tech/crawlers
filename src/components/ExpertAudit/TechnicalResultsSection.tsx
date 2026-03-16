@@ -83,7 +83,7 @@ export function TechnicalResultsSection({ result, t, onReportClick }: Props) {
           <MetricRow label="LCP" value={result.scores.performance.lcp != null ? formatMs(result.scores.performance.lcp) : '—'} status={result.scores.performance.lcp == null ? 'warning' : result.scores.performance.lcp <= 2500 ? 'good' : 'warning'} />
           <MetricRow label="CLS" value={result.scores.performance.cls != null ? result.scores.performance.cls.toFixed(2) : '—'} status={result.scores.performance.cls == null ? 'warning' : result.scores.performance.cls <= 0.1 ? 'good' : 'warning'} />
           <MetricRow label="TBT" value={result.scores.performance.tbt != null ? formatMs(result.scores.performance.tbt) : '—'} status={result.scores.performance.tbt == null ? 'warning' : result.scores.performance.tbt <= 200 ? 'good' : 'warning'} />
-          {result.scores.performance.psiUnavailable && (
+          {(result.scores.performance as any).psiUnavailable && (
             <p className="text-[10px] text-muted-foreground mt-1 italic">⚠️ PageSpeed indisponible — score estimé</p>
           )}
         </CategoryCard>
