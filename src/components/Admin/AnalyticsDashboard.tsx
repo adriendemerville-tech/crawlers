@@ -197,11 +197,14 @@ export function AnalyticsDashboard() {
       }) || [];
 
       // Fetch real signup count from profiles (30 days, excluding admins)
-      const { count: realSignupCount } = await supabase
+      let signupQuery = supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .gte('created_at', thirtyDaysAgo)
-        .not('user_id', 'in', `(${adminUserIds.join(',')})`);
+        .gte('created_at', thirtyDaysAgo);
+      if (adminUserIds.length > 0) {
+        signupQuery = signupQuery.not('user_id', 'in', `(${adminUserIds.join(',')})`);
+      }
+      const { count: realSignupCount } = await signupQuery;
 
       // Calculate stats
       const newStats: AnalyticsStats = {
