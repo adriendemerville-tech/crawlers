@@ -54,25 +54,28 @@ export function useAdmin() {
     checkRoles();
   }, [user]);
 
-  // Hierarchy: admin (créateur) > viewer > viewer_level2
-  const hasAdminAccess = isAdmin || isViewer || isViewerLevel2;
-  const isReadOnly = (isViewer || isViewerLevel2) && !isAdmin;
-  // viewer_level2 can't see docs, ML algos, finances, or users
+  // Hierarchy: admin (créateur) > viewer > auditor > viewer_level2
+  const hasAdminAccess = isAdmin || isViewer || isViewerLevel2 || isAuditor;
+  const isReadOnly = (isViewer || isViewerLevel2 || isAuditor) && !isAdmin;
+  // viewer_level2 & auditor can't see docs; auditor can't see intelligence, finances, users
   const canSeeDocs = isAdmin || isViewer;
   const canSeeAlgos = isAdmin || isViewer;
   const canSeeFinances = isAdmin || isViewer;
   const canSeeUsers = isAdmin || isViewer;
+  const canSeeIntelligence = isAdmin || isViewer || isViewerLevel2; // auditor excluded
 
   return { 
     isAdmin, 
     isViewer, 
     isViewerLevel2, 
+    isAuditor,
     hasAdminAccess, 
     isReadOnly, 
     canSeeDocs, 
     canSeeAlgos, 
     canSeeFinances,
     canSeeUsers,
+    canSeeIntelligence,
     loading 
   };
 }
