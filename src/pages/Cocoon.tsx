@@ -268,6 +268,7 @@ export default function Cocoon() {
   }, [navigate]);
 
   // Load tracked sites
+  const autoReadyTriggered = useRef(false);
   useEffect(() => {
     if (!user || !hasAccess) return;
 
@@ -284,6 +285,16 @@ export default function Cocoon() {
         const match = data.find((s: any) => s.domain === autoLaunchDomain);
         if (match) {
           setSelectedSiteId(match.id);
+        } else if (data[0]) {
+          setSelectedSiteId(data[0].id);
+        }
+      } else if (data?.length && !autoReadyTriggered.current) {
+        // Check which sites have both a crawl AND an expert audit → auto-select & auto-launch
+        const readySite = await findReadySite(data, user.id);
+        if (readySite) {
+          autoReadyTriggered.current = true;
+          setSelectedSiteId(readySite.id);
+          setAutoLaunchDomain(readySite.domain);
         } else if (data[0]) {
           setSelectedSiteId(data[0].id);
         }
