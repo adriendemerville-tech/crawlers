@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
@@ -241,20 +241,16 @@ export function CocoonArchitectModal({ open, onOpenChange, domain, trackedSiteId
   });
 
   // Re-initialize when recommendationText changes (modal reopens with new reco)
-  const [lastRecoText, setLastRecoText] = useState(recommendationText);
-  if (recommendationText !== lastRecoText) {
-    setLastRecoText(recommendationText);
+  useEffect(() => {
     setGeneratedCode('');
     setCopied(false);
+    const detected = recommendationText ? detectFixFromRecommendation(recommendationText) : null;
     setFixes(COCOON_FIXES.map(f => ({
       ...f,
-      enabled: f.id === (recommendationText ? detectFixFromRecommendation(recommendationText) : null),
+      enabled: f.id === detected,
     })));
-    if (recommendationText) {
-      const detected = detectFixFromRecommendation(recommendationText);
-      setExpandedFix(detected);
-    }
-  }
+    setExpandedFix(detected);
+  }, [recommendationText]);
 
   const toggleFix = (fixId: string) => {
     setFixes(prev => prev.map(f => f.id === fixId ? { ...f, enabled: !f.enabled } : f));
