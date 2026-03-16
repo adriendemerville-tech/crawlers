@@ -140,8 +140,13 @@ export function ScriptKillSwitches() {
   const handleToggleFreemium = async (checked: boolean) => {
     setFreemiumOpen(checked);
     await saveConfig('freemium_open_mode', checked);
-    // Force page reload for all clients after a short delay
     toast({ title: checked ? 'Mode freemium ouvert activé' : 'Mode freemium standard restauré' });
+  };
+
+  const handleToggleHideLeadmagnet = async (checked: boolean) => {
+    setHideHomeLeadmagnet(checked);
+    await saveConfig('hide_home_leadmagnet', checked);
+    toast({ title: checked ? 'Lead magnets masqués — Mode Audit Expert activé' : 'Lead magnets restaurés sur la Home' });
   };
 
   const handleAddDomain = async () => {
