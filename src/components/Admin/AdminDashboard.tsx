@@ -201,6 +201,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
 
     switch (activeTab) {
       case 'analytics': return <AnalyticsDashboard />;
+      case 'finances': return <FinancesDashboard />;
       case 'intelligence': return <IntelligenceHub />;
       case 'silent-errors': return <SilentErrorsRegistry />;
       case 'ci-tests': return <CiTestsDashboard />;
