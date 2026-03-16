@@ -497,6 +497,7 @@ export default function Cocoon() {
                 filters={cocoonFilters}
                 onFiltersChange={setCocoonFilters}
                 language={language}
+                theme={theme}
               />
               <Button
                 variant="outline"

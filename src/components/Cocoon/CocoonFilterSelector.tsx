@@ -188,9 +188,10 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
           </p>
           <div className="space-y-1.5">
             {presentJuiceTypes.map(type => {
-              const meta = JUICE_TYPE_META[type];
-              if (!meta) return null;
-              const label = meta.label[language] || meta.label.fr;
+              const labels = JUICE_TYPE_LABELS[type];
+              if (!labels) return null;
+              const label = labels[language] || labels.fr;
+              const color = particleColors[type] || '#508cff';
               const checked = filters.visibleJuiceTypes.has(type);
               return (
                 <label
@@ -203,7 +204,7 @@ export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language
                     className="border-white/20 data-[state=checked]:bg-transparent data-[state=checked]:border-white/40"
                     tabIndex={-1}
                   />
-                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: meta.color }} />
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
                   <span className="text-xs text-white/70 group-hover:text-white transition-colors">{label}</span>
                 </label>
               );
