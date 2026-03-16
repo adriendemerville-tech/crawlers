@@ -10,8 +10,10 @@ import { DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/di
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { toast } from 'sonner';
 import { t3 } from '@/utils/i18n';
+import { Checkbox } from '@/components/ui/checkbox';
 
 // ── Plugin PHP generator (unchanged) ──
 function generatePluginPhp(apiKey: string, domain: string): string {
