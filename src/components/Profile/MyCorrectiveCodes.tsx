@@ -65,6 +65,7 @@ const translations = {
     validateError: 'Error validating',
     tabScripts: 'Scripts',
     tabHistory: 'History',
+    tabDebug: 'Diagnostic',
   },
   es: {
     title: 'Mis Códigos Correctivos',
