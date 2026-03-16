@@ -1514,7 +1514,16 @@ export function MyTracking() {
                         company_size: currentSite.company_size || undefined,
                       }}
                     />
-                  )}
+                   )}
+
+                   {/* Prompt Matrix — CSV Import & Comparison */}
+                   {currentSite && user && (
+                     <PromptMatrixCard
+                       trackedSiteId={currentSite.id}
+                       userId={user.id}
+                       domain={currentSite.domain}
+                     />
+                   )}
                 </div>
               )}
             </div>
