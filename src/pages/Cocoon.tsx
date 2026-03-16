@@ -729,12 +729,42 @@ export default function Cocoon() {
           {/* Spacer */}
           <div className="flex-1" />
 
+          {/* Task Plan button — bottom right */}
+          {hasAccess && selectedSiteId && (
+            <button
+              onClick={() => setShowTaskPlan(true)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl border bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 backdrop-blur-md transition-all shrink-0"
+            >
+              <ClipboardList className="w-4 h-4" />
+              <span className="text-xs font-medium hidden sm:inline">{language === 'en' ? 'Tasks' : language === 'es' ? 'Tareas' : 'Tâches'}</span>
+            </button>
+          )}
+
           {/* Recommendation History — bottom right */}
           {hasAccess && selectedSiteId && (
             <div className="relative shrink-0 mr-2 sm:mr-4">
               <CocoonRecommendationHistory
                 trackedSiteId={selectedSiteId}
                 domain={trackedSites.find(s => s.id === selectedSiteId)?.domain || ''}
+                onAddToTaskPlan={async (title, recoId) => {
+                  if (!user) return;
+                  const { supabase: sb } = await import('@/integrations/supabase/client');
+                  await sb.from('cocoon_tasks').insert({
+                    tracked_site_id: selectedSiteId,
+                    user_id: user.id,
+                    title,
+                    status: 'todo',
+                    priority: 'medium',
+                    source_recommendation_id: recoId,
+                  });
+                  toast({ title: language === 'en' ? 'Task added' : language === 'es' ? 'Tarea añadida' : 'Tâche ajoutée' });
+                  setShowTaskPlan(true);
+                }}
+                onGenerateFix={(recoText) => {
+                  const selectedSite = trackedSites.find(s => s.id === selectedSiteId);
+                  const domain = selectedSite?.domain || '';
+                  navigate(`/audit-expert?url=${encodeURIComponent(domain)}&from=cocoon`);
+                }}
               />
             </div>
           )}
