@@ -143,16 +143,45 @@ export function UserManagement() {
     }
   };
 
+  // Fetch user IDs matching the selected action filter
+  const fetchActionFilter = useCallback(async (filterLabel: string | null) => {
+    setActionFilter(filterLabel);
+    if (!filterLabel) {
+      setUserIdsByAction(new Set());
+      return;
+    }
+    setActionFilterLoading(true);
+    try {
+      const filter = ACTION_FILTERS.find(f => f.label === filterLabel);
+      if (!filter) return;
+
+      const { data } = await supabase
+        .from('analytics_events')
+        .select('user_id')
+        .in('event_type', filter.types)
+        .not('user_id', 'is', null);
+
+      const ids = new Set<string>((data || []).map((e: any) => e.user_id).filter(Boolean));
+      setUserIdsByAction(ids);
+    } catch (err) {
+      console.error('Action filter error:', err);
+    } finally {
+      setActionFilterLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUsers();
     fetchAllRoles();
   }, []);
 
-  const filteredUsers = users.filter(user => 
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.last_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.last_name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesAction = !actionFilter || userIdsByAction.has(user.user_id);
+    return matchesSearch && matchesAction;
+  });
 
   const handleAddCredits = async (amount: number) => {
     if (!selectedUser) return;
