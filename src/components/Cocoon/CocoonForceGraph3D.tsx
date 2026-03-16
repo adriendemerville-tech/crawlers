@@ -930,13 +930,54 @@ export function CocoonForceGraph3D({
     canvas.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
   }, []);
 
+  // Keyboard: +/- for zoom, arrow keys for pan
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    if (!isHovered) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const canvas = containerRef.current?.querySelector("canvas");
+      if (!canvas) return;
+      // Numpad + / -
+      if (e.key === '+' || e.code === 'NumpadAdd') {
+        e.preventDefault();
+        handleZoom("in");
+      } else if (e.key === '-' || e.code === 'NumpadSubtract') {
+        e.preventDefault();
+        handleZoom("out");
+      }
+      // Arrow keys → pan via fake pointer events
+      const PAN_PX = 40;
+      let dx = 0, dy = 0;
+      if (e.key === 'ArrowLeft') { dx = PAN_PX; e.preventDefault(); }
+      else if (e.key === 'ArrowRight') { dx = -PAN_PX; e.preventDefault(); }
+      else if (e.key === 'ArrowUp') { dy = PAN_PX; e.preventDefault(); }
+      else if (e.key === 'ArrowDown') { dy = -PAN_PX; e.preventDefault(); }
+      if (dx !== 0 || dy !== 0) {
+        const rect = canvas.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        canvas.dispatchEvent(new PointerEvent("pointerdown", { clientX: cx, clientY: cy, button: 2, bubbles: true, pointerType: "mouse" }));
+        canvas.dispatchEvent(new PointerEvent("pointermove", { clientX: cx + dx, clientY: cy + dy, button: 2, bubbles: true, pointerType: "mouse" }));
+        canvas.dispatchEvent(new PointerEvent("pointerup", { clientX: cx + dx, clientY: cy + dy, button: 2, bubbles: true, pointerType: "mouse" }));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isHovered, handleZoom]);
+
   return (
     <div
+      ref={containerRef}
       className={`relative w-full h-full transition-all ${
         isPickingMode
           ? "ring-2 ring-[#fbbf24]/30"
           : ""
       }`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      tabIndex={0}
     >
       <Canvas
         camera={{ position: [0, 0, 150], fov: 50, near: 0.1, far: 1000 }}
