@@ -57,10 +57,11 @@ const PolitiqueConfidentialite = () => {
               
               <h3 className="text-lg font-medium text-foreground mb-2">{t3(language, 'Données d\'utilisation :', 'Usage data:', 'Datos de uso:')}</h3>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2 mb-4">
-                <li>{t3(language, 'URLs analysées via nos outils', 'URLs analyzed via our tools', 'URLs analizadas a través de nuestras herramientas')}</li>
+                <li>{t3(language, 'URLs analysées via nos outils (audits, crawls, analyses concurrentielles)', 'URLs analyzed via our tools (audits, crawls, competitive analysis)', 'URLs analizadas a través de nuestras herramientas (auditorías, crawls, análisis competitivo)')}</li>
                 <li>{t3(language, 'Données de navigation anonymisées (pages visitées, durée de visite)', 'Anonymized browsing data (pages visited, visit duration)', 'Datos de navegación anonimizados (páginas visitadas, duración de la visita)')}</li>
                 <li>{t3(language, 'Préférences linguistiques', 'Language preferences', 'Preferencias lingüísticas')}</li>
-                <li>{t3(language, 'Rapports et codes correctifs générés', 'Generated reports and corrective codes', 'Informes y códigos correctivos generados')}</li>
+                <li>{t3(language, 'Rapports, codes correctifs et graphes sémantiques (Cocoon) générés', 'Generated reports, corrective codes and semantic graphs (Cocoon)', 'Informes, códigos correctivos y grafos semánticos (Cocoon) generados')}</li>
+                <li>{t3(language, 'Données de télémétrie du widget/GTM (ping de statut, sans données personnelles des visiteurs)', 'Widget/GTM telemetry data (status ping, no visitor personal data)', 'Datos de telemetría del widget/GTM (ping de estado, sin datos personales de visitantes)')}</li>
               </ul>
 
               <h3 className="text-lg font-medium text-foreground mb-2">{t3(language, 'Données de compte (si inscription) :', 'Account data (if registered):', 'Datos de cuenta (si está registrado):')}</h3>
@@ -69,6 +70,7 @@ const PolitiqueConfidentialite = () => {
                 <li>{t3(language, 'Adresse email', 'Email address', 'Dirección de correo electrónico')}</li>
                 <li>{t3(language, 'Historique des achats de crédits', 'Credit purchase history', 'Historial de compras de créditos')}</li>
                 <li>{t3(language, 'Solde de crédits', 'Credit balance', 'Saldo de créditos')}</li>
+                <li>{t3(language, 'Tokens d\'accès Google Search Console / GA4 (chiffrés)', 'Google Search Console / GA4 access tokens (encrypted)', 'Tokens de acceso Google Search Console / GA4 (cifrados)')}</li>
               </ul>
 
               <h3 className="text-lg font-medium text-foreground mb-2">{t3(language, 'Données de paiement :', 'Payment data:', 'Datos de pago:')}</h3>
