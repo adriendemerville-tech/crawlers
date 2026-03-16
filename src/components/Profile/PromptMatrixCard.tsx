@@ -498,9 +498,11 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                   >
                     {imp.file_name} ({imp.row_count} lignes)
                   </Badge>
-                  <button onClick={() => handleDeleteImport(imp.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-                    <X className="h-3 w-3" />
-                  </button>
+                  {!demoMode && (
+                    <button onClick={() => handleDeleteImport(imp.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
