@@ -146,10 +146,10 @@ export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTask
                     {onAddToTaskPlan && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onAddToTaskPlan(item.summary, item.id); }}
-                        className="p-1 rounded-md hover:bg-[#a78bfa]/15 transition-colors"
+                        className="p-1 rounded-md hover:bg-emerald-400/15 transition-colors"
                         title={language === 'en' ? 'Add to task plan' : language === 'es' ? 'Añadir al plan' : 'Ajouter au plan'}
                       >
-                        <ClipboardList className="w-3 h-3 text-[#a78bfa]/60 hover:text-[#a78bfa]" />
+                        <ClipboardList className="w-3 h-3 text-emerald-400/60 hover:text-emerald-400" />
                       </button>
                     )}
                     {onGenerateFix && (
