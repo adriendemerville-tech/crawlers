@@ -1221,7 +1221,7 @@ async function detectGoogleMyBusiness(domain: string, brandName: string, locatio
       body: JSON.stringify([{
         keyword: brandName,
         location_code: locationCode,
-        language_code: 'fr',
+        language_code: context.languageCode,
         depth: 5,
       }]),
       signal: AbortSignal.timeout(10000),
