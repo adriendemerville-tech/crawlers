@@ -30,6 +30,12 @@ interface UserKpis {
   planType: string;
 }
 
+interface ScannedUrl {
+  url: string;
+  event_type: string;
+  created_at: string;
+}
+
 interface UserKpiModalProps {
   user: UserProfile | null;
   open: boolean;
