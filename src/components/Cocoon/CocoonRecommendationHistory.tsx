@@ -80,7 +80,7 @@ export function CocoonRecommendationHistory({ trackedSiteId, domain, onAddToTask
       {/* Panel sliding up */}
       {isOpen && (
         <div
-          className="absolute bottom-full right-0 mb-2 w-[380px] sm:w-[420px] max-h-[500px] flex flex-col rounded-2xl border border-white/10 bg-[#0f0a1e]/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden"
+          className="absolute bottom-full right-0 mb-2 w-[380px] sm:w-[420px] max-h-[500px] flex flex-col rounded-2xl border border-white/10 bg-[#0f0a1e] shadow-2xl shadow-black/50 overflow-hidden"
           style={{ animation: 'slideUp 0.2s ease-out' }}
         >
           {/* Header */}
