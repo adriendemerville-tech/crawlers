@@ -581,19 +581,6 @@ export default function Cocoon() {
                 {isXRayMode ? <EyeOff className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" /> : <Eye className="w-3 sm:w-3.5 h-3 sm:h-3.5 mr-1" />}
                 {t.xray}
               </Button>
-              {/* Day/Night toggle */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsDayMode(v => !v)}
-                className={`h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] px-2 sm:px-3 ${
-                  isDayMode
-                    ? "bg-[#fbbf24]/20 text-[#fbbf24]"
-                    : "bg-transparent text-white/60 hover:text-white"
-                }`}
-              >
-                {isDayMode ? <Sun className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> : <Moon className="w-3 sm:w-3.5 h-3 sm:h-3.5" />}
-              </Button>
               {/* Fullscreen in new tab */}
               <Button
                 variant="outline"
