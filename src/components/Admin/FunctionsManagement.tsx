@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronRight, Code2, Lock, Clock, User } from 'lucide-react';
+import { ChevronDown, ChevronRight, Code2, Lock, Clock, User, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdminContext } from '@/contexts/AdminContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
+import { PromptMatrixCard } from '@/components/Profile/PromptMatrixCard';
 
 // ─── Edge functions registry grouped by category ───
 const FUNCTION_CATEGORIES: Record<string, string[]> = {
@@ -95,16 +96,33 @@ export function FunctionsManagement() {
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [viewerApproved, setViewerApproved] = useState<Set<string>>(new Set());
   const [pendingRequests, setPendingRequests] = useState<Set<string>>(new Set());
+  const [showPromptMatrix, setShowPromptMatrix] = useState(false);
+  const [matrixSiteId, setMatrixSiteId] = useState('');
+  const [matrixDomain, setMatrixDomain] = useState('');
+  const [trackedSites, setTrackedSites] = useState<Array<{ id: string; domain: string }>>([]);
 
-  // Load consultation logs and access requests for creator
+  // Load consultation logs, access requests, and tracked sites
   useEffect(() => {
     if (!isViewer) {
       loadConsultationLogs();
       loadAccessRequests();
+      loadTrackedSites();
     } else {
       loadMyRequests();
     }
   }, [isViewer]);
+
+  const loadTrackedSites = async () => {
+    const { data } = await supabase
+      .from('tracked_sites')
+      .select('id, domain')
+      .order('domain');
+    if (data && data.length > 0) {
+      setTrackedSites(data);
+      setMatrixSiteId(data[0].id);
+      setMatrixDomain(data[0].domain);
+    }
+  };
 
   const loadConsultationLogs = async () => {
     const { data } = await supabase
@@ -285,7 +303,54 @@ export function FunctionsManagement() {
         ))}
       </div>
 
-      {/* Code viewer dialog */}
+      {/* ─── Prompt Matrix BETA ─── */}
+      {!isViewer && (
+        <div className="border border-border/40 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setShowPromptMatrix(!showPromptMatrix)}
+            className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              {showPromptMatrix ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+              <FileSpreadsheet className="h-3.5 w-3.5 text-primary" />
+              <span>Matrice de Prompts</span>
+              <Badge variant="secondary" className="text-[9px] px-1.5 py-0">BETA</Badge>
+            </div>
+          </button>
+          {showPromptMatrix && (
+            <div className="border-t border-border/30 p-4 space-y-3">
+              {trackedSites.length > 1 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Site :</span>
+                  <select
+                    value={matrixSiteId}
+                    onChange={(e) => {
+                      const site = trackedSites.find(s => s.id === e.target.value);
+                      if (site) { setMatrixSiteId(site.id); setMatrixDomain(site.domain); }
+                    }}
+                    className="text-xs border border-border rounded px-2 py-1 bg-background text-foreground"
+                  >
+                    {trackedSites.map(s => (
+                      <option key={s.id} value={s.id}>{s.domain}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {matrixSiteId && user && (
+                <PromptMatrixCard
+                  trackedSiteId={matrixSiteId}
+                  userId={user.id}
+                  domain={matrixDomain}
+                />
+              )}
+              {!matrixSiteId && (
+                <p className="text-xs text-muted-foreground">Aucun site suivi trouvé.</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>

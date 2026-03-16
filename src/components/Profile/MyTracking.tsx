@@ -27,7 +27,7 @@ import { LLMVisibilityDashboard } from '@/components/Profile/LLMVisibilityDashbo
 import { LLMDepthCard } from '@/components/Profile/LLMDepthCard';
 import { WordPressConfigCard } from '@/components/Profile/WordPressConfigCard';
 import { IASCard } from '@/components/Profile/IASCard';
-import { PromptMatrixCard } from '@/components/Profile/PromptMatrixCard';
+
 
 const translations = {
   fr: {
@@ -1516,14 +1516,6 @@ export function MyTracking() {
                     />
                    )}
 
-                   {/* Prompt Matrix — CSV Import & Comparison (admin only) */}
-                   {currentSite && user && isAdmin && (
-                     <PromptMatrixCard
-                       trackedSiteId={currentSite.id}
-                       userId={user.id}
-                       domain={currentSite.domain}
-                     />
-                   )}
                 </div>
               )}
             </div>
