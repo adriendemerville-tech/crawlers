@@ -1724,6 +1724,12 @@ Top positionnés: ${rankingOverview.top_keywords.slice(0, 5).map(k => `"${k.keyw
       if (personalLI.length > 0) lines.push(`LinkedIn perso: ${personalLI.join(', ')}`);
       if (companyLI.length > 0) lines.push(`LinkedIn entreprise: ${companyLI.join(', ')}`);
     }
+    // Facebook page info from SERP
+    if (facebookPageInfo?.found && facebookPageInfo.pageUrl) {
+      lines.push(`📘 Facebook Page SERP: ${facebookPageInfo.pageName || 'trouvée'} → ${facebookPageInfo.pageUrl}`);
+    } else {
+      lines.push(`📘 Facebook Page SERP: NON TROUVÉE`);
+    }
     eeatSection = lines.join('\n');
   }
 
