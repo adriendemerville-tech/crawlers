@@ -506,8 +506,8 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
             </div>
           )}
 
-          {/* No data state */}
-          {imports.length === 0 && (
+           {/* No data state */}
+          {imports.length === 0 && !demoMode && (
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center space-y-3">
               <FileSpreadsheet className="h-10 w-10 text-muted-foreground mx-auto" />
               <div>
@@ -517,15 +517,34 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
                   <br />Format libre — vous mapperez vos colonnes après l'upload.
                 </p>
               </div>
-              <label className="cursor-pointer inline-block">
-                <Button size="sm" className="gap-1.5" asChild>
-                  <span>
-                    <Upload className="h-3.5 w-3.5" />
-                    Choisir un fichier CSV
-                  </span>
+              <div className="flex items-center justify-center gap-2">
+                <label className="cursor-pointer inline-block">
+                  <Button size="sm" className="gap-1.5" asChild>
+                    <span>
+                      <Upload className="h-3.5 w-3.5" />
+                      Choisir un fichier CSV
+                    </span>
+                  </Button>
+                  <input type="file" accept=".csv,.tsv" className="hidden" onChange={handleFileUpload} />
+                </label>
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={loadDemoData}>
+                  <FlaskConical className="h-3.5 w-3.5" />
+                  Données simulées
                 </Button>
-                <input type="file" accept=".csv,.tsv" className="hidden" onChange={handleFileUpload} />
-              </label>
+              </div>
+            </div>
+          )}
+
+          {/* Demo mode banner */}
+          {demoMode && (
+            <div className="flex items-center justify-between bg-accent/50 border border-accent rounded-lg px-3 py-2">
+              <span className="text-xs font-medium text-accent-foreground flex items-center gap-1.5">
+                <FlaskConical className="h-3.5 w-3.5" />
+                Mode démo — données simulées
+              </span>
+              <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={exitDemoMode}>
+                Quitter la démo
+              </Button>
             </div>
           )}
 
