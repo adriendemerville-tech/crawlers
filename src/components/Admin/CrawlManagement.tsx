@@ -195,7 +195,10 @@ export function CrawlManagement() {
             </div>
           </CardContent>
         </Card>
-      </div>
+    </div>
+
+      {/* Pages per crawl stats */}
+      <CrawlPagesStatsCard />
 
       {/* Crawls Table */}
       <Card>
