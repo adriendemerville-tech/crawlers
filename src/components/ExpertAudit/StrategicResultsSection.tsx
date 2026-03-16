@@ -8,6 +8,7 @@ import { LLMConfusionDetectionCard } from './LLMConfusionDetectionCard';
 import { RegistrationGate } from './RegistrationGate';
 import { StrategicErrorBoundary } from './StrategicErrorBoundary';
 import { StrategicInsights } from './StrategicInsights';
+import { useFreemiumMode } from '@/contexts/FreemiumContext';
 import { ActionPlan } from './ActionPlan';
 import { AEOScoreCard } from './AEOScoreCard';
 import { ExpertAuditResult, Recommendation } from '@/types/expertAudit';
