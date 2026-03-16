@@ -8,6 +8,7 @@ interface Profile {
   first_name: string;
   last_name: string;
   email: string;
+  api_key: string;
   avatar_url: string | null;
   agency_logo_url: string | null;
   agency_primary_color: string | null;

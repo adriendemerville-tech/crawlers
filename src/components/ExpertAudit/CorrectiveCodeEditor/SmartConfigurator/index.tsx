@@ -215,10 +215,16 @@ export function SmartConfigurator({
       .eq('domain', siteDomain)
       .maybeSingle();
     if (data) {
+      // Use profile API key (universal) instead of per-site key
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('api_key')
+        .eq('user_id', user.id)
+        .maybeSingle();
       setWpSiteData({
         id: data.id,
         domain: data.domain,
-        apiKey: data.api_key,
+        apiKey: profileData?.api_key || data.api_key,
         hasConfig: isSiteSynced(data.current_config as Record<string, unknown>),
       });
     } else {
