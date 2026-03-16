@@ -2306,8 +2306,8 @@ Deno.serve(async (req) => {
           const tld = domain.split('.').pop() || 'com';
           const tldMap: Record<string, string> = { 'fr': 'france', 'be': 'belgium', 'ch': 'switzerland', 'ca': 'canada', 'de': 'germany', 'es': 'spain', 'it': 'italy', 'uk': 'united kingdom', 'com': 'france', 'ai': 'france', 'io': 'france', 'dev': 'france', 'app': 'france' };
           const locKey = tldMap[tld] || 'france';
-          const locCode = KNOWN_LOCATIONS[locKey]?.code || 2250;
-          return fetchRankedKeywords(domain, locCode);
+          const locInfo = KNOWN_LOCATIONS[locKey] || KNOWN_LOCATIONS['france'];
+          return fetchRankedKeywords(domain, locInfo.code, locInfo.lang);
         }),
       ]);
 
