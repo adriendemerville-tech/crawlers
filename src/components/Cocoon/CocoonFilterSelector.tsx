@@ -3,28 +3,29 @@ import { Filter, Sparkles, FileText, Layers } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
+import { CocoonTheme, DEFAULT_THEME } from '@/hooks/useCocoonTheme';
 
-// ── Color maps (match CocoonForceGraph3D) ──
-const PAGE_TYPE_META: Record<string, { color: string; label: Record<string, string> }> = {
-  homepage: { color: '#ffc83c', label: { fr: 'Accueil', en: 'Home', es: 'Inicio' } },
-  blog: { color: '#8c78ff', label: { fr: 'Blog', en: 'Blog', es: 'Blog' } },
-  produit: { color: '#3cdca0', label: { fr: 'Produit', en: 'Product', es: 'Producto' } },
-  'catégorie': { color: '#50aaff', label: { fr: 'Catégorie', en: 'Category', es: 'Categoría' } },
-  faq: { color: '#ff9650', label: { fr: 'FAQ', en: 'FAQ', es: 'FAQ' } },
-  contact: { color: '#f078b4', label: { fr: 'Contact', en: 'Contact', es: 'Contacto' } },
-  tarifs: { color: '#ffc83c', label: { fr: 'Tarifs', en: 'Pricing', es: 'Precios' } },
-  guide: { color: '#b48cff', label: { fr: 'Guide', en: 'Guide', es: 'Guía' } },
-  'légal': { color: '#a0aab4', label: { fr: 'Légal', en: 'Legal', es: 'Legal' } },
-  'à propos': { color: '#50dce6', label: { fr: 'À propos', en: 'About', es: 'Acerca de' } },
-  page: { color: '#8c64fa', label: { fr: 'Page', en: 'Page', es: 'Página' } },
-  unknown: { color: '#8c64fa', label: { fr: 'Autre', en: 'Other', es: 'Otro' } },
+// ── Label maps ──
+const PAGE_TYPE_LABELS: Record<string, Record<string, string>> = {
+  homepage: { fr: 'Accueil', en: 'Home', es: 'Inicio' },
+  blog: { fr: 'Blog', en: 'Blog', es: 'Blog' },
+  produit: { fr: 'Produit', en: 'Product', es: 'Producto' },
+  'catégorie': { fr: 'Catégorie', en: 'Category', es: 'Categoría' },
+  faq: { fr: 'FAQ', en: 'FAQ', es: 'FAQ' },
+  contact: { fr: 'Contact', en: 'Contact', es: 'Contacto' },
+  tarifs: { fr: 'Tarifs', en: 'Pricing', es: 'Precios' },
+  guide: { fr: 'Guide', en: 'Guide', es: 'Guía' },
+  'légal': { fr: 'Légal', en: 'Legal', es: 'Legal' },
+  'à propos': { fr: 'À propos', en: 'About', es: 'Acerca de' },
+  page: { fr: 'Page', en: 'Page', es: 'Página' },
+  unknown: { fr: 'Autre', en: 'Other', es: 'Otro' },
 };
 
-const JUICE_TYPE_META: Record<string, { color: string; label: Record<string, string> }> = {
-  authority: { color: '#ffc83c', label: { fr: 'Autorité', en: 'Authority', es: 'Autoridad' } },
-  semantic: { color: '#508cff', label: { fr: 'Sémantique', en: 'Semantic', es: 'Semántica' } },
-  traffic: { color: '#3cdc8c', label: { fr: 'Trafic', en: 'Traffic', es: 'Tráfico' } },
-  hierarchy: { color: '#b464ff', label: { fr: 'Hiérarchie', en: 'Hierarchy', es: 'Jerarquía' } },
+const JUICE_TYPE_LABELS: Record<string, Record<string, string>> = {
+  authority: { fr: 'Autorité', en: 'Authority', es: 'Autoridad' },
+  semantic: { fr: 'Sémantique', en: 'Semantic', es: 'Semántica' },
+  traffic: { fr: 'Trafic', en: 'Traffic', es: 'Tráfico' },
+  hierarchy: { fr: 'Hiérarchie', en: 'Hierarchy', es: 'Jerarquía' },
 };
 
 export interface CocoonFilters {
