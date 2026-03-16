@@ -4,8 +4,11 @@ import { corsHeaders } from '../_shared/cors.ts';
 /**
  * Edge Function: serve-client-script
  * 
+ * v2: Single API key per user (profiles.api_key) + automatic domain routing via Referer/Origin.
+ * Also supports legacy tracked_sites.api_key for backward compatibility.
+ * 
  * Optimized with:
- * - In-memory cache (TTL 60s) for rules — avoids DB reads on every SDK ping
+ * - In-memory cache (TTL 60s) for rules
  * - Batched last_widget_ping updates (max 1 write per 5 min per site)
  * - Singleton Supabase client
  */
@@ -19,16 +22,15 @@ interface CachedRules {
   fetchedAt: number;
 }
 
+// Cache key = `${apiKey}::${domain}`
 const rulesCache = new Map<string, CachedRules>();
-const CACHE_TTL_MS = 60_000; // 1 minute
+const CACHE_TTL_MS = 60_000;
 
-// Throttle last_widget_ping to max once per 5 minutes per site
 const lastPingUpdate = new Map<string, number>();
 const PING_THROTTLE_MS = 5 * 60_000;
 
-// Global kill switch cache
 let globalSwitchCache: { enabled: boolean; fetchedAt: number } | null = null;
-const GLOBAL_SWITCH_TTL_MS = 30_000; // 30s
+const GLOBAL_SWITCH_TTL_MS = 30_000;
 
 async function isGloballyEnabled(): Promise<boolean> {
   const now = Date.now();
@@ -46,27 +48,81 @@ async function isGloballyEnabled(): Promise<boolean> {
     globalSwitchCache = { enabled, fetchedAt: now };
     return enabled;
   } catch {
-    return true; // fail-open
+    return true;
   }
 }
 
-async function getSiteRules(apiKey: string): Promise<CachedRules | null> {
+function extractDomain(req: Request): string | null {
+  // Try Referer first, then Origin
+  const referer = req.headers.get('referer');
+  if (referer) {
+    try {
+      const url = new URL(referer);
+      return url.hostname.replace(/^www\./, '');
+    } catch { /* ignore */ }
+  }
+  const origin = req.headers.get('origin');
+  if (origin) {
+    try {
+      const url = new URL(origin);
+      return url.hostname.replace(/^www\./, '');
+    } catch { /* ignore */ }
+  }
+  return null;
+}
+
+async function getSiteRules(apiKey: string, callerDomain: string | null, req: Request): Promise<CachedRules | null> {
   const now = Date.now();
-  const cached = rulesCache.get(apiKey);
+  const cacheKey = `${apiKey}::${callerDomain || '_'}`;
+  const cached = rulesCache.get(cacheKey);
   if (cached && (now - cached.fetchedAt) < CACHE_TTL_MS) {
     return cached;
   }
 
   const supabase = getServiceClient();
 
-  const { data: site, error: siteErr } = await supabase
+  // ── Strategy 1: Try profiles.api_key (new universal key) ──
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('user_id, api_key')
+    .eq('api_key', apiKey)
+    .maybeSingle();
+
+  if (profile && callerDomain) {
+    // Find the tracked_site matching this user + caller domain
+    const normalizedDomain = callerDomain.replace(/^www\./, '');
+    const { data: site } = await supabase
+      .from('tracked_sites')
+      .select('id, domain, user_id, current_config')
+      .eq('user_id', profile.user_id)
+      .or(`domain.eq.${normalizedDomain},domain.eq.www.${normalizedDomain}`)
+      .maybeSingle();
+
+    if (site) {
+      return await buildCacheEntry(supabase, site, cacheKey, now);
+    }
+    // Domain not tracked for this user — return empty
+    return null;
+  }
+
+  if (profile && !callerDomain) {
+    // No Referer/Origin — can't route. Return comment.
+    return null;
+  }
+
+  // ── Strategy 2: Legacy fallback — try tracked_sites.api_key ──
+  const { data: legacySite, error: siteErr } = await supabase
     .from('tracked_sites')
     .select('id, domain, user_id, current_config')
     .eq('api_key', apiKey)
     .maybeSingle();
 
-  if (siteErr || !site) return null;
+  if (siteErr || !legacySite) return null;
 
+  return await buildCacheEntry(supabase, legacySite, cacheKey, now);
+}
+
+async function buildCacheEntry(supabase: any, site: any, cacheKey: string, now: number): Promise<CachedRules> {
   const { data: rules } = await supabase
     .from('site_script_rules')
     .select('url_pattern, payload_type, payload_data, is_active')
@@ -85,17 +141,16 @@ async function getSiteRules(apiKey: string): Promise<CachedRules | null> {
     fetchedAt: now,
   };
 
-  rulesCache.set(apiKey, entry);
+  rulesCache.set(cacheKey, entry);
   return entry;
 }
 
 function throttledPingUpdate(siteId: string) {
   const now = Date.now();
   const lastPing = lastPingUpdate.get(siteId) || 0;
-  if (now - lastPing < PING_THROTTLE_MS) return; // skip
+  if (now - lastPing < PING_THROTTLE_MS) return;
 
   lastPingUpdate.set(siteId, now);
-  // Fire-and-forget
   const supabase = getServiceClient();
   supabase
     .from('tracked_sites')
@@ -120,25 +175,28 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 1. Global kill switch (cached 30s)
+    // 1. Global kill switch
     if (!await isGloballyEnabled()) {
       return new Response('// Crawlers.fr: SDK globally disabled', {
         headers: { ...corsHeaders, 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=60' },
       });
     }
 
-    // 2. Get rules (cached 60s)
-    const site = await getSiteRules(apiKey);
+    // 2. Extract caller domain from Referer/Origin
+    const callerDomain = extractDomain(req);
+
+    // 3. Get rules (cached 60s)
+    const site = await getSiteRules(apiKey, callerDomain, req);
     if (!site) {
-      return new Response('// Crawlers.fr: invalid API key', {
+      return new Response('// Crawlers.fr: no matching site for this key/domain', {
         headers: { ...corsHeaders, 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=300' },
       });
     }
 
-    // 3. Throttled ping update (max 1 write per 5 min)
+    // 4. Throttled ping
     throttledPingUpdate(site.siteId);
 
-    // 4. Build script
+    // 5. Build script
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const sdkStatusUrl = `${supabaseUrl}/functions/v1/sdk-status`;
     const telemetryUrl = `${supabaseUrl}/functions/v1/sdk-status`;
@@ -150,7 +208,7 @@ Deno.serve(async (req) => {
     })));
 
     const script = `/**
- * Crawlers.fr — Dynamic Multi-Page Router v1.1
+ * Crawlers.fr — Dynamic Multi-Page Router v2.0
  * Domain: ${site.domain}
  * Rules: ${site.rules.length}
  * Generated: ${new Date().toISOString()}
