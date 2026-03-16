@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -18,6 +18,7 @@ import { SilentErrorsRegistry } from './SilentErrorsRegistry';
 import { AlgoTrainingDashboard } from './AlgoTrainingDashboard';
 import { ScannedUrlsRegistry } from './ScannedUrlsRegistry';
 import { FunctionsManagement } from './FunctionsManagement';
+import { FinancesDashboard } from './FinancesDashboard';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ const adminTranslations = {
   fr: {
     monitoring: 'Monitoring',
     analytics: 'Statistiques',
+    finances: 'Finances',
     intelligence: 'Intelligence',
     silentErrors: 'Erreurs',
     scannedUrls: 'URLs scannées',
@@ -52,6 +54,7 @@ const adminTranslations = {
   en: {
     monitoring: 'Monitoring',
     analytics: 'Analytics',
+    finances: 'Finances',
     intelligence: 'Intelligence',
     silentErrors: 'Errors',
     scannedUrls: 'Scanned URLs',
@@ -74,6 +77,7 @@ const adminTranslations = {
   es: {
     monitoring: 'Monitoreo',
     analytics: 'Estadísticas',
+    finances: 'Finanzas',
     intelligence: 'Inteligencia',
     silentErrors: 'Errores',
     scannedUrls: 'URLs escaneadas',
@@ -157,6 +161,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       label: t.monitoring,
       items: [
         { id: 'analytics', label: t.analytics, icon: BarChart3, group: 'monitoring' },
+        { id: 'finances', label: t.finances, icon: Wallet, group: 'monitoring' },
         { id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring' },
         { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring' },
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
@@ -196,6 +201,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
 
     switch (activeTab) {
       case 'analytics': return <AnalyticsDashboard />;
+      case 'finances': return <FinancesDashboard />;
       case 'intelligence': return <IntelligenceHub />;
       case 'silent-errors': return <SilentErrorsRegistry />;
       case 'ci-tests': return <CiTestsDashboard />;
