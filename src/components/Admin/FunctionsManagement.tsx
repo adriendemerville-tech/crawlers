@@ -303,7 +303,7 @@ export function FunctionsManagement() {
           {Object.values(FUNCTION_CATEGORIES).flat().length} fonctions
         </Badge>
         {isAuditor && (
-          <Badge variant="outline" className="text-[10px] border-primary/40 text-primary ml-auto">
+          <Badge variant="outline" className="text-[10px] border-amber-500 bg-transparent text-amber-500 ml-auto shrink-0">
             <Eye className="h-3 w-3 mr-1" />
             Mode Auditeur — Vue transparence
           </Badge>
