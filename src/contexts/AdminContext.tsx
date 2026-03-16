@@ -5,6 +5,7 @@ interface AdminContextType {
   canSeeDocs: boolean;
   canSeeAlgos: boolean;
   docsHiddenForViewers: boolean;
+  isAuditor: boolean;
 }
 
 const AdminContext = createContext<AdminContextType>({ 
@@ -12,6 +13,7 @@ const AdminContext = createContext<AdminContextType>({
   canSeeDocs: true, 
   canSeeAlgos: true,
   docsHiddenForViewers: false,
+  isAuditor: false,
 });
 
 export const AdminProvider = AdminContext.Provider;
