@@ -590,9 +590,9 @@ function checkDataQuality(keywords: { keyword: string; volume: number; difficult
 }
 
 async function fetchKeywordData(
-  seedKeywords: string[], locationCode: number
+  seedKeywords: string[], locationCode: number, languageCode: string = 'fr'
 ): Promise<{ keyword: string; volume: number; difficulty: number }[]> {
-  console.log(`📊 Récupération mots-clés pour location: ${locationCode}`);
+  console.log(`📊 Récupération mots-clés pour location: ${locationCode}, lang: ${languageCode}`);
   const allKeywords: { keyword: string; volume: number; difficulty: number }[] = [];
   const seenLower = new Set<string>();
   
