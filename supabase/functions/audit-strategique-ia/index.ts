@@ -1369,6 +1369,7 @@ function verifyFounderGeo(linkedinSnippet: string, targetLocation: string): { mi
 }
 
 async function searchFounderProfile(domain: string, targetLocation: string = 'france'): Promise<FounderInfo> {
+  const locInfo = KNOWN_LOCATIONS[targetLocation.toLowerCase()] || KNOWN_LOCATIONS['france'];
   const result: FounderInfo = { name: null, profileUrl: null, platform: null, isInfluencer: false, geoMismatch: false, detectedCountry: null };
   if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) return result;
   
