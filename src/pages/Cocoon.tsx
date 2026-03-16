@@ -686,6 +686,20 @@ export default function Cocoon() {
               />
             )}
 
+            {/* Particle Legend — bottom-left */}
+            {nodes.length > 0 && (
+              <div className="absolute bottom-3 left-3 z-20 flex flex-wrap items-center gap-x-4 gap-y-1 backdrop-blur-md bg-black/50 border border-white/10 rounded-lg px-3 py-2">
+                {Object.entries(cocoonTheme.particleColors).map(([key, color]) => (
+                  <div key={key} className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }} />
+                    <span className="text-[10px] text-white/70 capitalize">{
+                      { authority: "Autorité", semantic: "Sémantique", traffic: "Trafic", hierarchy: "Hiérarchie" }[key] || key
+                    }</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Contrast Slider — right side */}
             {nodes.length > 0 && (
               <div className="absolute top-3 right-3 z-20 flex flex-col items-center gap-2 backdrop-blur-md bg-black/50 border border-white/10 rounded-lg px-2 py-3">
