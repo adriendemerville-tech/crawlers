@@ -642,7 +642,7 @@ async function fetchKeywordData(
         method: 'POST',
         headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify([{
-          keywords: seedKeywords, location_code: locationCode, language_code: 'fr',
+          keywords: seedKeywords, location_code: locationCode, language_code: languageCode,
         }]),
       });
 
