@@ -216,10 +216,18 @@ export function TechnicalNarrativeSection({ result }: TechnicalNarrativeSectionP
   ];
   const bloc2Score = Math.round((bloc2Items.filter(Boolean).length / bloc2Items.length) * 100);
 
+  // Detect homepage: path is "/" or empty
+  const isHomepage = (() => {
+    try {
+      const urlObj = new URL(result.url.startsWith('http') ? result.url : `https://${result.url}`);
+      return urlObj.pathname === '/' || urlObj.pathname === '';
+    } catch { return false; }
+  })();
+
   const wordCountOk = scores.semantic.wordCount >= 500;
   const densityOk = (contentDensity?.ratio ?? 0) >= 15;
   const hasLinks = (linkProfile?.total ?? 0) > 0;
-  const bloc3Items = [wordCountOk, densityOk, hasLinks];
+  const bloc3Items = isHomepage ? [wordCountOk, hasLinks] : [wordCountOk, densityOk, hasLinks];
   const bloc3Score = Math.round((bloc3Items.filter(Boolean).length / bloc3Items.length) * 100);
 
   return (
@@ -379,7 +387,7 @@ export function TechnicalNarrativeSection({ result }: TechnicalNarrativeSectionP
           </CardHeader>
           <CardContent className="space-y-0 pt-2">
             <StatusRow icon={<FileText className="h-3.5 w-3.5" />} label={t.wordCount} ok={wordCountOk} detail={`~${scores.semantic.wordCount} ${t.words}`} />
-            <StatusRow icon={<BarChart3 className="h-3.5 w-3.5" />} label={t.textRatio} ok={densityOk} detail={contentDensity ? `${contentDensity.ratio}%` : undefined} />
+            {!isHomepage && <StatusRow icon={<BarChart3 className="h-3.5 w-3.5" />} label={t.textRatio} ok={densityOk} detail={contentDensity ? `${contentDensity.ratio}%` : undefined} />}
             <StatusRow icon={<Link2 className="h-3.5 w-3.5" />} label={t.linkProfile} ok={hasLinks} detail={linkProfile ? `${linkProfile.internal} ${t.internal} / ${linkProfile.external} ${t.external}` : undefined} />
             
             <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/20 p-3 mt-3">
