@@ -261,7 +261,23 @@ export function ScriptKillSwitches() {
 
         <Separator />
 
-        {/* Level 3: Blocked Domains */}
+        {/* Hide Home Lead Magnets */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <Label className="text-sm font-medium">Masquer Lead Magnets (Home)</Label>
+            <p className="text-xs text-muted-foreground">
+              Masque les onglets de fonctions sur la Home. Conserve le champ URL et transforme le CTA en « Démarrer Audit Expert ».
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={hideHomeLeadmagnet ? 'default' : 'secondary'} className={`text-[10px] ${hideHomeLeadmagnet ? 'bg-amber-500 hover:bg-amber-600' : ''}`}>
+              {hideHomeLeadmagnet ? 'Masqué' : 'Visible'}
+            </Badge>
+            <Switch checked={hideHomeLeadmagnet} onCheckedChange={handleToggleHideLeadmagnet} disabled={saving} />
+          </div>
+        </div>
+
+        <Separator />
         <div>
           <Label className="text-sm font-medium">{t.level3}</Label>
           <p className="text-xs text-muted-foreground mb-2">{t.level3Desc}</p>
