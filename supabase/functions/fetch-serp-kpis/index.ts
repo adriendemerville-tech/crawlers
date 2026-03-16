@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify([{
         target: domain,
-        language_code: 'fr',
-        location_code: 2250, // France
+        language_code: effectiveLanguageCode,
+        location_code: effectiveLocationCode,
         limit: 1000,
         order_by: ['ranked_serp_element.serp_item.rank_absolute,asc'],
       }]),
