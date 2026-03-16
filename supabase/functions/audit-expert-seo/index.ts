@@ -328,198 +328,226 @@ function performSelfAudit(doc: HTMLDocument, htmlLength: number): SelfAuditResul
   };
 }
 
-// ==================== SMART FETCHER WITH JS FALLBACK ====================
+// ==================== SMART FETCHER WITH CASCADING WAF BYPASS ====================
+
+/**
+ * Cascade: stealthFetch → Browserless → Fly.io Playwright → Firecrawl
+ * Each layer handles a different level of anti-bot protection.
+ */
+
+async function tryBrowserless(url: string): Promise<string | null> {
+  const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY') || Deno.env.get('BROWSERLESS_API_KEY');
+  if (!RENDERING_KEY) return null;
+
+  try {
+    console.log('[SmartFetch] 🔄 Tentative Browserless.io...');
+    const renderUrl = `https://production-sfo.browserless.io/content?token=${RENDERING_KEY}`;
+    const response = await fetch(renderUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        rejectResourceTypes: ['image', 'media', 'font'],
+        gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
+        waitForSelector: { selector: 'body', timeout: 5000 },
+      }),
+      signal: AbortSignal.timeout(35000),
+    });
+
+    if (response.ok) {
+      const html = await response.text();
+      if (html.length > 500) {
+        console.log(`[SmartFetch] ✅ Browserless OK (${html.length} chars)`);
+        return html;
+      }
+    } else {
+      console.log(`[SmartFetch] ⚠️ Browserless erreur ${response.status}`);
+    }
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.log(`[SmartFetch] ⚠️ Browserless exception: ${err.message}`);
+  }
+  return null;
+}
+
+async function tryFlyPlaywright(url: string): Promise<string | null> {
+  const flyUrl = Deno.env.get('FLY_RENDERER_URL');
+  const flySecret = Deno.env.get('FLY_RENDERER_SECRET');
+  if (!flyUrl) return null;
+
+  try {
+    console.log(`[SmartFetch] 🔄 Tentative Fly.io Playwright...`);
+    const response = await fetch(`${flyUrl}/render`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(flySecret ? { 'x-secret': flySecret } : {}),
+      },
+      body: JSON.stringify({ url, timeout: 30000, waitFor: 3000 }),
+      signal: AbortSignal.timeout(40000),
+    });
+
+    if (response.ok) {
+      const html = await response.text();
+      if (html.length > 500) {
+        console.log(`[SmartFetch] ✅ Fly.io Playwright OK (${html.length} chars)`);
+        return html;
+      }
+    } else {
+      console.log(`[SmartFetch] ⚠️ Fly.io erreur ${response.status}`);
+    }
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.log(`[SmartFetch] ⚠️ Fly.io exception: ${err.message}`);
+  }
+  return null;
+}
+
+async function tryFirecrawl(url: string): Promise<string | null> {
+  const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
+  if (!apiKey) return null;
+
+  try {
+    console.log(`[SmartFetch] 🔄 Tentative Firecrawl (dernier recours)...`);
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['html'],
+        onlyMainContent: false,
+        waitFor: 3000,
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const html = data?.data?.html || data?.html || '';
+      if (html.length > 500) {
+        console.log(`[SmartFetch] ✅ Firecrawl OK (${html.length} chars)`);
+        return html;
+      }
+    } else {
+      console.log(`[SmartFetch] ⚠️ Firecrawl erreur ${response.status}`);
+    }
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.log(`[SmartFetch] ⚠️ Firecrawl exception: ${err.message}`);
+  }
+  return null;
+}
 
 async function smartFetch(url: string): Promise<SmartFetchResult> {
   assertSafeUrl(url);
-  console.log('[SmartFetch] Tentative 1: Fetch statique standard...');
   
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  // ── ÉTAPE 1 : stealthFetch (gratuit, UA rotation + anti-détection) ──
+  console.log('[SmartFetch] Étape 1: stealthFetch (UA rotation)...');
+  let html = '';
+  let fetchStatus = 0;
   
   try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CrawlersFR/2.0',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-      }
+    const { response } = await stealthFetch(url, {
+      timeout: 15000,
+      maxRetries: 2,
     });
+    fetchStatus = response.status;
     
-    clearTimeout(timeoutId);
-    
-    // Accept 403 responses if they contain HTML content (WAF/Cloudflare protection)
-    if (!response.ok && response.status !== 403) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    
-    const html = await response.text();
-    
-    // For 403 with very little content, it's a real block — try Browserless directly
-    if (response.status === 403 && html.length < 500) {
-      console.log(`[SmartFetch] 403 avec contenu insuffisant (${html.length} chars), tentative Browserless directe...`);
-      
-      const RENDERING_KEY_403 = Deno.env.get('RENDERING_API_KEY') || Deno.env.get('BROWSERLESS_API_KEY');
-      
-      if (RENDERING_KEY_403) {
-        try {
-          const renderUrl403 = `https://production-sfo.browserless.io/content?token=${RENDERING_KEY_403}`;
-          const renderController403 = new AbortController();
-          const renderTimeout403 = setTimeout(() => renderController403.abort(), 30000);
-          
-          const renderResponse403 = await fetch(renderUrl403, {
-            method: 'POST',
-            signal: renderController403.signal,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              url: url,
-              rejectResourceTypes: ['image', 'media', 'font'],
-              gotoOptions: { waitUntil: 'networkidle2', timeout: 25000 },
-              waitForSelector: { selector: 'body', timeout: 5000 },
-            })
-          });
-          
-          clearTimeout(renderTimeout403);
-          
-          if (renderResponse403.ok) {
-            const renderedHtml403 = await renderResponse403.text();
-            if (renderedHtml403.length > 500) {
-              console.log(`[SmartFetch] ✅ Browserless 403-fallback réussi (${renderedHtml403.length} chars)`);
-              const renderedDoc403 = new DOMParser().parseFromString(renderedHtml403, 'text/html');
-              if (renderedDoc403) {
-                const renderedAudit403 = performSelfAudit(renderedDoc403, renderedHtml403.length);
-                return {
-                  html: renderedHtml403,
-                  renderingMode: 'dynamic_rendered' as const,
-                  selfAudit: { ...renderedAudit403, reliabilityScore: Math.max(renderedAudit403.reliabilityScore, 0.85) }
-                };
-              }
-            }
-          } else {
-            const errText = await renderResponse403.text().catch(() => '');
-            console.log(`[SmartFetch] ⚠️ Browserless 403-fallback erreur ${renderResponse403.status}: ${errText.slice(0, 200)}`);
-          }
-        } catch (e403: unknown) {
-          const err403 = e403 as Error;
-          console.log(`[SmartFetch] ⚠️ Browserless 403-fallback exception: ${err403.message}`);
-        }
-      } else {
-        console.log('[SmartFetch] ⚠️ RENDERING_API_KEY non configurée — impossible de contourner le 403');
+    if (response.ok || response.status === 403) {
+      html = await response.text();
+      if (response.status === 403 && html.length < 500) {
+        console.log(`[SmartFetch] 403 avec contenu insuffisant (${html.length} chars)`);
+        html = '';  // Force fallback
+      } else if (response.ok) {
+        console.log(`[SmartFetch] stealthFetch OK (${html.length} chars, status ${fetchStatus})`);
       }
-      
-      throw new Error(`HTTP 403 (blocked)`);
+    } else {
+      console.log(`[SmartFetch] stealthFetch HTTP ${fetchStatus}`);
     }
-    
-    if (response.status === 403) {
-      console.log(`[SmartFetch] 403 accepté avec ${html.length} chars de contenu`);
-    }
-    const htmlLength = html.length;
-    
-    // Parse DOM for self-audit
+  } catch (e: unknown) {
+    const err = e as Error;
+    console.log(`[SmartFetch] stealthFetch échoué: ${err.message}`);
+  }
+  
+  // Check if stealthFetch result is usable
+  let needsFallback = !html || html.length < 500;
+  let usedRendering = false;
+  
+  if (!needsFallback) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    if (!doc) {
-      throw new Error('Failed to parse HTML');
-    }
-    
-    const selfAudit = performSelfAudit(doc, htmlLength);
-    
-    // If self-audit fails, try JavaScript rendering fallback via Browserless.io
-    if (!selfAudit.isReliable) {
-      console.log('[SmartFetch] Auto-contrôle échoué:', selfAudit.reason);
-      console.log('[SmartFetch] Tentative 2: Fallback rendu JavaScript via Browserless.io...');
-      
-      const RENDERING_KEY = Deno.env.get('RENDERING_API_KEY') || Deno.env.get('BROWSERLESS_API_KEY');
-      
-      if (RENDERING_KEY) {
-        try {
-          // Browserless.io /content endpoint for full HTML rendering
-          const renderUrl = `https://production-sfo.browserless.io/content?token=${RENDERING_KEY}`;
-          
-          const renderController = new AbortController();
-          const renderTimeoutId = setTimeout(() => renderController.abort(), 30000);
-          
-          const renderResponse = await fetch(renderUrl, {
-            method: 'POST',
-            signal: renderController.signal,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              url: url,
-              rejectResourceTypes: ['image', 'media', 'font'],
-              gotoOptions: { 
-                waitUntil: 'networkidle2',
-                timeout: 25000
-              },
-              waitForSelector: { selector: 'body', timeout: 5000 },
-            })
-          });
-          
-          clearTimeout(renderTimeoutId);
-          
-          if (renderResponse.ok) {
-            const renderedHtml = await renderResponse.text();
-            const renderedDoc = new DOMParser().parseFromString(renderedHtml, 'text/html');
-            
-            if (renderedDoc) {
-              const renderedAudit = performSelfAudit(renderedDoc, renderedHtml.length);
-              
-              if (renderedAudit.isReliable) {
-                console.log('[SmartFetch] ✅ Fallback Browserless.io réussi! Contenu rendu récupéré.');
-                return {
-                  html: renderedHtml,
-                  renderingMode: 'dynamic_rendered',
-                  selfAudit: { ...renderedAudit, reliabilityScore: 0.95 }
-                };
-              } else {
-                console.log('[SmartFetch] ⚠️ Contenu rendu toujours insuffisant après Browserless');
-              }
-            }
-          } else {
-            // Gestion des erreurs HTTP Browserless (403, 429, timeout, etc.)
-            const errorStatus = renderResponse.status;
-            const errorText = await renderResponse.text().catch(() => 'Unknown error');
-            console.log(`[SmartFetch] ⚠️ Browserless.io erreur HTTP ${errorStatus}:`, errorText);
-            
-            if (errorStatus === 403) {
-              console.log('[SmartFetch] ⚠️ Browserless.io: Accès refusé (clé invalide ou quota dépassé)');
-            } else if (errorStatus === 429) {
-              console.log('[SmartFetch] ⚠️ Browserless.io: Rate limit atteint');
-            } else if (errorStatus === 504 || errorStatus === 524) {
-              console.log('[SmartFetch] ⚠️ Browserless.io: Timeout du service');
-            }
-          }
-        } catch (renderError: unknown) {
-          const error = renderError as Error;
-          if (error.name === 'AbortError') {
-            console.log('[SmartFetch] ⚠️ Browserless.io: Timeout local (30s dépassées)');
-          } else {
-            console.log('[SmartFetch] ⚠️ Erreur fallback Browserless.io:', error.message || renderError);
-          }
-        }
-      } else {
-        console.log('[SmartFetch] ⚠️ RENDERING_API_KEY non configurée dans les secrets - fallback JS impossible');
-        console.log('[SmartFetch] 💡 Configurez la clé API Browserless.io (secret RENDERING_API_KEY) pour activer le rendu des SPA');
+    if (doc) {
+      const selfAudit = performSelfAudit(doc, html.length);
+      if (selfAudit.isReliable) {
+        console.log('[SmartFetch] ✅ stealthFetch fiable — pas de fallback nécessaire');
+        return { html, renderingMode: 'static_fast', selfAudit };
       }
-      
-      // Return original with degraded reliability
+      console.log('[SmartFetch] stealthFetch non fiable:', selfAudit.reason);
+    }
+    needsFallback = true;
+  }
+  
+  // ── ÉTAPE 2 : Browserless.io (headless Chrome — résout les challenges JS) ──
+  const browserlessHtml = await tryBrowserless(url);
+  if (browserlessHtml) {
+    const doc = new DOMParser().parseFromString(browserlessHtml, 'text/html');
+    if (doc) {
+      const selfAudit = performSelfAudit(doc, browserlessHtml.length);
+      if (selfAudit.isReliable || browserlessHtml.length > (html?.length || 0)) {
+        return {
+          html: browserlessHtml,
+          renderingMode: 'dynamic_rendered',
+          selfAudit: { ...selfAudit, reliabilityScore: Math.max(selfAudit.reliabilityScore, 0.85) },
+        };
+      }
+    }
+  }
+  
+  // ── ÉTAPE 3 : Fly.io Playwright (fallback headless si Browserless échoue) ──
+  const flyHtml = await tryFlyPlaywright(url);
+  if (flyHtml) {
+    const doc = new DOMParser().parseFromString(flyHtml, 'text/html');
+    if (doc) {
+      const selfAudit = performSelfAudit(doc, flyHtml.length);
+      if (selfAudit.isReliable || flyHtml.length > (html?.length || 0)) {
+        return {
+          html: flyHtml,
+          renderingMode: 'dynamic_rendered',
+          selfAudit: { ...selfAudit, reliabilityScore: Math.max(selfAudit.reliabilityScore, 0.80) },
+        };
+      }
+    }
+  }
+  
+  // ── ÉTAPE 4 : Firecrawl (API payante, dernier recours anti-WAF) ──
+  const firecrawlHtml = await tryFirecrawl(url);
+  if (firecrawlHtml) {
+    const doc = new DOMParser().parseFromString(firecrawlHtml, 'text/html');
+    if (doc) {
+      const selfAudit = performSelfAudit(doc, firecrawlHtml.length);
       return {
-        html,
-        renderingMode: 'static_fast',
-        selfAudit: { ...selfAudit, reliabilityScore: Math.max(selfAudit.reliabilityScore, 0.5) }
+        html: firecrawlHtml,
+        renderingMode: 'dynamic_rendered',
+        selfAudit: { ...selfAudit, reliabilityScore: Math.max(selfAudit.reliabilityScore, 0.75) },
       };
     }
-    
-    console.log('[SmartFetch] ✅ Fetch statique réussi (fiabilité: 100%)');
+  }
+  
+  // ── Dernier recours : retourner ce qu'on a, même dégradé ──
+  if (html && html.length > 0) {
+    console.log('[SmartFetch] ⚠️ Tous les fallbacks ont échoué — utilisation du HTML dégradé');
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const selfAudit = doc ? performSelfAudit(doc, html.length) : { isReliable: false, reason: 'No DOM', reliabilityScore: 0.3 };
     return {
       html,
       renderingMode: 'static_fast',
-      selfAudit
+      selfAudit: { ...selfAudit, reliabilityScore: Math.max(selfAudit.reliabilityScore, 0.3) },
     };
-    
-  } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
   }
+  
+  throw new Error(`Impossible de récupérer le contenu de ${url} (toutes les méthodes ont échoué)`);
 }
 
 // ==================== DOM-BASED HTML ANALYSIS ====================
