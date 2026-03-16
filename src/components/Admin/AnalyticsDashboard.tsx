@@ -390,6 +390,32 @@ export function AnalyticsDashboard() {
         byApiService,
       });
 
+      // ─── Compute Total Platform Cost (LLM + all paid APIs) ───
+      const API_COST_ESTIMATES: Record<string, number> = {
+        dataforseo: 0.01,
+        browserless: 0.008,
+        firecrawl: 0.005,
+        'fly-playwright': 0.0001,
+        openrouter: 0,
+      };
+      let totalPaidApiCost = 0;
+      paidApiEvents.forEach(e => {
+        const data = e.event_data as Record<string, unknown> | null;
+        if (data) {
+          const service = (data.api_service as string) || 'unknown';
+          totalPaidApiCost += API_COST_ESTIMATES[service] || 0.005;
+        }
+      });
+      const grandTotalCost = totalEstimatedCost + flyEstimatedCost + totalPaidApiCost;
+      setTotalPlatformCost(grandTotalCost);
+
+      // ─── Count active users (distinct user_ids in events, excluding admins) ───
+      const activeUserIds = new Set<string>();
+      events.forEach(e => {
+        if (e.user_id) activeUserIds.add(e.user_id);
+      });
+      setActiveUsersCount(activeUserIds.size);
+
       // Calculate business metrics: paying subscribers, credits purchased, MRR
       try {
         const { data: payingProfiles } = await supabase
@@ -426,13 +452,6 @@ export function AnalyticsDashboard() {
               costPerUser[e.user_id] = (costPerUser[e.user_id] || 0) + cost;
             }
           });
-          const API_COST_ESTIMATES: Record<string, number> = {
-            dataforseo: 0.01,
-            browserless: 0.008,
-            firecrawl: 0.005,
-            'fly-playwright': 0.0001,
-            openrouter: 0,
-          };
           paidApiEvents.forEach(e => {
             const data = e.event_data as Record<string, unknown> | null;
             if (data && e.user_id && payingUserIds.has(e.user_id)) {
