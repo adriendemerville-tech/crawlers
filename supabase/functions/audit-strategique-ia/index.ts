@@ -871,8 +871,8 @@ async function findLocalCompetitor(
       method: 'POST',
       headers: { 'Authorization': getAuthHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify([{
-        keyword: localQuery, location_code: locationCode, language_code: 'fr',
-        depth: 20, se_domain: 'google.fr',
+        keyword: localQuery, location_code: locationCode, language_code: languageCode,
+        depth: 20, se_domain: seDomain,
       }]),
     });
 
