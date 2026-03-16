@@ -8,6 +8,7 @@ import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Toggle } from '@/components/ui/toggle';
+import { CrawlPagesStatsCard } from './CrawlPagesStatsCard';
 
 interface AnalyzedUrl {
   id: string;
@@ -152,6 +153,9 @@ export function ScannedUrlsRegistry() {
 
   return (
     <div className="space-y-4">
+      {/* Crawl pages stats */}
+      <CrawlPagesStatsCard />
+
       {/* KPI cards */}
       <div className="grid grid-cols-3 gap-4">
         <Card>

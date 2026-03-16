@@ -9,6 +9,7 @@ import {
   Globe, FileText, DollarSign, TrendingUp, Square, Bug, RotateCcw,
   Loader2, RefreshCw, Clock, CheckCircle2, AlertTriangle, XCircle
 } from 'lucide-react';
+import { CrawlPagesStatsCard } from './CrawlPagesStatsCard';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -195,7 +196,10 @@ export function CrawlManagement() {
             </div>
           </CardContent>
         </Card>
-      </div>
+    </div>
+
+      {/* Pages per crawl stats */}
+      <CrawlPagesStatsCard />
 
       {/* Crawls Table */}
       <Card>
