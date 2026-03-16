@@ -190,6 +190,7 @@ export default function Cocoon() {
   const [isLoading, setIsLoading] = useState(false);
   const [is3DMode, setIs3DMode] = useState(true);
   const [graphContrast, setGraphContrast] = useState(100);
+  const [colorIntensity, setColorIntensity] = useState(5);
   const [isComputing, setIsComputing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [showUpsell, setShowUpsell] = useState(false);
@@ -666,6 +667,7 @@ export default function Cocoon() {
                 showClusters={cocoonFilters.showAllClusters}
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
                 isDayMode={false}
+                colorIntensity={colorIntensity}
               />
             ) : (
               <CocoonForceGraph
@@ -700,22 +702,44 @@ export default function Cocoon() {
               </div>
             )}
 
-            {/* Contrast Slider — right side */}
+            {/* Controls — right side */}
             {nodes.length > 0 && (
-              <div className="absolute top-3 right-3 z-20 flex flex-col items-center gap-2 backdrop-blur-md bg-black/50 border border-white/10 rounded-lg px-2 py-3">
-                <SlidersHorizontal className="w-3 h-3 text-white/40" />
-                <div className="h-24">
-                  <Slider
-                    orientation="vertical"
-                    min={50}
-                    max={200}
-                    step={5}
-                    value={[graphContrast]}
-                    onValueChange={([v]) => setGraphContrast(v)}
-                    className="h-full [&_[data-orientation=vertical]]:w-1.5"
-                  />
+              <div className="absolute top-3 right-3 z-20 flex flex-col items-center gap-4 backdrop-blur-md bg-black/50 border border-white/10 rounded-lg px-2 py-3">
+                {/* Contrast Slider */}
+                <div className="flex flex-col items-center gap-1.5">
+                  <SlidersHorizontal className="w-3 h-3 text-white/40" />
+                  <div className="h-20">
+                    <Slider
+                      orientation="vertical"
+                      min={50}
+                      max={200}
+                      step={5}
+                      value={[graphContrast]}
+                      onValueChange={([v]) => setGraphContrast(v)}
+                      className="h-full [&_[data-orientation=vertical]]:w-1.5"
+                    />
+                  </div>
+                  <span className="text-[9px] text-white/30 font-mono">{graphContrast}%</span>
                 </div>
-                <span className="text-[9px] text-white/30 font-mono">{graphContrast}%</span>
+
+                <div className="w-full h-px bg-white/10" />
+
+                {/* Color Intensity Slider */}
+                <div className="flex flex-col items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-amber-400/70" />
+                  <div className="h-20">
+                    <Slider
+                      orientation="vertical"
+                      min={0}
+                      max={10}
+                      step={0.1}
+                      value={[colorIntensity]}
+                      onValueChange={([v]) => setColorIntensity(v)}
+                      className="h-full [&_[data-orientation=vertical]]:w-1.5"
+                    />
+                  </div>
+                  <span className="text-[9px] text-white/30 font-mono">{colorIntensity.toFixed(1)}</span>
+                </div>
               </div>
             )}
 

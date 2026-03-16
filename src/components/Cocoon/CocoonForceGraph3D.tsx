@@ -100,6 +100,7 @@ interface CocoonForceGraph3DProps {
   showClusters?: boolean;
   visibleJuiceTypes?: Set<string>;
   isDayMode?: boolean;
+  colorIntensity?: number;
 }
 
 // ─── 3D Force Simulation (manual spring-charge model) ───
@@ -217,6 +218,7 @@ function NodeSphere({
   isXRayMode,
   customNodeColors,
   spreadScale,
+  colorIntensity,
   onPointerOver,
   onPointerOut,
   onClick,
@@ -227,6 +229,7 @@ function NodeSphere({
   isXRayMode: boolean;
   customNodeColors: Record<string, string>;
   spreadScale: number;
+  colorIntensity: number;
   onPointerOver: () => void;
   onPointerOut: () => void;
   onClick: () => void;
@@ -239,7 +242,9 @@ function NodeSphere({
     ? isXRayMode ? "#1261d4" : (customNodeColors.homepage || "#ffc83c")
     : activeColors[node.pageType] || activeColors.unknown;
 
-  const emissiveIntensity = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.4 : 0.3;
+  const intensityMul = colorIntensity / 5; // 5 = default, range 0-10
+  const baseEmissive = isSelected ? 1.5 : isHovered ? 1.0 : node.isHome ? 0.4 : 0.3;
+  const emissiveIntensity = baseEmissive * intensityMul;
   const scale = isSelected ? 1.3 : isHovered ? 1.15 : 1;
   const isGhost = isXRayMode && node.traffic < 10;
 
@@ -697,6 +702,7 @@ function SceneContent({
   onNodeUnhover,
   rawNodes,
   isDayMode,
+  colorIntensity,
 }: {
   graphNodes: GraphNode3D[];
   graphLinks: GraphLink3D[];
@@ -715,6 +721,7 @@ function SceneContent({
   onNodeUnhover: () => void;
   rawNodes: SemanticNode[];
   isDayMode: boolean;
+  colorIntensity: number;
 }) {
   const hoveredNode = hoveredNodeId ? nodeMap.get(hoveredNodeId) : null;
 
@@ -757,7 +764,8 @@ function SceneContent({
           isHovered={node.id === hoveredNodeId}
           isXRayMode={isXRayMode}
           customNodeColors={customNodeColors}
-          spreadScale={spreadScale}
+           spreadScale={spreadScale}
+           colorIntensity={colorIntensity}
           onPointerOver={() => onNodeHover(node.id)}
           onPointerOut={onNodeUnhover}
           onClick={() => {
@@ -806,6 +814,7 @@ export function CocoonForceGraph3D({
   showClusters = true,
   visibleJuiceTypes,
   isDayMode = false,
+  colorIntensity = 5,
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [spreadScale, setSpreadScale] = useState(1);
@@ -1003,6 +1012,7 @@ export function CocoonForceGraph3D({
           onNodeUnhover={() => setHoveredNodeId(null)}
           rawNodes={nodes}
           isDayMode={isDayMode}
+          colorIntensity={colorIntensity}
         />
       </Canvas>
 
