@@ -696,6 +696,7 @@ function SceneContent({
   onNodeHover,
   onNodeUnhover,
   rawNodes,
+  isDayMode,
 }: {
   graphNodes: GraphNode3D[];
   graphLinks: GraphLink3D[];
