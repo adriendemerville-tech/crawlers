@@ -2494,7 +2494,7 @@ Deno.serve(async (req) => {
     // ═══ ÉTAPE 2: LLM ANALYSIS ═══
     console.log(`\n🤖 ÉTAPE 2: Analyse LLM (${((Date.now() - startTime) / 1000).toFixed(1)}s elapsed)...`);
 
-    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode);
+    let userPrompt = buildUserPrompt(url, domain, effectiveToolsData, marketData, pageContentContext, eeatSignals, founderInfo, rankingOverview, isContentMode, facebookPageInfo);
 
     // Inject language instruction
     userPrompt = `🌐 LANGUE DE RÉDACTION: ${langLabel}. Rédige TOUS les textes, analyses, recommandations et descriptions en ${langLabel}. Les mots-clés SEO restent dans la langue naturelle du site.\n` + userPrompt;
