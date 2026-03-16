@@ -111,7 +111,7 @@ const PolitiqueConfidentialite = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '3. Sous-traitants', '3. Subcontractors', '3. Subcontratistas')}
+                {t3(language, '4. Sous-traitants', '4. Subcontractors', '4. Subcontratistas')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language, 'Nous faisons appel aux sous-traitants suivants :', 'We use the following subcontractors:', 'Utilizamos los siguientes subcontratistas:')}
@@ -119,14 +119,14 @@ const PolitiqueConfidentialite = () => {
               <div className="bg-muted/50 rounded-lg p-6 space-y-4">
                 <div>
                   <p className="font-medium text-foreground">Stripe Payments Europe Ltd.</p>
-                  <p className="text-sm text-muted-foreground">{t3(language, 'Traitement des paiements. Les données transmises : email, montant, devise.', 'Payment processing. Data transmitted: email, amount, currency.', 'Procesamiento de pagos. Datos transmitidos: email, monto, divisa.')}</p>
+                  <p className="text-sm text-muted-foreground">{t3(language, 'Traitement des paiements. Données transmises : email, montant, devise. Certifié PCI-DSS niveau 1.', 'Payment processing. Data transmitted: email, amount, currency. PCI-DSS Level 1 certified.', 'Procesamiento de pagos. Datos transmitidos: email, monto, divisa. Certificado PCI-DSS nivel 1.')}</p>
                   <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
                     {t3(language, 'Politique de confidentialité Stripe', 'Stripe Privacy Policy', 'Política de privacidad de Stripe')}
                   </a>
                 </div>
                 <div>
                   <p className="font-medium text-foreground">Supabase Inc.</p>
-                  <p className="text-sm text-muted-foreground">{t3(language, 'Hébergement base de données et authentification. Serveurs européens.', 'Database hosting and authentication. European servers.', 'Alojamiento de base de datos y autenticación. Servidores europeos.')}</p>
+                  <p className="text-sm text-muted-foreground">{t3(language, 'Hébergement base de données, authentification, stockage fichiers. Serveurs UE (AWS eu-west-1).', 'Database hosting, authentication, file storage. EU servers (AWS eu-west-1).', 'Alojamiento de base de datos, autenticación, almacenamiento de archivos. Servidores UE (AWS eu-west-1).')}</p>
                   <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
                     {t3(language, 'Politique de confidentialité Supabase', 'Supabase Privacy Policy', 'Política de privacidad de Supabase')}
                   </a>
@@ -135,12 +135,28 @@ const PolitiqueConfidentialite = () => {
                   <p className="font-medium text-foreground">Lovable Technologies</p>
                   <p className="text-sm text-muted-foreground">{t3(language, 'Hébergement de l\'application web.', 'Web application hosting.', 'Alojamiento de la aplicación web.')}</p>
                 </div>
+                <div>
+                  <p className="font-medium text-foreground">OpenAI / OpenRouter</p>
+                  <p className="text-sm text-muted-foreground">{t3(language, 'Génération de recommandations IA. Données transmises : contenu HTML public analysé (aucune donnée personnelle). Aucun entraînement sur les données.', 'AI recommendation generation. Data transmitted: analyzed public HTML content (no personal data). No training on data.', 'Generación de recomendaciones IA. Datos transmitidos: contenido HTML público analizado (sin datos personales). Sin entrenamiento con los datos.')}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Google LLC</p>
+                  <p className="text-sm text-muted-foreground">{t3(language, 'APIs PageSpeed Insights, Search Console et Analytics (GA4). Connexion OAuth optionnelle initiée par l\'utilisateur.', 'PageSpeed Insights, Search Console and Analytics (GA4) APIs. Optional OAuth connection initiated by the user.', 'APIs PageSpeed Insights, Search Console y Analytics (GA4). Conexión OAuth opcional iniciada por el usuario.')}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">DataForSEO</p>
+                  <p className="text-sm text-muted-foreground">{t3(language, 'Données SERP et backlinks. Données transmises : domaines et URLs publics.', 'SERP and backlink data. Data transmitted: public domains and URLs.', 'Datos SERP y backlinks. Datos transmitidos: dominios y URLs públicos.')}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Firecrawl / Fly.io</p>
+                  <p className="text-sm text-muted-foreground">{t3(language, 'Services de crawl et rendu de pages. Données transmises : URLs publiques à analyser.', 'Crawl and page rendering services. Data transmitted: public URLs to analyze.', 'Servicios de crawl y renderizado de páginas. Datos transmitidos: URLs públicas a analizar.')}</p>
+                </div>
               </div>
             </section>
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '4. Cookies', '4. Cookies', '4. Cookies')}
+                {t3(language, '5. Cookies', '5. Cookies', '5. Cookies')}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 {t3(language,
