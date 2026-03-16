@@ -163,12 +163,24 @@ export function TechnicalTab({ fixes, onToggle, onRequestAuth }: TechnicalTabPro
                           </div>
                         </div>
                       </div>
-                      <Switch
-                        checked={fix.enabled}
-                        onCheckedChange={() => onToggle(fix.id)}
-                        disabled={isLocked}
-                        className="data-[state=checked]:bg-violet-600 scale-75"
-                      />
+                      {isFreemiumLocked ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 text-[10px] gap-1 px-2"
+                          onClick={() => onRequestAuth?.()}
+                        >
+                          <Lock className="w-2.5 h-2.5" />
+                          S'inscrire
+                        </Button>
+                      ) : (
+                        <Switch
+                          checked={fix.enabled}
+                          onCheckedChange={() => onToggle(fix.id)}
+                          disabled={isLocked}
+                          className="data-[state=checked]:bg-violet-600 scale-75"
+                        />
+                      )}
                     </div>
                   </motion.div>
                 );
