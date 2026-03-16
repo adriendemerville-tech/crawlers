@@ -16,6 +16,7 @@ export function useAdmin() {
         setIsAdmin(false);
         setIsViewer(false);
         setIsViewerLevel2(false);
+        setIsAuditor(false);
         setLoading(false);
         return;
       }
