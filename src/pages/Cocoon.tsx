@@ -573,7 +573,7 @@ export default function Cocoon() {
               </div>
             ) : is3DMode ? (
               <CocoonForceGraph3D
-                nodes={nodes}
+                nodes={filteredNodes}
                 selectedNodeId={selectedNode?.id || null}
                 onNodeSelect={(node) => {
                   if (nodePickerCallback && node) {
@@ -589,7 +589,8 @@ export default function Cocoon() {
                 nodeColors={cocoonTheme.nodeColors}
                 particleColors={cocoonTheme.particleColors}
                 haloColors={cocoonTheme.haloColors}
-                showClusters={showClusters}
+                showClusters={cocoonFilters.showAllClusters}
+                visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
               />
             ) : (
               <CocoonForceGraph
