@@ -96,6 +96,7 @@ const AUTO_REFRESH_INTERVAL = 60 * 60 * 1000;
 
 export function AnalyticsDashboard() {
   const [isMounted, setIsMounted] = useState(false);
+  const { allEvents: sharedAllEvents, filteredEvents: sharedFilteredEvents, adminUserIds: sharedAdminUserIds, thirtyDaysAgo, isLoading: sharedLoading, isRefreshing: sharedRefreshing, fetchEvents } = useAdminAnalytics();
   const [stats, setStats] = useState<AnalyticsStats>({
     totalVisits: 0,
     signupClicks: 0,
@@ -125,77 +126,22 @@ export function AnalyticsDashboard() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [reliabilityScore, setReliabilityScore] = useState<{ score: number; audits: number; predictions: number } | null>(null);
 
-
-
-  // Initial load
+  // Initial load — trigger shared context fetch
   useEffect(() => {
     setIsMounted(true);
-    fetchAnalytics();
+    fetchEvents();
   }, []);
 
-  // Auto-refresh every hour
+  // Process shared data when it arrives
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      fetchAnalytics(true);
-    }, AUTO_REFRESH_INTERVAL);
+    if (sharedFilteredEvents.length === 0 && sharedLoading) return;
+    processEvents(sharedFilteredEvents, sharedAdminUserIds, thirtyDaysAgo);
+  }, [sharedFilteredEvents, sharedLoading]);
 
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const fetchAnalytics = useCallback(async (isAutoRefresh = false) => {
-    if (isAutoRefresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-    
+  const processEvents = useCallback(async (events: typeof sharedFilteredEvents, adminUserIds: string[], thirtyDaysAgo: string) => {
+    setIsLoading(true);
+    setExcludedUserIds(adminUserIds);
     try {
-      // Récupérer les user_ids des admins à exclure
-      const { data: adminProfiles } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('email', ADMIN_EMAIL);
-      
-      const adminUserIds = adminProfiles?.map(p => p.user_id) || [];
-      setExcludedUserIds(adminUserIds);
-
-      // Limite aux 30 derniers jours pour éviter la surcharge mémoire
-      const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
-      
-      // Fetch ALL events des 30 derniers jours avec pagination (contourne la limite 1000)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let allEvents: Array<{ event_type: string; url: string | null; created_at: string; user_id: string | null; event_data: Record<string, unknown> | null }> = [];
-      const PAGE_SIZE = 1000;
-      let currentPage = 0;
-      while (true) {
-        const { data: rawPage, error: pageError } = await supabase
-          .from('analytics_events')
-          .select('event_type, url, created_at, user_id, event_data')
-          .gte('created_at', thirtyDaysAgo)
-          .order('created_at', { ascending: false })
-          .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
-        
-        if (pageError) throw pageError;
-        if (!rawPage || rawPage.length === 0) break;
-        allEvents = allEvents.concat(rawPage as typeof allEvents);
-        if (rawPage.length < PAGE_SIZE) break;
-        currentPage++;
-      }
-
-      console.log(`📊 Analytics: ${allEvents.length} événements chargés (${currentPage + 1} pages)`);
-
-
-      // Filtrer les événements des admins et des IPs exclues
-      const events = allEvents?.filter(e => {
-        // Exclure les admins
-        if (e.user_id && adminUserIds.includes(e.user_id)) return false;
-        
-        // Exclure les IPs spécifiées (stockées dans event_data)
-        const eventData = e.event_data as Record<string, unknown> | null;
-        if (eventData?.ip && EXCLUDED_IPS.includes(eventData.ip as string)) return false;
-        
-        return true;
-      }) || [];
 
       // Fetch real signup count from profiles (30 days, excluding admins)
       let signupQuery = supabase
