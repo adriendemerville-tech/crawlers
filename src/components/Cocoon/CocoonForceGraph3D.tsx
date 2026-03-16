@@ -960,6 +960,7 @@ export function CocoonForceGraph3D({
           onNodeHover={setHoveredNodeId}
           onNodeUnhover={() => setHoveredNodeId(null)}
           rawNodes={nodes}
+          isDayMode={isDayMode}
         />
       </Canvas>
 
