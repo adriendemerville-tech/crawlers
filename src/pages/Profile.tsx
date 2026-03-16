@@ -134,6 +134,17 @@ export default function Profile() {
     }
   }, [user, loading, navigate]);
 
+  // When auditor session expires, force-redirect away from admin tab
+  useEffect(() => {
+    if (auditorExpired && !isAdmin && !isViewer && !isViewerLevel2) {
+      // Pure auditor whose session expired — kick out of admin
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'admin') {
+        navigate('/profile?tab=tracking', { replace: true });
+      }
+    }
+  }, [auditorExpired, isAdmin, isViewer, isViewerLevel2, navigate]);
+
   const handleLogout = async () => {
     await signOut();
     navigate('/');
