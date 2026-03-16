@@ -1100,7 +1100,21 @@ export function MyTracking() {
                       citationRate: async () => { if (currentSite) await runStreamingAudit(currentSite); },
                       sentiment: async () => { if (currentSite) await runStreamingAudit(currentSite); },
                       semanticAuth: async () => { if (currentSite) await runStreamingAudit(currentSite); },
-                      voiceShare: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                      voiceShare: async () => {
+                        if (!currentSite) return;
+                        const res = await supabase.functions.invoke('calculate-sov', {
+                          body: { tracked_site_id: currentSite.id },
+                        });
+                        if (res.error || res.data?.error) {
+                          toast.error(res.data?.error || 'Erreur lors du calcul du Share of Voice');
+                          return;
+                        }
+                        if (res.data?.sov_score != null) {
+                          toast.success(`${t.voiceShare}: ${res.data.sov_score}%`);
+                          // Refresh stats to reflect new value
+                          if (currentSite) await runStreamingAudit(currentSite);
+                        }
+                      },
                     };
 
                     const isSiteExhausted = currentSite ? refreshExhaustedSites.has(currentSite.id) : false;
