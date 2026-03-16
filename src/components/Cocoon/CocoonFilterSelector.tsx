@@ -48,8 +48,10 @@ const i18n: Record<string, Record<string, string>> = {
   es: { title: 'Filtros', pageTypes: 'Tipos de página', particles: 'Flujos de partículas', clusters: 'Mostrar todos los clústeres' },
 };
 
-export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language }: CocoonFilterSelectorProps) {
+export function CocoonFilterSelector({ nodes, filters, onFiltersChange, language, theme }: CocoonFilterSelectorProps) {
   const t = i18n[language] || i18n.fr;
+  const nodeColors = theme?.nodeColors ?? DEFAULT_THEME.nodeColors;
+  const particleColors = theme?.particleColors ?? DEFAULT_THEME.particleColors;
 
   // Detect present page types from nodes
   const presentPageTypes = useMemo(() => {
