@@ -101,9 +101,6 @@ export function Header() {
   const location = useLocation();
   const t = translations[language];
   
-  // Kill viewers state
-  const [isKilling, setIsKilling] = useState(false);
-  const [showKillConfirm, setShowKillConfirm] = useState(false);
 
   // Hover state for profile dropdown
   const [isProfileOpen, setIsProfileOpen] = useState(false);
