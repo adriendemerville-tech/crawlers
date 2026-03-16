@@ -679,15 +679,15 @@ export default function Cocoon() {
                   }
                 </button>
                 <button
-                  onClick={() => setShowClusters(c => !c)}
+                  onClick={() => setCocoonFilters(f => ({ ...f, showAllClusters: !f.showAllClusters }))}
                   className={`flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] transition-colors border ml-0.5 sm:ml-1 ${
-                    showClusters
+                    cocoonFilters.showAllClusters
                       ? 'bg-white/5 border-white/10 text-white/40 hover:text-white/60'
                       : 'bg-white/5 border-white/10 text-white/20 hover:text-white/40'
                   }`}
                 >
                   <Layers className="w-2.5 h-2.5" />
-                  {showClusters
+                  {cocoonFilters.showAllClusters
                     ? (language === 'en' ? 'Clusters' : language === 'es' ? 'Clústeres' : 'Clusters')
                     : (language === 'en' ? 'Clusters off' : language === 'es' ? 'Sin clústeres' : 'Clusters off')
                   }
