@@ -22,6 +22,8 @@ const i18n = {
 interface Props {
   trackedSiteId: string | null;
   domain: string;
+  onAddToTaskPlan?: (title: string, recoId: string) => void;
+  onGenerateFix?: (recoText: string) => void;
 }
 
 export function CocoonRecommendationHistory({ trackedSiteId, domain }: Props) {
