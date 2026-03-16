@@ -165,8 +165,8 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify([{
           keyword: `site:${bareHomepage}`,
-          language_code: 'fr',
-          location_code: 2250,
+          language_code: effectiveLanguageCode,
+          location_code: effectiveLocationCode,
           device: 'desktop',
           depth: 1,
         }]),
