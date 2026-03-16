@@ -97,3 +97,5 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.persist-cocoon-session]
     verify_jwt = false
+  [functions.calculate-sov]
+    verify_jwt = false

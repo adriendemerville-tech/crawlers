@@ -3568,6 +3568,7 @@ export type Database = {
           google_connection_id: string | null
           id: string
           last_audit_at: string | null
+          last_sov_update: string | null
           last_widget_ping: string | null
           market_sector: string | null
           previous_config: Json
@@ -3588,6 +3589,7 @@ export type Database = {
           google_connection_id?: string | null
           id?: string
           last_audit_at?: string | null
+          last_sov_update?: string | null
           last_widget_ping?: string | null
           market_sector?: string | null
           previous_config?: Json
@@ -3608,6 +3610,7 @@ export type Database = {
           google_connection_id?: string | null
           id?: string
           last_audit_at?: string | null
+          last_sov_update?: string | null
           last_widget_ping?: string | null
           market_sector?: string | null
           previous_config?: Json

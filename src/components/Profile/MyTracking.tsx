@@ -1065,7 +1065,7 @@ export function MyTracking() {
                       citationRate: { label: t.citationRate, value: latestStats?.llm_citation_rate ? `${Math.round(latestStats.llm_citation_rate)}%` : '—', icon: Brain },
                       sentiment: { label: t.sentiment, value: latestStats ? sentimentLabel(latestStats.ai_sentiment) : '—', icon: BarChart3, valueClassName: latestStats ? sentimentColor(latestStats.ai_sentiment) : '' },
                       semanticAuth: { label: t.semanticAuth, value: latestStats?.semantic_authority ? `${Math.round(Number(latestStats.semantic_authority))}%` : '—', icon: TrendingUp },
-                      voiceShare: { label: t.voiceShare, value: latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—', icon: BarChart3 },
+                      voiceShare: { label: `${t.voiceShare} (estimation)`, value: latestStats?.voice_share ? `${Math.round(Number(latestStats.voice_share))}%` : '—', icon: BarChart3 },
                     };
 
                     // Per-KPI refresh handler map — shared for both mobile/desktop
@@ -1100,7 +1100,21 @@ export function MyTracking() {
                       citationRate: async () => { if (currentSite) await runStreamingAudit(currentSite); },
                       sentiment: async () => { if (currentSite) await runStreamingAudit(currentSite); },
                       semanticAuth: async () => { if (currentSite) await runStreamingAudit(currentSite); },
-                      voiceShare: async () => { if (currentSite) await runStreamingAudit(currentSite); },
+                      voiceShare: async () => {
+                        if (!currentSite) return;
+                        const res = await supabase.functions.invoke('calculate-sov', {
+                          body: { tracked_site_id: currentSite.id },
+                        });
+                        if (res.error || res.data?.error) {
+                          toast.error(res.data?.error || 'Erreur lors du calcul du Share of Voice');
+                          return;
+                        }
+                        if (res.data?.sov_score != null) {
+                          toast.success(`${t.voiceShare}: ${res.data.sov_score}%`);
+                          // Refresh stats to reflect new value
+                          if (currentSite) await runStreamingAudit(currentSite);
+                        }
+                      },
                     };
 
                     const isSiteExhausted = currentSite ? refreshExhaustedSites.has(currentSite.id) : false;
