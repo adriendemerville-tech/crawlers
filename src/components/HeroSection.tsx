@@ -54,6 +54,18 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
     setIsHydrated(true);
   }, []);
 
+  // Fetch hide_home_leadmagnet config
+  useEffect(() => {
+    supabase
+      .from('system_config')
+      .select('value')
+      .eq('key', 'hide_home_leadmagnet')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value === true) setHideLeadmagnet(true);
+      });
+  }, []);
+
   // Rotate words every 2.5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
