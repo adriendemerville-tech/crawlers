@@ -82,7 +82,19 @@ const PolitiqueConfidentialite = () => {
 
             <section className="mb-8">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                {t3(language, '2. Utilisation des données', '2. Use of Data', '2. Uso de los datos')}
+                {t3(language, '2. Bases légales du traitement', '2. Legal Bases for Processing', '2. Bases legales del tratamiento')}
+              </h2>
+              <ul className="list-disc pl-6 text-muted-foreground space-y-2">
+                <li><strong>{t3(language, 'Exécution du contrat :', 'Performance of contract:', 'Ejecución del contrato:')}</strong> {t3(language, 'gestion du compte, fourniture des services d\'audit, traitement des paiements', 'account management, provision of audit services, payment processing', 'gestión de la cuenta, prestación de servicios de auditoría, procesamiento de pagos')}</li>
+                <li><strong>{t3(language, 'Intérêt légitime :', 'Legitimate interest:', 'Interés legítimo:')}</strong> {t3(language, 'amélioration du service, statistiques anonymisées, sécurité de la plateforme', 'service improvement, anonymized statistics, platform security', 'mejora del servicio, estadísticas anonimizadas, seguridad de la plataforma')}</li>
+                <li><strong>{t3(language, 'Obligation légale :', 'Legal obligation:', 'Obligación legal:')}</strong> {t3(language, 'conservation des données de facturation (10 ans)', 'retention of billing data (10 years)', 'conservación de los datos de facturación (10 años)')}</li>
+                <li><strong>{t3(language, 'Consentement :', 'Consent:', 'Consentimiento:')}</strong> {t3(language, 'connexion Google Search Console / GA4 (OAuth), injection de code via widget', 'Google Search Console / GA4 connection (OAuth), code injection via widget', 'conexión Google Search Console / GA4 (OAuth), inyección de código via widget')}</li>
+              </ul>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
+                {t3(language, '3. Utilisation des données', '3. Use of Data', '3. Uso de los datos')}
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 {t3(language, 'Vos données sont utilisées pour :', 'Your data is used to:', 'Sus datos se utilizan para:')}
@@ -92,7 +104,7 @@ const PolitiqueConfidentialite = () => {
                 <li>{t3(language, 'Gérer votre compte et vos crédits', 'Manage your account and credits', 'Gestionar su cuenta y sus créditos')}</li>
                 <li>{t3(language, 'Traiter les transactions de paiement', 'Process payment transactions', 'Procesar las transacciones de pago')}</li>
                 <li>{t3(language, 'Améliorer nos services et l\'expérience utilisateur', 'Improve our services and user experience', 'Mejorar nuestros servicios y la experiencia del usuario')}</li>
-                <li>{t3(language, 'Envoyer des notifications transactionnelles (confirmations d\'achat)', 'Send transactional notifications (purchase confirmations)', 'Enviar notificaciones transaccionales (confirmaciones de compra)')}</li>
+                <li>{t3(language, 'Envoyer des notifications transactionnelles (confirmations d\'achat, alertes de suivi)', 'Send transactional notifications (purchase confirmations, tracking alerts)', 'Enviar notificaciones transaccionales (confirmaciones de compra, alertas de seguimiento)')}</li>
                 <li>{t3(language, 'Générer des statistiques d\'utilisation anonymisées', 'Generate anonymized usage statistics', 'Generar estadísticas de uso anonimizadas')}</li>
               </ul>
             </section>
