@@ -2703,6 +2703,7 @@ Deno.serve(async (req) => {
         (eeatSignals.detectedSocialUrls || []).map((u: string) => u.toLowerCase().replace(/\/$/, ''))
       );
       if (founderInfo?.profileUrl) detectedUrlsSet.add(founderInfo.profileUrl.toLowerCase().replace(/\/$/, ''));
+      if (facebookPageInfo?.pageUrl) detectedUrlsSet.add(facebookPageInfo.pageUrl.toLowerCase().replace(/\/$/, ''));
       console.log(`🔗 Validating social URLs against ${detectedUrlsSet.size} detected URLs:`, [...detectedUrlsSet]);
 
       for (const source of parsedAnalysis.social_signals.proof_sources) {
