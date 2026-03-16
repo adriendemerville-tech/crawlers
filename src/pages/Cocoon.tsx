@@ -512,16 +512,17 @@ export default function Cocoon() {
       <div className={`h-screen flex flex-col relative pt-2 sm:pt-4 overflow-hidden ${isDayMode ? 'bg-[#f5f5f0]' : 'bg-[#0f0a1e]'}`}>
 
         {/* Top Bar */}
-        <header className="shrink-0 bg-[#0f0a1e]/80 backdrop-blur-xl px-2 sm:px-4 md:px-6 py-2">
+        {!isFullscreen && (
+        <header className={`shrink-0 backdrop-blur-xl px-2 sm:px-4 md:px-6 py-2 ${isDayMode ? 'bg-white/80' : 'bg-[#0f0a1e]/80'}`}>
           <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-y-2 gap-x-2">
             {/* Title */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="w-2 h-2 rounded-full bg-[#fbbf24] animate-pulse hidden sm:block" />
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <h1 className="text-xs sm:text-sm font-bold text-white font-display tracking-tight leading-none">
+                <h1 className={`text-xs sm:text-sm font-bold font-display tracking-tight leading-none ${isDayMode ? 'text-black' : 'text-white'}`}>
                   Cocoon <span className="text-[#fbbf24]">·</span> <span className="hidden xs:inline">{t.organism}</span>
                 </h1>
-                <span className="text-[9px] sm:text-[10px] text-white/30 font-medium tracking-wider uppercase leading-none px-1 sm:px-1.5 py-0.5 rounded bg-white/5 border border-white/10">beta</span>
+                <span className={`text-[9px] sm:text-[10px] font-medium tracking-wider uppercase leading-none px-1 sm:px-1.5 py-0.5 rounded border ${isDayMode ? 'text-black/30 bg-black/5 border-black/10' : 'text-white/30 bg-white/5 border-white/10'}`}>beta</span>
               </div>
             </div>
 
