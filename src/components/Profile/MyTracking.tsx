@@ -1633,7 +1633,7 @@ export function MyTracking() {
               <WordPressConfigCard
                 siteId={wpSite.id}
                 siteDomain={wpSite.domain}
-                siteApiKey={wpSite.api_key || ''}
+                siteApiKey={profile?.api_key || wpSite.api_key || ''}
                 hasConfig={!!(wpSite.current_config && Object.keys(wpSite.current_config).length > 0)}
               />
             );
