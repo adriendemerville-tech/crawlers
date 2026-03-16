@@ -64,9 +64,21 @@ const priorityConfig = {
   },
 };
 
-export function TechnicalTab({ fixes, onToggle }: TechnicalTabProps) {
+export function TechnicalTab({ fixes, onToggle, onRequestAuth }: TechnicalTabProps) {
+  const { user } = useAuth();
+  const { openMode } = useFreemiumMode();
+  const isAnonymousFreemium = openMode && !user;
+
   // Filter only technical fixes (non-strategic, non-generative)
   const technicalFixes = fixes.filter(f => f.category !== 'strategic' && f.category !== 'generative');
+
+  // In freemium mode, only the first N minor (non-critical) fixes are allowed
+  const minorFixIds = new Set(
+    technicalFixes
+      .filter(f => f.priority !== 'critical')
+      .slice(0, FREEMIUM_MAX_FIXES)
+      .map(f => f.id)
+  );
   
   // Group by category
   const groupedFixes = technicalFixes.reduce((acc, fix) => {
