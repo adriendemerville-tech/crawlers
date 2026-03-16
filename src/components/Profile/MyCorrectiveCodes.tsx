@@ -48,6 +48,7 @@ const translations = {
     validateError: 'Erreur lors de la validation',
     tabScripts: 'Scripts',
     tabHistory: 'Historique',
+    tabDebug: 'Diagnostic',
   },
   en: {
     title: 'My Corrective Codes',
