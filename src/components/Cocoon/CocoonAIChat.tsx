@@ -208,6 +208,7 @@ function getSessionHash(): string {
 
 export function CocoonAIChat({ nodes, selectedNodeId, onRequestNodePick, onCancelPick, trackedSiteId, domain }: CocoonAIChatProps) {
   const { language } = useLanguage();
+  const { user } = useAuth();
   const t = labels[language] || labels.fr;
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
