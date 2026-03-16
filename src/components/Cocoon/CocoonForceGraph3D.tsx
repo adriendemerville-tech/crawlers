@@ -813,6 +813,7 @@ export function CocoonForceGraph3D({
   showClusters = true,
   visibleJuiceTypes,
   isDayMode = false,
+  colorIntensity = 5,
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [spreadScale, setSpreadScale] = useState(1);
