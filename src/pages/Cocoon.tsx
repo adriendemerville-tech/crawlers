@@ -678,6 +678,7 @@ export default function Cocoon() {
                 isXRayMode={isXRayMode}
                 isPickingMode={!!nodePickerCallback}
                 particlesEnabled={particlesEnabled}
+                isDayMode={isDayMode}
               />
             )}
 
