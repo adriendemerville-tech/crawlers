@@ -779,10 +779,20 @@ export default function Cocoon() {
             const legendItems = Object.entries(typeColorMap).filter(([type]) => presentTypes.has(type));
 
             return (
-              <div
-                className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 px-1 flex-wrap opacity-0 animate-fade-in"
+                <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 px-1 flex-wrap opacity-0 animate-fade-in"
                 style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
               >
+                {/* Particle legend */}
+                <div className="flex items-center gap-3 mr-2 sm:mr-4 pr-2 sm:pr-4 border-r border-white/10">
+                  {Object.entries(cocoonTheme.particleColors).map(([key, color]) => (
+                    <div key={key} className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full animate-pulse" style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }} />
+                      <span className="text-[10px] sm:text-xs text-white/50 capitalize">{
+                        { authority: language === 'en' ? 'Authority' : language === 'es' ? 'Autoridad' : 'Autorité', semantic: language === 'en' ? 'Semantic' : language === 'es' ? 'Semántica' : 'Sémantique', traffic: language === 'en' ? 'Traffic' : language === 'es' ? 'Tráfico' : 'Trafic', hierarchy: language === 'en' ? 'Hierarchy' : language === 'es' ? 'Jerarquía' : 'Hiérarchie' }[key] || key
+                      }</span>
+                    </div>
+                  ))}
+                </div>
                 {legendItems.map(([type, { color, label }]) => (
                   <div key={type} className="flex items-center gap-1 sm:gap-1.5">
                     <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full" style={{ background: color }} />
