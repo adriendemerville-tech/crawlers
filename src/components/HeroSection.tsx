@@ -247,10 +247,16 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
 
         {/* Search Form with inline tab bar */}
         <div className="mx-auto w-full text-left" style={{ maxWidth: 'min(85%, 48rem)' }}>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={hideLeadmagnet ? (e) => {
+          e.preventDefault();
+          if (!url.trim()) return;
+          const normalized = normalizeUrl(url);
+          navigate(`/audit-expert?url=${encodeURIComponent(normalized)}`);
+        } : handleSubmit}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
-              {/* Tab bar aligned to input width */}
+              {/* Tab bar — hidden when leadmagnet mode */}
+              {!hideLeadmagnet && (
               <div className="mb-2 flex overflow-x-auto scrollbar-hide rounded-lg border border-border bg-card p-1 -mx-1 sm:mx-0">
                 {([
                   { key: 'crawlers' as ToolTab, icon: Bot, label: t.tabs.crawlers },
@@ -277,6 +283,7 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
                   </div>
                 ))}
               </div>
+              )}
               <div className="relative">
                 <Input
                   type="text"
@@ -291,31 +298,48 @@ function HeroSectionComponent({ onSubmit, isLoading, activeTab, onTabChange, cur
                 <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
               </div>
             </div>
-            <Button 
-              type="submit" 
-              variant="hero" 
-              size="lg" 
-              disabled={isLoading || validation.isValidating}
-              className={cn(
-                "h-14 min-w-[122px] transition-shadow duration-500",
-                glowActive && "animate-cta-glow"
-              )}
-              style={{ paddingLeft: 20, paddingRight: 20 }}
-            >
-              {validation.isValidating ? (
-                <>
-                  <Zap className="h-5 w-5 animate-pulse" />
-                  {language === 'fr' ? 'Vérification…' : language === 'es' ? 'Verificando…' : 'Checking…'}
-                </>
-              ) : isLoading ? (
-                <>
-                  <Zap className="h-5 w-5 animate-pulse" />
-                  {content.loadingText}
-                </>
-              ) : (
-                content.buttonText
-              )}
-            </Button>
+            {hideLeadmagnet ? (
+              <div className="flex flex-col items-center">
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  className="h-14 min-w-[200px] bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-black font-bold text-base shadow-lg shadow-amber-500/25 border-0"
+                  style={{ paddingLeft: 24, paddingRight: 24 }}
+                >
+                  <FileSearch className="h-5 w-5 mr-2" />
+                  {language === 'fr' ? 'Démarrer Audit Expert' : language === 'es' ? 'Iniciar Auditoría Experta' : 'Start Expert Audit'}
+                </Button>
+                <span className="text-[11px] text-muted-foreground mt-1.5">
+                  {language === 'fr' ? '9 minutes max' : language === 'es' ? '9 minutos máx' : '9 minutes max'}
+                </span>
+              </div>
+            ) : (
+              <Button 
+                type="submit" 
+                variant="hero" 
+                size="lg" 
+                disabled={isLoading || validation.isValidating}
+                className={cn(
+                  "h-14 min-w-[122px] transition-shadow duration-500",
+                  glowActive && "animate-cta-glow"
+                )}
+                style={{ paddingLeft: 20, paddingRight: 20 }}
+              >
+                {validation.isValidating ? (
+                  <>
+                    <Zap className="h-5 w-5 animate-pulse" />
+                    {language === 'fr' ? 'Vérification…' : language === 'es' ? 'Verificando…' : 'Checking…'}
+                  </>
+                ) : isLoading ? (
+                  <>
+                    <Zap className="h-5 w-5 animate-pulse" />
+                    {content.loadingText}
+                  </>
+                ) : (
+                  content.buttonText
+                )}
+              </Button>
+            )}
         </div>
         </form>
         </div>
