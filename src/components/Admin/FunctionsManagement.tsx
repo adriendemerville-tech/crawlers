@@ -96,6 +96,9 @@ export function FunctionsManagement() {
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [viewerApproved, setViewerApproved] = useState<Set<string>>(new Set());
   const [pendingRequests, setPendingRequests] = useState<Set<string>>(new Set());
+  const [showPromptMatrix, setShowPromptMatrix] = useState(false);
+  const [matrixSiteId, setMatrixSiteId] = useState('');
+  const [matrixDomain, setMatrixDomain] = useState('');
 
   // Load consultation logs and access requests for creator
   useEffect(() => {
