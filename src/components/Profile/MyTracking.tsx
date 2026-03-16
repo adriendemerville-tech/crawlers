@@ -1516,8 +1516,8 @@ export function MyTracking() {
                     />
                    )}
 
-                   {/* Prompt Matrix — CSV Import & Comparison */}
-                   {currentSite && user && (
+                   {/* Prompt Matrix — CSV Import & Comparison (admin only) */}
+                   {currentSite && user && isAdmin && (
                      <PromptMatrixCard
                        trackedSiteId={currentSite.id}
                        userId={user.id}

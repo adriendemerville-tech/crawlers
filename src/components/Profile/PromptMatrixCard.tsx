@@ -385,6 +385,7 @@ export function PromptMatrixCard({ trackedSiteId, userId, domain }: PromptMatrix
               <CardTitle className="flex items-center gap-2 text-base">
                 <FileSpreadsheet className="h-4 w-4 text-primary" />
                 Matrice de Prompts
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">BETA</Badge>
               </CardTitle>
               <CardDescription>Importez votre matrice CSV et comparez avec les données Crawlers</CardDescription>
             </div>
