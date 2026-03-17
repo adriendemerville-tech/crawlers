@@ -725,6 +725,8 @@ export default function Cocoon() {
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
                 isDayMode={false}
                 colorIntensity={colorIntensity}
+                bgWarmth={bgWarmth}
+                linkThickness={linkThickness}
               />
             ) : (
               <CocoonForceGraph
