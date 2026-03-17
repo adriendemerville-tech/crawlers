@@ -713,17 +713,33 @@ Deno.serve(async (req) => {
       throw new Error('Could not resolve domain from any source');
     }
 
+    // ── Fetch site identity card (enriches if needed) ──
+    let siteContextHint = '';
+    try {
+      const ctx = await getSiteContext(supabase, { domain: intel.domain });
+      if (ctx) {
+        const parts: string[] = [];
+        if (ctx.market_sector) parts.push(`Sector: ${ctx.market_sector}`);
+        if (ctx.products_services) parts.push(`Products: ${ctx.products_services}`);
+        if (ctx.target_audience) parts.push(`Target: ${ctx.target_audience}`);
+        if (ctx.commercial_area) parts.push(`Area: ${ctx.commercial_area}`);
+        if (parts.length > 0) siteContextHint = `\nSite identity: ${parts.join(' | ')}`;
+        console.log(`[generate-prediction] Site context loaded (confidence: ${ctx.identity_confidence || 0})`);
+      }
+    } catch (e) {
+      console.warn('[generate-prediction] Could not fetch site context:', e);
+    }
+
     // ── GSC segmentation ──
     const seg = segmentGsc(intel.gscData, intel.root);
 
     // ── If no GSC data and source is crawl-only, synthesize baseline from crawl ──
     if (seg.totalClicks === 0 && intel.crawlContext) {
       const cc = intel.crawlContext;
-      // Heuristic baseline: ~15 clicks per well-optimized page per month
       const syntheticBaseline = Math.round(cc.totalPages * (cc.avgScore / 200) * 15);
       seg.totalClicks = syntheticBaseline;
       seg.totalImpressions = syntheticBaseline * 20;
-      seg.avgPos = 15 - (cc.avgScore / 200) * 10; // Score-based position estimate
+      seg.avgPos = 15 - (cc.avgScore / 200) * 10;
       seg.brandClicks = Math.round(syntheticBaseline * 0.30);
       seg.nonBrandClicks = syntheticBaseline - seg.brandClicks;
       seg.highIntentClicks = Math.round(seg.nonBrandClicks * 0.35);
@@ -738,7 +754,7 @@ Deno.serve(async (req) => {
     const anchors = computeAnchors(seg, intel.tdiScore, intel.sector);
 
     // ── Build prompt ──
-    const prompt = buildPrompt(intel, seg, anchors);
+    const prompt = buildPrompt(intel, seg, anchors) + siteContextHint;
 
     // ── Call AI ──
     const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
