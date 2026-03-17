@@ -417,6 +417,7 @@ function Links({
   particlesEnabled,
   customParticleColors,
   spreadScale,
+  linkThickness = 1,
 }: {
   links: GraphLink3D[];
   nodeMap: Map<string, GraphNode3D>;
@@ -424,6 +425,7 @@ function Links({
   particlesEnabled: boolean;
   customParticleColors: Record<string, string>;
   spreadScale: number;
+  linkThickness?: number;
 }) {
   const linesRef = useRef<THREE.Group>(null);
   const particleGroupRef = useRef<THREE.Group>(null);
