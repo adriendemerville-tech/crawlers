@@ -775,16 +775,16 @@ Deno.serve(async (req) => {
       details: t.details.botsAllowed(aiBotsResult.allowed, aiBotsResult.total)
     });
 
-    // Factor 2: Meta Description (15 points)
+    // Factor 2: Meta Description (10 points)
     // For SPA without rendering, meta may be injected by JS — give neutral score
-    const metaDescScore = metaResult.hasDescription ? 15 : (isSPAWithLimitedContent ? 8 : 0);
+    const metaDescScore = metaResult.hasDescription ? 10 : (isSPAWithLimitedContent ? 5 : 0);
     factors.push({
       id: 'meta-description',
       name: t.factors.metaDescription.name,
       description: t.factors.metaDescription.description,
       score: metaDescScore,
-      maxScore: 15,
-      status: metaDescScore === 15 ? 'good' : (isSPAWithLimitedContent && !metaResult.hasDescription) ? 'warning' : (metaDescScore > 0 ? 'warning' : 'error'),
+      maxScore: 10,
+      status: metaDescScore === 10 ? 'good' : (isSPAWithLimitedContent && !metaResult.hasDescription) ? 'warning' : (metaDescScore > 0 ? 'warning' : 'error'),
       recommendation: !metaResult.hasDescription 
         ? (isSPAWithLimitedContent ? 'SPA détecté — la meta description peut être injectée par JavaScript. Vérifiez le rendu côté serveur (SSR).' : t.factors.metaDescription.recommendation)
         : undefined,
