@@ -244,8 +244,9 @@ export function ScriptDebugTool() {
             </Button>
           )}
           <Button
+            variant="outline"
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className="h-8 gap-1.5 text-xs border-primary text-primary bg-transparent hover:bg-primary/10"
             onClick={runDiagnostic}
             disabled={running}
           >
