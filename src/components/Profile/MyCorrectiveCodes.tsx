@@ -121,9 +121,9 @@ export function MyCorrectiveCodes() {
     if (!user) return;
     const { data } = await supabase
       .from('tracked_sites')
-      .select('id, domain')
+      .select('id, domain, api_key, current_config')
       .eq('user_id', user.id);
-    setInjectableSites((data || []).map((s: any) => ({ id: s.id, domain: s.domain })));
+    setInjectableSites((data || []).map((s: any) => ({ id: s.id, domain: s.domain, api_key: s.api_key, current_config: s.current_config })));
   };
 
 
