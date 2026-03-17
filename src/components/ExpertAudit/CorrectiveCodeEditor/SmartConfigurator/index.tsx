@@ -832,6 +832,17 @@ export function SmartConfigurator({
       console.log('✅ Restored fixes from payment:', enabledFixIds);
     } else {
       setFixConfigs(availableFixes);
+      // When opened from "Mes sites" (activeSiteId + no live audit), auto-select the richest tab
+      if (activeSiteId && !technicalResult) {
+        const techAll = availableFixes.filter(f => !['strategic', 'generative'].includes(f.category)).length;
+        const stratAll = availableFixes.filter(f => f.category === 'strategic').length;
+        const genAll = availableFixes.filter(f => f.category === 'generative').length;
+        if (stratAll >= techAll && stratAll >= genAll) setActiveTab('strategic');
+        else if (genAll >= techAll && genAll >= stratAll) setActiveTab('generative');
+        else setActiveTab('technical');
+      } else {
+        setActiveTab('technical');
+      }
     }
     
     // If we have initialCode (from post-payment redirect), use it; otherwise reset
