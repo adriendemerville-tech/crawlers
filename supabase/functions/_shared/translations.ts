@@ -57,6 +57,16 @@ export interface GeoTranslations {
       noCanonical: string;
       found: string;
     };
+    intentInTitle: {
+      name: string;
+      description: string;
+      recommendation: string;
+    };
+    faqOrSummary: {
+      name: string;
+      description: string;
+      recommendation: string;
+    };
   };
   details: {
     botsAllowed: (allowed: number, total: number) => string;
