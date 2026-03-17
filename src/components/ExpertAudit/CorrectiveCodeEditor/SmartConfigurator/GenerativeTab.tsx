@@ -8,6 +8,7 @@ interface GenerativeTabProps {
   fixes: FixConfig[];
   onToggle: (fixId: string) => void;
   onUpdateData: (fixId: string, data: Record<string, any>) => void;
+  disabled?: boolean;
 }
 
 const GENERATIVE_ICONS: Record<string, React.ReactNode> = {
