@@ -267,7 +267,7 @@ export function MyInjectedScripts() {
     }
   };
 
-  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [viewingScript, setViewingScript] = useState<{ title: string; code: string } | null>(null);
 
   const handleToggleActive = async (rule: ScriptRule) => {
     setTogglingId(rule.id);
