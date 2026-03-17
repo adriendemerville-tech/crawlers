@@ -286,6 +286,16 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         noCanonical: 'No se encontró etiqueta canonical en <head>',
         found: 'Etiqueta canonical encontrada',
       },
+      intentInTitle: {
+        name: 'Intención en el Título',
+        description: 'La palabra clave principal o intención visible en el título y primera frase',
+        recommendation: 'Coloque su palabra clave principal en el título (H1 o <title>) y en la primera frase del contenido para maximizar la relevancia IA',
+      },
+      faqOrSummary: {
+        name: 'FAQ o Resumen al Inicio',
+        description: 'Sección FAQ o resumen (TL;DR) al inicio de la página',
+        recommendation: 'Agregue una sección FAQ (con marcado Schema FAQ) o un resumen (TL;DR) al inicio de su artículo para facilitar la extracción por IA',
+      },
     },
     details: {
       botsAllowed: (allowed, total) => `${allowed}/${total} bots de IA permitidos`,
