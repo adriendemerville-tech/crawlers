@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS unique_user_domain ON tracked_sites (user_id, domain);
