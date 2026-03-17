@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, Rocket, Bug, Undo2 } from 'lucide-react';
+import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, Rocket, Bug, Undo2, FlaskConical, Loader2, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { MyInjectedScripts } from './MyInjectedScripts';
 import { ScriptDebugTool } from './ScriptDebugTool';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface CorrectiveCodeFix {
   id: string;
@@ -97,6 +98,10 @@ export function MyCorrectiveCodes() {
   const [validatedIds, setValidatedIds] = useState<Set<string>>(new Set());
   const [validatingId, setValidatingId] = useState<string | null>(null);
   const [rollbackSites, setRollbackSites] = useState<{ id: string; domain: string }[]>([]);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyResults, setVerifyResults] = useState<any>(null);
+  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
+  const [injectableSites, setInjectableSites] = useState<{ id: string; domain: string }[]>([]);
 
   const dateLocale = language === 'fr' ? fr : language === 'es' ? es : enUS;
 
@@ -104,8 +109,19 @@ export function MyCorrectiveCodes() {
     if (user) {
       fetchCodes();
       fetchRollbackSites();
+      fetchInjectableSites();
     }
   }, [user]);
+
+  const fetchInjectableSites = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('tracked_sites')
+      .select('id, domain')
+      .eq('user_id', user.id);
+    setInjectableSites((data || []).map((s: any) => ({ id: s.id, domain: s.domain })));
+  };
+
 
   const fetchRollbackSites = async () => {
     if (!user) return;
@@ -138,6 +154,26 @@ export function MyCorrectiveCodes() {
       toast.error(language === 'fr' ? 'Erreur lors du rollback' : 'Rollback error');
     }
   };
+
+  const handleVerifyInjection = async (siteId: string) => {
+    setVerifyLoading(true);
+    setVerifyResults(null);
+    setVerifyDialogOpen(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-injection', {
+        body: { tracked_site_id: siteId },
+      });
+      if (error) throw error;
+      setVerifyResults(data);
+    } catch (err) {
+      console.error('Verify injection error:', err);
+      toast.error(language === 'fr' ? 'Erreur lors de la vérification' : 'Verification error');
+      setVerifyDialogOpen(false);
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
 
   const fetchCodes = async () => {
     if (!user) return;
@@ -259,6 +295,7 @@ export function MyCorrectiveCodes() {
   }
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardDescription>{t.description}</CardDescription>
@@ -273,6 +310,25 @@ export function MyCorrectiveCodes() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{site.domain}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
+          {injectableSites.map(site => (
+            <TooltipProvider key={`verify-${site.id}`}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={() => handleVerifyInjection(site.id)}
+                    disabled={verifyLoading}
+                  >
+                    {verifyLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FlaskConical className="h-3.5 w-3.5" />}
+                    {language === 'fr' ? 'Tester' : 'Test'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{site.domain} — {language === 'fr' ? 'Vérifier l\'injection' : 'Verify injection'}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           ))}
@@ -412,5 +468,79 @@ export function MyCorrectiveCodes() {
         </Tabs>
       </CardContent>
     </Card>
+
+    <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FlaskConical className="h-5 w-5" />
+            {language === 'fr' ? 'Vérification de l\'injection' : 'Injection Verification'}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          {verifyLoading ? (
+            <div className="flex flex-col items-center py-8 gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                {language === 'fr' ? 'Analyse des pages en cours…' : 'Analyzing pages…'}
+              </p>
+            </div>
+          ) : verifyResults ? (
+            <>
+              <div className={`flex items-center gap-2 p-3 rounded-lg border ${
+                verifyResults.summary?.all_injected
+                  ? 'bg-emerald-500/10 border-emerald-500/30'
+                  : verifyResults.summary?.found > 0
+                    ? 'bg-amber-500/10 border-amber-500/30'
+                    : 'bg-destructive/10 border-destructive/30'
+              }`}>
+                {verifyResults.summary?.all_injected ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                ) : verifyResults.summary?.found > 0 ? (
+                  <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-destructive shrink-0" />
+                )}
+                <span className="text-sm font-medium">{verifyResults.summary?.verdict}</span>
+              </div>
+
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {verifyResults.results?.map((r: any, i: number) => (
+                  <div key={i} className="flex items-start gap-2 p-2.5 rounded border bg-card text-xs">
+                    {r.found ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{r.url}</p>
+                      <p className="text-muted-foreground">
+                        {r.found
+                          ? `${language === 'fr' ? 'Détecté' : 'Found'}: ${r.method === 'sdk_tag' ? 'SDK tag' : 'Inline script'}`
+                          : r.error || (language === 'fr' ? 'Script non détecté' : 'Script not found')
+                        }
+                      </p>
+                      {r.snippet_preview && (
+                        <code className="block mt-1 text-[10px] text-muted-foreground bg-muted p-1 rounded truncate">
+                          {r.snippet_preview.substring(0, 120)}
+                        </code>
+                      )}
+                    </div>
+                    <Badge variant="outline" className="text-[10px] shrink-0">
+                      {r.status || '—'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center">
+                {verifyResults.summary?.checked} {language === 'fr' ? 'page(s) vérifiée(s)' : 'page(s) checked'}
+              </p>
+            </>
+          ) : null}
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
