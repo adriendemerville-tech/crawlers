@@ -193,7 +193,7 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto -mx-2">
-          <table className="w-full text-sm border-separate" style={{ borderSpacing: '3px' }}>
+          <table className="text-sm border-separate" style={{ borderSpacing: '3px' }}>
             <thead>
               <tr>
                 <th className="text-left py-2 pr-3 text-[10px] uppercase text-muted-foreground font-medium tracking-wider min-w-[100px]">
