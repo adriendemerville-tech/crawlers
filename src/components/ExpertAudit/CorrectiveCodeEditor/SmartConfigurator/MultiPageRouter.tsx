@@ -272,11 +272,49 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
   // Payload types that need AI generation (queued)
   const AI_GENERATED_TYPES = ['FAQPage', 'HTML_INJECTION', 'Article'];
 
+  // Resolve dominant intent for a URL pattern from semantic_nodes
+  const resolveIntentForPattern = async (pattern: string): Promise<string> => {
+    if (!siteId || !user) return 'informational';
+    try {
+      // Match semantic_nodes URLs against the pattern
+      let query = supabase
+        .from('semantic_nodes' as any)
+        .select('intent')
+        .eq('tracked_site_id', siteId)
+        .eq('user_id', user.id)
+        .limit(50);
+
+      // For patterns like /blog/*, filter URLs containing /blog/
+      const pathPrefix = pattern.replace('/*', '').replace('GLOBAL', '');
+      if (pathPrefix && pathPrefix !== '/') {
+        query = query.ilike('url', `%${pathPrefix}%`);
+      }
+
+      const { data: nodes } = await query;
+      if (!nodes || nodes.length === 0) return 'informational';
+
+      // Count intents and return dominant
+      const counts: Record<string, number> = {};
+      for (const n of nodes as any[]) {
+        const intent = n.intent || 'informational';
+        counts[intent] = (counts[intent] || 0) + 1;
+      }
+      return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+    } catch {
+      return 'informational';
+    }
+  };
+
   // Save all rules via bulk upsert with queuing for AI-generated payloads
   const handleSaveAll = async () => {
     if (!siteId || !user) return;
     setSaving(true);
     try {
+      // Resolve intents for all assignments in parallel
+      const intents = await Promise.all(
+        assignments.map(a => resolveIntentForPattern(a.urlPattern))
+      );
+
       // Delete existing rules for this site
       await supabase
         .from('site_script_rules')
@@ -284,9 +322,9 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
         .eq('domain_id', siteId)
         .eq('user_id', user.id);
 
-      // Insert new rules with appropriate generation_status
+      // Insert new rules with appropriate generation_status + intent
       if (assignments.length > 0) {
-        const rows = assignments.map(a => {
+        const rows = assignments.map((a, idx) => {
           const needsAI = AI_GENERATED_TYPES.includes(a.payloadType) && 
             (!a.payloadData || Object.keys(a.payloadData).length <= 1);
           return {
@@ -294,7 +332,7 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
             user_id: user.id,
             url_pattern: a.urlPattern,
             payload_type: a.payloadType,
-            payload_data: a.payloadData as any,
+            payload_data: { ...a.payloadData, _intent: intents[idx] } as any,
             is_active: true,
             status: 'active',
             generation_status: needsAI ? 'pending' : 'ready',
