@@ -153,6 +153,7 @@ export function MyInjectedScripts() {
   
   const [validatedCodes, setValidatedCodes] = useState<ValidatedCode[]>([]);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [testingId, setTestingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) fetchData();
