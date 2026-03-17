@@ -17,7 +17,7 @@ const translations = {
   fr: {
     title: 'Diagnostic Widget',
     description: 'Vérifie la configuration du script et les clés API pour chaque site',
-    runDiag: 'Lancer le diagnostic',
+    runDiag: 'Diagnostic',
     running: 'Analyse en cours…',
     copyReport: 'Copier le rapport',
     copied: 'Rapport copié !',
