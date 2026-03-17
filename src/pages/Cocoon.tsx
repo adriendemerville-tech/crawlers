@@ -555,6 +555,58 @@ export default function Cocoon() {
 
             {/* Controls */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Settings popover */}
+              {nodes.length > 0 && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white px-2 sm:px-3"
+                    >
+                      <Settings2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="bottom"
+                    align="end"
+                    className="w-72 bg-[#0f0a1e]/95 backdrop-blur-xl border-white/10 p-4 space-y-4"
+                  >
+                    {/* Contrast */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-white/50 font-medium">{language === 'es' ? 'Contraste' : language === 'en' ? 'Contrast' : 'Contraste'}</span>
+                        <span className="text-[9px] text-white/30 font-mono">{graphContrast}%</span>
+                      </div>
+                      <Slider min={50} max={200} step={5} value={[graphContrast]} onValueChange={([v]) => setGraphContrast(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
+                    </div>
+                    {/* Halo (color intensity) */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-white/50 font-medium">Halo</span>
+                        <span className="text-[9px] text-white/30 font-mono">{colorIntensity}</span>
+                      </div>
+                      <Slider min={0} max={10} step={1} value={[colorIntensity]} onValueChange={([v]) => setColorIntensity(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
+                    </div>
+                    {/* Background warmth */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-white/50 font-medium">{language === 'en' ? 'Warmth' : language === 'es' ? 'Calidez' : 'Chaleur'}</span>
+                        <span className="text-[9px] text-white/30 font-mono">{bgWarmth}</span>
+                      </div>
+                      <Slider min={-10} max={10} step={1} value={[bgWarmth]} onValueChange={([v]) => setBgWarmth(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
+                    </div>
+                    {/* Link & particle thickness */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-white/50 font-medium">{language === 'en' ? 'Thickness' : language === 'es' ? 'Grosor' : 'Épaisseur'}</span>
+                        <span className="text-[9px] text-white/30 font-mono">{linkThickness.toFixed(1)}×</span>
+                      </div>
+                      <Slider min={0.5} max={4} step={0.1} value={[linkThickness]} onValueChange={([v]) => setLinkThickness(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
               {new Set(nodes.map((n: any) => n.page_type || 'unknown')).size > 1 && (
                 <CocoonFilterSelector
                   nodes={nodes}
