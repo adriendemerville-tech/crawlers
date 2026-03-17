@@ -271,13 +271,34 @@ Deno.serve(async (req) => {
     const correctionContext = correction ? `\n\nIMPORTANT CORRECTION FROM THE SITE OWNER: "${correction}". Take this into account in your analysis.` : '';
     console.log(`Analyzing LLM visibility for: ${domain}${correction ? ' (with user correction)' : ''}`);
 
+    // ── Fetch site identity card (enriches if needed) ──
+    let siteContextStr = '';
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+      const ctx = await getSiteContext(supabase, { domain });
+      if (ctx) {
+        const parts: string[] = [];
+        if (ctx.market_sector) parts.push(`Secteur: ${ctx.market_sector}`);
+        if (ctx.products_services) parts.push(`Produits/Services: ${ctx.products_services}`);
+        if (ctx.target_audience) parts.push(`Cible: ${ctx.target_audience}`);
+        if (ctx.commercial_area) parts.push(`Zone: ${ctx.commercial_area}`);
+        if (parts.length > 0) siteContextStr = parts.join('\n');
+        console.log(`[check-llm] Site context loaded (confidence: ${ctx.identity_confidence || 0})`);
+      }
+    } catch (e) {
+      console.warn('[check-llm] Could not fetch site context:', e);
+    }
+
     // Query all LLMs with staggered delays to avoid 429 rate limiting
     const citationPromises = LLM_PROVIDERS.map(async (provider, index) => {
       // Stagger requests by 250ms each to avoid overwhelming OpenRouter
       await delay(index * 250);
       console.log(`Querying ${provider.name} (${provider.model})...`);
       const startTime = Date.now();
-      const result = await queryLLM(apiKey, provider.model, domain, lang, correctionContext);
+      const result = await queryLLM(apiKey, provider.model, domain, lang, correctionContext, siteContextStr);
       const iterationDepth = result.cited ? Math.ceil((Date.now() - startTime) / 1000) : 0;
 
       return {
