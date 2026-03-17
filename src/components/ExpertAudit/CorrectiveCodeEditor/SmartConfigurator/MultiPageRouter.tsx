@@ -385,7 +385,7 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
   };
 
   // Pro gate
-  if (!isAgencyPro) {
+  if (!isAgencyPro && !isAdmin) {
     return (
       <div className="p-4 text-center space-y-2">
         <Sparkles className="w-8 h-8 text-amber-500 mx-auto" />
