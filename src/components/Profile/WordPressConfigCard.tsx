@@ -511,12 +511,13 @@ export function WordPressConfigCard({ siteId, siteDomain, siteApiKey, hasConfig,
                 if (data?.last_widget_ping) {
                   const pingDate = new Date(data.last_widget_ping);
                   const diffH = (Date.now() - pingDate.getTime()) / 3600000;
-                  if (diffH < 24) {
+                if (diffH < 24) {
                     toast.success(t3(language,
                       `Connexion GTM active — dernier ping il y a ${diffH < 1 ? 'moins d\'1h' : Math.round(diffH) + 'h'}`,
                       `GTM connection active — last ping ${diffH < 1 ? 'less than 1h ago' : Math.round(diffH) + 'h ago'}`,
                       `Conexión GTM activa — último ping hace ${diffH < 1 ? 'menos de 1h' : Math.round(diffH) + 'h'}`
                     ));
+                    onConnectionSuccess?.();
                   } else {
                     toast.warning(t3(language,
                       `Dernier ping GTM il y a ${Math.round(diffH)}h — vérifiez que le snippet est bien installé.`,
