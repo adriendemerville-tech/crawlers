@@ -124,9 +124,10 @@ export function ScriptDebugTool() {
           detail: `${site.domain} (ID: ${site.id.slice(0, 8)}…)`,
         });
 
-        // Check 3: Widget ping (connected?)
-        const pingDate = site.last_widget_ping ? new Date(site.last_widget_ping) : null;
-        const isRecent = pingDate && (Date.now() - pingDate.getTime()) < 24 * 60 * 60 * 1000;
+        // Check 3: Widget ping (connected?) — will be updated after endpoint test
+        let pingDate = site.last_widget_ping ? new Date(site.last_widget_ping) : null;
+        let isRecent = pingDate && (Date.now() - pingDate.getTime()) < 24 * 60 * 60 * 1000;
+        const widgetCheckIndex = results.length;
         results.push({
           label: t.checkWidgetPing,
           status: isRecent ? 'ok' : pingDate ? 'warning' : 'error',
@@ -175,6 +176,24 @@ export function ScriptDebugTool() {
               detail: `Erreur réseau: ${e.message}`,
             });
           }
+        }
+
+        // Re-fetch last_widget_ping after endpoint test to update "site branché" status
+        const { data: freshSite } = await supabase
+          .from('tracked_sites')
+          .select('last_widget_ping')
+          .eq('id', site.id)
+          .maybeSingle();
+        if (freshSite) {
+          const freshPing = freshSite.last_widget_ping ? new Date(freshSite.last_widget_ping) : null;
+          const freshRecent = freshPing && (Date.now() - freshPing.getTime()) < 24 * 60 * 60 * 1000;
+          results[widgetCheckIndex] = {
+            label: t.checkWidgetPing,
+            status: freshRecent ? 'ok' : freshPing ? 'warning' : 'error',
+            detail: freshPing
+              ? `Dernier ping: ${freshPing.toLocaleString(language === 'fr' ? 'fr-FR' : language === 'es' ? 'es-ES' : 'en-US')}${!freshRecent ? ' (> 24h)' : ''}`
+              : 'Aucun ping reçu — le widget n\'est pas installé ou la clé est incorrecte',
+          };
         }
 
         allDiags.push({ domain: site.domain, results });

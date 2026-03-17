@@ -306,7 +306,7 @@ export function MyCorrectiveCodes() {
           </TabsList>
 
           <TabsContent value="scripts">
-            {codes.length === 0 ? (
+            {codes.filter(c => !validatedIds.has(c.id)).length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Code2 className="h-12 w-12 mx-auto mb-4 opacity-30" />
                 <p className="font-medium">{t.empty}</p>
@@ -314,8 +314,8 @@ export function MyCorrectiveCodes() {
               </div>
             ) : (
               <div className="space-y-3">
-                {codes.map((code) => {
-                  const isValidated = validatedIds.has(code.id);
+                {codes.filter(c => !validatedIds.has(c.id)).map((code) => {
+                  const isValidated = false;
                   const isValidating = validatingId === code.id;
 
                   return (
