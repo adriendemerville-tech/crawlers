@@ -312,13 +312,34 @@ Deno.serve(async (req) => {
 
     const t = translations[lang] || translations.fr;
 
+    // ── Fetch site identity card for enrichment ──
+    let identityHint = '';
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+      const ctx = await getSiteContext(supabase, { domain });
+      if (ctx) {
+        const parts: string[] = [];
+        if (ctx.market_sector) parts.push(`Sector: ${ctx.market_sector}`);
+        if (ctx.products_services) parts.push(`Products/Services: ${ctx.products_services}`);
+        if (ctx.target_audience) parts.push(`Target: ${ctx.target_audience}`);
+        if (ctx.commercial_area) parts.push(`Area: ${ctx.commercial_area}`);
+        if (parts.length > 0) identityHint = `\n\nVerified site identity:\n${parts.join('\n')}`;
+        console.log(`[diagnose-hallucination] Site context loaded (confidence: ${ctx.identity_confidence || 0})`);
+      }
+    } catch (e) {
+      console.warn('[diagnose-hallucination] Could not fetch site context:', e);
+    }
+
     // === ACTION: EXTRACT ===
     if (action === 'extract') {
       console.log(`[Diagnose] Extracting values for: ${domain}`);
 
       const content = await callAI(
         t.extractSystemPrompt,
-        t.extractUserPrompt(domain, coreValueSummary)
+        t.extractUserPrompt(domain, coreValueSummary + identityHint)
       );
 
       let extractedValues: DetectedValues;
