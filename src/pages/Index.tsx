@@ -65,6 +65,7 @@ const Index = () => {
   const [isPageSpeedLoading, setIsPageSpeedLoading] = useState(false);
   const [currentUrl, setCurrentUrl] = useState<string>('');
   const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const [hideLeadmagnet, setHideLeadmagnet] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [firstAnalysisDone, setFirstAnalysisDone] = useState(false);
   const { toast } = useToast();
@@ -117,6 +118,17 @@ const Index = () => {
     }
   }, [authUser, isSubscribed, isAdminUser, navTo]);
 
+  // Fetch hide_home_leadmagnet config
+  useEffect(() => {
+    supabase
+      .from('system_config')
+      .select('value')
+      .eq('key', 'hide_home_leadmagnet')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value === true) setHideLeadmagnet(true);
+      });
+  }, []);
 
 
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
@@ -576,6 +588,45 @@ const Index = () => {
           onTabChange={handleTabChange}
           currentUrl={currentUrl}
         />
+
+        {/* Pro Agency hero — visible only in leadmagnet mode */}
+        {hideLeadmagnet && (
+          <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-violet-950/20 via-background to-background py-14 sm:py-20">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.08),transparent_60%)]" />
+            <div className="relative mx-auto max-w-3xl px-4 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-violet-600/20 text-violet-400 border border-violet-500/30 text-sm px-4 py-1.5 mb-5">
+                <Crown className="h-4 w-4 text-yellow-500" />
+                {language === 'fr' ? 'Offre Pro Agency' : language === 'es' ? 'Oferta Pro Agency' : 'Pro Agency Plan'}
+              </div>
+              <h2 className="mb-4 text-2xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+                {language === 'fr' ? 'Passez au niveau supérieur avec ' : language === 'es' ? 'Sube de nivel con ' : 'Level up with '}
+                <span className="bg-gradient-to-r from-violet-500 to-amber-400 bg-clip-text text-transparent">Pro Agency</span>
+              </h2>
+              <p className="mx-auto mb-6 max-w-xl text-muted-foreground">
+                {language === 'fr'
+                  ? 'Suivi de 30 sites, Architecte Génératif multi-pages, crawl 5 000 pages/mois, rapports illimités et correctifs automatiques.'
+                  : language === 'es'
+                  ? 'Seguimiento de 30 sitios, Arquitecto Generativo multi-páginas, crawl de 5 000 páginas/mes, informes ilimitados y correcciones automáticas.'
+                  : '30-site tracking, multi-page Generative Architect, 5,000 pages/month crawl, unlimited reports & automatic fixes.'}
+              </p>
+              <div className="flex items-baseline justify-center gap-1 mb-6">
+                <span className="text-4xl font-extrabold text-foreground">59€</span>
+                <span className="text-lg text-muted-foreground">/mois</span>
+              </div>
+              <Link to="/pro-agency">
+                <Button
+                  size="lg"
+                  className="gap-2 bg-gradient-to-r from-violet-600 to-amber-500 hover:from-violet-700 hover:to-amber-600 text-white font-semibold px-8 shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Crown className="h-5 w-5 text-yellow-300" />
+                  {language === 'fr' ? 'Découvrir Pro Agency' : language === 'es' ? 'Descubrir Pro Agency' : 'Discover Pro Agency'}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </section>
+        )}
+
         {/* Active crawl notification banner */}
         <div className="max-w-3xl mx-auto px-4 mb-4">
           <ActiveCrawlBanner />
