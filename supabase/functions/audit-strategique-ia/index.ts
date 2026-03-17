@@ -2503,7 +2503,9 @@ Deno.serve(async (req) => {
       }
 
       if (localCompResult.status === 'fulfilled' && localCompResult.value) {
-        localCompetitorData = localCompResult.value;
+        const compResults = localCompResult.value;
+        localCompetitorsAll = Array.isArray(compResults) ? compResults : [compResults];
+        localCompetitorData = localCompetitorsAll[0] || null;
       }
 
       founderInfo = (founderResult.status === 'fulfilled' && founderResult.value)
