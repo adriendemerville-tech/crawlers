@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, Rocket, Bug } from 'lucide-react';
+import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, Rocket, Bug, Undo2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -96,14 +96,48 @@ export function MyCorrectiveCodes() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [validatedIds, setValidatedIds] = useState<Set<string>>(new Set());
   const [validatingId, setValidatingId] = useState<string | null>(null);
+  const [rollbackSites, setRollbackSites] = useState<{ id: string; domain: string }[]>([]);
 
   const dateLocale = language === 'fr' ? fr : language === 'es' ? es : enUS;
 
   useEffect(() => {
     if (user) {
       fetchCodes();
+      fetchRollbackSites();
     }
   }, [user]);
+
+  const fetchRollbackSites = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('tracked_sites')
+      .select('id, domain, previous_config')
+      .eq('user_id', user.id);
+    const sites = (data || []).filter((s: any) => s.previous_config && Object.keys(s.previous_config).length > 0);
+    setRollbackSites(sites.map((s: any) => ({ id: s.id, domain: s.domain })));
+  };
+
+  const handleRollback = async (siteId: string) => {
+    if (!user) return;
+    try {
+      const { data: site } = await supabase
+        .from('tracked_sites')
+        .select('previous_config')
+        .eq('id', siteId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!site?.previous_config) return;
+      await supabase
+        .from('tracked_sites')
+        .update({ current_config: site.previous_config, previous_config: {} } as any)
+        .eq('id', siteId)
+        .eq('user_id', user.id);
+      toast.success(language === 'fr' ? 'Rollback effectué' : 'Rollback done');
+      setRollbackSites(prev => prev.filter(s => s.id !== siteId));
+    } catch {
+      toast.error(language === 'fr' ? 'Erreur lors du rollback' : 'Rollback error');
+    }
+  };
 
   const fetchCodes = async () => {
     if (!user) return;
@@ -228,16 +262,31 @@ export function MyCorrectiveCodes() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardDescription>{t.description}</CardDescription>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/modifier-code-wordpress')}>
-                <Plug className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>WordPress</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex items-center gap-1.5">
+          {rollbackSites.map(site => (
+            <TooltipProvider key={site.id}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => handleRollback(site.id)}>
+                    <Undo2 className="h-3.5 w-3.5" />
+                    Rollback
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{site.domain}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/modifier-code-wordpress')}>
+                  <Plug className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>WordPress</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="scripts" className="w-full">
