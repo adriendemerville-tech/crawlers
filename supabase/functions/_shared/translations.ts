@@ -129,7 +129,17 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         addOg: 'les balises Open Graph',
         addTwitter: 'les balises Twitter Card',
         addBoth: 'Ajoutez les balises Open Graph et Twitter Card',
+      intentInTitle: {
+        name: 'Intention dans le Titre',
+        description: 'Le mot-clé principal ou l\'intention est visible dans le titre et la première phrase',
+        recommendation: 'Placez votre mot-clé principal dans le titre (H1 ou <title>) et dans la première phrase du contenu pour maximiser la pertinence IA',
       },
+      faqOrSummary: {
+        name: 'FAQ ou Résumé en Début',
+        description: 'Présence d\'une FAQ ou d\'un résumé en haut de page (TL;DR)',
+        recommendation: 'Ajoutez une section FAQ (avec balisage Schema FAQ) ou un résumé (TL;DR) en début d\'article pour faciliter l\'extraction par les IA',
+      },
+    },
       sitemap: {
         name: 'Sitemap XML',
         description: 'Sitemap déclaré dans robots.txt',
