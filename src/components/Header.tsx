@@ -277,6 +277,29 @@ export function Header() {
               </Button>
             </Link>
           )}
+          {isAuditExpertPage ? (
+            <>
+              <a href="/site-crawl" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <Globe className="h-4 w-4" />
+                  <span className="text-sm">Crawl</span>
+                </Button>
+              </a>
+              <a href="/integration-gtm" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                  <Puzzle className="h-4 w-4" />
+                  <span className="text-sm">GTM</span>
+                </Button>
+              </a>
+            </>
+          ) : (
+            <Link to="/site-crawl">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
+                <Globe className="h-4 w-4" />
+                <span className="text-sm">Crawl</span>
+              </Button>
+            </Link>
+          )}
           {isProfilePage && isAgencyPro && (
             <Link to="/cocoon">
               <Button variant="ghost" size="sm" className="gap-1.5 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10">
@@ -303,31 +326,6 @@ export function Header() {
               </Link>
             )
           ) : null}
-          {isAuditExpertPage ? (
-            <>
-              <a href="/site-crawl" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  <Globe className="h-4 w-4" />
-                  <span className="text-sm">Crawl</span>
-                </Button>
-              </a>
-              <a href="/integration-gtm" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  <Puzzle className="h-4 w-4" />
-                  <span className="text-sm">GTM</span>
-                </Button>
-              </a>
-            </>
-          ) : (
-            <>
-              <Link to="/site-crawl">
-                <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-                  <Globe className="h-4 w-4" />
-                  <span className="text-sm">Crawl</span>
-                </Button>
-              </Link>
-            </>
-          )}
         </div>
 
         {/* Right side: Audit CTA, Credits, Theme, User */}
