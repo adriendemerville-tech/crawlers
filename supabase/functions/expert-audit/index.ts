@@ -1932,6 +1932,75 @@ function generateRecommendations(scores: any, htmlAnalysis: HtmlAnalysis, psiDat
     });
   }
   
+  // ═══ INTERNAL LINKING (MAILLAGE) ═══
+  const internalLinks = htmlAnalysis.internalLinksCount || 0;
+  const externalLinks = htmlAnalysis.externalLinksCount || 0;
+  const uniquePaths = htmlAnalysis.uniqueInternalPaths || 0;
+
+  if (internalLinks < 3) {
+    recommendations.push({
+      id: 'orphan-page-risk',
+      priority: 'critical',
+      category: 'technique',
+      icon: '🔴',
+      title: `Page quasi-orpheline : seulement ${internalLinks} lien(s) interne(s) détecté(s)`,
+      description: `Cette page ne contient que ${internalLinks} lien(s) interne(s) vers d'autres pages du site. C'est un signal fort de mauvais maillage : les moteurs de recherche et les IA auront du mal à comprendre la place de cette page dans l'architecture du site.`,
+      weaknesses: [
+        `Seulement ${internalLinks} lien(s) interne(s) détecté(s)`,
+        "Risque de page orpheline pour les crawlers",
+        "Les IA ne peuvent pas contextualiser cette page dans le site",
+        "Impact négatif sur le PageRank interne"
+      ],
+      fixes: [
+        "Ajouter au minimum 5-10 liens internes pertinents vers des pages clés",
+        "Créer un maillage contextuel avec des ancres descriptives (pas de 'cliquez ici')",
+        "Lier vers les pages pilier (services, catégories, ressources)",
+        "Ajouter un bloc 'Articles connexes' ou 'Pages associées' en bas de page"
+      ]
+    });
+  } else if (internalLinks < 10 && (htmlAnalysis.wordCount || 0) > 500) {
+    recommendations.push({
+      id: 'weak-internal-linking',
+      priority: 'important',
+      category: 'technique',
+      icon: '🟠',
+      title: `Maillage interne faible : ${internalLinks} liens internes pour ${htmlAnalysis.wordCount} mots`,
+      description: `Le ratio maillage/contenu est faible. Pour une page de ${htmlAnalysis.wordCount} mots, on recommande au moins 10-15 liens internes pour maximiser le crawl budget et distribuer l'autorité.`,
+      weaknesses: [
+        `${internalLinks} liens internes pour un contenu de ${htmlAnalysis.wordCount} mots`,
+        `Seulement ${uniquePaths} destinations internes uniques`,
+        "Distribution d'autorité sous-optimale",
+      ],
+      fixes: [
+        "Viser un ratio de 1 lien interne pour 100-150 mots de contenu",
+        "Varier les ancres : inclure des mots-clés longue traîne",
+        "Lier vers les pages transactionnelles et les contenus complémentaires",
+        "Utiliser des ancres contextuelles riches plutôt que génériques"
+      ]
+    });
+  }
+
+  if (externalLinks === 0 && (htmlAnalysis.wordCount || 0) > 300) {
+    recommendations.push({
+      id: 'no-external-links',
+      priority: 'optional',
+      category: 'contenu',
+      icon: '🟡',
+      title: 'Aucun lien externe : risque de contenu « fermé »',
+      description: 'Aucun lien sortant vers des sources externes n\'a été détecté. Les moteurs et les IA valorisent les pages qui citent des sources fiables, études et références tierces.',
+      weaknesses: [
+        "Aucun lien externe sortant détecté",
+        "Perception de contenu auto-référencé",
+        "Les IA préfèrent les contenus qui citent des sources"
+      ],
+      fixes: [
+        "Ajouter 2-5 liens vers des sources d'autorité (études, rapports, documentation)",
+        "Citer des experts du domaine avec des liens vers leurs profils",
+        "Référencer des données officielles (INSEE, Google, études sectorielles)"
+      ]
+    });
+  }
+
   // ═══ LLMS.TXT CHECK ═══
   if (llmsTxtAnalysis && !llmsTxtAnalysis.exists) {
     recommendations.push({
