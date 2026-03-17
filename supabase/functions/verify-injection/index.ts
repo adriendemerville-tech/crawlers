@@ -201,7 +201,34 @@ Deno.serve(async (req) => {
       })
     }
 
-    // 5. Summary
+    // 5. Log errors to injection_error_logs
+    const errorResults = results.filter(r => !r.found)
+    if (errorResults.length > 0 && rules && rules.length > 0) {
+      const errorRows = []
+      for (const errResult of errorResults) {
+        const matchingRule = rules.find(r => {
+          const pattern = r.url_pattern || '*'
+          return errResult.pattern === pattern
+        })
+        if (matchingRule) {
+          errorRows.push({
+            rule_id: matchingRule.id,
+            domain_id: site.id,
+            user_id: site.user_id,
+            error_type: errResult.error ? 'fetch_failed' : 'not_found',
+            error_details: { url: errResult.url, status: errResult.status, error: errResult.error || null, method: errResult.method },
+            domain: site.domain,
+            url_pattern: errResult.pattern,
+            payload_type: matchingRule.payload_type,
+          })
+        }
+      }
+      if (errorRows.length > 0) {
+        await supabase.from('injection_error_logs').insert(errorRows)
+      }
+    }
+
+    // 6. Summary
     const totalChecked = results.length
     const totalFound = results.filter(r => r.found).length
     const allOk = totalFound === totalChecked && totalChecked > 0
