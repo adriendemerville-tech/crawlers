@@ -2,7 +2,7 @@ import { useEffect, lazy, Suspense, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock } from 'lucide-react';
+import { Settings, FileText, ArrowLeft, LogOut, Loader2, CheckSquare, Code2, Wallet, Shield, Radar, Crown, Bug, Lock, Network } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,6 +15,7 @@ import { MyCorrectiveCodes } from '@/components/Profile/MyCorrectiveCodes';
 import { MyWallet } from '@/components/Profile/MyWallet';
 import { MyTracking } from '@/components/Profile/MyTracking';
 import { MyCrawls } from '@/components/Profile/MyCrawls';
+import { CocoonTab } from '@/components/Profile/CocoonTab';
 import { AdminDashboard } from '@/components/Admin';
 import { ProfileSettings } from '@/components/Profile/ProfileSettings';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -201,6 +202,15 @@ export default function Profile() {
                   <span className="hidden sm:inline">Crawls</span>
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
+                {isProUser && (
+                  <TabsTrigger
+                    value="cocoon"
+                    className="flex-1 gap-2"
+                  >
+                    <Network className="h-4 w-4 text-violet-500" />
+                    <span className="hidden sm:inline">Cocoon</span>
+                  </TabsTrigger>
+                )}
                 <TabsTrigger value="action-plans" className="flex-1 gap-2">
                   <CheckSquare className="h-4 w-4" />
                   <span className="hidden sm:inline">{t.actionPlans}</span>
@@ -259,6 +269,12 @@ export default function Profile() {
               {isProUser && (
                 <TabsContent value="crawls">
                   <MyCrawls />
+                </TabsContent>
+              )}
+
+              {isProUser && (
+                <TabsContent value="cocoon">
+                  <CocoonTab />
                 </TabsContent>
               )}
 
