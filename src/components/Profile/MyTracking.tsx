@@ -128,6 +128,7 @@ interface TrackedSite {
   site_name: string;
   created_at: string;
   last_audit_at: string | null;
+  last_widget_ping?: string | null;
   api_key?: string;
   current_config?: Record<string, unknown>;
   previous_config?: Record<string, unknown>;
