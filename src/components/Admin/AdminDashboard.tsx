@@ -214,6 +214,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'finances': return <FinancesDashboard />;
       case 'intelligence': return <IntelligenceHub />;
       case 'silent-errors': return <SilentErrorsRegistry />;
+      case 'injection-errors': return <InjectionErrorsRegistry />;
       case 'ci-tests': return <CiTestsDashboard />;
       case 'scanned-urls': return <ScannedUrlsRegistry />;
       case 'users': return wrap(<UserManagement />);
