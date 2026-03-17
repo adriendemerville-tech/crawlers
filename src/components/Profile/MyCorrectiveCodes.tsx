@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, History, Bug } from 'lucide-react';
+import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, Rocket, Bug } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { MyScriptRulesHistory } from './MyScriptRulesHistory';
+import { MyInjectedScripts } from './MyInjectedScripts';
 import { ScriptDebugTool } from './ScriptDebugTool';
 
 interface CorrectiveCodeFix {
@@ -47,7 +47,7 @@ const translations = {
     validatedToast: 'Merci ! Script validé et ajouté à la bibliothèque éprouvée.',
     validateError: 'Erreur lors de la validation',
     tabScripts: 'Scripts',
-    tabHistory: 'Historique',
+    tabInjection: 'Injection',
     tabDebug: 'Diagnostic',
   },
   en: {
@@ -64,7 +64,7 @@ const translations = {
     validatedToast: 'Thanks! Script validated and added to the proven library.',
     validateError: 'Error validating',
     tabScripts: 'Scripts',
-    tabHistory: 'History',
+    tabInjection: 'Injection',
     tabDebug: 'Diagnostic',
   },
   es: {
@@ -81,7 +81,7 @@ const translations = {
     validatedToast: '¡Gracias! Script validado y añadido a la biblioteca probada.',
     validateError: 'Error al validar',
     tabScripts: 'Scripts',
-    tabHistory: 'Historial',
+    tabInjection: 'Inyección',
     tabDebug: 'Diagnóstico',
   },
 };
@@ -246,9 +246,9 @@ export function MyCorrectiveCodes() {
               <Code2 className="w-3 h-3" />
               {t.tabScripts}
             </TabsTrigger>
-            <TabsTrigger value="history" className="text-xs gap-1.5 h-7">
-              <History className="w-3 h-3" />
-              {t.tabHistory}
+            <TabsTrigger value="injection" className="text-xs gap-1.5 h-7">
+              <Rocket className="w-3 h-3" />
+              {t.tabInjection}
             </TabsTrigger>
             <TabsTrigger value="debug" className="text-xs gap-1.5 h-7">
               <Bug className="w-3 h-3" />
@@ -353,8 +353,8 @@ export function MyCorrectiveCodes() {
             )}
           </TabsContent>
 
-          <TabsContent value="history">
-            <MyScriptRulesHistory />
+          <TabsContent value="injection">
+            <MyInjectedScripts />
           </TabsContent>
 
           <TabsContent value="debug">
