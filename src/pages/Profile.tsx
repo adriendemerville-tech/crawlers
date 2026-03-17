@@ -203,13 +203,14 @@ export default function Profile() {
                   {!isProUser && <Lock className="h-3 w-3 text-muted-foreground" />}
                 </TabsTrigger>
                 {isProUser && (
-                  <TabsTrigger
-                    value="cocoon"
-                    className="flex-1 gap-2"
+                  <Link
+                    to="/cocoon"
+                    className="inline-flex items-center justify-center gap-2 flex-1 rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-colors hover:bg-muted hover:text-foreground text-muted-foreground"
                   >
                     <Network className="h-4 w-4 text-violet-500" />
                     <span className="hidden sm:inline">Cocoon</span>
-                  </TabsTrigger>
+                    <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-violet-500/40 text-violet-500">BETA</Badge>
+                  </Link>
                 )}
                 <TabsTrigger value="action-plans" className="flex-1 gap-2">
                   <CheckSquare className="h-4 w-4" />
