@@ -14,8 +14,7 @@ import { fetchGA4Engagement, type GA4Engagement } from '../_shared/fetchGA4.ts'
  * - Updates reliability grades per audit function
  */
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
-const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+// Singleton client via _shared/supabaseClient.ts
 const GA4_API = 'https://analyticsdata.googleapis.com/v1beta'
 
 async function fetchGscForDomain(accessToken: string, domain: string): Promise<any> {
