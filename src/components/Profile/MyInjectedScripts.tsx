@@ -299,6 +299,7 @@ export function MyInjectedScripts() {
     }
   };
 
+  const getPayloadPreview = (rule: ScriptRule): string | null => {
     if (!rule.payload_data) return null;
     try {
       const data = typeof rule.payload_data === 'string' ? JSON.parse(rule.payload_data) : rule.payload_data;
