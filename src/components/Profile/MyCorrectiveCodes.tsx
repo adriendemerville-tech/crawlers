@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, History, Bug } from 'lucide-react';
+import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, Rocket, Bug } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
