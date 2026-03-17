@@ -128,6 +128,7 @@ interface TrackedSite {
   site_name: string;
   created_at: string;
   last_audit_at: string | null;
+  last_widget_ping?: string | null;
   api_key?: string;
   current_config?: Record<string, unknown>;
   previous_config?: Record<string, unknown>;
@@ -969,33 +970,56 @@ export function MyTracking() {
                       )}
 
                       {/* Connect/Disconnect site button → opens modal */}
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        className={cn(
-                          "h-8 w-8 relative",
-                          isSiteSynced(currentSite.current_config as Record<string, unknown>) && "border-destructive/50 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        )}
-                        title={isSiteSynced(currentSite.current_config as Record<string, unknown>)
-                          ? (language === 'fr' ? 'Débrancher mon site' : language === 'es' ? 'Desconectar mi sitio' : 'Disconnect my site')
-                          : (language === 'fr' ? 'Brancher mon site' : language === 'es' ? 'Conectar mi sitio' : 'Connect my site')
-                        }
-                        onClick={() => {
-                          setWpConnectSiteId(currentSite.id);
-                          setShowWpModal(true);
-                          setWpApiKeyVisible(false);
-                          setWpApiKeyCopied(false);
-                        }}
-                      >
-                        {isSiteSynced(currentSite.current_config as Record<string, unknown>) ? (
-                          <Unplug className="h-3.5 w-3.5" />
-                        ) : (
-                          <>
-                            <Plug className="h-3.5 w-3.5" />
-                            <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-orange-500 border-2 border-background" />
-                          </>
-                        )}
-                      </Button>
+                      {(() => {
+                        const synced = isSiteSynced(currentSite.current_config as Record<string, unknown>);
+                        const pingDate = currentSite.last_widget_ping ? new Date(currentSite.last_widget_ping as string) : null;
+                        const isWidgetAlive = pingDate && (Date.now() - pingDate.getTime()) < 24 * 60 * 60 * 1000;
+                        const isConnected = synced || isWidgetAlive;
+                        const isStale = synced && !isWidgetAlive;
+
+                        const tooltipText = isConnected && !isStale
+                          ? (language === 'fr' ? 'Votre site est branché' : language === 'es' ? 'Su sitio está conectado' : 'Your site is connected')
+                          : (language === 'fr' ? 'Votre site est débranché' : language === 'es' ? 'Su sitio está desconectado' : 'Your site is disconnected');
+
+                        return (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                size="icon"
+                                className={cn(
+                                  "h-8 w-8 relative group",
+                                  isConnected && !isStale && "border-emerald-500/50 text-emerald-600 hover:text-emerald-500 hover:bg-emerald-500/10",
+                                  isStale && "border-amber-500/50 text-amber-600 hover:text-amber-500 hover:bg-amber-500/10",
+                                  !isConnected && !isStale && ""
+                                )}
+                                onClick={() => {
+                                  setWpConnectSiteId(currentSite.id);
+                                  setShowWpModal(true);
+                                  setWpApiKeyVisible(false);
+                                  setWpApiKeyCopied(false);
+                                }}
+                              >
+                                {isConnected && !isStale ? (
+                                  <Unplug className="h-3.5 w-3.5" />
+                                ) : (
+                                  <>
+                                    <Plug className="h-3.5 w-3.5" />
+                                    <span className={cn(
+                                      "absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border-2 border-background",
+                                      isStale ? "bg-amber-500 animate-pulse" : "bg-orange-500"
+                                    )} />
+                                  </>
+                                )}
+                                {/* Hover tooltip banner */}
+                                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium px-2 py-0.5 rounded bg-popover border shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                  {tooltipText}
+                                </span>
+                              </Button>
+                            </PopoverTrigger>
+                          </Popover>
+                        );
+                      })()}
 
                       {!gscConnected && (
                         <Button 
