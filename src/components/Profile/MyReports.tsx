@@ -428,10 +428,13 @@ export function MyReports() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-end">
-          <Button onClick={() => setShowNewFolderDialog(true)} size="sm" className="gap-2">
-            <FolderPlus className="h-4 w-4" />
-            {t.createFolder}
-          </Button>
+          <button
+            onClick={() => setShowNewFolderDialog(true)}
+            className="p-2 rounded-lg text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/60 transition-colors"
+            title={t.createFolder}
+          >
+            <FolderPlus className="h-5 w-5" />
+          </button>
         </div>
       </CardHeader>
       <CardContent>
