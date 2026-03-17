@@ -65,7 +65,7 @@ const priorityConfig = {
   },
 };
 
-export function TechnicalTab({ fixes, onToggle, onRequestAuth }: TechnicalTabProps) {
+export function TechnicalTab({ fixes, onToggle, onRequestAuth, disabled }: TechnicalTabProps) {
   const { user } = useAuth();
   const { openMode } = useFreemiumMode();
   const isAnonymousFreemium = openMode && !user;
