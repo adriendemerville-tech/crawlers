@@ -125,11 +125,52 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
   const extraLlms = [...new Set(scores.map(s => s.llm_name))].filter(n => !LLM_ORDER.includes(n as any));
   const allLlms = [...llmNames, ...extraLlms];
 
-  // Build lookup: llm -> week -> score
-  const scoreMap = new Map<string, Map<string, number>>();
+  // Build lookup: llm -> week -> raw score
+  const rawScoreMap = new Map<string, Map<string, number>>();
   for (const s of scores) {
-    if (!scoreMap.has(s.llm_name)) scoreMap.set(s.llm_name, new Map());
-    scoreMap.get(s.llm_name)!.set(s.week_start_date, s.score_percentage);
+    if (!rawScoreMap.has(s.llm_name)) rawScoreMap.set(s.llm_name, new Map());
+    rawScoreMap.get(s.llm_name)!.set(s.week_start_date, s.score_percentage);
+  }
+
+  // Temporal normalization: weight each week's score by its 4-week trend
+  // Formula: adjusted = raw * (1 + α * trend), α = 0.3
+  // trend = (current - mean_of_prev_3) / 100, clamped to [-0.5, 0.5]
+  const TREND_ALPHA = 0.3;
+  const scoreMap = new Map<string, Map<string, number>>();
+  const trendMap = new Map<string, Map<string, number>>(); // llm -> week -> trend direction
+
+  for (const llm of allLlms) {
+    const llmRaw = rawScoreMap.get(llm);
+    if (!llmRaw) continue;
+    const normalizedWeekMap = new Map<string, number>();
+    const trendWeekMap = new Map<string, number>();
+
+    for (let i = 0; i < weeks.length; i++) {
+      const week = weeks[i];
+      const raw = llmRaw.get(week);
+      if (raw == null) continue;
+
+      // Collect up to 3 previous weeks' scores
+      const prevScores: number[] = [];
+      for (let j = Math.max(0, i - 3); j < i; j++) {
+        const prev = llmRaw.get(weeks[j]);
+        if (prev != null) prevScores.push(prev);
+      }
+
+      if (prevScores.length === 0) {
+        // No history: use raw score
+        normalizedWeekMap.set(week, raw);
+        trendWeekMap.set(week, 0);
+      } else {
+        const prevMean = prevScores.reduce((a, b) => a + b, 0) / prevScores.length;
+        const trend = Math.max(-0.5, Math.min(0.5, (raw - prevMean) / 100));
+        const adjusted = Math.max(0, Math.min(100, Math.round(raw * (1 + TREND_ALPHA * trend))));
+        normalizedWeekMap.set(week, adjusted);
+        trendWeekMap.set(week, trend);
+      }
+    }
+    scoreMap.set(llm, normalizedWeekMap);
+    trendMap.set(llm, trendWeekMap);
   }
 
   if (loading) {
@@ -214,7 +255,9 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
                   </td>
                   {weeks.map(week => {
                     const score = scoreMap.get(llmName)?.get(week);
+                    const trend = trendMap.get(llmName)?.get(week) ?? 0;
                     const hasScore = score != null;
+                    const trendIcon = trend > 0.05 ? '↑' : trend < -0.05 ? '↓' : '';
                     return (
                       <td key={week} className="text-center pb-1.5 pl-1.5 pr-0 pt-0">
                         <div
@@ -223,6 +266,7 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
                           }`}
                         >
                           {hasScore ? `${Math.round(score)}%` : '—'}
+                          {trendIcon && <span className="ml-0.5 text-[9px] opacity-80">{trendIcon}</span>}
                         </div>
                       </td>
                     );
@@ -240,10 +284,10 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
         </div>
         <p className="text-[10px] text-muted-foreground/70 mt-2 italic">
           {language === 'fr'
-            ? 'Score basé sur 3 itérations conversationnelles par modèle (1ère = 100 pts, 2ème = 50 pts, 3ème = 25 pts, absent = 0).'
+            ? 'Score normalisé par la tendance sur 4 semaines (↑ progression, ↓ régression). Base : 3 itérations × modèle.'
             : language === 'es'
-              ? 'Puntuación basada en 3 iteraciones conversacionales por modelo (1ª = 100 pts, 2ª = 50 pts, 3ª = 25 pts, ausente = 0).'
-              : 'Score based on 3 conversational iterations per model (1st = 100 pts, 2nd = 50 pts, 3rd = 25 pts, absent = 0).'}
+              ? 'Puntuación normalizada por tendencia de 4 semanas (↑ progresión, ↓ regresión). Base: 3 iteraciones × modelo.'
+              : 'Score normalized by 4-week trend (↑ improving, ↓ declining). Base: 3 iterations × model.'}
         </p>
       </CardContent>
     </Card>
