@@ -262,16 +262,31 @@ export function MyCorrectiveCodes() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardDescription>{t.description}</CardDescription>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/modifier-code-wordpress')}>
-                <Plug className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>WordPress</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex items-center gap-1.5">
+          {rollbackSites.map(site => (
+            <TooltipProvider key={site.id}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => handleRollback(site.id)}>
+                    <Undo2 className="h-3.5 w-3.5" />
+                    Rollback
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{site.domain}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/modifier-code-wordpress')}>
+                  <Plug className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>WordPress</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="scripts" className="w-full">
