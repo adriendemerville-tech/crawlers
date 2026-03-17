@@ -212,6 +212,17 @@ export function StrategicResultsSection({
             {result.strategicAnalysis && (
               <AEOScoreCard result={result} />
             )}
+
+            {/* Maillage Interne (IPR) */}
+            {maillageData && (
+              <MaillageIPRCard
+                data={maillageData}
+                onExploreCocoon={() => {
+                  const domain = (result.domain || url).replace(/^https?:\/\//, '').replace(/^www\./, '');
+                  window.location.href = `/cocoon?domain=${encodeURIComponent(domain)}`;
+                }}
+              />
+            )}
           </FreemiumAwareContent>
 
           {/* Registration Gate — hidden in freemium open mode */}
