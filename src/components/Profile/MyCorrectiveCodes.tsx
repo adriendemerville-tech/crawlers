@@ -312,6 +312,25 @@ export function MyCorrectiveCodes() {
               </Tooltip>
             </TooltipProvider>
           ))}
+          {injectableSites.map(site => (
+            <TooltipProvider key={`verify-${site.id}`}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={() => handleVerifyInjection(site.id)}
+                    disabled={verifyLoading}
+                  >
+                    {verifyLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FlaskConical className="h-3.5 w-3.5" />}
+                    {language === 'fr' ? 'Tester' : 'Test'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{site.domain} — {language === 'fr' ? 'Vérifier l\'injection' : 'Verify injection'}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
