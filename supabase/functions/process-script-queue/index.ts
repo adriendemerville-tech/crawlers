@@ -159,6 +159,34 @@ Deno.serve(async (req) => {
 // AI PAYLOAD GENERATION PER RULE TYPE
 // ══════════════════════════════════════════════════════════════
 
+// ── Intent-aware prompt strategies ──
+const INTENT_STRATEGIES: Record<string, { focus: string; schemaHint: string; tone: string }> = {
+  transactional: {
+    focus: 'conversion, appels à l\'action, prix, offres, garanties, avis clients',
+    schemaHint: 'Product, Offer, AggregateRating',
+    tone: 'persuasif et orienté action',
+  },
+  commercial: {
+    focus: 'comparaison, avantages concurrentiels, témoignages, études de cas, ROI',
+    schemaHint: 'Product, Review, AggregateRating',
+    tone: 'expert et rassurant',
+  },
+  informational: {
+    focus: 'éducation, expertise E-E-A-T, définitions, guides, données factuelles',
+    schemaHint: 'Article, HowTo, FAQPage',
+    tone: 'pédagogique et autoritaire',
+  },
+  navigational: {
+    focus: 'identité de marque, coordonnées, structure du site, maillage interne',
+    schemaHint: 'Organization, WebSite, BreadcrumbList',
+    tone: 'clair et structuré',
+  },
+};
+
+function getIntentStrategy(intent: string) {
+  return INTENT_STRATEGIES[intent] || INTENT_STRATEGIES.informational;
+}
+
 async function generatePayloadForRule(
   rule: {
     id: string;
@@ -172,6 +200,7 @@ async function generatePayloadForRule(
 ): Promise<Record<string, any> | null> {
   const payloadType = rule.payload_type;
   const existingData = rule.payload_data || {};
+  const pageIntent = (existingData._intent as string) || 'informational';
 
   // Static payload types don't need AI generation
   const STATIC_TYPES = ['BreadcrumbList', 'GLOBAL_FIXES'];
@@ -194,11 +223,12 @@ async function generatePayloadForRule(
   const domain = site.domain;
   const siteConfig = (site.current_config as Record<string, any>) || {};
   const siteName = siteConfig.site_name || domain;
+  const strategy = getIntentStrategy(pageIntent);
 
-  // Generate payload based on type
+  // Generate payload based on type + intent
   switch (payloadType) {
     case 'FAQPage':
-      return await generateFAQPayload(domain, siteName, rule.url_pattern, lovableApiKey);
+      return await generateFAQPayload(domain, siteName, rule.url_pattern, lovableApiKey, strategy, pageIntent);
     case 'Organization':
       return generateOrganizationPayload(domain, siteName, existingData);
     case 'LocalBusiness':
@@ -208,7 +238,7 @@ async function generatePayloadForRule(
     case 'Product':
       return generateProductPayload(domain, siteName, existingData);
     case 'HTML_INJECTION':
-      return await generateHTMLPayload(domain, siteName, rule.url_pattern, existingData, lovableApiKey);
+      return await generateHTMLPayload(domain, siteName, rule.url_pattern, existingData, lovableApiKey, strategy, pageIntent);
     default:
       return null;
   }
@@ -219,10 +249,11 @@ async function generateFAQPayload(
   domain: string,
   siteName: string,
   urlPattern: string,
-  apiKey: string | undefined
+  apiKey: string | undefined,
+  strategy: { focus: string; schemaHint: string; tone: string },
+  intent: string
 ): Promise<Record<string, any>> {
   if (!apiKey) {
-    // Fallback: generic FAQ
     return {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
@@ -231,11 +262,6 @@ async function generateFAQPayload(
           '@type': 'Question',
           name: `Qu'est-ce que ${siteName} ?`,
           acceptedAnswer: { '@type': 'Answer', text: `${siteName} est un service disponible sur ${domain}.` },
-        },
-        {
-          '@type': 'Question',
-          name: `Comment contacter ${siteName} ?`,
-          acceptedAnswer: { '@type': 'Answer', text: `Visitez ${domain} pour nous contacter.` },
         },
       ],
     };
@@ -254,11 +280,11 @@ async function generateFAQPayload(
         messages: [
           {
             role: 'system',
-            content: 'Tu génères des FAQ SEO Schema.org pour des sites web. Réponds UNIQUEMENT en JSON valide, sans markdown.',
+            content: `Tu génères des FAQ SEO Schema.org pour des sites web. L'intent de cette page est "${intent}". Adapte le ton (${strategy.tone}) et les sujets abordés (${strategy.focus}). Réponds UNIQUEMENT en JSON valide, sans markdown.`,
           },
           {
             role: 'user',
-            content: `Génère une FAQPage JSON-LD avec 3-5 questions pertinentes pour la section \\"${section}\\" du site \\"${siteName}\\" (${domain}). Les questions doivent être naturelles et les réponses factuelles (50-80 mots). Format: {\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"FAQPage\\",\\"mainEntity\\":[{\\"@type\\":\\"Question\\",\\"name\\":\\"...\\",\\"acceptedAnswer\\":{\\"@type\\":\\"Answer\\",\\"text\\":\\"...\\"}}]}`,
+            content: `Génère une FAQPage JSON-LD avec 3-5 questions pertinentes pour la section "${section}" du site "${siteName}" (${domain}). Intent: ${intent} → les questions doivent être orientées ${strategy.focus}. Format: {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"...","acceptedAnswer":{"@type":"Answer","text":"..."}}]}`,
           },
         ],
         temperature: 0.6,
@@ -278,7 +304,6 @@ async function generateFAQPayload(
     return JSON.parse(content);
   } catch (err) {
     console.error('[process-script-queue] FAQ AI error:', err);
-    // Fallback
     return {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
@@ -353,14 +378,16 @@ async function generateHTMLPayload(
   siteName: string,
   urlPattern: string,
   existing: Record<string, any>,
-  apiKey: string | undefined
+  apiKey: string | undefined,
+  strategy: { focus: string; schemaHint: string; tone: string },
+  intent: string
 ): Promise<Record<string, any>> {
   // If HTML is already provided, keep it
   if (existing.html && existing.html.length > 50) return existing;
 
   if (!apiKey) {
     return {
-      html: `<section data-crawlers=\"injected\"><h2>${siteName}</h2><p>Contenu optimisé pour ${domain}</p></section>`,
+      html: `<section data-crawlers="injected"><h2>${siteName}</h2><p>Contenu optimisé pour ${domain}</p></section>`,
       targetSelector: existing.targetSelector || 'footer',
       insertPosition: existing.insertPosition || 'before',
     };
@@ -368,6 +395,15 @@ async function generateHTMLPayload(
 
   try {
     const section = urlPattern.replace('/*', '').replace('GLOBAL', '/');
+
+    // Intent-specific HTML generation instructions
+    const intentInstructions: Record<string, string> = {
+      transactional: `Génère un bloc HTML orienté CONVERSION : avantages produit/service, CTA clair, éléments de réassurance (garantie, livraison, avis). Inclus des micro-données ${strategy.schemaHint} si pertinent.`,
+      commercial: `Génère un bloc HTML orienté DÉCISION : comparatif, bénéfices clés, témoignages clients, chiffres clés. Ton ${strategy.tone}.`,
+      informational: `Génère un bloc HTML orienté EXPERTISE : contenu éducatif, définitions, données factuelles, citations de sources. Renforce l'E-E-A-T et la citabilité LLM.`,
+      navigational: `Génère un bloc HTML orienté NAVIGATION : présentation claire de l'entité, coordonnées, liens structurels, identité de marque.`,
+    };
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -379,11 +415,11 @@ async function generateHTMLPayload(
         messages: [
           {
             role: 'system',
-            content: 'Tu génères des blocs HTML SEO-optimisés pour injection dans des pages web. Code HTML sémantique uniquement, pas de JS ni CSS inline complexe. Réponds UNIQUEMENT avec le HTML brut.',
+            content: `Tu génères des blocs HTML SEO-optimisés pour injection dans des pages web. L'intent de cette page est "${intent}". Adapte le contenu en conséquence : ${strategy.focus}. Code HTML sémantique uniquement, pas de JS ni CSS inline complexe. Réponds UNIQUEMENT avec le HTML brut.`,
           },
           {
             role: 'user',
-            content: `Génère un bloc HTML sémantique (~100-200 mots) pour la section \\"${section}\\" du site \\"${siteName}\\" (${domain}). Le bloc doit renforcer l'E-E-A-T et la citabilité LLM. Inclus un h2, 2-3 paragraphes avec données factuelles. Pas de markdown, juste du HTML.`,
+            content: `${intentInstructions[intent] || intentInstructions.informational} Section "${section}" du site "${siteName}" (${domain}). ~100-200 mots, h2 + 2-3 paragraphes. Pas de markdown, juste du HTML.`,
           },
         ],
         temperature: 0.6,
@@ -403,11 +439,12 @@ async function generateHTMLPayload(
       html,
       targetSelector: existing.targetSelector || 'footer',
       insertPosition: existing.insertPosition || 'before',
+      _intent: intent,
     };
   } catch (err) {
     console.error('[process-script-queue] HTML AI error:', err);
     return {
-      html: `<section data-crawlers=\"injected\"><h2>${siteName}</h2><p>Contenu optimisé pour ${domain}</p></section>`,
+      html: `<section data-crawlers="injected"><h2>${siteName}</h2><p>Contenu optimisé pour ${domain}</p></section>`,
       targetSelector: existing.targetSelector || 'footer',
       insertPosition: existing.insertPosition || 'before',
     };
