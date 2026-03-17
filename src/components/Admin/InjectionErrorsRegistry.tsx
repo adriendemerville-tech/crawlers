@@ -49,7 +49,7 @@ export function InjectionErrorsRegistry() {
     }
 
     const { data } = await query;
-    setErrors((data || []) as InjectionError[]);
+    setErrors((data || []) as unknown as InjectionError[]);
   };
 
   useEffect(() => {
