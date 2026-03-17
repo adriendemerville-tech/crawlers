@@ -303,16 +303,33 @@ export function MyCorrectiveCodes() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardDescription>{t.description}</CardDescription>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/modifier-code-wordpress')}>
-                <Plug className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>WordPress</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex items-center gap-1">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground" onClick={() => { fetchCodes(); fetchInjectableSites(); toast.success(language === 'fr' ? 'Actualisé' : 'Refreshed'); }}>
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{language === 'fr' ? 'Actualiser' : 'Refresh'}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => {
+                  if (injectableSites.length > 0) {
+                    setPlugSiteId(injectableSites[0].id);
+                  }
+                  setShowPlugModal(true);
+                }}>
+                  <Plug className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Plug</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="injection" className="w-full">
