@@ -28,7 +28,7 @@ const FUNCTION_CATEGORIES: Record<string, string[]> = {
   ],
   'LLM & Visibilité IA': [
     'check-llm', 'check-llm-depth', 'calculate-llm-visibility', 'calculate-llm-volumes',
-    'refresh-llm-visibility-all', 'check-geo',
+    'refresh-llm-visibility-all', 'check-geo', 'calculate-sov',
   ],
   'SERP & Data': [
     'fetch-serp-kpis', 'generate-more-keywords', 'generate-target-queries',
@@ -44,7 +44,7 @@ const FUNCTION_CATEGORIES: Record<string, string[]> = {
   ],
   'Utilisateurs & Auth': [
     'ensure-profile', 'send-password-reset', 'send-verification-code', 'verify-email-code',
-    'check-email-exists', 'verify-turnstile', 'manage-team',
+    'check-email-exists', 'verify-turnstile', 'manage-team', 'admin-update-plan',
   ],
   'Scripts & Déploiement': [
     'serve-client-script', 'get-final-script', 'process-script-queue', 'dry-run-script',
@@ -63,6 +63,9 @@ const FUNCTION_CATEGORIES: Record<string, string[]> = {
   ],
   'IAS & Metrics': [
     'calculate-ias', 'extract-pdf-data',
+  ],
+  'Admin & Debug': [
+    'kill-all-viewers', 'run-backend-tests', 'view-function-source',
   ],
 };
 

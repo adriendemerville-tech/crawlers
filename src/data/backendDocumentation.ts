@@ -845,6 +845,115 @@ Landing page marketing avec comparaison GEO vs SEO et grille de fonctionnalités
 - \\\`INSERT / UPDATE / DELETE\\\` : \\\`user_id = auth.uid()\\\`
 `,
   },
+  // ───────────────────────────────────────────────
+  // SECTION : INDICATEURS SEO / GEO / SERP / EEAT
+  // ───────────────────────────────────────────────
+  {
+    id: 'indicators',
+    title: 'Indicateurs SEO / GEO / SERP / EEAT',
+    icon: 'Package',
+    content: \`
+# Indicateurs SEO / GEO / SERP / EEAT
+
+Référentiel de tous les indicateurs calculés par la plateforme, avec leur source et leur mode de construction.
+
+---
+
+## Indicateurs SEO (Audit Technique)
+
+| Indicateur | Construction |
+|------------|-------------|
+| **Score SEO** | Moyenne pondérée de 6 sous-scores : performance mobile, structure HTML (Hn, meta), sécurité (HTTPS, Safe Browsing), accessibilité bots, densité contenu et maillage. |
+| **Perf. Mobile** | Score PageSpeed Insights (API Google) mesurant LCP, FCP, CLS, TTFB et TBT sur émulation mobile Moto G Power. |
+| **Perf. Desktop** | Même calcul que Perf. Mobile mais sur émulation desktop via l'API PageSpeed Insights. |
+| **LCP (Largest Contentful Paint)** | Temps de rendu du plus grand élément visible (image ou bloc texte), mesuré en millisecondes par PageSpeed Insights. |
+| **FCP (First Contentful Paint)** | Temps avant l'affichage du premier texte ou image, mesuré en millisecondes par PageSpeed Insights. |
+| **CLS (Cumulative Layout Shift)** | Somme des décalages visuels inattendus pendant le chargement, score sans unité (0 = stable). |
+| **TTFB (Time To First Byte)** | Temps de réponse du serveur au premier octet, mesuré en millisecondes par PageSpeed Insights. |
+| **Ratio texte/HTML** | Pourcentage de contenu textuel visible par rapport au code HTML total, calculé après suppression des balises script/style/template. Exclu du score si la page est une homepage. |
+| **Volume de contenu** | Nombre de mots de texte visible extraits du DOM après nettoyage (seuil : 500 mots minimum). |
+| **Profil de liens** | Comptage des liens internes et externes détectés dans le DOM de la page analysée. |
+| **Images sans alt** | Nombre d'images dont l'attribut \\\`alt\\\` est absent ou vide, détecté par parsing HTML avec regex multi-format. |
+| **Poids de page** | Taille totale des ressources chargées (HTML + CSS + JS + images), récupérée via PageSpeed Insights. |
+| **Détection SPA** | Compare le volume de texte entre le HTML brut et le rendu Browserless pour identifier les Single Page Applications. |
+
+---
+
+## Indicateurs GEO (Generative Engine Optimization)
+
+| Indicateur | Construction |
+|------------|-------------|
+| **Score GEO** | Score composite (0-100%) évaluant la compatibilité du site avec les moteurs de recherche génératifs (SGE, ChatGPT, Perplexity). |
+| **Robots.txt** | Vérifie l'existence et le contenu du fichier robots.txt : permissivité générale et autorisation spécifique des bots IA (GPTBot, Google-Extended, ClaudeBot, etc.). |
+| **Bots IA autorisés** | Nombre de crawlers IA explicitement autorisés dans le robots.txt, sur un total de 6 bots principaux vérifiés. |
+| **JSON-LD** | Détection et validation syntaxique des blocs JSON-LD dans le code source statique de la page (les JSON-LD injectés par JavaScript sont pénalisés de -3 pts). |
+| **Schema.org** | Présence de données structurées Schema.org (JSON-LD, Microdata ou RDFa) dans le HTML de la page. |
+| **Cohérence Title/H1** | Similarité textuelle entre la balise Title et le H1 principal, calculée par comparaison de tokens (seuil : 30% minimum). |
+| **llms.txt** | Détection de la présence d'un fichier \\\`llms.txt\\\` à la racine du domaine, standard émergent pour guider les LLM. |
+| **Citabilité LLM** | Score estimant la probabilité qu'un LLM cite cette page dans ses réponses, basé sur la structure du contenu (listes, FAQ, tableaux), la densité informationnelle et la présence de données structurées. |
+| **Content Gap** | Écart entre le contenu existant et le contenu attendu par les LLM sur le sujet, évalué par analyse comparative SERP + IA. |
+
+---
+
+## Indicateurs SERP & Concurrence
+
+| Indicateur | Construction |
+|------------|-------------|
+| **Position SERP** | Position organique du domaine sur le mot-clé cible, récupérée via l'API DataForSEO (Google FR). |
+| **Volume de recherche** | Volume mensuel moyen de recherches pour le mot-clé, fourni par DataForSEO (données Google Keyword Planner). |
+| **Keyword Difficulty (KD)** | Indice de difficulté (0-100) pour se positionner sur le mot-clé, calculé par DataForSEO à partir de l'autorité des pages en top 10. |
+| **CPC** | Coût par clic moyen en EUR du mot-clé dans Google Ads, fourni par DataForSEO. |
+| **Part de voix (SOV)** | Pourcentage de visibilité SERP du domaine sur l'ensemble des requêtes cibles suivies, calculé par \\\`calculate-sov\\\`. |
+| **Competitors SERP** | Liste des 10 premiers domaines positionnés sur le mot-clé cible avec leur autorité respective, via DataForSEO. |
+| **ROI Prédictif** | Estimation annualisée du revenu potentiel : \\\`trafic_estimé × CPC × taux_conversion × 12\\\`. |
+| **Estimation trafic** | Si position connue : lookup table CTR (pos 1 = 28%…pos 10 = 2%). Sinon : \\\`volume × CTR_estimé\\\`. |
+
+---
+
+## Indicateurs E-E-A-T (Thought Leadership)
+
+| Indicateur | Construction |
+|------------|-------------|
+| **Score E-E-A-T** | Score global (0-10) évaluant l'Expérience, l'Expertise, l'Autorité et la Fiabilité du site, calculé par analyse IA des signaux SERP en temps réel. |
+| **Signaux sociaux** | Détection de la présence officielle de la marque sur les réseaux sociaux (Facebook, LinkedIn, Twitter/X) via recherche SERP croisée marque + secteur. |
+| **Autorité sémantique** | Mesure de la force du domaine comme source de référence sur son sujet, basée sur le ratio de domaines gouvernementaux, éducatifs et médias dans les résultats SERP concurrents. |
+| **Sentiment IA** | Perception de la marque par les LLM (très positif / positif / neutre / négatif), évaluée en interrogeant directement les modèles IA sur la réputation du domaine. |
+
+---
+
+## Indicateurs LLM (Benchmark)
+
+| Indicateur | Construction |
+|------------|-------------|
+| **Visibilité IA** | Score (0-100) mesurant si le domaine est mentionné par les LLM en réponse à des requêtes sectorielles, testé sur ChatGPT, Gemini et Perplexity. |
+| **Benchmark LLM** | Scores de visibilité par modèle IA (ChatGPT, Gemini, Perplexity), mesurés via 3 itérations conversationnelles pondérées (100/50/25 pts). |
+| **Taux de citation LLM** | Pourcentage de requêtes pour lesquelles le domaine est explicitement cité dans la réponse du LLM. |
+| **Volumes LLM estimés** | Estimation du trafic potentiel provenant de chaque LLM, calculée via la table \\\`market_trends\\\` (parts de marché FR) × taux de pénétration par type d'intention (informationnelle, commerciale, locale). |
+| **LLM Depth** | Test approfondi en 3 itérations conversationnelles avec relances (alternatives, niches), vérifiant si la marque apparaît naturellement dans les réponses des LLM gratuits. |
+
+---
+
+## Indicateurs IAS (Indice d'Alignement Stratégique)
+
+| Indicateur | Construction |
+|------------|-------------|
+| **Score IAS** | Ratio entre le trafic organique générique et le trafic total (brand + générique), comparé au ratio cible du secteur d'activité. |
+| **Risk Score** | Écart entre le ratio réel et le ratio cible : un score élevé signale une sur-dépendance au trafic de marque. |
+| **Brand Penetration Rate** | Part du trafic de marque dans le trafic organique total, calculée via les données GSC (clicks brand vs generic). |
+
+---
+
+## Indicateurs Cocoon (Architecture Sémantique)
+
+| Indicateur | Construction |
+|------------|-------------|
+| **Cannibalization Risk** | Probabilité que deux pages du même site se disputent le même mot-clé, détectée par similarité TF-IDF entre les nœuds du graphe. |
+| **GEO Score (nœud)** | Score GEO individuel par page, hérité de l'audit expert ou estimé par le moteur Cocoon. |
+| **Internal Links In/Out** | Nombre de liens internes entrants et sortants par page, extraits du crawl multi-pages. |
+| **Cluster ID** | Regroupement thématique automatique des pages par similarité sémantique (TF-IDF + analyse IA). |
+| **Page Authority** | Score d'autorité interne calculé par l'algorithme PageRank adapté au maillage interne du site. |
+\`,
+  },
 ];
 
 /**
@@ -852,10 +961,10 @@ Landing page marketing avec comparaison GEO vs SEO et grille de fonctionnalités
  * Modifiez la version et la date à chaque mise à jour significative.
  */
 export const docMetadata = {
-  version: '1.6.0',
-  lastUpdated: '2026-03-16',
+  version: '1.7.0',
+  lastUpdated: '2026-03-17',
   projectName: 'Crawlers — Plateforme Audit SEO/GEO/LLM + Architecte Génératif + Cocoon',
-  totalEdgeFunctions: 85,
+  totalEdgeFunctions: 90,
   totalTables: '40+',
-  totalLinesOfCode: '135 000+',
+  totalLinesOfCode: '140 000+',
 };
