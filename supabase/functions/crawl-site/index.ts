@@ -1,5 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackPaidApiCall, trackEdgeFunctionError } from '../_shared/tokenTracker.ts';
 import { checkIpRate, getClientIp, rateLimitResponse } from '../_shared/ipRateLimiter.ts';
 import { checkFairUse } from '../_shared/fairUse.ts';
