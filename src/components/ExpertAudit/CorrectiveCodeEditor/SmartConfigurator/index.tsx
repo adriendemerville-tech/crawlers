@@ -147,6 +147,7 @@ export function SmartConfigurator({
   const [registryRecommendations, setRegistryRecommendations] = useState<any[]>([]);
   const [strategicRoadmap, setStrategicRoadmap] = useState<any[]>([]);
   const [fixConfigs, setFixConfigs] = useState<FixConfig[]>([]);
+  const [activeTab, setActiveTab] = useState('technical');
   const [viewMode, setViewMode] = useState<ViewMode>(initialCode ? 'code' : 'visual');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<string>(initialCode);
@@ -831,6 +832,17 @@ export function SmartConfigurator({
       console.log('✅ Restored fixes from payment:', enabledFixIds);
     } else {
       setFixConfigs(availableFixes);
+      // When opened from "Mes sites" (activeSiteId + no live audit), auto-select the richest tab
+      if (activeSiteId && !technicalResult) {
+        const techAll = availableFixes.filter(f => !['strategic', 'generative'].includes(f.category)).length;
+        const stratAll = availableFixes.filter(f => f.category === 'strategic').length;
+        const genAll = availableFixes.filter(f => f.category === 'generative').length;
+        if (stratAll >= techAll && stratAll >= genAll) setActiveTab('strategic');
+        else if (genAll >= techAll && genAll >= stratAll) setActiveTab('generative');
+        else setActiveTab('technical');
+      } else {
+        setActiveTab('technical');
+      }
     }
     
     // If we have initialCode (from post-payment redirect), use it; otherwise reset
@@ -1313,6 +1325,7 @@ export function SmartConfigurator({
   const strategicCount = fixConfigs.filter(f => f.enabled && f.category === 'strategic').length;
   const generativeCount = fixConfigs.filter(f => f.enabled && f.category === 'generative').length;
 
+
   // Calculate dynamic price based on enabled fixes
   // Base: 3€ minimum (all basic fixes included), 12€ maximum
   // ONLY Strategic and Generative fixes increase the price
@@ -1366,7 +1379,7 @@ export function SmartConfigurator({
         <div className="flex-1 overflow-hidden grid grid-cols-12 h-full">
           {/* Left Column: Configurator */}
           <div className="col-span-5 border-r flex flex-col overflow-hidden">
-            <Tabs defaultValue="technical" className="flex-1 flex flex-col min-h-0">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
               <TabsList className="w-full justify-start rounded-none border-b bg-transparent px-4 py-0 h-auto flex-shrink-0">
                 <TabsTrigger 
                   value="technical" 
