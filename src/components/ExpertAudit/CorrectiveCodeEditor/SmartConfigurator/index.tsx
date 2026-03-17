@@ -1226,6 +1226,17 @@ export function SmartConfigurator({
     }
   }, [user, siteDomain]);
 
+  // Auto-check site connectivity on mount
+  useEffect(() => {
+    if (user && siteDomain) {
+      setSiteConnected(null);
+      verifySiteConnected().then(result => {
+        setSiteConnected(result);
+        if (result) setConnectionMethod(result);
+      });
+    }
+  }, [user, siteDomain, verifySiteConnected]);
+
   // Apply modifications via update-config + persist to tracked_sites
   const handleApplyToWordPress = useCallback(async () => {
     if (!generatedCode || !user) return;
