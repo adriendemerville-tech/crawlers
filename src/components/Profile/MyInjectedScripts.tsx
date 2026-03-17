@@ -475,6 +475,27 @@ export function MyInjectedScripts() {
                                   </>
                                 )}
                               </Button>
+                              <Button
+                                variant={rule.is_active ? 'outline' : 'default'}
+                                size="sm"
+                                className={`h-7 px-3 text-[10px] gap-1.5 flex-1 ${rule.is_active ? 'text-destructive border-destructive/30 hover:bg-destructive/10' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
+                                onClick={(e) => { e.stopPropagation(); handleToggleActive(rule); }}
+                                disabled={togglingId === rule.id}
+                              >
+                                {togglingId === rule.id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : rule.is_active ? (
+                                  <>
+                                    <PowerOff className="w-3 h-3" />
+                                    {t.deactivate}
+                                  </>
+                                ) : (
+                                  <>
+                                    <Power className="w-3 h-3" />
+                                    {t.activate}
+                                  </>
+                                )}
+                              </Button>
                             </div>
 
                             {result && (
