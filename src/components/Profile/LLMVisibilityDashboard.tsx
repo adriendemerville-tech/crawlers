@@ -284,10 +284,10 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
         </div>
         <p className="text-[10px] text-muted-foreground/70 mt-2 italic">
           {language === 'fr'
-            ? 'Score basé sur 3 itérations conversationnelles par modèle (1ère = 100 pts, 2ème = 50 pts, 3ème = 25 pts, absent = 0).'
+            ? 'Score normalisé par la tendance sur 4 semaines (↑ progression, ↓ régression). Base : 3 itérations × modèle.'
             : language === 'es'
-              ? 'Puntuación basada en 3 iteraciones conversacionales por modelo (1ª = 100 pts, 2ª = 50 pts, 3ª = 25 pts, ausente = 0).'
-              : 'Score based on 3 conversational iterations per model (1st = 100 pts, 2nd = 50 pts, 3rd = 25 pts, absent = 0).'}
+              ? 'Puntuación normalizada por tendencia de 4 semanas (↑ progresión, ↓ regresión). Base: 3 iteraciones × modelo.'
+              : 'Score normalized by 4-week trend (↑ improving, ↓ declining). Base: 3 iterations × model.'}
         </p>
       </CardContent>
     </Card>
