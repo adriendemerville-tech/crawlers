@@ -118,6 +118,17 @@ const Index = () => {
     }
   }, [authUser, isSubscribed, isAdminUser, navTo]);
 
+  // Fetch hide_home_leadmagnet config
+  useEffect(() => {
+    supabase
+      .from('system_config')
+      .select('value')
+      .eq('key', 'hide_home_leadmagnet')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value === true) setHideLeadmagnet(true);
+      });
+  }, []);
 
 
   // Inject JSON-LD structured data dynamically (moved from inline HTML to reduce critical chain)
