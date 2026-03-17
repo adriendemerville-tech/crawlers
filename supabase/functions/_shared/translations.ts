@@ -57,6 +57,16 @@ export interface GeoTranslations {
       noCanonical: string;
       found: string;
     };
+    intentInTitle: {
+      name: string;
+      description: string;
+      recommendation: string;
+    };
+    faqOrSummary: {
+      name: string;
+      description: string;
+      recommendation: string;
+    };
   };
   details: {
     botsAllowed: (allowed: number, total: number) => string;
@@ -132,6 +142,16 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         noCanonical: 'Aucune balise canonical trouvée dans <head>',
         found: 'Balise canonical trouvée',
       },
+      intentInTitle: {
+        name: 'Intention dans le Titre',
+        description: 'Le mot-clé principal ou l\'intention est visible dans le titre et la première phrase',
+        recommendation: 'Placez votre mot-clé principal dans le titre (H1 ou <title>) et dans la première phrase du contenu pour maximiser la pertinence IA',
+      },
+      faqOrSummary: {
+        name: 'FAQ ou Résumé en Début',
+        description: 'Présence d\'une FAQ ou d\'un résumé en haut de page (TL;DR)',
+        recommendation: 'Ajoutez une section FAQ (avec balisage Schema FAQ) ou un résumé (TL;DR) en début d\'article pour faciliter l\'extraction par les IA',
+      },
     },
     details: {
       botsAllowed: (allowed, total) => `${allowed}/${total} bots IA autorisés`,
@@ -194,6 +214,16 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         noCanonical: 'No canonical tag found in <head>',
         found: 'Canonical tag found',
       },
+      intentInTitle: {
+        name: 'Intent in Title',
+        description: 'Main keyword or intent visible in title and first sentence',
+        recommendation: 'Place your main keyword in the title (H1 or <title>) and first sentence to maximize AI relevance',
+      },
+      faqOrSummary: {
+        name: 'FAQ or Summary at Top',
+        description: 'FAQ section or summary (TL;DR) at the top of the page',
+        recommendation: 'Add a FAQ section (with Schema FAQ markup) or a summary (TL;DR) at the beginning of your article for easier AI extraction',
+      },
     },
     details: {
       botsAllowed: (allowed, total) => `${allowed}/${total} AI bots allowed`,
@@ -255,6 +285,16 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         recommendation: 'Agregue una etiqueta <link rel="canonical" href="..."> en su sección <head> para indicar la versión preferida de esta página',
         noCanonical: 'No se encontró etiqueta canonical en <head>',
         found: 'Etiqueta canonical encontrada',
+      },
+      intentInTitle: {
+        name: 'Intención en el Título',
+        description: 'La palabra clave principal o intención visible en el título y primera frase',
+        recommendation: 'Coloque su palabra clave principal en el título (H1 o <title>) y en la primera frase del contenido para maximizar la relevancia IA',
+      },
+      faqOrSummary: {
+        name: 'FAQ o Resumen al Inicio',
+        description: 'Sección FAQ o resumen (TL;DR) al inicio de la página',
+        recommendation: 'Agregue una sección FAQ (con marcado Schema FAQ) o un resumen (TL;DR) al inicio de su artículo para facilitar la extracción por IA',
       },
     },
     details: {

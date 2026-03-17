@@ -350,15 +350,33 @@ function analyzeContent(doc: ReturnType<DOMParser['parseFromString']>): {
   imagesWithAlt: number;
   imagesTotal: number;
   wordCount: number;
+  h1Text: string;
+  titleText: string;
+  firstParagraphText: string;
 } {
   if (!doc) {
-    return { hasH1: false, h1Count: 0, headingsCount: 0, imagesWithAlt: 0, imagesTotal: 0, wordCount: 0 };
+    return { hasH1: false, h1Count: 0, headingsCount: 0, imagesWithAlt: 0, imagesTotal: 0, wordCount: 0, h1Text: '', titleText: '', firstParagraphText: '' };
   }
 
   // H1 count
   const h1Elements = doc.querySelectorAll('h1');
   const h1Count = h1Elements.length;
   const hasH1 = h1Count >= 1;
+  const h1Text = h1Count > 0 ? (h1Elements[0] as Element).textContent?.trim() || '' : '';
+
+  // Title tag
+  const titleEl = doc.querySelector('title');
+  const titleText = titleEl?.textContent?.trim() || '';
+
+  // First paragraph text
+  const body = doc.querySelector('body');
+  let firstParagraphText = '';
+  if (body) {
+    const firstP = body.querySelector('p');
+    if (firstP) {
+      firstParagraphText = firstP.textContent?.trim() || '';
+    }
+  }
 
   // All headings
   const allHeadings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
@@ -374,17 +392,143 @@ function analyzeContent(doc: ReturnType<DOMParser['parseFromString']>): {
   });
 
   // Word count from body
-  const body = doc.querySelector('body');
   let wordCount = 0;
   if (body) {
-    // Supprimer scripts et styles
     const clone = body.cloneNode(true) as Element;
     clone.querySelectorAll('script, style, noscript').forEach((el: Element) => el.remove());
     const text = clone.textContent || '';
     wordCount = text.split(/\s+/).filter(w => w.length > 2).length;
   }
 
-  return { hasH1, h1Count, headingsCount, imagesWithAlt, imagesTotal, wordCount };
+  return { hasH1, h1Count, headingsCount, imagesWithAlt, imagesTotal, wordCount, h1Text, titleText, firstParagraphText };
+}
+
+// ============================================================================
+// DÉTECTION INTENTION DANS LE TITRE + PREMIÈRE PHRASE
+// ============================================================================
+
+function analyzeIntentInTitle(titleText: string, h1Text: string, firstParagraphText: string, metaDescription?: string): {
+  found: boolean;
+  inTitle: boolean;
+  inH1: boolean;
+  inFirstSentence: boolean;
+  detectedKeywords: string[];
+} {
+  // Extract likely intent keywords from the title (longest meaningful words)
+  const combinedTitle = `${titleText} ${h1Text}`.toLowerCase();
+  const titleWords = combinedTitle.split(/[\s\-–—:|,]+/).filter(w => w.length >= 4);
+  
+  // Remove common stopwords
+  const stopwords = new Set(['pour', 'dans', 'avec', 'plus', 'votre', 'notre', 'cette', 'comment', 'tout', 'what', 'your', 'this', 'that', 'with', 'from', 'about', 'como', 'para', 'todo', 'best', 'guide', 'complete']);
+  const keywords = [...new Set(titleWords.filter(w => !stopwords.has(w)))].slice(0, 5);
+  
+  if (keywords.length === 0) {
+    return { found: false, inTitle: false, inH1: false, inFirstSentence: false, detectedKeywords: [] };
+  }
+
+  const firstSentence = firstParagraphText.toLowerCase();
+  const title = titleText.toLowerCase();
+  const h1 = h1Text.toLowerCase();
+
+  // Check if at least 2 keywords from title appear in first paragraph
+  const matchesInFirst = keywords.filter(kw => firstSentence.includes(kw));
+  const inFirstSentence = matchesInFirst.length >= Math.min(2, keywords.length);
+  
+  const inTitle = keywords.some(kw => title.includes(kw));
+  const inH1 = keywords.some(kw => h1.includes(kw));
+
+  return {
+    found: (inTitle || inH1) && inFirstSentence,
+    inTitle,
+    inH1,
+    inFirstSentence,
+    detectedKeywords: matchesInFirst.length > 0 ? matchesInFirst : keywords.slice(0, 3),
+  };
+}
+
+// ============================================================================
+// DÉTECTION FAQ OU RÉSUMÉ EN DÉBUT D'ARTICLE
+// ============================================================================
+
+function analyzeFaqOrSummary(doc: ReturnType<DOMParser['parseFromString']>, structuredDataTypes: string[]): {
+  hasFaq: boolean;
+  hasSummary: boolean;
+  hasFaqSchema: boolean;
+  details: string;
+} {
+  if (!doc) {
+    return { hasFaq: false, hasSummary: false, hasFaqSchema: false, details: '' };
+  }
+
+  const body = doc.querySelector('body');
+  if (!body) {
+    return { hasFaq: false, hasSummary: false, hasFaqSchema: false, details: '' };
+  }
+
+  // Check for FAQ Schema.org type
+  const hasFaqSchema = structuredDataTypes.some(t => t.toLowerCase().includes('faq'));
+
+  // Check for FAQ patterns in the DOM
+  let hasFaq = hasFaqSchema;
+  if (!hasFaq) {
+    // Look for FAQ-like elements: details/summary, .faq, #faq, or FAQ headings in the top portion
+    const faqSelectors = ['details', '.faq', '#faq', '[class*="faq"]', '[id*="faq"]', '.accordion', '[class*="accordion"]'];
+    for (const sel of faqSelectors) {
+      if (body.querySelector(sel)) {
+        hasFaq = true;
+        break;
+      }
+    }
+  }
+
+  // Look for FAQ heading in top section
+  if (!hasFaq) {
+    const headings = body.querySelectorAll('h2, h3');
+    for (let i = 0; i < Math.min(headings.length, 5); i++) {
+      const text = (headings[i] as Element).textContent?.toLowerCase() || '';
+      if (text.includes('faq') || text.includes('questions fréquentes') || text.includes('frequently asked') || text.includes('preguntas frecuentes')) {
+        hasFaq = true;
+        break;
+      }
+    }
+  }
+
+  // Check for TL;DR / summary at the top
+  let hasSummary = false;
+  const summaryPatterns = ['tl;dr', 'tldr', 'en résumé', 'en bref', 'résumé', 'summary', 'key takeaways', 'points clés', 'in brief', 'en resumen', 'puntos clave'];
+  
+  // Check first few elements of the body for summary-like content
+  const earlyElements = body.querySelectorAll('p, div, blockquote, section');
+  for (let i = 0; i < Math.min(earlyElements.length, 10); i++) {
+    const text = (earlyElements[i] as Element).textContent?.toLowerCase() || '';
+    const classAttr = (earlyElements[i] as Element).getAttribute('class')?.toLowerCase() || '';
+    const idAttr = (earlyElements[i] as Element).getAttribute('id')?.toLowerCase() || '';
+    
+    if (summaryPatterns.some(p => text.includes(p) || classAttr.includes(p) || idAttr.includes(p))) {
+      hasSummary = true;
+      break;
+    }
+  }
+
+  // Also check for summary in headings
+  if (!hasSummary) {
+    const headings = body.querySelectorAll('h2, h3');
+    for (let i = 0; i < Math.min(headings.length, 3); i++) {
+      const text = (headings[i] as Element).textContent?.toLowerCase() || '';
+      if (summaryPatterns.some(p => text.includes(p))) {
+        hasSummary = true;
+        break;
+      }
+    }
+  }
+
+  let details = '';
+  if (hasFaq && hasSummary) details = 'FAQ + Résumé détectés';
+  else if (hasFaq) details = hasFaqSchema ? 'FAQ détectée (+ Schema FAQPage)' : 'FAQ détectée';
+  else if (hasSummary) details = 'Résumé/TL;DR détecté';
+  else details = 'Ni FAQ ni résumé détecté';
+
+  return { hasFaq, hasSummary, hasFaqSchema, details };
 }
 
 // ============================================================================
@@ -605,6 +749,8 @@ Deno.serve(async (req) => {
     const spaInfo = detectSPAMarkers(doc);
     const ogResult = analyzeOpenGraph(doc);
     const hasSitemap = checkSitemap(robotsTxt);
+    const intentResult = analyzeIntentInTitle(contentResult.titleText, contentResult.h1Text, contentResult.firstParagraphText, metaResult.description);
+    const faqResult = analyzeFaqOrSummary(doc, structuredData.types);
 
     // POST-ANALYSIS HEURISTIC: Si le contenu analysé est quasi-vide malgré un HTML volumineux,
     // c'est un SPA/JS-heavy qui n'a pas été rendu correctement — appliquer scoring neutre
@@ -616,31 +762,31 @@ Deno.serve(async (req) => {
 
     const factors: GeoFactor[] = [];
 
-    // Factor 1: AI Bots Access (20 points)
-    const aiBotScore = Math.round((aiBotsResult.allowed / aiBotsResult.total) * 20);
+    // Factor 1: AI Bots Access (15 points)
+    const aiBotScore = Math.round((aiBotsResult.allowed / aiBotsResult.total) * 15);
     factors.push({
       id: 'ai-bots',
       name: t.factors.aiBots.name,
       description: t.factors.aiBots.description,
       score: aiBotScore,
-      maxScore: 20,
-      status: aiBotScore >= 18 ? 'good' : aiBotScore >= 10 ? 'warning' : 'error',
-      recommendation: aiBotScore < 20 
+      maxScore: 15,
+      status: aiBotScore >= 13 ? 'good' : aiBotScore >= 8 ? 'warning' : 'error',
+      recommendation: aiBotScore < 15 
         ? t.factors.aiBots.recommendation(aiBotsResult.blocked.join(', '))
         : undefined,
       details: t.details.botsAllowed(aiBotsResult.allowed, aiBotsResult.total)
     });
 
-    // Factor 2: Meta Description (15 points)
+    // Factor 2: Meta Description (10 points)
     // For SPA without rendering, meta may be injected by JS — give neutral score
-    const metaDescScore = metaResult.hasDescription ? 15 : (isSPAWithLimitedContent ? 8 : 0);
+    const metaDescScore = metaResult.hasDescription ? 10 : (isSPAWithLimitedContent ? 5 : 0);
     factors.push({
       id: 'meta-description',
       name: t.factors.metaDescription.name,
       description: t.factors.metaDescription.description,
       score: metaDescScore,
-      maxScore: 15,
-      status: metaDescScore === 15 ? 'good' : (isSPAWithLimitedContent && !metaResult.hasDescription) ? 'warning' : (metaDescScore > 0 ? 'warning' : 'error'),
+      maxScore: 10,
+      status: metaDescScore === 10 ? 'good' : (isSPAWithLimitedContent && !metaResult.hasDescription) ? 'warning' : (metaDescScore > 0 ? 'warning' : 'error'),
       recommendation: !metaResult.hasDescription 
         ? (isSPAWithLimitedContent ? 'SPA détecté — la meta description peut être injectée par JavaScript. Vérifiez le rendu côté serveur (SSR).' : t.factors.metaDescription.recommendation)
         : undefined,
@@ -844,9 +990,74 @@ Deno.serve(async (req) => {
       details: canonicalDetails
     });
 
-    // =========================================================================
-    // CALCUL DU SCORE FINAL AVEC PONDÉRATION PAR FIABILITÉ
-    // =========================================================================
+    // Factor 9: Intent in Title & First Sentence (5 points)
+    let intentScore = 0;
+    let intentDetails = '';
+    let intentStatus: 'good' | 'warning' | 'error' = 'error';
+    
+    if (isSPAWithLimitedContent) {
+      intentScore = 3;
+      intentDetails = '⚠️ SPA détecté — analyse limitée sans rendu JS';
+      intentStatus = 'warning';
+    } else {
+      if (intentResult.found) {
+        intentScore = 5;
+        intentDetails = `Intention détectée dans le titre et la 1ère phrase | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
+        intentStatus = 'good';
+      } else if (intentResult.inTitle || intentResult.inH1) {
+        intentScore = 3;
+        intentDetails = `Intention dans le titre mais absente de la 1ère phrase | Mots-clés: ${intentResult.detectedKeywords.join(', ')}`;
+        intentStatus = 'warning';
+      } else {
+        intentScore = 0;
+        intentDetails = 'Aucune cohérence d\'intention détectée entre le titre et le contenu';
+        intentStatus = 'error';
+      }
+    }
+    
+    factors.push({
+      id: 'intent-in-title',
+      name: t.factors.intentInTitle.name,
+      description: t.factors.intentInTitle.description,
+      score: intentScore,
+      maxScore: 5,
+      status: intentStatus,
+      recommendation: intentScore < 5 ? t.factors.intentInTitle.recommendation : undefined,
+      details: intentDetails
+    });
+
+    // Factor 10: FAQ or Summary at Top (5 points)
+    let faqScore = 0;
+    let faqStatus: 'good' | 'warning' | 'error' = 'error';
+    
+    if (isSPAWithLimitedContent) {
+      faqScore = 3;
+      faqStatus = 'warning';
+    } else {
+      if (faqResult.hasFaq && faqResult.hasSummary) {
+        faqScore = 5;
+        faqStatus = 'good';
+      } else if (faqResult.hasFaq || faqResult.hasSummary) {
+        faqScore = 3;
+        faqStatus = 'warning';
+      } else {
+        faqScore = 0;
+        faqStatus = 'error';
+      }
+    }
+    
+    factors.push({
+      id: 'faq-or-summary',
+      name: t.factors.faqOrSummary.name,
+      description: t.factors.faqOrSummary.description,
+      score: faqScore,
+      maxScore: 5,
+      status: faqStatus,
+      recommendation: faqScore < 5 ? t.factors.faqOrSummary.recommendation : undefined,
+      details: isSPAWithLimitedContent ? '⚠️ SPA détecté — analyse limitée sans rendu JS' : faqResult.details
+    });
+
+
     const rawTotalScore = factors.reduce((sum, f) => sum + f.score, 0);
     
     // Si le self-audit a détecté des problèmes, on pondère le score
