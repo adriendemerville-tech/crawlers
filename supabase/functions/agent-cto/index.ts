@@ -361,7 +361,7 @@ Deno.serve(async (req) => {
 
     // ─── Mode: Cache Health Check ─────────────────────────────────
     if (body.action === 'cache_health_check') {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+      const supabase = getServiceClient()
       const report = await checkCacheHealth(supabase)
 
       console.log(`[AGENT-CTO] 🏥 Cache health: ${report.status} — ${report.total_entries} entries, ${report.anomalies.length} anomalies`)
