@@ -933,7 +933,6 @@ export function MyTracking() {
                   <TabsList className="w-full flex flex-wrap h-auto gap-1">
                     {sites.map(site => (
                       <TabsTrigger key={site.id} value={site.id} className="gap-2 text-xs sm:text-sm">
-                        <Globe className="h-3 w-3" />
                         {site.domain}
                         {refreshingSites.has(site.id) && <Loader2 className="h-3 w-3 animate-spin" />}
                       </TabsTrigger>
