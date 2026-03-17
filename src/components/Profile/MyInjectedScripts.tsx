@@ -126,6 +126,10 @@ const translations = {
     viewScript: 'Ver script',
     validatedCodes: 'Códigos correctivos validados',
     scriptContent: 'Contenido del script',
+    activate: 'Reactivar',
+    deactivate: 'Desactivar',
+    activated: 'Script reactivado',
+    deactivated: 'Script desactivado',
   },
 };
 
