@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Link2, Loader2, Copy, Check, Eye, EyeOff, Plug, Wifi, WifiOff, ExternalLink, Cable, Code, AlertCircle } from 'lucide-react';
+import { Download, Link2, Loader2, Copy, Check, Eye, EyeOff, Plug, Wifi, WifiOff, ExternalLink, Cable, Code, AlertCircle, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
