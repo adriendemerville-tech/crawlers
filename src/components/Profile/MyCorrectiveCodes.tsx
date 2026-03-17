@@ -353,8 +353,8 @@ export function MyCorrectiveCodes() {
             )}
           </TabsContent>
 
-          <TabsContent value="history">
-            <MyScriptRulesHistory />
+          <TabsContent value="injection">
+            <MyInjectedScripts />
           </TabsContent>
 
           <TabsContent value="debug">
