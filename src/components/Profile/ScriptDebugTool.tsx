@@ -124,9 +124,10 @@ export function ScriptDebugTool() {
           detail: `${site.domain} (ID: ${site.id.slice(0, 8)}…)`,
         });
 
-        // Check 3: Widget ping (connected?)
-        const pingDate = site.last_widget_ping ? new Date(site.last_widget_ping) : null;
-        const isRecent = pingDate && (Date.now() - pingDate.getTime()) < 24 * 60 * 60 * 1000;
+        // Check 3: Widget ping (connected?) — will be updated after endpoint test
+        let pingDate = site.last_widget_ping ? new Date(site.last_widget_ping) : null;
+        let isRecent = pingDate && (Date.now() - pingDate.getTime()) < 24 * 60 * 60 * 1000;
+        const widgetCheckIndex = results.length;
         results.push({
           label: t.checkWidgetPing,
           status: isRecent ? 'ok' : pingDate ? 'warning' : 'error',
