@@ -165,6 +165,13 @@ interface HtmlAnalysis {
   // Case studies
   hasCaseStudies?: boolean;
   caseStudySignals?: number;
+  // Internal linking (maillage)
+  internalLinksCount?: number;
+  externalLinksCount?: number;
+  totalLinksCount?: number;
+  internalLinkRatio?: number;
+  uniqueInternalPaths?: number;
+  orphanRisk?: boolean; // page has < 3 internal links
   // Misplaced structural tags (outside <head>)
   misplacedHeadTags?: string[];
 }
