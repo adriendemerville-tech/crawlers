@@ -99,3 +99,9 @@ project_id = "tutlimtasnjabdfhpewu"
     verify_jwt = false
   [functions.calculate-sov]
     verify_jwt = false
+  [functions.stripe-actions]
+    verify_jwt = false
+  [functions.auth-actions]
+    verify_jwt = false
+  [functions.share-actions]
+    verify_jwt = false

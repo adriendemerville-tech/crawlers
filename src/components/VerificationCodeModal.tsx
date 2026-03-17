@@ -78,8 +78,8 @@ export function VerificationCodeModal({ open, email, onVerified, onClose }: Veri
     setError(false);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('verify-email-code', {
-        body: { email, code },
+      const { data, error: fnError } = await supabase.functions.invoke('auth-actions', {
+        body: { action: 'verify-code', email, code },
       });
 
       if (fnError || !data?.success) {
@@ -108,8 +108,8 @@ export function VerificationCodeModal({ open, email, onVerified, onClose }: Veri
     setCode('');
 
     try {
-      await supabase.functions.invoke('send-verification-code', {
-        body: { email },
+      await supabase.functions.invoke('auth-actions', {
+        body: { action: 'send-code', email },
       });
       toast.success(t.resent);
     } catch {

@@ -157,8 +157,9 @@ Saludos`,
   const handleGenerateLink = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('share-report', {
+      const { data, error } = await supabase.functions.invoke('share-actions', {
         body: {
+          action: 'create',
           type,
           url,
           data: getReportData(),

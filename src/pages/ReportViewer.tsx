@@ -180,8 +180,8 @@ export default function ReportViewer() {
               language,
             };
 
-      const { data: responseData, error } = await supabase.functions.invoke('share-report', {
-        body: payload,
+      const { data: responseData, error } = await supabase.functions.invoke('share-actions', {
+        body: { action: 'create', ...payload },
       });
 
       if (error) throw error;

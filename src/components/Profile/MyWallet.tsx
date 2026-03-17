@@ -119,7 +119,7 @@ export function MyWallet() {
   const handleOpenPortal = async () => {
     setPortalLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-customer-portal');
+      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'portal' } });
       if (error) {
         // Check if this is a "no Stripe account" error (free offer user)
         const errorMsg = typeof error === 'object' && 'message' in error ? (error as any).message : String(error);
@@ -624,8 +624,8 @@ export function MyWallet() {
               onClick={async () => {
                 setSubscribeLoading(true);
                 try {
-                  const { data, error } = await supabase.functions.invoke('create-subscription-session', {
-                    body: { returnUrl: window.location.href }
+                  const { data, error } = await supabase.functions.invoke('stripe-actions', {
+                    body: { action: 'subscription', returnUrl: window.location.href }
                   });
                   if (error) throw error;
                   if (data?.url) window.open(data.url, '_blank', 'noopener');

@@ -298,7 +298,7 @@ export default function ProAgency() {
   const doSubscribe = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-subscription-session');
+      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription' } });
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank', 'noopener');
     } catch (err: any) {

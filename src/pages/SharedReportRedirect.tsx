@@ -56,8 +56,9 @@ export default function SharedReportRedirect() {
       const ref = searchParams.get('ref');
       if (ref) {
         try {
-          await supabase.functions.invoke('track-share-click', {
+          await supabase.functions.invoke('share-actions', {
             body: {
+              action: 'track-click',
               report_id: shareId,
               referrer_id: ref,
               visitor_ip: await getVisitorIP(),
@@ -69,8 +70,8 @@ export default function SharedReportRedirect() {
       }
 
       try {
-        const { data, error } = await supabase.functions.invoke('resolve-share', {
-          body: { shareId },
+        const { data, error } = await supabase.functions.invoke('share-actions', {
+          body: { action: 'resolve', shareId },
         });
         if (error) throw error;
         if (!data?.success) throw new Error(data?.error || 'Invalid link');

@@ -119,7 +119,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
       return;
     }
     try {
-      const { data } = await supabase.functions.invoke('check-email-exists', { body: { email } });
+      const { data } = await supabase.functions.invoke('auth-actions', { body: { action: 'check-email', email } });
       setExistingUser(data?.exists === true);
     } catch {
       setExistingUser(false);
@@ -228,7 +228,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
     } else {
       // Send verification code and show modal
       setVerificationEmail(data.email);
-      supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
+      supabase.functions.invoke('auth-actions', { body: { action: 'send-code', email: data.email } });
       setShowVerification(true);
     }
   };
