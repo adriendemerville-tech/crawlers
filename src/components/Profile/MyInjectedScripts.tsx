@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Globe, Loader2, CheckCircle2, XCircle, AlertTriangle, Rocket, ChevronDown, ChevronRight, Eye, Code2, RefreshCw, Power, PowerOff } from 'lucide-react';
+import { Globe, Loader2, ChevronDown, ChevronRight, Eye, Code2, RefreshCw, Power, PowerOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
