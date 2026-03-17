@@ -106,6 +106,7 @@ export function MyCorrectiveCodes() {
   const [injectableSites, setInjectableSites] = useState<{ id: string; domain: string; api_key?: string; current_config?: any }[]>([]);
   const [showPlugModal, setShowPlugModal] = useState(false);
   const [plugSiteId, setPlugSiteId] = useState<string | null>(null);
+  const [plugConnected, setPlugConnected] = useState(false);
 
   const dateLocale = language === 'fr' ? fr : language === 'es' ? es : enUS;
 
