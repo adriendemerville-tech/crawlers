@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Globe, Loader2, CheckCircle2, XCircle, AlertTriangle, Rocket, ChevronDown, ChevronRight, Eye, Code2, RefreshCw } from 'lucide-react';
+import { Globe, Loader2, CheckCircle2, XCircle, AlertTriangle, Rocket, ChevronDown, ChevronRight, Eye, Code2, RefreshCw, Power, PowerOff } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -74,6 +74,10 @@ const translations = {
     viewScript: 'Voir le script',
     validatedCodes: 'Codes correctifs validés',
     scriptContent: 'Contenu du script',
+    activate: 'Réactiver',
+    deactivate: 'Désactiver',
+    activated: 'Script réactivé',
+    deactivated: 'Script désactivé',
   },
   en: {
     empty: 'No injected scripts',
@@ -96,6 +100,10 @@ const translations = {
     viewScript: 'View script',
     validatedCodes: 'Validated corrective codes',
     scriptContent: 'Script content',
+    activate: 'Reactivate',
+    deactivate: 'Deactivate',
+    activated: 'Script reactivated',
+    deactivated: 'Script deactivated',
   },
   es: {
     empty: 'Sin scripts inyectados',
@@ -118,6 +126,10 @@ const translations = {
     viewScript: 'Ver script',
     validatedCodes: 'Códigos correctivos validados',
     scriptContent: 'Contenido del script',
+    activate: 'Reactivar',
+    deactivate: 'Desactivar',
+    activated: 'Script reactivado',
+    deactivated: 'Script desactivado',
   },
 };
 
@@ -142,7 +154,7 @@ export function MyInjectedScripts() {
   const [testResults, setTestResults] = useState<Record<string, TestResult>>({});
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
   const [validatedCodes, setValidatedCodes] = useState<ValidatedCode[]>([]);
-  const [viewingScript, setViewingScript] = useState<{ title: string; code: string } | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) fetchData();
@@ -252,6 +264,38 @@ export function MyInjectedScripts() {
       toast.error('Erreur lors du test');
     } finally {
       setTestingId(null);
+    }
+  };
+
+  const [viewingScript, setViewingScript] = useState<{ title: string; code: string } | null>(null);
+
+  const handleToggleActive = async (rule: ScriptRule) => {
+    setTogglingId(rule.id);
+    try {
+      const newActive = !rule.is_active;
+      const { error } = await supabase
+        .from('site_script_rules')
+        .update({ is_active: newActive })
+        .eq('id', rule.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setRulesBySite(prev => {
+        const updated = { ...prev };
+        const siteRules = updated[rule.domain_id]?.map(r =>
+          r.id === rule.id ? { ...r, is_active: newActive } : r
+        );
+        if (siteRules) updated[rule.domain_id] = siteRules;
+        return updated;
+      });
+
+      toast.success(newActive ? t.activated : t.deactivated);
+    } catch (err) {
+      console.error('[InjectedScripts] Toggle error:', err);
+      toast.error('Erreur');
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -428,6 +472,27 @@ export function MyInjectedScripts() {
                                   <>
                                     <Rocket className="w-3 h-3" />
                                     {t.test}
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                variant={rule.is_active ? 'outline' : 'default'}
+                                size="sm"
+                                className={`h-7 px-3 text-[10px] gap-1.5 flex-1 ${rule.is_active ? 'text-destructive border-destructive/30 hover:bg-destructive/10' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
+                                onClick={(e) => { e.stopPropagation(); handleToggleActive(rule); }}
+                                disabled={togglingId === rule.id}
+                              >
+                                {togglingId === rule.id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : rule.is_active ? (
+                                  <>
+                                    <PowerOff className="w-3 h-3" />
+                                    {t.deactivate}
+                                  </>
+                                ) : (
+                                  <>
+                                    <Power className="w-3 h-3" />
+                                    {t.activate}
                                   </>
                                 )}
                               </Button>
