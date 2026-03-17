@@ -98,7 +98,7 @@ IMPORTANT: Respond ONLY with valid JSON, no text before or after. Exact format:
   "coreValueMatch": boolean,
   "hallucinations": ["string"] or []
 }`,
-  es: (domain) => `Estás analizando el sitio web/marca "${domain}". Responde a estas preguntas en formato JSON:
+  es: (domain, siteContext) => `Estás analizando el sitio web/marca "${domain}".${siteContext ? `\n\nContexto verificado sobre este sitio:\n${siteContext}` : ''}\nResponde a estas preguntas en formato JSON:
 
 1. ¿Conoces este sitio web/marca? (cited: true/false)
 2. ¿Cuál es tu sentimiento general sobre este sitio? Elige EXACTAMENTE uno de estos 5 valores:
