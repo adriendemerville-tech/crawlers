@@ -1049,11 +1049,60 @@ export function MyTracking() {
                           size="sm" 
                           variant="outline"
                           className="gap-1.5 border-[#a78bfa]/40 text-[#a78bfa] bg-transparent hover:bg-[#a78bfa]/10 hover:text-[#a78bfa]"
-                          onClick={() => {
+                          disabled={isLoadingAudit}
+                          onClick={async () => {
                             setArchitectSiteId(currentSite.id);
-                            setIsArchitectOpen(true);
+                            setIsLoadingAudit(true);
+                            setArchitectAuditResult(null);
+                            try {
+                              // Try to fetch latest expert audit from cache
+                              const domainUrl = `https://${currentSite.domain}`;
+                              const cacheKey = `expert-audit:url="${domainUrl}"`;
+                              const { data: cached } = await supabase
+                                .from('audit_cache')
+                                .select('result_data')
+                                .eq('cache_key', cacheKey)
+                                .gt('expires_at', new Date().toISOString())
+                                .maybeSingle();
+                              
+                              if (cached?.result_data) {
+                                const parsed = cached.result_data as any;
+                                if (parsed?.success && parsed?.data) {
+                                  setArchitectAuditResult(parsed.data);
+                                } else if (parsed?.url) {
+                                  setArchitectAuditResult(parsed);
+                                }
+                              }
+                              
+                              // Fallback: try audit_raw_data
+                              if (!cached?.result_data) {
+                                const { data: rawData } = await supabase
+                                  .from('audit_raw_data')
+                                  .select('raw_payload')
+                                  .eq('domain', currentSite.domain)
+                                  .order('created_at', { ascending: false })
+                                  .limit(1)
+                                  .maybeSingle();
+                                if (rawData?.raw_payload) {
+                                  const payload = rawData.raw_payload as any;
+                                  if (payload?.data) {
+                                    setArchitectAuditResult(payload.data);
+                                  } else if (payload?.url) {
+                                    setArchitectAuditResult(payload);
+                                  }
+                                }
+                              }
+                            } catch (e) {
+                              console.warn('Could not fetch latest audit for Architect:', e);
+                            } finally {
+                              setIsLoadingAudit(false);
+                              setIsArchitectOpen(true);
+                            }
                           }}
                         >
+                          {isLoadingAudit && architectSiteId === currentSite.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : null}
                           {language === 'fr' ? 'Optimiser' : language === 'es' ? 'Optimizar' : 'Optimize'}
                         </Button>
                       )}
