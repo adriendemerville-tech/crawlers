@@ -813,7 +813,7 @@ export default function Cocoon() {
                   <div className="w-4 h-0.5 bg-gradient-to-r from-[#60a5fa] to-[#22d3ee] rounded" />
                   <span className="text-[10px] text-white/40">↑ {language === 'en' ? 'upstream' : language === 'es' ? 'ascendente' : 'ascendant'}</span>
                 </div>
-                <span className="text-[9px] sm:text-xs ml-auto hidden sm:inline text-white/30">⌂ = Home · {language === 'en' ? 'Size ∝ depth' : language === 'es' ? 'Tamaño ∝ profundidad' : 'Taille ∝ profondeur'}</span>
+                
               </div>
             );
           })()}
