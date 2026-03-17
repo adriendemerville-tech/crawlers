@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { trackTokenUsage, trackPaidApiCall } from '../_shared/tokenTracker.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 import { resolveGoogleToken } from '../_shared/resolveGoogleToken.ts'
+import { getSiteContext } from '../_shared/getSiteContext.ts'
 
 /**
  * Agent CTO v2 — Data-Driven Prompt Optimization
