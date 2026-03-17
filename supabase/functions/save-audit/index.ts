@@ -1,8 +1,5 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
-
-const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 // 💰 CONFIGURATION DU PRICING (Source of Truth)
 // Identique à la logique frontend dans SmartConfigurator/index.tsx
@@ -90,7 +87,7 @@ Deno.serve(async (req) => {
     );
 
     // Initialize Supabase client with service role (bypasses RLS)
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getServiceClient();
 
     // 2️⃣ INSERT OR UPDATE l'audit dans la table
     const { data: existingAudit } = await supabase

@@ -1,7 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { trackTokenUsage } from '../_shared/tokenTracker.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
@@ -317,10 +317,7 @@ Deno.serve(async (req) => {
     // ── Fetch site identity card for enrichment ──
     let identityHint = '';
     try {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      );
+      const supabase = getServiceClient();
       const ctx = await getSiteContext(supabase, { domain });
       if (ctx) {
         const parts: string[] = [];

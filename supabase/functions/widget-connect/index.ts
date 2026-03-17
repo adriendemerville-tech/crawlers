@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 
 // ──────────────────────────────────────────────────────────────
 // CORS — Cross-Origin Resource Sharing
@@ -68,9 +68,7 @@ Deno.serve(async (req) => {
   // ──────────────────────────────────────────────────────────
   // 2. Connexion Supabase (service_role pour lire tracked_sites)
   // ──────────────────────────────────────────────────────────
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = getServiceClient();
 
   // ──────────────────────────────────────────────────────────
   // 3. Vérification de l'API key dans tracked_sites

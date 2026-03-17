@@ -1,5 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 
 /**
  * apply-affiliate — Validates and applies an affiliate code during signup.
@@ -9,10 +9,6 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
   try {
     const { code, user_id } = await req.json();
@@ -29,7 +25,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const supabase = getServiceClient();
     const normalizedCode = code.trim().toUpperCase();
 
     // Find the affiliate code

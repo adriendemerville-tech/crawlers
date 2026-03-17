@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getUserClient, getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
@@ -14,16 +14,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-    // Auth client to get user
-    const authClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-    const token = authHeader.replace('Bearer ', '');
-    const { data: userData, error: userError } = await authClient.auth.getUser(token);
+    const authClient = getUserClient(authHeader);
+    const { data: userData, error: userError } = await authClient.auth.getUser();
     if (userError || !userData.user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -42,7 +34,7 @@ Deno.serve(async (req) => {
     const code = referral_code.trim().toUpperCase();
 
     // Service client for privileged operations
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = getServiceClient();
 
     // 1. Get current user profile
     const { data: myProfile, error: profileErr } = await supabase

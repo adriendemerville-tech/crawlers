@@ -1,13 +1,10 @@
 import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
 });
-
-const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -24,12 +21,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabase.auth.getUser(token);
+    const supabase = getUserClient(authHeader);
+    const { data: userData, error: userError } = await supabase.auth.getUser();
 
     if (userError || !userData.user) {
       return new Response(

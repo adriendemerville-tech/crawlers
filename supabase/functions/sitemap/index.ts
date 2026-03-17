@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { getServiceClient } from '../_shared/supabaseClient.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
 const SITE_URL = 'https://crawlers.fr';
@@ -64,9 +64,7 @@ Deno.serve(async (req) => {
     const pages: SitemapPage[] = [];
 
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = getServiceClient();
 
     // ========================================
     // PAGES STATIQUES (date du jour)

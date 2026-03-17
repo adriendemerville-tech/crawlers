@@ -1,5 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getAnonClient } from '../_shared/supabaseClient.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -16,10 +16,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-    const supabase = createClient(supabaseUrl, anonKey);
+    const supabase = getAnonClient();
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
       redirectTo: 'https://crawlers.fr/auth',

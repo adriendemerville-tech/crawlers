@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackTokenUsage, trackPaidApiCall } from "../_shared/tokenTracker.ts";
 import { corsHeaders } from '../_shared/cors.ts';
 import { getSiteContext } from '../_shared/getSiteContext.ts';
@@ -699,12 +699,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
     if (!openrouterKey) throw new Error('OPENROUTER_API_KEY is not configured');
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const supabase = getServiceClient();
 
     // ── Gather intelligence from all available sources ──
     const intel = await gatherIntelligence(supabase, { audit_id, crawl_id, client_id, gsc_data, sector });

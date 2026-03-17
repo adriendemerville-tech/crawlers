@@ -1,5 +1,5 @@
 import { corsHeaders } from '../_shared/cors.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { trackPaidApiCall } from '../_shared/tokenTracker.ts';
 import { saveRawAuditData } from '../_shared/saveRawAuditData.ts';
 
@@ -625,7 +625,7 @@ Deno.serve(async (req) => {
   const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY')!;
   const renderingKey = Deno.env.get('RENDERING_API_KEY') || null;
 
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const supabase = getServiceClient();
 
   const WATCHDOG_MS = 120_000;
   const startTime = Date.now();

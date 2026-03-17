@@ -1,8 +1,5 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
-
-const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -23,7 +20,7 @@ Deno.serve(async (req) => {
     console.log(`📝 Fetching script for audit: ${audit_id}`);
 
     // Initialize Supabase client with service role (bypasses RLS)
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getServiceClient();
 
     // Fetch the audit record
     const { data: audit, error: fetchError } = await supabase

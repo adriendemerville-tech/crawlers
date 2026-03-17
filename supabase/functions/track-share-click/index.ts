@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getServiceClient, getUserClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
@@ -16,10 +16,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabase = getServiceClient();
 
     // 1. Check referrer exists
     const { data: referrerProfile } = await supabase
@@ -38,11 +35,7 @@ Deno.serve(async (req) => {
     // 2. Self-click check: get visitor from auth header if available
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
-      const anonClient = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
-      );
+      const anonClient = getUserClient(authHeader);
       const { data: { user } } = await anonClient.auth.getUser();
       if (user && user.id === referrer_id) {
         return new Response(

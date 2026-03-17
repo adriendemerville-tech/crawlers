@@ -1,13 +1,10 @@
 import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getServiceClient } from '../_shared/supabaseClient.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2023-10-16",
 });
-
-const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 // Lien de paiement Stripe fixe (utilisé en mode fallback)
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/6oU4gB6KV6hMgLb9PidnW00";
@@ -46,7 +43,7 @@ Deno.serve(async (req) => {
 
     // 1️⃣ RÉCUPÉRATION DU PRIX DEPUIS LA BASE DE DONNÉES
     // Sécurité: le prix n'est PLUS calculé côté client ni ici
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getServiceClient();
 
     const { data: audit, error: fetchError } = await supabase
       .from("audits")
