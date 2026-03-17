@@ -255,7 +255,9 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
                   </td>
                   {weeks.map(week => {
                     const score = scoreMap.get(llmName)?.get(week);
+                    const trend = trendMap.get(llmName)?.get(week) ?? 0;
                     const hasScore = score != null;
+                    const trendIcon = trend > 0.05 ? '↑' : trend < -0.05 ? '↓' : '';
                     return (
                       <td key={week} className="text-center pb-1.5 pl-1.5 pr-0 pt-0">
                         <div
@@ -264,6 +266,7 @@ export function LLMVisibilityDashboard({ trackedSiteId, userId, domain }: LLMVis
                           }`}
                         >
                           {hasScore ? `${Math.round(score)}%` : '—'}
+                          {trendIcon && <span className="ml-0.5 text-[9px] opacity-80">{trendIcon}</span>}
                         </div>
                       </td>
                     );
