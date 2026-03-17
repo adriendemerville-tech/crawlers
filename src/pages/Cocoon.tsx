@@ -16,8 +16,9 @@ import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
 import { CocoonArchitectModal } from "@/components/Cocoon/CocoonArchitectModal";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
-import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Layers, ClipboardList, Maximize, SlidersHorizontal } from "lucide-react";
+import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Layers, ClipboardList, Maximize, SlidersHorizontal, Settings2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
@@ -191,6 +192,8 @@ export default function Cocoon() {
   const [is3DMode, setIs3DMode] = useState(true);
   const [graphContrast, setGraphContrast] = useState(100);
   const [colorIntensity, setColorIntensity] = useState(5);
+  const [bgWarmth, setBgWarmth] = useState(0);
+  const [linkThickness, setLinkThickness] = useState(1);
   const [isComputing, setIsComputing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [showUpsell, setShowUpsell] = useState(false);
@@ -552,6 +555,58 @@ export default function Cocoon() {
 
             {/* Controls */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Settings popover */}
+              {nodes.length > 0 && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 sm:h-8 text-[10px] sm:text-xs border-[hsl(263,70%,20%)] bg-transparent text-white/60 hover:text-white px-2 sm:px-3"
+                    >
+                      <Settings2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="bottom"
+                    align="end"
+                    className="w-72 bg-[#0f0a1e]/95 backdrop-blur-xl border-white/10 p-4 space-y-4"
+                  >
+                    {/* Contrast */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-white/50 font-medium">{language === 'es' ? 'Contraste' : language === 'en' ? 'Contrast' : 'Contraste'}</span>
+                        <span className="text-[9px] text-white/30 font-mono">{graphContrast}%</span>
+                      </div>
+                      <Slider min={50} max={200} step={5} value={[graphContrast]} onValueChange={([v]) => setGraphContrast(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
+                    </div>
+                    {/* Halo (color intensity) */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-white/50 font-medium">Halo</span>
+                        <span className="text-[9px] text-white/30 font-mono">{colorIntensity}</span>
+                      </div>
+                      <Slider min={0} max={10} step={1} value={[colorIntensity]} onValueChange={([v]) => setColorIntensity(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
+                    </div>
+                    {/* Background warmth */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-white/50 font-medium">{language === 'en' ? 'Warmth' : language === 'es' ? 'Calidez' : 'Chaleur'}</span>
+                        <span className="text-[9px] text-white/30 font-mono">{bgWarmth}</span>
+                      </div>
+                      <Slider min={-10} max={10} step={1} value={[bgWarmth]} onValueChange={([v]) => setBgWarmth(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
+                    </div>
+                    {/* Link & particle thickness */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-white/50 font-medium">{language === 'en' ? 'Thickness' : language === 'es' ? 'Grosor' : 'Épaisseur'}</span>
+                        <span className="text-[9px] text-white/30 font-mono">{linkThickness.toFixed(1)}×</span>
+                      </div>
+                      <Slider min={0.5} max={4} step={0.1} value={[linkThickness]} onValueChange={([v]) => setLinkThickness(v)} className="[&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/60 [&_[data-orientation=horizontal]]:h-[2px] [&_.relative]:bg-white/10 [&_[data-orientation=horizontal]>span:first-child]:bg-white/25" />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
               {new Set(nodes.map((n: any) => n.page_type || 'unknown')).size > 1 && (
                 <CocoonFilterSelector
                   nodes={nodes}
@@ -670,6 +725,8 @@ export default function Cocoon() {
                 visibleJuiceTypes={cocoonFilters.visibleJuiceTypes}
                 isDayMode={false}
                 colorIntensity={colorIntensity}
+                bgWarmth={bgWarmth}
+                linkThickness={linkThickness}
               />
             ) : (
               <CocoonForceGraph
@@ -691,28 +748,7 @@ export default function Cocoon() {
             )}
 
 
-            {/* Controls — right side */}
-            {nodes.length > 0 && (
-              <div className="absolute top-3 right-3 z-20 flex flex-col items-center gap-4 backdrop-blur-md bg-black/50 border border-white/10 rounded-lg px-2 py-3">
-                {/* Contrast Slider */}
-                <div className="flex flex-col items-center gap-1.5">
-                  <SlidersHorizontal className="w-3 h-3 text-white/40" />
-                  <div className="h-24">
-                    <Slider
-                      orientation="vertical"
-                      min={50}
-                      max={200}
-                      step={5}
-                      value={[graphContrast]}
-                      onValueChange={([v]) => setGraphContrast(v)}
-                      className="h-24 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/50 [&_[data-orientation=vertical]]:w-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=vertical]>span:first-child]:bg-white/20"
-                      thumbLabel="Contraste"
-                    />
-                  </div>
-                  <span className="text-[9px] text-white/30 font-mono">{graphContrast}%</span>
-                </div>
-              </div>
-            )}
+            {/* Controls moved to header settings popover */}
 
             {/* Side Panel */}
             {selectedNode && (

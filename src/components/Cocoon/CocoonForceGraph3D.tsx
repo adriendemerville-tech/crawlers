@@ -101,6 +101,8 @@ interface CocoonForceGraph3DProps {
   visibleJuiceTypes?: Set<string>;
   isDayMode?: boolean;
   colorIntensity?: number;
+  bgWarmth?: number;
+  linkThickness?: number;
 }
 
 // ─── 3D Force Simulation (manual spring-charge model) ───
@@ -415,6 +417,7 @@ function Links({
   particlesEnabled,
   customParticleColors,
   spreadScale,
+  linkThickness = 1,
 }: {
   links: GraphLink3D[];
   nodeMap: Map<string, GraphNode3D>;
@@ -422,6 +425,7 @@ function Links({
   particlesEnabled: boolean;
   customParticleColors: Record<string, string>;
   spreadScale: number;
+  linkThickness?: number;
 }) {
   const linesRef = useRef<THREE.Group>(null);
   const particleGroupRef = useRef<THREE.Group>(null);
@@ -510,7 +514,7 @@ function Links({
               color={color}
               transparent
               opacity={opacity}
-              lineWidth={isSelectedLink ? 1.5 : 0.5}
+              lineWidth={isSelectedLink ? 1.5 * linkThickness : 0.5 * linkThickness}
             />
           );
         })}
@@ -525,7 +529,7 @@ function Links({
             const color = link ? activeJuice2[link.juiceType] : "#508cff";
             return (
               <mesh key={i} position={[0, 0, 0]}>
-                <sphereGeometry args={[0.25, 6, 6]} />
+                <sphereGeometry args={[0.25 * linkThickness, 6, 6]} />
                 <meshBasicMaterial
                   color={color}
                   transparent
@@ -703,6 +707,8 @@ function SceneContent({
   rawNodes,
   isDayMode,
   colorIntensity,
+  bgWarmth = 0,
+  linkThickness = 1,
 }: {
   graphNodes: GraphNode3D[];
   graphLinks: GraphLink3D[];
@@ -722,8 +728,23 @@ function SceneContent({
   rawNodes: SemanticNode[];
   isDayMode: boolean;
   colorIntensity: number;
+  bgWarmth?: number;
+  linkThickness?: number;
 }) {
   const hoveredNode = hoveredNodeId ? nodeMap.get(hoveredNodeId) : null;
+
+  // Compute background color based on warmth (-10 to 10)
+  const bgColor = useMemo(() => {
+    if (isDayMode) return "#f5f5f0";
+    // Base: #06060e (very dark blue-black)
+    // Warmth > 0 → shift toward warm (add red/reduce blue)
+    // Warmth < 0 → shift toward cool (add blue)
+    const base = { r: 6, g: 6, b: 14 };
+    const r = Math.min(255, Math.max(0, base.r + bgWarmth * 3));
+    const g = Math.min(255, Math.max(0, base.g + Math.abs(bgWarmth) * 0.5));
+    const b = Math.min(255, Math.max(0, base.b - bgWarmth * 2));
+    return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+  }, [bgWarmth, isDayMode]);
 
    return (
     <>
@@ -734,8 +755,8 @@ function SceneContent({
       <pointLight position={[0, 0, 0]} intensity={isDayMode ? 0.3 : 0.6} color="#ffc83c" distance={200} decay={2} />
 
       {/* Background */}
-      <color attach="background" args={[isDayMode ? "#f5f5f0" : "#06060e"]} />
-      <fog attach="fog" args={[isDayMode ? "#f5f5f0" : "#06060e", 150, 500]} />
+      <color attach="background" args={[bgColor]} />
+      <fog attach="fog" args={[bgColor, 150, 500]} />
 
       {/* Cluster Halos — behind everything */}
       <ClusterHalos
@@ -753,6 +774,7 @@ function SceneContent({
         particlesEnabled={particlesEnabled}
         customParticleColors={customParticleColors}
         spreadScale={spreadScale}
+        linkThickness={linkThickness}
       />
 
       {/* Nodes */}
@@ -815,6 +837,8 @@ export function CocoonForceGraph3D({
   visibleJuiceTypes,
   isDayMode = false,
   colorIntensity = 5,
+  bgWarmth = 0,
+  linkThickness = 1,
 }: CocoonForceGraph3DProps) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [spreadScale, setSpreadScale] = useState(1);
@@ -1013,24 +1037,33 @@ export function CocoonForceGraph3D({
           rawNodes={nodes}
           isDayMode={isDayMode}
           colorIntensity={colorIntensity}
+          bgWarmth={bgWarmth}
+          linkThickness={linkThickness}
         />
       </Canvas>
 
       {/* Progressive vignette fade */}
-      {!isDayMode && (
-        <div
-          className="absolute inset-0 pointer-events-none z-[1]"
-          style={{
-            background: `
-              radial-gradient(ellipse 90% 88% at 50% 50%, transparent 82%, #06060e 100%),
-              linear-gradient(to top, #06060e 0%, transparent 4%),
-              linear-gradient(to bottom, #06060e 0%, transparent 4%),
-              linear-gradient(to left, #06060e 0%, transparent 3.3%),
-              linear-gradient(to right, #06060e 0%, transparent 3.3%)
-            `,
-          }}
-        />
-      )}
+      {!isDayMode && (() => {
+        const base = { r: 6, g: 6, b: 14 };
+        const r = Math.min(255, Math.max(0, Math.round(base.r + bgWarmth * 3)));
+        const g = Math.min(255, Math.max(0, Math.round(base.g + Math.abs(bgWarmth) * 0.5)));
+        const b = Math.min(255, Math.max(0, Math.round(base.b - bgWarmth * 2)));
+        const vc = `rgb(${r},${g},${b})`;
+        return (
+          <div
+            className="absolute inset-0 pointer-events-none z-[1]"
+            style={{
+              background: `
+                radial-gradient(ellipse 90% 88% at 50% 50%, transparent 82%, ${vc} 100%),
+                linear-gradient(to top, ${vc} 0%, transparent 4%),
+                linear-gradient(to bottom, ${vc} 0%, transparent 4%),
+                linear-gradient(to left, ${vc} 0%, transparent 3.3%),
+                linear-gradient(to right, ${vc} 0%, transparent 3.3%)
+              `,
+            }}
+          />
+        );
+      })()}
 
       {/* Zoom controls */}
       <div className="absolute bottom-4 left-4 flex flex-col gap-1.5 z-10">
@@ -1078,25 +1111,7 @@ export function CocoonForceGraph3D({
         <div>{nodes.length} nœuds · {graphLinks.length} liens</div>
       </div>
 
-      {/* Halo opacity vertical slider — bottom right, only when clusters visible */}
-      {showClusters && (
-        <div className="absolute bottom-4 right-4 z-[5] flex flex-col items-center gap-1.5 opacity-50 hover:opacity-80 transition-opacity duration-500">
-          <span className="text-[8px] text-white/40 font-mono select-none tracking-wider">Halo</span>
-          <div className="h-24 flex items-center">
-            <Slider
-              orientation="vertical"
-              min={0}
-              max={0.3}
-              step={0.01}
-              value={[haloOpacity]}
-              onValueChange={([v]) => setHaloOpacity(v)}
-              className="h-24 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/50 [&_[data-orientation=vertical]]:w-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=vertical]>span:first-child]:bg-white/20"
-              thumbLabel="Opacité halo"
-            />
-          </div>
-          <span className="text-[8px] text-white/30 font-mono select-none">{Math.round(haloOpacity * 100)}%</span>
-        </div>
-      )}
+      {/* Halo slider removed — now in header settings popover */}
     </div>
   );
 }
