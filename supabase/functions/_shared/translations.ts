@@ -214,6 +214,16 @@ const geoTranslations: Record<Language, GeoTranslations> = {
         noCanonical: 'No canonical tag found in <head>',
         found: 'Canonical tag found',
       },
+      intentInTitle: {
+        name: 'Intent in Title',
+        description: 'Main keyword or intent visible in title and first sentence',
+        recommendation: 'Place your main keyword in the title (H1 or <title>) and first sentence to maximize AI relevance',
+      },
+      faqOrSummary: {
+        name: 'FAQ or Summary at Top',
+        description: 'FAQ section or summary (TL;DR) at the top of the page',
+        recommendation: 'Add a FAQ section (with Schema FAQ markup) or a summary (TL;DR) at the beginning of your article for easier AI extraction',
+      },
     },
     details: {
       botsAllowed: (allowed, total) => `${allowed}/${total} AI bots allowed`,
