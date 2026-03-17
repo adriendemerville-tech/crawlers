@@ -10,6 +10,7 @@ import { Loader2, FolderTree, Globe, ChevronRight, ChevronDown, FileText, AlertC
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCredits } from '@/contexts/CreditsContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -127,6 +128,7 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
   const { toast } = useToast();
   const { user } = useAuth();
   const { isAgencyPro } = useCredits();
+  const { isAdmin } = useAdmin();
 
   const [tree, setTree] = useState<FolderNode[]>([]);
   const [totalUrls, setTotalUrls] = useState(0);
@@ -384,7 +386,7 @@ export function MultiPageRouter({ domain, siteId }: MultiPageRouterProps) {
   };
 
   // Pro gate
-  if (!isAgencyPro) {
+  if (!isAgencyPro && !isAdmin) {
     return (
       <div className="p-4 text-center space-y-2">
         <Sparkles className="w-8 h-8 text-amber-500 mx-auto" />
