@@ -168,7 +168,7 @@ export default function Profile() {
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <main className="flex-1 container mx-auto px-4 py-4 max-w-5xl">
+        <main className="flex-1 container mx-auto px-4 py-2 max-w-5xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -177,8 +177,8 @@ export default function Profile() {
 
 
             <FreeTrialBanner />
-            <Tabs defaultValue={initialTab} className="space-y-6">
-              <TabsList className="w-full flex">
+            <Tabs defaultValue={initialTab} className="space-y-2">
+              <TabsList className="w-full flex my-0 py-0">
                 {isProUser && (
                   <TabsTrigger value="wallet" className="flex-1 gap-2">
                     <Crown className="h-4 w-4 text-yellow-500" />
