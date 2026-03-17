@@ -1378,7 +1378,7 @@ export function SmartConfigurator({
         <div className="flex-1 overflow-hidden grid grid-cols-12 h-full">
           {/* Left Column: Configurator */}
           <div className="col-span-5 border-r flex flex-col overflow-hidden">
-            <Tabs defaultValue="technical" className="flex-1 flex flex-col min-h-0">
+            <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col min-h-0">
               <TabsList className="w-full justify-start rounded-none border-b bg-transparent px-4 py-0 h-auto flex-shrink-0">
                 <TabsTrigger 
                   value="technical" 
