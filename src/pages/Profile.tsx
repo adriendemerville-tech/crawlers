@@ -174,18 +174,6 @@ export default function Profile() {
             transition={{ duration: 0.5 }}
           >
 
-            {/* Header with Cocoon button */}
-            <div className="flex items-center justify-end mb-4">
-              {isProUser && (
-                <Button variant="outline" asChild className="gap-2 border-amber-500/30 hover:bg-amber-500/10">
-                  <Link to="/cocoon">
-                    <Network className="h-4 w-4 text-amber-500" />
-                    <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">BETA</span>
-                    <span className="text-amber-500 font-semibold">Cocoon</span>
-                  </Link>
-                </Button>
-              )}
-            </div>
 
             <FreeTrialBanner />
             <Tabs defaultValue={initialTab} className="space-y-6">
