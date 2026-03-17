@@ -16,7 +16,7 @@ import { CocoonTaskPlanModal } from "@/components/Cocoon/CocoonTaskPlanModal";
 import { CocoonArchitectModal } from "@/components/Cocoon/CocoonArchitectModal";
 import { CocoonAccessGate } from "@/components/Cocoon/CocoonAccessGate";
 import { CocoonFilterSelector, CocoonFilters } from "@/components/Cocoon/CocoonFilterSelector";
-import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Sparkles, Layers, ClipboardList, Maximize, SlidersHorizontal } from "lucide-react";
+import { Loader2, Eye, EyeOff, RefreshCw, Lock, ChevronDown, Crown, Star, CheckCircle2, AlertTriangle, Search, FileText, ArrowLeft, LayoutDashboard, ExternalLink, Layers, ClipboardList, Maximize, SlidersHorizontal } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -618,7 +618,7 @@ export default function Cocoon() {
         )}
 
         {/* Main Graph */}
-        <main className="flex-1 relative px-4 sm:px-6 md:px-10 lg:px-14 pt-6 sm:pt-8 lg:pt-12 pb-12 sm:pb-14 lg:pb-20 min-h-0">
+        <main className={`flex-1 relative px-4 sm:px-6 md:px-10 lg:px-14 pt-6 sm:pt-8 lg:pt-12 min-h-0 ${isFullscreen ? 'pb-12 sm:pb-14 lg:pb-20' : 'pb-4 sm:pb-6 lg:pb-8'}`}>
           <div className="h-full rounded-xl overflow-hidden border relative border-[hsl(263,70%,20%)]" style={{ filter: `contrast(${graphContrast}%) brightness(${50 + graphContrast / 2}%)` }}>
             {/* 2D / 3D toggle */}
             {nodes.length > 0 && (
@@ -710,7 +710,7 @@ export default function Cocoon() {
                 {/* Contrast Slider */}
                 <div className="flex flex-col items-center gap-1.5">
                   <SlidersHorizontal className="w-3 h-3 text-white/40" />
-                  <div className="h-20">
+                  <div className="h-24">
                     <Slider
                       orientation="vertical"
                       min={50}
@@ -718,29 +718,11 @@ export default function Cocoon() {
                       step={5}
                       value={[graphContrast]}
                       onValueChange={([v]) => setGraphContrast(v)}
-                      className="h-full [&_[data-orientation=vertical]]:w-1.5"
+                      className="h-24 [&_[role=slider]]:h-3 [&_[role=slider]]:w-3 [&_[role=slider]]:border-0 [&_[role=slider]]:bg-white/50 [&_[data-orientation=vertical]]:w-[1px] [&_.relative]:bg-white/10 [&_[data-orientation=vertical]>span:first-child]:bg-white/20"
+                      thumbLabel="Contraste"
                     />
                   </div>
                   <span className="text-[9px] text-white/30 font-mono">{graphContrast}%</span>
-                </div>
-
-                <div className="w-full h-px bg-white/10" />
-
-                {/* Color Intensity Slider */}
-                <div className="flex flex-col items-center gap-1.5">
-                  <Sparkles className="w-3 h-3 text-amber-400/70" />
-                  <div className="h-20">
-                    <Slider
-                      orientation="vertical"
-                      min={0}
-                      max={10}
-                      step={0.1}
-                      value={[colorIntensity]}
-                      onValueChange={([v]) => setColorIntensity(v)}
-                      className="h-full [&_[data-orientation=vertical]]:w-1.5"
-                    />
-                  </div>
-                  <span className="text-[9px] text-white/30 font-mono">{colorIntensity.toFixed(1)}</span>
                 </div>
               </div>
             )}
