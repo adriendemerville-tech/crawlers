@@ -202,8 +202,8 @@ export function CreditTopUpModal({ open, onOpenChange, currentBalance }: CreditT
     setLoadingPackage(packageId);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
-        body: { package_type: packageId },
+      const { data, error } = await supabase.functions.invoke('stripe-actions', {
+        body: { action: 'credit-checkout', package_type: packageId },
       });
 
       if (error) throw error;
