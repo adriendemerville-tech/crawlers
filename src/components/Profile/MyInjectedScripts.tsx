@@ -457,25 +457,6 @@ export function MyInjectedScripts() {
                                 {t.viewScript}
                               </Button>
                               <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 px-3 text-[10px] gap-1.5 flex-1"
-                                onClick={(e) => { e.stopPropagation(); handleTest(rule); }}
-                                disabled={isTesting}
-                              >
-                                {isTesting ? (
-                                  <>
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                    {t.testing}
-                                  </>
-                                ) : (
-                                  <>
-                                    <Rocket className="w-3 h-3" />
-                                    {t.test}
-                                  </>
-                                )}
-                              </Button>
-                              <Button
                                 variant={rule.is_active ? 'outline' : 'default'}
                                 size="sm"
                                 className={`h-7 px-3 text-[10px] gap-1.5 flex-1 ${rule.is_active ? 'text-destructive border-destructive/30 hover:bg-destructive/10' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
