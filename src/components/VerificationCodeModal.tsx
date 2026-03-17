@@ -108,8 +108,8 @@ export function VerificationCodeModal({ open, email, onVerified, onClose }: Veri
     setCode('');
 
     try {
-      await supabase.functions.invoke('send-verification-code', {
-        body: { email },
+      await supabase.functions.invoke('auth-actions', {
+        body: { action: 'send-code', email },
       });
       toast.success(t.resent);
     } catch {

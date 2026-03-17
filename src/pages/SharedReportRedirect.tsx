@@ -70,8 +70,8 @@ export default function SharedReportRedirect() {
       }
 
       try {
-        const { data, error } = await supabase.functions.invoke('resolve-share', {
-          body: { shareId },
+        const { data, error } = await supabase.functions.invoke('share-actions', {
+          body: { action: 'resolve', shareId },
         });
         if (error) throw error;
         if (!data?.success) throw new Error(data?.error || 'Invalid link');

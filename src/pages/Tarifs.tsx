@@ -317,7 +317,7 @@ export default function Tarifs() {
     }
     setSubscribeLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-subscription-session');
+      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'subscription' } });
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, '_blank', 'noopener');

@@ -224,8 +224,9 @@ export function ExpertReportPreviewModal({ isOpen, onClose, result, auditMode, p
   const handleShare = async () => {
     setIsSharing(true);
     try {
-      const { data: responseData, error } = await supabase.functions.invoke('share-report', {
+      const { data: responseData, error } = await supabase.functions.invoke('share-actions', {
         body: {
+          action: 'create',
           type: 'expert-audit',
           url: result.url,
           data: { result: effectiveResult, auditMode },

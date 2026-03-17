@@ -81,7 +81,7 @@ export function RetentionModal({ open, onOpenChange, onProceedToPortal }: Retent
   const handleAcceptOffer = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('apply-retention-offer');
+      const { data, error } = await supabase.functions.invoke('stripe-actions', { body: { action: 'retention' } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       toast.success(t.offerApplied);

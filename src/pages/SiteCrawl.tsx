@@ -855,8 +855,8 @@ export default function SiteCrawl() {
                     }
                     setSubscribeLoading(true);
                     try {
-                      const { data, error } = await supabase.functions.invoke('create-subscription-session', {
-                        body: { returnUrl: window.location.href }
+                      const { data, error } = await supabase.functions.invoke('stripe-actions', {
+                        body: { action: 'subscription', returnUrl: window.location.href }
                       });
                       if (error) throw error;
                       if (data?.url) window.open(data.url, '_blank', 'noopener');

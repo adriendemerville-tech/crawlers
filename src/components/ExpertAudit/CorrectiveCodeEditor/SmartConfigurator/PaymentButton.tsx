@@ -163,8 +163,9 @@ export function PaymentButton({
       }
 
       // Étape 2: Créer la session Stripe avec l'audit_id
-      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
+      const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('stripe-actions', {
         body: {
+          action: 'checkout',
           audit_id: auditId,
           usePaymentLink: false,
         },

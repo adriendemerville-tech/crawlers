@@ -228,7 +228,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
     } else {
       // Send verification code and show modal
       setVerificationEmail(data.email);
-      supabase.functions.invoke('send-verification-code', { body: { email: data.email } });
+      supabase.functions.invoke('auth-actions', { body: { action: 'send-code', email: data.email } });
       setShowVerification(true);
     }
   };
