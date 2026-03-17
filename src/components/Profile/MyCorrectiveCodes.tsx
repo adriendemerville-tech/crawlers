@@ -109,8 +109,19 @@ export function MyCorrectiveCodes() {
     if (user) {
       fetchCodes();
       fetchRollbackSites();
+      fetchInjectableSites();
     }
   }, [user]);
+
+  const fetchInjectableSites = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('tracked_sites')
+      .select('id, domain')
+      .eq('user_id', user.id);
+    setInjectableSites((data || []).map((s: any) => ({ id: s.id, domain: s.domain })));
+  };
+
 
   const fetchRollbackSites = async () => {
     if (!user) return;
