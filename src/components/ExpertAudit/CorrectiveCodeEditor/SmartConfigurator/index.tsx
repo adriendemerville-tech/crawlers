@@ -1440,6 +1440,7 @@ export function SmartConfigurator({
                     fixes={fixConfigs} 
                     onToggle={toggleFix}
                     onUpdateData={updateFixData}
+                    disabled={isCodeLocked}
                   />
                 </TabsContent>
 
