@@ -378,14 +378,16 @@ async function generateHTMLPayload(
   siteName: string,
   urlPattern: string,
   existing: Record<string, any>,
-  apiKey: string | undefined
+  apiKey: string | undefined,
+  strategy: { focus: string; schemaHint: string; tone: string },
+  intent: string
 ): Promise<Record<string, any>> {
   // If HTML is already provided, keep it
   if (existing.html && existing.html.length > 50) return existing;
 
   if (!apiKey) {
     return {
-      html: `<section data-crawlers=\"injected\"><h2>${siteName}</h2><p>Contenu optimisé pour ${domain}</p></section>`,
+      html: `<section data-crawlers="injected"><h2>${siteName}</h2><p>Contenu optimisé pour ${domain}</p></section>`,
       targetSelector: existing.targetSelector || 'footer',
       insertPosition: existing.insertPosition || 'before',
     };
@@ -393,6 +395,15 @@ async function generateHTMLPayload(
 
   try {
     const section = urlPattern.replace('/*', '').replace('GLOBAL', '/');
+
+    // Intent-specific HTML generation instructions
+    const intentInstructions: Record<string, string> = {
+      transactional: `Génère un bloc HTML orienté CONVERSION : avantages produit/service, CTA clair, éléments de réassurance (garantie, livraison, avis). Inclus des micro-données ${strategy.schemaHint} si pertinent.`,
+      commercial: `Génère un bloc HTML orienté DÉCISION : comparatif, bénéfices clés, témoignages clients, chiffres clés. Ton ${strategy.tone}.`,
+      informational: `Génère un bloc HTML orienté EXPERTISE : contenu éducatif, définitions, données factuelles, citations de sources. Renforce l'E-E-A-T et la citabilité LLM.`,
+      navigational: `Génère un bloc HTML orienté NAVIGATION : présentation claire de l'entité, coordonnées, liens structurels, identité de marque.`,
+    };
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -404,11 +415,11 @@ async function generateHTMLPayload(
         messages: [
           {
             role: 'system',
-            content: 'Tu génères des blocs HTML SEO-optimisés pour injection dans des pages web. Code HTML sémantique uniquement, pas de JS ni CSS inline complexe. Réponds UNIQUEMENT avec le HTML brut.',
+            content: `Tu génères des blocs HTML SEO-optimisés pour injection dans des pages web. L'intent de cette page est "${intent}". Adapte le contenu en conséquence : ${strategy.focus}. Code HTML sémantique uniquement, pas de JS ni CSS inline complexe. Réponds UNIQUEMENT avec le HTML brut.`,
           },
           {
             role: 'user',
-            content: `Génère un bloc HTML sémantique (~100-200 mots) pour la section \\"${section}\\" du site \\"${siteName}\\" (${domain}). Le bloc doit renforcer l'E-E-A-T et la citabilité LLM. Inclus un h2, 2-3 paragraphes avec données factuelles. Pas de markdown, juste du HTML.`,
+            content: `${intentInstructions[intent] || intentInstructions.informational} Section "${section}" du site "${siteName}" (${domain}). ~100-200 mots, h2 + 2-3 paragraphes. Pas de markdown, juste du HTML.`,
           },
         ],
         temperature: 0.6,
@@ -428,11 +439,12 @@ async function generateHTMLPayload(
       html,
       targetSelector: existing.targetSelector || 'footer',
       insertPosition: existing.insertPosition || 'before',
+      _intent: intent,
     };
   } catch (err) {
     console.error('[process-script-queue] HTML AI error:', err);
     return {
-      html: `<section data-crawlers=\"injected\"><h2>${siteName}</h2><p>Contenu optimisé pour ${domain}</p></section>`,
+      html: `<section data-crawlers="injected"><h2>${siteName}</h2><p>Contenu optimisé pour ${domain}</p></section>`,
       targetSelector: existing.targetSelector || 'footer',
       insertPosition: existing.insertPosition || 'before',
     };
