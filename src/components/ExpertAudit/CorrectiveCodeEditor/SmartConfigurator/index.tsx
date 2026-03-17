@@ -362,9 +362,15 @@ export function SmartConfigurator({
   const availableFixes = useMemo(() => {
     const fixes: FixConfig[] = [];
 
-    if (technicalResult) {
+    // Safely access nested scores — cached data from "Mes Sites" may have partial structure
+    const semantic = technicalResult?.scores?.semantic;
+    const aiReady = technicalResult?.scores?.aiReady;
+    const perf = technicalResult?.scores?.performance;
+    const security = technicalResult?.scores?.security;
+
+    if (technicalResult && semantic) {
       // SEO Fixes
-      if (!technicalResult.scores.semantic.hasTitle || technicalResult.scores.semantic.titleLength > 70) {
+      if (!semantic.hasTitle || semantic.titleLength > 70) {
         fixes.push({
           id: 'fix_title',
           category: 'seo',
@@ -376,7 +382,7 @@ export function SmartConfigurator({
         });
       }
 
-      if (!technicalResult.scores.semantic.hasMetaDesc) {
+      if (!semantic.hasMetaDesc) {
         fixes.push({
           id: 'fix_meta_desc',
           category: 'seo',
@@ -387,7 +393,7 @@ export function SmartConfigurator({
         });
       }
 
-      if (!technicalResult.scores.semantic.hasUniqueH1 || technicalResult.scores.semantic.h1Count === 0) {
+      if (!semantic.hasUniqueH1 || semantic.h1Count === 0) {
         fixes.push({
           id: 'fix_h1',
           category: 'seo',
@@ -397,45 +403,45 @@ export function SmartConfigurator({
           priority: 'critical',
         });
       }
+    }
 
-      if (!technicalResult.scores.aiReady.hasSchemaOrg) {
-        fixes.push({
-          id: 'fix_jsonld',
-          category: 'seo',
-          label: 'Ajouter JSON-LD Schema.org',
-          description: 'Injecte des données structurées pour l\'IA et Google',
-          enabled: true,
-          priority: 'important',
-          data: { siteName, siteUrl }
-        });
-      }
+    if (technicalResult && aiReady && !aiReady.hasSchemaOrg) {
+      fixes.push({
+        id: 'fix_jsonld',
+        category: 'seo',
+        label: 'Ajouter JSON-LD Schema.org',
+        description: 'Injecte des données structurées pour l\'IA et Google',
+        enabled: true,
+        priority: 'important',
+        data: { siteName, siteUrl }
+      });
+    }
 
-      if (technicalResult.scores.performance.lcp > 2500) {
-        fixes.push({
-          id: 'fix_lazy_images',
-          category: 'performance',
-          label: 'Lazy Loading des images',
-          description: 'Ajoute le lazy loading aux images hors viewport',
-          enabled: true,
-          priority: 'important',
-        });
-      }
+    if (technicalResult && perf && perf.lcp > 2500) {
+      fixes.push({
+        id: 'fix_lazy_images',
+        category: 'performance',
+        label: 'Lazy Loading des images',
+        description: 'Ajoute le lazy loading aux images hors viewport',
+        enabled: true,
+        priority: 'important',
+      });
+    }
 
-      if (!technicalResult.scores.security.isHttps) {
-        fixes.push({
-          id: 'fix_https_redirect',
-          category: 'seo',
-          label: 'Redirection HTTPS',
-          description: 'Force la redirection vers HTTPS',
-          enabled: true,
-          priority: 'critical',
-        });
-      }
+    if (technicalResult && security && !security.isHttps) {
+      fixes.push({
+        id: 'fix_https_redirect',
+        category: 'seo',
+        label: 'Redirection HTTPS',
+        description: 'Force la redirection vers HTTPS',
+        enabled: true,
+        priority: 'critical',
+      });
     }
 
     // Accessibility fixes - only if audit detects issues
-    if (technicalResult) {
-      const missingAlt = (technicalResult.scores.semantic as any)?.imagesMissingAlt ?? 0;
+    if (technicalResult && semantic) {
+      const missingAlt = (semantic as any)?.imagesMissingAlt ?? 0;
       if (missingAlt > 0) {
         fixes.push({
           id: 'fix_alt_images',
@@ -458,9 +464,9 @@ export function SmartConfigurator({
     });
 
     // Tracking fixes - GTM: enabled by default if missing, greyed out if already present
-    if (technicalResult) {
-      const hasGTM = (technicalResult.scores.semantic as any)?.hasGTM ?? false;
-      const hasGA4 = (technicalResult.scores.semantic as any)?.hasGA4 ?? false;
+    if (technicalResult && semantic) {
+      const hasGTM = (semantic as any)?.hasGTM ?? false;
+      const hasGA4 = (semantic as any)?.hasGA4 ?? false;
 
       fixes.push({
         id: 'fix_gtm',
