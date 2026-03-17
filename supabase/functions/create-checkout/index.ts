@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     // 1️⃣ RÉCUPÉRATION DU PRIX DEPUIS LA BASE DE DONNÉES
     // Sécurité: le prix n'est PLUS calculé côté client ni ici
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getServiceClient();
 
     const { data: audit, error: fetchError } = await supabase
       .from("audits")

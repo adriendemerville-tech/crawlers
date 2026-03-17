@@ -420,9 +420,7 @@ Deno.serve(async (req: Request) => {
   try {
     const { type, url, data, language, preRenderedHtml }: ShareReportRequest = await req.json();
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = getServiceClient();
 
     // Use pre-rendered HTML if provided (expert-audit with full rich report), otherwise generate
     const html = preRenderedHtml || generateReportHTML(type, data, url, language);

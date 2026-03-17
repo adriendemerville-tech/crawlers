@@ -16,10 +16,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-    const supabase = createClient(supabaseUrl, anonKey);
+    const supabase = getAnonClient();
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
       redirectTo: 'https://crawlers.fr/auth',

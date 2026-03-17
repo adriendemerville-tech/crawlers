@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
     console.log(`📝 Fetching script for audit: ${audit_id}`);
 
     // Initialize Supabase client with service role (bypasses RLS)
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getServiceClient();
 
     // Fetch the audit record
     const { data: audit, error: fetchError } = await supabase

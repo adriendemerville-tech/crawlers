@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const supabase = getServiceClient();
     const normalizedCode = code.trim().toUpperCase();
 
     // Find the affiliate code

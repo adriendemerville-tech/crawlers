@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
     );
 
     // Initialize Supabase client with service role (bypasses RLS)
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getServiceClient();
 
     // 2️⃣ INSERT OR UPDATE l'audit dans la table
     const { data: existingAudit } = await supabase
