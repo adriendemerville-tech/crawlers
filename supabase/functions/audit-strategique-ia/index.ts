@@ -2567,8 +2567,9 @@ Deno.serve(async (req) => {
       userPrompt = `🏷️ NOM DE L'ENTITÉ ANALYSÉE: "${resolvedEntityName}" — Utilise CE NOM pour désigner le site dans tout le rapport.\n` + userPrompt;
     }
 
-    if (!isContentMode && localCompetitorData) {
-      userPrompt = `🏙️ CONCURRENT LOCAL SERP: "${localCompetitorData.name}" URL:${localCompetitorData.url} Position:${localCompetitorData.rank}. Utilise comme direct_competitor.\n` + userPrompt;
+    if (!isContentMode && localCompetitorsAll.length > 0) {
+      const compLines = localCompetitorsAll.map((c, i) => `  ${i + 1}. "${c.name}" URL:${c.url || 'N/A'} Position:${c.rank || 'N/A'} Score:${c.score || 0}`).join('\n');
+      userPrompt = `🏙️ CONCURRENTS IDENTIFIÉS (SERP + Carte d'identité):\n${compLines}\nUtilise le #1 comme direct_competitor.\n` + userPrompt;
     }
 
     if (hallucinationCorrections) {
