@@ -138,6 +138,7 @@ export function MyInjectedScripts() {
   const [expandedSites, setExpandedSites] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [testingId, setTestingId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [testResults, setTestResults] = useState<Record<string, TestResult>>({});
   const [validatedCodes, setValidatedCodes] = useState<ValidatedCode[]>([]);
   const [viewingScript, setViewingScript] = useState<{ title: string; code: string } | null>(null);
