@@ -125,24 +125,19 @@ export function FloatingChatBubble() {
       )}
 
       {/* Floating Button */}
-      <Button
+      <button
         onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-        className={`fixed bottom-4 right-4 z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 ${
-          isAgencyPro 
-            ? '!bg-violet-600 hover:!bg-violet-700 border-0' 
-            : ''
-        }`}
-        size="icon"
+        className="fixed bottom-5 right-5 z-50 h-11 w-11 rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md bg-white/[0.06] border border-white/[0.12] hover:bg-white/[0.12] hover:border-white/[0.22] hover:scale-105 group"
         aria-label={isOpen ? 'Fermer le chat' : 'Ouvrir le chat support'}
       >
-        <MessageCircle className={`h-6 w-6 ${isAgencyPro ? 'text-yellow-400' : ''}`} style={isAgencyPro ? { filter: 'drop-shadow(0 0 3px rgba(234, 179, 8, 0.5))' } : undefined} />
+        <MessageCircle className="h-[18px] w-[18px] text-white/40 group-hover:text-white/70 transition-colors duration-300" />
         {/* Notification Badge */}
         {unreadCount > 0 && !isOpen && (
-          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold">
+          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
-      </Button>
+      </button>
     </>
   );
 }
