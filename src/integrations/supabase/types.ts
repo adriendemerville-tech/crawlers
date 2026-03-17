@@ -1831,6 +1831,63 @@ export type Database = {
           },
         ]
       }
+      injection_error_logs: {
+        Row: {
+          created_at: string
+          domain: string
+          domain_id: string
+          error_details: Json | null
+          error_type: string
+          id: string
+          payload_type: string
+          resolved_at: string | null
+          rule_id: string
+          url_pattern: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          domain_id: string
+          error_details?: Json | null
+          error_type: string
+          id?: string
+          payload_type: string
+          resolved_at?: string | null
+          rule_id: string
+          url_pattern: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          domain_id?: string
+          error_details?: Json | null
+          error_type?: string
+          id?: string
+          payload_type?: string
+          resolved_at?: string | null
+          rule_id?: string
+          url_pattern?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injection_error_logs_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "tracked_sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "injection_error_logs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "site_script_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       llm_depth_conversations: {
         Row: {
           created_at: string

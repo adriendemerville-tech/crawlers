@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AdminAnalyticsProvider } from '@/contexts/AdminAnalyticsContext';
-import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet } from 'lucide-react';
+import { Users, FileText, BarChart3, MessageCircle, BookOpen, Globe, FlaskConical, Link2, Cpu, ShieldAlert, AlertTriangle, Brain, EyeOff, Eye, Code2, ScanSearch, Wallet, Syringe } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 import { BlogManagement } from './BlogManagement';
 import { SupportManagement } from './SupportManagement';
@@ -20,6 +20,7 @@ import { AlgoTrainingDashboard } from './AlgoTrainingDashboard';
 import { ScannedUrlsRegistry } from './ScannedUrlsRegistry';
 import { FunctionsManagement } from './FunctionsManagement';
 import { FinancesDashboard } from './FinancesDashboard';
+import { InjectionErrorsRegistry } from './InjectionErrorsRegistry';
 import { ReadOnlyBanner } from './ReadOnlyBanner';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
@@ -34,7 +35,8 @@ const adminTranslations = {
     analytics: 'Statistiques',
     finances: 'Finances',
     intelligence: 'Intelligence',
-    silentErrors: 'Erreurs',
+    silentErrors: 'Erreurs silenc.',
+    injectionErrors: 'Erreurs inject.',
     scannedUrls: 'URLs scannées',
     ciTests: 'CI Tests',
     contentUsers: 'Contenu & Users',
@@ -57,7 +59,8 @@ const adminTranslations = {
     analytics: 'Analytics',
     finances: 'Finances',
     intelligence: 'Intelligence',
-    silentErrors: 'Errors',
+    silentErrors: 'Silent Errors',
+    injectionErrors: 'Injection Errors',
     scannedUrls: 'Scanned URLs',
     ciTests: 'CI Tests',
     contentUsers: 'Content & Users',
@@ -80,7 +83,8 @@ const adminTranslations = {
     analytics: 'Estadísticas',
     finances: 'Finanzas',
     intelligence: 'Inteligencia',
-    silentErrors: 'Errores',
+    silentErrors: 'Errores silenc.',
+    injectionErrors: 'Errores inject.',
     scannedUrls: 'URLs escaneadas',
     ciTests: 'CI Tests',
     contentUsers: 'Contenido & Usuarios',
@@ -169,6 +173,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
         ...(canSeeFinances ? [{ id: 'finances', label: t.finances, icon: Wallet, group: 'monitoring' }] : []),
         ...(canSeeIntelligence ? [{ id: 'intelligence', label: t.intelligence, icon: Cpu, group: 'monitoring' }] : []),
         { id: 'silent-errors', label: t.silentErrors, icon: AlertTriangle, group: 'monitoring' },
+        { id: 'injection-errors', label: t.injectionErrors, icon: Syringe, group: 'monitoring' },
         { id: 'ci-tests', label: t.ciTests, icon: FlaskConical, group: 'monitoring' },
         { id: 'scanned-urls', label: t.scannedUrls, icon: ScanSearch, group: 'monitoring' },
       ],
@@ -209,6 +214,7 @@ export function AdminDashboard({ readOnly = false, canSeeDocs = true, canSeeAlgo
       case 'finances': return <FinancesDashboard />;
       case 'intelligence': return <IntelligenceHub />;
       case 'silent-errors': return <SilentErrorsRegistry />;
+      case 'injection-errors': return <InjectionErrorsRegistry />;
       case 'ci-tests': return <CiTestsDashboard />;
       case 'scanned-urls': return <ScannedUrlsRegistry />;
       case 'users': return wrap(<UserManagement />);
