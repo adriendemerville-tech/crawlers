@@ -25,24 +25,24 @@ interface LLMVisibilityDashboardProps {
 
 const translations = {
   fr: {
-    title: 'Visibilité par modèle',
-    noData: 'Aucune donnée de visibilité LLM. Lancez une analyse pour commencer.',
+    title: 'Benchmark LLM',
+    noData: 'Aucune donnée de benchmark LLM. Lancez une analyse pour commencer.',
     refresh: 'Analyser',
     refreshing: 'Analyse en cours...',
     legend: '0% → 100%',
     week: 'Sem.',
   },
   en: {
-    title: 'Visibility by model',
-    noData: 'No LLM visibility data. Run an analysis to get started.',
+    title: 'LLM Benchmark',
+    noData: 'No LLM benchmark data. Run an analysis to get started.',
     refresh: 'Analyze',
     refreshing: 'Analyzing...',
     legend: '0% → 100%',
     week: 'Wk.',
   },
   es: {
-    title: 'Visibilidad por modelo',
-    noData: 'Sin datos de visibilidad LLM. Ejecute un análisis para comenzar.',
+    title: 'Benchmark LLM',
+    noData: 'Sin datos de benchmark LLM. Ejecute un análisis para comenzar.',
     refresh: 'Analizar',
     refreshing: 'Analizando...',
     legend: '0% → 100%',
