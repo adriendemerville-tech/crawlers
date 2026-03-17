@@ -103,8 +103,41 @@ export function MyCorrectiveCodes() {
   useEffect(() => {
     if (user) {
       fetchCodes();
+      fetchRollbackSites();
     }
   }, [user]);
+
+  const fetchRollbackSites = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('tracked_sites')
+      .select('id, domain, previous_config')
+      .eq('user_id', user.id);
+    const sites = (data || []).filter((s: any) => s.previous_config && Object.keys(s.previous_config).length > 0);
+    setRollbackSites(sites.map((s: any) => ({ id: s.id, domain: s.domain })));
+  };
+
+  const handleRollback = async (siteId: string) => {
+    if (!user) return;
+    try {
+      const { data: site } = await supabase
+        .from('tracked_sites')
+        .select('previous_config')
+        .eq('id', siteId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!site?.previous_config) return;
+      await supabase
+        .from('tracked_sites')
+        .update({ current_config: site.previous_config, previous_config: {} } as any)
+        .eq('id', siteId)
+        .eq('user_id', user.id);
+      toast.success(language === 'fr' ? 'Rollback effectué' : 'Rollback done');
+      setRollbackSites(prev => prev.filter(s => s.id !== siteId));
+    } catch {
+      toast.error(language === 'fr' ? 'Erreur lors du rollback' : 'Rollback error');
+    }
+  };
 
   const fetchCodes = async () => {
     if (!user) return;
