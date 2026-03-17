@@ -267,7 +267,38 @@ export function MyInjectedScripts() {
     }
   };
 
-  const getPayloadPreview = (rule: ScriptRule): string | null => {
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const handleToggleActive = async (rule: ScriptRule) => {
+    setTogglingId(rule.id);
+    try {
+      const newActive = !rule.is_active;
+      const { error } = await supabase
+        .from('site_script_rules')
+        .update({ is_active: newActive })
+        .eq('id', rule.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setRulesBySite(prev => {
+        const updated = { ...prev };
+        const siteRules = updated[rule.domain_id]?.map(r =>
+          r.id === rule.id ? { ...r, is_active: newActive } : r
+        );
+        if (siteRules) updated[rule.domain_id] = siteRules;
+        return updated;
+      });
+
+      toast.success(newActive ? t.activated : t.deactivated);
+    } catch (err) {
+      console.error('[InjectedScripts] Toggle error:', err);
+      toast.error('Erreur');
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
     if (!rule.payload_data) return null;
     try {
       const data = typeof rule.payload_data === 'string' ? JSON.parse(rule.payload_data) : rule.payload_data;
