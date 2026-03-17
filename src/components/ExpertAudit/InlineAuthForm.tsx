@@ -119,7 +119,7 @@ export function InlineAuthForm({ defaultMode = 'signup', onSuccess }: InlineAuth
       return;
     }
     try {
-      const { data } = await supabase.functions.invoke('check-email-exists', { body: { email } });
+      const { data } = await supabase.functions.invoke('auth-actions', { body: { action: 'check-email', email } });
       setExistingUser(data?.exists === true);
     } catch {
       setExistingUser(false);
