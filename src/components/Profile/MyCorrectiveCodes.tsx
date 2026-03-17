@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, Rocket, Bug, Undo2, FlaskConical, Loader2, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { Copy, Code2, Trash2, Check, ExternalLink, ThumbsUp, Plug, Rocket, Bug, Undo2, FlaskConical, Loader2, CheckCircle2, XCircle, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,6 +16,8 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/comp
 import { MyInjectedScripts } from './MyInjectedScripts';
 import { ScriptDebugTool } from './ScriptDebugTool';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { WordPressConfigCard } from './WordPressConfigCard';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface CorrectiveCodeFix {
   id: string;
@@ -88,7 +90,7 @@ const translations = {
 };
 
 export function MyCorrectiveCodes() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const t = translations[language];
@@ -101,7 +103,9 @@ export function MyCorrectiveCodes() {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyResults, setVerifyResults] = useState<any>(null);
   const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
-  const [injectableSites, setInjectableSites] = useState<{ id: string; domain: string }[]>([]);
+  const [injectableSites, setInjectableSites] = useState<{ id: string; domain: string; api_key?: string; current_config?: any }[]>([]);
+  const [showPlugModal, setShowPlugModal] = useState(false);
+  const [plugSiteId, setPlugSiteId] = useState<string | null>(null);
 
   const dateLocale = language === 'fr' ? fr : language === 'es' ? es : enUS;
 
@@ -117,9 +121,9 @@ export function MyCorrectiveCodes() {
     if (!user) return;
     const { data } = await supabase
       .from('tracked_sites')
-      .select('id, domain')
+      .select('id, domain, api_key, current_config')
       .eq('user_id', user.id);
-    setInjectableSites((data || []).map((s: any) => ({ id: s.id, domain: s.domain })));
+    setInjectableSites((data || []).map((s: any) => ({ id: s.id, domain: s.domain, api_key: s.api_key, current_config: s.current_config })));
   };
 
 
@@ -299,16 +303,33 @@ export function MyCorrectiveCodes() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardDescription>{t.description}</CardDescription>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => navigate('/modifier-code-wordpress')}>
-                <Plug className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>WordPress</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex items-center gap-1">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground" onClick={() => { fetchCodes(); fetchInjectableSites(); toast.success(language === 'fr' ? 'Actualisé' : 'Refreshed'); }}>
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{language === 'fr' ? 'Actualiser' : 'Refresh'}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => {
+                  if (injectableSites.length > 0) {
+                    setPlugSiteId(injectableSites[0].id);
+                  }
+                  setShowPlugModal(true);
+                }}>
+                  <Plug className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Plug</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="injection" className="w-full">
@@ -505,6 +526,48 @@ export function MyCorrectiveCodes() {
             </>
           ) : null}
         </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Plug Modal */}
+    <Dialog open={showPlugModal} onOpenChange={setShowPlugModal}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        {injectableSites.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Plug className="h-10 w-10 mx-auto mb-3 opacity-30" />
+            <p className="font-medium">{language === 'fr' ? 'Aucun site ajouté' : 'No sites added'}</p>
+            <p className="text-sm mt-1">{language === 'fr' ? 'Ajoutez un site depuis "Mes sites" pour le brancher.' : 'Add a site from "My sites" to connect it.'}</p>
+          </div>
+        ) : (
+          <>
+            {injectableSites.length > 1 && (
+              <div className="mb-4">
+                <Select value={plugSiteId || ''} onValueChange={setPlugSiteId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'fr' ? 'Sélectionner un site' : 'Select a site'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {injectableSites.map(s => (
+                      <SelectItem key={s.id} value={s.id}>{s.domain}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {(() => {
+              const site = injectableSites.find(s => s.id === plugSiteId);
+              if (!site) return null;
+              return (
+                <WordPressConfigCard
+                  siteId={site.id}
+                  siteDomain={site.domain}
+                  siteApiKey={profile?.api_key || site.api_key || ''}
+                  hasConfig={!!(site.current_config && typeof site.current_config === 'object' && Object.keys(site.current_config).length > 0)}
+                />
+              );
+            })()}
+          </>
+        )}
       </DialogContent>
     </Dialog>
     </>
