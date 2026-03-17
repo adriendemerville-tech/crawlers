@@ -610,6 +610,39 @@ async function analyzeHtml(url: string): Promise<HtmlAnalysis> {
     const hasSocialLinks = socialLinksCount > 0;
     const hasLinkedInLinks = linkedInLinksCount > 0;
 
+    // ═══ INTERNAL LINKING (MAILLAGE) ═══
+    const allHrefs = html.match(/<a\s[^>]*href=["']([^"'#]*?)["'][^>]*>/gi) || [];
+    let internalLinksCount = 0;
+    let externalLinksCount = 0;
+    const internalPathsSet = new Set<string>();
+    const pageDomain = (() => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } })();
+    for (const tag of allHrefs) {
+      const hrefMatch = tag.match(/href=["']([^"'#]*?)["']/i);
+      if (!hrefMatch || !hrefMatch[1]) continue;
+      const href = hrefMatch[1].trim();
+      if (!href || href === '/' || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) continue;
+      if (href.startsWith('/') || href.startsWith('#')) {
+        internalLinksCount++;
+        internalPathsSet.add(href.split('?')[0].split('#')[0]);
+      } else {
+        try {
+          const linkHost = new URL(href).hostname.replace(/^www\./, '');
+          if (linkHost === pageDomain) {
+            internalLinksCount++;
+            internalPathsSet.add(new URL(href).pathname);
+          } else {
+            externalLinksCount++;
+          }
+        } catch {
+          externalLinksCount++;
+        }
+      }
+    }
+    const totalLinksCount = internalLinksCount + externalLinksCount;
+    const internalLinkRatio = totalLinksCount > 0 ? Math.round((internalLinksCount / totalLinksCount) * 100) : 0;
+    const uniqueInternalPaths = internalPathsSet.size;
+    const orphanRisk = internalLinksCount < 3;
+
     // ═══ CASE STUDIES DETECTION ═══
     const caseStudyPatterns = [
       /(?:étude[s]?\s+de\s+cas|case\s+stud(?:y|ies))/gi,
